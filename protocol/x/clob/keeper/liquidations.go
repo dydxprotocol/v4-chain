@@ -22,17 +22,28 @@ import (
 
 // LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
 // the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
-// liquidations per block.
+// liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
 ) error {
 	lib.AssertCheckTxMode(ctx)
 
+	pseudoRand := k.GetPseudoRand(ctx)
+
 	// Get the liquidation order for each subaccount.
-	liquidationOrdersForSorting := make([]types.LiquidationOrder, 0)
-	for _, subaccountId := range subaccountIds {
-		// If attempting to liquidate a subaccount returns an error, panic.
+	// Process at-most `MaxLiquidationAttemptsPerBlock` subaccounts, starting from a pseudorandom location
+	// in the slice.
+	liquidationOrders := make([]types.LiquidationOrder, 0)
+	numSubaccounts := len(subaccountIds)
+	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
+	indexOffset := 0
+	if numSubaccounts > 0 {
+		indexOffset = pseudoRand.Intn(numSubaccounts)
+	}
+	for i := 0; i < numLiqOrders; i++ {
+		index := (i + indexOffset) % numSubaccounts
+		subaccountId := subaccountIds[index]
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
 			// Subaccount might not always be liquidatable since liquidation daemon runs
@@ -47,7 +58,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 
-		liquidationOrdersForSorting = append(liquidationOrdersForSorting, *liquidationOrder)
+		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
 
 	// Sort liquidation orders. The most underwater accounts should be liquidated first.
@@ -55,16 +66,18 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// liquidation matches will be put into the Operations Queue. However, when we process liquidations,
 	// we will generate a new liquidation order for each subaccount because previous liquidation orders
 	// can alter quantity sizes of subsequent liquidation orders.
-	k.SortLiquidationOrders(ctx, liquidationOrdersForSorting)
+	k.SortLiquidationOrders(ctx, liquidationOrders)
+
+	subaccountIdsToLiquidate := lib.MapSlice(liquidationOrders, func(order types.LiquidationOrder) satypes.SubaccountId {
+		return order.GetSubaccountId()
+	})
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	numFilledLiquidations := uint32(0)
 	numAttemptedDeleveraging := uint32(0)
-	for i := 0; numFilledLiquidations < k.MaxLiquidationOrdersPerBlock && i < len(liquidationOrdersForSorting); i++ {
-		liquidationOrderSubaccountId := liquidationOrdersForSorting[i].GetSubaccountId()
-
+	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
-		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, liquidationOrderSubaccountId)
+		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
 		if err != nil {
 			// Subaccount might not always be liquidatable if previous liquidation orders
 			// improves the net collateral of this subaccount.
@@ -96,11 +109,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		if optimisticallyFilledQuantums == 0 {
 			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
 
-			if numAttemptedDeleveraging < k.MaxDeleveragingAttemptsPerBlock {
+			if numAttemptedDeleveraging < k.Flags.MaxDeleveragingAttemptsPerBlock {
 				// The liquidation order was unfilled. Try to deleverage the subaccount.
-				subaccountId := liquidationOrder.GetSubaccountId()
-				perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
 				deltaQuantums := liquidationOrder.GetDeltaQuantums()
+
+				// Get a pseudorandom perpetualId from the list of open positions.
+				subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+				positions := subaccount.GetPerpetualPositions()
+				perpetualId := positions[pseudoRand.Intn(len(positions))].PerpetualId
 
 				_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 				if err != nil {
@@ -991,7 +1007,7 @@ func (k Keeper) validateMatchedLiquidation(
 	// Validate that processing the liquidation fill does not leave insufficient funds
 	// in the insurance fund (such that the liquidation couldn't have possibly continued).
 	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
-		k.Logger(ctx).Info("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
+		k.Logger(ctx).Debug("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
 		return nil, errorsmod.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v, insurance fund delta %v",
