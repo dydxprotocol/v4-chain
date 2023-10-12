@@ -111,7 +111,7 @@ func TestAddToUint32(t *testing.T) {
 	}
 }
 
-func TestDivisionUint32RoundUp(t *testing.T) {
+func TestMustDivideUint32RoundUp(t *testing.T) {
 	tests := map[string]struct {
 		x              uint32
 		y              uint32
@@ -135,7 +135,7 @@ func TestDivisionUint32RoundUp(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.DivisionUint32RoundUp(tc.x, tc.y)
+			result := lib.MustDivideUint32RoundUp(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -279,10 +279,15 @@ func TestInt64MulPpm(t *testing.T) {
 			ppm:            100_000, // 10%
 			expectedResult: 6,
 		},
-		"61 * 10% rounds down to 6": {
-			x:              61,
+		"69 * 10% rounds down to 6 (round towards negative infinity)": {
+			x:              69,
 			ppm:            100_000, // 10%
 			expectedResult: 6,
+		},
+		"-61 * 10% rounds down to -7 (round towards negative infinity)": {
+			x:              -61,
+			ppm:            100_000, // 10%
+			expectedResult: -7,
 		},
 		"overflow causes panic": {
 			x:             math.MaxInt64,

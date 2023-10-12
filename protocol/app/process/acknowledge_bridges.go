@@ -59,6 +59,7 @@ func DecodeAcknowledgeBridgesTx(
 
 // Validate returns an error if:
 // - msg fails `ValidateBasic`.
+// - bridge events are non empty and bridging is disabled.
 // - first bridge event ID is not the one to be next acknowledged.
 // - last bridge event ID has not been recognized.
 // - a bridge event's content is not the same as in server state.
@@ -78,9 +79,12 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 		return getValidateBasicError(abt.msg, err)
 	}
 
-	// If there is no bridge event, return nil.
 	if len(abt.msg.Events) == 0 {
+		// If there is no bridge event, return nil.
 		return nil
+	} else if abt.bridgeKeeper.GetSafetyParams(abt.ctx).IsDisabled {
+		// If there is any bridge event when bridging is disabled, return error.
+		return types.ErrBridgingDisabled
 	}
 
 	// Validate that first bridge event ID is the one to be next acknowledged.

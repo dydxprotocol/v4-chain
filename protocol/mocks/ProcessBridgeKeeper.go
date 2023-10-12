@@ -63,6 +63,20 @@ func (_m *ProcessBridgeKeeper) GetRecognizedEventInfo(ctx types.Context) bridget
 	return r0
 }
 
+// GetSafetyParams provides a mock function with given fields: ctx
+func (_m *ProcessBridgeKeeper) GetSafetyParams(ctx types.Context) bridgetypes.SafetyParams {
+	ret := _m.Called(ctx)
+
+	var r0 bridgetypes.SafetyParams
+	if rf, ok := ret.Get(0).(func(types.Context) bridgetypes.SafetyParams); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(bridgetypes.SafetyParams)
+	}
+
+	return r0
+}
+
 type mockConstructorTestingTNewProcessBridgeKeeper interface {
 	mock.TestingT
 	Cleanup(func())

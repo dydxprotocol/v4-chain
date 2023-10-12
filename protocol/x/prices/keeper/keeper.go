@@ -49,7 +49,7 @@ func NewKeeper(
 		timeProvider:           timeProvider,
 		indexerEventManager:    indexerEventManager,
 		marketToCreatedAt:      map[uint32]time.Time{},
-		authorities:            lib.SliceToSet(authorities),
+		authorities:            lib.UniqueSliceToSet(authorities),
 	}
 }
 

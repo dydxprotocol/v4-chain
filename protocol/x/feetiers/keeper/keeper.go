@@ -34,7 +34,7 @@ func NewKeeper(
 		cdc:         cdc,
 		statsKeeper: statsKeeper,
 		storeKey:    storeKey,
-		authorities: lib.SliceToSet(authorities),
+		authorities: lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -94,7 +94,7 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 	return userTier.MakerFeePpm
 }
 
-// GetLowestMakerFee returns the lowest maker fee amoung any tiers.
+// GetLowestMakerFee returns the lowest maker fee among any tiers.
 func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
 

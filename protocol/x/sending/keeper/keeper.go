@@ -42,7 +42,7 @@ func NewKeeper(
 		bankKeeper:          bankKeeper,
 		subaccountsKeeper:   subaccountsKeeper,
 		indexerEventManager: indexerEventManager,
-		authorities:         lib.SliceToSet(authorities),
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
 }
 

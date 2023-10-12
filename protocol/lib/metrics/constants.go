@@ -28,6 +28,7 @@ const (
 	Reason           = "reason"
 	Received         = "received"
 	Rejected         = "rejected"
+	SampleRate       = "sample_rate"
 	SequenceNumber   = "sequence_number"
 	Success          = "success"
 	Valid            = "valid"
@@ -298,6 +299,7 @@ const (
 	NumSubaccountsIterated         = "num_subaccounts_iterated"
 	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
+	NoOpenPositionOnOppositeSide   = "no_open_position_on_opposite_side"
 
 	// Pricefeed Daemon.
 	Exchange                                = "exchange"
@@ -359,3 +361,5 @@ const (
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
 )
+
+const LatencyMetricSampleRate = 0.01
