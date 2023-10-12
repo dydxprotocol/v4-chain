@@ -16,7 +16,6 @@ import (
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
 
-
 const (
 	MinAddrLen = 20
 	MaxAddrLen = 32
