@@ -197,6 +197,8 @@ func TestBridge_REJECT(t *testing.T) {
 	tests := map[string]struct {
 		// bridge events.
 		bridgeEvents []bridgetypes.BridgeEvent
+		// whether bridging is disabled.
+		bridgingDisabled bool
 	}{
 		"Bad coin": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
@@ -225,11 +227,30 @@ func TestBridge_REJECT(t *testing.T) {
 				constants.BridgeEvent_Id2_Height1,
 			},
 		},
+		"Bridging is disabled and non-empty bridge events are proposed": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id0_Height0,
+				constants.BridgeEvent_Id1_Height0,
+			},
+			bridgingDisabled: true,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *bridgetypes.GenesisState) {
+						genesisState.SafetyParams = bridgetypes.SafetyParams{
+							IsDisabled:  tc.bridgingDisabled,
+							DelayBlocks: 5,
+						}
+					},
+				)
+				return genesis
+			}).WithTesting(t).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Add good bridge events to app server.
@@ -243,7 +264,7 @@ func TestBridge_REJECT(t *testing.T) {
 			require.NoError(t, error)
 
 			proposal := tApp.PrepareProposal()
-			// Propose bad bridge events by overriding bridge tx, which is the third-to-last tx in the proposal.
+			// Propose bridge events by overriding bridge tx, which is the third-to-last tx in the proposal.
 			proposal.Txs[len(proposal.Txs)-3] = testtx.MustGetTxBytes(
 				&bridgetypes.MsgAcknowledgeBridges{
 					Events: tc.bridgeEvents,

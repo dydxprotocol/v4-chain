@@ -20,6 +20,13 @@ func (k Keeper) GetAcknowledgeBridges(
 	ctx sdk.Context,
 	blockTimestamp time.Time,
 ) (msg *types.MsgAcknowledgeBridges) {
+	// Do not propose bridge events if bridging is disabled.
+	if k.GetSafetyParams(ctx).IsDisabled {
+		return &types.MsgAcknowledgeBridges{
+			Events: []types.BridgeEvent{},
+		}
+	}
+
 	wallClock := k.bridgeEventManager.GetNow()
 	proposeParams := k.GetProposeParams(ctx)
 
@@ -81,13 +88,16 @@ func (k Keeper) AcknowledgeBridges(
 		metrics.Latency,
 	)
 
+	safetyParams := k.GetSafetyParams(ctx)
 	if len(bridgeEvents) == 0 {
 		return nil
+	} else if safetyParams.IsDisabled {
+		// Do not acknowledge bridges if bridging is disabled.
+		return types.ErrBridgingDisabled
 	}
 
 	// For each bridge event, delay a `MsgCompleteBridge` to be executed `safetyParams.DelayBlocks`
 	// blocks in the future. Panic if fails to delay any of the messages.
-	safetyParams := k.GetSafetyParams(ctx)
 	delayMsgModuleAccAddrString := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
 	for _, bridgeEvent := range bridgeEvents {
 		// delaymsg module should be the authority for completing bridges.
