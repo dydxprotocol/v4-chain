@@ -43,6 +43,20 @@ func TestCompleteBridge(t *testing.T) {
 			expectedError:   "invalid coin",
 			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		},
+		"Failure: coin amount is negative": {
+			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+			bridgeEvent: types.BridgeEvent{
+				Id:      7,
+				Address: constants.BobAccAddress.String(),
+				Coin: sdk.Coin{
+					Denom:  "adv4tnt",
+					Amount: sdkmath.NewInt(-1),
+				},
+				EthBlockHeight: 3,
+			},
+			expectedError:   "invalid coin",
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+		},
 		"Failure: invalid address string": {
 			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 			bridgeEvent: types.BridgeEvent{
