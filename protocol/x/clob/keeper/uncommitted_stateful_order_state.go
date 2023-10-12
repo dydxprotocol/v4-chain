@@ -98,7 +98,7 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 	)
 }
 
-// MustAddUncommittedStatefulOrderPlacement adds a new order placements by `OrderId` to a transient store and
+// MustAddUncommittedStatefulOrderPlacement adds a new order placement by `OrderId` to a transient store and
 // increments the per subaccount uncommitted stateful order count.
 //
 // This method will panic if the order already exists.
