@@ -504,7 +504,7 @@ export class Subscriptions {
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
         axiosRequest({
           method: RequestMethod.GET,
-          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED`,
+          url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
           transformResponse: (res) => res,
         }),

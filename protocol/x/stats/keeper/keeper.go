@@ -39,7 +39,7 @@ func NewKeeper(
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
-		authorities:       lib.SliceToSet(authorities),
+		authorities:       lib.UniqueSliceToSet(authorities),
 	}
 }
 

@@ -131,6 +131,7 @@ const (
 	OrderConflictsWithClobPairStatus             = "order_conflicts_with_clob_pair_status"
 	OrderFlag                                    = "order_flag"
 	OrderSide                                    = "order_side"
+	OrderId                                      = "order_id"
 	PlaceOrder                                   = "place_order"
 	PlaceOrderAccounts                           = "place_order_accounts"
 	PlaceStatefulOrder                           = "place_stateful_order"
@@ -141,7 +142,6 @@ const (
 	RateLimit                                    = "rate_limit"
 	ReduceOnly                                   = "reduce_only"
 	RemovalReason                                = "removal_reason"
-	ReplayOperations                             = "replay_operations"
 	SortLiquidationOrders                        = "sort_liquidation_orders"
 	SendCancelOrderOffchainUpdates               = "send_cancel_order_offchain_updates"
 	SendPlaceOrderOffchainUpdates                = "send_place_order_offchain_updates"
@@ -152,7 +152,6 @@ const (
 	SendPurgeOffchainUpdates                     = "send_purge_offchain_updates"
 	SendUncrossOffchainUpdates                   = "send_uncross_offchain_updates"
 	ShortTermOrder                               = "short_term_order"
-	SkipStatefulReplayPlaceOrder                 = "skip_stateful_replay_place_order"
 	StatefulCancellationMsgHandlerFailure        = "stateful_cancellation_msg_handler_failure"
 	StatefulCancellationMsgHandlerSuccess        = "stateful_cancellation_msg_handler_success"
 	StatefulOrder                                = "stateful_order"
@@ -299,6 +298,7 @@ const (
 	NumSubaccountsIterated         = "num_subaccounts_iterated"
 	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
+	NoOpenPositionOnOppositeSide   = "no_open_position_on_opposite_side"
 
 	// Pricefeed Daemon.
 	Exchange                                = "exchange"

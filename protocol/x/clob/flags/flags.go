@@ -2,7 +2,6 @@ package flags
 
 import (
 	"fmt"
-	"math"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
@@ -11,8 +10,9 @@ import (
 
 // A struct containing the values of all flags.
 type ClobFlags struct {
-	MaxLiquidationOrdersPerBlock    uint32
-	MaxDeleveragingAttemptsPerBlock uint32
+	MaxLiquidationAttemptsPerBlock      uint32
+	MaxDeleveragingAttemptsPerBlock     uint32
+	MaxDeleveragingSubaccountsToIterate uint32
 
 	MevTelemetryEnabled    bool
 	MevTelemetryHost       string
@@ -22,8 +22,9 @@ type ClobFlags struct {
 // List of CLI flags.
 const (
 	// Liquidations and deleveraging.
-	MaxLiquidationOrdersPerBlock    = "max-liquidation-orders-per-block"
-	MaxDeleveragingAttemptsPerBlock = "max-deleveraging-attempts-per-block"
+	MaxLiquidationAttemptsPerBlock      = "max-liquidation-attempts-per-block"
+	MaxDeleveragingAttemptsPerBlock     = "max-deleveraging-attempts-per-block"
+	MaxDeleveragingSubaccountsToIterate = "max-deleveraging-subaccounts-to-iterate"
 
 	// Mev.
 	MevTelemetryEnabled    = "mev-telemetry-enabled"
@@ -33,8 +34,9 @@ const (
 
 // Default values.
 const (
-	DefaultMaxLiquidationOrdersPerBlock    = math.MaxUint32
-	DefaultMaxDeleveragingAttemptsPerBlock = 35
+	DefaultMaxLiquidationAttemptsPerBlock      = 50
+	DefaultMaxDeleveragingAttemptsPerBlock     = 10
+	DefaultMaxDeleveragingSubaccountsToIterate = 500
 
 	DefaultMevTelemetryEnabled    = false
 	DefaultMevTelemetryHost       = ""
@@ -46,11 +48,11 @@ const (
 // E.g. `dydxprotocold start --non-validating-full-node true`.
 func AddClobFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().Uint32(
-		MaxLiquidationOrdersPerBlock,
-		DefaultMaxLiquidationOrdersPerBlock,
+		MaxLiquidationAttemptsPerBlock,
+		DefaultMaxLiquidationAttemptsPerBlock,
 		fmt.Sprintf(
 			"Sets the maximum number of liquidation orders to process per block. Default = %d",
-			DefaultMaxLiquidationOrdersPerBlock,
+			DefaultMaxLiquidationAttemptsPerBlock,
 		),
 	)
 	cmd.Flags().Uint32(
@@ -59,6 +61,14 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 		fmt.Sprintf(
 			"Sets the maximum number of attempted deleveraging events per block. Default = %d",
 			DefaultMaxDeleveragingAttemptsPerBlock,
+		),
+	)
+	cmd.Flags().Uint32(
+		MaxDeleveragingSubaccountsToIterate,
+		DefaultMaxDeleveragingSubaccountsToIterate,
+		fmt.Sprintf(
+			"Sets the maximum number of subaccounts iterated for each deleveraging event. Default = %d",
+			DefaultMaxDeleveragingSubaccountsToIterate,
 		),
 	)
 	cmd.Flags().Bool(
@@ -80,11 +90,12 @@ func AddClobFlagsToCmd(cmd *cobra.Command) {
 
 func GetDefaultClobFlags() ClobFlags {
 	return ClobFlags{
-		MaxLiquidationOrdersPerBlock:    DefaultMaxLiquidationOrdersPerBlock,
-		MaxDeleveragingAttemptsPerBlock: DefaultMaxDeleveragingAttemptsPerBlock,
-		MevTelemetryEnabled:             DefaultMevTelemetryEnabled,
-		MevTelemetryHost:                DefaultMevTelemetryHost,
-		MevTelemetryIdentifier:          DefaultMevTelemetryIdentifier,
+		MaxLiquidationAttemptsPerBlock:      DefaultMaxLiquidationAttemptsPerBlock,
+		MaxDeleveragingAttemptsPerBlock:     DefaultMaxDeleveragingAttemptsPerBlock,
+		MaxDeleveragingSubaccountsToIterate: DefaultMaxDeleveragingSubaccountsToIterate,
+		MevTelemetryEnabled:                 DefaultMevTelemetryEnabled,
+		MevTelemetryHost:                    DefaultMevTelemetryHost,
+		MevTelemetryIdentifier:              DefaultMevTelemetryIdentifier,
 	}
 }
 
@@ -115,15 +126,21 @@ func GetClobFlagValuesFromOptions(
 		}
 	}
 
-	if option := appOpts.Get(MaxLiquidationOrdersPerBlock); option != nil {
+	if option := appOpts.Get(MaxLiquidationAttemptsPerBlock); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
-			result.MaxLiquidationOrdersPerBlock = v
+			result.MaxLiquidationAttemptsPerBlock = v
 		}
 	}
 
 	if option := appOpts.Get(MaxDeleveragingAttemptsPerBlock); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.MaxDeleveragingAttemptsPerBlock = v
+		}
+	}
+
+	if option := appOpts.Get(MaxDeleveragingSubaccountsToIterate); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.MaxDeleveragingSubaccountsToIterate = v
 		}
 	}
 

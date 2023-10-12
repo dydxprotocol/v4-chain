@@ -86,8 +86,8 @@ func EndBlocker(
 	keeper.AddUntriggeredConditionalOrders(
 		ctx,
 		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.SliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.SliceToSet(expiredStatefulOrderIds),
+		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.

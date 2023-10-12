@@ -43,7 +43,7 @@ func NewKeeper(
 		bridgeEventManager: bridgeEventManager,
 		bankKeeper:         bankKeeper,
 		delayMsgKeeper:     delayMsgKeeper,
-		authorities:        lib.SliceToSet(authorities),
+		authorities:        lib.UniqueSliceToSet(authorities),
 	}
 }
 

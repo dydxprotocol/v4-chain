@@ -20,3 +20,8 @@ const (
 	// NumDelayedMessagesKey is the prefix to retrieve the number of DelayedMessages.
 	NumDelayedMessagesKey = "NumMsgs"
 )
+
+// Log
+const (
+	IdLogKey = "id"
+)
