@@ -7,6 +7,8 @@
 * [#143](https://github.com/dydxprotocol/v4-chain/pull/143) Add websocket events for perpetual markets.
 
 ### Improvements
+* [#577](https://github.com/dydxprotocol/v4-chain/pull/577) Correctly set order status for all order types
+
 * [#552](https://github.com/dydxprotocol/v4-chain/pull/552) Updated Elliptic compliance client block addresses with risk scores equal to the threshold in addition to risk score greater than the threshold.
 
 * [#469](https://github.com/dydxprotocol/v4-chain/pull/469) Added a reason field to `/screen` endpoint to display a reason for blocking an address.
