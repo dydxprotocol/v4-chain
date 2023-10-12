@@ -16,11 +16,11 @@ import (
 )
 
 func TestGetBridgeEventAbi(t *testing.T) {
-	results := make([]*abi.ABI, 0)
+	results := make([]abi.ABI, 0)
 	mu := sync.Mutex{}
 	var wg sync.WaitGroup
 
-	// Populate the pointers.
+	// Get the ABI 200 times.
 	for i := 0; i < 200; i++ {
 		wg.Add(1)
 		go func() {
@@ -35,11 +35,10 @@ func TestGetBridgeEventAbi(t *testing.T) {
 	wg.Wait()
 
 	// Call the function one more time.
-	// Ensure that the pointer is non-nil and equal to all other pointers.
+	// Ensure that the values are all equal.
 	expected := libeth.GetBridgeEventAbi()
-	require.NotNil(t, expected)
 	for _, r := range results {
-		require.Same(t, expected, r)
+		require.Equal(t, expected, r)
 	}
 }
 

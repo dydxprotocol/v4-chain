@@ -21,27 +21,16 @@ const (
 	MaxAddrLen = 32
 )
 
-// ABI Singleton and mutex.
-var bridgeEventAbi *ethabi.ABI
-
-// getBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
-func GetBridgeEventAbi() *ethabi.ABI {
-	sync.OnceValue()
-	// Initialize the singleton in a thread-safe way.
-	once.Do(func() {
-		bridgeAbi, err := ethabi.JSON(strings.NewReader(constants.BridgeEventABI))
+// GetBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
+func GetBridgeEventAbi() ethabi.ABI {
+	result := sync.OnceValue[ethabi.ABI](func() ethabi.ABI {
+		bAbi, err := ethabi.JSON(strings.NewReader(constants.BridgeEventABI))
 		if err != nil {
 			panic(err)
 		}
-		bridgeEventAbi = &bridgeAbi
+		return bAbi
 	})
-
-	// This could happen if the initialization fails in another thread.
-	if bridgeEventAbi == nil {
-		panic("getBridgeEventAbi: bridgeEventAbi not initialized")
-	}
-
-	return bridgeEventAbi
+	return result()
 }
 
 // PadOrTruncateAddress right-pads an address with zeros if it's shorter than `minAddrLen` or
