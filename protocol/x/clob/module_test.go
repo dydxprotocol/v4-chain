@@ -22,11 +22,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	liqiudations_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
+	liquidations_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	clob_keeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
@@ -96,7 +95,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	)
 	ks := keeper.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
 
-	err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+	err := keeper.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 	require.NoError(t, err)
 
 	return clob.NewAppModule(
@@ -105,7 +104,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-		liqiudations_types.NewLiquidatableSubaccountIds(),
+		liquidations_types.NewLiquidatableSubaccountIds(),
 	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
 }
 
