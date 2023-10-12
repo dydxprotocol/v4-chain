@@ -16,21 +16,27 @@ import (
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
 
+
 const (
 	MinAddrLen = 20
 	MaxAddrLen = 32
 )
 
-// GetBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
-func GetBridgeEventAbi() ethabi.ABI {
-	result := sync.OnceValue[ethabi.ABI](func() ethabi.ABI {
+// bridgeEventAbi is the ABI (application binary interface) for the Bridge contract.
+// It is initialized at most once.
+var bridgeEventAbi = sync.OnceValue[*ethabi.ABI](
+	func() *ethabi.ABI {
 		bAbi, err := ethabi.JSON(strings.NewReader(constants.BridgeEventABI))
 		if err != nil {
 			panic(err)
 		}
-		return bAbi
-	})
-	return result()
+		return &bAbi
+	},
+)
+
+// GetBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
+func GetBridgeEventAbi() *ethabi.ABI {
+	return bridgeEventAbi()
 }
 
 // PadOrTruncateAddress right-pads an address with zeros if it's shorter than `minAddrLen` or

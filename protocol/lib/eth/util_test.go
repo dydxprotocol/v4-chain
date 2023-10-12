@@ -16,7 +16,7 @@ import (
 )
 
 func TestGetBridgeEventAbi(t *testing.T) {
-	results := make([]abi.ABI, 0)
+	results := make([]*abi.ABI, 0)
 	mu := sync.Mutex{}
 	var wg sync.WaitGroup
 
@@ -35,10 +35,11 @@ func TestGetBridgeEventAbi(t *testing.T) {
 	wg.Wait()
 
 	// Call the function one more time.
-	// Ensure that the values are all equal.
+	// Ensure that all the pointers are equal.
 	expected := libeth.GetBridgeEventAbi()
+	require.NotNil(t, expected)
 	for _, r := range results {
-		require.Equal(t, expected, r)
+		require.Same(t, expected, r)
 	}
 }
 
