@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -18,6 +19,7 @@ func NewMsgServerImpl(keeper types.DelayMsgKeeper) types.MsgServer {
 	return &msgServer{keeper}
 }
 
+// DelayMessage delays execution of a message by a given number of blocks.
 func (k msgServer) DelayMessage(
 	goCtx context.Context,
 	msg *types.MsgDelayMessage,
@@ -74,7 +76,7 @@ func (k msgServer) DelayMessage(
 			constants.ErrorLogKey,
 			err,
 		)
-		return nil, fmt.Errorf("DelayMessageByBlocks failed, err  = %w", err)
+		return nil, fmt.Errorf("DelayMessageByBlocks failed, err = %w", err)
 	}
 
 	return &types.MsgDelayMessageResponse{
