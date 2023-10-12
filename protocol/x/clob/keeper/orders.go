@@ -170,6 +170,7 @@ func (k Keeper) CancelStatefulOrder(
 		k.Logger(ctx).Info(
 			"CancelStatefulOrder: Removing stateful order from state",
 			metrics.OrderId, msg.OrderId,
+			metrics.BlockHeight, ctx.BlockHeight(),
 		)
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.

@@ -75,6 +75,7 @@ func (k Keeper) ProcessProposerOperations(
 				k.Logger(ctx).Info(
 					"ProcessProposerOperations: Removing fully filled order from state.",
 					metrics.OrderId, orderId,
+					metrics.BlockHeight, ctx.BlockHeight(),
 				)
 				k.MustRemoveStatefulOrder(ctx, orderId)
 				telemetry.IncrCounterWithLabels(
@@ -410,6 +411,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	k.Logger(ctx).Info(
 		"PersistOrderRemovalToState: Removing Order Removal order from state.",
 		metrics.OrderId, orderIdToRemove,
+		metrics.BlockHeight, ctx.BlockHeight(),
 	)
 
 	// Remove the stateful order from state.

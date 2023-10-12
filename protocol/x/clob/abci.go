@@ -46,6 +46,7 @@ func EndBlocker(
 		keeper.Logger(ctx).Info(
 			"EndBlocker: Removing stateful order from state",
 			metrics.OrderId, orderId,
+			metrics.BlockHeight, ctx.BlockHeight(),
 		)
 
 		// Remove the order fill amount from state.
