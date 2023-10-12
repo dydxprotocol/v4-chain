@@ -32,7 +32,7 @@ type (
 
 		// Needed for getting `UsdcAsset.AtomicResolution` (converting quote quantums to a full USDC).
 		assetsKeeper types.AssetsKeeper
-		// Need for getting balance of module account balance and transfering tokens.
+		// Need for getting balance of module account balance and transferring tokens.
 		bankKeeper types.BankKeeper
 		// Needed for getting lowest maker fee.
 		feeTiersKeeper types.FeeTiersKeeper

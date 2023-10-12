@@ -1421,7 +1421,7 @@ func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(
 }
 
 // IsPositionUpdatable returns whether position of a perptual is updatable.
-// A perpetual is not updatable if it satifies:
+// A perpetual is not updatable if it satisfies:
 //   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default and valid
 //     oracle priceupdates are non-zero, this indicates the absence of a valid oracle price update.
 func (k Keeper) IsPositionUpdatable(

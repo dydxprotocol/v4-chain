@@ -48,7 +48,7 @@ func TestIsInternalMsg_Invalid(t *testing.T) {
 
 func TestIsInternalMsg_Valid(t *testing.T) {
 	sampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.InternalMsgSamplesAll)
-	// +1 for "/cosmos.auth.v1beta1.MsgUpdateParams" not having a corresponding Repsonse msg type.
+	// +1 for "/cosmos.auth.v1beta1.MsgUpdateParams" not having a corresponding Response msg type.
 	require.Len(t, sampleMsgs, len(appmsgs.InternalMsgSamplesAll)/2+1)
 	for _, sampleMsg := range sampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {

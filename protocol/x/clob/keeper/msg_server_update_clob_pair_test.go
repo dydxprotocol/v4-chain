@@ -229,7 +229,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
-		"Error: cannot update quantum converstion exponent": {
+		"Error: cannot update quantum conversion exponent": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				ClobPair: types.ClobPair{

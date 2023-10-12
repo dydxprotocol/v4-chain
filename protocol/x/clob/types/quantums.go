@@ -58,7 +58,7 @@ func FillAmountToQuoteQuantums(
 
 // GetAveragePriceSubticks computes the average price (in subticks) of filled
 // amount in `quoteQuantums` and `baseQuantums`.
-// To calulate quote quantums from base quantums and subticks, we use the
+// To calculate quote quantums from base quantums and subticks, we use the
 // following equation:
 // `sizeQuoteQuantums = subticks * baseQuantums * 10^quantumConversionExponent`.
 //
