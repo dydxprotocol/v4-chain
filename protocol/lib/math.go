@@ -67,7 +67,7 @@ func Min[T constraints.Ordered](x, y T) T {
 }
 
 // Int64MulPpm multiplies an int64 by a scaling factor represented in parts per million. If the integer overflows,
-// this method panics. This method rounds towards zero.
+// this method panics. This method rounds towards negative infinity.
 func Int64MulPpm(x int64, ppm uint32) int64 {
 	xMulPpm := BigIntMulPpm(big.NewInt(x), ppm)
 

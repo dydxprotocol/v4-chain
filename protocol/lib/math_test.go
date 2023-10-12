@@ -279,10 +279,15 @@ func TestInt64MulPpm(t *testing.T) {
 			ppm:            100_000, // 10%
 			expectedResult: 6,
 		},
-		"61 * 10% rounds down to 6": {
-			x:              61,
+		"69 * 10% rounds down to 6 (round towards negative infinity)": {
+			x:              69,
 			ppm:            100_000, // 10%
 			expectedResult: 6,
+		},
+		"-61 * 10% rounds down to -7 (round towards negative infinity)": {
+			x:              -61,
+			ppm:            100_000, // 10%
+			expectedResult: -7,
 		},
 		"overflow causes panic": {
 			x:             math.MaxInt64,
