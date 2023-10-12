@@ -427,7 +427,7 @@ const GenesisState = `{
           "block_height": "6480000"
         }
       ],
-      "num_messages": 1
+      "next_delayed_message_id": 1
     },
     "distribution": {
       "delegator_starting_infos": [],

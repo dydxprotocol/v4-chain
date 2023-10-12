@@ -171,9 +171,9 @@ func (_m *DelayMsgKeeper) SetDelayedMessage(ctx types.Context, msg *delaymsgtype
 	return r0
 }
 
-// SetNumMessages provides a mock function with given fields: ctx, numMessages
-func (_m *DelayMsgKeeper) SetNumMessages(ctx types.Context, numMessages uint32) {
-	_m.Called(ctx, numMessages)
+// SetNextDelayedMessageId provides a mock function with given fields: ctx, nextDelayedMessageId
+func (_m *DelayMsgKeeper) SetNextDelayedMessageId(ctx types.Context, nextDelayedMessageId uint32) {
+	_m.Called(ctx, nextDelayedMessageId)
 }
 
 type mockConstructorTestingTNewDelayMsgKeeper interface {

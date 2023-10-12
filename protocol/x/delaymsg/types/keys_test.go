@@ -15,5 +15,5 @@ func TestModuleKeys(t *testing.T) {
 func TestStateKeys(t *testing.T) {
 	require.Equal(t, "BlockMsgIds:", types.BlockMessageIdsPrefix)
 	require.Equal(t, "Msg:", types.DelayedMessageKeyPrefix)
-	require.Equal(t, "NumMsgs", types.NumDelayedMessagesKey)
+	require.Equal(t, "NextDelayedMessageId", types.NextDelayedMessageIdKey)
 }

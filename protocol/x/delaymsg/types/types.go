@@ -8,9 +8,9 @@ import (
 
 type DelayMsgKeeper interface {
 	// Delayed messages
-	SetNumMessages(
+	SetNextDelayedMessageId(
 		ctx sdk.Context,
-		numMessages uint32,
+		nextDelayedMessageId uint32,
 	)
 
 	SetDelayedMessage(

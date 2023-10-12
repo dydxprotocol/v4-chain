@@ -122,7 +122,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 			expectedErr: "failed to unmarshal delaymsg genesis state: unexpected EOF",
 		},
 		"Invalid state": {
-			genesisJson: `{"num_messages":1,` +
+			genesisJson: `{"next_delayed_message_id":1,` +
 				`"delayed_messages":[{"id": 1,"block_height":1}]}`,
 			expectedErr: "invalid delayed message at index 0 with id 1: Delayed msg is nil: Invalid genesis state",
 		},
@@ -176,9 +176,9 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	am.RegisterGRPCGatewayRoutes(client.Context{}, router)
 
-	// Expect NumMessages route registered
+	// Expect NextDelayedMessageId route registered
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/messages", nil)
+	req, err := http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/next_id", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
@@ -221,7 +221,7 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	require.Equal(t, 3, len(cmd.Commands()))
 	require.Equal(t, "get-block-message-ids", cmd.Commands()[0].Name())
 	require.Equal(t, "get-message", cmd.Commands()[1].Name())
-	require.Equal(t, "get-num-messages", cmd.Commands()[2].Name())
+	require.Equal(t, "get-next-delayed-message-id", cmd.Commands()[2].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -265,8 +265,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	result := am.InitGenesis(ctx, cdc, gs)
 	require.Equal(t, 0, len(result))
 
-	numMessages := keeper.GetNumMessages(ctx)
-	require.Equal(t, uint32(2), numMessages)
+	nextDelayedMessageId := keeper.GetNextDelayedMessageId(ctx)
+	require.Equal(t, uint32(2), nextDelayedMessageId)
 
 	delayedMessage, found := keeper.GetMessage(ctx, 1)
 	require.True(t, found)

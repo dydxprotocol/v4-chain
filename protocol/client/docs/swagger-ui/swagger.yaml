@@ -92,10 +92,6 @@ paths:
                         equivalent to
 
                         a position size of one full coin.
-                    long_interest:
-                      type: string
-                      format: uint64
-                      description: The total positive balance across the exchange.
                   description: Asset defines a single exchangable asset.
               pagination:
                 type: object
@@ -294,10 +290,6 @@ paths:
                       equivalent to
 
                       a position size of one full coin.
-                  long_interest:
-                    type: string
-                    format: uint64
-                    description: The total positive balance across the exchange.
                 description: Asset defines a single exchangable asset.
             description: QueryAssetResponse is response type for the Asset RPC method.
         default:
@@ -495,7 +487,7 @@ paths:
                         MsgCompleteBridge is the Msg/CompleteBridgeResponse
                         request type.
                     block_height:
-                      type: string
+                      type: integer
                       format: int64
                   description: >-
                     DelayedCompleteBridgeMessage is a message type for the
@@ -1899,7 +1891,7 @@ paths:
         - name: block_height
           in: path
           required: true
-          type: string
+          type: integer
           format: int64
       tags:
         - Query
@@ -2098,7 +2090,7 @@ paths:
                             "value": "1.212s"
                           }
                   block_height:
-                    type: string
+                    type: integer
                     format: int64
                     description: The block height at which the message should be executed.
                 description: >-
@@ -2306,24 +2298,22 @@ paths:
           format: int64
       tags:
         - Query
-  /dydxprotocol/v4/delaymsg/messages:
+  /dydxprotocol/v4/delaymsg/next_id:
     get:
-      summary: Queries the number of DelayedMessages.
-      operationId: NumMessages
+      summary: Queries the next DelayedMessage's id.
+      operationId: NextDelayedMessageId
       responses:
         '200':
           description: A successful response.
           schema:
             type: object
             properties:
-              num_messages:
+              next_delayed_message_id:
                 type: integer
                 format: int64
-            description: >-
-              QueryGetNumMessagesResponse is the response type for the
-              NumMessages RPC
-
-              method.
+            description: |-
+              QueryNextDelayedMessageIdResponse is the response type for the
+              NextDelayedMessageId RPC method.
         default:
           description: An unexpected error response.
           schema:
@@ -3053,12 +3043,6 @@ paths:
                       description: |-
                         The current index determined by the cumulative all-time
                         history of the funding mechanism. Starts at zero.
-                    open_interest:
-                      type: string
-                      format: uint64
-                      description: |-
-                        The total open-interest of the perpetual used for
-                        bookkeeping purposes. In base quantums.
                   description: Perpetual represents a perpetual on the dYdX exchange.
               pagination:
                 type: object
@@ -3240,12 +3224,6 @@ paths:
                     description: |-
                       The current index determined by the cumulative all-time
                       history of the funding mechanism. Starts at zero.
-                  open_interest:
-                    type: string
-                    format: uint64
-                    description: |-
-                      The total open-interest of the perpetual used for
-                      bookkeeping purposes. In base quantums.
                 description: Perpetual represents a perpetual on the dYdX exchange.
             description: >-
               QueryPerpetualResponse is response type for the Perpetual RPC
@@ -41812,10 +41790,6 @@ definitions:
           to a full coin. For example, if `atomic_resolution = -8`
           then an `asset_position` with `base_quantums = 1e8` is equivalent to
           a position size of one full coin.
-      long_interest:
-        type: string
-        format: uint64
-        description: The total positive balance across the exchange.
     description: Asset defines a single exchangable asset.
   dydxprotocol.assets.QueryAllAssetsResponse:
     type: object
@@ -41894,10 +41868,6 @@ definitions:
                 equivalent to
 
                 a position size of one full coin.
-            long_interest:
-              type: string
-              format: uint64
-              description: The total positive balance across the exchange.
           description: Asset defines a single exchangable asset.
       pagination:
         type: object
@@ -42001,10 +41971,6 @@ definitions:
               to
 
               a position size of one full coin.
-          long_interest:
-            type: string
-            format: uint64
-            description: The total positive balance across the exchange.
         description: Asset defines a single exchangable asset.
     description: QueryAssetResponse is response type for the Asset RPC method.
   google.protobuf.Any:
@@ -42568,7 +42534,7 @@ definitions:
                 description: The Ethereum block height of the event.
         description: MsgCompleteBridge is the Msg/CompleteBridgeResponse request type.
       block_height:
-        type: string
+        type: integer
         format: int64
     description: |-
       DelayedCompleteBridgeMessage is a message type for the response of
@@ -42720,7 +42686,7 @@ definitions:
                 MsgCompleteBridge is the Msg/CompleteBridgeResponse request
                 type.
             block_height:
-              type: string
+              type: integer
               format: int64
           description: |-
             DelayedCompleteBridgeMessage is a message type for the response of
@@ -44480,7 +44446,7 @@ definitions:
                 "value": "1.212s"
               }
       block_height:
-        type: string
+        type: integer
         format: int64
         description: The block height at which the message should be executed.
     description: DelayedMessage is a message that is delayed until a certain block height.
@@ -44675,22 +44641,22 @@ definitions:
                     "value": "1.212s"
                   }
           block_height:
-            type: string
+            type: integer
             format: int64
             description: The block height at which the message should be executed.
         description: >-
           DelayedMessage is a message that is delayed until a certain block
           height.
     description: QueryGetMessageResponse is the response type for the Message RPC method.
-  dydxprotocol.delaymsg.QueryNumMessagesResponse:
+  dydxprotocol.delaymsg.QueryNextDelayedMessageIdResponse:
     type: object
     properties:
-      num_messages:
+      next_delayed_message_id:
         type: integer
         format: int64
     description: |-
-      QueryGetNumMessagesResponse is the response type for the NumMessages RPC
-      method.
+      QueryNextDelayedMessageIdResponse is the response type for the
+      NextDelayedMessageId RPC method.
   dydxprotocol.epochs.EpochInfo:
     type: object
     properties:
@@ -45115,12 +45081,6 @@ definitions:
         description: |-
           The current index determined by the cumulative all-time
           history of the funding mechanism. Starts at zero.
-      open_interest:
-        type: string
-        format: uint64
-        description: |-
-          The total open-interest of the perpetual used for
-          bookkeeping purposes. In base quantums.
     description: Perpetual represents a perpetual on the dYdX exchange.
   dydxprotocol.perpetuals.PerpetualParams:
     type: object
@@ -45214,12 +45174,6 @@ definitions:
               description: |-
                 The current index determined by the cumulative all-time
                 history of the funding mechanism. Starts at zero.
-            open_interest:
-              type: string
-              format: uint64
-              description: |-
-                The total open-interest of the perpetual used for
-                bookkeeping purposes. In base quantums.
           description: Perpetual represents a perpetual on the dYdX exchange.
       pagination:
         type: object
@@ -45298,12 +45252,6 @@ definitions:
             description: |-
               The current index determined by the cumulative all-time
               history of the funding mechanism. Starts at zero.
-          open_interest:
-            type: string
-            format: uint64
-            description: |-
-              The total open-interest of the perpetual used for
-              bookkeeping purposes. In base quantums.
         description: Perpetual represents a perpetual on the dYdX exchange.
     description: QueryPerpetualResponse is response type for the Perpetual RPC method.
   dydxprotocol.prices.MarketParam:

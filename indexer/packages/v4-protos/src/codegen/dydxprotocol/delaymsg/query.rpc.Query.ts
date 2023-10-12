@@ -1,12 +1,12 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryNumMessagesRequest, QueryNumMessagesResponse, QueryMessageRequest, QueryMessageResponse, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponse } from "./query";
+import { QueryNextDelayedMessageIdRequest, QueryNextDelayedMessageIdResponse, QueryMessageRequest, QueryMessageResponse, QueryBlockMessageIdsRequest, QueryBlockMessageIdsResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
-  /** Queries the number of DelayedMessages. */
-  numMessages(request?: QueryNumMessagesRequest): Promise<QueryNumMessagesResponse>;
+  /** Queries the next DelayedMessage's id. */
+  nextDelayedMessageId(request?: QueryNextDelayedMessageIdRequest): Promise<QueryNextDelayedMessageIdResponse>;
   /** Queries the DelayedMessage by id. */
 
   message(request: QueryMessageRequest): Promise<QueryMessageResponse>;
@@ -19,15 +19,15 @@ export class QueryClientImpl implements Query {
 
   constructor(rpc: Rpc) {
     this.rpc = rpc;
-    this.numMessages = this.numMessages.bind(this);
+    this.nextDelayedMessageId = this.nextDelayedMessageId.bind(this);
     this.message = this.message.bind(this);
     this.blockMessageIds = this.blockMessageIds.bind(this);
   }
 
-  numMessages(request: QueryNumMessagesRequest = {}): Promise<QueryNumMessagesResponse> {
-    const data = QueryNumMessagesRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.delaymsg.Query", "NumMessages", data);
-    return promise.then(data => QueryNumMessagesResponse.decode(new _m0.Reader(data)));
+  nextDelayedMessageId(request: QueryNextDelayedMessageIdRequest = {}): Promise<QueryNextDelayedMessageIdResponse> {
+    const data = QueryNextDelayedMessageIdRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.delaymsg.Query", "NextDelayedMessageId", data);
+    return promise.then(data => QueryNextDelayedMessageIdResponse.decode(new _m0.Reader(data)));
   }
 
   message(request: QueryMessageRequest): Promise<QueryMessageResponse> {
@@ -47,8 +47,8 @@ export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
   const queryService = new QueryClientImpl(rpc);
   return {
-    numMessages(request?: QueryNumMessagesRequest): Promise<QueryNumMessagesResponse> {
-      return queryService.numMessages(request);
+    nextDelayedMessageId(request?: QueryNextDelayedMessageIdRequest): Promise<QueryNextDelayedMessageIdResponse> {
+      return queryService.nextDelayedMessageId(request);
     },
 
     message(request: QueryMessageRequest): Promise<QueryMessageResponse> {
