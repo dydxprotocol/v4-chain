@@ -21,6 +21,7 @@ type ProcessPricesKeeper interface {
 
 	UpdateSmoothedPrices(
 		ctx sdk.Context,
+		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
 }
 
