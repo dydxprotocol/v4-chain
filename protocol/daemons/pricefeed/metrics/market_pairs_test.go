@@ -1,9 +1,10 @@
 package metrics_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestGetMarketPairForTelemetry(t *testing.T) {
@@ -20,7 +21,7 @@ func TestGetMarketPairForTelemetry(t *testing.T) {
 			expected: "INVALID",
 		},
 	}
-	metrics.AddMarketPairForTelemetry(1, "BTC-USD")
+	metrics.SetMarketPairForTelemetry(1, "BTC-USD")
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			actual := metrics.GetMarketPairForTelemetry(tc.marketId)

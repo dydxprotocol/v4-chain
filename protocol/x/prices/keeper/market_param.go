@@ -14,58 +14,59 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// newMarketParamStore creates a new prefix store for MarketParams.
-func (k Keeper) newMarketParamStore(ctx sdk.Context) prefix.Store {
+// getMarketParamStore returns a prefix store for MarketParams.
+func (k Keeper) getMarketParamStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketParamKeyPrefix))
 }
 
 // ModifyMarketParam modifies an existing market param in the store.
 func (k Keeper) ModifyMarketParam(
 	ctx sdk.Context,
-	marketParam types.MarketParam,
+	newMarketParam types.MarketParam,
 ) (types.MarketParam, error) {
 	// Validate input.
-	if err := marketParam.Validate(); err != nil {
+	if err := newMarketParam.Validate(); err != nil {
 		return types.MarketParam{}, err
 	}
 
 	// Get existing market param.
-	existingParam, exists := k.GetMarketParam(ctx, marketParam.Id)
+	existingParam, exists := k.GetMarketParam(ctx, newMarketParam.Id)
 	if !exists {
 		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrMarketParamDoesNotExist,
-			lib.UintToString(marketParam.Id),
+			lib.UintToString(newMarketParam.Id),
 		)
 	}
 
 	// Validate update is permitted.
-	if marketParam.Exponent != existingParam.Exponent {
+	if newMarketParam.Exponent != existingParam.Exponent {
 		return types.MarketParam{},
-			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(marketParam.Id))
+			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(newMarketParam.Id))
 	}
 
 	// Store the modified market param.
-	marketParamStore := k.newMarketParamStore(ctx)
-	b := k.cdc.MustMarshal(&marketParam)
-	marketParamStore.Set(lib.Uint32ToKey(marketParam.Id), b)
+	marketParamStore := k.getMarketParamStore(ctx)
+	b := k.cdc.MustMarshal(&newMarketParam)
+	marketParamStore.Set(lib.Uint32ToKey(newMarketParam.Id), b)
 
+	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewMarketModifyEvent(
-				marketParam.Id,
-				marketParam.Pair,
-				marketParam.MinPriceChangePpm,
+				newMarketParam.Id,
+				newMarketParam.Pair,
+				newMarketParam.MinPriceChangePpm,
 			),
 		),
 	)
 
 	// Update the in-memory market pair map for labelling metrics.
-	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+	metrics.SetMarketPairForTelemetry(newMarketParam.Id, newMarketParam.Pair)
 
-	return marketParam, nil
+	return newMarketParam, nil
 }
 
 // GetMarketParam returns a market param from its id.
@@ -76,7 +77,7 @@ func (k Keeper) GetMarketParam(
 	market types.MarketParam,
 	exists bool,
 ) {
-	marketParamStore := k.newMarketParamStore(ctx)
+	marketParamStore := k.getMarketParamStore(ctx)
 	b := marketParamStore.Get(lib.Uint32ToKey(id))
 	if b == nil {
 		return types.MarketParam{}, false
@@ -88,9 +89,9 @@ func (k Keeper) GetMarketParam(
 
 // GetAllMarketParams returns all market params.
 func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
-	marketParamStore := k.newMarketParamStore(ctx)
+	marketParamStore := k.getMarketParamStore(ctx)
 
-	marketParams := make([]types.MarketParam, 0)
+	allMarketParams := make([]types.MarketParam, 0)
 
 	iterator := marketParamStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -98,13 +99,13 @@ func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
 	for ; iterator.Valid(); iterator.Next() {
 		marketParam := types.MarketParam{}
 		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
-		marketParams = append(marketParams, marketParam)
+		allMarketParams = append(allMarketParams, marketParam)
 	}
 
 	// Sort the market params to return them in ascending order based on Id.
-	sort.Slice(marketParams, func(i, j int) bool {
-		return marketParams[i].Id < marketParams[j].Id
+	sort.Slice(allMarketParams, func(i, j int) bool {
+		return allMarketParams[i].Id < allMarketParams[j].Id
 	})
 
-	return marketParams
+	return allMarketParams
 }

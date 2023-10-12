@@ -1,8 +1,9 @@
 package metrics
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"sync"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 )
 
 var (
@@ -22,9 +23,9 @@ var (
 	lock sync.Mutex
 )
 
-// AddMarketPairForTelemetry adds a market pair to an in-memory map of marketId to marketPair strings used
+// SetMarketPairForTelemetry sets a market pair to an in-memory map of marketId to marketPair strings used
 // for labelling metrics. This method is synchronized.
-func AddMarketPairForTelemetry(marketId types.MarketId, marketPair string) {
+func SetMarketPairForTelemetry(marketId types.MarketId, marketPair string) {
 	lock.Lock()
 	defer lock.Unlock()
 	marketToPair[marketId] = marketPair
