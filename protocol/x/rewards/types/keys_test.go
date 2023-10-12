@@ -10,7 +10,6 @@ import (
 func TestModuleKeys(t *testing.T) {
 	require.Equal(t, "rewards", types.ModuleName)
 	require.Equal(t, "rewards", types.StoreKey)
-	require.Equal(t, "rewards", types.RouterKey)
 	require.Equal(t, "tmp_rewards", types.TransientStoreKey)
 }
 
