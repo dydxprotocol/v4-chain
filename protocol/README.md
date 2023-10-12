@@ -16,7 +16,7 @@ TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V
 
 ### Installation
 
-1. Install Go `1.19` [here](https://go.dev/dl/).
+1. Install Go `1.21` [here](https://go.dev/dl/).
 2. Install Docker Desktop [here](https://www.docker.com/products/docker-desktop/)
 3. Run `make install` to install project dependencies.
 
