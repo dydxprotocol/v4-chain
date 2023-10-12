@@ -188,8 +188,7 @@ const GenesisState = `{
         "durations": [
           "300s",
           "1800s"
-        ],
-        "clock_drift_grace_period_duration": "5s"
+        ]
       }
     },
     "bridge": {

@@ -352,13 +352,6 @@ paths:
                       sorted from
 
                       shortest to longest and must all be positive.
-                  clock_drift_grace_period_duration:
-                    type: string
-                    description: >-
-                      Grace-period duration when validating `MsgIsDelayedBlock`
-                      messages. Must be
-
-                      positive.
                 description: DowntimeParams defines the parameters for downtime.
             description: >-
               QueryDowntimeParamsResponse is a response type for the
@@ -42416,13 +42409,6 @@ definitions:
         description: |-
           Durations tracked for downtime. The durations must be sorted from
           shortest to longest and must all be positive.
-      clock_drift_grace_period_duration:
-        type: string
-        description: >-
-          Grace-period duration when validating `MsgIsDelayedBlock` messages.
-          Must be
-
-          positive.
     description: DowntimeParams defines the parameters for downtime.
   dydxprotocol.blocktime.QueryAllDowntimeInfoResponse:
     type: object
@@ -42474,13 +42460,6 @@ definitions:
             description: |-
               Durations tracked for downtime. The durations must be sorted from
               shortest to longest and must all be positive.
-          clock_drift_grace_period_duration:
-            type: string
-            description: >-
-              Grace-period duration when validating `MsgIsDelayedBlock`
-              messages. Must be
-
-              positive.
         description: DowntimeParams defines the parameters for downtime.
     description: |-
       QueryDowntimeParamsResponse is a response type for the DowntimeParams

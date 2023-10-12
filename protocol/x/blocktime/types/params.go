@@ -14,8 +14,5 @@ func (m *DowntimeParams) Validate() error {
 			}
 		}
 	}
-	if m.ClockDriftGracePeriodDuration <= 0 {
-		return ErrNonpositiveDuration
-	}
 	return nil
 }

@@ -1,12 +1,13 @@
 package types_test
 
 import (
+	"testing"
+	time "time"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 var (
@@ -28,9 +29,7 @@ func TestMsgUpdateDowntimeParams_ValidateBasic(t *testing.T) {
 		"Success": {
 			msg: types.MsgUpdateDowntimeParams{
 				Authority: validAuthority,
-				Params: types.DowntimeParams{
-					ClockDriftGracePeriodDuration: 1 * time.Second,
-				},
+				Params:    types.DowntimeParams{},
 			},
 		},
 		"Failure: Invalid authority": {
@@ -43,10 +42,13 @@ func TestMsgUpdateDowntimeParams_ValidateBasic(t *testing.T) {
 			msg: types.MsgUpdateDowntimeParams{
 				Authority: validAuthority,
 				Params: types.DowntimeParams{
-					ClockDriftGracePeriodDuration: 0, // invalid
+					Durations: []time.Duration{
+						5 * time.Second,
+						1 * time.Second,
+					},
 				},
 			},
-			expectedErr: types.ErrNonpositiveDuration,
+			expectedErr: types.ErrUnorderedDurations,
 		},
 	}
 	for name, tc := range tests {
@@ -59,16 +61,4 @@ func TestMsgUpdateDowntimeParams_ValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgIsDelayedBlock_GetSigners(t *testing.T) {
-	msg := types.MsgIsDelayedBlock{
-		DelayDuration: 5 * time.Minute,
-	}
-	require.Equal(t, []sdk.AccAddress{}, msg.GetSigners())
-}
-
-func TestMsgIsDelayedBlock_ValidateBasic(t *testing.T) {
-	msg := types.MsgIsDelayedBlock{}
-	require.NoError(t, msg.ValidateBasic())
 }
