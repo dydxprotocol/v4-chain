@@ -4,13 +4,13 @@ import { DeepPartial, Long, toTimestamp, fromTimestamp } from "../../helpers";
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
 export interface BlockStats {
-  /** The fills that occured on this block. */
+  /** The fills that occurred on this block. */
   fills: BlockStats_Fill[];
 }
 /** BlockStats is used to store stats transiently within the scope of a block. */
 
 export interface BlockStatsSDKType {
-  /** The fills that occured on this block. */
+  /** The fills that occurred on this block. */
   fills: BlockStats_FillSDKType[];
 }
 /** Fill records data about a fill on this block. */
