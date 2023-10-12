@@ -78,7 +78,7 @@ func (k Keeper) GetAcknowledgeBridges(
 // AcknowledgeBridges acknowledges a list of bridge events and returns an error if any of following
 // - bridging is disabled.
 // - fails to delay a `MsgCompleteBridge` for any bridge event.
-// - fails to upate `AcknowledgedEventInfo` in state.
+// - fails to update `AcknowledgedEventInfo` in state.
 func (k Keeper) AcknowledgeBridges(
 	ctx sdk.Context,
 	bridgeEvents []types.BridgeEvent,

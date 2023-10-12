@@ -100,7 +100,7 @@ func TestAcknowledgeBridges(t *testing.T) {
 				// Verify that error is as expected.
 				require.ErrorContains(t, err, tc.expectedError)
 
-				// Verify that AEI was not updated.
+				// Verify that AcknowledgedEventInfo was not updated.
 				require.Equal(t, initialAei, bridgeKeeper.GetAcknowledgedEventInfo(ctx))
 
 				if tc.bridgingDisabled {
@@ -111,7 +111,7 @@ func TestAcknowledgeBridges(t *testing.T) {
 				// Verify that AcknowledgeBridges returns no error.
 				require.NoError(t, err)
 
-				// Assert expected AcknowledgedEventInfo.
+				// Verify that AcknowledgedEventInfo is updated in state.
 				aei := bridgeKeeper.GetAcknowledgedEventInfo(ctx)
 				require.Equal(t, tc.expectedAEI, aei)
 
