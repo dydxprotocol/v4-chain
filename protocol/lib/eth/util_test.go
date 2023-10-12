@@ -17,8 +17,8 @@ import (
 
 func TestGetBridgeEventAbi(t *testing.T) {
 	results := make([]*abi.ABI, 0)
-	mu := &sync.Mutex{}
-	wg := new(sync.WaitGroup)
+	mu := sync.Mutex{}
+	var wg sync.WaitGroup
 
 	// Populate the pointers.
 	for i := 0; i < 200; i++ {

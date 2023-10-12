@@ -23,10 +23,10 @@ const (
 
 // ABI Singleton and mutex.
 var bridgeEventAbi *ethabi.ABI
-var once sync.Once
 
 // getBridgeEventAbi returns the ABI (application binary interface) for the Bridge contract.
 func GetBridgeEventAbi() *ethabi.ABI {
+	sync.OnceValue()
 	// Initialize the singleton in a thread-safe way.
 	once.Do(func() {
 		bridgeAbi, err := ethabi.JSON(strings.NewReader(constants.BridgeEventABI))
