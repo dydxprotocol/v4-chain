@@ -4,14 +4,12 @@ import (
 	"fmt"
 	"math/big"
 
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.

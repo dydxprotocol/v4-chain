@@ -6,12 +6,8 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-
-	sdkmath "cosmossdk.io/math"
-
 	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
@@ -19,7 +15,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
