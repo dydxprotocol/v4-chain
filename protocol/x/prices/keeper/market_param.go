@@ -22,32 +22,32 @@ func (k Keeper) getMarketParamStore(ctx sdk.Context) prefix.Store {
 // ModifyMarketParam modifies an existing market param in the store.
 func (k Keeper) ModifyMarketParam(
 	ctx sdk.Context,
-	newMarketParam types.MarketParam,
+	updatedMarketParam types.MarketParam,
 ) (types.MarketParam, error) {
 	// Validate input.
-	if err := newMarketParam.Validate(); err != nil {
+	if err := updatedMarketParam.Validate(); err != nil {
 		return types.MarketParam{}, err
 	}
 
 	// Get existing market param.
-	existingParam, exists := k.GetMarketParam(ctx, newMarketParam.Id)
+	existingParam, exists := k.GetMarketParam(ctx, updatedMarketParam.Id)
 	if !exists {
 		return types.MarketParam{}, errorsmod.Wrap(
 			types.ErrMarketParamDoesNotExist,
-			lib.UintToString(newMarketParam.Id),
+			lib.UintToString(updatedMarketParam.Id),
 		)
 	}
 
 	// Validate update is permitted.
-	if newMarketParam.Exponent != existingParam.Exponent {
+	if updatedMarketParam.Exponent != existingParam.Exponent {
 		return types.MarketParam{},
-			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(newMarketParam.Id))
+			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(updatedMarketParam.Id))
 	}
 
 	// Store the modified market param.
 	marketParamStore := k.getMarketParamStore(ctx)
-	b := k.cdc.MustMarshal(&newMarketParam)
-	marketParamStore.Set(lib.Uint32ToKey(newMarketParam.Id), b)
+	b := k.cdc.MustMarshal(&updatedMarketParam)
+	marketParamStore.Set(lib.Uint32ToKey(updatedMarketParam.Id), b)
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -56,17 +56,17 @@ func (k Keeper) ModifyMarketParam(
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewMarketModifyEvent(
-				newMarketParam.Id,
-				newMarketParam.Pair,
-				newMarketParam.MinPriceChangePpm,
+				updatedMarketParam.Id,
+				updatedMarketParam.Pair,
+				updatedMarketParam.MinPriceChangePpm,
 			),
 		),
 	)
 
 	// Update the in-memory market pair map for labelling metrics.
-	metrics.SetMarketPairForTelemetry(newMarketParam.Id, newMarketParam.Pair)
+	metrics.SetMarketPairForTelemetry(updatedMarketParam.Id, updatedMarketParam.Pair)
 
-	return newMarketParam, nil
+	return updatedMarketParam, nil
 }
 
 // GetMarketParam returns a market param from its id.
