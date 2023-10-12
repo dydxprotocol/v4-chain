@@ -24,7 +24,6 @@ TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V
 
 * `make test` runs unit tests.
 * `make lint` lints source code (`make lint-fix` to also fix).
-* `make proto-all` formats, lints, and generates Go from proto files.
 * `make build` builds source.
 * `make mock-gen` generates mocks for files listed in [mocks/Makefile](https://github.com/dydxprotocol/v4/tree/main/mocks/Makefile). More info about mocking [here](https://github.com/dydxprotocol/v4/tree/main/mocks/README.md).
 
