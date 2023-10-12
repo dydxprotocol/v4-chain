@@ -742,12 +742,17 @@ func (k Keeper) GetNetNotional(
 	bigNetNotionalQuoteQuantums *big.Int,
 	err error,
 ) {
-	if rand.Float64() < 0.01 {
-		defer telemetry.ModuleMeasureSince(
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
 			types.ModuleName,
+			[]string{metrics.GetNetNotional, metrics.Latency},
 			time.Now(),
-			metrics.GetNetNotional,
-			metrics.Latency,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
 		)
 	}
 
@@ -844,12 +849,17 @@ func (k Keeper) GetMarginRequirements(
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 	err error,
 ) {
-	if rand.Float64() < 0.01 {
-		defer telemetry.ModuleMeasureSince(
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
 			types.ModuleName,
+			[]string{metrics.GetMarginRequirements, metrics.Latency},
 			time.Now(),
-			metrics.GetMarginRequirements,
-			metrics.Latency,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
 		)
 	}
 
@@ -1098,12 +1108,17 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (types.Perpetual, pricestypes.MarketPrice, error) {
-	if rand.Float64() < 0.01 {
-		defer telemetry.ModuleMeasureSince(
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
 			types.ModuleName,
+			[]string{metrics.GetPerpetualAndMarketPrice, metrics.Latency},
 			time.Now(),
-			metrics.GetPerpetualAndMarketPrice,
-			metrics.Latency,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
 		)
 	}
 

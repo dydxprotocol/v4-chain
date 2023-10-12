@@ -8,16 +8,14 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -46,12 +44,17 @@ func (k Keeper) GetSubaccount(
 	ctx sdk.Context,
 	id types.SubaccountId,
 ) (val types.Subaccount) {
-	if rand.Float64() < 0.01 {
-		defer telemetry.ModuleMeasureSince(
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
 			types.ModuleName,
+			[]string{metrics.GetSubaccount, metrics.Latency},
 			time.Now(),
-			metrics.GetSubaccount,
-			metrics.Latency,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
 		)
 	}
 

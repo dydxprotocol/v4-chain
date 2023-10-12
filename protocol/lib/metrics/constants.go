@@ -28,6 +28,7 @@ const (
 	Reason           = "reason"
 	Received         = "received"
 	Rejected         = "rejected"
+	SampleRate       = "sample_rate"
 	SequenceNumber   = "sequence_number"
 	Success          = "success"
 	Valid            = "valid"
@@ -360,3 +361,5 @@ const (
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
 )
+
+const LatencyMetricSampleRate = 0.01
