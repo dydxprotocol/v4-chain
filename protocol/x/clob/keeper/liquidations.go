@@ -239,6 +239,18 @@ func (k Keeper) PlacePerpetualLiquidation(
 	} else {
 		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
 	}
+
+	// Record the percent filled of the liquidation as a distribution.
+	percentFilled, _ := new(big.Float).Quo(
+		new(big.Float).SetUint64(orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64()),
+		new(big.Float).SetUint64(liquidationOrder.GetBaseQuantums().ToUint64()),
+	).Float32()
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Liquidations, metrics.PercentFilled, metrics.Distribution},
+		percentFilled,
+		labels,
+	)
+
 	if orderSizeOptimisticallyFilledFromMatchingQuantums == 0 {
 		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.Unfilled))
 	} else if orderSizeOptimisticallyFilledFromMatchingQuantums == liquidationOrder.GetBaseQuantums() {
@@ -261,6 +273,11 @@ func (k Keeper) PlacePerpetualLiquidation(
 	); err == nil {
 		telemetry.IncrCounterWithLabels(
 			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
+			labels,
+		)
+		gometrics.AddSampleWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums, metrics.Distribution},
 			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
 			labels,
 		)

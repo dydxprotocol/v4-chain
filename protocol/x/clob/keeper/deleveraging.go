@@ -76,7 +76,23 @@ func (k Keeper) MaybeDeleverageSubaccount(
 			metrics.GetMetricValueFromBigInt(quoteQuantums),
 			labels,
 		)
+		gometrics.AddSampleWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums, metrics.Distribution},
+			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			labels,
+		)
 	}
+
+	// Record the percent filled of the deleveraging operation as a distribution.
+	percentFilled, _ := new(big.Float).Quo(
+		new(big.Float).SetInt(new(big.Int).Abs(quantumsDeleveraged)),
+		new(big.Float).SetInt(new(big.Int).Abs(deltaQuantums)),
+	).Float32()
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Deleveraging, metrics.PercentFilled, metrics.Distribution},
+		percentFilled,
+		labels,
+	)
 
 	return quantumsDeleveraged, err
 }
