@@ -2,6 +2,10 @@ package keeper
 
 import (
 	"context"
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -27,5 +31,12 @@ func (k msgServer) UpdateMarketParam(
 		return nil, err
 	}
 
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.UpdateMarketParam, metrics.Success},
+		1,
+		[]gometrics.Label{
+			pricefeedmetrics.GetLabelForMarketId(msg.MarketParam.Id),
+		},
+	)
 	return &types.MsgUpdateMarketParamResponse{}, nil
 }
