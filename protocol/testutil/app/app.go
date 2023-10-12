@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -578,6 +579,17 @@ func (tApp *TestApp) GetHalted() bool {
 	return tApp.halted
 }
 
+// newTestingLogger returns a logger that will write to stdout if testing is verbose. This method replaces
+// cometbft's log.TestingLogger, which re-uses the same logger for all tests, which can cause race test false positives
+// when accessed by concurrent go routines in the same test.
+func newTestingLogger() log.Logger {
+	if testing.Verbose() {
+		return log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	} else {
+		return log.NewNopLogger()
+	}
+}
+
 // CheckTx adds the transaction to a test specific "mempool" that will be used to deliver the transaction during
 // Prepare/Process proposal. Note that this must be invoked over TestApp.App.CheckTx as the transaction will not
 // be added to the "mempool" causing the transaction to not be supplied during the Prepare/Process proposal phase.
@@ -588,7 +600,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	res := tApp.App.CheckTx(req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
-	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, log.TestingLogger()) {
+	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()
