@@ -26,11 +26,10 @@ import (
 
 func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
-		msg           *types.MsgUpdateClobPair
-		setup         func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager)
-		expectedResp  *types.MsgUpdateClobPairResponse
-		expectedErr   error
-		expectedPanic string
+		msg          *types.MsgUpdateClobPair
+		setup        func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager)
+		expectedResp *types.MsgUpdateClobPairResponse
+		expectedErr  error
 	}{
 		"Success": {
 			msg: &types.MsgUpdateClobPair{
@@ -119,7 +118,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
+			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
 		"Error: invalid authority": {
 			msg: &types.MsgUpdateClobPair{
@@ -274,25 +273,18 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(k)
 			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
-			if tc.expectedPanic != "" {
-				require.PanicsWithValue(t, tc.expectedPanic, func() {
-					_, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
-					require.NoError(t, err)
-				})
+			resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
+			require.Equal(t, tc.expectedResp, resp)
+
+			mockIndexerEventManager.AssertExpectations(t)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
 			} else {
-				resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
-				require.Equal(t, tc.expectedResp, resp)
-
-				mockIndexerEventManager.AssertExpectations(t)
-
-				if tc.expectedErr != nil {
-					require.ErrorIs(t, err, tc.expectedErr)
-				} else {
-					require.NoError(t, err)
-					clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
-					require.True(t, found)
-					require.Equal(t, clobPair, tc.msg.ClobPair)
-				}
+				require.NoError(t, err)
+				clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
+				require.True(t, found)
+				require.Equal(t, clobPair, tc.msg.ClobPair)
 			}
 		})
 	}

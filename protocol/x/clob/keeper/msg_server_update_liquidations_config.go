@@ -7,8 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -18,13 +16,6 @@ func (k msgServer) UpdateLiquidationsConfig(
 	msg *types.MsgUpdateLiquidationsConfig,
 ) (resp *types.MsgUpdateLiquidationsConfigResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	defer func() {
-		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.UpdateLiquidationsConfig, metrics.DeliverTx)
-		if err != nil {
-			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateLiquidationsConfig", msg)
-		}
-	}()
 
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
