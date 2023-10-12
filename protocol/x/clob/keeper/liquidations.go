@@ -234,7 +234,19 @@ func (k Keeper) PlacePerpetualLiquidation(
 	telemetry.IncrCounterWithLabels(
 		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Count},
 		1,
-		labels,
+		append(
+			[]gometrics.Label{
+				metrics.GetLabelForBoolValue(
+					metrics.Unfilled,
+					orderSizeOptimisticallyFilledFromMatchingQuantums == 0,
+				),
+				metrics.GetLabelForBoolValue(
+					metrics.FullyFilled,
+					orderSizeOptimisticallyFilledFromMatchingQuantums == liquidationOrder.GetBaseQuantums(),
+				),
+			},
+			labels...,
+		),
 	)
 
 	// Stat the volume of liquidation orders placed.
@@ -246,14 +258,6 @@ func (k Keeper) PlacePerpetualLiquidation(
 		telemetry.IncrCounterWithLabels(
 			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums},
 			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
-			labels,
-		)
-	}
-
-	if orderSizeOptimisticallyFilledFromMatchingQuantums == 0 {
-		telemetry.IncrCounterWithLabels(
-			[]string{metrics.Liquidations, metrics.UnfilledLiquidationOrders},
-			1,
 			labels,
 		)
 	}

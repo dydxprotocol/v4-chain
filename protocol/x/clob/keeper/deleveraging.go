@@ -50,6 +50,8 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 		metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
@@ -57,7 +59,16 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.DeleverageSubaccount},
 		1,
-		labels,
+		append(
+			[]gometrics.Label{
+				metrics.GetLabelForBoolValue(metrics.Unfilled, quantumsDeleveraged.Sign() == 0),
+				metrics.GetLabelForBoolValue(
+					metrics.FullyFilled,
+					quantumsDeleveraged.CmpAbs(deltaQuantums) == 0,
+				),
+			},
+			labels...,
+		),
 	)
 
 	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
@@ -72,7 +83,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		)
 	}
 
-	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	return quantumsDeleveraged, err
 }
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
@@ -235,6 +246,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				)
 			} else {
 				// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
+				// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 				offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
 				k.Logger(ctx).Debug(
@@ -278,26 +290,6 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
 		labels,
 	)
-
-	if deltaQuantumsRemaining.Sign() == 0 {
-		// Deleveraging was successful.
-		telemetry.IncrCounter(1, types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.Success, metrics.Count)
-	} else {
-		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
-		telemetry.IncrCounter(
-			1,
-			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
-		)
-		k.Logger(ctx).Debug(
-			"OffsetSubaccountPerpetualPosition: Not enough positions to fully offset position",
-			"subaccount", liquidatedSubaccountId,
-			"perpetual", perpetualId,
-			"deltaQuantumsTotal", deltaQuantumsTotal.String(),
-			"deltaQuantumsRemaining", deltaQuantumsRemaining.String(),
-		)
-		// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
-	}
-
 	return fills, deltaQuantumsRemaining
 }
 
