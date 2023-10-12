@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ibc"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,7 +16,7 @@ func TestDenomTraceToIBCDenom_Success(t *testing.T) {
 		// Check `transfer/channel-0/uusdc` results in expected ibc hash.
 		{
 			denomTrace: "transfer/channel-0/uusdc",
-			expected:   "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+			expected:   assettypes.UusdcDenom,
 		},
 		// The following test cases and results are obtained from the private testnet.
 		{
