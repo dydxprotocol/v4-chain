@@ -33,7 +33,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		authorities: lib.SliceToSet(authorities),
+		authorities: lib.UniqueSliceToSet(authorities),
 		router:      router,
 	}
 }
