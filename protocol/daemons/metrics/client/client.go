@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"runtime/debug"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -14,17 +13,17 @@ import (
 
 var (
 	// 30 minutes
-	METRICS_DAEMON_LOOP_DELAY_MS uint32 = 30 * 60 * 1000
+	METRICS_DAEMON_LOOP_DELAY_MS       uint32 = 30 * 60 * 1000
+	METRICS_DAEMON_LOOP_DELAY_DURATION        = time.Duration(METRICS_DAEMON_LOOP_DELAY_MS)
 )
 
 // Start begins a job that periodically:
 // 1) Emits metrics about app version and git commit.
-// This job should never panic or block the application from running.
 func Start(
 	ctx context.Context,
 	logger log.Logger,
 ) {
-	ticker := time.NewTicker(time.Duration(METRICS_DAEMON_LOOP_DELAY_MS) * time.Millisecond)
+	ticker := time.NewTicker(time.Duration(METRICS_DAEMON_LOOP_DELAY_DURATION * time.Millisecond))
 	defer ticker.Stop()
 	for ; true; <-ticker.C {
 		RunMetricsDaemonTaskLoop(
@@ -39,18 +38,6 @@ func RunMetricsDaemonTaskLoop(
 	ctx context.Context,
 	logger log.Logger,
 ) {
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error(
-				"panic when reporting metrics from metrics daemon",
-				"panic",
-				r,
-				"stack",
-				string(debug.Stack()),
-			)
-		}
-	}()
-
 	// Report out app version and git commit.
 	version := version.NewInfo()
 	telemetry.SetGaugeWithLabels(

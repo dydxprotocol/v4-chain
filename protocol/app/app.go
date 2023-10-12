@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -17,7 +18,6 @@ import (
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -45,7 +45,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -649,13 +648,24 @@ func New(
 		}
 
 		// Start the Metrics Daemon.
-		// The metrics daemon is purely used for observability.
+		// The metrics daemon is purely used for observability. It should never bring the app down.
+		// TODO(CLOB-960) Don't start this goroutine if there's a false flag
 		go func() {
-			// Don't panic if metrics daemon has delay. Use maximum value.
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error(
+						"Metrics Daemon exited unexpectedly with a panic.",
+						"panic",
+						r,
+						"stack",
+						string(debug.Stack()),
+					)
+				}
+			}()
+			// Don't panic if metrics daemon loops are delayed. Use maximum value.
 			app.Server.ExpectMetricsDaemon(
 				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
 			)
-			// TODO prometheus flag enable
 			metricsclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
@@ -1187,14 +1197,6 @@ func New(
 
 	// Report out app version and git commit. This will be run when validators restart.
 	version := version.NewInfo()
-	telemetry.SetGaugeWithLabels(
-		[]string{metrics.AppInfo},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
-			metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-		},
-	)
 	app.Logger().Info(
 		"App instantiated",
 		metrics.AppVersion,
