@@ -26,7 +26,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	// `/block_results` endpoint.
 	var events sdk.Events
 
-	// Execute all delayed messages scheduled for this block and delete them from the store.
+	// Execute all delayed messages scheduled for this block.
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
@@ -40,6 +40,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			continue
 		}
 
+		// Execute the message in a cached context.
 		if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
 			handler := k.Router().Handler(msg)
 			res, err := handler(ctx, msg)
@@ -57,6 +58,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	// Propagate events emitted in message handlers to current context.
 	ctx.EventManager().EmitEvents(events)
 
+	// Delete executed messages.
 	for _, id := range blockMessageIds.Ids {
 		if err := k.DeleteMessage(ctx, id); err != nil {
 			k.Logger(ctx).Error("failed to delete delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)

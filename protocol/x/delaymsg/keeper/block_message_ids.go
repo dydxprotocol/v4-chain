@@ -8,12 +8,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
-// newBlockIdStore creates a new prefix store for BlockMessageIds.
+// newBlockMessageIdsStore creates a new prefix store for BlockMessageIds.
 func (k Keeper) newBlockMessageIdsStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BlockMessageIdsPrefix))
 }
 
-// GetBlockMessageIds gets the ids of delayed messages to execute at a given block.
+// GetBlockMessageIds gets the ids of delayed messages to execute at a given block height.
+// `found` is false is there is no delayed message for the given block height.
 func (k Keeper) GetBlockMessageIds(
 	ctx sdk.Context,
 	blockHeight uint32,
@@ -33,9 +34,9 @@ func (k Keeper) GetBlockMessageIds(
 	return blockMessageIds, true
 }
 
-// addMessageIdToBlock adds a message id to the list of message ids for a block. This method should only
-// be called from DelayMessageByBlocks whenever a new message is added. When this restriction is followed and the id is
-// only called during DelayedMessage creation, the message ids for a block will always be in ascending order.
+// addMessageIdToBlock adds a message id to the list of message ids for a block height. This method should only
+// be called from DelayMessageByBlocks whenever a new message is added. When this restriction is followed, the
+// message ids for a block height will always be in ascending order.
 func (k Keeper) addMessageIdToBlock(
 	ctx sdk.Context,
 	id uint32,
