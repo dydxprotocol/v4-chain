@@ -45,7 +45,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 # Runner
 # --------------------------------------------------------
 
-FROM golang@sha256:${GOLANG_1_19_ALPINE_DIGEST}
+FROM golang@sha256:${GOLANG_1_21_ALPINE_DIGEST}
 
 RUN apk add --no-cache bash
 
