@@ -154,6 +154,12 @@ func (k Keeper) MaybeGetLiquidationOrder(
 		return nil, types.ErrSubaccountNotLiquidatable
 	}
 
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.MaybeGetLiquidationOrder,
+	)
+
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
 	perpetualId, baseQuantumsBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
 	if err != nil {
