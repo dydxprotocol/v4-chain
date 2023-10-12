@@ -56,20 +56,15 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 		metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
 	}
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.DeleverageSubaccount},
-		1,
-		append(
-			[]gometrics.Label{
-				metrics.GetLabelForBoolValue(metrics.Unfilled, quantumsDeleveraged.Sign() == 0),
-				metrics.GetLabelForBoolValue(
-					metrics.FullyFilled,
-					quantumsDeleveraged.CmpAbs(deltaQuantums) == 0,
-				),
-			},
-			labels...,
-		),
-	)
+	if quantumsDeleveraged.Sign() == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.Unfilled))
+	} else if quantumsDeleveraged.CmpAbs(deltaQuantums) == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.FullyFilled))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.PartiallyFilled))
+	}
+	// Record the status of the deleveraging operation.
+	telemetry.IncrCounterWithLabels([]string{types.ModuleName, metrics.DeleverageSubaccount}, 1, labels)
 
 	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
@@ -404,7 +399,7 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Stat quantums deleveraged in quote quantums.
-	if delevergedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
+	if deleveragedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
 		ctx,
 		perpetualId,
 		new(big.Int).Abs(deltaQuantums),
@@ -416,7 +411,7 @@ func (k Keeper) ProcessDeleveraging(
 		}
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
-			metrics.GetMetricValueFromBigInt(delevergedQuoteQuantums),
+			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
 			labels,
 		)
 	}

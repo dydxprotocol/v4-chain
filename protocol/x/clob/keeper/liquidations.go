@@ -99,7 +99,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		if err != nil {
 			k.Logger(ctx).Error(
 				"Failed to liquidate subaccount",
-				"liquidationOrder", liquidationOrder,
+				"liquidationOrder", *liquidationOrder,
 				"error", err,
 			)
 			return err
@@ -157,7 +157,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
-		metrics.MaybeGetLiquidationOrder,
+		metrics.ConstructLiquidationOrder,
 	)
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
@@ -233,26 +233,24 @@ func (k Keeper) PlacePerpetualLiquidation(
 
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-		metrics.GetLabelForBoolValue(metrics.IsBuy, liquidationOrder.IsBuy()),
 	}
-
+	if liquidationOrder.IsBuy() {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
+	}
+	if orderSizeOptimisticallyFilledFromMatchingQuantums == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.Unfilled))
+	} else if orderSizeOptimisticallyFilledFromMatchingQuantums == liquidationOrder.GetBaseQuantums() {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.FullyFilled))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.PartiallyFilled))
+	}
 	// Stat the number of liquidation orders placed.
 	telemetry.IncrCounterWithLabels(
 		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Count},
 		1,
-		append(
-			[]gometrics.Label{
-				metrics.GetLabelForBoolValue(
-					metrics.Unfilled,
-					orderSizeOptimisticallyFilledFromMatchingQuantums == 0,
-				),
-				metrics.GetLabelForBoolValue(
-					metrics.FullyFilled,
-					orderSizeOptimisticallyFilledFromMatchingQuantums == liquidationOrder.GetBaseQuantums(),
-				),
-			},
-			labels...,
-		),
+		labels,
 	)
 
 	// Stat the volume of liquidation orders placed.

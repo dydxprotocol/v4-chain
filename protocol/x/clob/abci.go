@@ -3,6 +3,7 @@ package clob
 import (
 	"fmt"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
@@ -105,10 +106,11 @@ func EndBlocker(
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
 
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
+	// Emit relevant metrics at the end of every block.
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.InsuranceFundBalance},
 		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
-		metrics.InsuranceFundBalance,
+		[]gometrics.Label{},
 	)
 }
 

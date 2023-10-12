@@ -249,8 +249,12 @@ func (k Keeper) ProcessSingleMatch(
 
 		labels := []gometrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-			metrics.GetLabelForBoolValue(metrics.IsBuy, matchWithOrders.TakerOrder.IsBuy()),
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+		}
+		if matchWithOrders.TakerOrder.IsBuy() {
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
+		} else {
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
 		}
 
 		// Stat quote quantums liquidated.
