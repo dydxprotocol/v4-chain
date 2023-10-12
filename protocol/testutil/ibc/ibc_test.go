@@ -12,6 +12,7 @@ func TestDenomTraceToIBCDenom_Success(t *testing.T) {
 		denomTrace string
 		expected   string
 	}{
+		// Check `transfer/channel-0/uusdc` results in expected ibc hash.
 		{
 			denomTrace: "transfer/channel-0/uusdc",
 			expected:   "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
