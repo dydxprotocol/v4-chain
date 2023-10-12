@@ -56,7 +56,7 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "invalid params: negative duration",
+			name: "invalid params: unordered durations",
 			input: &types.MsgUpdateDowntimeParams{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params: types.DowntimeParams{
