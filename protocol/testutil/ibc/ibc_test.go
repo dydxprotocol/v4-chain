@@ -1,9 +1,9 @@
-package lib_test
+package ibc_test
 
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/ibc"
 	"github.com/stretchr/testify/require"
 )
 
@@ -37,7 +37,7 @@ func TestDenomTraceToIBCDenom_Success(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.denomTrace, func(t *testing.T) {
-			result, err := lib.DenomTraceToIBCDenom(tc.denomTrace)
+			result, err := ibc.DenomTraceToIBCDenom(tc.denomTrace)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, result)
 		})
@@ -65,7 +65,7 @@ func TestDenomTraceToIBCDenom_Failure(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, err := lib.DenomTraceToIBCDenom(tc.denomTrace)
+			_, err := ibc.DenomTraceToIBCDenom(tc.denomTrace)
 			require.ErrorContains(t, err, tc.expectedErr)
 		})
 	}
