@@ -10,8 +10,6 @@ import (
 func TestModuleKeys(t *testing.T) {
 	require.Equal(t, "vest", types.ModuleName)
 	require.Equal(t, "vest", types.StoreKey)
-	require.Equal(t, "vest", types.RouterKey)
-	require.Equal(t, "mem_vest", types.MemStoreKey)
 }
 
 func TestStateKeys(t *testing.T) {
