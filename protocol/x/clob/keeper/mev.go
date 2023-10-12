@@ -520,9 +520,12 @@ func (k Keeper) GetMEVDataFromOperations(
 						return nil, err
 					}
 
+					if !insuranceFundDelta.IsInt64() {
+						panic(fmt.Sprintf("insurance fund delta (%v) is not an int64", insuranceFundDelta.String()))
+					}
+
 					mevLiquidationMatch := types.MEVLiquidationMatch{
-						LiquidatedSubaccountId: matchLiquidation.Liquidated,
-						// TODO: Panic if insurance fund delta is not an int64.
+						LiquidatedSubaccountId:          matchLiquidation.Liquidated,
 						InsuranceFundDeltaQuoteQuantums: insuranceFundDelta.Int64(),
 
 						MakerOrderSubaccountId: makerOrder.OrderId.SubaccountId,
