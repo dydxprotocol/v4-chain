@@ -8,9 +8,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -242,6 +245,25 @@ func (k Keeper) ProcessSingleMatch(
 			matchWithOrders.TakerOrder.GetSubaccountId(),
 			notionalLiquidatedQuoteQuantums,
 			takerInsuranceFundDelta,
+		)
+
+		labels := []gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.IsBuy, matchWithOrders.TakerOrder.IsBuy()),
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+		}
+
+		// Stat quote quantums liquidated.
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(notionalLiquidatedQuoteQuantums),
+			labels,
+		)
+		// Stat insurance fund delta.
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.InsuranceFundDelta},
+			metrics.GetMetricValueFromBigInt(new(big.Int).Abs(takerInsuranceFundDelta)),
+			append(labels, metrics.GetLabelForBoolValue(metrics.Positive, takerInsuranceFundDelta.Sign() == 1)),
 		)
 	}
 

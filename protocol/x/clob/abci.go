@@ -104,6 +104,12 @@ func EndBlocker(
 
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
+
+	telemetry.ModuleSetGauge(
+		types.ModuleName,
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		metrics.InsuranceFundBalance,
+	)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -179,20 +185,6 @@ func PrepareCheckState(
 	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
 		panic(err)
 	}
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		float32(len(subaccountIds)),
-		metrics.Liquidations,
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
-		metrics.InsuranceFundBalance,
-	)
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)

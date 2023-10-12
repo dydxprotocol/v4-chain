@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,12 +50,27 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
-	telemetry.IncrCounter(
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
+	}
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.DeleverageSubaccount},
 		1,
-		types.ModuleName,
-		metrics.PrepareCheckState,
-		metrics.DeleverageSubaccount,
+		labels,
 	)
+
+	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		new(big.Int).Abs(deltaQuantums),
+	); err == nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums},
+			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			labels,
+		)
+	}
 
 	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 }
@@ -238,17 +254,29 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		k.GetPseudoRand(ctx),
 	)
 
-	telemetry.IncrCounter(
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+	}
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
+		},
 		float32(numSubaccountsIterated),
-		types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
+		labels,
 	)
-	telemetry.IncrCounter(
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
+		},
 		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
-		types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
+		labels,
 	)
-	telemetry.IncrCounter(
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
+		},
 		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
-		types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
+		labels,
 	)
 
 	if deltaQuantumsRemaining.Sign() == 0 {
@@ -381,6 +409,24 @@ func (k Keeper) ProcessDeleveraging(
 	// If not successful, return error indicating why.
 	if updateErr := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); updateErr != nil {
 		return updateErr
+	}
+
+	// Stat quantums deleveraged in quote quantums.
+	if delevergedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
+		ctx,
+		perpetualId,
+		new(big.Int).Abs(deltaQuantums),
+	); err == nil {
+		labels := []gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+			metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(delevergedQuoteQuantums),
+			labels,
+		)
 	}
 
 	// Deleveraging was successful, therefore emit a cometbft event indicating a deleveraging match occurred.
