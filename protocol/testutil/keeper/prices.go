@@ -158,7 +158,7 @@ func AssertPriceUpdateEventsInIndexerBlock(
 	updatedMarketPrices []types.MarketPrice,
 ) {
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
-	expectedEvents := keeper.GenerateMarketPriceUpdateEvents(updatedMarketPrices)
+	expectedEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
 	for _, expectedEvent := range expectedEvents {
 		require.Contains(t, marketEvents, expectedEvent)
 	}
@@ -185,10 +185,9 @@ func getMarketEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeMarket {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var marketEvent indexerevents.MarketEventV1
-		err := unmarshaler.Unmarshal(bytes, &marketEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &marketEvent)
 		if err != nil {
 			panic(err)
 		}

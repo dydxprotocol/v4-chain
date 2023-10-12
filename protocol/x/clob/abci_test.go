@@ -147,12 +147,6 @@ func TestEndBlocker_Failure(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewStatefulOrderRemovalEvent(
-							orderId,
-							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -693,20 +687,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -739,20 +719,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						1,
-						1,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
-						constants.ClobPair_Eth.Status,
-						constants.ClobPair_Eth.QuantumConversionExponent,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-						constants.ClobPair_Eth.SubticksPerTick,
-						constants.ClobPair_Eth.StepBaseQuantums,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -789,12 +755,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewStatefulOrderRemovalEvent(
-							orderId,
-							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -810,11 +770,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewConditionalOrderTriggeredEvent(
-							orderId,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderTriggeredEvent(

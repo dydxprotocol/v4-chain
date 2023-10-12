@@ -1,18 +1,20 @@
 package metrics_test
 
 import (
-	gometrics "github.com/armon/go-metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"math"
 	"math/big"
 	"testing"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+
 	"github.com/stretchr/testify/require"
 )
 
 func TestIncrCountMetricWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
@@ -205,6 +207,10 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 			input:    new(big.Int).SetUint64(math.MaxUint64),
 			expected: float32(1.8446744e+19),
 		},
+		"overflow: 1234567 * 1e24": {
+			input:    big_testutil.Int64MulPow10(1234567, 24), // 1234567 * 1e24
+			expected: float32(1.234567e+30),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -214,7 +220,7 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 }
 
 func TestModuleMeasureSinceWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)

@@ -389,7 +389,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 		expectedFills             []types.MatchPerpetualDeleveraging_Fill
 		expectedQuantumsRemaining *big.Int
 	}{
-		"Can get one offsetting subaccount": {
+		"Can get one offsetting subaccount for deleveraged short": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -407,6 +407,33 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					// to close 1 BTC short is $54,999 and we close both positions at this price.
 					AssetPositions: keepertest.CreateUsdcAssetPosition(
 						big.NewInt(50_000_000_000 + 54_999_000_000),
+					),
+				},
+			},
+			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
+				{
+					OffsettingSubaccountId: constants.Dave_Num0,
+					FillAmount:             100_000_000,
+				},
+			},
+			expectedQuantumsRemaining: new(big.Int),
+		},
+		"Can get one offsetting subaccount for deleveraged long": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Long_54999USD,
+				constants.Dave_Num0_1BTC_Short_100000USD,
+			},
+			liquidatedSubaccountId: constants.Carl_Num0,
+			perpetualId:            0,
+			deltaQuantums:          big.NewInt(-100_000_000),
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(100_000_000_000 - 54_999_000_000),
 					),
 				},
 			},
@@ -586,6 +613,45 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			expectedSubaccounts:       nil,
 			expectedFills:             []types.MatchPerpetualDeleveraging_Fill{},
 			expectedQuantumsRemaining: big.NewInt(100_000_000),
+		},
+		"Can offset subaccount with multiple positions, first position is offset leaving TNC constant": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_1ETH_Long_47000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			liquidatedSubaccountId: constants.Carl_Num0,
+			perpetualId:            0,
+			deltaQuantums:          big.NewInt(100_000_000),
+			expectedSubaccounts: []satypes.Subaccount{
+				// Carl's BTC short position is offset by Dave's BTC long position at $50,000 leaving
+				// his ETH long position untouched and dropping his asset position to -$3000.
+				{
+					Id: &constants.Carl_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  1,
+							Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(-3_000_000_000),
+					),
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(50_000_000_000 + 50_000_000_000),
+					),
+				},
+			},
+			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
+				{
+					OffsettingSubaccountId: constants.Dave_Num0,
+					FillAmount:             100_000_000,
+				},
+			},
+			expectedQuantumsRemaining: big.NewInt(0),
 		},
 	}
 

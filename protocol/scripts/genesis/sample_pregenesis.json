@@ -63,7 +63,6 @@
     },
     "blocktime": {
       "params": {
-        "clock_drift_grace_period_duration": "5s",
         "durations": [
           "300s",
           "1800s"
@@ -475,7 +474,7 @@
             "usd_tnc_required": "10000000000"
           },
           {
-            "limit": 200,
+            "limit": 1000,
             "usd_tnc_required": "100000000000"
           }
         ],

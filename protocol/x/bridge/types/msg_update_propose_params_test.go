@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -19,34 +20,76 @@ func TestMsgUpdateProposeParams_GetSigners(t *testing.T) {
 func TestMsgUpdateProposeParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		msg         types.MsgUpdateProposeParams
-		expectedErr error
+		expectedErr string
 	}{
 		"Success": {
 			msg: types.MsgUpdateProposeParams{
 				Authority: validAuthority,
 				Params: types.ProposeParams{
 					MaxBridgesPerBlock:           5,
-					ProposeDelayDuration:         10_000,
+					ProposeDelayDuration:         time.Second,
 					SkipRatePpm:                  800_000,
-					SkipIfBlockDelayedByDuration: 5_000,
+					SkipIfBlockDelayedByDuration: time.Minute,
 				},
 			},
 		},
-		"Failure: Invalid authority": {
+		"Failure: negative propose delay duration": {
+			msg: types.MsgUpdateProposeParams{
+				Authority: validAuthority,
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           5,
+					ProposeDelayDuration:         -time.Second,
+					SkipRatePpm:                  800_000,
+					SkipIfBlockDelayedByDuration: time.Minute,
+				},
+			},
+			expectedErr: types.ErrNegativeDuration.Error(),
+		},
+		"Failure: negative skip if blocked delayed by duration": {
+			msg: types.MsgUpdateProposeParams{
+				Authority: validAuthority,
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           5,
+					ProposeDelayDuration:         time.Second,
+					SkipRatePpm:                  800_000,
+					SkipIfBlockDelayedByDuration: -time.Minute,
+				},
+			},
+			expectedErr: types.ErrNegativeDuration.Error(),
+		},
+		"Failure: out-of-bound skip rate ppm": {
+			msg: types.MsgUpdateProposeParams{
+				Authority: validAuthority,
+				Params: types.ProposeParams{
+					MaxBridgesPerBlock:           5,
+					ProposeDelayDuration:         time.Second,
+					SkipRatePpm:                  1_000_001,
+					SkipIfBlockDelayedByDuration: time.Minute,
+				},
+			},
+			expectedErr: types.ErrRateOutOfBounds.Error(),
+		},
+		"Failure: empty authority": {
 			msg: types.MsgUpdateProposeParams{
 				Authority: "",
 			},
-			expectedErr: types.ErrInvalidAuthority,
+			expectedErr: types.ErrInvalidAuthority.Error(),
+		},
+		"Failure: invalid authority": {
+			msg: types.MsgUpdateProposeParams{
+				Authority: "dydx1abc",
+			},
+			expectedErr: types.ErrInvalidAuthority.Error(),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if tc.expectedErr == nil {
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.ErrorIs(t, err, tc.expectedErr)
+				require.ErrorContains(t, err, tc.expectedErr)
 			}
 		})
 	}

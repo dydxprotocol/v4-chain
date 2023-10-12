@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -29,13 +30,13 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
-			k.Logger(ctx).Error("delayed message %v not found", id)
+			k.Logger(ctx).Error("delayed message not found", types.IdLogKey, id)
 			continue
 		}
 
 		msg, err := delayedMsg.GetMessage()
 		if err != nil {
-			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
+			k.Logger(ctx).Error("failed to decode delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
 			continue
 		}
 
@@ -49,7 +50,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			events = append(events, res.GetEvents()...)
 			return nil
 		}); err != nil {
-			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
+			k.Logger(ctx).Error("failed to execute delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
 		}
 	}
 
@@ -58,7 +59,7 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 
 	for _, id := range blockMessageIds.Ids {
 		if err := k.DeleteMessage(ctx, id); err != nil {
-			k.Logger(ctx).Error("failed to delete delayed message: %w", err)
+			k.Logger(ctx).Error("failed to delete delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
 		}
 	}
 }

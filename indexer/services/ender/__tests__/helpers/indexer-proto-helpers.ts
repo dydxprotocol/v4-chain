@@ -89,7 +89,6 @@ export function createIndexerTendermintEvent(
     // blockEvent
     return {
       subtype,
-      data: '',
       dataBytes,
       blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
       eventIndex,
@@ -99,7 +98,6 @@ export function createIndexerTendermintEvent(
   // transactionIndex
   return {
     subtype,
-    data: '',
     dataBytes,
     transactionIndex,
     eventIndex,

@@ -47,7 +47,7 @@ describe('Subscriptions', () => {
   const initialResponseUrlPatterns: Record<Channel, string[] | undefined> = {
     [Channel.V4_ACCOUNTS]: [
       '/v4/addresses/.+/subaccountNumber/.+',
-      '/v4/orders?.+OPEN,UNTRIGGERED',
+      '/v4/orders?.+OPEN,UNTRIGGERED,BEST_EFFORT_OPENED',
     ],
     [Channel.V4_CANDLES]: ['/v4/candles/perpetualMarkets/.+?resolution=.+'],
     [Channel.V4_MARKETS]: ['/v4/perpetualMarkets'],

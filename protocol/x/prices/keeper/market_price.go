@@ -94,14 +94,11 @@ func (k Keeper) UpdateMarketPrices(
 		)
 	}
 
-	marketPriceUpdates := GenerateMarketPriceUpdateEvents(updatedMarketPrices)
-	for _, update := range marketPriceUpdates {
+	priceUpdateIndexerEvents := GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
+	for _, update := range priceUpdateIndexerEvents {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				update,
-			),
 			indexerevents.MarketEventVersion,
 			indexer_manager.GetBytes(
 				update,

@@ -13,6 +13,6 @@ var (
 	ErrInvalidAuthority = errorsmod.Register(
 		ModuleName,
 		401,
-		"Autority is invalid",
+		"Authority is invalid",
 	)
 )

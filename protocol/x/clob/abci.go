@@ -53,12 +53,6 @@ func EndBlocker(
 		keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewStatefulOrderRemovalEvent(
-					orderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(
@@ -92,8 +86,8 @@ func EndBlocker(
 	keeper.AddUntriggeredConditionalOrders(
 		ctx,
 		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.SliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.SliceToSet(expiredStatefulOrderIds),
+		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.

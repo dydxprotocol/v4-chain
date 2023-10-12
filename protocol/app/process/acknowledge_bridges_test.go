@@ -1,9 +1,10 @@
 package process_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
@@ -85,6 +86,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 		txBytes []byte // tx bytes.
 
 		// Mocking.
+		bridgingDisabled      bool                // whether bridging is disabled.
 		bridgeEventsInServer  []types.BridgeEvent // events in bridge server that a bridge tx is validated against.
 		acknowledgedEventInfo types.BridgeEventInfo
 		recognizedEventInfo   types.BridgeEventInfo
@@ -166,6 +168,21 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
 			expectedErr:           types.ErrBridgeEventContentMismatch,
 		},
+		"Error: one event and bridging disabled": {
+			txBytes:               constants.MsgAcknowledgeBridges_Id0_Height0_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_Id0_Height0.Events,
+			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
+			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
+			bridgingDisabled:      true,
+			expectedErr:           types.ErrBridgingDisabled,
+		},
+		"Valid: empty events and bridging disabled": {
+			txBytes:               constants.MsgAcknowledgeBridges_NoEvents_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_NoEvents.Events,
+			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
+			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
+			bridgingDisabled:      true,
+		},
 		"Valid: empty events": {
 			txBytes:               constants.MsgAcknowledgeBridges_NoEvents_TxBytes,
 			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_NoEvents.Events,
@@ -191,6 +208,10 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			// Setup.
 			ctx, _, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetSafetyParams", ctx).Return(types.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: 7, // dummy value
+			})
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", ctx).Return(tc.acknowledgedEventInfo)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", ctx).Return(tc.recognizedEventInfo)
 			for _, event := range tc.bridgeEventsInServer {

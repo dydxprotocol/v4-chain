@@ -11,19 +11,9 @@ import (
 	"path/filepath"
 	"runtime/debug"
 
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
-	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-
-	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
-
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	sdklog "cosmossdk.io/log"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -108,7 +98,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	// Lib
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -121,10 +115,13 @@ import (
 	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
+	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	bridgedaemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
@@ -639,7 +636,7 @@ func New(
 					context.Background(),
 					daemonFlags,
 					appFlags,
-					logger,
+					logger.With(sdklog.ModuleKey, "bridge-daemon"),
 					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)

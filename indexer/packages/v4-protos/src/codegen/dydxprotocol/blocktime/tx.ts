@@ -1,5 +1,4 @@
 import { DowntimeParams, DowntimeParamsSDKType } from "./params";
-import { Duration, DurationSDKType } from "../../google/protobuf/duration";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** MsgUpdateDowntimeParams is the Msg/UpdateDowntimeParams request type. */
@@ -30,30 +29,6 @@ export interface MsgUpdateDowntimeParamsResponse {}
  */
 
 export interface MsgUpdateDowntimeParamsResponseSDKType {}
-/** MsgIsDelayedBlock is the Msg/IsDelayedBlock request type. */
-
-export interface MsgIsDelayedBlock {
-  /**
-   * The duration that the block is delayed by.
-   * This value could possibly be negative in rare cases.
-   */
-  delayDuration?: Duration;
-}
-/** MsgIsDelayedBlock is the Msg/IsDelayedBlock request type. */
-
-export interface MsgIsDelayedBlockSDKType {
-  /**
-   * The duration that the block is delayed by.
-   * This value could possibly be negative in rare cases.
-   */
-  delay_duration?: DurationSDKType;
-}
-/** MsgIsDelayedBlock is the Msg/IsDelayedBlock response type. */
-
-export interface MsgIsDelayedBlockResponse {}
-/** MsgIsDelayedBlock is the Msg/IsDelayedBlock response type. */
-
-export interface MsgIsDelayedBlockResponseSDKType {}
 
 function createBaseMsgUpdateDowntimeParams(): MsgUpdateDowntimeParams {
   return {
@@ -139,85 +114,6 @@ export const MsgUpdateDowntimeParamsResponse = {
 
   fromPartial(_: DeepPartial<MsgUpdateDowntimeParamsResponse>): MsgUpdateDowntimeParamsResponse {
     const message = createBaseMsgUpdateDowntimeParamsResponse();
-    return message;
-  }
-
-};
-
-function createBaseMsgIsDelayedBlock(): MsgIsDelayedBlock {
-  return {
-    delayDuration: undefined
-  };
-}
-
-export const MsgIsDelayedBlock = {
-  encode(message: MsgIsDelayedBlock, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.delayDuration !== undefined) {
-      Duration.encode(message.delayDuration, writer.uint32(10).fork()).ldelim();
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgIsDelayedBlock {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgIsDelayedBlock();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.delayDuration = Duration.decode(reader, reader.uint32());
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<MsgIsDelayedBlock>): MsgIsDelayedBlock {
-    const message = createBaseMsgIsDelayedBlock();
-    message.delayDuration = object.delayDuration !== undefined && object.delayDuration !== null ? Duration.fromPartial(object.delayDuration) : undefined;
-    return message;
-  }
-
-};
-
-function createBaseMsgIsDelayedBlockResponse(): MsgIsDelayedBlockResponse {
-  return {};
-}
-
-export const MsgIsDelayedBlockResponse = {
-  encode(_: MsgIsDelayedBlockResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): MsgIsDelayedBlockResponse {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseMsgIsDelayedBlockResponse();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(_: DeepPartial<MsgIsDelayedBlockResponse>): MsgIsDelayedBlockResponse {
-    const message = createBaseMsgIsDelayedBlockResponse();
     return message;
   }
 

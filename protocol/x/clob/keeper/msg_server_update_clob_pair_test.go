@@ -61,15 +61,6 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewUpdateClobPairEvent(
-							clobPair.GetClobPairId(),
-							types.ClobPair_STATUS_ACTIVE,
-							clobPair.QuantumConversionExponent,
-							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-						),
-					),
 					indexerevents.UpdateClobPairEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
@@ -238,7 +229,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
-		"Error: cannot update quantum converstion exponent": {
+		"Error: cannot update quantum conversion exponent": {
 			msg: &types.MsgUpdateClobPair{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				ClobPair: types.ClobPair{

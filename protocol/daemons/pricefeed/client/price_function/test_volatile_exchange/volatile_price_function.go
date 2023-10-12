@@ -36,12 +36,13 @@ func (t VolatileExchangeTicker) GetLastPrice() string {
 	return t.Price
 }
 
-// VolatileExchangePriceFunction generates a time-based price value based off of the following
-// function:
+// VolatileExchangePriceFunction generates a time-based price value. The value follows a cosine wave
+// function, but that includes jumps from the lowest value to the highest value (and vice versa)
+// once per period. The general formula is written below.
 // - PRICE = AVERAGE * (1 + AMPLITUDE * WAVE_VALUE)
-// - WAVE_VALUE = math.Sin(RADIANS)
-// - RADIANS = PERCENTAGE_THROUGH_DAY * FREQUENCY * 2 * math.Pi
-// - PERCENTAGE_THROUGH_DAY = (time.Now().Unix() % SECONDS_IN_A_DAY) / SECONDS_IN_A_DAY
+// - WAVE_VALUE = math.Cos(RADIANS)
+// - RADIANS = (PHASE <= 0.5 ? PHASE * 4 : PHASE * 4 - 1) * math.Pi
+// - PHASE = (FREQUENCY * UNIX_SECONDS / SECONDS_IN_DAY) % 1
 // The following values are parametrized in `VolatileExchangeParams`:
 // - AVERAGE, AMPLITUDE, FREQUENCY
 func VolatileExchangePriceFunction(
@@ -49,9 +50,29 @@ func VolatileExchangePriceFunction(
 	tickerToExponent map[string]int32,
 	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
-	percentageThroughDay := float64(time.Now().Unix()%SECONDS_IN_DAY) / float64(SECONDS_IN_DAY)
-	radians := percentageThroughDay * TestVolatileExchangeParams.Frequency * 2 * math.Pi
-	waveValue := math.Sin(radians)
+	// Calculate the phase, how far in the period we are.
+	// The phase is a value that goes from 0 to 1 over the timespan of (1 day / frequency).
+	phase := math.Mod(
+		TestVolatileExchangeParams.Frequency*
+			float64(time.Now().Unix())/
+			float64(SECONDS_IN_DAY),
+		1,
+	)
+
+	// Next we get the radians. Over each period, we want the price to "jump" from the max to the min
+	// and vice versa. Otherwise the price should move smoothly between min and max.
+	// So we want the  first half of the period to move from 0-2 pi radians,
+	// and the second half of the period to move from 1-3 pi radians.
+	radMultiplier := phase * float64(4)
+	if phase > 0.5 {
+		radMultiplier -= float64(1)
+	}
+	radians := radMultiplier * float64(math.Pi)
+
+	// Next we get the final wave value in the range from -1 to 1 based on the radians.
+	waveValue := math.Cos(radians)
+
+	// The price value is centered around `AveragePrice` with an amplitude of `Amplitude`.
 	price := float64(TestVolatileExchangeParams.AveragePrice) * (1 + TestVolatileExchangeParams.Amplitude*waveValue)
 
 	volatile_exchange_ticker := VolatileExchangeTicker{

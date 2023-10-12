@@ -49,7 +49,7 @@ func NewServer(
 		gsrv:          grpcServer,
 		fileHandler:   fileHandler,
 		socketAddress: socketAddress,
-		updateMonitor: types.NewUpdateFrequencyMonitor(),
+		updateMonitor: types.NewUpdateFrequencyMonitor(types.DaemonStartupGracePeriod, logger),
 	}
 	stoppable.RegisterServiceForTestCleanup(uniqueTestIdentifier, srv)
 	return srv

@@ -188,8 +188,7 @@ const GenesisState = `{
         "durations": [
           "300s",
           "1800s"
-        ],
-        "clock_drift_grace_period_duration": "5s"
+        ]
       }
     },
     "bridge": {
@@ -287,7 +286,7 @@ const GenesisState = `{
             "usd_tnc_required": "10000"
           },
           {
-            "limit": 200,
+            "limit": 1000,
             "usd_tnc_required": "100000"
           }
         ],
