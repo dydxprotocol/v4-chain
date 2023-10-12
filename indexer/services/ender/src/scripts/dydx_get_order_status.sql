@@ -27,7 +27,7 @@ BEGIN
             RETURN 'OPEN';
         END IF;
     ELSIF time_in_force = 'FOK' THEN /** 2. Short-term FOK */
-        RETURN 'FILLED'
+        RETURN 'FILLED';
     ELSIF time_in_force = 'IOC' THEN /** 3. Short-term IOC */
         RETURN 'CANCELED';
     ELSIF is_cancelled THEN /** 4. Short-term Limit & Postonly */
