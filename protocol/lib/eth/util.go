@@ -39,8 +39,8 @@ func GetBridgeEventAbi() *ethabi.ABI {
 	return bridgeEventAbi()
 }
 
-// PadOrTruncateAddress right-pads an address with zeros if it's shorter than `minAddrLen` or
-// takes the first `maxAddrLen` if it's longer than that.
+// PadOrTruncateAddress right-pads an address with zeros if it's shorter than `MinAddrLen` or
+// takes the first `MaxAddrLen` if it's longer than that.
 func PadOrTruncateAddress(address []byte) []byte {
 	if len(address) > MaxAddrLen {
 		return address[:MaxAddrLen]
