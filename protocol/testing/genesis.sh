@@ -1396,7 +1396,7 @@ function edit_genesis() {
 
   # Fee Tiers
   # Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
-	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.next_delayed_message_id' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
 

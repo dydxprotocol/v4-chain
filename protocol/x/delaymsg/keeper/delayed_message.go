@@ -19,25 +19,25 @@ func (k Keeper) newDelayedMessageStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DelayedMessageKeyPrefix))
 }
 
-// GetNumMessages returns the number of messages in the store.
-func (k Keeper) GetNumMessages(
+// GetNextDelayedMessageId returns the next delayed message id in the store.
+func (k Keeper) GetNextDelayedMessageId(
 	ctx sdk.Context,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(types.NumDelayedMessagesKey))
+	b := store.Get([]byte(types.NextDelayedMessageIdKey))
 	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
 	return result.Value
 }
 
-// SetNumMessages sets the number of messages in the store.
-func (k Keeper) SetNumMessages(
+// SetNextDelayedMessageId sets the next delayed message id in the store.
+func (k Keeper) SetNextDelayedMessageId(
 	ctx sdk.Context,
-	numMessages uint32,
+	nextId uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	value := gogotypes.UInt32Value{Value: numMessages}
-	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&value))
+	value := gogotypes.UInt32Value{Value: nextId}
+	store.Set([]byte(types.NextDelayedMessageIdKey), k.cdc.MustMarshal(&value))
 }
 
 // GetMessage returns a message from its id.
@@ -242,7 +242,7 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
-	nextId := k.GetNumMessages(ctx)
+	nextId := k.GetNextDelayedMessageId(ctx)
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
 		Msg:         anyMsg,
@@ -254,8 +254,8 @@ func (k Keeper) DelayMessageByBlocks(
 		return 0, err
 	}
 
-	// Increment the number of messages in the store.
-	k.SetNumMessages(ctx, nextId+1)
+	// Increment next delayed message id in the store.
+	k.SetNextDelayedMessageId(ctx, nextId+1)
 
 	return nextId, nil
 }
