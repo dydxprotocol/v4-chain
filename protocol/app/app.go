@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+	"runtime/debug"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	sdklog "cosmossdk.io/log"
-	gometrics "github.com/armon/go-metrics"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -35,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -113,6 +112,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
+	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -643,6 +643,33 @@ func New(
 				}
 			}()
 		}
+
+		// Start the Metrics Daemon.
+		// The metrics daemon is purely used for observability. It should never bring the app down.
+		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error(
+						"Metrics Daemon exited unexpectedly with a panic.",
+						"panic",
+						r,
+						"stack",
+						string(debug.Stack()),
+					)
+				}
+			}()
+			// Don't panic if metrics daemon loops are delayed. Use maximum value.
+			app.Server.ExpectMetricsDaemon(
+				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
+			)
+			metricsclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				logger,
+			)
+		}()
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
@@ -1165,6 +1192,16 @@ func New(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
+	// Report out app version and git commit. This will be run when validators restart.
+	version := version.NewInfo()
+	app.Logger().Info(
+		"App instantiated",
+		metrics.AppVersion,
+		version.Version,
+		metrics.GitCommit,
+		version.GitCommit,
+	)
+
 	return app
 }
 
@@ -1225,20 +1262,6 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
-
-	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
-	// TODO(DEC-2107): Doing this based on chain id seems brittle.
-	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
-		version := version.NewInfo()
-		telemetry.SetGaugeWithLabels(
-			[]string{metrics.AppInfo},
-			1,
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
-				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-			},
-		)
-	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
