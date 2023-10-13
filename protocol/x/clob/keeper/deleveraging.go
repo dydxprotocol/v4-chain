@@ -27,7 +27,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-	deltaQuantums *big.Int,
 ) (
 	quantumsDeleveraged *big.Int,
 	err error,
@@ -49,6 +48,14 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		)
 		return new(big.Int), nil
 	}
+
+	// Deleverage the entire position for the given perpetual id.
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	position, exists := subaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
+		return nil, types.ErrNoOpenPositionForPerpetual
+	}
+	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
 
 	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 
