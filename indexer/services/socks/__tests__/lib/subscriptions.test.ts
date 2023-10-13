@@ -8,7 +8,8 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
-import { makeAxiosSafeServerError } from '@dydxprotocol-indexer/base';
+import { AxiosSafeServerError, makeAxiosSafeServerError } from '@dydxprotocol-indexer/base';
+import { BlockedError } from '../../src/lib/errors';
 
 jest.mock('ws');
 jest.mock('../../src/helpers/wss');
@@ -212,6 +213,38 @@ describe('Subscriptions', () => {
           message: expect.stringContaining(
             `Internal error, could not fetch data for subscription: ${Channel.V4_ACCOUNTS}`,
           ),
+        }));
+      expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
+      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
+    });
+
+    it('sends blocked error message if initial message request fails with 403', async () => {
+      const expectedError: BlockedError = new BlockedError();
+      axiosRequestMock.mockImplementation(
+        () => {
+          throw new AxiosSafeServerError({
+            data: {},
+            status: 403,
+            statusText: '',
+          }, {});
+        },
+      );
+      await subscriptions.subscribe(
+        mockWs,
+        Channel.V4_ACCOUNTS,
+        connectionId,
+        initialMsgId,
+        mockSubaccountId,
+      );
+
+      expect(sendMessageMock).toHaveBeenCalledTimes(1);
+      expect(sendMessageMock).toHaveBeenCalledWith(
+        mockWs,
+        connectionId,
+        expect.objectContaining({
+          connection_id: connectionId,
+          type: 'error',
+          message: expectedError.message,
         }));
       expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
       expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();

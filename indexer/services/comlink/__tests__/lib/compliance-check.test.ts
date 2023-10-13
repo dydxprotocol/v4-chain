@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { BlockedCode, RequestMethod } from '../../src/types';
+import { RequestMethod } from '../../src/types';
 import Server from '../../src/request-helpers/server';
 import { sendRequestToApp } from '../helpers/helpers';
 import { complianceCheck } from '../../src/lib/compliance-check';
@@ -11,7 +11,10 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { blockedComplianceData, nonBlockedComplianceData } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import request from 'supertest';
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
+import {
+  INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+  BlockedCode,
+} from '@dydxprotocol-indexer/compliance';
 
 // Create a router to test the middleware with
 const router: express.Router = express.Router();

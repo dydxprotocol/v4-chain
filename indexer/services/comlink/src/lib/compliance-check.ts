@@ -1,9 +1,12 @@
-import { INDEXER_COMPLIANCE_BLOCKED_PAYLOAD } from '@dydxprotocol-indexer/compliance';
+import {
+  INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+  BlockedCode,
+} from '@dydxprotocol-indexer/compliance';
 import { ComplianceDataFromDatabase, ComplianceTable } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import { matchedData } from 'express-validator';
 
-import { AddressRequest, BlockedCode } from '../types';
+import { AddressRequest } from '../types';
 import { create4xxResponse } from './helpers';
 
 /**
