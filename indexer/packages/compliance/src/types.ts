@@ -5,8 +5,3 @@ export interface ComplianceClientResponse {
   blocked: boolean,
   riskScore?: string,
 }
-
-export enum BlockedCode {
-  GEOBLOCKED = 'GEOBLOCKED',
-  COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
-}
