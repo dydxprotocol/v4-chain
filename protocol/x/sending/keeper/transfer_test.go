@@ -612,3 +612,17 @@ func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 	err := ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgNonExistentSender)
 	require.NoError(t, err) // this line is never reached, just here for lint check.
 }
+
+func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromModuleToAccount(
+		ks.Ctx,
+		&types.MsgSendFromModuleToAccount{
+			Authority:        constants.GovModuleAccAddressString,
+			SenderModuleName: "bridge",
+			Recipient:        "dydx1abc", // invalid recipient address
+			Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+		},
+	)
+	require.ErrorContains(t, err, "Account address is invalid")
+}
