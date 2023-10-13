@@ -76,6 +76,13 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 }
 
 func TestRunBridgeDaemonTaskLoop(t *testing.T) {
+	errParams := errors.New("error getting event params")
+	errPropose := errors.New("error getting propose params")
+	errRecognizedEventInfo := errors.New("error getting recognized event info")
+	errChainId := errors.New("error getting chain id")
+	errEthereumLogs := errors.New("error getting Ethereum logs")
+	errAddBridgeEvents := errors.New("error adding bridge events")
+
 	tests := map[string]struct {
 		eventParams            bridgetypes.EventParams
 		eventParamsErr         error
@@ -89,7 +96,8 @@ func TestRunBridgeDaemonTaskLoop(t *testing.T) {
 		filterLogsErr          error
 		addBridgeEventsErr     error
 
-		expectedError string
+		expectedErrorString string
+		expectedError       error
 	}{
 		"Success": {
 			eventParams:         constants.EventParams,
@@ -102,33 +110,33 @@ func TestRunBridgeDaemonTaskLoop(t *testing.T) {
 			},
 		},
 		"Error getting event params": {
-			eventParamsErr: errors.New("error getting event params"),
-			expectedError:  "error getting event params",
+			eventParamsErr: errParams,
+			expectedError:  errParams,
 		},
 		"Error getting propose params": {
 			eventParams:      constants.EventParams,
-			proposeParamsErr: errors.New("error getting propose params"),
-			expectedError:    "error getting propose params",
+			proposeParamsErr: errPropose,
+			expectedError:    errPropose,
 		},
 		"Error getting recognized event info": {
 			eventParams:            constants.EventParams,
 			proposeParams:          constants.ProposeParams,
-			recognizedEventInfoErr: errors.New("error getting recognized event info"),
-			expectedError:          "error getting recognized event info",
+			recognizedEventInfoErr: errRecognizedEventInfo,
+			expectedError:          errRecognizedEventInfo,
 		},
 		"Error getting chain id": {
 			eventParams:         constants.EventParams,
 			proposeParams:       constants.ProposeParams,
 			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainIdError:        errors.New("error getting chain id"),
-			expectedError:       "error getting chain id",
+			chainIdError:        errChainId,
+			expectedError:       errChainId,
 		},
 		"Error chain ID not as expected": {
 			eventParams:         constants.EventParams,
 			proposeParams:       constants.ProposeParams,
 			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
 			chainId:             constants.EthChainId + 1,
-			expectedError: fmt.Sprintf(
+			expectedErrorString: fmt.Sprintf(
 				"expected chain ID %d but node has chain ID %d",
 				constants.EthChainId,
 				constants.EthChainId+1,
@@ -139,8 +147,8 @@ func TestRunBridgeDaemonTaskLoop(t *testing.T) {
 			proposeParams:       constants.ProposeParams,
 			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
 			chainId:             constants.EthChainId,
-			filterLogsErr:       errors.New("error getting Ethereum logs"),
-			expectedError:       "error getting Ethereum logs",
+			filterLogsErr:       errEthereumLogs,
+			expectedError:       errEthereumLogs,
 		},
 		"Error adding bridge events": {
 			eventParams:         constants.EventParams,
@@ -150,8 +158,8 @@ func TestRunBridgeDaemonTaskLoop(t *testing.T) {
 			filterLogs: []ethcoretypes.Log{
 				constants.EthLog_Event0,
 			},
-			addBridgeEventsErr: errors.New("error adding bridge events"),
-			expectedError:      "error adding bridge events",
+			addBridgeEventsErr: errAddBridgeEvents,
+			expectedError:      errAddBridgeEvents,
 		},
 	}
 
@@ -192,9 +200,13 @@ func TestRunBridgeDaemonTaskLoop(t *testing.T) {
 				&mockQueryClient,
 				&mockServiceClient,
 			)
-			if tc.expectedError != "" {
+			if tc.expectedErrorString != "" {
 				require.Error(t, err)
-				require.ErrorContains(t, err, tc.expectedError)
+				require.ErrorContains(t, err, tc.expectedErrorString)
+			}
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.ErrorIs(t, err, tc.expectedError)
 			}
 		})
 	}
