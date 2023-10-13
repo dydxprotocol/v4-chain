@@ -206,6 +206,7 @@ func (k Keeper) GenerateWithdrawEvent(withdraw *types.MsgWithdrawFromSubaccount)
 	)
 }
 
+// SendFromModuleToAccount sends coins from a module account to an `x/bank` recipient.
 func (k Keeper) SendFromModuleToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromModuleToAccount,

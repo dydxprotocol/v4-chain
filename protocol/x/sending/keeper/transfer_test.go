@@ -490,6 +490,11 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			balanceToSend:        100,
 			recipientAddress:     authtypes.NewModuleAddress(testModuleName).String(),
 		},
+		"Success - send 0 amount": {
+			initialModuleBalance: 700,
+			balanceToSend:        0,
+			recipientAddress:     authtypes.NewModuleAddress(testModuleName).String(),
+		},
 		"Error - insufficient fund": {
 			initialModuleBalance: 100,
 			balanceToSend:        101,
