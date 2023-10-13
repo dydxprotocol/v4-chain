@@ -277,8 +277,8 @@ func Test_UpdateUsedBytes(t *testing.T) {
 				},
 			)
 			require.NoError(t, err)
-			require.Equal(t, int64(10), ppt.MaxBytes)
-			require.Equal(t, int64(0), ppt.UsedBytes)
+			require.Equal(t, uint64(10), ppt.MaxBytes)
+			require.Equal(t, uint64(0), ppt.UsedBytes)
 
 			ppt.UsedBytes = tc.usedBytes
 
