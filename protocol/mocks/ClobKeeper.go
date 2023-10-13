@@ -321,7 +321,7 @@ func (_m *ClobKeeper) GetMaxAndMinPositionNotionalLiquidatable(ctx types.Context
 }
 
 // GetPerpetualPositionToLiquidate provides a mock function with given fields: ctx, subaccountId
-func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, *big.Int, error) {
+func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (uint32, error) {
 	ret := _m.Called(ctx, subaccountId)
 
 	var r0 uint32
@@ -331,23 +331,14 @@ func (_m *ClobKeeper) GetPerpetualPositionToLiquidate(ctx types.Context, subacco
 		r0 = ret.Get(0).(uint32)
 	}
 
-	var r1 *big.Int
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) *big.Int); ok {
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
 		r1 = rf(ctx, subaccountId)
 	} else {
-		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
-		}
+		r1 = ret.Error(1)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
-		r2 = rf(ctx, subaccountId)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // GetProcessProposerMatchesEvents provides a mock function with given fields: ctx

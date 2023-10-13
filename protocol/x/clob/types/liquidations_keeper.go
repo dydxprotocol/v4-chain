@@ -81,7 +81,6 @@ type LiquidationsKeeper interface {
 		subaccountId satypes.SubaccountId,
 	) (
 		perpetualId uint32,
-		quantums *big.Int,
 		err error,
 	)
 	GetSubaccountMaxNotionalLiquidatable(

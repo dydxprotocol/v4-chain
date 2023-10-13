@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -2096,7 +2097,7 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
+			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
 		},
 		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
 			perpetuals: []*perptypes.Perpetual{

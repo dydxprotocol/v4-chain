@@ -161,20 +161,45 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	)
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
-	perpetualId, baseQuantumsBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
+	perpetualId, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
+	if err != nil {
+		return nil, err
+	}
+
+	return k.GetLiquidationOrderForPerpetual(
+		ctx,
+		subaccountId,
+		perpetualId,
+	)
+}
+
+// GetLiquidationOrderForPerpetual returns a liquidation order for a subaccount
+// given a perpetual ID and position size delta.
+func (k Keeper) GetLiquidationOrderForPerpetual(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) (
+	liquidationOrder *types.LiquidationOrder,
+	err error,
+) {
+	deltaQuantums, err := k.GetLiquidatablePositionSizeDelta(
+		ctx,
+		subaccountId,
+		perpetualId,
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Get the fillable price of the liquidation order in subticks.
-	deltaQuantumsBig := baseQuantumsBig.Neg(baseQuantumsBig)
-	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantumsBig)
+	fillablePriceRat, err := k.GetFillablePrice(ctx, subaccountId, perpetualId, deltaQuantums)
 	if err != nil {
 		return nil, err
 	}
 
 	// Calculate the fillable price.
-	isLiquidatingLong := deltaQuantumsBig.Sign() == -1
+	isLiquidatingLong := deltaQuantums.Sign() == -1
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	fillablePriceSubticks := k.ConvertFillablePriceToSubticks(
 		ctx,
@@ -184,7 +209,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	)
 
 	// Create the liquidation order.
-	absBaseQuantums := deltaQuantumsBig.Abs(deltaQuantumsBig)
+	absBaseQuantums := deltaQuantums.Abs(deltaQuantums)
 	liquidationOrder = types.NewLiquidationOrder(
 		subaccountId,
 		clobPair,
@@ -664,15 +689,13 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 
 // GetPerpetualPositionToLiquidate determines which position and position size to liquidate on the
 // passed-in subaccount (after accounting for the `update`). It will return the perpetual id that
-// will be used for liquidating the perpetual position and the number of quantums to liquidate
-// from the perpetual position (positive if long, negative if short).
+// will be used for liquidating the perpetual position
 // This function returns an error if the subaccount has no perpetual positions to liquidate.
 func (k Keeper) GetPerpetualPositionToLiquidate(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) (
 	perpetualId uint32,
-	quantums *big.Int,
 	err error,
 ) {
 	// Fetch the subaccount from state.
@@ -694,15 +717,38 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	// Return an error if there are no perpetual positions to liquidate.
 	if perpetualPosition == nil {
 		return 0,
-			nil,
 			errorsmod.Wrapf(
 				types.ErrNoPerpetualPositionsToLiquidate,
 				"Subaccount ID: %v",
 				subaccount.Id,
 			)
 	}
+	return perpetualPosition.PerpetualId, nil
+}
 
-	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualPosition.PerpetualId)
+// GetLiquidatablePositionSizeDelta returns the max number of base quantums to liquidate
+// from the perpetual position without exceeding the block and position limits.
+func (k Keeper) GetLiquidatablePositionSizeDelta(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) (
+	deltaQuantums *big.Int,
+	err error,
+) {
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+	perpetualPosition, exists := subaccount.GetPerpetualPositionForId(perpetualId)
+	if !exists {
+		return nil,
+			errorsmod.Wrapf(
+				types.ErrNoPerpetualPositionsToLiquidate,
+				"SubaccountId: %v, perpetualId: %d",
+				subaccount.Id,
+				perpetualId,
+			)
+	}
+
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 
 	// Get the maximum notional liquidatable for this position.
 	_, bigMaxPositionNotionalLiquidatable, err := k.GetMaxAndMinPositionNotionalLiquidatable(
@@ -710,17 +756,17 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		perpetualPosition,
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Get the maximum notional liquidatable for this subaccount.
 	bigMaxSubaccountNotionalLiquidatable, err := k.GetSubaccountMaxNotionalLiquidatable(
 		ctx,
 		subaccountId,
-		perpetualPosition.PerpetualId,
+		perpetualId,
 	)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Take the minimum of the subaccount block limit and position block limit.
@@ -731,7 +777,7 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 
 	bigQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
-		perpetualPosition.PerpetualId,
+		perpetualId,
 		perpetualPosition.GetBigQuantums(),
 	)
 	if err != nil {
@@ -743,13 +789,13 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 		perpetualPosition.GetBigQuantums().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
-		return perpetualPosition.PerpetualId, perpetualPosition.GetBigQuantums(), nil
+		return new(big.Int).Neg(perpetualPosition.GetBigQuantums()), nil
 	}
 
 	// Convert the max notional liquidatable to base quantums.
-	bigBaseQuantumsToLiquidate, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
+	absDeltaQuantums, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
-		perpetualPosition.PerpetualId,
+		perpetualId,
 		bigMaxQuoteQuantumsLiquidatable,
 	)
 	if err != nil {
@@ -757,26 +803,26 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 	}
 
 	// Round to the nearest step size.
-	bigBaseQuantumsToLiquidate = lib.BigIntRoundToMultiple(
-		bigBaseQuantumsToLiquidate,
+	absDeltaQuantums = lib.BigIntRoundToMultiple(
+		absDeltaQuantums,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
 	// Clamp the base quantums to liquidate to the step size and the size of the position
 	// in case there's rounding errors.
-	bigBaseQuantumsToLiquidate = lib.BigIntClamp(
-		bigBaseQuantumsToLiquidate,
+	absDeltaQuantums = lib.BigIntClamp(
+		absDeltaQuantums,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
 	)
 
-	// Negate the position size if it's short.
-	if !perpetualPosition.GetIsLong() {
-		bigBaseQuantumsToLiquidate.Neg(bigBaseQuantumsToLiquidate)
+	// Negate the position size if it's a long position to get the size delta.
+	if perpetualPosition.GetIsLong() {
+		return absDeltaQuantums.Neg(absDeltaQuantums), nil
 	}
 
-	return perpetualPosition.PerpetualId, bigBaseQuantumsToLiquidate, nil
+	return absDeltaQuantums, nil
 }
 
 // GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate
