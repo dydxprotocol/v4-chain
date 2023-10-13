@@ -861,7 +861,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		}
 	}()
 
-	placedStatefulOrderIds := make(map[types.OrderId]struct{})
 	// Iterate over all provided operations.
 	for _, operation := range localOperations {
 		switch operation.Operation.(type) {
@@ -936,11 +935,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			// Prevent double placement caused by PreexistingStatefulOrder and Order Removal
-			// both existing in local operations.
-			if _, found := placedStatefulOrderIds[*orderId]; found {
-				continue
-			}
+			m.clobKeeper.Logger(ctx).Info(
+				"Replaying PreexistingStatefulOrder",
+				metrics.OrderId, *orderId,
+				metrics.BlockHeight, ctx.BlockHeight(),
+			)
 
 			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
@@ -948,7 +947,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			placedStatefulOrderIds[*orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
@@ -972,17 +970,16 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			// Prevent double placement caused by PreexistingStatefulOrder and Order Removal
-			// both existing in local operations.
-			if _, found := placedStatefulOrderIds[orderId]; found {
-				continue
-			}
+			m.clobKeeper.Logger(ctx).Info(
+				"Replaying OrderRemoval",
+				metrics.OrderId, orderId,
+				metrics.BlockHeight, ctx.BlockHeight(),
+			)
 
 			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			placedStatefulOrderIds[orderId] = struct{}{}
 
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
