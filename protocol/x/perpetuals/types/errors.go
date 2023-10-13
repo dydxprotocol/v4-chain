@@ -102,6 +102,11 @@ var (
 		20,
 		"Liquidity tier already exists",
 	)
+	ErrMaintenanceMarginLargerThanInitialMargin = errorsmod.Register(
+		ModuleName,
+		21,
+		"Maintenance margin fraction is larger than initial margin fraction",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

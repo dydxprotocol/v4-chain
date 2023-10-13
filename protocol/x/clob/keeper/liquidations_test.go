@@ -723,7 +723,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
-			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,
 			},
@@ -763,7 +763,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				).Return(sdk.NewCoin("USDC", sdkmath.NewIntFromUint64(0))) // Insurance fund is empty.
 			},
 
-			liquidationConfig: constants.LiquidationsConfig_No_Limit, // `MaxInsuranceFundQuantumsForDeleveraging` is zero.
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
 			},
@@ -816,11 +816,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxInsuranceFundQuantumsForDeleveraging: 750_001,
-				MaxLiquidationFeePpm:                    5_000,
-				FillablePriceConfig:                     constants.FillablePriceConfig_Default,
-				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
+				MaxLiquidationFeePpm:  5_000,
+				FillablePriceConfig:   constants.FillablePriceConfig_Default,
+				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Dave_Num0_Id2_Clob0_Sell025BTC_Price50500_GTB12,
@@ -829,8 +828,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			// Overall insurance fund delta when liquidating at $50,500 is -$1.
 			order: constants.LiquidationOrder_Carl_Num0_Clob0_Buy1BTC_Price50500,
 
-			// Matches the first order since insurance fund balance is above `MaxInsuranceFundQuantumsForDeleveraging`
-			// and has enough to cover the losses (-$0.25).
+			// Matches the first order since insurance fund balance has enough to cover the losses (-$0.25).
 			// Does not match the second order since insurance fund delta is -$0.75 and insurance fund balance
 			// is $0.74 which is not enough to cover the loss, and therefore deleveraging is required.
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
@@ -899,11 +897,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			},
 
 			liquidationConfig: types.LiquidationsConfig{
-				MaxInsuranceFundQuantumsForDeleveraging: 750_001,
-				MaxLiquidationFeePpm:                    5_000,
-				FillablePriceConfig:                     constants.FillablePriceConfig_Default,
-				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
+				MaxLiquidationFeePpm:  5_000,
+				FillablePriceConfig:   constants.FillablePriceConfig_Default,
+				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			placedMatchableOrders: []types.MatchableOrder{
 				&constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price49500,
@@ -912,8 +909,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			// Overall insurance fund delta when liquidating at $50,500 is -$1.
 			order: constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price49500,
 
-			// Matches the first order since insurance fund balance is above `MaxInsuranceFundQuantumsForDeleveraging`
-			// and has enough to cover the losses (-$0.25).
+			// Matches the first order since insurance fund balance has enough to cover the losses (-$0.25).
 			// Does not match the second order since insurance fund delta is -$0.75 and insurance fund balance
 			// is $0.74 which is not enough to cover the loss, and therefore deleveraging is required.
 			expectedOrderStatus: types.LiquidationRequiresDeleveraging,
@@ -1636,7 +1632,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			},
 		},
 		`Partially matched but fails due to insufficient insurance fund balance and deleveraging is skipped -
-			negative TNC and insurance fund balance less than MaxInsuranceFundQuantumsForDeleveraging`: {
+			negative TNC`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1646,7 +1642,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
 			},
 
-			liquidationConfig: constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
 			placedMatchableOrders: []types.MatchableOrder{
 				// First order at $50,498, Carl pays $0.25 to the insurance fund.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,
@@ -1715,8 +1711,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				),
 			},
 		},
-		`Partially matched deleveraging is skipped -
-			negative TNC and insurance fund balance less than MaxInsuranceFundQuantumsForDeleveraging`: {
+		`Partially matched deleveraging is skipped - negative TNC`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -1726,7 +1721,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC.
 			},
 
-			liquidationConfig: constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+			liquidationConfig: constants.LiquidationsConfig_No_Limit,
 			placedMatchableOrders: []types.MatchableOrder{
 				// First order at $50,498, Carl pays $0.25 to the insurance fund.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50498_GTB11,

@@ -64,11 +64,4 @@ var (
 			MaxQuantumsInsuranceLost: 10_000_000_000, // $10,000
 		},
 	}
-	LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging = clobtypes.LiquidationsConfig{
-		MaxInsuranceFundQuantumsForDeleveraging: 10_000_000_000, // $10,000
-		MaxLiquidationFeePpm:                    5_000,
-		FillablePriceConfig:                     FillablePriceConfig_Default,
-		PositionBlockLimits:                     PositionBlockLimits_No_Limit,
-		SubaccountBlockLimits:                   SubaccountBlockLimits_No_Limit,
-	}
 )
