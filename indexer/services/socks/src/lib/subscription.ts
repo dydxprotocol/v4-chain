@@ -18,7 +18,7 @@ import {
 } from '../types';
 import { axiosRequest } from './axios';
 import { V4_MARKETS_ID, WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
-import { InvalidChannelError } from './errors';
+import { BlockedError, InvalidChannelError } from './errors';
 import { RateLimiter } from './rate-limit';
 
 const COMLINK_URL: string = `http://${config.COMLINK_URL}`;
@@ -140,11 +140,18 @@ export class Subscriptions {
         id,
       });
 
+      // For blocked errors add the erorr message into the error message sent in the websocket
+      // connection
+      let errorMsg: string = `Internal error, could not fetch data for subscription: ${channel}.`;
+      if (error instanceof BlockedError) {
+        errorMsg = error.message;
+      }
+
       sendMessage(
         ws,
         connectionId,
         createErrorMessage(
-          `Internal error, could not fetch data for subscription: ${channel}`,
+          errorMsg,
           connectionId,
           messageId,
         ),
@@ -520,6 +527,11 @@ export class Subscriptions {
       // indexed to an existing subscription.
       if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 404) {
         return EMPTY_INITIAL_RESPONSE;
+      }
+      // 403 indicates a blocked address. Throw a specific error for blocked addresses with a
+      // specific error message detailing why the subscription failed due to a blocked address.
+      if (error instanceof AxiosSafeServerError && (error as AxiosSafeServerError).status === 403) {
+        throw new BlockedError();
       }
       throw error;
     }
