@@ -26,8 +26,8 @@ TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24
 # Each testnet validator self-delegates 500k whole coins of native token.
 TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000$EIGHTEEN_ZEROS # 5e23
 ETH_CHAIN_ID=11155111 # sepolia
-# https://sepolia.etherscan.io/address/0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0
-ETH_BRIDGE_ADDRESS="0xcca9D5f0a3c58b6f02BD0985fC7F9420EA24C1f0"
+# https://sepolia.etherscan.io/address/0xf75012c350e4ad55be2048bd67ce6e03b20de82d
+ETH_BRIDGE_ADDRESS="0xf75012c350e4ad55be2048bd67ce6e03b20de82d"
 TOTAL_NATIVE_TOKEN_SUPPLY=1000000000$EIGHTEEN_ZEROS # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=5
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=4322136
@@ -70,6 +70,10 @@ function edit_genesis() {
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
+	# reduced deposit period
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
+	# reduced voting period
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s' 
 
 	# Update staking module.
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
