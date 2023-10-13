@@ -322,7 +322,6 @@ const GenesisState = `{
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 100000
         },
-        "max_insurance_fund_quantums_for_deleveraging": "0",
         "max_liquidation_fee_ppm": 5000,
         "position_block_limits": {
           "max_position_portion_liquidated_ppm": 1000000,

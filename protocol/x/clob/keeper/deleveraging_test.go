@@ -220,9 +220,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 		// Expectations.
 		expectedCanDeleverageSubaccount bool
 	}{
-		`Cannot deleverage when subaccount has positive TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Cannot deleverage when subaccount has positive TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
@@ -231,9 +230,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			expectedCanDeleverageSubaccount: false,
 		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Cannot deleverage when subaccount has zero TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
@@ -242,54 +240,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			expectedCanDeleverageSubaccount: false,
 		},
-		`Cannot deleverage when subaccount has negative TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is equal to
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Can deleverage when subaccount has negative TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is less than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(0), // $0
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Can deleverage when subaccount has negative TNC, insurance fund balance is equal to
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: true,
-		},
-		`Can deleverage when subaccount has negative TNC, insurance fund balance is less than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(0), // $0
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
