@@ -64,7 +64,7 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 	// Need to divide by 1 million (done by `BigIntMulPpm`) as both clamp factor and margin are in units of ppm.
 	return lib.BigIntMulPpm(
 		new(big.Int).SetUint64(uint64(clampFactorPpm)),
-		liquidityTier.InitialMarginPpm-liquidityTier.GetMaintenanceMarginPpm(),
+		liquidityTier.InitialMarginPpm-maintenanceMarginPpm,
 	)
 }
 
