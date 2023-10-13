@@ -103,8 +103,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
-
 	// Lib
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
@@ -187,11 +185,6 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// `Upgrades` defines the upgrade handlers and store loaders for the application.
-	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{}
-	Forks    = []upgrades.Fork{}
 )
 
 var (

@@ -14,41 +14,19 @@ import (
 )
 
 func TestSetupUpgradeHandlers(t *testing.T) {
-	upgradeName := "test-upgrade"
-	createHandlerWasCalled := 0
-	handlerWasCalled := 0
-	upgradeHandlerFn := func(manager *module.Manager, configurator module.Configurator) types.UpgradeHandler {
-		createHandlerWasCalled++
-		return func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-			handlerWasCalled++
-			return nil, errors.New("upgrade failed")
-		}
-	}
-
 	tests := map[string]struct {
-		upgrades      []upgrades.Upgrade
+		upgradeNames  []string
 		expectedPanic string
 	}{
-		"Successfully setup handler": {
-			upgrades: []upgrades.Upgrade{
-				{
-					UpgradeName:          upgradeName,
-					CreateUpgradeHandler: upgradeHandlerFn,
-				},
-			},
+		"Successfully setup upgrade handler": {
+			upgradeNames: []string{"test1"},
 		},
-		"Panic due to duplicate handlers": {
-			upgrades: []upgrades.Upgrade{
-				{
-					UpgradeName:          upgradeName,
-					CreateUpgradeHandler: upgradeHandlerFn,
-				},
-				{
-					UpgradeName:          upgradeName,
-					CreateUpgradeHandler: upgradeHandlerFn,
-				},
-			},
-			expectedPanic: "Cannot register duplicate upgrade handler 'test-upgrade'",
+		"Successfully setup multiple upgrade handlers": {
+			upgradeNames: []string{"test1", "test2"},
+		},
+		"Panic due to duplicate uppgrade names": {
+			upgradeNames:  []string{"test1", "test1"},
+			expectedPanic: "Cannot register duplicate upgrade handler 'test1'",
 		},
 	}
 
@@ -56,16 +34,33 @@ func TestSetupUpgradeHandlers(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Restore the global variable back to original pre-test state.
 			originalUpgrades := app.Upgrades
-			defer func() {
+			t.Cleanup(func() {
 				app.Upgrades = originalUpgrades
-			}()
+			})
 
-			app.Upgrades = tc.upgrades
+			createHandlerWasCalled := make([]int, len(tc.upgradeNames))
+			handlerWasCalled := make([]int, len(tc.upgradeNames))
+			for i, upgradeName := range tc.upgradeNames {
+				ii := i
+				app.Upgrades = append(app.Upgrades, upgrades.Upgrade{
+					UpgradeName: upgradeName,
+					CreateUpgradeHandler: func(manager *module.Manager, configurator module.Configurator) types.UpgradeHandler {
+						createHandlerWasCalled[ii] = createHandlerWasCalled[ii] + 1
+						return func(ctx sdk.Context, plan types.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+							handlerWasCalled[ii]++
+							return nil, errors.New("upgrade failed")
+						}
+					},
+				})
+			}
+
 			if tc.expectedPanic == "" {
 				app := testapp.DefaultTestApp(nil)
-				require.True(t, app.UpgradeKeeper.HasHandler(upgradeName))
-				require.Equal(t, 1, createHandlerWasCalled)
-				require.Equal(t, 0, handlerWasCalled)
+				for i, upgradeName := range tc.upgradeNames {
+					require.True(t, app.UpgradeKeeper.HasHandler(upgradeName))
+					require.Equal(t, 1, createHandlerWasCalled[i])
+					require.Equal(t, 0, handlerWasCalled[i])
+				}
 			} else {
 				require.PanicsWithValue(
 					t,
@@ -77,4 +72,9 @@ func TestSetupUpgradeHandlers(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestDefaultUpgradesAndForks(t *testing.T) {
+	require.Empty(t, app.Upgrades, "Expected empty upgrades list")
+	require.Empty(t, app.Forks, "Expected empty forks list")
 }
