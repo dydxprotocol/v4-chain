@@ -2027,7 +2027,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					ctx,
 					tc.order.GetSubaccountId(),
 					tc.order.MustGetLiquidatedPerpetualId(),
-					tc.order.GetDeltaQuantums(),
 				)
 				require.NoError(t, err)
 			}

@@ -22,7 +22,6 @@ type LiquidationsKeeper interface {
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
-		deltaQuantums *big.Int,
 	) (
 		quantumsDeleveraged *big.Int,
 		err error,

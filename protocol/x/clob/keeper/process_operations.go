@@ -533,12 +533,8 @@ func (k Keeper) PersistMatchLiquidationToState(
 	ordersMap map[types.OrderId]types.Order,
 ) error {
 	// If the subaccount is not liquidatable, do nothing.
-	isLiquidatable, err := k.IsLiquidatable(ctx, matchLiquidation.Liquidated)
-	if err != nil {
+	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {
 		return err
-	}
-	if !isLiquidatable {
-		return types.ErrSubaccountNotLiquidatable
 	}
 
 	takerOrder, err := k.GetLiquidationOrderForPerpetual(
