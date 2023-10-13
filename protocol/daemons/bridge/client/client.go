@@ -39,7 +39,7 @@ func Start(
 	}
 	defer func() {
 		if connErr := grpcClient.CloseConnection(queryConn); connErr != nil {
-			err = connErr
+			logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
 		}
 	}()
 
@@ -51,7 +51,7 @@ func Start(
 	}
 	defer func() {
 		if connErr := grpcClient.CloseConnection(daemonConn); connErr != nil {
-			err = connErr
+			logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
 		}
 	}()
 
@@ -114,25 +114,25 @@ func RunBridgeDaemonTaskLoop(
 	//   - NextId: Next bridge event ID to query for.
 	eventParams, err := queryClient.EventParams(ctx, &bridgetypes.QueryEventParamsRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch event params: %w", err)
 	}
 	proposeParams, err := queryClient.ProposeParams(ctx, &bridgetypes.QueryProposeParamsRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch propose params: %w", err)
 	}
 	recognizedEventInfo, err := queryClient.RecognizedEventInfo(ctx, &bridgetypes.QueryRecognizedEventInfoRequest{})
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch recognized event info: %w", err)
 	}
 
 	// Verify Chain ID.
 	chainId, err := ethClient.ChainID(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch chain ID: %w", err)
 	}
 	if chainId.Uint64() != eventParams.Params.EthChainId {
 		return fmt.Errorf(
-			"Expected chain ID %d but node has chain ID %d",
+			"expected chain ID %d but node has chain ID %d",
 			eventParams.Params.EthChainId,
 			chainId,
 		)
@@ -147,7 +147,7 @@ func RunBridgeDaemonTaskLoop(
 	)
 	logs, err := ethClient.FilterLogs(ctx, filterQuery)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to fetch logs: %w", err)
 	}
 	telemetry.IncrCounter(
 		float32(len(logs)),
@@ -157,19 +157,16 @@ func RunBridgeDaemonTaskLoop(
 	)
 
 	// Parse logs into bridge events.
-	newBridgeEvents := make([]bridgetypes.BridgeEvent, 0, len(logs))
-	for _, log := range logs {
-		newBridgeEvents = append(
-			newBridgeEvents,
-			libeth.BridgeLogToEvent(log, eventParams.Params.Denom),
-		)
+	newBridgeEvents := make([]bridgetypes.BridgeEvent, len(logs))
+	for i, log := range logs {
+		newBridgeEvents[i] = libeth.BridgeLogToEvent(log, eventParams.Params.Denom)
 	}
 
 	// Send bridge events to bridge server.
 	if _, err = serviceClient.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
 		BridgeEvents: newBridgeEvents,
 	}); err != nil {
-		return err
+		return fmt.Errorf("failed to add bridge events: %w", err)
 	}
 
 	// Success.
@@ -189,8 +186,7 @@ func getFilterQuery(
 	// Generate `ethcommon.Hash`s of the next `numIds` event IDs.
 	eventIdHashes := make([]ethcommon.Hash, numIds)
 	for i := uint32(0); i < numIds; i++ {
-		h := ethcommon.BigToHash(big.NewInt(int64(firstId + i)))
-		eventIdHashes = append(eventIdHashes, h)
+		eventIdHashes[i] = ethcommon.BigToHash(new(big.Int).SetUint64(uint64(firstId + i)))
 	}
 
 	return eth.FilterQuery{
