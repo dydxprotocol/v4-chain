@@ -79,7 +79,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	telemetry.MeasureSince(
 		startGetLiquidationOrders,
 		types.ModuleName,
-		metrics.ClobLiquidateSubaccounts_GetLiquidations,
+		metrics.LiquidateSubaccounts_GetLiquidations,
 		metrics.Latency,
 	)
 
@@ -128,7 +128,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	telemetry.MeasureSince(
 		startPlaceLiquidationOrders,
 		types.ModuleName,
-		metrics.ClobLiquidateSubaccounts_PlaceLiquidations,
+		metrics.LiquidateSubaccounts_PlaceLiquidations,
 		metrics.Latency,
 	)
 
@@ -154,7 +154,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	telemetry.MeasureSince(
 		startDeleverageSubaccounts,
 		types.ModuleName,
-		metrics.ClobLiquidateSubaccounts_Deleverage,
+		metrics.LiquidateSubaccounts_Deleverage,
 		metrics.Latency,
 	)
 
