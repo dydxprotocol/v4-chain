@@ -26,14 +26,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
 ) error {
+	lib.AssertCheckTxMode(ctx)
+
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
 		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
 		metrics.Latency,
 	)
-
-	lib.AssertCheckTxMode(ctx)
 
 	telemetry.ModuleSetGauge(
 		types.ModuleName,

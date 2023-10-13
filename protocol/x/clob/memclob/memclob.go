@@ -848,6 +848,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	shortTermOrderTxBytes map[types.OrderHash][]byte,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
@@ -861,8 +863,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		metrics.MemClobReplayOperations,
 		metrics.OperationsQueueLength,
 	)
-
-	lib.AssertCheckTxMode(ctx)
 
 	// Recover from any panics that occur during replay operations.
 	// This could happen in cases where i.e. A subaccount balance overflowed
@@ -1111,14 +1111,14 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 	ctx sdk.Context,
 	localValidatorOperationsQueue []types.InternalOperation,
 ) {
+	lib.AssertCheckTxMode(ctx)
+
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
 		metrics.RemoveAndClearOperationsQueue,
 		metrics.Latency,
 	)
-
-	lib.AssertCheckTxMode(ctx)
 
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
@@ -1171,14 +1171,14 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	removedStatefulOrderIds []types.OrderId,
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
+	lib.AssertCheckTxMode(ctx)
+
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
 		metrics.MemClobPurgeInvalidState,
 		metrics.Latency,
 	)
-
-	lib.AssertCheckTxMode(ctx)
 
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
