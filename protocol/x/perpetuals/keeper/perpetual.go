@@ -293,7 +293,6 @@ func (k Keeper) processPremiumVotesIntoSamples(
 					metrics.PerpetualId,
 					int(perp.GetId()),
 				),
-				// TODO(DEC-1071): Add epoch number as label.
 			},
 		)
 
@@ -397,7 +396,6 @@ func (k Keeper) getFundingIndexDelta(
 // if the current block is the start of a new funding-sample epoch.
 // Otherwise, does nothing and returns an empty message.
 // Does not make any changes to state.
-// TODO(DEC-1310): Rename to reflect new premium sampling design.
 func (k Keeper) GetAddPremiumVotes(
 	ctx sdk.Context,
 ) (
@@ -669,7 +667,6 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 					metrics.PerpetualId,
 					int(perp.Params.Id),
 				),
-				// TODO(DEC-1071): Add epoch number as label.
 			},
 		)
 

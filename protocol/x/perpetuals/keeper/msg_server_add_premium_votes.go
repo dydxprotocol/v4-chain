@@ -9,7 +9,6 @@ import (
 )
 
 // AddPremiumVotes add new premium sample votes from a proposer to the application.
-// TODO(DEC-1310): Rename this message handler.
 func (k msgServer) AddPremiumVotes(
 	goCtx context.Context,
 	msg *types.MsgAddPremiumVotes,
