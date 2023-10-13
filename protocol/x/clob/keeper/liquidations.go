@@ -28,13 +28,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) error {
 	lib.AssertCheckTxMode(ctx)
 
-	defer telemetry.MeasureSince(
-		time.Now(),
-		types.ModuleName,
-		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
-		metrics.Latency,
-	)
-
 	telemetry.ModuleSetGauge(
 		types.ModuleName,
 		float32(len(subaccountIds)),
@@ -43,18 +36,26 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Count,
 	)
 
-	pseudoRand := k.GetPseudoRand(ctx)
+	// Early return if there are 0 subaccounts to liquidate.
+	numSubaccounts := len(subaccountIds)
+	if numSubaccounts == 0 {
+		return nil
+	}
+
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
+		metrics.Latency,
+	)
 
 	// Get the liquidation order for each subaccount.
 	// Process at-most `MaxLiquidationAttemptsPerBlock` subaccounts, starting from a pseudorandom location
-	// in the slice.
+	// in the slice. Note `numSubaccounts` is guaranteed to be non-zero at this point, so `Intn` shouldn't panic.
+	pseudoRand := k.GetPseudoRand(ctx)
 	liquidationOrders := make([]types.LiquidationOrder, 0)
-	numSubaccounts := len(subaccountIds)
 	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
-	indexOffset := 0
-	if numSubaccounts > 0 {
-		indexOffset = pseudoRand.Intn(numSubaccounts)
-	}
+	indexOffset := pseudoRand.Intn(numSubaccounts)
 
 	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
@@ -151,6 +152,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 	}
+
 	telemetry.MeasureSince(
 		startDeleverageSubaccounts,
 		types.ModuleName,
