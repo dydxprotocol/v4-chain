@@ -8,6 +8,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,14 +50,51 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
-	telemetry.IncrCounter(
-		1,
-		types.ModuleName,
-		metrics.PrepareCheckState,
-		metrics.DeleverageSubaccount,
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
+	}
+	if quantumsDeleveraged.Sign() == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.Unfilled))
+	} else if quantumsDeleveraged.CmpAbs(deltaQuantums) == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.FullyFilled))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.PartiallyFilled))
+	}
+	// Record the status of the deleveraging operation.
+	telemetry.IncrCounterWithLabels([]string{types.ModuleName, metrics.DeleverageSubaccount}, 1, labels)
+
+	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		new(big.Int).Abs(deltaQuantums),
+	); err == nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums},
+			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			labels,
+		)
+		gometrics.AddSampleWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums, metrics.Distribution},
+			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			labels,
+		)
+	}
+
+	// Record the percent filled of the deleveraging operation as a distribution.
+	percentFilled, _ := new(big.Float).Quo(
+		new(big.Float).SetInt(new(big.Int).Abs(quantumsDeleveraged)),
+		new(big.Float).SetInt(new(big.Int).Abs(deltaQuantums)),
+	).Float32()
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Deleveraging, metrics.PercentFilled, metrics.Distribution},
+		percentFilled,
+		labels,
 	)
 
-	return k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	return quantumsDeleveraged, err
 }
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
@@ -219,6 +257,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				)
 			} else {
 				// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
+				// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 				offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
 				k.Logger(ctx).Debug(
@@ -238,38 +277,30 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		k.GetPseudoRand(ctx),
 	)
 
-	telemetry.IncrCounter(
-		float32(numSubaccountsIterated),
-		types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
-	)
-	telemetry.IncrCounter(
-		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
-		types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
-	)
-	telemetry.IncrCounter(
-		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
-		types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
-	)
-
-	if deltaQuantumsRemaining.Sign() == 0 {
-		// Deleveraging was successful.
-		telemetry.IncrCounter(1, types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.Success, metrics.Count)
-	} else {
-		// Not enough offsetting subaccounts to fully offset the liquidated subaccount's position.
-		telemetry.IncrCounter(
-			1,
-			types.ModuleName, metrics.CheckTx, metrics.Deleveraging, metrics.NotEnoughPositionToFullyOffset, metrics.Count,
-		)
-		k.Logger(ctx).Debug(
-			"OffsetSubaccountPerpetualPosition: Not enough positions to fully offset position",
-			"subaccount", liquidatedSubaccountId,
-			"perpetual", perpetualId,
-			"deltaQuantumsTotal", deltaQuantumsTotal.String(),
-			"deltaQuantumsRemaining", deltaQuantumsRemaining.String(),
-		)
-		// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
-
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
+		},
+		float32(numSubaccountsIterated),
+		labels,
+	)
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
+		},
+		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
+		labels,
+	)
+	telemetry.SetGaugeWithLabels(
+		[]string{
+			types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
+		},
+		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
+		labels,
+	)
 	return fills, deltaQuantumsRemaining
 }
 
@@ -381,6 +412,24 @@ func (k Keeper) ProcessDeleveraging(
 	// If not successful, return error indicating why.
 	if updateErr := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); updateErr != nil {
 		return updateErr
+	}
+
+	// Stat quantums deleveraged in quote quantums.
+	if deleveragedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
+		ctx,
+		perpetualId,
+		new(big.Int).Abs(deltaQuantums),
+	); err == nil {
+		labels := []gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+			metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
+		}
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
+			labels,
+		)
 	}
 
 	// Deleveraging was successful, therefore emit a cometbft event indicating a deleveraging match occurred.

@@ -3,7 +3,6 @@ package keeper
 import (
 	"bytes"
 	"errors"
-	"fmt"
 	"math"
 	"math/big"
 	"sort"
@@ -28,6 +27,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	subaccountIds []satypes.SubaccountId,
 ) error {
 	lib.AssertCheckTxMode(ctx)
+
+	telemetry.ModuleSetGauge(
+		types.ModuleName,
+		float32(len(subaccountIds)),
+		metrics.Liquidations,
+		metrics.LiquidatableSubaccountIds,
+		metrics.Count,
+	)
 
 	pseudoRand := k.GetPseudoRand(ctx)
 
@@ -73,7 +80,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	})
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	numFilledLiquidations := uint32(0)
 	numAttemptedDeleveraging := uint32(0)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
@@ -92,23 +98,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
 		if err != nil {
 			k.Logger(ctx).Error(
-				fmt.Sprintf(
-					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrder,
-					err,
-				),
+				"Failed to liquidate subaccount",
+				"liquidationOrder", *liquidationOrder,
+				"error", err,
 			)
 			return err
 		}
 
-		// Keep a count of partially and fully filled liquidations for this block.
-		if optimisticallyFilledQuantums > 0 {
-			numFilledLiquidations++
-		}
-
 		if optimisticallyFilledQuantums == 0 {
-			telemetry.IncrCounter(1, types.ModuleName, metrics.PrepareCheckState, metrics.UnfilledLiquidationOrders)
-
 			if numAttemptedDeleveraging < k.Flags.MaxDeleveragingAttemptsPerBlock {
 				// The liquidation order was unfilled. Try to deleverage the subaccount.
 				deltaQuantums := liquidationOrder.GetDeltaQuantums()
@@ -134,13 +131,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		}
 	}
 
-	telemetry.IncrCounter(
-		float32(numFilledLiquidations),
-		types.ModuleName,
-		metrics.PrepareCheckState,
-		metrics.NumMatchedLiquidationOrders,
-	)
-
 	return nil
 }
 
@@ -163,6 +153,12 @@ func (k Keeper) MaybeGetLiquidationOrder(
 	if !isLiquidatable {
 		return nil, types.ErrSubaccountNotLiquidatable
 	}
+
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.ConstructLiquidationOrder,
+	)
 
 	// The subaccount is liquidatable. Get the perpetual position and position size to liquidate.
 	perpetualId, baseQuantumsBig, err := k.GetPerpetualPositionToLiquidate(ctx, subaccountId)
@@ -211,6 +207,12 @@ func (k Keeper) PlacePerpetualLiquidation(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	defer telemetry.ModuleMeasureSince(
+		types.ModuleName,
+		time.Now(),
+		metrics.PlacePerpetualLiquidation,
+	)
+
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,
 		offchainUpdates,
@@ -222,34 +224,64 @@ func (k Keeper) PlacePerpetualLiquidation(
 
 	// TODO(DEC-1323): Potentially allow liquidating the same perpetual + subaccount
 	// multiple times in a block.
+	perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
 	k.MustUpdateSubaccountPerpetualLiquidated(
 		ctx,
 		liquidationOrder.GetSubaccountId(),
-		liquidationOrder.MustGetLiquidatedPerpetualId(),
+		perpetualId,
 	)
 
-	telemetry.IncrCounter(
+	labels := []gometrics.Label{
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+	}
+	if liquidationOrder.IsBuy() {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
+	}
+
+	// Record the percent filled of the liquidation as a distribution.
+	percentFilled, _ := new(big.Float).Quo(
+		new(big.Float).SetUint64(orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64()),
+		new(big.Float).SetUint64(liquidationOrder.GetBaseQuantums().ToUint64()),
+	).Float32()
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Liquidations, metrics.PercentFilled, metrics.Distribution},
+		percentFilled,
+		labels,
+	)
+
+	if orderSizeOptimisticallyFilledFromMatchingQuantums == 0 {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.Unfilled))
+	} else if orderSizeOptimisticallyFilledFromMatchingQuantums == liquidationOrder.GetBaseQuantums() {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.FullyFilled))
+	} else {
+		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.PartiallyFilled))
+	}
+	// Stat the number of liquidation orders placed.
+	telemetry.IncrCounterWithLabels(
+		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Count},
 		1,
-		metrics.Liquidations,
-		metrics.PlacePerpetualLiquidation,
-		metrics.Count,
+		labels,
 	)
 
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.BaseQuantums},
-		metrics.GetMetricValueFromBigInt(liquidationOrder.GetBaseQuantums().ToBigInt()),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
-		},
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.BaseQuantums},
-		metrics.GetMetricValueFromBigInt(orderSizeOptimisticallyFilledFromMatchingQuantums.ToBigInt()),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(metrics.PerpetualId, int(liquidationOrder.MustGetLiquidatedPerpetualId())),
-		},
-	)
+	// Stat the volume of liquidation orders placed.
+	if totalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		liquidationOrder.GetBaseQuantums().ToBigInt(),
+	); err == nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
+			labels,
+		)
+		gometrics.AddSampleWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums, metrics.Distribution},
+			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
+			labels,
+		)
+	}
 
 	k.SendOffchainMessages(offchainUpdates, nil, metrics.SendPlacePerpetualLiquidationOffchainUpdates)
 	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
@@ -992,16 +1024,6 @@ func (k Keeper) validateMatchedLiquidation(
 	)
 	if err != nil {
 		return nil, err
-	}
-
-	sign := metrics.Positive
-	if insuranceFundDelta.Sign() == -1 {
-		sign = metrics.Negative
-	}
-
-	// Only increment this counter during `DeliverTx`.
-	if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
-		telemetry.IncrCounter(1, metrics.Liquidations, metrics.InsuranceFundDelta, sign)
 	}
 
 	// Validate that processing the liquidation fill does not leave insufficient funds

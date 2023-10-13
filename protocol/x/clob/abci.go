@@ -3,6 +3,7 @@ package clob
 import (
 	"fmt"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
@@ -104,6 +105,13 @@ func EndBlocker(
 
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
+
+	// Emit relevant metrics at the end of every block.
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.InsuranceFundBalance},
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		[]gometrics.Label{},
+	)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -179,20 +187,6 @@ func PrepareCheckState(
 	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
 		panic(err)
 	}
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		float32(len(subaccountIds)),
-		metrics.Liquidations,
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
-		metrics.InsuranceFundBalance,
-	)
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
