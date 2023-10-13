@@ -861,7 +861,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		}
 	}()
 
-	placedStatefulOrderIds := make(map[types.OrderId]struct{})
+	placedPreexistingStatefulOrderIds := make(map[types.OrderId]struct{})
+	placedOrderRemovalOrderIds := make(map[types.OrderId]struct{})
 	// Iterate over all provided operations.
 	for _, operation := range localOperations {
 		switch operation.Operation.(type) {
@@ -939,11 +940,19 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			// Log an error if the order was already placed. We should not see duplicate Preexisting Stateful Orders
 			// and Order Removals (which, when replayed, can result in placements) should never precede a Preexisting
 			// Stateful Order operation.
-			if _, found := placedStatefulOrderIds[*orderId]; found {
+			if _, found := placedPreexistingStatefulOrderIds[*orderId]; found {
 				m.clobKeeper.Logger(ctx).Error(
 					"ReplayOperations: PreexistingStatefulOrder operation for order which was already placed",
 					metrics.OrderId, *orderId,
-					metrics.BlockHeight, ctx.BlockHeight(),
+					metrics.BlockHeight, ctx.BlockHeight()+1,
+				)
+				continue
+			}
+			if _, found := placedOrderRemovalOrderIds[*orderId]; found {
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: PreexistingStatefulOrder preceded by Order Removal",
+					metrics.OrderId, *orderId,
+					metrics.BlockHeight, ctx.BlockHeight()+1,
 				)
 				continue
 			}
@@ -954,7 +963,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			placedStatefulOrderIds[*orderId] = struct{}{}
+			placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
@@ -971,7 +980,22 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 
 			// Prevent double placement caused by PreexistingStatefulOrder and Order Removal
 			// both existing in local operations.
-			if _, found := placedStatefulOrderIds[orderId]; found {
+			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+				telemetry.IncrCounterWithLabels(
+					[]string{types.ModuleName, metrics.ReplayOperations, metrics.SkipOrderRemovalAfterPlacement},
+					1,
+					orderId.GetOrderIdLabels(),
+				)
+				continue
+			}
+
+			// Log an error if there are two Order Removals for the same OrderId
+			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: OrderRemoval operation for order which was already removed",
+					metrics.OrderId, orderId,
+					metrics.BlockHeight, ctx.BlockHeight()+1,
+				)
 				continue
 			}
 
@@ -989,7 +1013,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
-			placedStatefulOrderIds[orderId] = struct{}{}
+			placedOrderRemovalOrderIds[orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
