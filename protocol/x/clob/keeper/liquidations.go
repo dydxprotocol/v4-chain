@@ -152,7 +152,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 	}
-
 	telemetry.MeasureSince(
 		startDeleverageSubaccounts,
 		types.ModuleName,
