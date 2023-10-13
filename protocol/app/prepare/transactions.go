@@ -41,7 +41,7 @@ func NewPrepareProposalTxs(
 func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
 	oldBytes := uint64(len(t.UpdateMarketPricesTx))
 	newBytes := uint64(len(tx))
-	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
+	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.UpdateMarketPricesTx = tx
@@ -52,7 +52,7 @@ func (t *PrepareProposalTxs) SetUpdateMarketPricesTx(tx []byte) error {
 func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
 	oldBytes := uint64(len(t.AddPremiumVotesTx))
 	newBytes := uint64(len(tx))
-	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
+	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.AddPremiumVotesTx = tx
@@ -63,7 +63,7 @@ func (t *PrepareProposalTxs) SetAddPremiumVotesTx(tx []byte) error {
 func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
 	oldBytes := uint64(len(t.ProposedOperationsTx))
 	newBytes := uint64(len(tx))
-	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
+	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.ProposedOperationsTx = tx
@@ -74,7 +74,7 @@ func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
 func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
 	oldBytes := uint64(len(t.AcknowledgeBridgesTx))
 	newBytes := uint64(len(tx))
-	if err := t.updateUsedBytes(oldBytes, newBytes); err != nil {
+	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
 		return err
 	}
 	t.AcknowledgeBridgesTx = tx
@@ -96,7 +96,7 @@ func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
 		return errors.New("No txs to add.")
 	}
 
-	if err := t.updateUsedBytes(0, bytesToAdd); err != nil {
+	if err := t.UpdateUsedBytes(0, bytesToAdd); err != nil {
 		return err
 	}
 
@@ -104,9 +104,9 @@ func (t *PrepareProposalTxs) AddOtherTxs(allTxs [][]byte) error {
 	return nil
 }
 
-// updateUsedBytes updates the used bytes field. This returns an error if the num used bytes
+// UpdateUsedBytes updates the used bytes field. This returns an error if the num used bytes
 // exceeds the max byte limit.
-func (t *PrepareProposalTxs) updateUsedBytes(
+func (t *PrepareProposalTxs) UpdateUsedBytes(
 	bytesToRemove uint64,
 	bytesToAdd uint64,
 ) error {

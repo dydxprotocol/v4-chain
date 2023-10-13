@@ -232,6 +232,66 @@ func Test_AddOtherTxs(t *testing.T) {
 	}
 }
 
+func Test_UpdateUsedBytes(t *testing.T) {
+	tests := map[string]struct {
+		usedBytes     uint64
+		bytesToRemove uint64
+		bytesToAdd    uint64
+
+		expectedErr error
+	}{
+		"Valid: replaced > add": {
+			usedBytes:     4,
+			bytesToRemove: 4,
+			bytesToAdd:    2,
+		},
+		"Valid: replaced = add": {
+			usedBytes:     5,
+			bytesToRemove: 3,
+			bytesToAdd:    3,
+		},
+		"Valid: replaced < add": {
+			usedBytes:     5,
+			bytesToRemove: 3,
+			bytesToAdd:    5,
+		},
+		"Cannot be Negative": {
+			usedBytes:     0,
+			bytesToRemove: 3,
+			bytesToAdd:    2,
+			expectedErr:   errors.New("Result cannot be negative"),
+		},
+		"Exceeds max": {
+			usedBytes:     0,
+			bytesToRemove: 0,
+			bytesToAdd:    11,
+			expectedErr:   errors.New("Exceeds max: max=10, used=0, adding=11"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ppt, err := prepare.NewPrepareProposalTxs(
+				abci.RequestPrepareProposal{
+					MaxTxBytes: 10,
+				},
+			)
+			require.NoError(t, err)
+			require.Equal(t, int64(10), ppt.MaxBytes)
+			require.Equal(t, int64(0), ppt.UsedBytes)
+
+			ppt.UsedBytes = tc.usedBytes
+
+			err = ppt.UpdateUsedBytes(tc.bytesToRemove, tc.bytesToAdd)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+		})
+	}
+}
+
 func Test_GetAvailableBytes(t *testing.T) {
 	tests := map[string]struct {
 		pricesTx           []byte
