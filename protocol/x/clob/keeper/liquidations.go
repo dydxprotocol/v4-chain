@@ -168,7 +168,7 @@ func (k Keeper) MaybeGetLiquidationOrder(
 }
 
 // GetLiquidationOrderForPerpetual returns a liquidation order for a subaccount
-// given a perpetual ID and position size delta.
+// given a perpetual ID.
 func (k Keeper) GetLiquidationOrderForPerpetual(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
@@ -348,7 +348,11 @@ func (k Keeper) EnsureIsLiquidatable(
 		return err
 	}
 	if !isLiquidatable {
-		return types.ErrSubaccountNotLiquidatable
+		return errorsmod.Wrapf(
+			types.ErrSubaccountNotLiquidatable,
+			"SubaccountId %v is not liquidatable",
+			subaccountId,
+		)
 	}
 	return nil
 }
@@ -698,9 +702,9 @@ func (k Keeper) GetLiquidationInsuranceFundDelta(
 	), nil
 }
 
-// GetPerpetualPositionToLiquidate determines which position and position size to liquidate on the
+// GetPerpetualPositionToLiquidate determines which position to liquidate on the
 // passed-in subaccount (after accounting for the `update`). It will return the perpetual id that
-// will be used for liquidating the perpetual position
+// will be used for liquidating the perpetual position.
 // This function returns an error if the subaccount has no perpetual positions to liquidate.
 func (k Keeper) GetPerpetualPositionToLiquidate(
 	ctx sdk.Context,
@@ -711,18 +715,19 @@ func (k Keeper) GetPerpetualPositionToLiquidate(
 ) {
 	// Fetch the subaccount from state.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
-	subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
 
 	numPositions := len(subaccount.PerpetualPositions)
-	indexOffset := k.GetPseudoRand(ctx).Intn(numPositions)
-
-	for i := 0; i < numPositions; i++ {
-		position := subaccount.PerpetualPositions[(i+indexOffset)%numPositions]
-		// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
-		// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
-		// id will be liquidated first.
-		if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
-			return position.PerpetualId, nil
+	if numPositions > 0 {
+		subaccountLiquidationInfo := k.GetSubaccountLiquidationInfo(ctx, subaccountId)
+		indexOffset := k.GetPseudoRand(ctx).Intn(numPositions)
+		for i := 0; i < numPositions; i++ {
+			position := subaccount.PerpetualPositions[(i+indexOffset)%numPositions]
+			// Note that this could run in O(n^2) time. This is fine for now because we have less than a hundred
+			// perpetuals and only liquidate once per subaccount per block. This means that the position with smallest
+			// id will be liquidated first.
+			if !subaccountLiquidationInfo.HasPerpetualBeenLiquidatedForSubaccount(position.PerpetualId) {
+				return position.PerpetualId, nil
+			}
 		}
 	}
 
