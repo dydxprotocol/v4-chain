@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"math"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -2393,7 +2394,7 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			insuranceFundBalance: 999_999, // Insurance fund only has $0.999999
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
-		"Succeeds when insurance fund has enough balance but is less than MaxInsuranceFundQuantumsForDeleveraging": {
+		"Succeeds when insurance fund has enough balance": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
@@ -2429,11 +2430,10 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			},
 			insuranceFundBalance: 2_000_000, // Insurance fund has $2
 			liquidationConfig: &types.LiquidationsConfig{
-				MaxInsuranceFundQuantumsForDeleveraging: 5_000_000, // $5
-				MaxLiquidationFeePpm:                    5_000,
-				FillablePriceConfig:                     constants.FillablePriceConfig_Default,
-				PositionBlockLimits:                     constants.PositionBlockLimits_No_Limit,
-				SubaccountBlockLimits:                   constants.SubaccountBlockLimits_No_Limit,
+				MaxLiquidationFeePpm:  5_000,
+				FillablePriceConfig:   constants.FillablePriceConfig_Default,
+				PositionBlockLimits:   constants.PositionBlockLimits_No_Limit,
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_No_Limit,
 			},
 			expectedError: nil,
 			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{

@@ -120,23 +120,12 @@ func (k Keeper) GetInsuranceFundBalance(
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
 // Specifically, this function returns true if both of the following are true:
-// - The insurance fund balance is less-than-or-equal to `MaxInsuranceFundQuantumsForDeleveraging`.
 // - The subaccount's total net collateral is negative.
 // This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error.
 func (k Keeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 ) (bool, error) {
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
-	liquidationConfig := k.GetLiquidationsConfig(ctx)
-	bigMaxInsuranceFundForDeleveraging := new(big.Int).SetUint64(liquidationConfig.MaxInsuranceFundQuantumsForDeleveraging)
-
-	// Deleveraging cannot be performed if the current insurance fund balance is greater than the
-	// max insurance fund for deleveraging,
-	if currentInsuranceFundBalance.Cmp(bigMaxInsuranceFundForDeleveraging) > 0 {
-		return false, nil
-	}
-
 	bigNetCollateral,
 		_,
 		_,
@@ -153,8 +142,7 @@ func (k Keeper) CanDeleverageSubaccount(
 		return false, nil
 	}
 
-	// The insurance fund balance is less-than-or-equal to `MaxInsuranceFundQuantumsForDeleveraging`
-	// and the subaccount's total net collateral is negative, so deleveraging can be performed.
+	// The subaccount's total net collateral is negative, so deleveraging can be performed.
 	return true, nil
 }
 

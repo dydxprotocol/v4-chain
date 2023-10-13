@@ -43,7 +43,7 @@ import (
 func getValidGenesisStr() string {
 	gs := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},"subticks_per_tick":100,`
 	gs += `"step_base_quantums":5,"status":"STATUS_ACTIVE"}],`
-	gs += `"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
+	gs += `"liquidations_config":{`
 	gs += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
 	gs += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	gs += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
@@ -167,7 +167,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	json, err := result.MarshalJSON()
 	require.NoError(t, err)
 
-	expected := `{"clob_pairs":[],"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
+	expected := `{"clob_pairs":[],"liquidations_config":{`
 	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
 	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
@@ -453,7 +453,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected := `{"clob_pairs":[{"id":0,"perpetual_clob_metadata":{"perpetual_id":0},`
 	expected += `"step_base_quantums":"5","subticks_per_tick":100,`
 	expected += `"quantum_conversion_exponent":0,"status":"STATUS_ACTIVE"}],`
-	expected += `"liquidations_config":{"max_insurance_fund_quantums_for_deleveraging":"0",`
+	expected += `"liquidations_config":{`
 	expected += `"max_liquidation_fee_ppm":5000,"position_block_limits":{"min_position_notional_liquidated":"1000",`
 	expected += `"max_position_portion_liquidated_ppm":1000000},"subaccount_block_limits":`
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`

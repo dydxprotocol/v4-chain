@@ -45,12 +45,6 @@ var (
 		Valid:      math.MaxUint32,
 	}
 
-	MaxInsuranceFundQuantumsForDeleveragingBuckets = []int{
-		0, // min
-		1_000_000,
-		100_000_000,
-		1_000_000_000_000, // $1,000,000
-	}
 	MinPositionNotionalBuckets = []int{
 		1, // min
 		1_000_000,
