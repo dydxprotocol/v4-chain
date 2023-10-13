@@ -36,18 +36,28 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Count,
 	)
 
-	pseudoRand := k.GetPseudoRand(ctx)
+	// Early return if there are 0 subaccounts to liquidate.
+	numSubaccounts := len(subaccountIds)
+	if numSubaccounts == 0 {
+		return nil
+	}
+
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
+		metrics.Latency,
+	)
 
 	// Get the liquidation order for each subaccount.
 	// Process at-most `MaxLiquidationAttemptsPerBlock` subaccounts, starting from a pseudorandom location
-	// in the slice.
+	// in the slice. Note `numSubaccounts` is guaranteed to be non-zero at this point, so `Intn` shouldn't panic.
+	pseudoRand := k.GetPseudoRand(ctx)
 	liquidationOrders := make([]types.LiquidationOrder, 0)
-	numSubaccounts := len(subaccountIds)
 	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
-	indexOffset := 0
-	if numSubaccounts > 0 {
-		indexOffset = pseudoRand.Intn(numSubaccounts)
-	}
+	indexOffset := pseudoRand.Intn(numSubaccounts)
+
+	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
 		index := (i + indexOffset) % numSubaccounts
 		subaccountId := subaccountIds[index]
@@ -67,6 +77,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
+	telemetry.MeasureSince(
+		startGetLiquidationOrders,
+		types.ModuleName,
+		metrics.LiquidateSubaccounts_GetLiquidations,
+		metrics.Latency,
+	)
 
 	// Sort liquidation orders. The most underwater accounts should be liquidated first.
 	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
@@ -80,6 +96,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	})
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	startPlaceLiquidationOrders := time.Now()
 	unfilledLiquidations := make([]types.LiquidationOrder, 0)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
@@ -109,8 +126,15 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			unfilledLiquidations = append(unfilledLiquidations, *liquidationOrder)
 		}
 	}
+	telemetry.MeasureSince(
+		startPlaceLiquidationOrders,
+		types.ModuleName,
+		metrics.LiquidateSubaccounts_PlaceLiquidations,
+		metrics.Latency,
+	)
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
+	startDeleverageSubaccounts := time.Now()
 	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
 		liquidationOrder := unfilledLiquidations[i]
 
@@ -128,6 +152,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 	}
+	telemetry.MeasureSince(
+		startDeleverageSubaccounts,
+		types.ModuleName,
+		metrics.LiquidateSubaccounts_Deleverage,
+		metrics.Latency,
+	)
 
 	return nil
 }

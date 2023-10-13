@@ -850,6 +850,20 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
 
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.MemClobReplayOperations,
+		metrics.Latency,
+	)
+
+	telemetry.SetGauge(
+		float32(len(localOperations)),
+		types.ModuleName,
+		metrics.MemClobReplayOperations,
+		metrics.OperationsQueueLength,
+	)
+
 	// Recover from any panics that occur during replay operations.
 	// This could happen in cases where i.e. A subaccount balance overflowed
 	// during a match. We don't want to halt the entire chain in this case.
@@ -1099,6 +1113,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.RemoveAndClearOperationsQueue,
+		metrics.Latency,
+	)
+
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
 
@@ -1151,6 +1172,13 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
+
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.MemClobPurgeInvalidState,
+		metrics.Latency,
+	)
 
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
