@@ -70,6 +70,10 @@ function edit_genesis() {
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
+	# reduced deposit period
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
+	# reduced voting period
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s' 
 
 	# Update staking module.
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
