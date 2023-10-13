@@ -4,23 +4,24 @@ import (
 	"errors"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDecodeAddPremiumVotesTx(t *testing.T) {
+func TestDecodeProposedOperationsTx(t *testing.T) {
 	encodingCfg := encoding.GetTestEncodingCfg()
 	txBuilder := encodingCfg.TxConfig.NewTxBuilder()
 
 	// Valid.
-	validMsgTxBytes := constants.ValidMsgAddPremiumVotesTxBytes
+	validMsgTxBytes := constants.ValidEmptyMsgProposedOperationsTxBytes
 
 	// Duplicate.
-	_ = txBuilder.SetMsgs(constants.ValidMsgAddPremiumVotes, constants.ValidMsgAddPremiumVotes)
+	_ = txBuilder.SetMsgs(constants.ValidEmptyMsgProposedOperations, constants.ValidEmptyMsgProposedOperations)
 	duplicateMsgTxBytes, _ := encodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 
 	// Incorrect type.
@@ -30,7 +31,7 @@ func TestDecodeAddPremiumVotesTx(t *testing.T) {
 		txBytes []byte
 
 		expectedErr error
-		expectedMsg *types.MsgAddPremiumVotes
+		expectedMsg *types.MsgProposedOperations
 	}{
 		"Error: decode fails": {
 			txBytes:     []byte{1, 2, 3}, // invalid bytes.
@@ -38,72 +39,66 @@ func TestDecodeAddPremiumVotesTx(t *testing.T) {
 		},
 		"Error: empty bytes": {
 			txBytes: []byte{}, // empty returns 0 msgs.
-			expectedErr: errors.New("Msg Type: types.MsgAddPremiumVotes, " +
+			expectedErr: errors.New("Msg Type: types.MsgProposedOperations, " +
 				"Expected 1 num of msgs, but got 0: Unexpected num of msgs"),
 		},
 		"Error: incorrect msg len": {
 			txBytes: duplicateMsgTxBytes,
-			expectedErr: errors.New("Msg Type: types.MsgAddPremiumVotes, " +
+			expectedErr: errors.New("Msg Type: types.MsgProposedOperations, " +
 				"Expected 1 num of msgs, but got 2: Unexpected num of msgs"),
 		},
 		"Error: incorrect msg type": {
 			txBytes: incorrectMsgTxBytes,
 			expectedErr: errors.New(
-				"Expected MsgType types.MsgAddPremiumVotes, but " +
+				"Expected MsgType types.MsgProposedOperations, but " +
 					"got *types.MsgUpdateMarketPrices: Unexpected msg type",
 			),
 		},
 		"Valid": {
 			txBytes:     validMsgTxBytes,
-			expectedMsg: constants.ValidMsgAddPremiumVotes,
+			expectedMsg: constants.ValidEmptyMsgProposedOperations,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			afst, err := process.DecodeAddPremiumVotesTx(encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+			pot, err := process.DecodeProposedOperationsTx(encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
-				require.Nil(t, afst)
+				require.Nil(t, pot)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tc.expectedMsg, afst.GetMsg())
+				require.Equal(t, tc.expectedMsg, pot.GetMsg())
 			}
 		})
 	}
 }
 
-func TestAddPremiumVotesTx_Validate(t *testing.T) {
-	encodingCfg := encoding.GetTestEncodingCfg()
-
-	// Valid.
-	validMsgTxBytes := constants.ValidMsgAddPremiumVotesTxBytes
-
-	// Invalid.
-	invalidMsgTxBytes := constants.InvalidMsgAddPremiumVotesTxBytes
-
+func TestProposedOperationsTx_Validate(t *testing.T) {
 	tests := map[string]struct {
 		txBytes     []byte
 		expectedErr error
 	}{
 		"Error: ValidateBasic fails": {
-			txBytes: invalidMsgTxBytes,
-			expectedErr: errors.New(
-				"premium votes must be sorted by perpetual id in ascending order and cannot contain" +
-					" duplicates: MsgAddPremiumVotes is invalid: ValidateBasic failed on msg",
+			txBytes: constants.InvalidProposedOperationsUnspecifiedOrderRemovalReasonTxBytes,
+			expectedErr: errorsmod.Wrap(
+				types.ErrInvalidMsgProposedOperations,
+				"order removal reason must be specified: {{dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4 0} 0 64 0}",
 			),
 		},
 		"Valid: ValidateBasic passes": {
-			txBytes: validMsgTxBytes,
+			txBytes: constants.ValidEmptyMsgProposedOperationsTxBytes,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			afst, err := process.DecodeAddPremiumVotesTx(encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+			// Setup.
+			pot, err := process.DecodeProposedOperationsTx(constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			require.NoError(t, err)
 
-			err = afst.Validate()
+			// Run and Validate.
+			err = pot.Validate()
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {
@@ -113,20 +108,20 @@ func TestAddPremiumVotesTx_Validate(t *testing.T) {
 	}
 }
 
-func TestAddPremiumVotesTx_GetMsg(t *testing.T) {
-	validMsgTxBytes := constants.ValidMsgAddPremiumVotesTxBytes
+func TestProposedOperationsTx_GetMsg(t *testing.T) {
+	validMsgTxBytes := constants.ValidEmptyMsgProposedOperationsTxBytes
 
 	tests := map[string]struct {
-		txWrapper   process.AddPremiumVotesTx
+		txWrapper   process.ProposedOperationsTx
 		txBytes     []byte
-		expectedMsg *types.MsgAddPremiumVotes
+		expectedMsg *types.MsgProposedOperations
 	}{
 		"Returns nil msg": {
-			txWrapper: process.AddPremiumVotesTx{},
+			txWrapper: process.ProposedOperationsTx{},
 		},
 		"Returns valid msg": {
 			txBytes:     validMsgTxBytes,
-			expectedMsg: constants.ValidMsgAddPremiumVotes,
+			expectedMsg: constants.ValidEmptyMsgProposedOperations,
 		},
 	}
 
@@ -134,9 +129,9 @@ func TestAddPremiumVotesTx_GetMsg(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var msg sdk.Msg
 			if tc.txBytes != nil {
-				afst, err := process.DecodeAddPremiumVotesTx(constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+				pot, err := process.DecodeProposedOperationsTx(constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 				require.NoError(t, err)
-				msg = afst.GetMsg()
+				msg = pot.GetMsg()
 			} else {
 				msg = tc.txWrapper.GetMsg()
 			}
