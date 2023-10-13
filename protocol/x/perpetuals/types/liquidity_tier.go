@@ -36,7 +36,7 @@ func (liquidityTier LiquidityTier) Validate() error {
 // and maintenance fraction ppm.
 func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
-		// Invariant broken: MaintenanceFractionPpm should always be less than `MaxMaintenanceFractionPpm`,
+		// Invariant broken: `MaintenanceFractionPpm` should always be less than `MaxMaintenanceFractionPpm`,
 		// which is checked in `SetLiquidityTier`.
 		panic(errorsmod.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
 			liquidityTier.MaintenanceFractionPpm))
