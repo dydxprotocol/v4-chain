@@ -315,6 +315,7 @@ func New(
 
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
@@ -543,6 +544,7 @@ func New(
 
 	// Get Daemon Flags.
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
@@ -813,6 +815,7 @@ func New(
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 
@@ -1471,6 +1474,11 @@ func getIndexerFromOptions(
 	}
 
 	indexerFlags := indexer.GetIndexerFlagValuesFromOptions(appOpts)
+	logger.Info(
+		"Parsed Indexer flags",
+		"Flags", indexerFlags,
+	)
+
 	var indexerMessageSender msgsender.IndexerMessageSender
 	if len(indexerFlags.KafkaAddrs) == 0 {
 		indexerMessageSender = msgsender.NewIndexerMessageSenderNoop()

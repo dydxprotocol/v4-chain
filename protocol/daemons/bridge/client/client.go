@@ -31,6 +31,12 @@ func Start(
 	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 ) error {
+	// Log the daemon flags.
+	logger.Info(
+		"Starting bridge daemon with flags",
+		"BridgeFlags", flags.Bridge,
+	)
+
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
