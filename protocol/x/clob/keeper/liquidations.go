@@ -26,6 +26,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
 ) error {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
+	)
+
 	lib.AssertCheckTxMode(ctx)
 
 	telemetry.ModuleSetGauge(
@@ -48,6 +54,8 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	if numSubaccounts > 0 {
 		indexOffset = pseudoRand.Intn(numSubaccounts)
 	}
+
+	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
 		index := (i + indexOffset) % numSubaccounts
 		subaccountId := subaccountIds[index]
@@ -67,6 +75,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
 	}
+	telemetry.MeasureSince(
+		startGetLiquidationOrders,
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccounts_GetLiquidations,
+	)
 
 	// Sort liquidation orders. The most underwater accounts should be liquidated first.
 	// These orders are only used for sorting. When we match these orders here in PrepareCheckState,
@@ -80,6 +93,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	})
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
+	startPlaceLiquidationOrders := time.Now()
 	unfilledLiquidations := make([]types.LiquidationOrder, 0)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
@@ -109,8 +123,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			unfilledLiquidations = append(unfilledLiquidations, *liquidationOrder)
 		}
 	}
+	telemetry.MeasureSince(
+		startPlaceLiquidationOrders,
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccounts_PlaceLiquidations,
+	)
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
+	startDeleverageSubaccounts := time.Now()
 	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
 		liquidationOrder := unfilledLiquidations[i]
 
@@ -128,6 +148,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return err
 		}
 	}
+	telemetry.MeasureSince(
+		startDeleverageSubaccounts,
+		types.ModuleName,
+		metrics.ClobLiquidateSubaccounts_Deleverage,
+	)
 
 	return nil
 }
