@@ -127,7 +127,7 @@ message TransferEventV1 {
   dydxprotocol.indexer.protocol.v1.IndexerSubaccountId sender_subaccount_id = 1;
   dydxprotocol.indexer.protocol.v1.IndexerSubaccountId recipient_subaccount_id =
       2;
-  // Id of the asset transfered.
+  // Id of the asset transferred.
   uint32 asset_id = 3;
   // The amount of asset in quantums to transfer.
   uint64 amount = 4;

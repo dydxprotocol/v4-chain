@@ -609,7 +609,7 @@ func (*SourceOfFunds) XXX_OneofWrappers() []interface{} {
 type TransferEventV1 struct {
 	SenderSubaccountId    *v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=sender_subaccount_id,json=senderSubaccountId,proto3" json:"sender_subaccount_id,omitempty"`
 	RecipientSubaccountId *v1.IndexerSubaccountId `protobuf:"bytes,2,opt,name=recipient_subaccount_id,json=recipientSubaccountId,proto3" json:"recipient_subaccount_id,omitempty"`
-	// Id of the asset transfered.
+	// Id of the asset transferred.
 	AssetId uint32 `protobuf:"varint,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
 	// The amount of asset in quantums to transfer.
 	Amount uint64 `protobuf:"varint,4,opt,name=amount,proto3" json:"amount,omitempty"`
