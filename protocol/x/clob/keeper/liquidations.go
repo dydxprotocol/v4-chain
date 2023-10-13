@@ -30,6 +30,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		time.Now(),
 		types.ModuleName,
 		metrics.ClobLiquidateSubaccountsAgainstOrderbook,
+		metrics.Latency,
 	)
 
 	lib.AssertCheckTxMode(ctx)
@@ -79,6 +80,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		startGetLiquidationOrders,
 		types.ModuleName,
 		metrics.ClobLiquidateSubaccounts_GetLiquidations,
+		metrics.Latency,
 	)
 
 	// Sort liquidation orders. The most underwater accounts should be liquidated first.
@@ -127,6 +129,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		startPlaceLiquidationOrders,
 		types.ModuleName,
 		metrics.ClobLiquidateSubaccounts_PlaceLiquidations,
+		metrics.Latency,
 	)
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
@@ -152,6 +155,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		startDeleverageSubaccounts,
 		types.ModuleName,
 		metrics.ClobLiquidateSubaccounts_Deleverage,
+		metrics.Latency,
 	)
 
 	return nil
