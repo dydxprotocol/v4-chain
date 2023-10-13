@@ -15,7 +15,7 @@ const (
 	addPremiumVotesTxLenOffset    = -2
 	acknowledgeBridgesTxLenOffset = -3
 	lastOtherTxLenOffset          = acknowledgeBridgesTxLenOffset
-	firstOtherTxOffset            = 1
+	firstOtherTxOffset            = proposedOperationsTxIndex + 1
 )
 
 func init() {
@@ -33,6 +33,24 @@ func init() {
 	}
 	if slices.Min[[]int](txIndicesAndOffsets) != lastOtherTxLenOffset {
 		panic("lastTxLenOffset is not the lowest offset")
+	}
+	if slices.Max[[]int](txIndicesAndOffsets)+1 != firstOtherTxOffset {
+		panic("firstOtherTxOffset is <= the maximum offset")
+	}
+	txIndicesForMinTxsCount := []int{
+		proposedOperationsTxIndex,
+		updateMarketPricesTxLenOffset + minTxsCount,
+		addPremiumVotesTxLenOffset + minTxsCount,
+		acknowledgeBridgesTxLenOffset + minTxsCount,
+	}
+	if minTxsCount != len(txIndicesForMinTxsCount) {
+		panic("minTxsCount does not match expected count of Txs.")
+	}
+	if lib.ContainsDuplicates(txIndicesForMinTxsCount) {
+		panic("Overlapping indices and offsets defined for Txs.")
+	}
+	if minTxsCount != firstOtherTxOffset-lastOtherTxLenOffset {
+		panic("Unexpected gap between firstOtherTxOffset and lastOtherTxLenOffset which is greater than minTxsCount")
 	}
 }
 
