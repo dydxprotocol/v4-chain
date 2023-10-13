@@ -49,12 +49,6 @@ async function start() {
     message: `Connected to redis at ${config.REDIS_URL}`,
   });
 
-  logger.info({
-    at: 'start',
-    message: 'config',
-    config,
-  });
-
   startServer();
 }
 
