@@ -114,7 +114,7 @@ func PrepareProposalHandler(
 		}
 
 		// Gather "Other" group messages.
-		otherBytesAllocated := txs.GetAvailableBytes() / int64(4) // ~25% of the remainder.
+		otherBytesAllocated := txs.GetAvailableBytes() / 4 // ~25% of the remainder.
 		// filter out txs that have disallow messages.
 		txsWithoutDisallowMsgs := RemoveDisallowMsgs(ctx, txConfig.TxDecoder(), req.Txs)
 		otherTxsToInclude, otherTxsRemainder := GetGroupMsgOther(txsWithoutDisallowMsgs, otherBytesAllocated)
