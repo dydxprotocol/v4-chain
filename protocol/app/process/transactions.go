@@ -4,20 +4,37 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-)
-
-type txtype int
-
-const (
-	ProposedOperationsTxType txtype = 1
-	AcknowledgeBridgesTxType txtype = 2
-	AddPremiumVotesTxType    txtype = 3
-	UpdateMarketPricesTxType txtype = 4
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"slices"
 )
 
 const (
-	MinTxsCount = 4
+	minTxsCount                   = 4
+	proposedOperationsTxIndex     = 0
+	updateMarketPricesTxLenOffset = -1
+	addPremiumVotesTxLenOffset    = -2
+	acknowledgeBridgesTxLenOffset = -3
+	lastOtherTxLenOffset          = acknowledgeBridgesTxLenOffset
+	firstOtherTxOffset            = 1
 )
+
+func init() {
+	txIndicesAndOffsets := []int{
+		proposedOperationsTxIndex,
+		updateMarketPricesTxLenOffset,
+		addPremiumVotesTxLenOffset,
+		acknowledgeBridgesTxLenOffset,
+	}
+	if minTxsCount != len(txIndicesAndOffsets) {
+		panic("minTxsCount does not match expected count of Txs.")
+	}
+	if lib.ContainsDuplicates(txIndicesAndOffsets) {
+		panic("Duplicate indices/offsets defined for Txs.")
+	}
+	if slices.Min[[]int](txIndicesAndOffsets) != lastOtherTxLenOffset {
+		panic("lastTxLenOffset is not the lowest offset")
+	}
+}
 
 // ProcessProposalTxs is used as an intermediary struct to validate a proposed list of txs
 // for `ProcessProposal`.
@@ -42,77 +59,58 @@ func DecodeProcessProposalTxs(
 ) (*ProcessProposalTxs, error) {
 	// Check len.
 	numTxs := len(req.Txs)
-	if numTxs < MinTxsCount {
+	if numTxs < minTxsCount {
 		return nil, errorsmod.Wrapf(
 			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
-			MinTxsCount,
+			minTxsCount,
 			numTxs,
 		)
 	}
 
-	txTypeToIdx, idxToTxType := GetAppInjectedMsgIdxMaps(numTxs)
-
 	// Operations.
-	orderIdx, ok := txTypeToIdx[ProposedOperationsTxType]
-	if !ok {
-		panic("must define ProposedOperationsTxType")
-	}
-	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[orderIdx])
+	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex])
 	if err != nil {
 		return nil, err
 	}
 
 	// Acknowledge bridges.
-	acknowledgeBridgesIdx, ok := txTypeToIdx[AcknowledgeBridgesTxType]
-	if !ok {
-		panic("must define AcknowledgeBridgesTxType")
-	}
 	acknowledgeBridgesTx, err := DecodeAcknowledgeBridgesTx(
 		ctx,
 		bridgeKeeper,
 		decoder,
-		req.Txs[acknowledgeBridgesIdx],
+		req.Txs[numTxs+acknowledgeBridgesTxLenOffset],
 	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Funding samples.
-	addFundingIdx, ok := txTypeToIdx[AddPremiumVotesTxType]
-	if !ok {
-		panic("must define AddPremiumVotesTxType")
-	}
-	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[addFundingIdx])
+	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+addPremiumVotesTxLenOffset])
 	if err != nil {
 		return nil, err
 	}
 
 	// Price updates.
-	updatePricesIdx, ok := txTypeToIdx[UpdateMarketPricesTxType]
-	if !ok {
-		panic("must define AddPremiumVotesTxType")
-	}
-	updatePricesTx, err := DecodeUpdateMarketPricesTx(ctx, pricesKeeper, decoder, req.Txs[updatePricesIdx])
+	updatePricesTx, err := DecodeUpdateMarketPricesTx(
+		ctx,
+		pricesKeeper,
+		decoder,
+		req.Txs[numTxs+updateMarketPricesTxLenOffset],
+	)
 	if err != nil {
 		return nil, err
 	}
 
 	// Other txs.
-	allOtherTxs := make([]*OtherMsgsTx, numTxs-len(txTypeToIdx))
-	idx := 0
-	for i, txBytes := range req.Txs {
-		if _, exists := idxToTxType[i]; exists { // skip, because tx is not part of "others".
-			continue
-		}
-
+	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
+	for i, txBytes := range req.Txs[firstOtherTxOffset : numTxs+lastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err
 		}
 
-		allOtherTxs[idx] = otherTx
-		idx += 1
+		allOtherTxs[i] = otherTx
 	}
 
 	return &ProcessProposalTxs{
