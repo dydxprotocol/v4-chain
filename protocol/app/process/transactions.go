@@ -15,7 +15,7 @@ const (
 	addPremiumVotesTxLenOffset    = -2
 	acknowledgeBridgesTxLenOffset = -3
 	lastOtherTxLenOffset          = acknowledgeBridgesTxLenOffset
-	firstOtherTxOffset            = proposedOperationsTxIndex + 1
+	firstOtherTxIndex             = proposedOperationsTxIndex + 1
 )
 
 func init() {
@@ -34,8 +34,8 @@ func init() {
 	if slices.Min[[]int](txIndicesAndOffsets) != lastOtherTxLenOffset {
 		panic("lastTxLenOffset is not the lowest offset")
 	}
-	if slices.Max[[]int](txIndicesAndOffsets)+1 != firstOtherTxOffset {
-		panic("firstOtherTxOffset is <= the maximum offset")
+	if slices.Max[[]int](txIndicesAndOffsets)+1 != firstOtherTxIndex {
+		panic("firstOtherTxIndex is <= the maximum offset")
 	}
 	txIndicesForMinTxsCount := []int{
 		proposedOperationsTxIndex,
@@ -49,8 +49,8 @@ func init() {
 	if lib.ContainsDuplicates(txIndicesForMinTxsCount) {
 		panic("Overlapping indices and offsets defined for Txs.")
 	}
-	if minTxsCount != firstOtherTxOffset-lastOtherTxLenOffset {
-		panic("Unexpected gap between firstOtherTxOffset and lastOtherTxLenOffset which is greater than minTxsCount")
+	if minTxsCount != firstOtherTxIndex-lastOtherTxLenOffset {
+		panic("Unexpected gap between firstOtherTxIndex and lastOtherTxLenOffset which is greater than minTxsCount")
 	}
 }
 
@@ -122,7 +122,7 @@ func DecodeProcessProposalTxs(
 
 	// Other txs.
 	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
-	for i, txBytes := range req.Txs[firstOtherTxOffset : numTxs+lastOtherTxLenOffset] {
+	for i, txBytes := range req.Txs[firstOtherTxIndex : numTxs+lastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err
