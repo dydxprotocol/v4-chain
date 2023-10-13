@@ -528,7 +528,8 @@ func (k Keeper) GetMEVDataFromOperations(
 					}
 
 					mevLiquidationMatch := types.MEVLiquidationMatch{
-						LiquidatedSubaccountId:          matchLiquidation.Liquidated,
+						LiquidatedSubaccountId: matchLiquidation.Liquidated,
+						// TODO(CLOB-957): Use `SerializableInt` for insurance fund delta
 						InsuranceFundDeltaQuoteQuantums: insuranceFundDelta.Int64(),
 
 						MakerOrderSubaccountId: makerOrder.OrderId.SubaccountId,
