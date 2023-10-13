@@ -17,7 +17,7 @@ const (
 	// Maximum default funding rate magnitude is 100%.
 	MaxDefaultFundingPpmAbs = lib.OneMillion
 
-	// Liquidit-tier related constants
+	// Liquidity-tier related constants
 	MaxInitialMarginPpm       = lib.OneMillion
 	MaxMaintenanceFractionPpm = lib.OneMillion
 )
