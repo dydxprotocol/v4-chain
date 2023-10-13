@@ -117,7 +117,7 @@ func (c *Client) start(ctx context.Context,
 	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
 ) (err error) {
@@ -269,7 +269,7 @@ func StartNewClient(
 	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
 ) (client *Client) {
@@ -302,7 +302,7 @@ func StartNewClient(
 // 1) The exchangeIdToExchangeDetails map has an entry for each exchange.
 // 2) The static exchange names map has an entry for each exchange, and each name is unique.
 func validateDaemonConfiguration(
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 ) (
 	err error,

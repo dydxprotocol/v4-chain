@@ -28,7 +28,7 @@ type PriceFetcherSubtaskResponse struct {
 // PriceFetcher fetches prices from an exchange by making a query based on the
 // `exchangeConfig` specifications and then encodes the price or any associated error.
 type PriceFetcher struct {
-	exchangeStartupConfig types.ExchangeStartupConfig
+	exchangeStartupConfig types.ExchangeQueryConfig
 	exchangeDetails       types.ExchangeQueryDetails
 	queryHandler          handler.ExchangeQueryHandler
 	logger                log.Logger
@@ -43,7 +43,7 @@ type PriceFetcher struct {
 // queries to an exchange and encodes the responses or related errors into the shared buffered
 // channel `bCh`.
 func NewPriceFetcher(
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeStartupConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	mutableExchangeConfig *types.MutableExchangeMarketConfig,
 	mutableMarketConfigs []*types.MutableMarketConfig,

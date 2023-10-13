@@ -32,7 +32,7 @@ var (
 func TestRunTaskLoop(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig         types.ExchangeStartupConfig
+		startupConfig         types.ExchangeQueryConfig
 		queryDetails          types.ExchangeQueryDetails
 		mutableExchangeConfig types.MutableExchangeMarketConfig
 		mutableMarketConfigs  []*types.MutableMarketConfig
@@ -260,7 +260,7 @@ func TestGetTaskLoopDefinition_MultiMarketExchange(t *testing.T) {
 func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig types.ExchangeStartupConfig
+		startupConfig types.ExchangeQueryConfig
 		queryDetails  types.ExchangeQueryDetails
 
 		initialMutableExchangeConfig types.MutableExchangeMarketConfig
@@ -388,7 +388,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig types.ExchangeStartupConfig
+		startupConfig types.ExchangeQueryConfig
 		queryDetails  types.ExchangeQueryDetails
 
 		initialMutableExchangeConfig types.MutableExchangeMarketConfig

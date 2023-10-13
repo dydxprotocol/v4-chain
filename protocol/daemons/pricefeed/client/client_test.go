@@ -86,7 +86,7 @@ func (f *FakeSubTaskRunner) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeStartupConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
@@ -136,7 +136,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		mockGrpcClient              *mocks.GrpcClient
 		initialMarketConfig         map[types.MarketId]*types.MutableMarketConfig
 		initialExchangeMarketConfig map[types.ExchangeId]*types.MutableExchangeMarketConfig
-		exchangeIdToStartupConfig   map[types.ExchangeId]*types.ExchangeStartupConfig
+		exchangeIdToStartupConfig   map[types.ExchangeId]*types.ExchangeQueryConfig
 		exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails
 
 		// expectations
@@ -177,7 +177,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Invalid: empty exchange startup config": {
 			mockGrpcClient:            grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[types.ExchangeId]*types.ExchangeStartupConfig{},
+			exchangeIdToStartupConfig: map[types.ExchangeId]*types.ExchangeQueryConfig{},
 			expectedError:             errors.New("exchangeIds must not be empty"),
 			expectGrpcConnection:      true,
 			expectCloseTcpConnection:  true,
@@ -185,7 +185,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Invalid: missing exchange query details": {
 			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[string]*types.ExchangeStartupConfig{
+			exchangeIdToStartupConfig: map[string]*types.ExchangeQueryConfig{
 				validExchangeId: constants.TestExchangeStartupConfigs[validExchangeId],
 			},
 			expectedError:             fmt.Errorf("no exchange details exists for exchangeId: %v", validExchangeId),

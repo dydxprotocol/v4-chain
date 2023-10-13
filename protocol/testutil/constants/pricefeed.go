@@ -354,21 +354,21 @@ var (
 	MultiMarketExchangeQueryDetails  = daemonClientTypes.ExchangeQueryDetails{IsMultiMarket: true}
 
 	// ExchangeStartupConfigs.
-	Exchange1_0MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+	Exchange1_0MaxQueries_StartupConfig = daemonClientTypes.ExchangeQueryConfig{
 		ExchangeId: ExchangeId1,
 		IntervalMs: 100,
 		TimeoutMs:  3_000,
 		MaxQueries: 0,
 	}
 
-	Exchange1_1MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+	Exchange1_1MaxQueries_StartupConfig = daemonClientTypes.ExchangeQueryConfig{
 		ExchangeId: ExchangeId1,
 		IntervalMs: 100,
 		TimeoutMs:  3_000,
 		MaxQueries: 1,
 	}
 
-	Exchange1_2MaxQueries_StartupConfig = daemonClientTypes.ExchangeStartupConfig{
+	Exchange1_2MaxQueries_StartupConfig = daemonClientTypes.ExchangeQueryConfig{
 		ExchangeId: ExchangeId1,
 		IntervalMs: 100,
 		TimeoutMs:  3_000,
@@ -667,7 +667,7 @@ var (
 		MarketId11: MaticUsdExponent,
 	}
 
-	TestExchangeStartupConfigs = map[string]*daemonClientTypes.ExchangeStartupConfig{
+	TestExchangeStartupConfigs = map[string]*daemonClientTypes.ExchangeQueryConfig{
 		ExchangeId1: {
 			ExchangeId: ExchangeId1,
 			IntervalMs: 100,

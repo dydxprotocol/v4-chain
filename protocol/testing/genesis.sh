@@ -1476,7 +1476,7 @@ function update_genesis_use_test_exchange() {
 	# All remaining markets can just use the LINK ticker so the daemon will start. All markets must have at least 1
 	# exchange. With only one exchange configured, there should not be enough prices to meet the minimum exchange
 	# count, and these markets will not have index prices.
-	for market_idx in {3..33}
+	for market_idx in {3..34}
 	do
 		dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$market_idx].exchange_config_json" -v "$link_exchange_config_json"
 	done
