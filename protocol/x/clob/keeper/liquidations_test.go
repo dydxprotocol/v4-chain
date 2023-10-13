@@ -4234,28 +4234,6 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 			expectedClobPair: constants.ClobPair_Btc,
 			expectedQuantums: new(big.Int).SetInt64(5_000_000), // 0.05 BTC
 		},
-		`Full position size of first perpetual is returned when subaccount has multiple perpetual
-		positions`: {
-			perpetualPositions: []*satypes.PerpetualPosition{
-				&constants.PerpetualPosition_OneTenthEthLong,
-				&constants.PerpetualPosition_OneTenthBTCLong,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			},
-			liquidationConfig: constants.LiquidationsConfig_No_Limit,
-
-			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc,
-				constants.ClobPair_Eth,
-			},
-
-			expectedClobPair: constants.ClobPair_Eth,
-			expectedQuantums: new(big.Int).Neg(
-				constants.PerpetualPosition_OneTenthEthLong.GetBigQuantums(),
-			),
-		},
 		`Full position size of max uint64 of perpetual and CLOB pair are returned when subaccount
 		has one long perpetual position at max position size`: {
 			perpetualPositions: []*satypes.PerpetualPosition{
