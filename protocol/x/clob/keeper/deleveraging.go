@@ -23,6 +23,7 @@ import (
 // MaybeDeleverageSubaccount is the main entry point to deleverage a subaccount. It attempts to find positions
 // on the opposite side of deltaQuantums and use them to offset the liquidated subaccount's position at
 // the bankruptcy price of the liquidated position.
+// Note that the full position size will get deleveraged.
 func (k Keeper) MaybeDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
