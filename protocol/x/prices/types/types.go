@@ -24,10 +24,12 @@ type PricesKeeper interface {
 	) (err error)
 
 	GetAllMarketParamPrices(ctx sdk.Context) (marketPramPrices []MarketParamPrice, err error)
-	GetMarketParam(ctx sdk.Context, id uint32) (marketParam MarketParam, err error)
+	GetMarketParam(ctx sdk.Context, id uint32) (marketParam MarketParam, exists bool)
+	GetMarketIdToValidIndexPrice(ctx sdk.Context) (marketIdToIndexPrice map[uint32]MarketPrice)
 	GetAllMarketParams(ctx sdk.Context) (marketParams []MarketParam)
 	GetMarketPrice(ctx sdk.Context, id uint32) (marketPrice MarketPrice, err error)
 	GetAllMarketPrices(ctx sdk.Context) (marketPrices []MarketPrice)
+	HasAuthority(authority string) bool
 
 	// Validation related.
 	PerformStatefulPriceUpdateValidation(
@@ -39,6 +41,7 @@ type PricesKeeper interface {
 	// Proposal related.
 	UpdateSmoothedPrices(
 		ctx sdk.Context,
+		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
 
 	// Misc.

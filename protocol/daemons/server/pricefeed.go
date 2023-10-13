@@ -2,11 +2,12 @@ package server
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
+	servertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
@@ -30,6 +31,14 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 	return server
 }
 
+// ExpectPricefeedDaemon registers the pricefeed daemon with the server. This is required
+// in order to ensure that the daemon service is called at least once during every
+// maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
+// respond within maximumAcceptableUpdateDelay duration.
+func (server *Server) ExpectPricefeedDaemon(maximumAcceptableUpdateDelay time.Duration) {
+	server.registerDaemon(servertypes.PricefeedDaemonServiceName, maximumAcceptableUpdateDelay)
+}
+
 // UpdateMarketPrices updates prices from exchanges for each market provided.
 func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
@@ -43,9 +52,15 @@ func (s *Server) UpdateMarketPrices(
 		metrics.Latency,
 	)
 
+	// If the daemon is unable to report a response, there is either an error in the registration of
+	// this daemon, or another one. In either case, the protocol should panic.
+	if err := s.reportResponse(servertypes.PricefeedDaemonServiceName); err != nil {
+		panic(err)
+	}
+
 	if s.marketToExchange == nil {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrServerNotInitializedCorrectly,
 				"MarketToExchange not initialized",
 			),
@@ -62,6 +77,7 @@ func (s *Server) UpdateMarketPrices(
 	return &api.UpdateMarketPricesResponse{}, nil
 }
 
+// validateMarketPricesUpdatesMessage validates a `UpdateMarketPricesRequest`.
 func validateMarketPricesUpdatesMessage(req *api.UpdateMarketPricesRequest) error {
 	if len(req.MarketPriceUpdates) == 0 {
 		return types.ErrPriceFeedMarketPriceUpdateEmpty
@@ -89,6 +105,7 @@ func validateMarketPricesUpdatesMessage(req *api.UpdateMarketPricesRequest) erro
 	return nil
 }
 
+// validateMarketPriceUpdate validates a single `MarketPriceUpdate`.
 func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 	for _, ep := range mpu.ExchangePrices {
 		if ep.Price == constants.DefaultPrice {
@@ -112,5 +129,5 @@ func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 
 // generateSdkErrorForExchangePrice generates an error for an invalid `ExchangePrice`.
 func generateSdkErrorForExchangePrice(err error, ep *api.ExchangePrice, marketId uint32) error {
-	return sdkerrors.Wrapf(err, "ExchangePrice: %v and MarketId: %d", ep, marketId)
+	return errorsmod.Wrapf(err, "ExchangePrice: %v and MarketId: %d", ep, marketId)
 }

@@ -30,6 +30,27 @@ func (_m *PerpetualsKeeper) AddPremiumVotes(ctx types.Context, votes []perpetual
 	return r0
 }
 
+// CreatePerpetual provides a mock function with given fields: ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier
+func (_m *PerpetualsKeeper) CreatePerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, atomicResolution int32, defaultFundingPpm int32, liquidityTier uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier)
+
+	var r0 perpetualstypes.Perpetual
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, int32, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, int32, uint32) error); ok {
+		r1 = rf(ctx, id, ticker, marketId, atomicResolution, defaultFundingPpm, liquidityTier)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAddPremiumVotes provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) GetAddPremiumVotes(ctx types.Context) *perpetualstypes.MsgAddPremiumVotes {
 	ret := _m.Called(ctx)
@@ -147,6 +168,20 @@ func (_m *PerpetualsKeeper) GetNotionalInBaseQuantums(ctx types.Context, id uint
 	return r0, r1
 }
 
+// HasAuthority provides a mock function with given fields: authority
+func (_m *PerpetualsKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
 // MaybeProcessNewFundingSampleEpoch provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) MaybeProcessNewFundingSampleEpoch(ctx types.Context) {
 	_m.Called(ctx)
@@ -157,6 +192,27 @@ func (_m *PerpetualsKeeper) MaybeProcessNewFundingTickEpoch(ctx types.Context) {
 	_m.Called(ctx)
 }
 
+// ModifyPerpetual provides a mock function with given fields: ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier
+func (_m *PerpetualsKeeper) ModifyPerpetual(ctx types.Context, id uint32, ticker string, marketId uint32, defaultFundingPpm int32, liquidityTier uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+
+	var r0 perpetualstypes.Perpetual
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, int32, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, int32, uint32) error); ok {
+		r1 = rf(ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PerformStatefulPremiumVotesValidation provides a mock function with given fields: ctx, msg
 func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Context, msg *perpetualstypes.MsgAddPremiumVotes) error {
 	ret := _m.Called(ctx, msg)
@@ -164,6 +220,41 @@ func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Cont
 	var r0 error
 	if rf, ok := ret.Get(0).(func(types.Context, *perpetualstypes.MsgAddPremiumVotes) error); ok {
 		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional
+func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, basePositionNotional uint64, impactNotional uint64) (perpetualstypes.LiquidityTier, error) {
+	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+
+	var r0 perpetualstypes.LiquidityTier
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64) perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.LiquidityTier)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64) error); ok {
+		r1 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SetParams provides a mock function with given fields: ctx, params
+func (_m *PerpetualsKeeper) SetParams(ctx types.Context, params perpetualstypes.Params) error {
+	ret := _m.Called(ctx, params)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, perpetualstypes.Params) error); ok {
+		r0 = rf(ctx, params)
 	} else {
 		r0 = ret.Error(0)
 	}

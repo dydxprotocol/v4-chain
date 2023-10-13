@@ -21,13 +21,14 @@ import {
   liquidityTierRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
+import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
-  createIndexerTendermintEvent, expectPerpetualMarket,
+  createIndexerTendermintEvent,
+  expectPerpetualMarket,
+  expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
@@ -38,10 +39,12 @@ import {
   defaultTxHash,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('perpetualMarketHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -63,6 +66,7 @@ describe('perpetualMarketHandler', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    liquidityTierRefresher.clear();
   });
 
   afterAll(async () => {
@@ -77,9 +81,7 @@ describe('perpetualMarketHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.PERPETUAL_MARKET,
-        binaryToBase64String(
-          PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
-        ),
+        PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -134,10 +136,8 @@ describe('perpetualMarketHandler', () => {
       MarketTable.create(testConstants.defaultMarket),
       LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
     ]);
-    await Promise.all([
-      marketRefresher.updateMarkets(),
-      liquidityTierRefresher.updateLiquidityTiers(),
-    ]);
+    await liquidityTierRefresher.updateLiquidityTiers();
+    await marketRefresher.updateMarkets();
 
     const transactionIndex: number = 0;
 
@@ -152,6 +152,7 @@ describe('perpetualMarketHandler', () => {
     // Confirm there is no existing perpetualMarket.
     await expectNoExistingPerpetualMarkets();
 
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
     await onMessage(kafkaMessage);
 
     const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
@@ -165,6 +166,7 @@ describe('perpetualMarketHandler', () => {
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
     expect(perpetualMarket).toBeDefined();
     expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
+    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
   });
 });
 
@@ -196,7 +198,6 @@ function expectPerpetualMarketMatchesEvent(
     quantumConversionExponent: perpetual.quantumConversionExponent,
     atomicResolution: perpetual.atomicResolution,
     subticksPerTick: perpetual.subticksPerTick,
-    minOrderBaseQuantums: Number(perpetual.minOrderBaseQuantums),
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
   }));
@@ -219,9 +220,7 @@ function createKafkaMessageFromPerpetualMarketEvent({
   events.push(
     createIndexerTendermintEvent(
       DydxIndexerSubtypes.PERPETUAL_MARKET,
-      binaryToBase64String(
-        PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
-      ),
+      PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
       transactionIndex,
       0,
     ),

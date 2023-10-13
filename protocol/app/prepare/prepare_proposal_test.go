@@ -21,8 +21,7 @@ import (
 )
 
 var (
-	ctx     = sdktypes.Context{}
-	address = []byte{1, 2, 3, 4}
+	ctx = sdktypes.Context{}
 
 	failingTxEncoder = func(tx sdktypes.Tx) ([]byte, error) {
 		return nil, errors.New("encoder failed")
@@ -40,10 +39,6 @@ var (
 		return []byte{1, 2, 3, 4}, nil
 	}
 )
-
-func TestEmptyResponse(t *testing.T) {
-	require.Equal(t, abci.ResponsePrepareProposal{Txs: [][]byte{}}, prepare.EmptyResponse)
-}
 
 func TestPrepareProposalHandler(t *testing.T) {
 	msgSendTxBytesLen := int64(len(constants.Msg_Send_TxBytes))
@@ -318,7 +313,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			expectedTxs: [][]byte{
 				{1, 2, 3, 4},                          // order.
 				constants.Msg_Send_TxBytes,            // others.
-				constants.Msg_SendAndTransfer_TxBytes, // addtional others.
+				constants.Msg_SendAndTransfer_TxBytes, // additional others.
 				{1, 2, 3, 4},                          // bridge.
 				{1, 2, 3, 4},                          // funding.
 				{1, 2, 3, 4},                          // prices.
@@ -504,11 +499,11 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.keeperResp)
 
-			resp := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, address, &mockPricesKeeper)
+			resp, err := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, &mockPricesKeeper)
 			if tc.expectedErr != nil {
-				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
+				require.Equal(t, err, tc.expectedErr)
 			} else {
-				require.NoError(t, resp.Err)
+				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedTx, resp.Tx)
 			require.Equal(t, tc.expectedNumMarkets, resp.NumMarkets)
@@ -566,11 +561,11 @@ func TestGetAcknowledgeBridgesTx(t *testing.T) {
 			mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
 				Return(tc.keeperResp)
 
-			resp := prepare.GetAcknowledgeBridgesTx(ctx, mockTxConfig, &mockBridgeKeeper)
+			resp, err := prepare.GetAcknowledgeBridgesTx(ctx, mockTxConfig, &mockBridgeKeeper)
 			if tc.expectedErr != nil {
-				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
+				require.Equal(t, err, tc.expectedErr)
 			} else {
-				require.NoError(t, resp.Err)
+				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedTx, resp.Tx)
 			require.Equal(t, tc.expectedNumBridges, resp.NumBridges)
@@ -628,11 +623,11 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
 
-			resp := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, &mockPerpKeeper)
+			resp, err := prepare.GetAddPremiumVotesTx(ctx, mockTxConfig, &mockPerpKeeper)
 			if tc.expectedErr != nil {
-				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
+				require.Equal(t, err, tc.expectedErr)
 			} else {
-				require.NoError(t, resp.Err)
+				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedTx, resp.Tx)
 			require.Equal(t, tc.expectedNumVotes, resp.NumVotes)
@@ -692,11 +687,11 @@ func TestGetProposedOperationsTx(t *testing.T) {
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
 
-			resp := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
+			resp, err := prepare.GetProposedOperationsTx(ctx, mockTxConfig, &mockClobKeeper)
 			if tc.expectedErr != nil {
-				require.ErrorContains(t, resp.Err, tc.expectedErr.Error())
+				require.Equal(t, err, tc.expectedErr)
 			} else {
-				require.NoError(t, resp.Err)
+				require.NoError(t, err)
 			}
 			require.Equal(t, tc.expectedTx, resp.Tx)
 		})
@@ -733,7 +728,7 @@ func TestEncodeMsgsIntoTxBytes(t *testing.T) {
 			tx, err := prepare.EncodeMsgsIntoTxBytes(mockTxConfig, &clobtypes.MsgProposedOperations{})
 
 			if tc.expectedErr != nil {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Equal(t, err, tc.expectedErr)
 			} else {
 				require.NoError(t, err)
 			}

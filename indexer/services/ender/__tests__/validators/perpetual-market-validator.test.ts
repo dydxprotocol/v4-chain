@@ -8,7 +8,6 @@ import {
   defaultPerpetualMarketCreateEvent, defaultHeight, defaultTime, defaultTxHash,
 } from '../helpers/constants';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
@@ -71,7 +70,7 @@ describe('perpetual-market-validator', () => {
         'throws error on perpetual market create event missing stepBaseQuantums',
         {
           ...defaultPerpetualMarketCreateEvent,
-          stepBaseQuantums: Long.fromValue(0),
+          stepBaseQuantums: Long.fromValue(0, true),
         } as PerpetualMarketCreateEventV1,
         'PerpetualMarketCreateEvent stepBaseQuantums is not populated',
       ],
@@ -86,13 +85,11 @@ describe('perpetual-market-validator', () => {
 });
 
 function createBlock(
-  assetCreateEvent: PerpetualMarketCreateEventV1,
+  perpetualMarketEvent: PerpetualMarketCreateEventV1,
 ): IndexerTendermintBlock {
   const event: IndexerTendermintEvent = createIndexerTendermintEvent(
     DydxIndexerSubtypes.PERPETUAL_MARKET,
-    binaryToBase64String(
-      PerpetualMarketCreateEventV1.encode(assetCreateEvent).finish(),
-    ),
+    PerpetualMarketCreateEventV1.encode(perpetualMarketEvent).finish(),
     0,
     0,
   );

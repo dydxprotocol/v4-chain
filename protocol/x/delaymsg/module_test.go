@@ -4,10 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
+	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -23,12 +26,6 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-)
-
-const (
-	// Exchange config json is left empty as it is not validated by the server.
-	// This genesis state is formatted to export back to itself. It explicitly defines all fields using valid defaults.
-	validGenesisState = `{"delayed_messages":[{"id":1,"msg":"YWFh","block_height":"100"}],"num_messages":2}`
 )
 
 func createAppModule(t *testing.T) delaymsg.AppModule {
@@ -76,8 +73,6 @@ func TestAppModuleBasic_RegisterCodec(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgDelayMessage")
-	require.Contains(t, buf.String(), "delaymsg/DelayMessage")
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -89,8 +84,6 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 	var buf bytes.Buffer
 	err := cdc.Amino.PrintTypes(&buf)
 	require.NoError(t, err)
-	require.Contains(t, buf.String(), "MsgDelayMessage")
-	require.Contains(t, buf.String(), "delaymsg/DelayMessage")
 }
 
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
@@ -100,7 +93,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
 	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
 	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 3)
+	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 2)
 	mockRegistry.AssertExpectations(t)
 }
 
@@ -129,9 +122,9 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 			expectedErr: "failed to unmarshal delaymsg genesis state: unexpected EOF",
 		},
 		"Invalid state": {
-			genesisJson: `{"num_messages":1,` +
-				`"delayed_messages":[{"id": 1,"msg":"YWFh","block_height":1}]}`,
-			expectedErr: "delayed message id exceeds total number of messages: Invalid genesis state",
+			genesisJson: `{"next_delayed_message_id":1,` +
+				`"delayed_messages":[{"id": 1,"block_height":1}]}`,
+			expectedErr: "invalid delayed message at index 0 with id 1: Delayed msg is nil: Invalid genesis state",
 		},
 	}
 	for name, tc := range tests {
@@ -152,6 +145,9 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	bridgetypes.RegisterInterfaces(interfaceRegistry)
+
+	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
 
 	h := json.RawMessage(validGenesisState)
 
@@ -180,9 +176,9 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	am.RegisterGRPCGatewayRoutes(client.Context{}, router)
 
-	// Expect NumMessages route registered
+	// Expect NextDelayedMessageId route registered
 	recorder := httptest.NewRecorder()
-	req, err := http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/messages", nil)
+	req, err := http.NewRequest("GET", "/dydxprotocol/v4/delaymsg/next_id", nil)
 	require.NoError(t, err)
 	router.ServeHTTP(recorder, req)
 	require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
@@ -225,7 +221,7 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	require.Equal(t, 3, len(cmd.Commands()))
 	require.Equal(t, "get-block-message-ids", cmd.Commands()[0].Name())
 	require.Equal(t, "get-message", cmd.Commands()[1].Name())
-	require.Equal(t, "get-num-messages", cmd.Commands()[2].Name())
+	require.Equal(t, "get-next-delayed-message-id", cmd.Commands()[2].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -260,19 +256,23 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	interfaceRegistry := types.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
+	bridgetypes.RegisterInterfaces(interfaceRegistry)
+
+	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
+
 	gs := json.RawMessage(validGenesisState)
 
 	result := am.InitGenesis(ctx, cdc, gs)
 	require.Equal(t, 0, len(result))
 
-	numMessages := keeper.GetNumMessages(ctx)
-	require.Equal(t, uint32(2), numMessages)
+	nextDelayedMessageId := keeper.GetNextDelayedMessageId(ctx)
+	require.Equal(t, uint32(2), nextDelayedMessageId)
 
 	delayedMessage, found := keeper.GetMessage(ctx, 1)
 	require.True(t, found)
 	require.Equal(t, uint32(1), delayedMessage.Id)
-	require.Equal(t, int64(100), delayedMessage.BlockHeight)
-	require.Equal(t, []byte("aaa"), delayedMessage.Msg)
+	require.Equal(t, uint32(100), delayedMessage.BlockHeight)
+	require.Equal(t, testutildelaymsg.CreateTestAnyMsg(t), delayedMessage.Msg)
 
 	blockIds, found := keeper.GetBlockMessageIds(ctx, 100)
 	require.True(t, found)

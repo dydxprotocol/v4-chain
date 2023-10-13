@@ -1,8 +1,9 @@
-package lib
+package lib_test
 
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"math"
 	"math/big"
 	"testing"
@@ -17,7 +18,7 @@ const (
 var (
 	overflowError            = errors.New("value overflows uint64")
 	underflowError           = errors.New("value underflows uint64")
-	maxUint64PlusOneBigFloat = new(big.Float).Add(new(big.Float).SetUint64(1), BigFloatMaxUint64())
+	maxUint64PlusOneBigFloat = new(big.Float).Add(new(big.Float).SetUint64(1), lib.BigFloatMaxUint64())
 )
 
 func TestMustConvertIntegerToUint32_Int8(t *testing.T) {
@@ -50,9 +51,9 @@ func TestMustConvertIntegerToUint32_Int8(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if tc.expectedPanic {
-				require.Panics(t, func() { MustConvertIntegerToUint32(tc.value) })
+				require.Panics(t, func() { lib.MustConvertIntegerToUint32(tc.value) })
 			} else {
-				require.Equal(t, tc.expected, MustConvertIntegerToUint32(tc.value))
+				require.Equal(t, tc.expected, lib.MustConvertIntegerToUint32(tc.value))
 			}
 		})
 	}
@@ -88,9 +89,9 @@ func TestMustConvertIntegerToUint32_Int32(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if tc.expectedPanic {
-				require.Panics(t, func() { MustConvertIntegerToUint32(tc.value) })
+				require.Panics(t, func() { lib.MustConvertIntegerToUint32(tc.value) })
 			} else {
-				require.Equal(t, tc.expected, MustConvertIntegerToUint32(tc.value))
+				require.Equal(t, tc.expected, lib.MustConvertIntegerToUint32(tc.value))
 			}
 		})
 	}
@@ -134,9 +135,9 @@ func TestMustConvertIntegerToUint32_Int64(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if tc.expectedPanic {
-				require.Panics(t, func() { MustConvertIntegerToUint32(tc.value) })
+				require.Panics(t, func() { lib.MustConvertIntegerToUint32(tc.value) })
 			} else {
-				require.Equal(t, tc.expected, MustConvertIntegerToUint32(tc.value))
+				require.Equal(t, tc.expected, lib.MustConvertIntegerToUint32(tc.value))
 			}
 		})
 	}
@@ -172,9 +173,9 @@ func TestMustConvertIntegerToUint32_Uint64(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			if tc.expectedPanic {
-				require.Panics(t, func() { MustConvertIntegerToUint32(tc.value) })
+				require.Panics(t, func() { lib.MustConvertIntegerToUint32(tc.value) })
 			} else {
-				require.Equal(t, tc.expected, MustConvertIntegerToUint32(tc.value))
+				require.Equal(t, tc.expected, lib.MustConvertIntegerToUint32(tc.value))
 			}
 		})
 	}
@@ -195,7 +196,7 @@ func TestConvertBigFloatToUint64(t *testing.T) {
 			expectedUint64: uint64(0),
 		},
 		"Convert max uint64 successfully": {
-			bigFloatValue:  BigFloatMaxUint64(),
+			bigFloatValue:  lib.BigFloatMaxUint64(),
 			expectedError:  nil,
 			expectedUint64: math.MaxUint64,
 		},
@@ -228,7 +229,7 @@ func TestConvertBigFloatToUint64(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := ConvertBigFloatToUint64(tc.bigFloatValue)
+			result, err := lib.ConvertBigFloatToUint64(tc.bigFloatValue)
 			if tc.expectedError == nil {
 				require.NoError(t, err)
 			} else {
@@ -256,7 +257,11 @@ func TestConvertStringSliceToBigFloatSlice(t *testing.T) {
 				new(big.Float).SetUint64(100),
 			},
 		},
-		"Multiple values and one throws an error": {
+		"Convert empty string returns an error": {
+			stringSlice:   []string{""},
+			expectedError: fmt.Errorf("invalid, value is not a number: %v", ""),
+		},
+		"Multiple values and one returns an error": {
 			stringSlice: []string{
 				"100.0001",
 				"300.02",
@@ -270,7 +275,7 @@ func TestConvertStringSliceToBigFloatSlice(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := ConvertStringSliceToBigFloatSlice(tc.stringSlice)
+			result, err := lib.ConvertStringSliceToBigFloatSlice(tc.stringSlice)
 			if tc.expectedError == nil {
 				require.NoError(t, err)
 			} else {
@@ -290,7 +295,7 @@ func TestConvertStringSliceToBigFloatSlice_MultipleValues(t *testing.T) {
 		"50000",
 	}
 
-	result, err := ConvertStringSliceToBigFloatSlice(stringValues)
+	result, err := lib.ConvertStringSliceToBigFloatSlice(stringValues)
 
 	expectedResult := make([]*big.Float, 0, len(stringValues))
 	for _, val := range stringValues {
@@ -316,7 +321,6 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 			bigFloatSlice: []*big.Float{
 				new(big.Float).SetFloat64(100.0001),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(100),
 			},
@@ -324,9 +328,8 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 		"Convert successfully for 0 and max value": {
 			bigFloatSlice: []*big.Float{
 				new(big.Float).SetFloat64(0),
-				BigFloatMaxUint64(),
+				lib.BigFloatMaxUint64(),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(0),
 				math.MaxUint64,
@@ -338,9 +341,8 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 				new(big.Float).SetFloat64(300.02),
 				new(big.Float).SetFloat64(5),
 				new(big.Float).SetFloat64(50000),
-				BigFloatMaxUint64(),
+				lib.BigFloatMaxUint64(),
 			},
-			expectedError: nil,
 			expectedUint64Slice: []uint64{
 				uint64(100),
 				uint64(300),
@@ -355,30 +357,27 @@ func TestConvertBigFloatSliceToUint64Slice(t *testing.T) {
 				new(big.Float).SetFloat64(300.02),
 				new(big.Float).SetFloat64(5),
 				new(big.Float).SetFloat64(-1), // Invalid
-				BigFloatMaxUint64(),
+				lib.BigFloatMaxUint64(),
 			},
-			expectedError:       underflowError,
-			expectedUint64Slice: nil,
+			expectedError: underflowError,
 		},
 		"value overflows": {
 			bigFloatSlice: []*big.Float{
 				maxUint64PlusOneBigFloat,
 			},
-			expectedError:       overflowError,
-			expectedUint64Slice: nil,
+			expectedError: overflowError,
 		},
 		"value underflows": {
 			bigFloatSlice: []*big.Float{
 				new(big.Float).SetFloat64(-100),
 			},
-			expectedError:       underflowError,
-			expectedUint64Slice: nil,
+			expectedError: underflowError,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := ConvertBigFloatSliceToUint64Slice(tc.bigFloatSlice)
+			result, err := lib.ConvertBigFloatSliceToUint64Slice(tc.bigFloatSlice)
 			if tc.expectedError == nil {
 				require.NoError(t, err)
 			} else {

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,10 +16,9 @@ import (
 )
 
 func TestPerpetualQuerySingle(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgs, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 2)
-	require.NoError(t, err)
+	pc := keepertest.PerpetualsKeepers(t)
+	wctx := sdk.WrapSDKContext(pc.Ctx)
+	msgs := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 2)
 	for _, tc := range []struct {
 		desc     string
 		request  *types.QueryPerpetualRequest
@@ -44,7 +44,10 @@ func TestPerpetualQuerySingle(t *testing.T) {
 			request: &types.QueryPerpetualRequest{
 				Id: uint32(100000),
 			},
-			err: status.Error(codes.NotFound, "not found"),
+			err: status.Error(codes.NotFound, fmt.Sprintf(
+				"Perpetual id %+v not found.",
+				uint32(100000),
+			)),
 		},
 		{
 			desc: "InvalidRequest",
@@ -52,7 +55,7 @@ func TestPerpetualQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.Perpetual(wctx, tc.request)
+			response, err := pc.PerpetualsKeeper.Perpetual(wctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -67,10 +70,9 @@ func TestPerpetualQuerySingle(t *testing.T) {
 }
 
 func TestPerpetualQueryPaginated(t *testing.T) {
-	ctx, keeper, pricesKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	wctx := sdk.WrapSDKContext(ctx)
-	msgs, err := createLiquidityTiersAndNPerpetuals(t, ctx, keeper, pricesKeeper, 5)
-	require.NoError(t, err)
+	pc := keepertest.PerpetualsKeepers(t)
+	wctx := sdk.WrapSDKContext(pc.Ctx)
+	msgs := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 5)
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllPerpetualsRequest {
 		return &types.QueryAllPerpetualsRequest{
@@ -85,7 +87,7 @@ func TestPerpetualQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.AllPerpetuals(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := pc.PerpetualsKeeper.AllPerpetuals(wctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.Perpetual), step)
 			require.Subset(t,
@@ -98,7 +100,7 @@ func TestPerpetualQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.AllPerpetuals(wctx, request(next, 0, uint64(step), false))
+			resp, err := pc.PerpetualsKeeper.AllPerpetuals(wctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.Perpetual), step)
 			require.Subset(t,
@@ -109,7 +111,7 @@ func TestPerpetualQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.AllPerpetuals(wctx, request(nil, 0, 0, true))
+		resp, err := pc.PerpetualsKeeper.AllPerpetuals(wctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -118,7 +120,7 @@ func TestPerpetualQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.AllPerpetuals(wctx, nil)
+		_, err := pc.PerpetualsKeeper.AllPerpetuals(wctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

@@ -3,8 +3,9 @@ package keeper
 import (
 	"context"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc/codes"
@@ -22,7 +23,7 @@ func (k Keeper) AllMarketPrices(
 	var marketPrices []types.MarketPrice
 	ctx := sdk.UnwrapSDKContext(c)
 
-	marketPriceStore := k.newMarketPriceStore(ctx)
+	marketPriceStore := k.getMarketPriceStore(ctx)
 
 	pageRes, err := query.Paginate(marketPriceStore, req.Pagination, func(key []byte, value []byte) error {
 		var marketPrice types.MarketPrice
@@ -58,7 +59,7 @@ func (k Keeper) MarketPrice(
 		req.Id,
 	)
 	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketPriceDoesNotExist) {
+		if errorsmod.IsOf(err, types.ErrMarketPriceDoesNotExist) {
 			return nil, status.Error(codes.NotFound, "not found")
 		} else {
 			return nil, status.Error(codes.Internal, "unknown error getting market price")
@@ -79,7 +80,7 @@ func (k Keeper) AllMarketParams(
 	var marketParams []types.MarketParam
 	ctx := sdk.UnwrapSDKContext(c)
 
-	marketParamStore := k.newMarketParamStore(ctx)
+	marketParamStore := k.getMarketParamStore(ctx)
 
 	pageRes, err := query.Paginate(marketParamStore, req.Pagination, func(key []byte, value []byte) error {
 		var marketParam types.MarketParam
@@ -110,16 +111,12 @@ func (k Keeper) MarketParam(
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	val, err := k.GetMarketParam(
+	val, exists := k.GetMarketParam(
 		ctx,
 		req.Id,
 	)
-	if err != nil {
-		if sdkerrors.IsOf(err, types.ErrMarketParamDoesNotExist) {
-			return nil, status.Error(codes.NotFound, "not found")
-		} else {
-			return nil, status.Error(codes.Internal, "unknown error getting market param")
-		}
+	if !exists {
+		return nil, status.Error(codes.NotFound, "not found")
 	}
 
 	return &types.QueryMarketParamResponse{MarketParam: val}, nil

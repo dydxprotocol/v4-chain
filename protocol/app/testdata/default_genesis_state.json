@@ -9,8 +9,7 @@
         "denom_exponent": -6,
         "has_market": false,
         "market_id": 0,
-        "atomic_resolution": -6,
-        "long_interest": "0"
+        "atomic_resolution": -6
       }
     ]
   },
@@ -39,8 +38,7 @@
       "durations": [
         "300s",
         "1800s"
-      ],
-      "clock_drift_grace_period_duration": "5s"
+      ]
     }
   },
   "bridge": {
@@ -71,7 +69,6 @@
   "clob": {
     "clob_pairs": [],
     "liquidations_config": {
-      "max_insurance_fund_quantums_for_deleveraging": "0",
       "max_liquidation_fee_ppm": 5000,
       "position_block_limits": {
         "min_position_notional_liquidated": "1000",
@@ -87,9 +84,9 @@
       }
     },
     "block_rate_limit_config": {
-      "max_short_term_orders_per_market_per_n_blocks": [],
+      "max_short_term_orders_per_n_blocks": [],
       "max_stateful_orders_per_n_blocks": [],
-      "max_short_term_order_cancellations_per_market_per_n_blocks": []
+      "max_short_term_order_cancellations_per_n_blocks": []
     },
     "equity_tier_limit_config": {
       "short_term_order_equity_tiers": [],
@@ -105,7 +102,7 @@
   },
   "delaymsg": {
     "delayed_messages": [],
-    "num_messages": 0
+    "next_delayed_message_id": 0
   },
   "distribution": {
     "params": {
@@ -156,6 +153,9 @@
         "fast_forward_next_tick": true
       }
     ]
+  },
+  "evidence":{
+    "evidence":[]
   },
   "feegrant": {
     "allowances": []
@@ -275,7 +275,8 @@
       "params": {
         "allowed_clients": [
           "06-solomachine",
-          "07-tendermint"
+          "07-tendermint",
+          "09-localhost"
         ]
       },
       "create_localhost": false,
@@ -345,8 +346,8 @@
   "rewards": {
     "params": {
       "treasury_account":"rewards_treasury",
-      "denom":"testnet_reward_token",
-      "denom_exponent":-6,
+      "denom":"adv4tnt",
+      "denom_exponent":-18,
       "market_id":1,
       "fee_multiplier_ppm":990000
     }
@@ -394,15 +395,23 @@
     "params": {
       "send_enabled": true,
       "receive_enabled": true
-    }
+    },
+    "total_escrowed": []
   },
   "upgrade": {},
   "vest": {
     "vest_entries": [
       {
-        "denom": "testnet_reward_token",
-        "end_time": "2023-08-23T00:00:00Z",
-        "start_time": "2023-08-02T00:00:00Z",
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
+        "treasury_account": "community_treasury",
+        "vester_account": "community_vester"
+      },
+      {
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
         "treasury_account": "rewards_treasury",
         "vester_account": "rewards_vester"
       }

@@ -1,5 +1,6 @@
+import { Any, AnySDKType } from "../../google/protobuf/any";
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial } from "../../helpers";
+import { DeepPartial } from "../../helpers";
 /** DelayedMessage is a message that is delayed until a certain block height. */
 
 export interface DelayedMessage {
@@ -7,10 +8,10 @@ export interface DelayedMessage {
   id: number;
   /** The message to be executed. */
 
-  msg: Uint8Array;
+  msg?: Any;
   /** The block height at which the message should be executed. */
 
-  blockHeight: Long;
+  blockHeight: number;
 }
 /** DelayedMessage is a message that is delayed until a certain block height. */
 
@@ -19,17 +20,17 @@ export interface DelayedMessageSDKType {
   id: number;
   /** The message to be executed. */
 
-  msg: Uint8Array;
+  msg?: AnySDKType;
   /** The block height at which the message should be executed. */
 
-  block_height: Long;
+  block_height: number;
 }
 
 function createBaseDelayedMessage(): DelayedMessage {
   return {
     id: 0,
-    msg: new Uint8Array(),
-    blockHeight: Long.ZERO
+    msg: undefined,
+    blockHeight: 0
   };
 }
 
@@ -39,12 +40,12 @@ export const DelayedMessage = {
       writer.uint32(8).uint32(message.id);
     }
 
-    if (message.msg.length !== 0) {
-      writer.uint32(18).bytes(message.msg);
+    if (message.msg !== undefined) {
+      Any.encode(message.msg, writer.uint32(18).fork()).ldelim();
     }
 
-    if (!message.blockHeight.isZero()) {
-      writer.uint32(24).sint64(message.blockHeight);
+    if (message.blockHeight !== 0) {
+      writer.uint32(24).uint32(message.blockHeight);
     }
 
     return writer;
@@ -64,11 +65,11 @@ export const DelayedMessage = {
           break;
 
         case 2:
-          message.msg = reader.bytes();
+          message.msg = Any.decode(reader, reader.uint32());
           break;
 
         case 3:
-          message.blockHeight = (reader.sint64() as Long);
+          message.blockHeight = reader.uint32();
           break;
 
         default:
@@ -83,8 +84,8 @@ export const DelayedMessage = {
   fromPartial(object: DeepPartial<DelayedMessage>): DelayedMessage {
     const message = createBaseDelayedMessage();
     message.id = object.id ?? 0;
-    message.msg = object.msg ?? new Uint8Array();
-    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
+    message.msg = object.msg !== undefined && object.msg !== null ? Any.fromPartial(object.msg) : undefined;
+    message.blockHeight = object.blockHeight ?? 0;
     return message;
   }
 

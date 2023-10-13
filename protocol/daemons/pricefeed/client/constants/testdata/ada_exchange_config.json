@@ -2,16 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ADAUSDT\"",
+      "ticker": "ADAUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ADAUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tADAUSD",
+      "exchangeName": "Bybit",
+      "ticker": "ADAUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -34,6 +30,16 @@
     },
     {
       "exchangeName": "Kucoin",
+      "ticker": "ADA-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ADA_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
       "ticker": "ADA-USDT",
       "adjustByMarket": "USDT-USD"
     }

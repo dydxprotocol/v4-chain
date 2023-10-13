@@ -5,7 +5,7 @@
 
 Base URLs:
 
-* <a href="https://indexer.v4testnet2.dydx.exchange/v4">https://indexer.v4testnet2.dydx.exchange/v4</a>
+* <a href="https://indexer.v4testnet.dydx.exchange/v4">https://indexer.v4testnet.dydx.exchange/v4</a>
 
 # Authentication
 
@@ -23,7 +23,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}', headers = headers)
 
 print(r.json())
 
@@ -35,7 +35,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}',
 {
   method: 'GET',
 
@@ -193,7 +193,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}', headers = headers)
 
 print(r.json())
 
@@ -205,7 +205,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/addresses/{address}/subaccountNumber/{subaccountNumber}',
 {
   method: 'GET',
 
@@ -314,7 +314,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/assetPositions', params={
   'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
@@ -328,7 +328,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/assetPositions?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -390,7 +390,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{ticker}', params={
   'resolution': '1MIN',  'limit': '0'
 }, headers = headers)
 
@@ -404,7 +404,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/candles/perpetualMarkets/{ticker}?resolution=1MIN&limit=0',
 {
   method: 'GET',
 
@@ -477,6 +477,75 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/candles/perpetualMarkets/{tic
 This operation does not require authentication
 </aside>
 
+## Screen
+
+<a id="opIdScreen"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/screen', params={
+  'address': 'string'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://indexer.v4testnet.dydx.exchange/v4/screen?address=string',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /screen`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "restricted": true,
+  "reason": "string"
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ComplianceResponse](#schemacomplianceresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetFills
 
 <a id="opIdGetFills"></a>
@@ -489,7 +558,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/fills', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/fills', params={
   'address': 'string',  'subaccountNumber': '0',  'market': 'string',  'marketType': 'PERPETUAL',  'limit': '0'
 }, headers = headers)
 
@@ -503,7 +572,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/fills?address=string&subaccountNumber=0&market=string&marketType=PERPETUAL&limit=0',
 {
   method: 'GET',
 
@@ -586,7 +655,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/height', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/height', headers = headers)
 
 print(r.json())
 
@@ -598,7 +667,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/height',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/height',
 {
   method: 'GET',
 
@@ -647,7 +716,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/historicalFunding/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -661,7 +730,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/historicalFunding/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -726,7 +795,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/historical-pnl', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -740,7 +809,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/historical-pnl?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -811,7 +880,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}', headers = headers)
 
 print(r.json())
 
@@ -823,7 +892,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orderbooks/perpetualMarket/{ticker}',
 {
   method: 'GET',
 
@@ -888,7 +957,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orders', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -902,7 +971,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orders?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -976,7 +1045,9 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders?address=string&subacco
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
-    "ticker": "string"
+    "ticker": "string",
+    "updatedAt": "string",
+    "updatedAtHeight": "string"
   }
 ]
 ```
@@ -1031,6 +1102,8 @@ Status Code **200**
 |---|---|---|---|---|
 |» postOnly|boolean|true|none|none|
 |» ticker|string|true|none|none|
+|» updatedAt|[IsoString](#schemaisostring)|false|none|none|
+|» updatedAtHeight|string|false|none|none|
 
 #### Enumerated Values
 
@@ -1074,7 +1147,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/orders/{orderId}', headers = headers)
 
 print(r.json())
 
@@ -1086,7 +1159,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/orders/{orderId}',
 {
   method: 'GET',
 
@@ -1133,7 +1206,9 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/orders/{orderId}',
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
-  "ticker": "string"
+  "ticker": "string",
+  "updatedAt": "string",
+  "updatedAtHeight": "string"
 }
 ```
 
@@ -1159,7 +1234,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1173,7 +1248,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets?limit=0',
 {
   method: 'GET',
 
@@ -1207,8 +1282,6 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -1218,24 +1291,18 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     },
     "property2": {
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -1245,17 +1312,13 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualMarkets?limit=0',
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     }
   }
 }
@@ -1283,7 +1346,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/perpetualPositions', params={
   'address': 'string',  'subaccountNumber': '0',  'status': [
   "OPEN"
 ],  'limit': '0'
@@ -1299,7 +1362,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualPositions?address=string&subaccountNumber=0&status=OPEN&limit=0',
 {
   method: 'GET',
 
@@ -1384,7 +1447,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/sparklines', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/sparklines', params={
   'timePeriod': 'ONE_DAY'
 }, headers = headers)
 
@@ -1398,7 +1461,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/sparklines?timePeriod=ONE_DAY',
 {
   method: 'GET',
 
@@ -1464,7 +1527,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/time', headers = headers)
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/time', headers = headers)
 
 print(r.json())
 
@@ -1476,7 +1539,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/time',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/time',
 {
   method: 'GET',
 
@@ -1525,7 +1588,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}', params={
   'limit': '0'
 }, headers = headers)
 
@@ -1539,7 +1602,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{ticker}?limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker}?limit=0',
 {
   method: 'GET',
 
@@ -1553,7 +1616,7 @@ fetch('https://indexer.v4testnet2.dydx.exchange/v4/trades/perpetualMarkets/{tick
 
 ```
 
-`GET /trades/perpetualMarkets/{ticker}`
+`GET /trades/perpetualMarket/{ticker}`
 
 ### Parameters
 
@@ -1605,7 +1668,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://indexer.v4testnet2.dydx.exchange/v4/transfers', params={
+r = requests.get('https://indexer.v4testnet.dydx.exchange/v4/transfers', params={
   'address': 'string',  'subaccountNumber': '0',  'limit': '0'
 }, headers = headers)
 
@@ -1619,7 +1682,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://indexer.v4testnet2.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
+fetch('https://indexer.v4testnet.dydx.exchange/v4/transfers?address=string&subaccountNumber=0&limit=0',
 {
   method: 'GET',
 
@@ -2125,6 +2188,28 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |candles|[[CandleResponseObject](#schemacandleresponseobject)]|true|none|none|
+
+## ComplianceResponse
+
+<a id="schemacomplianceresponse"></a>
+<a id="schema_ComplianceResponse"></a>
+<a id="tocScomplianceresponse"></a>
+<a id="tocscomplianceresponse"></a>
+
+```json
+{
+  "restricted": true,
+  "reason": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|restricted|boolean|true|none|none|
+|reason|string|false|none|none|
 
 ## OrderSide
 
@@ -2670,7 +2755,9 @@ or
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
-  "ticker": "string"
+  "ticker": "string",
+  "updatedAt": "string",
+  "updatedAtHeight": "string"
 }
 
 ```
@@ -2699,6 +2786,8 @@ or
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
 |ticker|string|true|none|none|
+|updatedAt|[IsoString](#schemaisostring)|false|none|none|
+|updatedAtHeight|string|false|none|none|
 
 ## PerpetualMarketStatus
 
@@ -2740,8 +2829,6 @@ or
   "clobPairId": "string",
   "ticker": "string",
   "status": "ACTIVE",
-  "baseAsset": "string",
-  "quoteAsset": "string",
   "lastPrice": "string",
   "oraclePrice": "string",
   "priceChange24H": "string",
@@ -2751,17 +2838,13 @@ or
   "initialMarginFraction": "string",
   "maintenanceMarginFraction": "string",
   "basePositionNotional": "string",
-  "basePositionSize": "string",
-  "incrementalPositionSize": "string",
-  "maxPositionSize": "string",
   "openInterest": "string",
   "atomicResolution": 0,
   "quantumConversionExponent": 0,
   "tickSize": "string",
   "stepSize": "string",
   "stepBaseQuantums": 0,
-  "subticksPerTick": 0,
-  "minOrderBaseQuantums": 0
+  "subticksPerTick": 0
 }
 
 ```
@@ -2773,8 +2856,6 @@ or
 |clobPairId|string|true|none|none|
 |ticker|string|true|none|none|
 |status|[PerpetualMarketStatus](#schemaperpetualmarketstatus)|true|none|none|
-|baseAsset|string|true|none|none|
-|quoteAsset|string|true|none|none|
 |lastPrice|string|true|none|none|
 |oraclePrice|string|true|none|none|
 |priceChange24H|string|true|none|none|
@@ -2784,9 +2865,6 @@ or
 |initialMarginFraction|string|true|none|none|
 |maintenanceMarginFraction|string|true|none|none|
 |basePositionNotional|string|true|none|none|
-|basePositionSize|string|true|none|none|
-|incrementalPositionSize|string|true|none|none|
-|maxPositionSize|string|true|none|none|
 |openInterest|string|true|none|none|
 |atomicResolution|number(double)|true|none|none|
 |quantumConversionExponent|number(double)|true|none|none|
@@ -2794,7 +2872,6 @@ or
 |stepSize|string|true|none|none|
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
-|minOrderBaseQuantums|number(double)|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -2810,8 +2887,6 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -2821,24 +2896,18 @@ or
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     },
     "property2": {
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "baseAsset": "string",
-      "quoteAsset": "string",
       "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
@@ -2848,17 +2917,13 @@ or
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
       "basePositionNotional": "string",
-      "basePositionSize": "string",
-      "incrementalPositionSize": "string",
-      "maxPositionSize": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0,
-      "minOrderBaseQuantums": 0
+      "subticksPerTick": 0
     }
   }
 }

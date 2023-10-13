@@ -1,10 +1,11 @@
 package msgs_test
 
 import (
+	"sort"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/maps"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 
@@ -47,6 +48,11 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.distribution.v1beta1.MsgWithdrawDelegatorRewardResponse",
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommission",
 		"/cosmos.distribution.v1beta1.MsgWithdrawValidatorCommissionResponse",
+
+		// evidence
+		"/cosmos.evidence.v1beta1.Equivocation",
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidence",
+		"/cosmos.evidence.v1beta1.MsgSubmitEvidenceResponse",
 
 		// feegrant
 		"/cosmos.feegrant.v1beta1.AllowedMsgAllowance",
@@ -182,15 +188,16 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.connection.v1.Version",
 
 		// ibc.lightclients
+		"/ibc.lightclients.localhost.v2.ClientState",
 		"/ibc.lightclients.tendermint.v1.ClientState",
 		"/ibc.lightclients.tendermint.v1.ConsensusState",
 		"/ibc.lightclients.tendermint.v1.Header",
 		"/ibc.lightclients.tendermint.v1.Misbehaviour",
 	}
 
-	require.Equal(t, expectedMsgs, maps.GetSortedKeys(msgs.NormalMsgs))
+	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.NormalMsgs))
 }
 
 func TestNormalMsgs_Value(t *testing.T) {
-	validateSampleMsgValue(t, msgs.NormalMsgs)
+	validateMsgValue(t, msgs.NormalMsgs)
 }

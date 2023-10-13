@@ -1,0 +1,23 @@
+defaults:
+  actions:
+    backport:
+      assignees:
+        - "{{ author }}"
+
+pull_request_rules:
+  - name: backport to release/protocol/v0.3.x branch
+    conditions:
+      - base=main
+      - label=backport/v0.3.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v0.3.x
+  - name: backport to release/protocol/v1.x branch
+    conditions:
+      - base=main
+      - label=backport/protocol/v1.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v1.x

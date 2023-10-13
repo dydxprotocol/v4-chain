@@ -21,11 +21,7 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
-import {
-  binaryToBase64String,
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
-} from '../helpers/indexer-proto-helpers';
+import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
   defaultFundingRateEvent,
@@ -45,10 +41,12 @@ import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import { startPriceCache } from '../../src/caches/price-cache';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('fundingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -84,9 +82,7 @@ describe('fundingHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        binaryToBase64String(
-          FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
-        ),
+        FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -338,9 +334,7 @@ function createKafkaMessageFromFundingEvents({
     events.push(
       createIndexerTendermintEvent(
         DydxIndexerSubtypes.FUNDING,
-        binaryToBase64String(
-          FundingEventV1.encode(fundingEvent).finish(),
-        ),
+        FundingEventV1.encode(fundingEvent).finish(),
         transactionIndex,
         eventIndex,
       ),

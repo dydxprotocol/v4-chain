@@ -20,6 +20,7 @@ type (
 		cdc         codec.BinaryCodec
 		statsKeeper types.StatsKeeper
 		storeKey    storetypes.StoreKey
+		authorities map[string]struct{}
 	}
 )
 
@@ -27,12 +28,19 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	statsKeeper types.StatsKeeper,
 	storeKey storetypes.StoreKey,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:         cdc,
 		statsKeeper: statsKeeper,
 		storeKey:    storeKey,
+		authorities: lib.UniqueSliceToSet(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -86,7 +94,7 @@ func (k Keeper) GetPerpetualFeePpm(ctx sdk.Context, address string, isTaker bool
 	return userTier.MakerFeePpm
 }
 
-// GetLowestMakerFee returns the lowest maker fee amoung any tiers.
+// GetLowestMakerFee returns the lowest maker fee among any tiers.
 func (k Keeper) GetLowestMakerFee(ctx sdk.Context) int32 {
 	feeParams := k.GetPerpetualFeeParams(ctx)
 

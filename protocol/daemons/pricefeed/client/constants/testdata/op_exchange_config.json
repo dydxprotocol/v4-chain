@@ -1,0 +1,33 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "OPUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "OP-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "OP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "OP-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "OP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "OP-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

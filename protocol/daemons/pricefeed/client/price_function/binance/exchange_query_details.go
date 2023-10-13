@@ -6,17 +6,16 @@ import (
 )
 
 var (
-	// Example request URL: /api/v3/ticker/24hr?symbols=["BTCUSDT","BNBUSDT"]
 	BinanceDetails = types.ExchangeQueryDetails{
 		Exchange:      exchange_common.EXCHANGE_ID_BINANCE,
-		Url:           "https://data.binance.com/api/v3/ticker/24hr?symbols=[$]",
+		Url:           "https://data-api.binance.vision/api/v3/ticker/24hr",
 		PriceFunction: BinancePriceFunction,
 		IsMultiMarket: true,
 	}
 
 	BinanceUSDetails = types.ExchangeQueryDetails{
 		Exchange:      exchange_common.EXCHANGE_ID_BINANCE_US,
-		Url:           "https://api.binance.us/api/v3/ticker/24hr?symbols=[$]",
+		Url:           "https://api.binance.us/api/v3/ticker/24hr",
 		PriceFunction: BinancePriceFunction,
 		IsMultiMarket: true,
 	}

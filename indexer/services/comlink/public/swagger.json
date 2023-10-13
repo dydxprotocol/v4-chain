@@ -270,6 +270,21 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ComplianceResponse": {
+        "properties": {
+          "restricted": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "restricted"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "OrderSide": {
         "enum": [
           "BUY",
@@ -635,6 +650,12 @@
           },
           "ticker": {
             "type": "string"
+          },
+          "updatedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "updatedAtHeight": {
+            "type": "string"
           }
         },
         "required": [
@@ -679,12 +700,6 @@
           "status": {
             "$ref": "#/components/schemas/PerpetualMarketStatus"
           },
-          "baseAsset": {
-            "type": "string"
-          },
-          "quoteAsset": {
-            "type": "string"
-          },
           "lastPrice": {
             "type": "string"
           },
@@ -713,15 +728,6 @@
           "basePositionNotional": {
             "type": "string"
           },
-          "basePositionSize": {
-            "type": "string"
-          },
-          "incrementalPositionSize": {
-            "type": "string"
-          },
-          "maxPositionSize": {
-            "type": "string"
-          },
           "openInterest": {
             "type": "string"
           },
@@ -746,18 +752,12 @@
           "subticksPerTick": {
             "type": "number",
             "format": "double"
-          },
-          "minOrderBaseQuantums": {
-            "type": "number",
-            "format": "double"
           }
         },
         "required": [
           "clobPairId",
           "ticker",
           "status",
-          "baseAsset",
-          "quoteAsset",
           "lastPrice",
           "oraclePrice",
           "priceChange24H",
@@ -767,17 +767,13 @@
           "initialMarginFraction",
           "maintenanceMarginFraction",
           "basePositionNotional",
-          "basePositionSize",
-          "incrementalPositionSize",
-          "maxPositionSize",
           "openInterest",
           "atomicResolution",
           "quantumConversionExponent",
           "tickSize",
           "stepSize",
           "stepBaseQuantums",
-          "subticksPerTick",
-          "minOrderBaseQuantums"
+          "subticksPerTick"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1154,6 +1150,34 @@
             "in": "query",
             "name": "toISO",
             "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/screen": {
+      "get": {
+        "operationId": "Screen",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
             "schema": {
               "type": "string"
             }
@@ -1716,7 +1740,7 @@
         "parameters": []
       }
     },
-    "/trades/perpetualMarkets/{ticker}": {
+    "/trades/perpetualMarket/{ticker}": {
       "get": {
         "operationId": "GetTrades",
         "responses": {
@@ -1836,7 +1860,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet2.dydx.exchange/v4",
+      "url": "https://indexer.v4testnet.dydx.exchange/v4",
       "description": "Public Testnet"
     }
   ]

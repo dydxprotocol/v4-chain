@@ -2,6 +2,7 @@ package flags_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -35,6 +36,45 @@ func TestAddFlagsToCommand(t *testing.T) {
 	}
 }
 
+func TestValidate(t *testing.T) {
+	tests := map[string]struct {
+		flags       flags.Flags
+		expectedErr error
+	}{
+		"success (default values)": {
+			flags: flags.Flags{
+				NonValidatingFullNode: flags.DefaultNonValidatingFullNode,
+				DdAgentHost:           flags.DefaultDdAgentHost,
+				DdTraceAgentPort:      flags.DefaultDdTraceAgentPort,
+				GrpcAddress:           config.DefaultGRPCAddress,
+				GrpcEnable:            true,
+			},
+		},
+		"success - full node & gRPC disabled": {
+			flags: flags.Flags{
+				GrpcEnable:            false,
+				NonValidatingFullNode: true,
+			},
+		},
+		"failure - gRPC disabled": {
+			flags: flags.Flags{
+				GrpcEnable: false,
+			},
+			expectedErr: fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server"),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			err := tc.flags.Validate()
+			if tc.expectedErr != nil {
+				require.EqualError(t, err, tc.expectedErr.Error())
+			} else {
+				require.Nil(t, err)
+			}
+		})
+	}
+}
+
 func TestGetFlagValuesFromOptions(t *testing.T) {
 	tests := map[string]struct {
 		// Parameters.
@@ -44,21 +84,29 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedNonValidatingFullNodeFlag bool
 		expectedDdAgentHost               string
 		expectedDdTraceAgentPort          uint16
+		expectedGrpcAddress               string
+		expectedGrpcEnable                bool
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag: false,
 			expectedDdAgentHost:               "",
 			expectedDdTraceAgentPort:          8126,
+			expectedGrpcAddress:               "localhost:9090",
+			expectedGrpcEnable:                true,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
 				flags.NonValidatingFullNodeFlag: true,
 				flags.DdAgentHost:               "agentHostTest",
 				flags.DdTraceAgentPort:          uint16(777),
+				flags.GrpcEnable:                false,
+				flags.GrpcAddress:               "localhost:9091",
 			},
 			expectedNonValidatingFullNodeFlag: true,
 			expectedDdAgentHost:               "agentHostTest",
 			expectedDdTraceAgentPort:          777,
+			expectedGrpcEnable:                false,
+			expectedGrpcAddress:               "localhost:9091",
 		},
 	}
 
@@ -85,6 +133,16 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				t,
 				tc.expectedDdTraceAgentPort,
 				flags.DdTraceAgentPort,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcEnable,
+				flags.GrpcEnable,
+			)
+			require.Equal(
+				t,
+				tc.expectedGrpcAddress,
+				flags.GrpcAddress,
 			)
 		})
 	}

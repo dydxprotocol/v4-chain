@@ -19,12 +19,13 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultOrderId, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -33,10 +34,12 @@ import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-orde
 import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -76,9 +79,7 @@ describe('statefulOrderRemovalHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
-        binaryToBase64String(
-          StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        ),
+        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -115,7 +116,11 @@ describe('statefulOrderRemovalHandler', () => {
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
     expect(order).toBeDefined();
-    expect(order!.status).toEqual(OrderStatus.CANCELED);
+    expect(order).toEqual(expect.objectContaining({
+      status: OrderStatus.CANCELED,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
     expectTimingStats();
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {

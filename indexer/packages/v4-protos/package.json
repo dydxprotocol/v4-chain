@@ -25,7 +25,7 @@
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSL-1.1",
   "bugs": {
     "url": "https://github.com/dydxprotocol/indexer/issues"
   },
@@ -40,6 +40,6 @@
     "bech32": "^2.0.0",
     "dotenv-flow": "^3.2.0",
     "long": "^5.2.1",
-    "protobufjs": "^7.2.3"
+    "protobufjs": "^7.2.4"
   }
 }

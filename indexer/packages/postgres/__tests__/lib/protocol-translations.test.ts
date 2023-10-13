@@ -56,8 +56,8 @@ describe('protocolTranslations', () => {
   const goodTilBlockOrder: IndexerOrder = {
     orderId: orderIdShortTerm,
     side: IndexerOrder_Side.SIDE_BUY,
-    subticks: Long.fromValue(1_000_000),
-    quantums: Long.fromValue(1_000_000),
+    subticks: Long.fromValue(1_000_000, true),
+    quantums: Long.fromValue(1_000_000, true),
     goodTilBlock: 100,
     timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
     reduceOnly: false,

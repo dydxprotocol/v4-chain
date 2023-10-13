@@ -4,21 +4,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"strings"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 )
 
 // ExchangeQueryHandlerImpl is the struct that implements the `ExchangeQueryHandler` interface.
 type ExchangeQueryHandlerImpl struct {
-	lib.TimeProvider
+	libtime.TimeProvider
 }
 
 // Ensure the `ExchangeQueryHandlerImpl` struct is implemented at compile time
@@ -26,13 +29,13 @@ var _ ExchangeQueryHandler = (*ExchangeQueryHandlerImpl)(nil)
 
 // ExchangeQueryHandler is an interface that encapsulates querying an exchange for price info.
 type ExchangeQueryHandler interface {
-	lib.TimeProvider
+	libtime.TimeProvider
 	Query(
 		ctx context.Context,
 		exchangeQueryDetails *types.ExchangeQueryDetails,
 		exchangeConfig *types.MutableExchangeMarketConfig,
 		marketIds []types.MarketId,
-		requestHandler lib.RequestHandler,
+		requestHandler daemontypes.RequestHandler,
 		marketPriceExponent map[types.MarketId]types.Exponent,
 	) (marketPriceTimestamps []*types.MarketPriceTimestamp, unavailableMarkets map[types.MarketId]error, err error)
 }
@@ -52,7 +55,7 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	exchangeQueryDetails *types.ExchangeQueryDetails,
 	exchangeConfig *types.MutableExchangeMarketConfig,
 	marketIds []types.MarketId,
-	requestHandler lib.RequestHandler,
+	requestHandler daemontypes.RequestHandler,
 	marketPriceExponent map[types.MarketId]types.Exponent,
 ) (marketPriceTimestamps []*types.MarketPriceTimestamp, unavailableMarkets map[types.MarketId]error, err error) {
 	// Measure latency to run query function per exchange.
@@ -141,6 +144,10 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 		},
 	)
 
+	if response.StatusCode == 429 {
+		return nil, nil, constants.RateLimitingError
+	}
+
 	// Verify response is not 4xx or 5xx.
 	if response.StatusCode < 200 || response.StatusCode > 299 {
 		return nil, nil, fmt.Errorf("%s %v", constants.UnexpectedResponseStatusMessage, response.StatusCode)
@@ -150,10 +157,10 @@ func (eqh *ExchangeQueryHandlerImpl) Query(
 	prices, unavailableTickers, err := exchangeQueryDetails.PriceFunction(
 		response,
 		tickerToPriceExponent,
-		&lib.MedianizerImpl{},
+		lib.Median[uint64],
 	)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, price_function.NewExchangeError(exchangeQueryDetails.Exchange, err.Error())
 	}
 
 	// 5) Insert prices into MarketPriceTimestamp struct slice, convert unavailable tickers back into marketIds,

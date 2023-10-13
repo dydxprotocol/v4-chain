@@ -3,9 +3,12 @@ package clob_test
 import (
 	"errors"
 	"fmt"
+	"math/big"
 	"sort"
 	"testing"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
@@ -22,6 +25,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -69,11 +73,11 @@ func assertFillAmountAndPruneState(
 		// Verify that expected `blockHeightToPotentiallyPrunableOrders` were deleted.
 		blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 			ctx.KVStore(storeKey),
-			types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+			[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+			lib.Uint32ToKey(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -143,7 +147,8 @@ func TestEndBlocker_Failure(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
 							orderId,
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
@@ -650,7 +655,17 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+			)
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			// Set up prices keeper markets with default prices.
@@ -666,6 +681,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			} {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -674,6 +690,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
@@ -681,7 +700,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						0,
 						0,
@@ -691,16 +711,15 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Btc.QuantumConversionExponent,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.MinOrderBaseQuantums,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
-				satypes.BaseQuantums(constants.ClobPair_Btc.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Btc.StepBaseQuantums),
 				constants.ClobPair_Btc.QuantumConversionExponent,
 				constants.ClobPair_Btc.SubticksPerTick,
@@ -713,7 +732,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						1,
 						1,
@@ -723,7 +743,6 @@ func TestEndBlocker_Success(t *testing.T) {
 						constants.ClobPair_Eth.QuantumConversionExponent,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
 						constants.ClobPair_Eth.SubticksPerTick,
-						constants.ClobPair_Eth.MinOrderBaseQuantums,
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
 					),
@@ -731,8 +750,8 @@ func TestEndBlocker_Success(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				constants.ClobPair_Eth.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Eth),
-				satypes.BaseQuantums(constants.ClobPair_Eth.MinOrderBaseQuantums),
 				satypes.BaseQuantums(constants.ClobPair_Eth.StepBaseQuantums),
 				constants.ClobPair_Eth.QuantumConversionExponent,
 				constants.ClobPair_Eth.SubticksPerTick,
@@ -749,7 +768,8 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
 							orderId,
 							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
@@ -763,7 +783,8 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderTriggeredEvent(
 							orderId,
 						),
@@ -814,9 +835,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
 				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(types.OrderIdKey(triggeredConditionalOrderId))
+				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.False(t, exists)
 			}
 
@@ -1037,7 +1058,8 @@ func TestLiquidateSubaccounts(t *testing.T) {
 				existingOrderMsgs[i] = types.MsgPlaceOrder{Order: order}
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Update the liquidatable subaccount IDs.
@@ -1077,8 +1099,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1105,8 +1126,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 	require.Panics(t, func() {
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
-			*ks.ClobKeeper,
-			memClob,
+			ks.ClobKeeper,
 			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
@@ -1315,6 +1335,12 @@ func TestPrepareCheckState(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
+			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,
 				mock.Anything,
@@ -1338,6 +1364,7 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, p := range tc.perpetuals {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
+					p.Params.Id,
 					p.Params.Ticker,
 					p.Params.MarketId,
 					p.Params.AtomicResolution,
@@ -1356,8 +1383,8 @@ func TestPrepareCheckState(t *testing.T) {
 			for _, clobPair := range tc.clobs {
 				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 					ctx,
+					clobPair.Id,
 					clobtest.MustPerpetualId(clobPair),
-					satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 					satypes.BaseQuantums(clobPair.StepBaseQuantums),
 					clobPair.QuantumConversionExponent,
 					clobPair.SubticksPerTick,
@@ -1455,8 +1482,7 @@ func TestPrepareCheckState(t *testing.T) {
 			// Run the test.
 			clob.PrepareCheckState(
 				ctx,
-				*ks.ClobKeeper,
-				memClob,
+				ks.ClobKeeper,
 				liquidatableSubaccountIds,
 			)
 

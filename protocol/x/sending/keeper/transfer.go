@@ -53,7 +53,8 @@ func (k Keeper) ProcessTransfer(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeTransfer,
-		indexer_manager.GetB64EncodedEventMessage(
+		indexerevents.TransferEventVersion,
+		indexer_manager.GetBytes(
 			k.GenerateTransferEvent(pendingTransfer),
 		),
 	)
@@ -111,9 +112,6 @@ func (k Keeper) ProcessDepositToSubaccount(
 			float32(msgDepositToSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgDepositToSubaccount.Sender),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgDepositToSubaccount.Recipient.Owner),
-				metrics.GetLabelForIntValue(metrics.RecipientSubaccount, int(msgDepositToSubaccount.Recipient.Number)),
 			},
 		)
 
@@ -121,7 +119,8 @@ func (k Keeper) ProcessDepositToSubaccount(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeTransfer,
-			indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
 			),
 		)
@@ -177,9 +176,6 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 			float32(msgWithdrawFromSubaccount.Quantums),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgWithdrawFromSubaccount.AssetId)),
-				metrics.GetLabelForStringValue(metrics.SenderAddress, msgWithdrawFromSubaccount.Sender.Owner),
-				metrics.GetLabelForIntValue(metrics.SenderSubaccount, int(msgWithdrawFromSubaccount.Sender.Number)),
-				metrics.GetLabelForStringValue(metrics.RecipientAddress, msgWithdrawFromSubaccount.Recipient),
 			},
 		)
 
@@ -187,7 +183,8 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeTransfer,
-			indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.TransferEventVersion,
+			indexer_manager.GetBytes(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
 			),
 		)
@@ -206,5 +203,21 @@ func (k Keeper) GenerateWithdrawEvent(withdraw *types.MsgWithdrawFromSubaccount)
 		withdraw.Recipient,
 		withdraw.AssetId,
 		satypes.BaseQuantums(withdraw.Quantums),
+	)
+}
+
+func (k Keeper) SendFromModuleToAccount(
+	ctx sdk.Context,
+	msg *types.MsgSendFromModuleToAccount,
+) (err error) {
+	if err = msg.ValidateBasic(); err != nil {
+		return err
+	}
+
+	return k.bankKeeper.SendCoinsFromModuleToAccount(
+		ctx,
+		msg.GetSenderModuleName(),
+		sdk.MustAccAddressFromBech32(msg.GetRecipient()),
+		sdk.NewCoins(msg.Coin),
 	)
 }

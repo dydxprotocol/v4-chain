@@ -543,7 +543,8 @@ func TestConditionalOrder(t *testing.T) {
 					tApp.App,
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
-					require.True(t, tApp.CheckTx(checkTx).IsOK())
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
@@ -722,7 +723,8 @@ func TestConditionalOrderCancellation(t *testing.T) {
 					tApp.App,
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
-					require.True(t, tApp.CheckTx(checkTx).IsOK())
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
@@ -773,7 +775,8 @@ func TestConditionalOrderCancellation(t *testing.T) {
 					),
 				),
 			) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Advance to the next block, cancelling the previously placed conditional order.
@@ -1028,7 +1031,8 @@ func TestConditionalOrderExpiration(t *testing.T) {
 					tApp.App,
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
-					require.True(t, tApp.CheckTx(checkTx).IsOK())
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 					}

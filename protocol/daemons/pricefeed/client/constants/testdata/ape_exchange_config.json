@@ -1,0 +1,37 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "APEUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "APE-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "APE_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "APEUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "APE-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "APE_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "APE-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

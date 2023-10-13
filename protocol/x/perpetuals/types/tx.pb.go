@@ -6,6 +6,8 @@ package types
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -28,6 +30,285 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgCreatePerpetual is a message used by x/gov to create a new perpetual.
+type MsgCreatePerpetual struct {
+	// The address that controls the module.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// `params` defines parameters for the new perpetual market.
+	Params PerpetualParams `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
+}
+
+func (m *MsgCreatePerpetual) Reset()         { *m = MsgCreatePerpetual{} }
+func (m *MsgCreatePerpetual) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePerpetual) ProtoMessage()    {}
+func (*MsgCreatePerpetual) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{0}
+}
+func (m *MsgCreatePerpetual) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePerpetual) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePerpetual.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePerpetual) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePerpetual.Merge(m, src)
+}
+func (m *MsgCreatePerpetual) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePerpetual) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePerpetual.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePerpetual proto.InternalMessageInfo
+
+func (m *MsgCreatePerpetual) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgCreatePerpetual) GetParams() PerpetualParams {
+	if m != nil {
+		return m.Params
+	}
+	return PerpetualParams{}
+}
+
+// MsgCreatePerpetualResponse defines the CreatePerpetual
+// response type.
+type MsgCreatePerpetualResponse struct {
+}
+
+func (m *MsgCreatePerpetualResponse) Reset()         { *m = MsgCreatePerpetualResponse{} }
+func (m *MsgCreatePerpetualResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreatePerpetualResponse) ProtoMessage()    {}
+func (*MsgCreatePerpetualResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{1}
+}
+func (m *MsgCreatePerpetualResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreatePerpetualResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreatePerpetualResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreatePerpetualResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreatePerpetualResponse.Merge(m, src)
+}
+func (m *MsgCreatePerpetualResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreatePerpetualResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreatePerpetualResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreatePerpetualResponse proto.InternalMessageInfo
+
+// MsgSetLiquidityTier is a message used by x/gov to create or update a
+// liquidity tier.
+type MsgSetLiquidityTier struct {
+	// The address that controls the module.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The liquidity tier to create or update.
+	LiquidityTier LiquidityTier `protobuf:"bytes,2,opt,name=liquidity_tier,json=liquidityTier,proto3" json:"liquidity_tier"`
+}
+
+func (m *MsgSetLiquidityTier) Reset()         { *m = MsgSetLiquidityTier{} }
+func (m *MsgSetLiquidityTier) String() string { return proto.CompactTextString(m) }
+func (*MsgSetLiquidityTier) ProtoMessage()    {}
+func (*MsgSetLiquidityTier) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{2}
+}
+func (m *MsgSetLiquidityTier) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetLiquidityTier) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetLiquidityTier.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetLiquidityTier) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetLiquidityTier.Merge(m, src)
+}
+func (m *MsgSetLiquidityTier) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetLiquidityTier) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetLiquidityTier.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetLiquidityTier proto.InternalMessageInfo
+
+func (m *MsgSetLiquidityTier) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgSetLiquidityTier) GetLiquidityTier() LiquidityTier {
+	if m != nil {
+		return m.LiquidityTier
+	}
+	return LiquidityTier{}
+}
+
+// MsgSetLiquidityTierResponse defines the SetLiquidityTier response type.
+type MsgSetLiquidityTierResponse struct {
+}
+
+func (m *MsgSetLiquidityTierResponse) Reset()         { *m = MsgSetLiquidityTierResponse{} }
+func (m *MsgSetLiquidityTierResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSetLiquidityTierResponse) ProtoMessage()    {}
+func (*MsgSetLiquidityTierResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{3}
+}
+func (m *MsgSetLiquidityTierResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSetLiquidityTierResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSetLiquidityTierResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSetLiquidityTierResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSetLiquidityTierResponse.Merge(m, src)
+}
+func (m *MsgSetLiquidityTierResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSetLiquidityTierResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSetLiquidityTierResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSetLiquidityTierResponse proto.InternalMessageInfo
+
+// MsgUpdatePerpetualParams is a message used by x/gov to update the parameters
+// of a perpetual.
+type MsgUpdatePerpetualParams struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The perpetual to update. Each field must be set.
+	PerpetualParams PerpetualParams `protobuf:"bytes,2,opt,name=perpetual_params,json=perpetualParams,proto3" json:"perpetual_params"`
+}
+
+func (m *MsgUpdatePerpetualParams) Reset()         { *m = MsgUpdatePerpetualParams{} }
+func (m *MsgUpdatePerpetualParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdatePerpetualParams) ProtoMessage()    {}
+func (*MsgUpdatePerpetualParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{4}
+}
+func (m *MsgUpdatePerpetualParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdatePerpetualParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdatePerpetualParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdatePerpetualParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdatePerpetualParams.Merge(m, src)
+}
+func (m *MsgUpdatePerpetualParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdatePerpetualParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdatePerpetualParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdatePerpetualParams proto.InternalMessageInfo
+
+func (m *MsgUpdatePerpetualParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdatePerpetualParams) GetPerpetualParams() PerpetualParams {
+	if m != nil {
+		return m.PerpetualParams
+	}
+	return PerpetualParams{}
+}
+
+// MsgUpdatePerpetualParamsResponse defines the UpdatePerpetualParams
+// response type.
+type MsgUpdatePerpetualParamsResponse struct {
+}
+
+func (m *MsgUpdatePerpetualParamsResponse) Reset()         { *m = MsgUpdatePerpetualParamsResponse{} }
+func (m *MsgUpdatePerpetualParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdatePerpetualParamsResponse) ProtoMessage()    {}
+func (*MsgUpdatePerpetualParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{5}
+}
+func (m *MsgUpdatePerpetualParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdatePerpetualParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdatePerpetualParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdatePerpetualParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdatePerpetualParamsResponse.Merge(m, src)
+}
+func (m *MsgUpdatePerpetualParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdatePerpetualParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdatePerpetualParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdatePerpetualParamsResponse proto.InternalMessageInfo
+
 // FundingPremium represents a funding premium value for a perpetual
 // market. Can be used to represent a premium vote or a premium sample.
 type FundingPremium struct {
@@ -41,7 +322,7 @@ func (m *FundingPremium) Reset()         { *m = FundingPremium{} }
 func (m *FundingPremium) String() string { return proto.CompactTextString(m) }
 func (*FundingPremium) ProtoMessage()    {}
 func (*FundingPremium) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daed24c15760c356, []int{0}
+	return fileDescriptor_daed24c15760c356, []int{6}
 }
 func (m *FundingPremium) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -93,7 +374,7 @@ func (m *MsgAddPremiumVotes) Reset()         { *m = MsgAddPremiumVotes{} }
 func (m *MsgAddPremiumVotes) String() string { return proto.CompactTextString(m) }
 func (*MsgAddPremiumVotes) ProtoMessage()    {}
 func (*MsgAddPremiumVotes) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daed24c15760c356, []int{1}
+	return fileDescriptor_daed24c15760c356, []int{7}
 }
 func (m *MsgAddPremiumVotes) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -138,7 +419,7 @@ func (m *MsgAddPremiumVotesResponse) Reset()         { *m = MsgAddPremiumVotesRe
 func (m *MsgAddPremiumVotesResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgAddPremiumVotesResponse) ProtoMessage()    {}
 func (*MsgAddPremiumVotesResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_daed24c15760c356, []int{2}
+	return fileDescriptor_daed24c15760c356, []int{8}
 }
 func (m *MsgAddPremiumVotesResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -167,35 +448,155 @@ func (m *MsgAddPremiumVotesResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgAddPremiumVotesResponse proto.InternalMessageInfo
 
+// MsgUpdateParams is a message used by x/gov to update the parameters of the
+// perpetuals module.
+type MsgUpdateParams struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// The parameters to update. Each field must be set.
+	Params Params `protobuf:"bytes,2,opt,name=params,proto3" json:"params"`
+}
+
+func (m *MsgUpdateParams) Reset()         { *m = MsgUpdateParams{} }
+func (m *MsgUpdateParams) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateParams) ProtoMessage()    {}
+func (*MsgUpdateParams) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{9}
+}
+func (m *MsgUpdateParams) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateParams) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateParams.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateParams) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateParams.Merge(m, src)
+}
+func (m *MsgUpdateParams) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateParams) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateParams.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateParams proto.InternalMessageInfo
+
+func (m *MsgUpdateParams) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateParams) GetParams() Params {
+	if m != nil {
+		return m.Params
+	}
+	return Params{}
+}
+
+// MsgUpdateParamsResponse defines the UpdateParams response type.
+type MsgUpdateParamsResponse struct {
+}
+
+func (m *MsgUpdateParamsResponse) Reset()         { *m = MsgUpdateParamsResponse{} }
+func (m *MsgUpdateParamsResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateParamsResponse) ProtoMessage()    {}
+func (*MsgUpdateParamsResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_daed24c15760c356, []int{10}
+}
+func (m *MsgUpdateParamsResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateParamsResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateParamsResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateParamsResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateParamsResponse.Merge(m, src)
+}
+func (m *MsgUpdateParamsResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateParamsResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateParamsResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateParamsResponse proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterType((*MsgCreatePerpetual)(nil), "dydxprotocol.perpetuals.MsgCreatePerpetual")
+	proto.RegisterType((*MsgCreatePerpetualResponse)(nil), "dydxprotocol.perpetuals.MsgCreatePerpetualResponse")
+	proto.RegisterType((*MsgSetLiquidityTier)(nil), "dydxprotocol.perpetuals.MsgSetLiquidityTier")
+	proto.RegisterType((*MsgSetLiquidityTierResponse)(nil), "dydxprotocol.perpetuals.MsgSetLiquidityTierResponse")
+	proto.RegisterType((*MsgUpdatePerpetualParams)(nil), "dydxprotocol.perpetuals.MsgUpdatePerpetualParams")
+	proto.RegisterType((*MsgUpdatePerpetualParamsResponse)(nil), "dydxprotocol.perpetuals.MsgUpdatePerpetualParamsResponse")
 	proto.RegisterType((*FundingPremium)(nil), "dydxprotocol.perpetuals.FundingPremium")
 	proto.RegisterType((*MsgAddPremiumVotes)(nil), "dydxprotocol.perpetuals.MsgAddPremiumVotes")
 	proto.RegisterType((*MsgAddPremiumVotesResponse)(nil), "dydxprotocol.perpetuals.MsgAddPremiumVotesResponse")
+	proto.RegisterType((*MsgUpdateParams)(nil), "dydxprotocol.perpetuals.MsgUpdateParams")
+	proto.RegisterType((*MsgUpdateParamsResponse)(nil), "dydxprotocol.perpetuals.MsgUpdateParamsResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/perpetuals/tx.proto", fileDescriptor_daed24c15760c356) }
 
 var fileDescriptor_daed24c15760c356 = []byte{
-	// 291 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x48, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x48, 0x2d, 0x2a, 0x48, 0x2d, 0x29,
-	0x4d, 0xcc, 0x29, 0xd6, 0x2f, 0xa9, 0xd0, 0x03, 0x0b, 0x0b, 0x89, 0x23, 0xab, 0xd0, 0x43, 0xa8,
-	0x90, 0x12, 0x49, 0xcf, 0x4f, 0xcf, 0x07, 0x4b, 0xe8, 0x83, 0x58, 0x10, 0xe5, 0x4a, 0x21, 0x5c,
-	0x7c, 0x6e, 0xa5, 0x79, 0x29, 0x99, 0x79, 0xe9, 0x01, 0x45, 0xa9, 0xb9, 0x99, 0xa5, 0xb9, 0x42,
-	0x8a, 0x5c, 0x3c, 0x70, 0x5d, 0xf1, 0x99, 0x29, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0xbc, 0x41, 0xdc,
-	0x70, 0x31, 0xcf, 0x14, 0x21, 0x79, 0x2e, 0xee, 0x02, 0x88, 0xea, 0xf8, 0x82, 0x82, 0x5c, 0x09,
-	0x26, 0x05, 0x46, 0x0d, 0xd6, 0x20, 0x2e, 0xa8, 0x50, 0x40, 0x41, 0xae, 0x52, 0x24, 0x97, 0x90,
-	0x6f, 0x71, 0xba, 0x63, 0x4a, 0x0a, 0xd4, 0xd0, 0xb0, 0xfc, 0x92, 0xd4, 0x62, 0x21, 0x67, 0x2e,
-	0xd6, 0x32, 0x10, 0x43, 0x82, 0x51, 0x81, 0x59, 0x83, 0xdb, 0x48, 0x5d, 0x0f, 0x87, 0x53, 0xf5,
-	0x50, 0x5d, 0xe4, 0xc4, 0x72, 0xe2, 0x9e, 0x3c, 0x43, 0x10, 0x44, 0xaf, 0x92, 0x0c, 0x97, 0x14,
-	0xa6, 0xd1, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x46, 0x55, 0x5c, 0xcc, 0xbe, 0xc5,
-	0xe9, 0x42, 0xc5, 0x5c, 0xfc, 0xe8, 0x96, 0x6b, 0xe3, 0xb4, 0x0d, 0xd3, 0x38, 0x29, 0x63, 0x12,
-	0x14, 0xc3, 0xec, 0x76, 0x0a, 0x3b, 0xf1, 0x48, 0x8e, 0xf1, 0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f,
-	0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e, 0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28,
-	0x9b, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc, 0x5c, 0x7d, 0x94, 0x08, 0x2c, 0x33,
-	0xd1, 0x4d, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0x87, 0x8b, 0x54, 0xa0, 0x44, 0x6a, 0x65, 0x41, 0x6a,
-	0x71, 0x12, 0x1b, 0x58, 0xd2, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0xbb, 0xe3, 0x25, 0x33, 0xfc,
-	0x01, 0x00, 0x00,
+	// 620 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x55, 0x4d, 0x6b, 0x13, 0x41,
+	0x18, 0xce, 0xd8, 0x0f, 0xe8, 0x9b, 0x36, 0x29, 0x6b, 0x25, 0xe9, 0xaa, 0x9b, 0x18, 0xc4, 0x06,
+	0xb5, 0x59, 0x9b, 0x16, 0x41, 0xd1, 0x43, 0x53, 0x28, 0x08, 0x06, 0x42, 0x52, 0x0b, 0xf5, 0x12,
+	0xb6, 0xd9, 0x61, 0x33, 0x92, 0xcd, 0x8e, 0x3b, 0xb3, 0x21, 0xb9, 0x0a, 0xde, 0x3d, 0xfa, 0x03,
+	0xfc, 0x01, 0x22, 0x5e, 0xbd, 0xf7, 0x58, 0x3c, 0x09, 0x82, 0x48, 0x72, 0xf0, 0x6f, 0x48, 0xf6,
+	0x2b, 0xd9, 0x4d, 0x36, 0x24, 0xed, 0x69, 0x67, 0xdf, 0x79, 0xde, 0xf7, 0x79, 0x9e, 0x77, 0xbe,
+	0x20, 0xab, 0xf6, 0xd4, 0x2e, 0x35, 0x0d, 0x6e, 0x34, 0x8c, 0x96, 0x4c, 0xb1, 0x49, 0x31, 0xb7,
+	0x94, 0x16, 0x93, 0x79, 0xb7, 0x60, 0x87, 0x85, 0xd4, 0x38, 0xa2, 0x30, 0x42, 0x88, 0xdb, 0x0d,
+	0x83, 0xe9, 0x06, 0xab, 0xdb, 0x73, 0xb2, 0xf3, 0xe3, 0xe4, 0x88, 0x29, 0xe7, 0x4f, 0xd6, 0x99,
+	0x26, 0x77, 0xf6, 0x86, 0x1f, 0x77, 0x62, 0x4b, 0x33, 0x34, 0xc3, 0x49, 0x18, 0x8e, 0xdc, 0xe8,
+	0xfd, 0x28, 0x11, 0x54, 0x31, 0x15, 0xdd, 0x2b, 0xba, 0x13, 0x89, 0xf2, 0x86, 0x0e, 0x30, 0xf7,
+	0x05, 0x81, 0x50, 0x66, 0xda, 0x91, 0x89, 0x15, 0x8e, 0x2b, 0xde, 0xa4, 0xf0, 0x14, 0xd6, 0x14,
+	0x8b, 0x37, 0x0d, 0x93, 0xf0, 0x5e, 0x1a, 0x65, 0x51, 0x7e, 0xad, 0x94, 0xfe, 0xf9, 0x7d, 0x77,
+	0xcb, 0x55, 0x7e, 0xa8, 0xaa, 0x26, 0x66, 0xac, 0xc6, 0x4d, 0xd2, 0xd6, 0xaa, 0x23, 0xa8, 0x70,
+	0x0c, 0xab, 0x8e, 0x8e, 0xf4, 0x8d, 0x2c, 0xca, 0xc7, 0x8b, 0xf9, 0x42, 0x44, 0x47, 0x0a, 0x3e,
+	0x57, 0xc5, 0xc6, 0x97, 0x96, 0x2f, 0xfe, 0x64, 0x62, 0x55, 0x37, 0xfb, 0x79, 0xe2, 0xc3, 0xbf,
+	0xaf, 0x0f, 0x47, 0x75, 0x73, 0x77, 0x40, 0x9c, 0x54, 0x59, 0xc5, 0x8c, 0x1a, 0x6d, 0x86, 0x73,
+	0xdf, 0x10, 0xdc, 0x2c, 0x33, 0xad, 0x86, 0xf9, 0x6b, 0xf2, 0xde, 0x22, 0x2a, 0xe1, 0xbd, 0x13,
+	0x82, 0xcd, 0x2b, 0xbb, 0xa8, 0x41, 0xa2, 0xe5, 0x15, 0xaa, 0x73, 0x82, 0x4d, 0xd7, 0xcd, 0x83,
+	0x48, 0x37, 0x01, 0x5e, 0xd7, 0xcb, 0x46, 0x6b, 0x3c, 0x38, 0x61, 0xe9, 0x2e, 0xdc, 0x9e, 0xa2,
+	0xd9, 0xf7, 0xf4, 0x03, 0x41, 0xba, 0xcc, 0xb4, 0x37, 0x54, 0x1d, 0xb7, 0xec, 0x34, 0xeb, 0xca,
+	0xc6, 0xce, 0x60, 0xd3, 0x17, 0x5d, 0xbf, 0xd6, 0x42, 0x25, 0x69, 0x30, 0x3c, 0x61, 0x2f, 0x07,
+	0xd9, 0x28, 0xf9, 0xbe, 0xc7, 0x13, 0x48, 0x1c, 0x5b, 0x6d, 0x95, 0xb4, 0xb5, 0x8a, 0x89, 0x75,
+	0x62, 0xe9, 0xc2, 0x3d, 0x58, 0x1f, 0x09, 0x24, 0xaa, 0xed, 0x6d, 0xa3, 0x1a, 0xf7, 0x63, 0xaf,
+	0x54, 0x21, 0x03, 0x71, 0xea, 0xa0, 0xeb, 0x94, 0xea, 0xb6, 0xfc, 0x95, 0x2a, 0xb8, 0xa1, 0x0a,
+	0xd5, 0x73, 0x67, 0xf6, 0x8e, 0x3e, 0x54, 0x55, 0xb7, 0xe8, 0xa9, 0xc1, 0x31, 0x13, 0x8e, 0x60,
+	0xa5, 0x33, 0x1c, 0xa4, 0x51, 0x76, 0x29, 0x1f, 0x2f, 0xee, 0x44, 0xfa, 0x0d, 0x2a, 0x72, 0xed,
+	0x3a, 0xb9, 0xee, 0x36, 0x0c, 0x95, 0xf6, 0xed, 0x7c, 0x46, 0x90, 0x1c, 0x79, 0xbe, 0xde, 0x4a,
+	0xbd, 0x0c, 0x1d, 0xa4, 0x4c, 0xf4, 0xfa, 0xcc, 0x73, 0x7e, 0xb6, 0x21, 0x15, 0x52, 0xe6, 0xa9,
+	0x2e, 0xfe, 0x5e, 0x86, 0xa5, 0x32, 0xd3, 0x04, 0x06, 0xc9, 0x70, 0xcf, 0x1e, 0x45, 0x92, 0x4e,
+	0x76, 0x41, 0xdc, 0x5f, 0x00, 0xec, 0x91, 0x0f, 0x49, 0xc3, 0x57, 0xcf, 0x4c, 0xd2, 0x10, 0x78,
+	0x36, 0x69, 0xc4, 0x75, 0x21, 0x74, 0x60, 0x73, 0xe2, 0xaa, 0x78, 0x3c, 0xab, 0x50, 0x18, 0x2d,
+	0x1e, 0x2c, 0x82, 0xf6, 0x79, 0x3f, 0x22, 0xb8, 0x35, 0xfd, 0x3c, 0xef, 0xcd, 0xaa, 0x37, 0x35,
+	0x45, 0x7c, 0xb6, 0x70, 0x8a, 0xaf, 0xe3, 0x1d, 0xac, 0x07, 0xf6, 0x68, 0x7e, 0x8e, 0x52, 0x0e,
+	0xe9, 0x93, 0x79, 0x91, 0x1e, 0x57, 0xe9, 0xf4, 0xa2, 0x2f, 0xa1, 0xcb, 0xbe, 0x84, 0xfe, 0xf6,
+	0x25, 0xf4, 0x69, 0x20, 0xc5, 0x2e, 0x07, 0x52, 0xec, 0xd7, 0x40, 0x8a, 0xbd, 0x7d, 0xa1, 0x11,
+	0xde, 0xb4, 0xce, 0x0b, 0x0d, 0x43, 0x97, 0x03, 0xaf, 0x55, 0xe7, 0x60, 0xb7, 0xd1, 0x54, 0x48,
+	0x5b, 0xf6, 0x23, 0xdd, 0xc0, 0x63, 0xdb, 0xa3, 0x98, 0x9d, 0xaf, 0xda, 0x93, 0xfb, 0xff, 0x03,
+	0x00, 0x00, 0xff, 0xff, 0x2c, 0x4e, 0x17, 0x56, 0x94, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -213,6 +614,15 @@ type MsgClient interface {
 	// AddPremiumVotes add new samples of the funding premiums to the
 	// application.
 	AddPremiumVotes(ctx context.Context, in *MsgAddPremiumVotes, opts ...grpc.CallOption) (*MsgAddPremiumVotesResponse, error)
+	// CreatePerpetual creates a new perpetual object.
+	CreatePerpetual(ctx context.Context, in *MsgCreatePerpetual, opts ...grpc.CallOption) (*MsgCreatePerpetualResponse, error)
+	// SetLiquidityTier creates an liquidity tier if the ID doesn't exist, and
+	// updates the existing liquidity tier otherwise.
+	SetLiquidityTier(ctx context.Context, in *MsgSetLiquidityTier, opts ...grpc.CallOption) (*MsgSetLiquidityTierResponse, error)
+	// UpdatePerpetualParams updates the parameters of a perpetual market.
+	UpdatePerpetualParams(ctx context.Context, in *MsgUpdatePerpetualParams, opts ...grpc.CallOption) (*MsgUpdatePerpetualParamsResponse, error)
+	// UpdateParams updates the parameters of perpetuals module.
+	UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error)
 }
 
 type msgClient struct {
@@ -232,11 +642,56 @@ func (c *msgClient) AddPremiumVotes(ctx context.Context, in *MsgAddPremiumVotes,
 	return out, nil
 }
 
+func (c *msgClient) CreatePerpetual(ctx context.Context, in *MsgCreatePerpetual, opts ...grpc.CallOption) (*MsgCreatePerpetualResponse, error) {
+	out := new(MsgCreatePerpetualResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.perpetuals.Msg/CreatePerpetual", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) SetLiquidityTier(ctx context.Context, in *MsgSetLiquidityTier, opts ...grpc.CallOption) (*MsgSetLiquidityTierResponse, error) {
+	out := new(MsgSetLiquidityTierResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.perpetuals.Msg/SetLiquidityTier", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdatePerpetualParams(ctx context.Context, in *MsgUpdatePerpetualParams, opts ...grpc.CallOption) (*MsgUpdatePerpetualParamsResponse, error) {
+	out := new(MsgUpdatePerpetualParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.perpetuals.Msg/UpdatePerpetualParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateParams(ctx context.Context, in *MsgUpdateParams, opts ...grpc.CallOption) (*MsgUpdateParamsResponse, error) {
+	out := new(MsgUpdateParamsResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.perpetuals.Msg/UpdateParams", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// AddPremiumVotes add new samples of the funding premiums to the
 	// application.
 	AddPremiumVotes(context.Context, *MsgAddPremiumVotes) (*MsgAddPremiumVotesResponse, error)
+	// CreatePerpetual creates a new perpetual object.
+	CreatePerpetual(context.Context, *MsgCreatePerpetual) (*MsgCreatePerpetualResponse, error)
+	// SetLiquidityTier creates an liquidity tier if the ID doesn't exist, and
+	// updates the existing liquidity tier otherwise.
+	SetLiquidityTier(context.Context, *MsgSetLiquidityTier) (*MsgSetLiquidityTierResponse, error)
+	// UpdatePerpetualParams updates the parameters of a perpetual market.
+	UpdatePerpetualParams(context.Context, *MsgUpdatePerpetualParams) (*MsgUpdatePerpetualParamsResponse, error)
+	// UpdateParams updates the parameters of perpetuals module.
+	UpdateParams(context.Context, *MsgUpdateParams) (*MsgUpdateParamsResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -245,6 +700,18 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) AddPremiumVotes(ctx context.Context, req *MsgAddPremiumVotes) (*MsgAddPremiumVotesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPremiumVotes not implemented")
+}
+func (*UnimplementedMsgServer) CreatePerpetual(ctx context.Context, req *MsgCreatePerpetual) (*MsgCreatePerpetualResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePerpetual not implemented")
+}
+func (*UnimplementedMsgServer) SetLiquidityTier(ctx context.Context, req *MsgSetLiquidityTier) (*MsgSetLiquidityTierResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetLiquidityTier not implemented")
+}
+func (*UnimplementedMsgServer) UpdatePerpetualParams(ctx context.Context, req *MsgUpdatePerpetualParams) (*MsgUpdatePerpetualParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePerpetualParams not implemented")
+}
+func (*UnimplementedMsgServer) UpdateParams(ctx context.Context, req *MsgUpdateParams) (*MsgUpdateParamsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateParams not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -269,6 +736,78 @@ func _Msg_AddPremiumVotes_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreatePerpetual_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreatePerpetual)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreatePerpetual(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.perpetuals.Msg/CreatePerpetual",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreatePerpetual(ctx, req.(*MsgCreatePerpetual))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_SetLiquidityTier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSetLiquidityTier)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SetLiquidityTier(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.perpetuals.Msg/SetLiquidityTier",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SetLiquidityTier(ctx, req.(*MsgSetLiquidityTier))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdatePerpetualParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdatePerpetualParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdatePerpetualParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.perpetuals.Msg/UpdatePerpetualParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdatePerpetualParams(ctx, req.(*MsgUpdatePerpetualParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateParams_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateParams)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateParams(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.perpetuals.Msg/UpdateParams",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateParams(ctx, req.(*MsgUpdateParams))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.perpetuals.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -277,9 +816,214 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			MethodName: "AddPremiumVotes",
 			Handler:    _Msg_AddPremiumVotes_Handler,
 		},
+		{
+			MethodName: "CreatePerpetual",
+			Handler:    _Msg_CreatePerpetual_Handler,
+		},
+		{
+			MethodName: "SetLiquidityTier",
+			Handler:    _Msg_SetLiquidityTier_Handler,
+		},
+		{
+			MethodName: "UpdatePerpetualParams",
+			Handler:    _Msg_UpdatePerpetualParams_Handler,
+		},
+		{
+			MethodName: "UpdateParams",
+			Handler:    _Msg_UpdateParams_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/perpetuals/tx.proto",
+}
+
+func (m *MsgCreatePerpetual) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePerpetual) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePerpetual) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreatePerpetualResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreatePerpetualResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreatePerpetualResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetLiquidityTier) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetLiquidityTier) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetLiquidityTier) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.LiquidityTier.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgSetLiquidityTierResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSetLiquidityTierResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSetLiquidityTierResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdatePerpetualParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdatePerpetualParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdatePerpetualParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.PerpetualParams.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdatePerpetualParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdatePerpetualParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdatePerpetualParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *FundingPremium) Marshal() (dAtA []byte, err error) {
@@ -375,6 +1119,69 @@ func (m *MsgAddPremiumVotesResponse) MarshalToSizedBuffer(dAtA []byte) (int, err
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateParams) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateParams) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateParams) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.Params.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateParamsResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateParamsResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -386,6 +1193,78 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgCreatePerpetual) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Params.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreatePerpetualResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSetLiquidityTier) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.LiquidityTier.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgSetLiquidityTierResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdatePerpetualParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.PerpetualParams.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdatePerpetualParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *FundingPremium) Size() (n int) {
 	if m == nil {
 		return 0
@@ -425,11 +1304,530 @@ func (m *MsgAddPremiumVotesResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgUpdateParams) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.Params.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateParamsResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgCreatePerpetual) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePerpetual: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePerpetual: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreatePerpetualResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreatePerpetualResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreatePerpetualResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetLiquidityTier) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetLiquidityTier: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetLiquidityTier: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidityTier", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LiquidityTier.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSetLiquidityTierResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSetLiquidityTierResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSetLiquidityTierResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdatePerpetualParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdatePerpetualParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdatePerpetualParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field PerpetualParams", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.PerpetualParams.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdatePerpetualParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdatePerpetualParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdatePerpetualParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *FundingPremium) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -630,6 +2028,171 @@ func (m *MsgAddPremiumVotesResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgAddPremiumVotesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateParams) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateParams: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateParams: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Params", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.Params.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateParamsResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateParamsResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

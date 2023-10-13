@@ -17,13 +17,14 @@
     "gen-markdown": "widdershins public/swagger.json -o public/api-documentation.md --omitHeader --language_tabs 'python:Python' 'javascript:Javascript'"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSL-1.1",
   "dependencies": {
     "@bugsnag/core": "^7.18.0",
     "@bugsnag/js": "^7.18.0",
     "@bugsnag/node": "^7.18.0",
     "@bugsnag/plugin-express": "^7.18.0",
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/compliance": "workspace:^0.0.1",
     "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
     "@dydxprotocol-indexer/redis": "workspace:^0.0.1",
     "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",

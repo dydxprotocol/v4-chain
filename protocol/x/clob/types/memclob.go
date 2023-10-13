@@ -1,6 +1,7 @@
 package types
 
 import (
+	"math/big"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,18 +31,10 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPair ClobPair,
 	)
-	CountSubaccountOrders(
+	CountSubaccountShortTermOrders(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
-		filter func(OrderId) bool,
 	) uint32
-	GetClobPairForPerpetual(
-		ctx sdk.Context,
-		perpetualId uint32,
-	) (
-		clobPairId ClobPairId,
-		err error,
-	)
 	GetOperationsToReplay(
 		ctx sdk.Context,
 	) (
@@ -66,6 +59,13 @@ type MemClob interface {
 		ctx sdk.Context,
 		orderId OrderId,
 	) satypes.BaseQuantums
+	GetOrderRemainingAmount(
+		ctx sdk.Context,
+		order Order,
+	) (
+		remainingAmount satypes.BaseQuantums,
+		hasRemainingAmount bool,
+	)
 	GetSubaccountOrders(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
@@ -83,6 +83,15 @@ type MemClob interface {
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
 		offchainUpdates *OffchainUpdates,
+		err error,
+	)
+	DeleverageSubaccount(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+		deltaQuantums *big.Int,
+	) (
+		quantumsDeleveraged *big.Int,
 		err error,
 	)
 	RemoveOrderIfFilled(

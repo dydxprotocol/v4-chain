@@ -3,6 +3,8 @@
 package mocks
 
 import (
+	big "math/big"
+
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	mock "github.com/stretchr/testify/mock"
 
@@ -41,13 +43,13 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 	return r0, r1
 }
 
-// CountSubaccountOrders provides a mock function with given fields: ctx, subaccountId, filter
-func (_m *MemClob) CountSubaccountOrders(ctx types.Context, subaccountId subaccountstypes.SubaccountId, filter func(clobtypes.OrderId) bool) uint32 {
-	ret := _m.Called(ctx, subaccountId, filter)
+// CountSubaccountShortTermOrders provides a mock function with given fields: ctx, subaccountId
+func (_m *MemClob) CountSubaccountShortTermOrders(ctx types.Context, subaccountId subaccountstypes.SubaccountId) uint32 {
+	ret := _m.Called(ctx, subaccountId)
 
 	var r0 uint32
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, func(clobtypes.OrderId) bool) uint32); ok {
-		r0 = rf(ctx, subaccountId, filter)
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) uint32); ok {
+		r0 = rf(ctx, subaccountId)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
@@ -58,6 +60,29 @@ func (_m *MemClob) CountSubaccountOrders(ctx types.Context, subaccountId subacco
 // CreateOrderbook provides a mock function with given fields: ctx, clobPair
 func (_m *MemClob) CreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPair) {
 	_m.Called(ctx, clobPair)
+}
+
+// DeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
+func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Int, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
+
+	var r0 *big.Int
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
+		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*big.Int)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetCancelOrder provides a mock function with given fields: ctx, orderId
@@ -76,27 +101,6 @@ func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) 
 		r1 = rf(ctx, orderId)
 	} else {
 		r1 = ret.Get(1).(bool)
-	}
-
-	return r0, r1
-}
-
-// GetClobPairForPerpetual provides a mock function with given fields: ctx, perpetualId
-func (_m *MemClob) GetClobPairForPerpetual(ctx types.Context, perpetualId uint32) (clobtypes.ClobPairId, error) {
-	ret := _m.Called(ctx, perpetualId)
-
-	var r0 clobtypes.ClobPairId
-	if rf, ok := ret.Get(0).(func(types.Context, uint32) clobtypes.ClobPairId); ok {
-		r0 = rf(ctx, perpetualId)
-	} else {
-		r0 = ret.Get(0).(clobtypes.ClobPairId)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
-		r1 = rf(ctx, perpetualId)
-	} else {
-		r1 = ret.Error(1)
 	}
 
 	return r0, r1
@@ -197,6 +201,27 @@ func (_m *MemClob) GetOrderFilledAmount(ctx types.Context, orderId clobtypes.Ord
 	}
 
 	return r0
+}
+
+// GetOrderRemainingAmount provides a mock function with given fields: ctx, order
+func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, bool) {
+	ret := _m.Called(ctx, order)
+
+	var r0 subaccountstypes.BaseQuantums
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
+	}
+
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) bool); ok {
+		r1 = rf(ctx, order)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
 }
 
 // GetPricePremium provides a mock function with given fields: ctx, clobPair, params

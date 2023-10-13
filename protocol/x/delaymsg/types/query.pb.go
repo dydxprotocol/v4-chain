@@ -28,23 +28,23 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// QueryNumMessagesRequest is the request type for the NumMessages RPC
-// method.
-type QueryNumMessagesRequest struct {
+// QueryNextDelayedMessageIdRequest is the request type for the
+// NextDelayedMessageId RPC method.
+type QueryNextDelayedMessageIdRequest struct {
 }
 
-func (m *QueryNumMessagesRequest) Reset()         { *m = QueryNumMessagesRequest{} }
-func (m *QueryNumMessagesRequest) String() string { return proto.CompactTextString(m) }
-func (*QueryNumMessagesRequest) ProtoMessage()    {}
-func (*QueryNumMessagesRequest) Descriptor() ([]byte, []int) {
+func (m *QueryNextDelayedMessageIdRequest) Reset()         { *m = QueryNextDelayedMessageIdRequest{} }
+func (m *QueryNextDelayedMessageIdRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryNextDelayedMessageIdRequest) ProtoMessage()    {}
+func (*QueryNextDelayedMessageIdRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_60f81d4d7b29defa, []int{0}
 }
-func (m *QueryNumMessagesRequest) XXX_Unmarshal(b []byte) error {
+func (m *QueryNextDelayedMessageIdRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNumMessagesRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryNextDelayedMessageIdRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNumMessagesRequest.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryNextDelayedMessageIdRequest.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -54,36 +54,36 @@ func (m *QueryNumMessagesRequest) XXX_Marshal(b []byte, deterministic bool) ([]b
 		return b[:n], nil
 	}
 }
-func (m *QueryNumMessagesRequest) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNumMessagesRequest.Merge(m, src)
+func (m *QueryNextDelayedMessageIdRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryNextDelayedMessageIdRequest.Merge(m, src)
 }
-func (m *QueryNumMessagesRequest) XXX_Size() int {
+func (m *QueryNextDelayedMessageIdRequest) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNumMessagesRequest) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNumMessagesRequest.DiscardUnknown(m)
+func (m *QueryNextDelayedMessageIdRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryNextDelayedMessageIdRequest.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNumMessagesRequest proto.InternalMessageInfo
+var xxx_messageInfo_QueryNextDelayedMessageIdRequest proto.InternalMessageInfo
 
-// QueryGetNumMessagesResponse is the response type for the NumMessages RPC
-// method.
-type QueryNumMessagesResponse struct {
-	NumMessages uint32 `protobuf:"varint,1,opt,name=num_messages,json=numMessages,proto3" json:"num_messages,omitempty"`
+// QueryNextDelayedMessageIdResponse is the response type for the
+// NextDelayedMessageId RPC method.
+type QueryNextDelayedMessageIdResponse struct {
+	NextDelayedMessageId uint32 `protobuf:"varint,1,opt,name=next_delayed_message_id,json=nextDelayedMessageId,proto3" json:"next_delayed_message_id,omitempty"`
 }
 
-func (m *QueryNumMessagesResponse) Reset()         { *m = QueryNumMessagesResponse{} }
-func (m *QueryNumMessagesResponse) String() string { return proto.CompactTextString(m) }
-func (*QueryNumMessagesResponse) ProtoMessage()    {}
-func (*QueryNumMessagesResponse) Descriptor() ([]byte, []int) {
+func (m *QueryNextDelayedMessageIdResponse) Reset()         { *m = QueryNextDelayedMessageIdResponse{} }
+func (m *QueryNextDelayedMessageIdResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryNextDelayedMessageIdResponse) ProtoMessage()    {}
+func (*QueryNextDelayedMessageIdResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_60f81d4d7b29defa, []int{1}
 }
-func (m *QueryNumMessagesResponse) XXX_Unmarshal(b []byte) error {
+func (m *QueryNextDelayedMessageIdResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
 }
-func (m *QueryNumMessagesResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+func (m *QueryNextDelayedMessageIdResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
 	if deterministic {
-		return xxx_messageInfo_QueryNumMessagesResponse.Marshal(b, m, deterministic)
+		return xxx_messageInfo_QueryNextDelayedMessageIdResponse.Marshal(b, m, deterministic)
 	} else {
 		b = b[:cap(b)]
 		n, err := m.MarshalToSizedBuffer(b)
@@ -93,21 +93,21 @@ func (m *QueryNumMessagesResponse) XXX_Marshal(b []byte, deterministic bool) ([]
 		return b[:n], nil
 	}
 }
-func (m *QueryNumMessagesResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_QueryNumMessagesResponse.Merge(m, src)
+func (m *QueryNextDelayedMessageIdResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryNextDelayedMessageIdResponse.Merge(m, src)
 }
-func (m *QueryNumMessagesResponse) XXX_Size() int {
+func (m *QueryNextDelayedMessageIdResponse) XXX_Size() int {
 	return m.Size()
 }
-func (m *QueryNumMessagesResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_QueryNumMessagesResponse.DiscardUnknown(m)
+func (m *QueryNextDelayedMessageIdResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryNextDelayedMessageIdResponse.DiscardUnknown(m)
 }
 
-var xxx_messageInfo_QueryNumMessagesResponse proto.InternalMessageInfo
+var xxx_messageInfo_QueryNextDelayedMessageIdResponse proto.InternalMessageInfo
 
-func (m *QueryNumMessagesResponse) GetNumMessages() uint32 {
+func (m *QueryNextDelayedMessageIdResponse) GetNextDelayedMessageId() uint32 {
 	if m != nil {
-		return m.NumMessages
+		return m.NextDelayedMessageId
 	}
 	return 0
 }
@@ -205,7 +205,7 @@ func (m *QueryMessageResponse) GetMessage() *DelayedMessage {
 // QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
 // RPC method.
 type QueryBlockMessageIdsRequest struct {
-	BlockHeight int64 `protobuf:"zigzag64,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	BlockHeight uint32 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
 }
 
 func (m *QueryBlockMessageIdsRequest) Reset()         { *m = QueryBlockMessageIdsRequest{} }
@@ -241,7 +241,7 @@ func (m *QueryBlockMessageIdsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryBlockMessageIdsRequest proto.InternalMessageInfo
 
-func (m *QueryBlockMessageIdsRequest) GetBlockHeight() int64 {
+func (m *QueryBlockMessageIdsRequest) GetBlockHeight() uint32 {
 	if m != nil {
 		return m.BlockHeight
 	}
@@ -295,8 +295,8 @@ func (m *QueryBlockMessageIdsResponse) GetMessageIds() []uint32 {
 }
 
 func init() {
-	proto.RegisterType((*QueryNumMessagesRequest)(nil), "dydxprotocol.delaymsg.QueryNumMessagesRequest")
-	proto.RegisterType((*QueryNumMessagesResponse)(nil), "dydxprotocol.delaymsg.QueryNumMessagesResponse")
+	proto.RegisterType((*QueryNextDelayedMessageIdRequest)(nil), "dydxprotocol.delaymsg.QueryNextDelayedMessageIdRequest")
+	proto.RegisterType((*QueryNextDelayedMessageIdResponse)(nil), "dydxprotocol.delaymsg.QueryNextDelayedMessageIdResponse")
 	proto.RegisterType((*QueryMessageRequest)(nil), "dydxprotocol.delaymsg.QueryMessageRequest")
 	proto.RegisterType((*QueryMessageResponse)(nil), "dydxprotocol.delaymsg.QueryMessageResponse")
 	proto.RegisterType((*QueryBlockMessageIdsRequest)(nil), "dydxprotocol.delaymsg.QueryBlockMessageIdsRequest")
@@ -306,37 +306,37 @@ func init() {
 func init() { proto.RegisterFile("dydxprotocol/delaymsg/query.proto", fileDescriptor_60f81d4d7b29defa) }
 
 var fileDescriptor_60f81d4d7b29defa = []byte{
-	// 466 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0x41, 0x6b, 0xd4, 0x40,
-	0x14, 0xde, 0xd9, 0xa2, 0x85, 0x17, 0xab, 0x30, 0x2a, 0xd6, 0x58, 0xa2, 0x1d, 0xac, 0x2c, 0x2d,
-	0x66, 0x60, 0xeb, 0xa9, 0x28, 0x95, 0xc5, 0x83, 0x1e, 0x14, 0x5c, 0x04, 0xc1, 0xcb, 0x92, 0xcd,
-	0x0c, 0xc9, 0x60, 0x92, 0x49, 0x3b, 0x89, 0x34, 0x94, 0x5e, 0xfc, 0x05, 0xa2, 0x37, 0x7f, 0x8c,
-	0x67, 0x8f, 0x05, 0x2f, 0x1e, 0x65, 0xd7, 0x5f, 0xe1, 0x49, 0x32, 0x99, 0x74, 0xb3, 0x35, 0x5b,
-	0xdb, 0xdb, 0xf0, 0xde, 0xf7, 0xbe, 0xef, 0x9b, 0xf7, 0x3d, 0x58, 0x67, 0x05, 0x3b, 0x48, 0xf7,
-	0x65, 0x26, 0x7d, 0x19, 0x51, 0xc6, 0x23, 0xaf, 0x88, 0x55, 0x40, 0xf7, 0x72, 0xbe, 0x5f, 0xb8,
-	0xba, 0x8e, 0x6f, 0x36, 0x21, 0x6e, 0x0d, 0xb1, 0xd7, 0x02, 0x29, 0x83, 0x88, 0x53, 0x2f, 0x15,
-	0xd4, 0x4b, 0x12, 0x99, 0x79, 0x99, 0x90, 0x89, 0xaa, 0x86, 0xec, 0xad, 0x76, 0x5e, 0xfd, 0xe0,
-	0x6c, 0x14, 0x73, 0xa5, 0xbc, 0x80, 0x57, 0x60, 0x72, 0x1b, 0x6e, 0xbd, 0x2e, 0x05, 0x5f, 0xe5,
-	0xf1, 0xcb, 0xaa, 0xa1, 0x86, 0x7c, 0x2f, 0xe7, 0x2a, 0x23, 0x4f, 0x60, 0xf5, 0xdf, 0x96, 0x4a,
-	0x65, 0xa2, 0x38, 0x5e, 0x87, 0x2b, 0x49, 0x1e, 0xd7, 0x5c, 0x6a, 0x15, 0xdd, 0x43, 0xbd, 0x95,
-	0xa1, 0x95, 0xcc, 0xa0, 0x64, 0x03, 0xae, 0xeb, 0x71, 0x53, 0x30, 0xac, 0xf8, 0x2a, 0x74, 0x05,
-	0x33, 0xf8, 0xae, 0x60, 0xe4, 0x2d, 0xdc, 0x98, 0x87, 0x19, 0x85, 0x5d, 0x58, 0x36, 0xec, 0x1a,
-	0x6c, 0xf5, 0x37, 0xdc, 0xd6, 0x65, 0xb8, 0xcf, 0xaa, 0x7f, 0xd5, 0xf3, 0xf5, 0x14, 0x79, 0x0a,
-	0x77, 0x34, 0xf1, 0x20, 0x92, 0xfe, 0x7b, 0xd3, 0x7d, 0xc1, 0xea, 0xdf, 0x95, 0x3f, 0x18, 0x97,
-	0x9d, 0x51, 0xc8, 0x45, 0x10, 0x66, 0x5a, 0x04, 0x0f, 0x2d, 0x5d, 0x7b, 0xae, 0x4b, 0x64, 0x17,
-	0xd6, 0xda, 0x19, 0x8c, 0xc5, 0xbb, 0x60, 0x19, 0xb1, 0x91, 0x60, 0xe5, 0x0e, 0x96, 0x7a, 0x2b,
-	0x43, 0x88, 0x4f, 0x80, 0xfd, 0x3f, 0x4b, 0x70, 0x49, 0x33, 0xe0, 0xaf, 0x08, 0xac, 0xc6, 0x1e,
-	0xb1, 0xbb, 0xe0, 0x33, 0x0b, 0xb2, 0xb0, 0xe9, 0xb9, 0xf1, 0x95, 0x37, 0xb2, 0xf9, 0xf1, 0xc7,
-	0xef, 0x2f, 0xdd, 0xfb, 0x98, 0xd0, 0xb9, 0x6b, 0xf8, 0xf0, 0x68, 0x76, 0x10, 0x75, 0x78, 0xf8,
-	0x33, 0x82, 0x65, 0x43, 0x80, 0x37, 0xcf, 0x12, 0x9a, 0x8f, 0xd2, 0xde, 0x3a, 0x17, 0xd6, 0x18,
-	0x72, 0xb5, 0xa1, 0x1e, 0x7e, 0xf0, 0x5f, 0x43, 0xf4, 0x50, 0xb0, 0x23, 0xfc, 0x0d, 0xc1, 0xb5,
-	0x53, 0x8b, 0xc7, 0xfd, 0xb3, 0x04, 0xdb, 0x73, 0xb6, 0xb7, 0x2f, 0x34, 0x63, 0xcc, 0x0e, 0xb4,
-	0xd9, 0xc7, 0x78, 0x67, 0xb1, 0x59, 0x7d, 0x28, 0xb4, 0x91, 0x3f, 0x3d, 0x6c, 0xde, 0xd3, 0xd1,
-	0xe0, 0xcd, 0xf7, 0x89, 0x83, 0x8e, 0x27, 0x0e, 0xfa, 0x35, 0x71, 0xd0, 0xa7, 0xa9, 0xd3, 0x39,
-	0x9e, 0x3a, 0x9d, 0x9f, 0x53, 0xa7, 0xf3, 0x6e, 0x27, 0x10, 0x59, 0x98, 0x8f, 0x5d, 0x5f, 0xc6,
-	0xa7, 0xf9, 0x1f, 0xfa, 0xa1, 0x27, 0x12, 0x7a, 0x52, 0x39, 0x98, 0x09, 0x66, 0x45, 0xca, 0xd5,
-	0xf8, 0xb2, 0x6e, 0x6d, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x3b, 0x8b, 0x10, 0xd1, 0x3d, 0x04,
-	0x00, 0x00,
+	// 471 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x52, 0x4f, 0x6b, 0x13, 0x41,
+	0x14, 0xcf, 0xc4, 0x3f, 0x85, 0x17, 0xab, 0x30, 0x46, 0x2c, 0x6b, 0x59, 0x93, 0x91, 0x4a, 0xb4,
+	0xb8, 0x03, 0xa9, 0xa2, 0x14, 0xa1, 0x12, 0x3c, 0xe8, 0x41, 0xc1, 0x20, 0x08, 0xbd, 0x84, 0x4d,
+	0x66, 0xd8, 0x0c, 0x26, 0x3b, 0xdb, 0xce, 0x44, 0x76, 0x29, 0xbd, 0xf8, 0x09, 0x44, 0xfd, 0x28,
+	0x9e, 0x3d, 0x7b, 0x2c, 0x78, 0xf1, 0x28, 0x89, 0x1f, 0x44, 0x3a, 0x3b, 0xd9, 0x64, 0xc3, 0x26,
+	0x9a, 0xdb, 0xf2, 0xe6, 0xf7, 0x6f, 0xdf, 0xfb, 0x41, 0x9d, 0x25, 0x2c, 0x8e, 0x8e, 0xa5, 0x96,
+	0x3d, 0x39, 0xa0, 0x8c, 0x0f, 0xfc, 0x64, 0xa8, 0x02, 0x7a, 0x34, 0xe2, 0xc7, 0x89, 0x67, 0xe6,
+	0xf8, 0xc6, 0x3c, 0xc4, 0x9b, 0x42, 0x9c, 0xed, 0x40, 0xca, 0x60, 0xc0, 0xa9, 0x1f, 0x09, 0xea,
+	0x87, 0xa1, 0xd4, 0xbe, 0x16, 0x32, 0x54, 0x29, 0xc9, 0xd9, 0x2d, 0xd6, 0x35, 0x1f, 0x9c, 0x75,
+	0x86, 0x5c, 0x29, 0x3f, 0xe0, 0x29, 0x98, 0x10, 0xa8, 0xbd, 0x39, 0x37, 0x7c, 0xcd, 0x63, 0xfd,
+	0x3c, 0x45, 0xbc, 0x4a, 0x01, 0x2f, 0x59, 0x9b, 0x1f, 0x8d, 0xb8, 0xd2, 0xe4, 0x10, 0xea, 0x2b,
+	0x30, 0x2a, 0x92, 0xa1, 0xe2, 0xf8, 0x11, 0xdc, 0x0c, 0x79, 0xac, 0x3b, 0x0b, 0x36, 0x1d, 0xc1,
+	0xb6, 0x50, 0x0d, 0x35, 0x36, 0xdb, 0xd5, 0xb0, 0x80, 0x4e, 0x76, 0xe0, 0xba, 0xd1, 0xb6, 0x13,
+	0x6b, 0x89, 0xaf, 0x42, 0x39, 0x23, 0x96, 0x05, 0x23, 0xef, 0xa0, 0x9a, 0x87, 0x59, 0xd7, 0x03,
+	0xd8, 0xb0, 0x46, 0x06, 0x5c, 0x69, 0xee, 0x78, 0x85, 0x2b, 0xf3, 0xf2, 0xc6, 0xed, 0x29, 0x8b,
+	0x3c, 0x83, 0x5b, 0x46, 0xb8, 0x35, 0x90, 0xbd, 0xf7, 0x59, 0x2c, 0x35, 0xcd, 0x51, 0x87, 0x2b,
+	0xdd, 0xf3, 0x97, 0x4e, 0x9f, 0x8b, 0xa0, 0xaf, 0x6d, 0xa2, 0x8a, 0x99, 0xbd, 0x30, 0x23, 0x72,
+	0x00, 0xdb, 0xc5, 0x0a, 0x36, 0xe2, 0x6d, 0xa8, 0xcc, 0x76, 0xa1, 0xb6, 0x50, 0xed, 0x42, 0x63,
+	0xb3, 0x0d, 0xc3, 0x0c, 0xd8, 0xfc, 0x7a, 0x11, 0x2e, 0x19, 0x05, 0xfc, 0x0d, 0x41, 0xb5, 0x68,
+	0xc9, 0xf8, 0xf1, 0x92, 0xbf, 0xfa, 0xd7, 0xe9, 0x9c, 0x27, 0xeb, 0x13, 0xd3, 0xd8, 0xe4, 0xde,
+	0xc7, 0x9f, 0x7f, 0xbe, 0x94, 0xef, 0xe0, 0x3a, 0xcd, 0xd5, 0xe9, 0xc3, 0xc3, 0x59, 0xa3, 0xcc,
+	0xbd, 0x05, 0xc3, 0x9f, 0x11, 0x6c, 0x58, 0x01, 0x7c, 0x7f, 0x95, 0x61, 0xfe, 0xc8, 0xce, 0xee,
+	0x7f, 0x61, 0x6d, 0x1e, 0xcf, 0xe4, 0x69, 0xe0, 0xbb, 0xcb, 0xf3, 0xd8, 0x9d, 0xd2, 0x13, 0xc1,
+	0x4e, 0xf1, 0x77, 0x04, 0xd7, 0x16, 0x4e, 0x82, 0x9b, 0xab, 0x0c, 0x8b, 0x1b, 0xe0, 0xec, 0xad,
+	0xc5, 0xb1, 0x61, 0x5b, 0x26, 0xec, 0x53, 0xbc, 0xbf, 0x3c, 0xac, 0xa9, 0x10, 0x9d, 0x6b, 0x06,
+	0x3d, 0x99, 0x6f, 0xda, 0x69, 0xeb, 0xed, 0x8f, 0xb1, 0x8b, 0xce, 0xc6, 0x2e, 0xfa, 0x3d, 0x76,
+	0xd1, 0xa7, 0x89, 0x5b, 0x3a, 0x9b, 0xb8, 0xa5, 0x5f, 0x13, 0xb7, 0x74, 0xb8, 0x1f, 0x08, 0xdd,
+	0x1f, 0x75, 0xbd, 0x9e, 0x1c, 0x2e, 0xea, 0x3f, 0xe8, 0xf5, 0x7d, 0x11, 0xd2, 0x6c, 0x12, 0xcf,
+	0x0c, 0x75, 0x12, 0x71, 0xd5, 0xbd, 0x6c, 0x9e, 0xf6, 0xfe, 0x06, 0x00, 0x00, 0xff, 0xff, 0x74,
+	0x37, 0xc1, 0x6d, 0x7d, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -351,8 +351,8 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type QueryClient interface {
-	// Queries the number of DelayedMessages.
-	NumMessages(ctx context.Context, in *QueryNumMessagesRequest, opts ...grpc.CallOption) (*QueryNumMessagesResponse, error)
+	// Queries the next DelayedMessage's id.
+	NextDelayedMessageId(ctx context.Context, in *QueryNextDelayedMessageIdRequest, opts ...grpc.CallOption) (*QueryNextDelayedMessageIdResponse, error)
 	// Queries the DelayedMessage by id.
 	Message(ctx context.Context, in *QueryMessageRequest, opts ...grpc.CallOption) (*QueryMessageResponse, error)
 	// Queries the DelayedMessages at a given block height.
@@ -367,9 +367,9 @@ func NewQueryClient(cc grpc1.ClientConn) QueryClient {
 	return &queryClient{cc}
 }
 
-func (c *queryClient) NumMessages(ctx context.Context, in *QueryNumMessagesRequest, opts ...grpc.CallOption) (*QueryNumMessagesResponse, error) {
-	out := new(QueryNumMessagesResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.delaymsg.Query/NumMessages", in, out, opts...)
+func (c *queryClient) NextDelayedMessageId(ctx context.Context, in *QueryNextDelayedMessageIdRequest, opts ...grpc.CallOption) (*QueryNextDelayedMessageIdResponse, error) {
+	out := new(QueryNextDelayedMessageIdResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.delaymsg.Query/NextDelayedMessageId", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -396,8 +396,8 @@ func (c *queryClient) BlockMessageIds(ctx context.Context, in *QueryBlockMessage
 
 // QueryServer is the server API for Query service.
 type QueryServer interface {
-	// Queries the number of DelayedMessages.
-	NumMessages(context.Context, *QueryNumMessagesRequest) (*QueryNumMessagesResponse, error)
+	// Queries the next DelayedMessage's id.
+	NextDelayedMessageId(context.Context, *QueryNextDelayedMessageIdRequest) (*QueryNextDelayedMessageIdResponse, error)
 	// Queries the DelayedMessage by id.
 	Message(context.Context, *QueryMessageRequest) (*QueryMessageResponse, error)
 	// Queries the DelayedMessages at a given block height.
@@ -408,8 +408,8 @@ type QueryServer interface {
 type UnimplementedQueryServer struct {
 }
 
-func (*UnimplementedQueryServer) NumMessages(ctx context.Context, req *QueryNumMessagesRequest) (*QueryNumMessagesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method NumMessages not implemented")
+func (*UnimplementedQueryServer) NextDelayedMessageId(ctx context.Context, req *QueryNextDelayedMessageIdRequest) (*QueryNextDelayedMessageIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method NextDelayedMessageId not implemented")
 }
 func (*UnimplementedQueryServer) Message(ctx context.Context, req *QueryMessageRequest) (*QueryMessageResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Message not implemented")
@@ -422,20 +422,20 @@ func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
 	s.RegisterService(&_Query_serviceDesc, srv)
 }
 
-func _Query_NumMessages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(QueryNumMessagesRequest)
+func _Query_NextDelayedMessageId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryNextDelayedMessageIdRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(QueryServer).NumMessages(ctx, in)
+		return srv.(QueryServer).NextDelayedMessageId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/dydxprotocol.delaymsg.Query/NumMessages",
+		FullMethod: "/dydxprotocol.delaymsg.Query/NextDelayedMessageId",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(QueryServer).NumMessages(ctx, req.(*QueryNumMessagesRequest))
+		return srv.(QueryServer).NextDelayedMessageId(ctx, req.(*QueryNextDelayedMessageIdRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -481,8 +481,8 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "NumMessages",
-			Handler:    _Query_NumMessages_Handler,
+			MethodName: "NextDelayedMessageId",
+			Handler:    _Query_NextDelayedMessageId_Handler,
 		},
 		{
 			MethodName: "Message",
@@ -497,7 +497,7 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 	Metadata: "dydxprotocol/delaymsg/query.proto",
 }
 
-func (m *QueryNumMessagesRequest) Marshal() (dAtA []byte, err error) {
+func (m *QueryNextDelayedMessageIdRequest) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -507,12 +507,12 @@ func (m *QueryNumMessagesRequest) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryNumMessagesRequest) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryNextDelayedMessageIdRequest) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNumMessagesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryNextDelayedMessageIdRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
@@ -520,7 +520,7 @@ func (m *QueryNumMessagesRequest) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	return len(dAtA) - i, nil
 }
 
-func (m *QueryNumMessagesResponse) Marshal() (dAtA []byte, err error) {
+func (m *QueryNextDelayedMessageIdResponse) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
 	n, err := m.MarshalToSizedBuffer(dAtA[:size])
@@ -530,18 +530,18 @@ func (m *QueryNumMessagesResponse) Marshal() (dAtA []byte, err error) {
 	return dAtA[:n], nil
 }
 
-func (m *QueryNumMessagesResponse) MarshalTo(dAtA []byte) (int, error) {
+func (m *QueryNextDelayedMessageIdResponse) MarshalTo(dAtA []byte) (int, error) {
 	size := m.Size()
 	return m.MarshalToSizedBuffer(dAtA[:size])
 }
 
-func (m *QueryNumMessagesResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+func (m *QueryNextDelayedMessageIdResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	i := len(dAtA)
 	_ = i
 	var l int
 	_ = l
-	if m.NumMessages != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64(m.NumMessages))
+	if m.NextDelayedMessageId != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.NextDelayedMessageId))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -632,7 +632,7 @@ func (m *QueryBlockMessageIdsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	var l int
 	_ = l
 	if m.BlockHeight != 0 {
-		i = encodeVarintQuery(dAtA, i, uint64((uint64(m.BlockHeight)<<1)^uint64((m.BlockHeight>>63))))
+		i = encodeVarintQuery(dAtA, i, uint64(m.BlockHeight))
 		i--
 		dAtA[i] = 0x8
 	}
@@ -691,7 +691,7 @@ func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *QueryNumMessagesRequest) Size() (n int) {
+func (m *QueryNextDelayedMessageIdRequest) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -700,14 +700,14 @@ func (m *QueryNumMessagesRequest) Size() (n int) {
 	return n
 }
 
-func (m *QueryNumMessagesResponse) Size() (n int) {
+func (m *QueryNextDelayedMessageIdResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
 	var l int
 	_ = l
-	if m.NumMessages != 0 {
-		n += 1 + sovQuery(uint64(m.NumMessages))
+	if m.NextDelayedMessageId != 0 {
+		n += 1 + sovQuery(uint64(m.NextDelayedMessageId))
 	}
 	return n
 }
@@ -744,7 +744,7 @@ func (m *QueryBlockMessageIdsRequest) Size() (n int) {
 	var l int
 	_ = l
 	if m.BlockHeight != 0 {
-		n += 1 + sozQuery(uint64(m.BlockHeight))
+		n += 1 + sovQuery(uint64(m.BlockHeight))
 	}
 	return n
 }
@@ -771,7 +771,7 @@ func sovQuery(x uint64) (n int) {
 func sozQuery(x uint64) (n int) {
 	return sovQuery(uint64((x << 1) ^ uint64((int64(x) >> 63))))
 }
-func (m *QueryNumMessagesRequest) Unmarshal(dAtA []byte) error {
+func (m *QueryNextDelayedMessageIdRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -794,10 +794,10 @@ func (m *QueryNumMessagesRequest) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNumMessagesRequest: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryNextDelayedMessageIdRequest: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNumMessagesRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryNextDelayedMessageIdRequest: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:
@@ -821,7 +821,7 @@ func (m *QueryNumMessagesRequest) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
-func (m *QueryNumMessagesResponse) Unmarshal(dAtA []byte) error {
+func (m *QueryNextDelayedMessageIdResponse) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
 	for iNdEx < l {
@@ -844,17 +844,17 @@ func (m *QueryNumMessagesResponse) Unmarshal(dAtA []byte) error {
 		fieldNum := int32(wire >> 3)
 		wireType := int(wire & 0x7)
 		if wireType == 4 {
-			return fmt.Errorf("proto: QueryNumMessagesResponse: wiretype end group for non-group")
+			return fmt.Errorf("proto: QueryNextDelayedMessageIdResponse: wiretype end group for non-group")
 		}
 		if fieldNum <= 0 {
-			return fmt.Errorf("proto: QueryNumMessagesResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+			return fmt.Errorf("proto: QueryNextDelayedMessageIdResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		case 1:
 			if wireType != 0 {
-				return fmt.Errorf("proto: wrong wireType = %d for field NumMessages", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field NextDelayedMessageId", wireType)
 			}
-			m.NumMessages = 0
+			m.NextDelayedMessageId = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -864,7 +864,7 @@ func (m *QueryNumMessagesResponse) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.NumMessages |= uint32(b&0x7F) << shift
+				m.NextDelayedMessageId |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -1078,7 +1078,7 @@ func (m *QueryBlockMessageIdsRequest) Unmarshal(dAtA []byte) error {
 			if wireType != 0 {
 				return fmt.Errorf("proto: wrong wireType = %d for field BlockHeight", wireType)
 			}
-			var v uint64
+			m.BlockHeight = 0
 			for shift := uint(0); ; shift += 7 {
 				if shift >= 64 {
 					return ErrIntOverflowQuery
@@ -1088,13 +1088,11 @@ func (m *QueryBlockMessageIdsRequest) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				v |= uint64(b&0x7F) << shift
+				m.BlockHeight |= uint32(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
 			}
-			v = (v >> 1) ^ uint64((int64(v&1)<<63)>>63)
-			m.BlockHeight = int64(v)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

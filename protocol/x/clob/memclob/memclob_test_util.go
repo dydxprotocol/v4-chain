@@ -85,7 +85,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 				{
 					RemainingQuantums: expectedMatch.matchedQuantums,
 					IsBuy:             expectedMatch.makerOrder.IsBuy(),
-					IsTaker:           false,
 					Subticks:          subticks,
 					ClobPairId:        clobPairId,
 				},
@@ -94,7 +93,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 				{
 					RemainingQuantums: expectedMatch.matchedQuantums,
 					IsBuy:             expectedMatch.takerOrder.IsBuy(),
-					IsTaker:           true,
 					Subticks:          subticks,
 					ClobPairId:        clobPairId,
 				},
@@ -113,7 +111,6 @@ func createCollatCheckExpectationsFromPendingMatches(
 			{
 				RemainingQuantums: addToOrderbookSize,
 				IsBuy:             order.IsBuy(),
-				IsTaker:           false,
 				Subticks:          order.GetOrderSubticks(),
 				ClobPairId:        clobPairId,
 			},
@@ -274,10 +271,10 @@ func AssertMemclobHasShortTermTxBytes(
 		}
 	}
 
-	expectedShortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+	expectedShortTermOrdersWithTxBytes := lib.GetSortedKeys[types.SortedOrderHashes](
 		expectedShortTermOrderHashes,
 	)
-	shortTermOrdersWithTxBytes := lib.ConvertMapToSliceOfKeys(
+	shortTermOrdersWithTxBytes := lib.GetSortedKeys[types.SortedOrderHashes](
 		memclob.operationsToPropose.ShortTermOrderHashToTxBytes,
 	)
 
@@ -460,7 +457,7 @@ func AssertMemclobHasOrders(
 				require.Fail(t, fmt.Sprintf("Bid with order ID %s has 0 remaining quantums", orderId.String()))
 			}
 
-			remainingAmount, hasRemainingAmount := memclob.getOrderRemainingAmount(
+			remainingAmount, hasRemainingAmount := memclob.GetOrderRemainingAmount(
 				ctx,
 				order.Order,
 			)

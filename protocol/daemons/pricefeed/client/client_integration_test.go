@@ -5,6 +5,7 @@ package client_test
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
@@ -13,9 +14,12 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
+	servertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -147,7 +151,7 @@ var (
 		},
 	}
 
-	marketParams_InvalidUpdate = []pricetypes.MarketParam{
+	marketParams_PartialUpdate = []pricetypes.MarketParam{
 		{
 			Id:       0,
 			Pair:     "BTC-USD",
@@ -180,19 +184,26 @@ var (
 	expectedAdjustedLinkPrice      = uint64(270_000_000_000_000)
 
 	expectedPrices1Market = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD: expectedMedianBtcPrice,
+		exchange_config.MARKET_BTC_USD: expectedMedianBtcPrice,
+	}
+
+	// expectedPricesPartialUpdate preserves the expected price of BTC, ignoring the invalid update params, and also
+	// updates to expect the median price of ETH.
+	expectedPricesPartialUpdate = map[types.MarketId]uint64{
+		exchange_config.MARKET_BTC_USD: expectedMedianBtcPrice,
+		exchange_config.MARKET_ETH_USD: expectedMedianEthPrice,
 	}
 
 	expectedPrices3Markets = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
-		exchange_common.MARKET_ETH_USD:  expectedMedianEthPrice,
-		exchange_common.MARKET_LINK_USD: testExchangeLinkPrice,
+		exchange_config.MARKET_BTC_USD:  expectedMedianBtcPrice,
+		exchange_config.MARKET_ETH_USD:  expectedMedianEthPrice,
+		exchange_config.MARKET_LINK_USD: testExchangeLinkPrice,
 	}
 
 	expectedPrices3MarketsWithConversions = map[types.MarketId]uint64{
-		exchange_common.MARKET_BTC_USD:  expectedMedianBtcPrice,
-		exchange_common.MARKET_ETH_USD:  expectedAdjustedMedianEthPrice,
-		exchange_common.MARKET_LINK_USD: expectedAdjustedLinkPrice,
+		exchange_config.MARKET_BTC_USD:  expectedMedianBtcPrice,
+		exchange_config.MARKET_ETH_USD:  expectedAdjustedMedianEthPrice,
+		exchange_config.MARKET_LINK_USD: expectedAdjustedLinkPrice,
 	}
 
 	// 5s is chosen to give us a comfortable margin of error for prices to make it through the
@@ -204,6 +215,7 @@ var (
 type PriceDaemonIntegrationTestSuite struct {
 	suite.Suite
 	daemonFlags        flags.DaemonFlags
+	appFlags           appflags.Flags
 	exchangeServer     *pricefeed.ExchangeServer
 	daemonServer       *daemonserver.Server
 	exchangePriceCache *pricefeedserver_types.MarketToExchangePrices
@@ -248,23 +260,26 @@ func (s *PriceDaemonIntegrationTestSuite) mockAllMarketParamsResponseNTimes(
 func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	// Configure test to use test exchange.
 	s.exchangeServer = pricefeed.NewExchangeServer()
-	s.exchangeServer.SetPrice(exchange_common.MARKET_BTC_USD, 1_000_000)
-	s.exchangeServer.SetPrice(exchange_common.MARKET_ETH_USD, 2_000_000)
-	s.exchangeServer.SetPrice(exchange_common.MARKET_LINK_USD, 3_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_BTC_USD, 1_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_ETH_USD, 2_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_LINK_USD, 3_000_000)
 
 	// Set USDT to 90 cents.
-	s.exchangeServer.SetPrice(exchange_common.MARKET_USDT_USD, 900_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_USDT_USD, 900_000_000)
 
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
+	s.appFlags = appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
 
 	// Configure mock daemon server with prices cache.
 	s.daemonServer = daemonserver.NewServer(
 		log.TestingLogger(),
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
+		"test",
 	)
+	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	s.daemonServer.WithPriceFeedMarketToExchangePrices(s.exchangePriceCache)
 
@@ -284,7 +299,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.activeServers.Add(1)
 	go func() {
 		defer s.activeServers.Done()
-		ls, err := net.Listen("tcp", s.daemonFlags.Shared.GrpcServerAddress)
+		ls, err := net.Listen("tcp", s.appFlags.GrpcAddress)
 		s.Require().NoError(err)
 		err = s.pricesGrpcServer.Serve(ls)
 		s.Require().NoError(err)
@@ -308,8 +323,9 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 	s.pricefeedDaemon = client.StartNewClient(
 		grpc_util.Ctx,
 		s.daemonFlags,
+		s.appFlags,
 		log.TestingLogger(),
-		&lib.GrpcClientImpl{},
+		&daemontypes.GrpcClientImpl{},
 		testExchangeStartupConfigs,
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},
@@ -438,9 +454,10 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_AddMarketWithUSDTCon
 	)
 }
 
-// TestUpdateMarkets_InvalidUpdates tests that the pricefeed daemon ignores invalid updates.
-func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
-	// Start the daemon with a single market. Then, update the endpoint to return invalid params.
+// TestUpdateMarkets_PartialUpdates tests that the pricefeed daemon applies valid market params and discards invalid
+// params whenever an update is partially valid.
+func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_PartialUpdate() {
+	// Start the daemon with a single market. Then, update the endpoint to return partially valid params.
 	s.mockAllMarketParamsResponseNTimes(
 		&pricetypes.QueryAllMarketParamsResponse{
 			MarketParams: defaultMarketParams,
@@ -449,7 +466,7 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
 	)
 	s.mockAllMarketParamsResponseNTimes(
 		&pricetypes.QueryAllMarketParamsResponse{
-			MarketParams: marketParams_InvalidUpdate,
+			MarketParams: marketParams_PartialUpdate,
 		},
 		100,
 	)
@@ -462,9 +479,10 @@ func (s *PriceDaemonIntegrationTestSuite) TestUpdateMarkets_InvalidUpdate() {
 	time.Sleep(testPriceCacheExpirationDuration + 5*time.Second)
 
 	s.expectPricesWithTimeout(
-		// The invalid update should not have been applied, so prices will come in as before.
-		expectedPrices1Market,
-		marketParams_InvalidUpdate,
+		// The 1st market param is invalid and should not have applied, so the BTC price does not change.
+		// The 2nd market param is valid and should have applied, so the ETH price should be added.
+		expectedPricesPartialUpdate,
+		marketParams_PartialUpdate,
 		1*time.Second,
 	)
 }

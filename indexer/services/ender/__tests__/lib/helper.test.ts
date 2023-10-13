@@ -46,8 +46,9 @@ describe('helper', () => {
     const event: IndexerTendermintEvent = {
       ...eventFields,
       subtype: 'order_fill',
-      data: 'data',
+      dataBytes: Uint8Array.from(Buffer.from('data')),
       eventIndex: 0,
+      version: 1,
     };
     if (throwError) {
       expect(() => indexerTendermintEventToTransactionIndex(event))

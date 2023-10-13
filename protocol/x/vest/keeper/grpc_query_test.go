@@ -27,6 +27,12 @@ func TestVestEntryQuery(t *testing.T) {
 			},
 			err: nil,
 		},
+		"Failure - non-existent": {
+			req: &types.QueryVestEntryRequest{
+				VesterAccount: "non-existent",
+			},
+			err: types.ErrVestEntryNotFound,
+		},
 		"Nil": {
 			req: nil,
 			err: status.Error(codes.InvalidArgument, "invalid request"),

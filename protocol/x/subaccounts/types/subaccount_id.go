@@ -1,6 +1,19 @@
 package types
 
-import "sort"
+import (
+	"sort"
+)
+
+// ToStateKey returns a bytes representation of a SubaccountId for use as a state key.
+// The key uses the proto marshaling of the object such that it can be unmarshalled in
+// the same way if it needs to be.
+func (id *SubaccountId) ToStateKey() []byte {
+	b, err := id.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return b
+}
 
 // SortedSubaccountIds is type alias for `[]SubaccountId` which supports deterministic
 // sorting. SubaccountIds are first ordered by string comparison

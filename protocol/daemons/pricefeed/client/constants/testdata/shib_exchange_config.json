@@ -1,0 +1,42 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "SHIBUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "SHIBUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "SHIB-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "SHIB_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "SHIBUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "SHIB-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "SHIB_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "SHIB-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

@@ -5,7 +5,10 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
@@ -88,7 +91,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				},
 			},
 			expectedOrderRemovals: []bool{
-				false,
+				true,
 				true, // non fully filled IOC order should be removed
 			},
 		},
@@ -290,7 +293,8 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					tApp.App,
 					*clobtypes.NewMsgPlaceOrder(order),
 				) {
-					require.True(t, tApp.CheckTx(checkTx).IsOK())
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 					}
@@ -326,13 +330,13 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: testtx.MustGetSignerAddress(tc.withdrawal),
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
 					},
 					tc.withdrawal,
 				)
 				checkTxResp := tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
-				require.True(t, checkTxResp.IsOK())
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 			// Advance to the next block, persisting removals in operations queue to state.
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
@@ -357,6 +361,380 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId)
 				require.Equal(t, tc.expectedOrderRemovals[idx], !found)
 			}
+		})
+	}
+}
+
+func TestOrderRemoval_Invalid(t *testing.T) {
+	tests := map[string]struct {
+		subaccounts []satypes.Subaccount
+		orders      []clobtypes.Order
+
+		// Optional withdraw message for under-collateralized tests.
+		withdrawal  *sendingtypes.MsgWithdrawFromSubaccount
+		priceUpdate *prices.MsgUpdateMarketPrices
+
+		// Optional field to override MsgProposedOperations to inject invalid order removals
+		msgProposedOperations *clobtypes.MsgProposedOperations
+
+		expectedErr string
+	}{
+		// TODO(CLOB-877): re-enable these tests.
+		// "invalid proposal: undercollateralized order removal invalid for fully-filled order": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Alice_Num0_10_000USD,
+		// 		constants.Bob_Num0_10_000USD,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+		// 		constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewMatchOperationRaw(
+		// 				&constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell50_Price10_GTBT15,
+		// 				[]clobtypes.MakerFill{
+		// 					{
+		// 						FillAmount:   5,
+		// 						MakerOrderId: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+		// 					},
+		// 				},
+		// 			),
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErr: "Order is fully filled",
+		// },
+		// "invalid proposal: order for well collateralized account cannot be removed": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_10000USD,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_UNDERCOLLATERALIZED,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErr: "Order passes collateralization check",
+		// },
+		// Re-enable when reduce-only orders are re-enabled.
+		// "invalid proposal: valid reduce-only order cannot be removed": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Carl_Num0_Id2_Clob0_Buy10_Price35_GTB20_RO,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Carl_Num0_Id2_Clob0_Buy10_Price35_GTB20_RO.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErr: "Order fill must increase position size or change side",
+		// },
+		// "invalid proposal: non reduce-only order may not be removed with reduce-only reason": {
+		// 	subaccounts: []satypes.Subaccount{
+		// 		constants.Carl_Num0_1BTC_Short,
+		// 	},
+		// 	orders: []clobtypes.Order{
+		// 		constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
+		// 	},
+		// 	msgProposedOperations: &clobtypes.MsgProposedOperations{
+		// 		OperationsQueue: []clobtypes.OperationRaw{
+		// 			clobtestutils.NewOrderRemovalOperationRaw(
+		// 				constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId,
+		// 				clobtypes.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY,
+		// 			),
+		// 		},
+		// 	},
+		// 	expectedErrType: clobtypes.ErrInvalidOrderRemoval,
+		// 	expectedErr:     "Order must be reduce only",
+		// },
+		"invalid proposal: conditional fok order cannot be removed when untriggered": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
+					),
+				},
+			},
+			expectedErr: "does not exist in triggered conditional state",
+		},
+		"invalid proposal: conditional fok order removal is for non fok order": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
+			},
+			priceUpdate: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_400_000),
+				},
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
+					),
+				},
+			},
+			expectedErr: "Order is not fill-or-kill",
+		},
+		"invalid proposal: conditional fok order cannot be removed when fully filled": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
+			},
+			priceUpdate: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_400_000),
+				},
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewMatchOperationRaw(
+						&constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
+						[]clobtypes.MakerFill{
+							{
+								FillAmount:   50_000_000,
+								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+							},
+						},
+					),
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED,
+					),
+				},
+			},
+			expectedErr: "Fill-or-kill order is fully filled",
+		},
+		"invalid proposal: conditional ioc order cannot be removed when untriggered": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+					),
+				},
+			},
+			expectedErr: "does not exist in triggered conditional state",
+		},
+		"invalid proposal: conditional ioc order removal is for non ioc order": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK,
+			},
+			priceUpdate: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_400_000),
+				},
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_FOK.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+					),
+				},
+			},
+			expectedErr: "Order is not immediate-or-cancel",
+		},
+		"invalid proposal: conditional ioc order cannot be removed when fully filled": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+				constants.Dave_Num0_10000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
+			},
+			priceUpdate: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_400_000),
+				},
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewMatchOperationRaw(
+						&constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
+						[]clobtypes.MakerFill{
+							{
+								FillAmount:   50_000_000,
+								MakerOrderId: constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
+							},
+						},
+					),
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK,
+					),
+				},
+			},
+			expectedErr: "Immediate-or-cancel order is fully filled",
+		},
+		"invalid proposal: non fully-filled long-term order cannot be removed with fully filled removal reason": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_100_000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					),
+				},
+			},
+			expectedErr: "Order has remaining size",
+		},
+		"invalid proposal: post-only removal reason used for non post-only order": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_100_000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			},
+			msgProposedOperations: &clobtypes.MsgProposedOperations{
+				OperationsQueue: []clobtypes.OperationRaw{
+					clobtestutils.NewOrderRemovalOperationRaw(
+						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+						clobtypes.OrderRemoval_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+					),
+				},
+			},
+			expectedErr: "Order is not post-only",
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = tc.subaccounts
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *prices.GenesisState) {
+						*genesisState = constants.TestPricesGenesisState
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *perptypes.GenesisState) {
+						genesisState.Params = constants.PerpetualsGenesisParams
+						genesisState.LiquidityTiers = constants.LiquidityTiers
+						genesisState.Perpetuals = []perptypes.Perpetual{
+							constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+						}
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *clobtypes.GenesisState) {
+						genesisState.ClobPairs = []clobtypes.ClobPair{
+							constants.ClobPair_Btc,
+						}
+						genesisState.LiquidationsConfig = clobtypes.LiquidationsConfig_Default
+						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *feetiertypes.GenesisState) {
+						genesisState.Params = constants.PerpetualFeeParamsNoFee
+					},
+				)
+				return genesis
+			}).WithTesting(t).Build()
+			ctx := tApp.InitChain()
+
+			// Create all orders and add to deliverTxsOverride
+			deliverTxsOverride := make([][]byte, 0)
+			for _, order := range tc.orders {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					*clobtypes.NewMsgPlaceOrder(order),
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+					deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
+				}
+			}
+
+			if tc.priceUpdate != nil {
+				// Add the price update to deliverTxsOverride
+				txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
+				require.NoError(t, txBuilder.SetMsgs(tc.priceUpdate))
+				priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+				require.NoError(t, err)
+				deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+			}
+
+			// Advance to the next block, updating the price.
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: deliverTxsOverride,
+			})
+			// Make sure stateful orders are in state.
+			for _, order := range tc.orders {
+				_, found := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId)
+				require.True(t, found)
+			}
+
+			// Next block will have invalid Order Removals injected in proposal.
+			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				DeliverTxsOverride: [][]byte{testtx.MustGetTxBytes(tc.msgProposedOperations)},
+				ValidateDeliverTxs: func(
+					ctx sdktypes.Context,
+					request abcitypes.RequestDeliverTx,
+					response abcitypes.ResponseDeliverTx,
+					txIndex int,
+				) (haltchain bool) {
+					require.True(t, response.IsErr())
+					require.Equal(t, clobtypes.ErrInvalidOrderRemoval.ABCICode(), response.Code)
+					require.Contains(t, response.Log, tc.expectedErr)
+					return false
+				},
+			})
 		})
 	}
 }
@@ -525,14 +903,16 @@ func TestOrderRemoval(t *testing.T) {
 				tApp.App,
 				*clobtypes.NewMsgPlaceOrder(tc.firstOrder),
 			) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx,
 				tApp.App,
 				*clobtypes.NewMsgPlaceOrder(tc.secondOrder),
 			) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			// Do the optional withdraw.
@@ -541,13 +921,13 @@ func TestOrderRemoval(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: testtx.MustGetSignerAddress(tc.withdrawal),
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
 					},
 					tc.withdrawal,
 				)
 				checkTxResp := tApp.CheckTx(CheckTx_MsgWithdrawFromSubaccount)
-				require.True(t, checkTxResp.IsOK())
+				require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
 			}
 
 			// First block only persists stateful orders to state without matching them.
@@ -618,7 +998,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Partially match alice's order so that it's in the operations queue.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -628,7 +1009,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Bob_Num0_Id1_Clob0_Sell5_Price10_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Now remove alice's order somehow. Self-trade in this case.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -638,7 +1020,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 	// Place another order to invalidate Alice's post only order.
 	for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
@@ -648,7 +1031,8 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell5_Price5_GTBT10,
 		),
 	) {
-		require.True(t, tApp.CheckTx(checkTx).IsOK())
+		resp := tApp.CheckTx(checkTx)
+		require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 	}
 
 	_ = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})

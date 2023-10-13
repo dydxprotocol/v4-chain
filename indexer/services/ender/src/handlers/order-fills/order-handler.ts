@@ -26,14 +26,15 @@ import * as pg from 'pg';
 
 import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
-import { base64StringToBinary } from '../../helpers/encoding-helper';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
+import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
 import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
-import { ConsolidatedKafkaEvent, OrderFillEventWithLiquidity, OrderFillEventWithOrder } from '../../lib/types';
+import { OrderFillWithLiquidity } from '../../lib/translated-types';
+import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
 import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
 
-export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiquidity> {
+export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
 
   /**
@@ -42,7 +43,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
   public getParallelizationIds(): string[] {
     // OrderFillEvents with the same subaccountId and clobPairId cannot be processed in parallel.
     const castedOrderFillEventMessage:
-    OrderFillEventWithOrder = this.event.event as OrderFillEventWithOrder;
+    OrderFillEventWithOrder = orderFillWithLiquidityToOrderFillEventWithOrder(this.event);
     const orderId: IndexerOrderId = this.event.liquidity === Liquidity.MAKER
       ? castedOrderFillEventMessage.makerOrder!.orderId!
       : castedOrderFillEventMessage.order!.orderId!;
@@ -60,14 +61,14 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
   }
 
   public async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = base64StringToBinary(this.indexerTendermintEvent.data);
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
     );
     const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
-    const castedOrderFillEventMessage: OrderFillEventWithOrder = (
-      this.event.event as OrderFillEventWithOrder);
+    const castedOrderFillEventMessage:
+    OrderFillEventWithOrder = orderFillWithLiquidityToOrderFillEventWithOrder(this.event);
     const field: string = this.event.liquidity === Liquidity.TAKER ? 'order' : 'makerOrder';
     const orderProto: IndexerOrder = this.liquidityToOrder(
       castedOrderFillEventMessage,
@@ -151,7 +152,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillEventWithLiq
   public async handleViaKnexQueries(): Promise<ConsolidatedKafkaEvent[]> {
     // OrderFillHandler already makes sure the event has 'takerOrder' as the oneofKind.
     const castedOrderFillEventMessage:
-    OrderFillEventWithOrder = this.event.event as OrderFillEventWithOrder;
+    OrderFillEventWithOrder = orderFillWithLiquidityToOrderFillEventWithOrder(this.event);
     const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const clobPairId:

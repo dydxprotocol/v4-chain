@@ -2,12 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"LTCUSDT\"",
+      "ticker": "LTCUSDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"LTCUSD\""
     },
     {
       "exchangeName": "Bybit",
@@ -30,6 +26,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "LTC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "LTC_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

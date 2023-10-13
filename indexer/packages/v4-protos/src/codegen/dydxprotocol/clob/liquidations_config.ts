@@ -1,20 +1,12 @@
 import * as _m0 from "protobufjs/minimal";
-import { Long, DeepPartial } from "../../helpers";
+import { DeepPartial, Long } from "../../helpers";
 /** LiquidationsConfig stores all configurable fields related to liquidations. */
 
 export interface LiquidationsConfig {
   /**
-   * The maximum number of quote quantums (exclusive) that the insurance fund
-   * can have for deleverages to be enabled. This is typically some non-zero
-   * value since it is difficult to fully-drain the insurance fund (to
-   * zero without rounding error).
-   */
-  maxInsuranceFundQuantumsForDeleveraging: Long;
-  /**
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-
   maxLiquidationFeePpm: number;
   /**
    * Limits around how much of a single position can be liquidated
@@ -39,17 +31,9 @@ export interface LiquidationsConfig {
 
 export interface LiquidationsConfigSDKType {
   /**
-   * The maximum number of quote quantums (exclusive) that the insurance fund
-   * can have for deleverages to be enabled. This is typically some non-zero
-   * value since it is difficult to fully-drain the insurance fund (to
-   * zero without rounding error).
-   */
-  max_insurance_fund_quantums_for_deleveraging: Long;
-  /**
    * The maximum liquidation fee (in parts-per-million). This fee goes
    * 100% to the insurance fund.
    */
-
   max_liquidation_fee_ppm: number;
   /**
    * Limits around how much of a single position can be liquidated
@@ -179,7 +163,6 @@ export interface FillablePriceConfigSDKType {
 
 function createBaseLiquidationsConfig(): LiquidationsConfig {
   return {
-    maxInsuranceFundQuantumsForDeleveraging: Long.UZERO,
     maxLiquidationFeePpm: 0,
     positionBlockLimits: undefined,
     subaccountBlockLimits: undefined,
@@ -189,24 +172,20 @@ function createBaseLiquidationsConfig(): LiquidationsConfig {
 
 export const LiquidationsConfig = {
   encode(message: LiquidationsConfig, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.maxInsuranceFundQuantumsForDeleveraging.isZero()) {
-      writer.uint32(8).uint64(message.maxInsuranceFundQuantumsForDeleveraging);
-    }
-
     if (message.maxLiquidationFeePpm !== 0) {
-      writer.uint32(16).uint32(message.maxLiquidationFeePpm);
+      writer.uint32(8).uint32(message.maxLiquidationFeePpm);
     }
 
     if (message.positionBlockLimits !== undefined) {
-      PositionBlockLimits.encode(message.positionBlockLimits, writer.uint32(26).fork()).ldelim();
+      PositionBlockLimits.encode(message.positionBlockLimits, writer.uint32(18).fork()).ldelim();
     }
 
     if (message.subaccountBlockLimits !== undefined) {
-      SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(34).fork()).ldelim();
+      SubaccountBlockLimits.encode(message.subaccountBlockLimits, writer.uint32(26).fork()).ldelim();
     }
 
     if (message.fillablePriceConfig !== undefined) {
-      FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(42).fork()).ldelim();
+      FillablePriceConfig.encode(message.fillablePriceConfig, writer.uint32(34).fork()).ldelim();
     }
 
     return writer;
@@ -222,22 +201,18 @@ export const LiquidationsConfig = {
 
       switch (tag >>> 3) {
         case 1:
-          message.maxInsuranceFundQuantumsForDeleveraging = (reader.uint64() as Long);
-          break;
-
-        case 2:
           message.maxLiquidationFeePpm = reader.uint32();
           break;
 
-        case 3:
+        case 2:
           message.positionBlockLimits = PositionBlockLimits.decode(reader, reader.uint32());
           break;
 
-        case 4:
+        case 3:
           message.subaccountBlockLimits = SubaccountBlockLimits.decode(reader, reader.uint32());
           break;
 
-        case 5:
+        case 4:
           message.fillablePriceConfig = FillablePriceConfig.decode(reader, reader.uint32());
           break;
 
@@ -252,7 +227,6 @@ export const LiquidationsConfig = {
 
   fromPartial(object: DeepPartial<LiquidationsConfig>): LiquidationsConfig {
     const message = createBaseLiquidationsConfig();
-    message.maxInsuranceFundQuantumsForDeleveraging = object.maxInsuranceFundQuantumsForDeleveraging !== undefined && object.maxInsuranceFundQuantumsForDeleveraging !== null ? Long.fromValue(object.maxInsuranceFundQuantumsForDeleveraging) : Long.UZERO;
     message.maxLiquidationFeePpm = object.maxLiquidationFeePpm ?? 0;
     message.positionBlockLimits = object.positionBlockLimits !== undefined && object.positionBlockLimits !== null ? PositionBlockLimits.fromPartial(object.positionBlockLimits) : undefined;
     message.subaccountBlockLimits = object.subaccountBlockLimits !== undefined && object.subaccountBlockLimits !== null ? SubaccountBlockLimits.fromPartial(object.subaccountBlockLimits) : undefined;

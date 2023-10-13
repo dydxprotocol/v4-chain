@@ -115,6 +115,8 @@ export interface OrderSubaccountMessageContents {
   goodTilBlock?: string;
   goodTilBlockTime?: string;
   triggerPrice?: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string;
 
   // This will only be filled if the order was removed
   removalReason?: string;
@@ -155,6 +157,8 @@ export interface TransferSubaccountMessageContents {
   size: string,
   type: TransferType,
   transactionHash: string,
+  createdAt: IsoString;
+  createdAtHeight: string;
 }
 
 /* ------- TradeMessageContents ------- */
@@ -192,19 +196,13 @@ export interface TradingPerpetualMarketMessage {
   ticker?: string;
   marketId?: number;
   status?: PerpetualMarketStatus;
-  baseAsset?: string;
-  quoteAsset?: string;
   initialMarginFraction?: string;
   maintenanceMarginFraction?: string;
   basePositionNotional?: string;
-  basePositionSize?: string;
-  incrementalPositionSize?: string;
-  maxPositionSize?: string;
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;
   subticksPerTick?: number;
-  minOrderBaseQuantums?: number;
   stepBaseQuantums?: number;
 
   // Fields that are likely to change
@@ -220,7 +218,7 @@ export type OraclePriceMarketMessageContentsMapping = {
 };
 
 export interface OraclePriceMarket {
-  price: string,
+  oraclePrice: string,
   effectiveAt: IsoString,
   effectiveAtHeight: string,
   marketId: number,

@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
@@ -29,7 +29,7 @@ type BridgeEventManager struct {
 	recognizedEventInfo types.BridgeEventInfo
 
 	// Time provider than can mocked out if necessary
-	timeProvider lib.TimeProvider
+	timeProvider libtime.TimeProvider
 }
 
 // BridgeEventWithTime is a type that wraps BridgeEvent but also
@@ -41,7 +41,7 @@ type BridgeEventWithTime struct {
 
 // NewBridgeEventManager creates a new BridgeEventManager.
 func NewBridgeEventManager(
-	timeProvider lib.TimeProvider,
+	timeProvider libtime.TimeProvider,
 ) *BridgeEventManager {
 	return &BridgeEventManager{
 		events: make(map[uint32]BridgeEventWithTime),
@@ -75,31 +75,12 @@ func (b *BridgeEventManager) AddBridgeEvents(
 		}
 	}
 
-	// Event IDs cannot be skipped.
-	if events[0].Id > b.recognizedEventInfo.NextId {
-		telemetry.IncrCounter(1, metrics.BridgeServer, metrics.AddBridgeEvents, metrics.EventIdNotNextExpected)
-		return fmt.Errorf(
-			"AddBridgeEvents: Event ID %d is greater than the Next Id %d.",
-			events[0].Id,
-			b.recognizedEventInfo.NextId,
-		)
-	}
-
 	now := b.timeProvider.Now()
 	for _, event := range events {
 		// Ignore stale events which may be the result of a race condition.
 		if event.Id < b.recognizedEventInfo.NextId {
 			telemetry.IncrCounter(1, metrics.BridgeServer, metrics.AddBridgeEvents, metrics.EventIdAlreadyRecognized)
 			continue
-		}
-
-		// Due to the above validation, the eventId should always be the next expected.
-		if event.Id != b.recognizedEventInfo.NextId {
-			panic(fmt.Errorf(
-				"Event ID %d does not match the Next Id %d",
-				event.Id,
-				b.recognizedEventInfo.NextId,
-			))
 		}
 
 		// Update BridgeEventManager with the new event.

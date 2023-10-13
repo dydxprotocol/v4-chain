@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // MexcResponseBody defines the overall Mexc response.
@@ -23,6 +23,9 @@ type MexcTicker struct {
 	BidPrice  string `json:"bid" validate:"required,positive-float-string"`
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
+
+// Ensure that MexcTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*MexcTicker)(nil)
 
 func (t MexcTicker) GetPair() string {
 	return t.Pair
@@ -45,7 +48,7 @@ func (t MexcTicker) GetLastPrice() string {
 func MexcPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body.
 	var mexcResponseBody MexcResponseBody
@@ -61,6 +64,6 @@ func MexcPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		mexcResponseBody.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

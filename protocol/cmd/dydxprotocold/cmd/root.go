@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"cosmossdk.io/simapp/params"
 	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -35,9 +34,12 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+
+	// Unnamed import of statik for swagger UI support.
+	// Used in cosmos-sdk when registering the route for swagger docs.
+	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
 )
 
 const (
@@ -49,7 +51,7 @@ const (
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
 func NewRootCmd(option *RootCmdOption) *cobra.Command {
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := dydxapp.GetEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
@@ -106,7 +108,7 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 }
 
 // initRootCmd initializes the app's root command with useful commands.
-func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig params.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
@@ -211,7 +213,7 @@ func txCommand() *cobra.Command {
 }
 
 type appCreator struct {
-	encCfg params.EncodingConfig
+	encCfg dydxapp.EncodingConfig
 }
 
 // newApp initializes and returns a new app.

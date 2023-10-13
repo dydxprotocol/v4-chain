@@ -105,9 +105,11 @@ export function create4xxResponse(
   res: express.Response,
   msg: string,
   status: number = 400,
+  additionalParams: object = {},
 ): express.Response {
   return res.status(status).json({
     errors: [{
+      ...additionalParams,
       msg,
     }],
   });
@@ -227,6 +229,8 @@ export function getSignedNotionalAndRisk({
   if (liquidityTier === undefined) {
     throw new NotFoundError(`Liquidity tier with id ${perpetualMarket.liquidityTierId} not found for perpetual market ${perpetualMarket.ticker}`);
   }
+  // Used to calculate risk / margin fracitons, as risk of a position should always be positive
+  const positionNotional: Big = signedNotional.abs();
   const {
     adjustedInitialMarginFraction,
     adjustedMaintenanceMarginFraction,
@@ -235,13 +239,13 @@ export function getSignedNotionalAndRisk({
     adjustedMaintenanceMarginFraction: Big,
   } = getAdjustedMarginFractions({
     liquidityTier,
-    positionNotional: signedNotional.abs(),
+    positionNotional,
   });
   return {
     signedNotional,
     individualRisk: {
-      initial: signedNotional.times(adjustedInitialMarginFraction),
-      maintenance: signedNotional.times(adjustedMaintenanceMarginFraction),
+      initial: positionNotional.times(adjustedInitialMarginFraction),
+      maintenance: positionNotional.times(adjustedMaintenanceMarginFraction),
     },
   };
 }
@@ -345,7 +349,6 @@ export async function filterPositionsByLatestEventIdPerPerpetual(
       id: positions.map((position: PerpetualPositionWithFunding) => position.lastEventId),
     },
     [],
-    { readReplica: true },
   );
   const eventByIdHex: { [eventId: string]: TendermintEventFromDatabase } = _.keyBy(
     events,
@@ -383,15 +386,9 @@ export async function getFundingIndexMaps(
   [FundingIndexMap, FundingIndexMap] = await Promise.all([
     FundingIndexUpdatesTable.findFundingIndexMap(
       subaccount.updatedAtHeight,
-      {
-        readReplica: true,
-      },
     ),
     FundingIndexUpdatesTable.findFundingIndexMap(
       latestBlock.blockHeight,
-      {
-        readReplica: true,
-      },
     ),
   ]);
   return {

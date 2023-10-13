@@ -2,9 +2,9 @@ package clob
 
 import (
 	"fmt"
-	"sort"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
@@ -55,7 +55,8 @@ func EndBlocker(
 		keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
 				indexerevents.NewStatefulOrderRemovalEvent(
 					orderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
@@ -87,8 +88,8 @@ func EndBlocker(
 	keeper.AddUntriggeredConditionalOrders(
 		ctx,
 		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.SliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.SliceToSet(expiredStatefulOrderIds),
+		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
@@ -105,15 +106,28 @@ func EndBlocker(
 
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
+
+	// Emit relevant metrics at the end of every block.
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.InsuranceFundBalance},
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		[]gometrics.Label{},
+	)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
 func PrepareCheckState(
 	ctx sdk.Context,
-	keeper keeper.Keeper,
-	memClob types.MemClob,
+	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobPrepareCheckState,
+		metrics.Latency,
+	)
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -127,8 +141,8 @@ func PrepareCheckState(
 	}
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
-	localValidatorOperationsQueue, shortTermOrderTxBytes := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	localValidatorOperationsQueue, shortTermOrderTxBytes := keeper.MemClob.GetOperationsToReplay(ctx)
+	keeper.Logger(ctx).Debug(
 		"Clearing local operations queue",
 		"localValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
@@ -136,11 +150,11 @@ func PrepareCheckState(
 		ctx.BlockHeight(),
 	)
 
-	memClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
+	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
-	offchainUpdates = memClob.PurgeInvalidMemclobState(
+	offchainUpdates = keeper.MemClob.PurgeInvalidMemclobState(
 		ctx,
 		processProposerMatchesEvents.OrderIdsFilledInLastBlock,
 		processProposerMatchesEvents.ExpiredStatefulOrderIds,
@@ -150,10 +164,25 @@ func PrepareCheckState(
 	)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
+	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
+	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
+	startPlaceLongTermOrders := time.Now()
 	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
 		processProposerMatchesEvents.PlacedLongTermOrderIds,
 		offchainUpdates,
+	)
+	telemetry.MeasureSince(
+		startPlaceLongTermOrders,
+		types.ModuleName,
+		metrics.PlaceLongTermOrdersFromLastBlock,
+		metrics.Latency,
+	)
+	telemetry.SetGauge(
+		float32(len(processProposerMatchesEvents.PlacedLongTermOrderIds)),
+		types.ModuleName,
+		metrics.PlaceLongTermOrdersFromLastBlock,
+		metrics.Count,
 	)
 
 	// 4. Place all conditional orders triggered in EndBlocker of last block on the memclob.
@@ -164,7 +193,7 @@ func PrepareCheckState(
 	)
 
 	// 5. Replay the local validator’s operations onto the book.
-	replayUpdates := memClob.ReplayOperations(
+	replayUpdates := keeper.MemClob.ReplayOperations(
 		ctx,
 		localValidatorOperationsQueue,
 		shortTermOrderTxBytes,
@@ -178,54 +207,15 @@ func PrepareCheckState(
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		float32(len(subaccountIds)),
-		metrics.Liquidations,
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-
-	// Get the liquidation order for each subaccount.
-	liquidationOrders := make([]types.LiquidationOrder, 0)
-	for _, subaccountId := range subaccountIds {
-		// If attempting to liquidate a subaccount returns an error, panic.
-		liquidationOrder, err := keeper.MaybeGetLiquidationOrder(ctx, subaccountId)
-		if err != nil {
-			panic(err)
-		}
-
-		if liquidationOrder != nil {
-			liquidationOrders = append(liquidationOrders, *liquidationOrder)
-		}
-	}
-
-	// Sort liquidation orders by clob pair id, then by fillable price, then by order hash.
-	start := time.Now()
-	sort.Sort(types.SortedLiquidationOrders(liquidationOrders))
-	telemetry.ModuleMeasureSince(types.ModuleName, start, metrics.OffsettingSubaccountPerpetualPosition)
-
-	// Attempt to place each liquidation order and perform deleveraging if necessary.
-	for i := 0; uint32(i) < keeper.MaxLiquidationOrdersPerBlock && i < len(liquidationOrders); i++ {
-		liquidationOrder := liquidationOrders[i]
-		if _, _, err := keeper.PlacePerpetualLiquidation(ctx, liquidationOrder); err != nil {
-			ctx.Logger().Error(
-				fmt.Sprintf(
-					"Failed to liquidate subaccount. Liquidation Order: (%+v). Err: %v",
-					liquidationOrder,
-					err,
-				),
-			)
-			panic(err)
-		}
+	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
+		panic(err)
 	}
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
-	newLocalValidatorOperationsQueue, _ := memClob.GetOperationsToReplay(ctx)
-	ctx.Logger().Debug(
+	newLocalValidatorOperationsQueue, _ := keeper.MemClob.GetOperationsToReplay(ctx)
+	keeper.Logger(ctx).Debug(
 		"Local operations queue after PrepareCheckState",
 		"newLocalValidatorOperationsQueue",
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
@@ -234,5 +224,5 @@ func PrepareCheckState(
 	)
 
 	// Set per-orderbook gauges.
-	memClob.SetMemclobGauges(ctx)
+	keeper.MemClob.SetMemclobGauges(ctx)
 }

@@ -1,12 +1,12 @@
 {
   "balances": [
     {
-      "denom": "dv4tnt",
-      "amount": "99500000000"
+      "denom": "adv4tnt",
+      "amount": "500000000000000000000000"
     },
     {
       "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
-      "amount": "99999999999999999"
+      "amount": "99999999999949999"
     }
   ],
   "pagination": {

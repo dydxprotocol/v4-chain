@@ -1,13 +1,15 @@
 package keeper
 
 import (
-	sdklog "cosmossdk.io/log"
 	"fmt"
+
+	sdklog "cosmossdk.io/log"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -28,30 +30,27 @@ func NewKeeper(
 	router *baseapp.MsgServiceRouter,
 	authorities []string,
 ) *Keeper {
-	authoritiesMap := make(map[string]struct{}, len(authorities))
-	for _, authority := range authorities {
-		authoritiesMap[authority] = struct{}{}
-	}
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		authorities: authoritiesMap,
+		authorities: lib.UniqueSliceToSet(authorities),
 		router:      router,
 	}
 }
 
-// GetAuthorities returns the set of authorities permitted to sign delayed messages.
-func (k Keeper) GetAuthorities() map[string]struct{} {
-	authorities := make(map[string]struct{}, len(k.authorities))
-	for authority := range k.authorities {
-		authorities[authority] = struct{}{}
-	}
-	return authorities
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
+}
+
+// Router returns the x/delaymsg router.
+func (k Keeper) Router() lib.MsgRouter {
+	return k.router
 }
 
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.SetNumMessages(ctx, 0)
+	k.SetNextDelayedMessageId(ctx, 0)
 }
 
 // Logger returns a module-specific logger for x/delaymsg.

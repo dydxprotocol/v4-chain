@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // These indices into the REST API response are defined in https://docs.bitfinex.com/reference/rest-public-tickers
@@ -31,6 +31,9 @@ type BitfinexTicker struct {
 	LastPrice string `validate:"required,positive-float-string"`
 }
 
+// Ensure that BitfinexTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BitfinexTicker)(nil)
+
 func (t BitfinexTicker) GetPair() string {
 	return t.Pair
 }
@@ -52,7 +55,7 @@ func (t BitfinexTicker) GetLastPrice() string {
 func BitfinexPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into raw format first.
 	var rawResponse [][]interface{}
@@ -105,7 +108,7 @@ func BitfinexPriceFunction(
 	tickerToPrice, unavailableTickers, err = price_function.GetMedianPricesFromTickers(
 		bitfinexTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 
 	// Mark as unavailable requested tickers whose raw ticker response was invalid.

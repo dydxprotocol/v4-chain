@@ -2,26 +2,17 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"XLMUSDT\"",
+      "ticker": "XLMUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"XLMUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tXLMUSD",
+      "exchangeName": "Bybit",
+      "ticker": "XLMUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "XLM-USD"
-    },
-    {
-      "exchangeName": "Gate",
-      "ticker": "XLM_USDT",
-      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
@@ -30,6 +21,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "XLM-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "XLM_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

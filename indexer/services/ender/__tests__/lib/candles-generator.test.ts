@@ -34,6 +34,7 @@ import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } fr
 describe('candleHelper', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await dbHelpers.clearData();
     jest.spyOn(stats, 'timing');
   });
 

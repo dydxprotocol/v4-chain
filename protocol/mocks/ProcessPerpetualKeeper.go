@@ -37,8 +37,8 @@ func (_m *ProcessPerpetualKeeper) GetPerpetual(ctx types.Context, id uint32) (pe
 	return r0, r1
 }
 
-// GetSettlement provides a mock function with given fields: ctx, perpetualId, quantums, index
-func (_m *ProcessPerpetualKeeper) GetSettlement(ctx types.Context, perpetualId uint32, quantums *big.Int, index *big.Int) (*big.Int, *big.Int, error) {
+// GetSettlementPpm provides a mock function with given fields: ctx, perpetualId, quantums, index
+func (_m *ProcessPerpetualKeeper) GetSettlementPpm(ctx types.Context, perpetualId uint32, quantums *big.Int, index *big.Int) (*big.Int, *big.Int, error) {
 	ret := _m.Called(ctx, perpetualId, quantums, index)
 
 	var r0 *big.Int

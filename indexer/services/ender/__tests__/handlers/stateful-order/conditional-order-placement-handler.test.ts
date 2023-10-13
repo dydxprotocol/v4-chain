@@ -23,6 +23,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
   defaultTime,
@@ -31,7 +33,6 @@ import {
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectOrderSubaccountKafkaMessage,
@@ -43,10 +44,12 @@ import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('conditionalOrderPlacementHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -96,9 +99,7 @@ describe('conditionalOrderPlacementHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
-        binaryToBase64String(
-          StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        ),
+        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -150,6 +151,8 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     expectOrderSubaccountKafkaMessage(
@@ -181,6 +184,8 @@ describe('conditionalOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
@@ -207,6 +212,8 @@ describe('conditionalOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: getTriggerPrice(defaultOrder, testConstants.defaultPerpetualMarket),
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     expectOrderSubaccountKafkaMessage(

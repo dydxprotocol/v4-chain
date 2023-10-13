@@ -2,9 +2,10 @@ package types_test
 
 import (
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -24,16 +25,18 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 0,
+						Pair:               constants.BtcUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
-						Id:                1,
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 1,
+						Pair:               constants.EthUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -49,20 +52,42 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: nil,
 		},
+		"invalid: empty ExchangeConfigJson": {
+			genState: &types.GenesisState{
+				MarketParams: []types.MarketParam{
+					{
+						Id:                 0,
+						Pair:               constants.BtcUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: "",
+					},
+				},
+				MarketPrices: []types.MarketPrice{
+					{
+						Id:    0,
+						Price: constants.FiveBillion,
+					},
+				},
+			},
+			expectedError: errors.New("ExchangeConfigJson string is not valid"),
+		},
 		"invalid: duplicate market param ids": {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 0,
+						Pair:               constants.BtcUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
-						Id:                0,
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 0,
+						Pair:               constants.EthUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 			},
@@ -72,27 +97,30 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:   0,
-						Pair: "",
+						Id:                 0,
+						Pair:               "",
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 				},
 			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "Pair cannot be empty"),
+			expectedError: errorsmod.Wrap(types.ErrInvalidInput, "Pair cannot be empty"),
 		},
 		"invalid: mismatched number of market params and prices": {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 0,
+						Pair:               constants.BtcUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
-						Id:                1,
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 1,
+						Pair:               constants.EthUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -108,16 +136,18 @@ func TestGenesisState_Validate(t *testing.T) {
 			genState: &types.GenesisState{
 				MarketParams: []types.MarketParam{
 					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 0,
+						Pair:               constants.BtcUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
 					},
 					{
-						Id:                1,
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
+						Id:                 1,
+						Pair:               constants.EthUsdPair,
+						MinExchanges:       1,
+						MinPriceChangePpm:  1,
+						ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_ETH_USD],
 					},
 				},
 				MarketPrices: []types.MarketPrice{
@@ -131,36 +161,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					},
 				},
 			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
-		},
-		"invalid: invalid market price": {
-			genState: &types.GenesisState{
-				MarketParams: []types.MarketParam{
-					{
-						Id:                0,
-						Pair:              constants.BtcUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
-					},
-					{
-						Id:                1,
-						Pair:              constants.EthUsdPair,
-						MinExchanges:      1,
-						MinPriceChangePpm: 1,
-					},
-				},
-				MarketPrices: []types.MarketPrice{
-					{
-						Id:    0,
-						Price: constants.FiveBillion,
-					},
-					{
-						Id:    1,
-						Price: 0, // invalid
-					},
-				},
-			},
-			expectedError: sdkerrors.Wrap(types.ErrInvalidInput, "market 1 price cannot be zero"),
+			expectedError: errorsmod.Wrap(types.ErrInvalidInput, "market param id 1 does not match market price id 2"),
 		},
 	}
 	for name, tc := range tests {

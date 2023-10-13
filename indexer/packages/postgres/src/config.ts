@@ -31,10 +31,11 @@ export const postgresConfigSchema = {
   PG_POOL_MIN: parseInteger({ default: 1 }),
   PG_POOL_MAX: parseInteger({ default: 2 }),
   PG_ACQUIRE_CONNECTION_TIMEOUT_MS: parseInteger({ default: 10_000 }),
-  PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
-  ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
-  MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
-  LIQUIDITY_TIER_REFRESHER_INTERVAL_MS: parseInteger({ default: 300_000 }), // 5 minutes
+  PERPETUAL_MARKETS_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
+  ASSET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
+  MARKET_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
+  LIQUIDITY_TIER_REFRESHER_INTERVAL_MS: parseInteger({ default: 30_000 }), // 30 seconds
+  USE_READ_REPLICA: parseBoolean({ default: false }),
 
   // Optional environment variables.
   NODE_ENV: parseString({ default: null }),

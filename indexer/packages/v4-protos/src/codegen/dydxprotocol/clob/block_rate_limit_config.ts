@@ -3,34 +3,50 @@ import { DeepPartial } from "../../helpers";
 /** Defines the block rate limits for CLOB specific operations. */
 
 export interface BlockRateLimitConfiguration {
-  maxShortTermOrdersPerMarketPerNBlocks: MaxPerNBlocksRateLimit[];
   /**
-   * How many stateful order attempts (successful and failed) are allowed for a
-   * subaccount per N blocks. Note that the rate limits are applied
-   * in an AND fashion such that an order must pass all rate limit
+   * How many short term order attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied
+   * in an AND fashion such that an order placement must pass all rate limit
+   * configurations.
+   * 
+   * Specifying 0 values disables this rate limit.
+   */
+  maxShortTermOrdersPerNBlocks: MaxPerNBlocksRateLimit[];
+  /**
+   * How many stateful order attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied
+   * in an AND fashion such that an order placement must pass all rate limit
    * configurations.
    * 
    * Specifying 0 values disables this rate limit.
    */
 
   maxStatefulOrdersPerNBlocks: MaxPerNBlocksRateLimit[];
-  maxShortTermOrderCancellationsPerMarketPerNBlocks: MaxPerNBlocksRateLimit[];
+  maxShortTermOrderCancellationsPerNBlocks: MaxPerNBlocksRateLimit[];
 }
 /** Defines the block rate limits for CLOB specific operations. */
 
 export interface BlockRateLimitConfigurationSDKType {
-  max_short_term_orders_per_market_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
   /**
-   * How many stateful order attempts (successful and failed) are allowed for a
-   * subaccount per N blocks. Note that the rate limits are applied
-   * in an AND fashion such that an order must pass all rate limit
+   * How many short term order attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied
+   * in an AND fashion such that an order placement must pass all rate limit
+   * configurations.
+   * 
+   * Specifying 0 values disables this rate limit.
+   */
+  max_short_term_orders_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
+  /**
+   * How many stateful order attempts (successful and failed) are allowed for
+   * an account per N blocks. Note that the rate limits are applied
+   * in an AND fashion such that an order placement must pass all rate limit
    * configurations.
    * 
    * Specifying 0 values disables this rate limit.
    */
 
   max_stateful_orders_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
-  max_short_term_order_cancellations_per_market_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
+  max_short_term_order_cancellations_per_n_blocks: MaxPerNBlocksRateLimitSDKType[];
 }
 /** Defines a rate limit over a specific number of blocks. */
 
@@ -65,15 +81,15 @@ export interface MaxPerNBlocksRateLimitSDKType {
 
 function createBaseBlockRateLimitConfiguration(): BlockRateLimitConfiguration {
   return {
-    maxShortTermOrdersPerMarketPerNBlocks: [],
+    maxShortTermOrdersPerNBlocks: [],
     maxStatefulOrdersPerNBlocks: [],
-    maxShortTermOrderCancellationsPerMarketPerNBlocks: []
+    maxShortTermOrderCancellationsPerNBlocks: []
   };
 }
 
 export const BlockRateLimitConfiguration = {
   encode(message: BlockRateLimitConfiguration, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.maxShortTermOrdersPerMarketPerNBlocks) {
+    for (const v of message.maxShortTermOrdersPerNBlocks) {
       MaxPerNBlocksRateLimit.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
@@ -81,7 +97,7 @@ export const BlockRateLimitConfiguration = {
       MaxPerNBlocksRateLimit.encode(v!, writer.uint32(18).fork()).ldelim();
     }
 
-    for (const v of message.maxShortTermOrderCancellationsPerMarketPerNBlocks) {
+    for (const v of message.maxShortTermOrderCancellationsPerNBlocks) {
       MaxPerNBlocksRateLimit.encode(v!, writer.uint32(26).fork()).ldelim();
     }
 
@@ -98,7 +114,7 @@ export const BlockRateLimitConfiguration = {
 
       switch (tag >>> 3) {
         case 1:
-          message.maxShortTermOrdersPerMarketPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
+          message.maxShortTermOrdersPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
           break;
 
         case 2:
@@ -106,7 +122,7 @@ export const BlockRateLimitConfiguration = {
           break;
 
         case 3:
-          message.maxShortTermOrderCancellationsPerMarketPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
+          message.maxShortTermOrderCancellationsPerNBlocks.push(MaxPerNBlocksRateLimit.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -120,9 +136,9 @@ export const BlockRateLimitConfiguration = {
 
   fromPartial(object: DeepPartial<BlockRateLimitConfiguration>): BlockRateLimitConfiguration {
     const message = createBaseBlockRateLimitConfiguration();
-    message.maxShortTermOrdersPerMarketPerNBlocks = object.maxShortTermOrdersPerMarketPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
+    message.maxShortTermOrdersPerNBlocks = object.maxShortTermOrdersPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
     message.maxStatefulOrdersPerNBlocks = object.maxStatefulOrdersPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
-    message.maxShortTermOrderCancellationsPerMarketPerNBlocks = object.maxShortTermOrderCancellationsPerMarketPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
+    message.maxShortTermOrderCancellationsPerNBlocks = object.maxShortTermOrderCancellationsPerNBlocks?.map(e => MaxPerNBlocksRateLimit.fromPartial(e)) || [];
     return message;
   }
 

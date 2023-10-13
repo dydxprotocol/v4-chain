@@ -2,10 +2,9 @@ package keeper
 
 import (
 	"context"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
@@ -26,11 +25,10 @@ func (k msgServer) UpdateParams(
 	goCtx context.Context,
 	msg *types.MsgUpdateParams,
 ) (*types.MsgUpdateParamsResponse, error) {
-	if k.GetAuthority() != msg.Authority {
-		return nil, sdkerrors.Wrapf(
+	if !k.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
-			"invalid authority; expected %s, got %s",
-			k.GetAuthority(),
+			"invalid authority %s",
 			msg.Authority,
 		)
 	}

@@ -26,6 +26,7 @@ import {
   ALL_CHANNELS,
   WebsocketEvents,
 } from '../types';
+import { CountryRestrictor } from './restrict-countries';
 
 const HEARTBEAT_INTERVAL_MS: number = config.WS_HEARTBEAT_INTERVAL_MS;
 const HEARTBEAT_TIMEOUT_MS: number = config.WS_HEARTBEAT_TIMEOUT_MS;
@@ -41,6 +42,7 @@ export class Index {
   // Handlers for pings and invalid messages.
   private pingHandler: PingHandler;
   private invalidMessageHandler: InvalidMessageHandler;
+  private countryRestrictor: CountryRestrictor;
 
   constructor(wss: Wss, subscriptions: Subscriptions) {
     this.wss = wss;
@@ -48,6 +50,7 @@ export class Index {
     this.subscriptions = subscriptions;
     this.pingHandler = new PingHandler();
     this.invalidMessageHandler = new InvalidMessageHandler();
+    this.countryRestrictor = new CountryRestrictor();
 
     // Attach the new connection handler to the websocket server.
     this.wss.onConnection((ws: WebSocket, req: IncomingMessage) => this.onConnection(ws, req));
@@ -96,6 +99,11 @@ export class Index {
    * @param req HTTP request accompanying new connection request.
    */
   private onConnection(ws: WebSocket, req: IncomingMessage): void {
+    // Terminate the connection if the connection requestion originated from a restricted country
+    if (this.countryRestrictor.isRestrictedCountry(req)) {
+      return ws.terminate();
+    }
+
     const connectionId: string = uuidv4();
 
     this.connections[connectionId] = {

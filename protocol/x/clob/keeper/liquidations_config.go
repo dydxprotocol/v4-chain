@@ -10,11 +10,7 @@ func (k Keeper) GetLiquidationsConfig(
 	ctx sdk.Context,
 ) (config types.LiquidationsConfig) {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get(
-		types.KeyPrefix(
-			types.LiquidationsConfigKey,
-		),
-	)
+	b := store.Get([]byte(types.LiquidationsConfigKey))
 
 	// The liquidations config should be set in state by the genesis logic.
 	// If it's not found, then that indicates it was never set in state, which is invalid.
@@ -40,12 +36,20 @@ func (k Keeper) setLiquidationsConfig(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&config)
-	store.Set(
-		types.KeyPrefix(
-			types.LiquidationsConfigKey,
-		),
-		b,
-	)
+	store.Set([]byte(types.LiquidationsConfigKey), b)
+
+	return nil
+}
+
+// UpdateLiquidationsConfig updates the liquidations config in state.
+func (k Keeper) UpdateLiquidationsConfig(
+	ctx sdk.Context,
+	config types.LiquidationsConfig,
+) error {
+	// Write the liquidations config to state.
+	if err := k.setLiquidationsConfig(ctx, config); err != nil {
+		return err
+	}
 
 	return nil
 }

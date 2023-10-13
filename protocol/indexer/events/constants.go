@@ -13,6 +13,24 @@ const (
 	SubtypeStatefulOrder    = "stateful_order"
 	SubtypeAsset            = "asset"
 	SubtypePerpetualMarket  = "perpetual_market"
+	SubtypeLiquidityTier    = "liquidity_tier"
+	SubtypeUpdatePerpetual  = "update_perpetual"
+	SubtypeUpdateClobPair   = "update_clob_pair"
+)
+
+const (
+	// Indexer event versions.
+	OrderFillEventVersion        uint32 = 1
+	SubaccountUpdateEventVersion uint32 = 1
+	TransferEventVersion         uint32 = 1
+	MarketEventVersion           uint32 = 1
+	FundingValuesEventVersion    uint32 = 1
+	StatefulOrderEventVersion    uint32 = 1
+	AssetEventVersion            uint32 = 1
+	PerpetualMarketEventVersion  uint32 = 1
+	LiquidityTierEventVersion    uint32 = 1
+	UpdatePerpetualEventVersion  uint32 = 1
+	UpdateClobPairEventVersion   uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{
@@ -24,4 +42,6 @@ var OnChainEventSubtypes = []string{
 	SubtypeStatefulOrder,
 	SubtypeAsset,
 	SubtypePerpetualMarket,
+	SubtypeLiquidityTier,
+	SubtypeUpdatePerpetual,
 }

@@ -81,6 +81,28 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidStartAndEndTimes,
 		},
+		{
+			desc: "start_time not utc",
+			entry: types.VestEntry{
+				VesterAccount:   "test_vester",
+				TreasuryAccount: "test_treasury",
+				Denom:           "testdenom",
+				StartTime:       now.Add(-1 * time.Hour).In(time.FixedZone("EST", -5*60*60)),
+				EndTime:         now,
+			},
+			expectedErr: types.ErrInvalidTimeZone,
+		},
+		{
+			desc: "end_time not utc",
+			entry: types.VestEntry{
+				VesterAccount:   "test_vester",
+				TreasuryAccount: "test_treasury",
+				Denom:           "testdenom",
+				StartTime:       now.Add(-1 * time.Hour),
+				EndTime:         now.In(time.FixedZone("EST", -5*60*60)),
+			},
+			expectedErr: types.ErrInvalidTimeZone,
+		},
 	}
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {

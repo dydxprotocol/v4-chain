@@ -1,0 +1,38 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "SEIUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "SEIUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "SEI-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "SEI_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "seiusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "SEI-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "SEI_USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

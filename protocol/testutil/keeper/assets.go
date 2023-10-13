@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -24,6 +25,7 @@ import (
 func CreateUsdcAsset(ctx sdk.Context, assetsKeeper *keeper.Keeper) error {
 	_, err := assetsKeeper.CreateAsset(
 		ctx,
+		constants.Usdc.Id,
 		constants.Usdc.Symbol,
 		constants.Usdc.Denom,
 		constants.Usdc.DenomExponent,
@@ -45,6 +47,7 @@ func AssetsKeepers(
 	bankKeeper *bankkeeper.BaseKeeper,
 	storeKey storetypes.StoreKey,
 ) {
+	var mockTimeProvider *mocks.TimeProvider
 	ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
@@ -53,14 +56,15 @@ func AssetsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		keeper, storeKey = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
 
 		return []GenesisInitializer{pricesKeeper, keeper}
 	})
-
+	// Mock time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	return ctx, keeper, pricesKeeper, accountKeeper, bankKeeper, storeKey
 }
 
@@ -105,10 +109,9 @@ func GetAssetCreateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeAsset {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var assetEvent indexerevents.AssetCreateEventV1
-		err := unmarshaler.Unmarshal(bytes, &assetEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &assetEvent)
 		if err != nil {
 			panic(err)
 		}

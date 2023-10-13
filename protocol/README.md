@@ -1,23 +1,22 @@
-<p align="center"><img src="https://s3.amazonaws.com/dydx-assets/logo_large_white.png" width="256" /></p>
+<p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
+
+<h1 align="center">v4 Protocol</h1>
 
 <div align="center">
-  <a href="https://github.com/dydxprotocol/v4/actions/workflows/test.yml?query=branch%3Amain" style="text-decoration:none;">
-    <img src="https://github.com/dydxprotocol/v4/actions/workflows/test.yml/badge.svg?branch=main" />
-  </a>
-  <a href='https://coveralls.io/github/dydxprotocol/v4' style="text-decoration:none;">
-    <img src='https://coveralls.io/repos/github/dydxprotocol/v4/badge.svg?t=72Ru8Z' alt='Coverage Status' />
+  <a href="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml?query=branch%3Amain" style="text-decoration:none;">
+    <img src="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml/badge.svg?branch=main" />
   </a>
 </div>
 
-> Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
+Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
 
-**Additional Documentation available on [notion](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee).**
+TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
 
 ## Get started
 
 ### Installation
 
-1. Install Go `1.19` [here](https://go.dev/dl/).
+1. Install Go `1.21` [here](https://go.dev/dl/).
 2. Install Docker Desktop [here](https://www.docker.com/products/docker-desktop/)
 3. Run `make install` to install project dependencies.
 
@@ -25,7 +24,6 @@
 
 * `make test` runs unit tests.
 * `make lint` lints source code (`make lint-fix` to also fix).
-* `make proto-all` formats, lints, and generates Go from proto files.
 * `make build` builds source.
 * `make mock-gen` generates mocks for files listed in [mocks/Makefile](https://github.com/dydxprotocol/v4/tree/main/mocks/Makefile). More info about mocking [here](https://github.com/dydxprotocol/v4/tree/main/mocks/README.md).
 
@@ -77,7 +75,7 @@ We currently lint the following YAML files in the [`Lint` CI job](https://github
 
 #### Protos
 
-Our protos live in [v4-proto](https://github.com/dydxprotocol/v4-proto) which is included as a submodule of this repo. When running `git checkout`, we recommend using the `--recurse-submodules` flag to initialize and checkout the submodule. You can also consider setting `git config --global submodule.recurse` to make this a default for all git commands. Additional help for using submodules can be found on [notion](https://www.notion.so/dydx/Git-Submodules-9a158282ac2145c9a3dde66dffa60f8f).
+Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
 
 #### Genesis
 

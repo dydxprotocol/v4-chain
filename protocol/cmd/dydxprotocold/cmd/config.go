@@ -5,11 +5,21 @@ import (
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 const (
-	// TODO(CORE-189): Support additional tokens for gas.
-	minGasPrice = "0ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
+	// `minGasPriceUusdc` is default minimum gas price in micro USDC.
+	minGasPriceUusdc = "0.025" + assettypes.UusdcDenom
+	// `minGasPriceStakeToken` is the default minimum gas price in stake token.
+	// TODO(GENESIS): `adv4tnt` is a placeholder for the stake token of the dYdX chain.
+	// Before this software is published for genesis, `adv4tnt` should be replaced with
+	// the chain stake token. It's also recommended that the min gas price in stake token
+	// is roughly the same in value as 0.025 micro USDC.
+	minGasPriceStakeToken = "25000000000adv4tnt"
+	// `minGasPrice` defines the default `minimum-gas-prices` attribute in validator's `app.toml` file.
+	MinGasPrice = minGasPriceUusdc + "," + minGasPriceStakeToken
 )
 
 // DydxAppConfig specifies dYdX app specific config.
@@ -38,7 +48,7 @@ func initAppConfig() (string, interface{}) {
 	//   own app.toml to override, or use this default value.
 	//
 	// In simapp, we set the min gas prices to 0.
-	srvCfg.MinGasPrices = minGasPrice
+	srvCfg.MinGasPrices = MinGasPrice
 
 	appConfig := DydxAppConfig{
 		Config: *srvCfg,
@@ -75,7 +85,11 @@ func initTendermintConfig() *tmcfg.Config {
 
 	// Mempool config.
 	cfg.Mempool.Version = "v1"
-	cfg.Mempool.CacheSize = 20000
+	// We specifically are using a number greater than max QPS (currently set at 5000) * ShortBlockWindow to prevent
+	// a replay attack that is possible with short-term order placements and cancellations. The attack would consume
+	// a users rate limit if the entry is evicted from the mempool cache as it would be possible for the transaction
+	// to go through `CheckTx` again causing it to hit rate limit code against the users account.
+	cfg.Mempool.CacheSize = 5000 * int(clobtypes.ShortBlockWindow)
 	cfg.Mempool.Size = 50000
 	cfg.Mempool.TTLNumBlocks = 20 //nolint:staticcheck
 	cfg.Mempool.KeepInvalidTxsInCache = true

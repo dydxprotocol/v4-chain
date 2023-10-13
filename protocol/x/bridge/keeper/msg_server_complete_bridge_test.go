@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -11,7 +13,7 @@ import (
 )
 
 func TestMsgServerCompleteBridge(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
 		testMsg      types.MsgCompleteBridge
@@ -20,17 +22,17 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetBridgeAuthority(),
+				Authority: constants.DelayMsgModuleAccAddressString,
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
 		"Failure: invalid address": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: k.GetBridgeAuthority(),
+				Authority: constants.DelayMsgModuleAccAddressString,
 				Event: types.BridgeEvent{
 					Id:             0,
-					Coin:           sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+					Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 					Address:        "invalid",
 					EthBlockHeight: 1,
 				},
@@ -43,8 +45,7 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedErr: fmt.Sprintf(
-				"expected %s, got %s: Authority is invalid",
-				k.GetBridgeAuthority(),
+				"message authority %s is not valid for sending complete bridge messages",
 				"12345",
 			),
 		},

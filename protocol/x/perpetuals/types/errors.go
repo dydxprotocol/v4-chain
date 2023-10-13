@@ -2,90 +2,112 @@ package types
 
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 // x/perpetuals module sentinel errors
 var (
-	ErrPerpetualDoesNotExist = sdkerrors.Register(
+	ErrPerpetualDoesNotExist = errorsmod.Register(
 		ModuleName,
 		1,
 		"Perpetual does not exist",
 	)
-	ErrMarketDoesNotExist = sdkerrors.Register(
+	ErrMarketDoesNotExist = errorsmod.Register(
 		ModuleName,
 		2,
 		"MarketId on perpetual does not exist",
 	)
-	ErrInitialMarginPpmExceedsMax = sdkerrors.Register(
+	ErrInitialMarginPpmExceedsMax = errorsmod.Register(
 		ModuleName,
 		3,
 		"InitialMarginPpm exceeds maximum value of 1e6",
 	)
-	ErrMaintenanceFractionPpmExceedsMax = sdkerrors.Register(
+	ErrMaintenanceFractionPpmExceedsMax = errorsmod.Register(
 		ModuleName,
 		4,
 		"MaintenanceFractionPpm exceeds maximum value of 1e6",
 	)
-	ErrDefaultFundingPpmMagnitudeExceedsMax = sdkerrors.Register(
+	ErrDefaultFundingPpmMagnitudeExceedsMax = errorsmod.Register(
 		ModuleName,
 		5,
 		"DefaultFundingPpm magnitude exceeds maximum value of 1e6",
 	)
-	ErrTickerEmptyString = sdkerrors.Register(
+	ErrTickerEmptyString = errorsmod.Register(
 		ModuleName,
 		6,
 		"Ticker must be non-empty string",
 	)
-	ErrNoNewPremiumVotes = sdkerrors.Register(
+	ErrNoNewPremiumVotes = errorsmod.Register(
 		ModuleName,
 		7,
 		"No new premium votes were collected",
 	)
-	ErrMoreFundingSamplesThanExpected = sdkerrors.Register(
+	ErrMoreFundingSamplesThanExpected = errorsmod.Register(
 		ModuleName,
 		8,
 		"Recorded more than expected funding samples in the past funding-tick epoch",
 	)
-	ErrInvalidAddPremiumVotes = sdkerrors.Register(ModuleName, 9, "MsgAddPremiumVotes is invalid")
-	ErrPremiumVoteNotClamped  = sdkerrors.Register(
+	ErrInvalidAddPremiumVotes = errorsmod.Register(ModuleName, 9, "MsgAddPremiumVotes is invalid")
+	ErrPremiumVoteNotClamped  = errorsmod.Register(
 		ModuleName,
 		10,
 		"Premium vote value is not clamped by MaxAbsPremiumVotePpm",
 	)
-	ErrFundingRateInt32Overflow = sdkerrors.Register(
+	ErrFundingRateInt32Overflow = errorsmod.Register(
 		ModuleName,
 		11,
 		"Funding rate int32 overflow",
 	)
-	ErrLiquidityTierDoesNotExist = sdkerrors.Register(
+	ErrLiquidityTierDoesNotExist = errorsmod.Register(
 		ModuleName,
 		12,
 		"Liquidity Tier does not exist",
 	)
-	ErrBasePositionNotionalIsZero = sdkerrors.Register(
+	ErrBasePositionNotionalIsZero = errorsmod.Register(
 		ModuleName,
 		13,
 		"Base position notional is zero",
 	)
-	ErrFundingRateClampFactorPpmIsZero = sdkerrors.Register(
+	ErrFundingRateClampFactorPpmIsZero = errorsmod.Register(
 		ModuleName,
 		14,
 		"Funding rate clamp factor ppm is zero",
 	)
-	ErrPremiumVoteClampFactorPpmIsZero = sdkerrors.Register(
+	ErrPremiumVoteClampFactorPpmIsZero = errorsmod.Register(
 		ModuleName,
 		15,
 		"Premium vote clamp factor ppm is zero",
 	)
-	ErrImpactNotionalIsZero = sdkerrors.Register(
+	ErrImpactNotionalIsZero = errorsmod.Register(
 		ModuleName,
 		16,
 		"Impact notional is zero",
 	)
+	ErrPerpetualAlreadyExists = errorsmod.Register(
+		ModuleName,
+		17,
+		"Perpetual already exists",
+	)
+	ErrPremiumVoteForNonActiveMarket = errorsmod.Register(
+		ModuleName,
+		18,
+		"Premium votes are disallowed for non active markets",
+	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		19,
+		"Authority is invalid",
+	)
+	ErrLiquidityTierAlreadyExists = errorsmod.Register(
+		ModuleName,
+		20,
+		"Liquidity tier already exists",
+	)
+	ErrMaintenanceMarginLargerThanInitialMargin = errorsmod.Register(
+		ModuleName,
+		21,
+		"Maintenance margin fraction is larger than initial margin fraction",
+	)
 
 	// Errors for Not Implemented
-	ErrNotImplementedFunding      = sdkerrors.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
-	ErrNotImplementedOpenInterest = sdkerrors.Register(ModuleName, 1002, "Not Implemented: Perpetuals Open Interest")
+	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
 )

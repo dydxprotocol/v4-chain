@@ -2,16 +2,12 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"SOLUSDT\"",
+      "ticker": "SOLUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"SOLUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tSOLUSD",
+      "exchangeName": "Bybit",
+      "ticker": "SOLUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -30,6 +26,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "SOL-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "SOL_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

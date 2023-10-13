@@ -2,14 +2,17 @@ package types
 
 // DONTCOVER
 
-import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 var (
-	ErrNonpositiveDuration = sdkerrors.Register(
+	ErrNonpositiveDuration = errorsmod.Register(
 		ModuleName,
 		400,
 		"Duration is nonpositive",
+	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		401,
+		"Authority is invalid",
 	)
 )

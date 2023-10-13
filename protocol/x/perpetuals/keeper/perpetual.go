@@ -3,8 +3,11 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"math/rand"
 	"sort"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -12,7 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -20,7 +22,6 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/pkg/errors"
 )
 
 // CreatePerpetual creates a new perpetual in the store.
@@ -28,19 +29,25 @@ import (
 // or if the `marketId` does not exist.
 func (k Keeper) CreatePerpetual(
 	ctx sdk.Context,
+	id uint32,
 	ticker string,
 	marketId uint32,
 	atomicResolution int32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
 ) (types.Perpetual, error) {
-	// Get the `nextId`.
-	nextId := k.GetNumPerpetuals(ctx)
+	// Check if perpetual exists.
+	if k.HasPerpetual(ctx, id) {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrPerpetualAlreadyExists,
+			lib.UintToString(id),
+		)
+	}
 
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Params: types.PerpetualParams{
-			Id:                nextId,
+			Id:                id,
 			Ticker:            ticker,
 			MarketId:          marketId,
 			AtomicResolution:  atomicResolution,
@@ -48,7 +55,6 @@ func (k Keeper) CreatePerpetual(
 			LiquidityTier:     liquidityTier,
 		},
 		FundingIndex: dtypes.ZeroInt(),
-		OpenInterest: types.DefaultOpenInterest,
 	}
 
 	if err := k.validatePerpetual(
@@ -61,13 +67,24 @@ func (k Keeper) CreatePerpetual(
 	// Store the new perpetual.
 	k.setPerpetual(ctx, perpetual)
 
-	// Store the new `numPerpetuals`.
-	k.setNumPerpetuals(ctx, nextId+1)
-
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
 
 	return perpetual, nil
+}
+
+// HasPerpetual checks if a perpetual exists in the store.
+func (k Keeper) HasPerpetual(
+	ctx sdk.Context,
+	id uint32,
+) (found bool) {
+	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
+	return perpetualStore.Has(lib.Uint32ToKey(id))
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) ModifyPerpetual(
@@ -101,24 +118,23 @@ func (k Keeper) ModifyPerpetual(
 	// Store the modified perpetual.
 	k.setPerpetual(ctx, perpetual)
 
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeUpdatePerpetual,
+		indexerevents.UpdatePerpetualEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdatePerpetualEventV1(
+				perpetual.Params.Id,
+				perpetual.Params.Ticker,
+				perpetual.Params.MarketId,
+				perpetual.Params.AtomicResolution,
+				perpetual.Params.LiquidityTier,
+			),
+		),
+	)
+
 	return perpetual, nil
-}
-
-// getUint32InStore gets a uint32 value from store.
-func (k Keeper) getUint32InStore(
-	ctx sdk.Context,
-	key string,
-) uint32 {
-	store := ctx.KVStore(k.storeKey)
-	var numBytes []byte = store.Get(types.KeyPrefix(key))
-	return lib.BytesToUint32(numBytes)
-}
-
-// GetNumPerpetuals returns the number of perpetuals created.
-func (k Keeper) GetNumPerpetuals(
-	ctx sdk.Context,
-) uint32 {
-	return k.getUint32InStore(ctx, types.NumPerpetualsKey)
 }
 
 // GetPerpetual returns a perpetual from its id.
@@ -126,11 +142,11 @@ func (k Keeper) GetPerpetual(
 	ctx sdk.Context,
 	id uint32,
 ) (val types.Perpetual, err error) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 
-	b := store.Get(types.PerpetualKey(id))
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
-		return val, sdkerrors.Wrap(types.ErrPerpetualDoesNotExist, lib.Uint32ToString(id))
+		return val, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, lib.UintToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -138,20 +154,23 @@ func (k Keeper) GetPerpetual(
 }
 
 // GetAllPerpetuals returns all perpetuals, sorted by perpetual Id.
-func (k Keeper) GetAllPerpetuals(ctx sdk.Context) []types.Perpetual {
-	num := k.GetNumPerpetuals(ctx)
-	perpetuals := make([]types.Perpetual, num)
+func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
-	for i := uint32(0); i < num; i++ {
-		perpetual, err := k.GetPerpetual(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	defer iterator.Close()
 
-		perpetuals[i] = perpetual
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.Perpetual
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
 	}
 
-	return perpetuals
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Params.Id < list[j].Params.Id
+	})
+
+	return list
 }
 
 // processStoredPremiums combines all stored premiums into a single premium value
@@ -165,7 +184,7 @@ func (k Keeper) GetAllPerpetuals(ctx sdk.Context) []types.Perpetual {
 // - `filterFunc`: a function that takes in a list of premium values and filter
 // out some values.
 // - `minNumPremiumsRequired`: minimum number of premium values required for each
-// market. Padding will be added if `NumPerpetuals < minNumPremiumsRequired`.
+// market. Padding will be added if `NumPremiums < minNumPremiumsRequired`.
 func (k Keeper) processStoredPremiums(
 	ctx sdk.Context,
 	newEpochInfo epochstypes.EpochInfo,
@@ -188,10 +207,6 @@ func (k Keeper) processStoredPremiums(
 		},
 		float32(premiumStore.NumPremiums),
 		[]gometrics.Label{
-			metrics.GetLabelForIntValue(
-				metrics.BlockHeight,
-				int(ctx.BlockHeight()),
-			),
 			metrics.GetLabelForStringValue(
 				metrics.PremiumType,
 				premiumKey,
@@ -200,9 +215,9 @@ func (k Keeper) processStoredPremiums(
 				metrics.EpochInfoName,
 				newEpochInfo.Name,
 			),
-			metrics.GetLabelForIntValue(
-				metrics.EpochNumber,
-				int(newEpochInfo.CurrentEpoch),
+			metrics.GetLabelForBoolValue(
+				metrics.IsEpochOne,
+				newEpochInfo.CurrentEpoch == 1,
 			),
 		},
 	)
@@ -223,9 +238,8 @@ func (k Keeper) processStoredPremiums(
 		// if block times are longer than expected and hence there were not enough blocks to
 		// collect votes.
 		// Note `NumPremiums >= len(marketPremiums.Premiums)`, so `lenPadding >= 0`.
-		lenPadding := int64(
-			lib.MaxUint32(premiumStore.NumPremiums,
-				minNumPremiumsRequired)) - int64(len(marketPremiums.Premiums))
+		lenPadding := int64(lib.Max(premiumStore.NumPremiums, minNumPremiumsRequired)) -
+			int64(len(marketPremiums.Premiums))
 
 		padding := make([]int32, lenPadding)
 		paddedPremiums := append(marketPremiums.Premiums, padding...)
@@ -252,16 +266,18 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		ctx,
 		newFundingSampleEpoch,
 		types.PremiumVotesKey,
-		k.GetMinNumVotesPerSample(ctx),
-		lib.MustGetMedianInt32, // combineFunc
+		k.GetParams(ctx).MinNumVotesPerSample,
+		lib.MustGetMedian[int32], // combineFunc
 		func(input []int32) []int32 { return input }, // filterFunc
 	)
 
 	newSamples := []types.FundingPremium{}
 	newSamplesForEvent := []indexerevents.FundingUpdateV1{}
 
-	for perpId := uint32(0); perpId < k.GetNumPerpetuals(ctx); perpId++ {
-		summarizedPremium, found := perpIdToSummarizedPremium[perpId]
+	allPerps := k.GetAllPerpetuals(ctx)
+
+	for _, perp := range allPerps {
+		summarizedPremium, found := perpIdToSummarizedPremium[perp.GetId()]
 		if !found {
 			summarizedPremium = 0
 		}
@@ -274,28 +290,23 @@ func (k Keeper) processPremiumVotesIntoSamples(
 			float32(summarizedPremium),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(
-					metrics.BlockHeight,
-					int(ctx.BlockHeight()),
-				),
-				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
-					int(perpId),
+					int(perp.GetId()),
 				),
-				// TODO(DEC-1071): Add epoch number as label.
 			},
 		)
 
 		// Append all samples (including zeros) to `newSamplesForEvent`, since
 		// the indexer should forward all sample values to users.
 		newSamplesForEvent = append(newSamplesForEvent, indexerevents.FundingUpdateV1{
-			PerpetualId:     perpId,
+			PerpetualId:     perp.GetId(),
 			FundingValuePpm: summarizedPremium,
 		})
 
 		if summarizedPremium != 0 {
 			// Append non-zero sample to `PremiumSample` storage.
 			newSamples = append(newSamples, types.FundingPremium{
-				PerpetualId: perpId,
+				PerpetualId: perp.GetId(),
 				PremiumPpm:  summarizedPremium,
 			})
 		}
@@ -308,10 +319,11 @@ func (k Keeper) processPremiumVotesIntoSamples(
 	k.indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewPremiumSamplesEvent(newSamplesForEvent),
 		),
-		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)
 
 	k.SetEmptyPremiumVotes(ctx)
@@ -384,7 +396,6 @@ func (k Keeper) getFundingIndexDelta(
 // if the current block is the start of a new funding-sample epoch.
 // Otherwise, does nothing and returns an empty message.
 // Does not make any changes to state.
-// TODO(DEC-1310): Rename to reflect new premium sampling design.
 func (k Keeper) GetAddPremiumVotes(
 	ctx sdk.Context,
 ) (
@@ -398,21 +409,12 @@ func (k Keeper) GetAddPremiumVotes(
 		))
 	}
 
-	telemetry.SetGaugeWithLabels(
-		[]string{
-			types.ModuleName,
-			metrics.NewPremiumVotes,
-			metrics.Count,
-			metrics.Proposer,
-		},
+	telemetry.SetGauge(
 		float32(len(newPremiumVotes)),
-		[]gometrics.Label{
-			metrics.GetLabelForIntValue(
-				metrics.BlockHeight,
-				int(ctx.BlockHeight()),
-			),
-			// TODO(DEC-1071): Add epoch number as label.
-		},
+		types.ModuleName,
+		metrics.NewPremiumVotes,
+		metrics.Count,
+		metrics.Proposer,
 	)
 
 	return types.NewMsgAddPremiumVotes(newPremiumVotes)
@@ -426,7 +428,6 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 	err error,
 ) {
 	allPerpetuals := k.GetAllPerpetuals(ctx)
-	allLiquidityTiers := k.GetAllLiquidityTiers(ctx)
 
 	// Calculate `maxAbsPremiumVotePpm` of each liquidity tier.
 	liquidityTierToMaxAbsPremiumVotePpm := k.getLiquidityTiertoMaxAbsPremiumVotePpm(ctx)
@@ -439,26 +440,59 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		metrics.Latency,
 	)
 
+	marketIdToIndexPrice := k.pricesKeeper.GetMarketIdToValidIndexPrice(ctx)
+
 	for _, perp := range allPerpetuals {
-		marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
-		if err != nil {
-			panic(err)
+		indexPrice, exists := marketIdToIndexPrice[perp.Params.MarketId]
+		// Valid index price is missing
+		if !exists {
+			// Only log and increment stats if height is passed initialization period.
+			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
+				k.Logger(ctx).Error(
+					fmt.Sprintf(
+						"Perpetual (%d) does not have valid index price. Skipping premium",
+						perp.Params.Id,
+					))
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						types.ModuleName,
+						metrics.MissingIndexPriceForFunding,
+						metrics.Count,
+					},
+					1,
+					[]gometrics.Label{
+						metrics.GetLabelForIntValue(
+							metrics.MarketId,
+							int(perp.Params.MarketId),
+						),
+					},
+				)
+			}
+			// Skip this market, effectively emitting a zero premium.
+			continue
 		}
 
 		// Get impact notional corresponding to this perpetual market (panic if its liquidity tier doesn't exist).
-		liquidityTier := lib.MustGetValue(allLiquidityTiers, uint(perp.Params.LiquidityTier))
+		liquidityTier, err := k.GetLiquidityTier(ctx, perp.Params.LiquidityTier)
+		if err != nil {
+			panic(err)
+		}
 		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
 
-		premiumPpm, err := k.pricePremiumGetter.GetPricePremiumForPerpetual(
+		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if not found).
+		maxAbsPremiumVotePpm, exists := liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier]
+		if !exists {
+			panic(types.ErrLiquidityTierDoesNotExist)
+		}
+		premiumPpm, err := k.clobKeeper.GetPricePremiumForPerpetual(
 			ctx,
 			perp.Params.Id,
 			types.GetPricePremiumParams{
-				MarketPrice:                 marketPrice,
+				IndexPrice:                  indexPrice,
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
-				// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-				MaxAbsPremiumVotePpm: lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perp.Params.LiquidityTier)),
+				MaxAbsPremiumVotePpm:        maxAbsPremiumVotePpm,
 			},
 		)
 		if err != nil {
@@ -539,14 +573,14 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 	}
 
 	allPerps := k.GetAllPerpetuals(ctx)
-	fundingRateClampFactorPpm := k.GetFundingRateClampFactorPpm(ctx)
+	params := k.GetParams(ctx)
 
 	fundingTickEpochInfo := k.epochsKeeper.MustGetFundingTickEpochInfo(ctx)
 	fundingSampleEpochInfo := k.epochsKeeper.MustGetFundingSampleEpochInfo(ctx)
 
 	// Use the ratio between funding-tick and funding-sample durations
 	// as minimum number of samples required to get a premium rate.
-	minSampleRequiredForPremiumRate := lib.DivisionUint32RoundUp(
+	minSampleRequiredForPremiumRate := lib.MustDivideUint32RoundUp(
 		fundingTickEpochInfo.Duration,
 		fundingSampleEpochInfo.Duration,
 	)
@@ -605,7 +639,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 
 		// Panic if maintenance fraction ppm is larger than its maximum value.
 		if liquidityTier.MaintenanceFractionPpm > types.MaxMaintenanceFractionPpm {
-			panic(sdkerrors.Wrapf(
+			panic(errorsmod.Wrapf(
 				types.ErrMaintenanceFractionPpmExceedsMax,
 				"perpetual Id = (%d), liquidity tier Id = (%d), maintenance fraction ppm = (%v)",
 				perp.Params.Id, perp.Params.LiquidityTier, liquidityTier.MaintenanceFractionPpm,
@@ -614,7 +648,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 
 		// Clamp funding rate according to equation:
 		// |R| <= clamp_factor * (initial margin - maintenance margin)
-		fundingRateUpperBoundPpm := liquidityTier.GetMaxAbsFundingClampPpm(fundingRateClampFactorPpm)
+		fundingRateUpperBoundPpm := liquidityTier.GetMaxAbsFundingClampPpm(params.FundingRateClampFactorPpm)
 		bigFundingRatePpm = lib.BigIntClamp(
 			bigFundingRatePpm,
 			new(big.Int).Neg(fundingRateUpperBoundPpm),
@@ -633,12 +667,11 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 					metrics.PerpetualId,
 					int(perp.Params.Id),
 				),
-				// TODO(DEC-1071): Add epoch number as label.
 			},
 		)
 
 		if bigFundingRatePpm.Cmp(lib.BigMaxInt32()) > 0 {
-			panic(sdkerrors.Wrapf(
+			panic(errorsmod.Wrapf(
 				types.ErrFundingRateInt32Overflow,
 				"perpetual Id = (%d), funding rate = (%v)",
 				perp.Params.Id, bigFundingRatePpm,
@@ -679,10 +712,11 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 	k.indexerEventManager.AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeFundingValues,
-		indexer_manager.GetB64EncodedEventMessage(
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.FundingValuesEventVersion,
+		indexer_manager.GetBytes(
 			indexerevents.NewFundingRatesAndIndicesEvent(newFundingRatesAndIndicesForEvent),
 		),
-		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 	)
 
 	// Clear premium samples.
@@ -694,6 +728,9 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 // Note that longs are positive, and shorts are negative.
 // Returns an error if a perpetual with `id` does not exist or if the `perpetual.Params.MarketId` does
 // not exist.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetNetNotional(
 	ctx sdk.Context,
 	id uint32,
@@ -702,12 +739,19 @@ func (k Keeper) GetNetNotional(
 	bigNetNotionalQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetNetNotional,
-		metrics.Latency,
-	)
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetNetNotional, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
 
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
@@ -790,6 +834,9 @@ func (k Keeper) GetNetCollateral(
 //
 // Returns an error if a perpetual with `id`, `perpetual.Params.MarketId`, or
 // `perpetual.Params.LiquidityTier` does not exist.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
@@ -799,12 +846,20 @@ func (k Keeper) GetMarginRequirements(
 	bigMaintenanceMarginQuoteQuantums *big.Int,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetMarginRequirements,
-		metrics.Latency,
-	)
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetMarginRequirements, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
+
 	// Get perpetual and market price.
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
@@ -830,14 +885,19 @@ func (k Keeper) GetMarginRequirements(
 	bigInitialMarginQuoteQuantums = liquidityTier.GetAdjustedInitialMarginQuoteQuantums(bigQuoteQuantums)
 
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
-	bigMaintenanceMarginQuoteQuantums =
-		lib.BigIntMulPpm(bigInitialMarginQuoteQuantums, liquidityTier.MaintenanceFractionPpm)
+	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
+		lib.BigRatMulPpm(
+			new(big.Rat).SetInt(bigInitialMarginQuoteQuantums),
+			liquidityTier.MaintenanceFractionPpm,
+		),
+		true,
+	)
 
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
 
-// GetSettlement returns the net settlement amount (in quote quantums) given the
-// perpetual Id and position size (in base quantums).
+// GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
+// the perpetual Id and position size (in base quantums).
 // When handling rounding, always round positive settlement amount to zero, and
 // negative amount to negative infinity. This ensures total amount of value does
 // not increase after settlement.
@@ -846,13 +906,13 @@ func (k Keeper) GetMarginRequirements(
 // account C is to pay 205 quote quantums.
 // After settlement, accounts A, B are credited 102 quote quantum each; account C
 // is debited 205 quote quantums.
-func (k Keeper) GetSettlement(
+func (k Keeper) GetSettlementPpm(
 	ctx sdk.Context,
 	perpetualId uint32,
 	quantums *big.Int,
 	index *big.Int,
 ) (
-	bigNetSettlement *big.Int,
+	bigNetSettlementPpm *big.Int,
 	newFundingIndex *big.Int,
 	err error,
 ) {
@@ -869,19 +929,14 @@ func (k Keeper) GetSettlement(
 		return big.NewInt(0), perpetual.FundingIndex.BigInt(), nil
 	}
 
-	bigNetSettlement = new(big.Int).Mul(indexDelta, quantums)
+	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
 
-	// `bigNetSettlement`` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
+	// `bigNetSettlementPpm` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
 	// the position is long (positive), the net settlement should be short (negative), and vice versa.
-	// Thus, always negate `bigNetSettlement` here.
-	bigNetSettlement = bigNetSettlement.Neg(bigNetSettlement)
+	// Thus, always negate `bigNetSettlementPpm` here.
+	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
-	// division result always rounds towards negative infinity.
-	return bigNetSettlement.Div(
-		bigNetSettlement,
-		big.NewInt(int64(lib.OneMillion)),
-	), perpetual.FundingIndex.BigInt(), nil
+	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt(), nil
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
@@ -905,7 +960,7 @@ func (k Keeper) getPremiumStore(ctx sdk.Context, key string) (
 ) {
 	store := ctx.KVStore(k.storeKey)
 
-	premiumStoreBytes := store.Get(types.KeyPrefix(key))
+	premiumStoreBytes := store.Get([]byte(key))
 
 	if premiumStoreBytes == nil {
 		return types.PremiumStore{}
@@ -958,14 +1013,11 @@ func (k Keeper) addToPremiumStore(
 
 	marketPremiumsMap := premiumStore.GetMarketPremiumsMap()
 
-	numPerpetuals := k.GetNumPerpetuals(ctx)
-
 	for _, sample := range newSamples {
-		// Invariant: perpetualId < numPerpetuals
-		if sample.PerpetualId >= numPerpetuals {
-			return sdkerrors.Wrapf(
+		if !k.HasPerpetual(ctx, sample.PerpetualId) {
+			return errorsmod.Wrapf(
 				types.ErrPerpetualDoesNotExist,
-				"Perpetual Id from new sample: %d",
+				"perpetual ID = %d",
 				sample.PerpetualId,
 			)
 		}
@@ -985,8 +1037,7 @@ func (k Keeper) addToPremiumStore(
 		ctx,
 		*types.NewPremiumStoreFromMarketPremiumMap(
 			marketPremiumsMap,
-			numPerpetuals,
-			premiumStore.NumPremiums+1, // increment NumPerpetuals
+			premiumStore.NumPremiums+1, // increment NumPremiums
 		),
 		key,
 	)
@@ -1037,56 +1088,36 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) ModifyOpenInterest(
-	ctx sdk.Context,
-	id uint32,
-	isIncrease bool,
-	deltaBaseQuantums uint64,
-) (newOpenInterestBaseQuantums uint64, err error) {
-	return 0, types.ErrNotImplementedOpenInterest
-}
-
 func (k Keeper) setPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
 	b := k.cdc.MustMarshal(&perpetual)
-	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PerpetualKeyPrefix))
-	perpetualStore.Set(types.PerpetualKey(perpetual.Params.Id), b)
-}
-
-// setUint32InStore sets a uint32 value in store for a given key.
-func (k Keeper) setUint32InStore(
-	ctx sdk.Context,
-	key string,
-	num uint32,
-) {
-	// Get necessary stores
-	store := ctx.KVStore(k.storeKey)
-
-	// Set key value pair
-	store.Set(types.KeyPrefix(key), lib.Uint32ToBytes(num))
-}
-
-func (k Keeper) setNumPerpetuals(
-	ctx sdk.Context,
-	num uint32,
-) {
-	// Set `numPerpetuals`
-	k.setUint32InStore(ctx, types.NumPerpetualsKey, num)
+	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetPerpetualAndMarketPrice(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (types.Perpetual, pricestypes.MarketPrice, error) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetPerpetualAndMarketPrice,
-		metrics.Latency,
-	)
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetPerpetualAndMarketPrice, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
 
 	// Get perpetual.
 	perpetual, err := k.GetPerpetual(ctx, perpetualId)
@@ -1097,8 +1128,8 @@ func (k Keeper) GetPerpetualAndMarketPrice(
 	// Get market price.
 	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
 	if err != nil {
-		if sdkerrors.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
-			return perpetual, marketPrice, sdkerrors.Wrap(
+		if errorsmod.IsOf(err, pricestypes.ErrMarketPriceDoesNotExist) {
+			return perpetual, marketPrice, errorsmod.Wrap(
 				types.ErrMarketDoesNotExist,
 				fmt.Sprintf(
 					"Market ID %d does not exist on perpetual ID %d",
@@ -1122,36 +1153,19 @@ func (k Keeper) validatePerpetual(
 	ctx sdk.Context,
 	perpetual *types.Perpetual,
 ) error {
-	if err := k.validatePerpetualStateless(perpetual); err != nil {
+	// Stateless validation.
+	if err := perpetual.Params.Validate(); err != nil {
 		return err
 	}
-	// Validate `marketId`.
+
+	// Validate `marketId` exists.
 	if _, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId); err != nil {
 		return err
 	}
-	// Validate `liquidityTier`.
-	if perpetual.Params.LiquidityTier >= k.GetNumLiquidityTiers(ctx) {
-		return sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(perpetual.Params.LiquidityTier))
-	}
 
-	return nil
-}
-
-// Performs the following validation (stateful and stateless) on a `Perpetual`
-// structs fields, returning an error if any conditions are false:
-// - Ticker is a non-empty string.
-func (k Keeper) validatePerpetualStateless(perpetual *types.Perpetual) error {
-	// Validate `ticker`.
-	if len(perpetual.Params.Ticker) == 0 {
-		return errors.WithStack(types.ErrTickerEmptyString)
-	}
-
-	// Validate `defaultFundingPpm`
-	defaultFundingPpm := lib.AbsInt32(perpetual.Params.DefaultFundingPpm)
-	if defaultFundingPpm > types.MaxDefaultFundingPpmAbs {
-		return sdkerrors.Wrap(
-			types.ErrDefaultFundingPpmMagnitudeExceedsMax,
-			lib.Int32ToString(perpetual.Params.DefaultFundingPpm))
+	// Validate `liquidityTier` exists.
+	if !k.HasLiquidityTier(ctx, perpetual.Params.LiquidityTier) {
+		return errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(perpetual.Params.LiquidityTier))
 	}
 
 	return nil
@@ -1167,7 +1181,7 @@ func (k Keeper) setPremiumStore(
 	// Get necessary stores
 	store := ctx.KVStore(k.storeKey)
 
-	store.Set(types.KeyPrefix(key), b)
+	store.Set([]byte(key), b)
 }
 
 func (k Keeper) SetPremiumSamples(
@@ -1188,19 +1202,19 @@ func (k Keeper) SetPremiumVotes(
 // For each vote, it checks that:
 // - The perpetual Id is valid.
 // - The premium vote value is correctly clamped.
+// This function throws an error if the associated clob pair cannot be found or is not active.
 func (k Keeper) PerformStatefulPremiumVotesValidation(
 	ctx sdk.Context,
 	msg *types.MsgAddPremiumVotes,
 ) (
 	err error,
 ) {
-	numPerpetuals := k.GetNumPerpetuals(ctx)
 	liquidityTierToMaxAbsPremiumVotePpm := k.getLiquidityTiertoMaxAbsPremiumVotePpm(ctx)
 
 	for _, vote := range msg.Votes {
 		// Check that the perpetual Id is valid.
-		if vote.PerpetualId >= numPerpetuals {
-			return sdkerrors.Wrapf(
+		if _, err := k.GetPerpetual(ctx, vote.PerpetualId); err != nil {
+			return errorsmod.Wrapf(
 				types.ErrPerpetualDoesNotExist,
 				"perpetualId = %d",
 				vote.PerpetualId,
@@ -1213,14 +1227,35 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 		if err != nil {
 			return err
 		}
-		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if index is invalid).
-		maxAbsPremiumVotePpm := lib.MustGetValue(liquidityTierToMaxAbsPremiumVotePpm, uint(perpetual.Params.LiquidityTier))
+
+		// Zero values for perpetuals whose ClobPair is not active
+		if isActive, err := k.clobKeeper.IsPerpetualClobPairActive(
+			ctx, vote.PerpetualId,
+		); err != nil {
+			return errorsmod.Wrapf(
+				err,
+				"PerformStatefulPremiumVotesValidation: failed to determine ClobPair status for perpetual with id %d",
+				vote.PerpetualId,
+			)
+		} else if !isActive { // reject premium votes for non active markets
+			return errorsmod.Wrapf(
+				types.ErrPremiumVoteForNonActiveMarket,
+				"PerformStatefulPremiumVotesValidation: no premium vote should be included for inactive perpetual with id %d",
+				vote.PerpetualId,
+			)
+		}
+
+		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if not found).
+		maxAbsPremiumVotePpm, exists := liquidityTierToMaxAbsPremiumVotePpm[perpetual.Params.LiquidityTier]
+		if !exists {
+			panic(types.ErrLiquidityTierDoesNotExist)
+		}
 		// Check premium vote value is within bounds.
 		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),
 		))
 		if bigAbsPremiumPpm.Cmp(maxAbsPremiumVotePpm) > 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrPremiumVoteNotClamped,
 				"perpetualId = %d, premium vote = %d, maxAbsPremiumVotePpm = %d",
 				vote.PerpetualId,
@@ -1235,10 +1270,20 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 
 /* === LIQUIDITY TIER FUNCTIONS === */
 
-// `CreateLiquidityTier` creates a new liquidity tier in the store.
-// Returns an error if any of its fields fails validation.
-func (k Keeper) CreateLiquidityTier(
+// HasLiquidityTier checks if a liquidity tier exists in the store.
+func (k Keeper) HasLiquidityTier(
 	ctx sdk.Context,
+	id uint32,
+) (found bool) {
+	ltStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
+	return ltStore.Has(lib.Uint32ToKey(id))
+}
+
+// `SetLiquidityTier` sets a liquidity tier in the store (i.e. updates if `id` exists and creates otherwise).
+// Returns an error if any of its fields fails validation.
+func (k Keeper) SetLiquidityTier(
+	ctx sdk.Context,
+	id uint32,
 	name string,
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
@@ -1248,11 +1293,9 @@ func (k Keeper) CreateLiquidityTier(
 	liquidityTier types.LiquidityTier,
 	err error,
 ) {
-	// Get id for a new liquidity tier.
-	nextId := k.GetNumLiquidityTiers(ctx)
-
+	// Construct liquidity tier.
 	liquidityTier = types.LiquidityTier{
-		Id:                     nextId,
+		Id:                     id,
 		Name:                   name,
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
@@ -1267,63 +1310,24 @@ func (k Keeper) CreateLiquidityTier(
 
 	// Set liquidity tier in store.
 	k.setLiquidityTier(ctx, liquidityTier)
-	// Increase `numLiquidityTiers` by 1.
-	k.setNumLiquidityTiers(ctx, nextId+1)
+
+	// Emit indexer event.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeLiquidityTier,
+		indexerevents.LiquidityTierEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewLiquidityTierUpsertEvent(
+				id,
+				name,
+				initialMarginPpm,
+				maintenanceFractionPpm,
+				basePositionNotional,
+			),
+		),
+	)
 
 	return liquidityTier, nil
-}
-
-// `ModifyLiquidityTier` modifies a liquidity tier in the store.
-func (k Keeper) ModifyLiquidityTier(
-	ctx sdk.Context,
-	id uint32,
-	name string,
-	initialMarginPpm uint32,
-	maintenanceFractionPpm uint32,
-	basePositionNotional uint64,
-	impactNotional uint64,
-) (
-	liquidityTier types.LiquidityTier,
-	err error,
-) {
-	// Retrieve LiquidityTier.
-	liquidityTier, err = k.GetLiquidityTier(ctx, id)
-	if err != nil {
-		return liquidityTier, err
-	}
-
-	// Modify LiquidityTier.
-	liquidityTier.Name = name
-	liquidityTier.InitialMarginPpm = initialMarginPpm
-	liquidityTier.MaintenanceFractionPpm = maintenanceFractionPpm
-	liquidityTier.BasePositionNotional = basePositionNotional
-	liquidityTier.ImpactNotional = impactNotional
-
-	// Validate modified fields.
-	if err = liquidityTier.Validate(); err != nil {
-		return liquidityTier, err
-	}
-
-	// Store LiquidityTier.
-	k.setLiquidityTier(ctx, liquidityTier)
-
-	return liquidityTier, nil
-}
-
-// `GetNumLiquidityTiers` returns the number of liquidity tiers created (`numLiquidityTiers`).
-func (k Keeper) GetNumLiquidityTiers(ctx sdk.Context) (
-	numLiquidityTiers uint32,
-) {
-	return k.getUint32InStore(ctx, types.NumLiquidityTiersKey)
-}
-
-// `setNumLiquidityTiers` sets number of liquidity tiers in store.
-func (k Keeper) setNumLiquidityTiers(
-	ctx sdk.Context,
-	num uint32,
-) {
-	// Set `numLiquidityTiers`.
-	k.setUint32InStore(ctx, types.NumLiquidityTiersKey, num)
 }
 
 // `GetLiquidityTier` gets a liquidity tier given its id.
@@ -1331,11 +1335,11 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 	liquidityTier types.LiquidityTier,
 	err error,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
 
-	b := store.Get(types.LiquidityTierKey(id))
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
-		return liquidityTier, sdkerrors.Wrap(types.ErrLiquidityTierDoesNotExist, lib.Uint32ToString(id))
+		return liquidityTier, errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, lib.UintToString(id))
 	}
 
 	k.cdc.MustUnmarshal(b, &liquidityTier)
@@ -1343,22 +1347,23 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 }
 
 // `GetAllLiquidityTiers` returns all liquidity tiers, sorted by id.
-func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (
-	liquidityTiers []types.LiquidityTier,
-) {
-	num := k.GetNumLiquidityTiers(ctx)
-	liquidityTiers = make([]types.LiquidityTier, num)
+func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (list []types.LiquidityTier) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
+	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
-	for i := uint32(0); i < num; i++ {
-		liquidityTier, err := k.GetLiquidityTier(ctx, i)
-		if err != nil {
-			panic(err)
-		}
+	defer iterator.Close()
 
-		liquidityTiers[i] = liquidityTier
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.LiquidityTier
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
 	}
 
-	return liquidityTiers
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Id < list[j].Id
+	})
+
+	return list
 }
 
 // `setLiquidityTier` sets a liquidity tier in store.
@@ -1367,73 +1372,73 @@ func (k Keeper) setLiquidityTier(
 	liquidityTier types.LiquidityTier,
 ) {
 	b := k.cdc.MustMarshal(&liquidityTier)
-	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.LiquidityTierKeyPrefix))
-	liquidityTierStore.Set(types.LiquidityTierKey(liquidityTier.Id), b)
+	liquidityTierStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
+	liquidityTierStore.Set(lib.Uint32ToKey(liquidityTier.Id), b)
 }
 
 /* === PARAMETERS FUNCTIONS === */
-// `GetParams` returns all perpetuals module parameters as a `Params` object from store.
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
-	return types.Params{
-		FundingRateClampFactorPpm: k.GetFundingRateClampFactorPpm(ctx),
-		PremiumVoteClampFactorPpm: k.GetPremiumVoteClampFactorPpm(ctx),
-		MinNumVotesPerSample:      k.GetMinNumVotesPerSample(ctx),
-	}
+// `GetParams` returns perpetuals module parameters as a `Params` object from store.
+func (k Keeper) GetParams(
+	ctx sdk.Context,
+) (params types.Params) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get([]byte(types.ParamsKey))
+	k.cdc.MustUnmarshal(b, &params)
+	return params
 }
 
-// `GetFundingRateClampFactorPpm` returns funding rate clamp factor (in parts-per-million).
-func (k Keeper) GetFundingRateClampFactorPpm(ctx sdk.Context) uint32 {
-	return k.getUint32InStore(ctx, types.FundingRateClampFactorPpmKey)
-}
-
-// `SetFundingRateClampFactorPpm` sets funding rate clamp factor (in parts-per-million) in store
-// and returns error instead if parameter value fails validation.
-func (k Keeper) SetFundingRateClampFactorPpm(ctx sdk.Context, num uint32) error {
-	// Validate `num` first.
-	if err := types.ValidateFundingRateClampFactorPpm(num); err != nil {
+// `SetParams` sets perpetuals module parameters in store.
+func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
+	// Validate params.
+	if err := params.Validate(); err != nil {
 		return err
 	}
-	// Set 'fundingRateClampFactorPpm`.
-	k.setUint32InStore(ctx, types.FundingRateClampFactorPpmKey, num)
-	return nil
-}
 
-// `GetPremiumVoteClampFactorPpm` returns premium vote clamp factor (in parts-per-million).
-func (k Keeper) GetPremiumVoteClampFactorPpm(ctx sdk.Context) uint32 {
-	return k.getUint32InStore(ctx, types.PremiumVoteClampFactorPpmKey)
-}
+	// Set params in store.
+	store := ctx.KVStore(k.storeKey)
+	b := k.cdc.MustMarshal(&params)
+	store.Set([]byte(types.ParamsKey), b)
 
-// `SetPremiumVoteClampFactorPpm` sets premium vote clamp factor (in parts-per-million) in store
-// and returns error instead if parameter value fails validation.
-func (k Keeper) SetPremiumVoteClampFactorPpm(ctx sdk.Context, num uint32) error {
-	// Validate `num` first.
-	if err := types.ValidatePremiumVoteClampFactorPpm(num); err != nil {
-		return err
-	}
-	// Set 'premiumVoteClampFactorPpm`.
-	k.setUint32InStore(ctx, types.PremiumVoteClampFactorPpmKey, num)
-	return nil
-}
-
-// `GetMinNumVotesPerSample` returns minimum number of votes per sample.
-func (k Keeper) GetMinNumVotesPerSample(ctx sdk.Context) uint32 {
-	return k.getUint32InStore(ctx, types.MinNumVotesPerSampleKey)
-}
-
-// `SetMinNumVotesPerSample` sets minimum number of votes per sample in store.
-func (k Keeper) SetMinNumVotesPerSample(ctx sdk.Context, num uint32) error {
-	k.setUint32InStore(ctx, types.MinNumVotesPerSampleKey, num)
 	return nil
 }
 
 // `getLiquidityTiertoMaxAbsPremiumVotePpm` returns `maxAbsPremiumVotePpm` for each liquidity tier
-// (used for clamping premium votes), sorted by increasing liquidity tier ID.
-func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(ctx sdk.Context) []*big.Int {
-	premiumVoteClampFactorPpm := k.GetPremiumVoteClampFactorPpm(ctx)
+// (used for clamping premium votes) as a map whose key is liquidity tier ID.
+func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(
+	ctx sdk.Context,
+) (ltToMaxAbsPremiumVotePpm map[uint32]*big.Int) {
+	params := k.GetParams(ctx)
 	allLiquidityTiers := k.GetAllLiquidityTiers(ctx)
-	var maxAbsPremiumVotePpms = make([]*big.Int, len(allLiquidityTiers))
-	for i, liquidityTier := range allLiquidityTiers {
-		maxAbsPremiumVotePpms[i] = liquidityTier.GetMaxAbsFundingClampPpm(premiumVoteClampFactorPpm)
+	ltToMaxAbsPremiumVotePpm = make(map[uint32]*big.Int)
+	for _, liquidityTier := range allLiquidityTiers {
+		ltToMaxAbsPremiumVotePpm[liquidityTier.Id] =
+			liquidityTier.GetMaxAbsFundingClampPpm(params.PremiumVoteClampFactorPpm)
 	}
-	return maxAbsPremiumVotePpms
+	return ltToMaxAbsPremiumVotePpm
+}
+
+// IsPositionUpdatable returns whether position of a perptual is updatable.
+// A perpetual is not updatable if it satisfies:
+//   - Perpetual has zero oracle price. Since new oracle prices are created at zero by default and valid
+//     oracle priceupdates are non-zero, this indicates the absence of a valid oracle price update.
+func (k Keeper) IsPositionUpdatable(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (
+	updatable bool,
+	err error,
+) {
+	_, oraclePrice, err := k.GetPerpetualAndMarketPrice(
+		ctx,
+		perpetualId,
+	)
+	if err != nil {
+		return false, err
+	}
+
+	// If perpetual has zero oracle price, it is considered not updatable.
+	if oraclePrice.Price == 0 {
+		return false, nil
+	}
+	return true, nil
 }

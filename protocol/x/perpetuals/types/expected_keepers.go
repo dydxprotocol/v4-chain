@@ -12,16 +12,26 @@ type PricesKeeper interface {
 		ctx sdk.Context,
 		id uint32,
 	) (marketPrice pricestypes.MarketPrice, err error)
+	GetMarketIdToValidIndexPrice(
+		ctx sdk.Context,
+	) map[uint32]pricestypes.MarketPrice
 }
 
-// PricePremiumGetter defines an interface that returns price premium for a perpetual.
-type PricePremiumGetter interface {
+// PerpetualsClobKeeper defines the expected interface for the clob keeper.
+type PerpetualsClobKeeper interface {
 	GetPricePremiumForPerpetual(
 		ctx sdk.Context,
 		perpetualId uint32,
 		params GetPricePremiumParams,
 	) (
 		premiumPpm int32,
+		err error,
+	)
+	IsPerpetualClobPairActive(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		isActive bool,
 		err error,
 	)
 }

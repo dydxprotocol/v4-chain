@@ -5,6 +5,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
@@ -24,10 +25,11 @@ func createNMarketPriceUpdates(
 }
 
 func TestUpdateMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
-	require.Equal(t, uint32(10), keeper.GetNumMarkets(ctx))
+	require.Equal(t, uint32(10), keepertest.GetNumMarkets(t, ctx, keeper))
 
 	// Create firstPriceUpdates which should be overwritten by secondPriceUpdates
 	firstPriceUpdates := createNMarketPriceUpdates(10)
@@ -58,7 +60,8 @@ func TestUpdateMarketPrices(t *testing.T) {
 }
 
 func TestUpdateMarketPrices_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
 	err := keeper.UpdateMarketPrices(
@@ -86,7 +89,8 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 }
 
 func TestGetMarketPrice(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
 		rst, err := keeper.GetMarketPrice(ctx, item.Param.Id)
@@ -106,7 +110,8 @@ func TestGetMarketPrice_NotFound(t *testing.T) {
 }
 
 func TestGetAllMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	prices := make([]types.MarketPrice, len(items))
 	for i, item := range items {
@@ -118,4 +123,60 @@ func TestGetAllMarketPrices(t *testing.T) {
 		prices,
 		keeper.GetAllMarketPrices(ctx),
 	)
+}
+
+func TestGetMarketIdToValidIndexPrice(t *testing.T) {
+	ctx, keeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	// Now() is used by `GetMarketIdToValidIndexPrice` internally compare with the cutoff time
+	// of each price.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	keepertest.CreateTestPriceMarkets(t,
+		ctx,
+		keeper,
+		[]types.MarketParamPrice{
+			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(6),
+				pricestest.WithMinExchanges(2),
+			),
+			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(7),
+				pricestest.WithMinExchanges(2),
+			),
+			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(8),
+				pricestest.WithMinExchanges(2),
+				pricestest.WithExponent(-8),
+			),
+			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithId(9),
+				pricestest.WithMinExchanges(2),
+				pricestest.WithExponent(-9),
+			),
+		},
+	)
+
+	// Set up index price cache values for market 7, 8, 9.
+	indexPriceCache.UpdatePrices(constants.MixedTimePriceUpdate)
+	marketIdToIndexPrice := keeper.GetMarketIdToValidIndexPrice(ctx)
+	// While there are 4 markets in state, only 7, 8, 9 have index prices,
+	// and only 8, 9 have valid median index prices.
+	// Market7 only has 1 valid price due to update time constraint,
+	// but the min exchanges required is 2. Therefore, no median price.
+	require.Len(t, marketIdToIndexPrice, 2)
+	require.Equal(t,
+		types.MarketPrice{
+			Id:       constants.MarketId9,
+			Price:    uint64(2002),
+			Exponent: constants.Exponent9,
+		},
+		marketIdToIndexPrice[constants.MarketId9],
+	) // Median of 1001, 2002, 3003
+	require.Equal(t,
+		types.MarketPrice{
+			Id:       constants.MarketId8,
+			Price:    uint64(2503),
+			Exponent: constants.Exponent8,
+		},
+		marketIdToIndexPrice[constants.MarketId8],
+	) // Median of 2002, 3003
 }

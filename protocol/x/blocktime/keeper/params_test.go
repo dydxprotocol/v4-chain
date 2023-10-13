@@ -69,7 +69,6 @@ func TestSetDowntimeParams_Success(t *testing.T) {
 			35 * time.Second,
 			45 * time.Second,
 		},
-		ClockDriftGracePeriodDuration: 5 * time.Second,
 	}
 	expectedAllDowntimeInfo := &types.AllDowntimeInfo{
 		Infos: []*types.AllDowntimeInfo_DowntimeInfo{

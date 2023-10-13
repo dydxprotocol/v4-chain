@@ -7,19 +7,116 @@
   },
   "apis": [
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/clob/query.swagger.json"
+      "url": "./tmp-swagger-gen/dydxprotocol/assets/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "AssetParams"
+        }
+      }
     },
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/epochs/query.swagger.json"
+      "url": "./tmp-swagger-gen/dydxprotocol/blocktime/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BlocktimeParams"
+        }
+      }
     },
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/perpetuals/query.swagger.json"
+      "url": "./tmp-swagger-gen/dydxprotocol/bridge/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "BridgeParams"
+        }
+      }
     },
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/prices/query.swagger.json"
+      "url": "./tmp-swagger-gen/dydxprotocol/clob/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "ClobParams"
+        }
+      }
     },
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/subaccounts/query.swagger.json"
+      "url": "./tmp-swagger-gen/dydxprotocol/delaymsg/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "DelaymsgParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/epochs/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "EpochParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/feetiers/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "FeetierParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/perpetuals/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "PerpetualParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/prices/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "PriceParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/rewards/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "RewardParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/sending/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SendingParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/stats/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "StatParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/subaccounts/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "SubaccountParams"
+        }
+      }
+    },
+    {
+      "url": "./tmp-swagger-gen/dydxprotocol/vest/query.swagger.json",
+      "operationIds": {
+        "rename": {
+          "Params": "VestParams"
+        }
+      }
     },
     {
       "url": "./tmp-swagger-gen/ibc/applications/transfer/v1/query.swagger.json",

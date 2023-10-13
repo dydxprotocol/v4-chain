@@ -26,26 +26,32 @@ import {
   OrderRemovalReason,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  ClobPairStatus,
+  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1, UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
 
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
-import { ConsolidatedKafkaEvent, FundingEventMessage, SingleTradeMessage } from '../../src/lib/types';
+import { SubaccountUpdate } from '../../src/lib/translated-types';
+import {
+  ConsolidatedKafkaEvent,
+  FundingEventMessage,
+  OrderFillEventWithLiquidation, OrderFillEventWithOrder,
+  SingleTradeMessage,
+} from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
 
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000),
+    priceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
 export const defaultMarketPriceUpdate2: MarketEventV1 = {
   marketId: 10,
   priceUpdate: {
-    priceWithExponent: Long.fromValue(100000000),
+    priceWithExponent: Long.fromValue(100000000, true),
   },
 };
 
@@ -104,20 +110,43 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   clobPairId: 1,
   ticker: 'BTC-USD',
   marketId: 0,
-  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING,
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
-  minOrderBaseQuantums: Long.fromValue(10),
-  stepBaseQuantums: Long.fromValue(10),
+  stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
+};
+
+export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
+  id: 0,
+  name: 'Large-Cap',
+  initialMarginPpm: 50000,  // 5%
+  maintenanceFractionPpm: 600000,  // 60% of IM = 3%
+  basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
+};
+
+export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
+  id: 0,
+  ticker: 'BTC-USD2',
+  marketId: 1,
+  atomicResolution: -8,
+  liquidityTier: 1,
+};
+
+export const defaultUpdateClobPairEvent: UpdateClobPairEventV1 = {
+  clobPairId: 1,
+  status: ClobPairStatus.CLOB_PAIR_STATUS_ACTIVE,
+  quantumConversionExponent: -7,
+  subticksPerTick: 1000,
+  stepBaseQuantums: Long.fromValue(100, true),
 };
 
 export const defaultPreviousHeight: string = '2';
 export const defaultHeight: number = 3;
 export const defaultDateTime: DateTime = DateTime.utc(2022, 6, 1, 12, 1, 1, 2);
 export const defaultTime: Timestamp = {
-  seconds: Long.fromValue(Math.floor(defaultDateTime.toSeconds())),
+  seconds: Long.fromValue(Math.floor(defaultDateTime.toSeconds()), true),
   nanos: (defaultDateTime.toMillis() % SECONDS_IN_MILLIS) * MILLIS_IN_NANOS,
 };
 export const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
@@ -162,8 +191,8 @@ export const defaultMakerOrder: IndexerOrder = {
 export const defaultTakerOrder: IndexerOrder = {
   orderId: defaultOrderId2,
   side: IndexerOrder_Side.SIDE_SELL,
-  quantums: Long.fromValue(10_000_000_000),
-  subticks: Long.fromValue(1_000_000_000),
+  quantums: Long.fromValue(10_000_000_000, true),
+  subticks: Long.fromValue(1_000_000_000, true),
   goodTilBlock: 5,
   timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
   reduceOnly: true,
@@ -175,27 +204,51 @@ export const defaultLiquidationOrder: LiquidationOrderV1 = {
   liquidated: defaultSubaccountId,
   clobPairId: parseInt(testConstants.defaultPerpetualMarket.clobPairId, 10),
   perpetualId: parseInt(testConstants.defaultPerpetualMarket.id, 10),
-  totalSize: Long.fromValue(10_000),
+  totalSize: Long.fromValue(10_000, true),
   isBuy: true,
-  subticks: Long.fromValue(1_000_000_000),
+  subticks: Long.fromValue(1_000_000_000, true),
 };
 export const defaultOrderEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
   order: defaultTakerOrder,
-  makerFee: Long.fromValue(0),
-  takerFee: Long.fromValue(0),
-  fillAmount: Long.fromValue(10_000),
-  totalFilledMaker: Long.fromValue(0),
-  totalFilledTaker: Long.fromValue(0),
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
+};
+export const defaultOrder: OrderFillEventWithOrder = {
+  makerOrder: defaultMakerOrder,
+  order: defaultTakerOrder,
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
 };
 export const defaultLiquidationEvent: OrderFillEventV1 = {
   makerOrder: defaultMakerOrder,
   liquidationOrder: defaultLiquidationOrder,
-  makerFee: Long.fromValue(0),
-  takerFee: Long.fromValue(0),
-  fillAmount: Long.fromValue(10_000),
-  totalFilledMaker: Long.fromValue(0),
-  totalFilledTaker: Long.fromValue(0),
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
+};
+export const defaultLiquidation: OrderFillEventWithLiquidation = {
+  makerOrder: defaultMakerOrder,
+  liquidationOrder: defaultLiquidationOrder,
+  makerFee: Long.fromValue(0, true),
+  takerFee: Long.fromValue(0, true),
+  fillAmount: Long.fromValue(10_000, true),
+  totalFilledMaker: Long.fromValue(0, true),
+  totalFilledTaker: Long.fromValue(0, true),
+};
+
+export const defaultEmptySubaccountUpdate: SubaccountUpdate = {
+  subaccountId: defaultSubaccountId,
+  updatedPerpetualPositions: [],
+  updatedAssetPositions: [],
 };
 
 export const defaultEmptySubaccountUpdateEvent: SubaccountUpdateEventV1 = {
@@ -215,7 +268,7 @@ export const defaultRecipientSubaccountId: IndexerSubaccountId = {
 };
 export const defaultTransferEvent: TransferEventV1 = {
   assetId: 0,
-  amount: Long.fromValue(100),
+  amount: Long.fromValue(100, true),
   sender: {
     subaccountId: defaultSenderSubaccountId,
   },
@@ -225,7 +278,7 @@ export const defaultTransferEvent: TransferEventV1 = {
 };
 export const defaultDepositEvent: TransferEventV1 = {
   assetId: 0,
-  amount: Long.fromValue(100),
+  amount: Long.fromValue(100, true),
   sender: {
     address: defaultWalletAddress,
   },
@@ -235,7 +288,7 @@ export const defaultDepositEvent: TransferEventV1 = {
 };
 export const defaultWithdrawalEvent: TransferEventV1 = {
   assetId: 0,
-  amount: Long.fromValue(100),
+  amount: Long.fromValue(100, true),
   sender: {
     subaccountId: defaultSenderSubaccountId,
   },

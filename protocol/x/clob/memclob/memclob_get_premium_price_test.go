@@ -5,7 +5,8 @@ import (
 	"math/big"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
@@ -17,13 +18,14 @@ import (
 
 func TestGetPremiumPrice(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	tests := map[string]struct {
 		// State.
 		placedMatchableOrders []types.MatchableOrder
 
 		// Parameters.
 		clobPair                    types.ClobPair
-		marketPrice                 pricestypes.MarketPrice
+		indexPrice                  pricestypes.MarketPrice
 		baseAtomicResolution        int32
 		maxAbsPremiumVotePpm        *big.Int
 		impactNotionalQuoteQuantums *big.Int
@@ -60,7 +62,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000.
 				Exponent: -5,
 			},
@@ -107,7 +109,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    900_000_000, // $9_000.
 				Exponent: -5,
 			},
@@ -165,7 +167,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_300_000, // $10_003
 				Exponent: -5,
 			},
@@ -201,7 +203,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_190_000, // $10_001.9
 				Exponent: -5,
 			},
@@ -237,7 +239,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
@@ -295,7 +297,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    999_982_000, // $9_999.5
 				Exponent: -5,
 			},
@@ -331,7 +333,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
@@ -367,7 +369,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    999_950_000, // $9_999.5
 				Exponent: -5,
 			},
@@ -403,7 +405,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
@@ -416,7 +418,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			placedMatchableOrders: []types.MatchableOrder{},
 			clobPair:              constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm:  big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
@@ -452,7 +454,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    600_000_000, // $6_000
 				Exponent: -5,
 			},
@@ -488,7 +490,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_500_000_000, // $6_000
 				Exponent: -5,
 			},
@@ -497,7 +499,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          -100_000,
 		},
-		`Index < Impact Bid < Impact Ask = Infinitey (low liquidity); positive premium`: {
+		`Index < Impact Bid < Impact Ask = Infinity (low liquidity); positive premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
 				&types.Order{
 					OrderId: types.OrderId{
@@ -524,7 +526,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    999_900_000, // $9_999
 				Exponent: -5,
 			},
@@ -560,7 +562,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
@@ -590,7 +592,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			clobPair:                    constants.ClobPair_Spot_Btc,
 			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
 			impactNotionalQuoteQuantums: big.NewInt(1000),
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrPremiumWithNonPerpetualClobPair,
 				"ClobPair ID: %d",
 				constants.ClobPair_Spot_Btc.Id,
@@ -601,7 +603,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
 			impactNotionalQuoteQuantums: big.NewInt(1000),
 
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price: 0,
 			},
 			expectedErr: types.ErrZeroIndexPriceForPremiumCalculation,
@@ -633,7 +635,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			},
 			clobPair:             constants.ClobPair_Btc,
 			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
-			marketPrice: pricestypes.MarketPrice{
+			indexPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
@@ -660,7 +662,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			}
 
 			pricePremiumParams := perptypes.GetPricePremiumParams{
-				MarketPrice:                 tc.marketPrice,
+				IndexPrice:                  tc.indexPrice,
 				BaseAtomicResolution:        tc.baseAtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
 				ImpactNotionalQuoteQuantums: tc.impactNotionalQuoteQuantums,

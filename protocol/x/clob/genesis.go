@@ -1,8 +1,8 @@
 package clob
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -17,12 +17,12 @@ func InitGenesis(ctx sdk.Context, k *keeper.Keeper, genState types.GenesisState)
 	for _, elem := range genState.ClobPairs {
 		perpetualId, err := elem.GetPerpetualId()
 		if err != nil {
-			panic(sdkerrors.Wrap(types.ErrInvalidClobPairParameter, err.Error()))
+			panic(errorsmod.Wrap(types.ErrInvalidClobPairParameter, err.Error()))
 		}
 		_, err = k.CreatePerpetualClobPair(
 			ctx,
+			elem.Id,
 			perpetualId,
-			satypes.BaseQuantums(elem.MinOrderBaseQuantums),
 			satypes.BaseQuantums(elem.StepBaseQuantums),
 			elem.QuantumConversionExponent,
 			elem.SubticksPerTick,
@@ -54,7 +54,7 @@ func ExportGenesis(ctx sdk.Context, k keeper.Keeper) *types.GenesisState {
 	genesis := types.DefaultGenesis()
 
 	// Read the CLOB pairs from state.
-	genesis.ClobPairs = k.GetAllClobPair(ctx)
+	genesis.ClobPairs = k.GetAllClobPairs(ctx)
 
 	// Read the liquidations config from state.
 	genesis.LiquidationsConfig = k.GetLiquidationsConfig(ctx)

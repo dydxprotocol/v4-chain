@@ -3,22 +3,27 @@ package keeper
 import (
 	"fmt"
 
+	errorsmod "cosmossdk.io/errors"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 )
 
+func (k Keeper) getEpochInfoStore(
+	ctx sdk.Context,
+) prefix.Store {
+	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochInfoKeyPrefix))
+}
+
 func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 	b := k.cdc.MustMarshal(&epochInfo)
-	store.Set(types.EpochInfoKey(
-		epochInfo.Name,
-	), b)
+	store.Set([]byte(epochInfo.Name), b)
 }
 
 // MaybeStartNextEpoch initializes and/or ticks the next epoch.
@@ -32,7 +37,7 @@ func (k Keeper) setEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) {
 func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (nextEpochStarted bool, err error) {
 	epoch, found := k.GetEpochInfo(ctx, id)
 	if !found {
-		return false, sdkerrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
+		return false, errorsmod.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
 	}
 
 	blockTime := uint32(ctx.BlockTime().Unix())
@@ -93,7 +98,6 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 		float32(epoch.CurrentEpoch),
 		[]gometrics.Label{
 			metrics.GetLabelForStringValue(types.AttributeKeyEpochInfoName, epoch.Name),
-			metrics.GetLabelForIntValue(metrics.BlockHeight, int(epoch.CurrentEpochStartBlock)),
 		},
 	)
 
@@ -111,7 +115,7 @@ func (k Keeper) CreateEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) erro
 
 	// Check if identifier already exists
 	if _, found := k.GetEpochInfo(ctx, epochInfo.GetEpochInfoName()); found {
-		return sdkerrors.Wrapf(types.ErrEpochInfoAlreadyExists, "epochInfo.Name already exists (%s)", epochInfo.Name)
+		return errorsmod.Wrapf(types.ErrEpochInfoAlreadyExists, "epochInfo.Name already exists (%s)", epochInfo.Name)
 	}
 
 	k.setEpochInfo(ctx, epochInfo)
@@ -129,11 +133,9 @@ func (k Keeper) GetEpochInfo(
 	ctx sdk.Context,
 	id types.EpochInfoName,
 ) (val types.EpochInfo, found bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 
-	b := store.Get(types.EpochInfoKey(
-		string(id),
-	))
+	b := store.Get([]byte(id))
 
 	if b == nil {
 		return val, false
@@ -145,7 +147,7 @@ func (k Keeper) GetEpochInfo(
 
 // GetAllEpochInfo returns all epochInfos
 func (k Keeper) GetAllEpochInfo(ctx sdk.Context) (list []types.EpochInfo) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.EpochInfoKeyPrefix))
+	store := k.getEpochInfoStore(ctx)
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
@@ -169,7 +171,7 @@ func (k Keeper) NumBlocksSinceEpochStart(
 ) {
 	epoch, found := k.GetEpochInfo(ctx, id)
 	if !found {
-		return 0, sdkerrors.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
+		return 0, errorsmod.Wrapf(types.ErrEpochInfoNotFound, "EpochInfo Id not found (%s)", id)
 	}
 
 	return lib.MustConvertIntegerToUint32(ctx.BlockHeight() - int64(epoch.CurrentEpochStartBlock)), nil
@@ -202,7 +204,7 @@ func (k Keeper) mustGetEpochInfo(
 		epochInfoName,
 	)
 	if !found {
-		panic(sdkerrors.Wrapf(
+		panic(errorsmod.Wrapf(
 			types.ErrEpochInfoNotFound,
 			"name: %s",
 			epochInfoName,

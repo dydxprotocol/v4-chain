@@ -13,15 +13,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
-)
-
-const (
-	statsMetadataKey    = "StatsMetadata/value"
-	epochStatsKeyPrefix = "EpochStats/value/"
-	userStatsKeyPrefix  = "UserStats/value/"
-	globalStatsKey      = "GlobalStats/value"
-	blockStatsKey       = "BlockStats/value"
 )
 
 type (
@@ -30,9 +23,7 @@ type (
 		epochsKeeper      types.EpochsKeeper
 		storeKey          storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
-
-		// The address capable of updating params. Typically the x/gov module account.
-		authority string
+		authorities       map[string]struct{}
 	}
 )
 
@@ -41,19 +32,20 @@ func NewKeeper(
 	epochsKeeper types.EpochsKeeper,
 	storeKey storetypes.StoreKey,
 	transientStoreKey storetypes.StoreKey,
-	authority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:               cdc,
 		epochsKeeper:      epochsKeeper,
 		storeKey:          storeKey,
 		transientStoreKey: transientStoreKey,
-		authority:         authority,
+		authorities:       lib.UniqueSliceToSet(authorities),
 	}
 }
 
-func (k Keeper) GetAuthority() string {
-	return k.authority
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -64,7 +56,7 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 
 func (k Keeper) GetBlockStats(ctx sdk.Context) *types.BlockStats {
 	store := ctx.TransientStore(k.transientStoreKey)
-	bytes := store.Get([]byte(blockStatsKey))
+	bytes := store.Get([]byte(types.BlockStatsKey))
 
 	if bytes == nil {
 		return &types.BlockStats{}
@@ -78,7 +70,7 @@ func (k Keeper) GetBlockStats(ctx sdk.Context) *types.BlockStats {
 func (k Keeper) SetBlockStats(ctx sdk.Context, blockStats *types.BlockStats) {
 	store := ctx.TransientStore(k.transientStoreKey)
 	b := k.cdc.MustMarshal(blockStats)
-	store.Set([]byte(blockStatsKey), b)
+	store.Set([]byte(types.BlockStatsKey), b)
 }
 
 // Record a match in BlockStats, which is stored in the transient store
@@ -97,7 +89,7 @@ func (k Keeper) RecordFill(ctx sdk.Context, takerAddress string, makerAddress st
 
 func (k Keeper) GetStatsMetadata(ctx sdk.Context) *types.StatsMetadata {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get([]byte(statsMetadataKey))
+	bytes := store.Get([]byte(types.StatsMetadataKey))
 
 	if bytes == nil {
 		return &types.StatsMetadata{}
@@ -111,14 +103,14 @@ func (k Keeper) GetStatsMetadata(ctx sdk.Context) *types.StatsMetadata {
 func (k Keeper) SetStatsMetadata(ctx sdk.Context, metadata *types.StatsMetadata) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(metadata)
-	store.Set([]byte(statsMetadataKey), b)
+	store.Set([]byte(types.StatsMetadataKey), b)
 }
 
 // GetEpochStatsOrNil returns the EpochStats for an epoch. This function returns nil
 // if epoch stats aren't found.
 func (k Keeper) GetEpochStatsOrNil(ctx sdk.Context, epoch uint32) *types.EpochStats {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(epochStatsKeyPrefix))
-	bytes := store.Get([]byte(fmt.Sprintf("%d", epoch)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
+	bytes := store.Get(lib.Uint32ToKey(epoch))
 
 	if bytes == nil {
 		return nil
@@ -130,18 +122,18 @@ func (k Keeper) GetEpochStatsOrNil(ctx sdk.Context, epoch uint32) *types.EpochSt
 }
 
 func (k Keeper) SetEpochStats(ctx sdk.Context, epoch uint32, epochStats *types.EpochStats) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(epochStatsKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
 	b := k.cdc.MustMarshal(epochStats)
-	store.Set([]byte(fmt.Sprintf("%d", epoch)), b)
+	store.Set(lib.Uint32ToKey(epoch), b)
 }
 
 func (k Keeper) deleteEpochStats(ctx sdk.Context, epoch uint32) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(epochStatsKeyPrefix))
-	store.Delete([]byte(fmt.Sprintf("%d", epoch)))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.EpochStatsKeyPrefix))
+	store.Delete(lib.Uint32ToKey(epoch))
 }
 
 func (k Keeper) GetUserStats(ctx sdk.Context, address string) *types.UserStats {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(userStatsKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStatsKeyPrefix))
 	bytes := store.Get([]byte(address))
 
 	if bytes == nil {
@@ -154,14 +146,14 @@ func (k Keeper) GetUserStats(ctx sdk.Context, address string) *types.UserStats {
 }
 
 func (k Keeper) SetUserStats(ctx sdk.Context, address string, userStats *types.UserStats) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(userStatsKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.UserStatsKeyPrefix))
 	b := k.cdc.MustMarshal(userStats)
 	store.Set([]byte(address), b)
 }
 
 func (k Keeper) GetGlobalStats(ctx sdk.Context) *types.GlobalStats {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get([]byte(globalStatsKey))
+	bytes := store.Get([]byte(types.GlobalStatsKey))
 
 	if bytes == nil {
 		return &types.GlobalStats{}
@@ -175,7 +167,7 @@ func (k Keeper) GetGlobalStats(ctx sdk.Context) *types.GlobalStats {
 func (k Keeper) SetGlobalStats(ctx sdk.Context, globalStats *types.GlobalStats) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(globalStats)
-	store.Set([]byte(globalStatsKey), b)
+	store.Set([]byte(types.GlobalStatsKey), b)
 }
 
 // ProcessBlockStats persists the info from this block's BlockStats this epoch's stats.
@@ -200,6 +192,8 @@ func (k Keeper) ProcessBlockStats(ctx sdk.Context) {
 		userStatsMap[userWithStats.User] = userWithStats
 	}
 
+	// NB: These unsigned ints can technically overflow and wrap around, but the trading volume
+	// required to do so is unrealistic.
 	for _, fill := range blockStats.Fills {
 		userStats := k.GetUserStats(ctx, fill.Taker)
 		userStats.TakerNotional += fill.Notional

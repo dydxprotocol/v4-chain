@@ -3,12 +3,15 @@ package perpetuals_test
 import (
 	"testing"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	"github.com/stretchr/testify/require"
@@ -18,10 +21,11 @@ func TestGenesis(t *testing.T) {
 	pricesGenesisState := constants.Prices_DefaultGenesisState
 	genesisState := constants.Perpetuals_DefaultGenesisState
 
-	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
-	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
-	perpetuals.InitGenesis(ctx, *k, genesisState)
-	got := perpetuals.ExportGenesis(ctx, *k)
+	pc := keepertest.PerpetualsKeepers(t)
+	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)
+	perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, genesisState)
+	assertLiquidityTierUpsertEventsInIndexerBlock(t, pc.PerpetualsKeeper, pc.Ctx, genesisState.LiquidityTiers)
+	got := perpetuals.ExportGenesis(pc.Ctx, *pc.PerpetualsKeeper)
 	require.NotNil(t, got)
 
 	nullify.Fill(&genesisState) //nolint:staticcheck
@@ -133,10 +137,10 @@ func TestGenesis_Failure(t *testing.T) {
 	}
 
 	// Test setup.
-	ctx, k, priceKeeper, _, _ := keepertest.PerpetualsKeepers(t)
+	pc := keepertest.PerpetualsKeepers(t)
 
 	pricesGenesisState := constants.Prices_DefaultGenesisState
-	prices.InitGenesis(ctx, *priceKeeper, pricesGenesisState)
+	prices.InitGenesis(pc.Ctx, *pc.PricesKeeper, pricesGenesisState)
 
 	// Run tests.
 	for name, tc := range tests {
@@ -168,8 +172,73 @@ func TestGenesis_Failure(t *testing.T) {
 			}
 
 			require.Panics(t, func() {
-				perpetuals.InitGenesis(ctx, *k, genesisState)
+				perpetuals.InitGenesis(pc.Ctx, *pc.PerpetualsKeeper, genesisState)
 			})
 		})
+	}
+}
+
+// assertLiquidityTierUpsertEventsInIndexerBlock checks the liquidity tier upsert events
+// included in the Indexer block kafka message.
+func assertLiquidityTierUpsertEventsInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	liquidityTiers []types.LiquidityTier,
+) {
+	// Get LiquidityTierUpsertEvents from IndexerBlock
+	liquidityTierUpsertEvents := keepertest.GetLiquidityTierUpsertEventsFromIndexerBlock(ctx, k)
+
+	// Check if the length of the LiquidityTierUpsertEvents matches the expected length
+	if len(liquidityTierUpsertEvents) != len(liquidityTiers) {
+		t.Fatalf("Expected %d LiquidityTierUpsertEvents, but got %d", len(liquidityTiers), len(liquidityTierUpsertEvents))
+	}
+
+	// Loop through each event and check if each event matches the expected value
+	for i, event := range liquidityTierUpsertEvents {
+		if event.Id != liquidityTiers[i].Id {
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with Id %d, but got %d at index %d",
+				liquidityTiers[i].Id,
+				event.Id,
+				i,
+			)
+		}
+
+		if event.Name != liquidityTiers[i].Name {
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with Name %s, but got %s at index %d",
+				liquidityTiers[i].Name,
+				event.Name,
+				i,
+			)
+		}
+
+		if event.InitialMarginPpm != liquidityTiers[i].InitialMarginPpm {
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with InitialMarginPpm %d, but got %d at index %d",
+				liquidityTiers[i].InitialMarginPpm,
+				event.InitialMarginPpm,
+				i,
+			)
+		}
+
+		if event.MaintenanceFractionPpm != liquidityTiers[i].MaintenanceFractionPpm {
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with MaintenanceFractionPpm %d, but got %d at index %d",
+				liquidityTiers[i].MaintenanceFractionPpm,
+				event.MaintenanceFractionPpm,
+				i,
+			)
+		}
+
+		if event.BasePositionNotional != liquidityTiers[i].BasePositionNotional {
+			t.Fatalf(
+				"Expected LiquidityTierUpsertEvent with BasePositionNotional %d, but got %d at index %d",
+				liquidityTiers[i].BasePositionNotional,
+				event.BasePositionNotional,
+				i,
+			)
+		}
 	}
 }

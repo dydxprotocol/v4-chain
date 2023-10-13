@@ -13,7 +13,7 @@ import (
 // along with the last time that each market price was updated.
 // Methods are goroutine safe.
 type MarketToPrice struct {
-	sync.RWMutex                                            // reader-writer lock
+	sync.Mutex                                              // lock
 	MarketToPriceTimestamp map[uint32]*types.PriceTimestamp // {k: market id, v: PriceTimestamp}
 }
 
@@ -52,8 +52,8 @@ func (mtp *MarketToPrice) UpdatePrice(
 
 // GetAllPrices returns a list of all `MarketPriceTimestamps` for an exchange.
 func (mtp *MarketToPrice) GetAllPrices() []MarketPriceTimestamp {
-	mtp.RLock()
-	defer mtp.RUnlock()
+	mtp.Lock()
+	defer mtp.Unlock()
 
 	marketPricesForExchange := make([]MarketPriceTimestamp, 0, len(mtp.MarketToPriceTimestamp))
 	for marketId, priceTimestamp := range mtp.MarketToPriceTimestamp {
@@ -70,6 +70,8 @@ func (mtp *MarketToPrice) GetAllPrices() []MarketPriceTimestamp {
 
 // GetValidPriceForMarket returns the most recent valid price for a market for an exchange.
 func (mtp *MarketToPrice) GetValidPriceForMarket(marketId MarketId, cutoffTime time.Time) (uint64, bool) {
+	mtp.Lock()
+	defer mtp.Unlock()
 	price, exists := mtp.MarketToPriceTimestamp[marketId]
 	if !exists {
 		return 0, false

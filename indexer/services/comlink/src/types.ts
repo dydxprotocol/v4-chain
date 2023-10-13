@@ -211,8 +211,6 @@ export interface PerpetualMarketResponseObject {
   clobPairId: string;
   ticker: string;
   status: PerpetualMarketStatus;
-  baseAsset: string;
-  quoteAsset: string;
   lastPrice: string;
   oraclePrice: string;
   priceChange24H: string;
@@ -222,9 +220,6 @@ export interface PerpetualMarketResponseObject {
   initialMarginFraction: string;
   maintenanceMarginFraction: string;
   basePositionNotional: string;
-  basePositionSize: string;
-  incrementalPositionSize: string;
-  maxPositionSize: string;
   openInterest: string;
   atomicResolution: number;
   quantumConversionExponent: number;
@@ -232,7 +227,6 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
-  minOrderBaseQuantums: number;
 }
 
 /* ------- ORDERBOOK TYPES ------- */
@@ -250,11 +244,13 @@ export interface OrderbookResponsePriceLevel {
 /* ------- ORDER TYPES ------- */
 // TimeInForce stored in the database is different from the TimeInForce expected in the API
 // The omitted field name have to be literal strings for Typescript to parse them correctly
-export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForce' | 'status'> {
+export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForce' | 'status' | 'updatedAt' | 'updatedAtHeight'> {
   timeInForce: APITimeInForce,
   status: APIOrderStatus,
   postOnly: boolean,
   ticker: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -385,4 +381,18 @@ export interface HistoricalFundingRequest extends LimitAndEffectiveBeforeRequest
 export interface Risk {
   initial: Big;
   maintenance: Big;
+}
+
+/* ------- COMPLIANCE TYPES ------- */
+
+export interface ComplianceResponse {
+  restricted: boolean;
+  reason?: string;
+}
+
+export interface ComplianceRequest extends AddressRequest {}
+
+export enum BlockedCode {
+  GEOBLOCKED = 'GEOBLOCKED',
+  COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
 }

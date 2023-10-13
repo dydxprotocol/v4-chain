@@ -56,21 +56,15 @@ export default class PerpetualMarketModel extends Model {
         'ticker',
         'marketId',
         'status',
-        'baseAsset',
-        'quoteAsset',
         'lastPrice',
         'priceChange24H',
         'volume24H',
         'trades24H',
         'nextFundingRate',
-        'basePositionSize',
-        'incrementalPositionSize',
-        'maxPositionSize',
         'openInterest',
         'quantumConversionExponent',
         'atomicResolution',
         'subticksPerTick',
-        'minOrderBaseQuantums',
         'stepBaseQuantums',
         'liquidityTierId',
       ],
@@ -80,21 +74,15 @@ export default class PerpetualMarketModel extends Model {
         ticker: { type: 'string' },
         marketId: { type: 'integer' },
         status: { type: 'string', enum: [...Object.values(PerpetualMarketStatus)] },
-        baseAsset: { type: 'string' },
-        quoteAsset: { type: 'string' },
         lastPrice: { type: 'string', pattern: NonNegativeNumericPattern },
         priceChange24H: { type: 'string', pattern: NumericPattern },
         volume24H: { type: 'string', pattern: NonNegativeNumericPattern },
         trades24H: { type: 'integer' },
         nextFundingRate: { type: 'string', pattern: NumericPattern },
-        basePositionSize: { type: 'string', pattern: NonNegativeNumericPattern },
-        incrementalPositionSize: { type: 'string', pattern: NonNegativeNumericPattern },
-        maxPositionSize: { type: 'string', pattern: NonNegativeNumericPattern },
         openInterest: { type: 'string', pattern: NumericPattern },
         quantumConversionExponent: { type: 'integer' },
         atomicResolution: { type: 'integer' },
         subticksPerTick: { type: 'integer' },
-        minOrderBaseQuantums: { type: 'integer' },
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
       },
@@ -114,21 +102,15 @@ export default class PerpetualMarketModel extends Model {
       ticker: 'string',
       marketId: 'integer',
       status: 'string',
-      baseAsset: 'string',
-      quoteAsset: 'string',
       lastPrice: 'string',
       priceChange24H: 'string',
       volume24H: 'string',
       trades24H: 'integer',
       nextFundingRate: 'string',
-      basePositionSize: 'string',
-      incrementalPositionSize: 'string',
-      maxPositionSize: 'string',
       openInterest: 'string',
       quantumConversionExponent: 'integer',
       atomicResolution: 'integer',
       subticksPerTick: 'integer',
-      minOrderBaseQuantums: 'integer',
       stepBaseQuantums: 'integer',
       liquidityTierId: 'integer',
     };
@@ -144,10 +126,6 @@ export default class PerpetualMarketModel extends Model {
 
   status!: PerpetualMarketStatus;
 
-  baseAsset!: string;
-
-  quoteAsset!: string;
-
   lastPrice!: string;
 
   priceChange24H!: string;
@@ -158,12 +136,6 @@ export default class PerpetualMarketModel extends Model {
 
   nextFundingRate!: string;
 
-  basePositionSize!: string;
-
-  incrementalPositionSize!: string;
-
-  maxPositionSize!: string;
-
   openInterest!: string;
 
   quantumConversionExponent!: number;
@@ -171,8 +143,6 @@ export default class PerpetualMarketModel extends Model {
   atomicResolution!: number;
 
   subticksPerTick!: number;
-
-  minOrderBaseQuantums!: number;
 
   stepBaseQuantums!: number;
 

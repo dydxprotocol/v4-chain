@@ -18,6 +18,12 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+type MevTelemetryConfig struct {
+	Enabled    bool
+	Host       string
+	Identifier string
+}
+
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
 type CumulativePnL struct {
 	// PnL calculations.
@@ -39,6 +45,11 @@ type PnLCalculationParams struct {
 	subaccountId satypes.SubaccountId
 	isBuy        bool
 	feePpm       int32
+}
+
+// RecordMevMetricsIsEnabled returns true if the MEV telemetry config is enabled.
+func (k Keeper) RecordMevMetricsIsEnabled() bool {
+	return k.mevTelemetryConfig.Enabled
 }
 
 // RecordMevMetrics measures and records MEV by comparing the block proposer's list of matches
@@ -291,7 +302,7 @@ func (k Keeper) RecordMevMetrics(
 		mevPerMarket[clobPairId] = mev
 	}
 
-	if k.mevTelemetryHost != "" {
+	if k.mevTelemetryConfig.Host != "" {
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
 		for _, clobPair := range clobPairs {
 			mevClobMidPrices = append(
@@ -304,14 +315,14 @@ func (k Keeper) RecordMevMetrics(
 		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
-			k.mevTelemetryHost,
+			k.mevTelemetryConfig.Host,
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 					ChainID:             ctx.ChainID(),
 					VolumeQuoteQuantums: validatorVolumeQuoteQuantumsPerMarket,
 					MEV:                 mevPerMarket,
-					Identifier:          k.mevTelemetryIdentifier,
+					Identifier:          k.mevTelemetryConfig.Identifier,
 				},
 				MevNodeToNode: types.MevNodeToNodeMetrics{
 					ValidatorMevMatches: validatorMevMatches,
@@ -333,7 +344,7 @@ func (k Keeper) GetClobMetadata(
 	clobMidPrices = make(map[types.ClobPairId]types.Subticks)
 	clobPairs = make(map[types.ClobPairId]types.ClobPair)
 
-	for _, clobPair := range k.GetAllClobPair(ctx) {
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
 		var midPriceSubticks types.Subticks
 
@@ -427,7 +438,8 @@ func (k Keeper) InitializeCumulativePnLs(
 }
 
 // GetMEVDataFromOperations returns the MEV matches and MEV liquidations from the provided
-// operations queue. It returns an error if a short-term order cannot be decoded.
+// operations queue. It returns an error if a short-term order cannot be decoded. Panics if
+// an order cannot be found.
 func (k Keeper) GetMEVDataFromOperations(
 	ctx sdk.Context,
 	operations []types.OperationRaw,
@@ -508,9 +520,16 @@ func (k Keeper) GetMEVDataFromOperations(
 						return nil, err
 					}
 
+					// `insuranceFundDelta` is measured in int64 quote quantums.
+					// It represents up to ~9 trillion USDC which should always be enough for insurance fund delta.
+					// We explicitly panic if there's an int64 overflow.
+					if !insuranceFundDelta.IsInt64() {
+						panic(fmt.Sprintf("insurance fund delta (%v) is not an int64", insuranceFundDelta.String()))
+					}
+
 					mevLiquidationMatch := types.MEVLiquidationMatch{
 						LiquidatedSubaccountId: matchLiquidation.Liquidated,
-						// TODO: Panic if insurance fund delta is not an int64.
+						// TODO(CLOB-957): Use `SerializableInt` for insurance fund delta
 						InsuranceFundDeltaQuoteQuantums: insuranceFundDelta.Int64(),
 
 						MakerOrderSubaccountId: makerOrder.OrderId.SubaccountId,
@@ -670,7 +689,7 @@ func (k Keeper) CalculateSubaccountPnLForMatches(
 				// TODO(CLOB-742): This whole function is currently not being called since deleveraging and funding
 				// are excluded from MEV calculations. Re-enable deleveraging and funding in MEV calculation.
 				matchDeleveraging := match.MatchPerpetualDeleveraging
-				clobPairId, err := k.MemClob.GetClobPairForPerpetual(ctx, matchDeleveraging.PerpetualId)
+				clobPairId, err := k.GetClobPairIdForPerpetual(ctx, matchDeleveraging.PerpetualId)
 				if err != nil {
 					return err
 				}
@@ -747,7 +766,7 @@ func (k Keeper) AddSettlementForPositionDelta(
 			}
 
 			// Get the funding payment for this position delta.
-			bigNetSettlement, _, err := perpetualKeeper.GetSettlement(
+			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlementPpm(
 				ctx,
 				perpetualId,
 				deltaQuantums,
@@ -761,7 +780,10 @@ func (k Keeper) AddSettlementForPositionDelta(
 			// Add the settlement to the subaccount.
 			// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 			// to a negative funding payment (position received funding payment) and vice versa.
-			cumulativePnL.AddDeltaToSubaccount(subaccountId, bigNetSettlement)
+			cumulativePnL.AddDeltaToSubaccount(
+				subaccountId,
+				bigNetSettlementPpm.Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
+			)
 		}
 	}
 	return nil
@@ -824,7 +846,7 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	}
 
 	// Calculate fees.
-	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(filledQuoteQuantums, feePpm)
+	bigFeeQuoteQuantums := lib.BigIntMulSignedPpm(filledQuoteQuantums, feePpm, true)
 	pnl.Sub(pnl, bigFeeQuoteQuantums)
 
 	c.AddDeltaToSubaccount(subaccountId, pnl)

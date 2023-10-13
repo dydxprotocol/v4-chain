@@ -2,15 +2,6 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"COMPUSDT\"",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"COMPUSD\""
-    },
-    {
-      "exchangeName": "Bybit",
       "ticker": "COMPUSDT",
       "adjustByMarket": "USDT-USD"
     },
@@ -19,8 +10,8 @@
       "ticker": "COMP-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "compusdt",
+      "exchangeName": "Gate",
+      "ticker": "COMP_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -28,8 +19,8 @@
       "ticker": "COMPUSD"
     },
     {
-      "exchangeName": "Kucoin",
-      "ticker": "COMP-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "COMP_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

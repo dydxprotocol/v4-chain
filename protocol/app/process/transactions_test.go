@@ -3,9 +3,10 @@ package process_test
 import (
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -40,35 +41,35 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	}{
 		"Less than min num txs": {
 			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, validUpdatePriceTx}, // need at least 4.
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedNumMsgs,
 				"Expected the proposal to contain at least 4 txs, but got 3",
 			),
 		},
 		"Order tx decoding fails": {
 			txsBytes: [][]byte{invalidTxBytes, validAcknowledgeBridgesTx, validAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Acknowledge bridges tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, invalidTxBytes, validAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidTxBytes, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Update prices tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidTxBytes},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
@@ -82,7 +83,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
@@ -96,7 +97,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
 			),
@@ -106,7 +107,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
@@ -188,7 +189,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
-			_, bridgeKeeper, _, _, _, _ := keepertest.BridgeKeepers(t)
+			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			// Run.
 			ppt, err := process.DecodeProcessProposalTxs(
@@ -253,10 +254,11 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 	invalidMultiMsgOtherTx, _ := encodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 
 	tests := map[string]struct {
-		txsBytes    [][]byte
-		expectedErr error
+		txsBytes         [][]byte
+		bridgingDisabled bool
+		expectedErr      error
 	}{
-		"AcknowledgeBridges tx validation fails": {
+		"AcknowledgeBridges tx validation fails as event ID is not expected": {
 			txsBytes: [][]byte{
 				validOperationsTx,
 				invalidAcknowledgeBridgesTx,
@@ -265,16 +267,26 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 			},
 			expectedErr: bridgetypes.ErrBridgeIdNotNextToAcknowledge,
 		},
+		"AcknowledgeBridges tx validation fails as events are non-empty and bridging is disabled": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validAcknowledgeBridgesTx,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			bridgingDisabled: true,
+			expectedErr:      bridgetypes.ErrBridgingDisabled,
+		},
 		"AddFunding tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidAddFundingTx, validUpdatePriceTx},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
 					"cannot contain duplicates: MsgAddPremiumVotes is invalid"),
 		},
 		"UpdatePrices tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidUpdatePriceTx},
-			expectedErr: sdkerrors.Wrap(
+			expectedErr: errorsmod.Wrap(
 				process.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),
@@ -288,7 +300,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
@@ -299,7 +311,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: sdkerrors.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
 		},
 	}
 
@@ -307,11 +319,17 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetSafetyParams", mock.Anything).Return(
+				bridgetypes.SafetyParams{
+					IsDisabled:  tc.bridgingDisabled,
+					DelayBlocks: 5, // dummy value, not considered by Validate.
+				},
+			)
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(
 				constants.AcknowledgedEventInfo_Id0_Height0,
 			)
@@ -347,6 +365,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	// Valid acknowledge bridges tx.
 	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
 	validAcknowledgeBridgesMsg := constants.MsgAcknowledgeBridges_Ids0_1_Height0
+	emptyAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_NoEvents_TxBytes
 
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
@@ -361,7 +380,8 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	validMultiMsgOtherTx := constants.Msg_SendAndTransfer_TxBytes
 
 	tests := map[string]struct {
-		txsBytes [][]byte
+		txsBytes         [][]byte
+		bridgingDisabled bool
 	}{
 		"No other txs": {
 			txsBytes: [][]byte{
@@ -390,17 +410,33 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				validUpdatePriceTx,
 			},
 		},
+		"Empty bridge events and bridging is disabled": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validSingleMsgOtherTx,
+				emptyAcknowledgeBridgesTx,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			bridgingDisabled: true,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
-			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetSafetyParams", mock.Anything).Return(
+				bridgetypes.SafetyParams{
+					IsDisabled:  tc.bridgingDisabled,
+					DelayBlocks: 5, // dummy value, not considered by Validate.
+				},
+			)
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(
 				constants.AcknowledgedEventInfo_Id0_Height0,
 			)

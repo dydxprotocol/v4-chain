@@ -2,12 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ETCUSDT\"",
+      "ticker": "ETCUSDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ETCUSD\""
     },
     {
       "exchangeName": "CoinbasePro",
@@ -24,8 +20,14 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Kraken",
-      "ticker": "XETCZUSD"
+      "exchangeName": "Kucoin",
+      "ticker": "ETC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ETC_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

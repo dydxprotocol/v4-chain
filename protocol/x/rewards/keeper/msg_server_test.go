@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
@@ -28,7 +30,7 @@ func TestMsgServer(t *testing.T) {
 }
 
 func TestMsgUpdateParams(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	testCases := []struct {
 		name      string
@@ -39,7 +41,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateParams{
-				Authority: k.GetAuthority(),
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params:    types.DefaultParams(),
 			},
 			expErr: false,
@@ -56,7 +58,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: invalid denom",
 			input: &types.MsgUpdateParams{
-				Authority: k.GetAuthority(),
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params: types.Params{
 					TreasuryAccount: "rewards_treasury",
 					Denom:           "",

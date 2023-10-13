@@ -1,6 +1,8 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { stopConsumer, startConsumer } from '@dydxprotocol-indexer/kafka';
-import { assetRefresher, perpetualMarketRefresher, marketRefresher } from '@dydxprotocol-indexer/postgres';
+import {
+  assetRefresher, perpetualMarketRefresher, marketRefresher, liquidityTierRefresher,
+} from '@dydxprotocol-indexer/postgres';
 
 import { initializeAllCaches } from './caches/block-cache';
 import config from './config';
@@ -23,10 +25,11 @@ async function startKafka(): Promise<void> {
     perpetualMarketRefresher.updatePerpetualMarkets(),
     assetRefresher.updateAssets(),
     marketRefresher.updateMarkets(),
+    liquidityTierRefresher.updateLiquidityTiers(),
   ]);
-  wrapBackgroundTask(perpetualMarketRefresher.start(), true, 'startUpdatePerpetualMarkets');
-  wrapBackgroundTask(assetRefresher.start(), true, 'startUpdateAssets');
-  wrapBackgroundTask(marketRefresher.start(), true, 'startUpdateMarkets');
+  // Ender does not need to refresh its caches in a loop because Ender is the only service that
+  // writes to the key attributes of perpetual_markets, asset_refresher, and market_refresher
+  // The only exception are the aggregated properties of perpetual_markets
   await initializeAllCaches();
 
   await connect();

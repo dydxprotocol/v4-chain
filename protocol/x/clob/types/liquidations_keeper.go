@@ -18,6 +18,14 @@ type LiquidationsKeeper interface {
 		orderStatus OrderStatus,
 		err error,
 	)
+	MaybeDeleverageSubaccount(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+	) (
+		quantumsDeleveraged *big.Int,
+		err error,
+	)
 	IsLiquidatable(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
@@ -46,7 +54,7 @@ type LiquidationsKeeper interface {
 	GetInsuranceFundBalance(
 		ctx sdk.Context,
 	) (
-		balance uint64,
+		balance *big.Int,
 	)
 	GetLiquidationInsuranceFundDelta(
 		ctx sdk.Context,
@@ -71,16 +79,22 @@ type LiquidationsKeeper interface {
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 	) (
-		clobPair ClobPair,
-		quantums *big.Int,
+		perpetualId uint32,
 		err error,
 	)
-	GetMaxLiquidatableNotionalAndInsuranceLost(
+	GetSubaccountMaxNotionalLiquidatable(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	) (
 		bigMaxNotionalLiquidatable *big.Int,
+		err error,
+	)
+	GetSubaccountMaxInsuranceLost(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+	) (
 		bigMaxQuantumsInsuranceLost *big.Int,
 		err error,
 	)

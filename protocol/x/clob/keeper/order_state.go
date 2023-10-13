@@ -24,7 +24,7 @@ func (k Keeper) GetAllOrderFillStates(ctx sdk.Context) (fillStates []OrderIdFill
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Iterate over all keys with the `OrderAmountFilledKeyPrefx`.
@@ -50,25 +50,6 @@ func (k Keeper) GetAllOrderFillStates(ctx sdk.Context) (fillStates []OrderIdFill
 	return fillStates
 }
 
-// GetOrdersFilledDuringLatestBlock returns a list of `OrderIds` filled during the latest block.
-// If no orders were filled during the last block, returns an empty slice.
-func (k Keeper) GetOrdersFilledDuringLatestBlock(ctx sdk.Context) []types.OrderId {
-	// Retrieve an instance of the memory store.
-	memStore := ctx.KVStore(k.memKey)
-
-	// Retrieve the `ordersFilledDuringLatestBlock` bytes from the store.
-	ordersFilledDuringLatestBlockBytes := memStore.Get(
-		[]byte(types.OrdersFilledDuringLatestBlockKey),
-	)
-
-	// Unmarshal the `ordersFilledDuringLatestBlock` into a struct.
-	var ordersFilledDuringLatestBlock types.OrdersFilledDuringLatestBlock
-	k.cdc.MustUnmarshal(ordersFilledDuringLatestBlockBytes, &ordersFilledDuringLatestBlock)
-
-	// Return the `OrderIds` filled during the latest block.
-	return ordersFilledDuringLatestBlock.OrderIds
-}
-
 // SetOrderFillAmount writes the total `fillAmount` and `prunableBlockHeight` of an order to on-chain state.
 // TODO(DEC-1219): Determine whether we should continue using `OrderFillState` proto for stateful orders.
 func (k Keeper) SetOrderFillAmount(
@@ -89,24 +70,24 @@ func (k Keeper) SetOrderFillAmount(
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Write `orderFillStateBytes` to state.
 	store.Set(
-		types.OrderIdKey(orderId),
+		orderId.ToStateKey(),
 		orderFillStateBytes,
 	)
 
 	// Retrieve an instance of the memStore.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Write `orderFillStateBytes` to memStore.
 	memStore.Set(
-		types.OrderIdKey(orderId),
+		orderId.ToStateKey(),
 		orderFillStateBytes,
 	)
 }
@@ -125,12 +106,12 @@ func (k Keeper) GetOrderFillAmount(
 	// Retrieve an instance of the memStore.
 	memPrefixStore := prefix.NewStore(
 		memStore,
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
 	// Retrieve the `OrderFillState` bytes from the store.
 	orderFillStateBytes := memPrefixStore.Get(
-		types.OrderIdKey(orderId),
+		orderId.ToStateKey(),
 	)
 
 	// If the `OrderFillState` does not exist, early return.
@@ -152,12 +133,12 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
 	potentiallyPrunableOrdersBytes := store.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(prunableBlockHeight),
+		lib.Uint32ToKey(prunableBlockHeight),
 	)
 
 	var potentiallyPrunableOrdersSet = make(map[types.OrderId]bool)
@@ -197,7 +178,7 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 
 	// Write `prunableOrders` to state for the appropriate block height.
 	store.Set(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(prunableBlockHeight),
+		lib.Uint32ToKey(prunableBlockHeight),
 		potentiallyPrunableOrdersBytes,
 	)
 }
@@ -210,12 +191,12 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 	// Retrieve an instance of the stores.
 	blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	// Retrieve the raw bytes of the `prunableOrders`.
 	potentiallyPrunableOrderBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToKey(blockHeight),
 	)
 
 	// If there are no prunable orders for this block, then there is nothing to do. Early return.
@@ -234,7 +215,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 			prunedOrderIds = append(prunedOrderIds, orderId)
 
 			if prunableBlockHeight < blockHeight {
-				ctx.Logger().Error(fmt.Sprintf(
+				k.Logger(ctx).Error(fmt.Sprintf(
 					"prunableBlockHeight %v is less than blockHeight %v in PruneOrdersForBlockHeight, this should never happen.",
 					prunableBlockHeight,
 					blockHeight,
@@ -245,7 +226,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 
 	// Delete the key for prunable orders at this block height.
 	blockHeightToPotentiallyPrunableOrdersStore.Delete(
-		types.BlockHeightToPotentiallyPrunableOrdersKey(blockHeight),
+		lib.Uint32ToKey(blockHeight),
 	)
 
 	return prunedOrderIds
@@ -257,21 +238,17 @@ func (k Keeper) RemoveOrderFillAmount(ctx sdk.Context, orderId types.OrderId) {
 	// Delete the fill amount from the state store.
 	orderAmountFilledStore := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
 
-	orderAmountFilledStore.Delete(types.OrderIdKey(
-		orderId,
-	))
+	orderAmountFilledStore.Delete(orderId.ToStateKey())
 
 	// Delete the fill amount from the mem store.
 	memStore := prefix.NewStore(
 		ctx.KVStore(k.memKey),
-		types.KeyPrefix(types.OrderAmountFilledKeyPrefix),
+		[]byte(types.OrderAmountFilledKeyPrefix),
 	)
-	memStore.Delete(types.OrderIdKey(
-		orderId,
-	))
+	memStore.Delete(orderId.ToStateKey())
 }
 
 // PruneStateFillAmountsForShortTermOrders prunes Short-Term order fill amounts from state that are pruneable

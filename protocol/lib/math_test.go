@@ -111,7 +111,7 @@ func TestAddToUint32(t *testing.T) {
 	}
 }
 
-func TestDivisionUint32RoundUp(t *testing.T) {
+func TestMustDivideUint32RoundUp(t *testing.T) {
 	tests := map[string]struct {
 		x              uint32
 		y              uint32
@@ -135,7 +135,7 @@ func TestDivisionUint32RoundUp(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result := lib.DivisionUint32RoundUp(tc.x, tc.y)
+			result := lib.MustDivideUint32RoundUp(tc.x, tc.y)
 			require.Equal(t, tc.expectedResult, result)
 		})
 	}
@@ -261,41 +261,6 @@ func TestGenericMaxFloat64(t *testing.T) {
 	}
 }
 
-func TestMaxUInt32(t *testing.T) {
-	tests := map[string]struct {
-		x              uint32
-		y              uint32
-		expectedResult uint32
-	}{
-		"Equal": {
-			x:              5,
-			y:              5,
-			expectedResult: 5,
-		},
-		"X is Less": {
-			x:              4,
-			y:              5,
-			expectedResult: 5,
-		},
-		"Y is Less": {
-			x:              5,
-			y:              4,
-			expectedResult: 5,
-		},
-		"Zero": {
-			x:              0,
-			y:              0,
-			expectedResult: 0,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result := lib.MaxUint32(tc.x, tc.y)
-			require.Equal(t, tc.expectedResult, result)
-		})
-	}
-}
-
 func TestInt64MulPpm(t *testing.T) {
 	tests := map[string]struct {
 		x              int64
@@ -314,10 +279,15 @@ func TestInt64MulPpm(t *testing.T) {
 			ppm:            100_000, // 10%
 			expectedResult: 6,
 		},
-		"61 * 10% rounds down to 6": {
-			x:              61,
+		"69 * 10% rounds down to 6 (round towards negative infinity)": {
+			x:              69,
 			ppm:            100_000, // 10%
 			expectedResult: 6,
+		},
+		"-61 * 10% rounds down to -7 (round towards negative infinity)": {
+			x:              -61,
+			ppm:            100_000, // 10%
+			expectedResult: -7,
 		},
 		"overflow causes panic": {
 			x:             math.MaxInt64,
@@ -600,23 +570,23 @@ func TestChangeRateUint64(t *testing.T) {
 	}
 }
 
-func TestMustGetMedianInt32_Failure(t *testing.T) {
+func TestMustGetMedian_Failure(t *testing.T) {
 	require.PanicsWithError(t,
 		"input cannot be empty",
 		func() {
-			lib.MustGetMedianInt32([]int32{})
+			lib.MustGetMedian([]int32{})
 		},
 	)
 }
 
-func TestMustGetMedianInt32_Success(t *testing.T) {
+func TestMustGetMedian_Success(t *testing.T) {
 	require.Equal(t,
 		int32(5),
-		lib.MustGetMedianInt32([]int32{8, 1, -5, 100, -50, 59}),
+		lib.MustGetMedian([]int32{8, 1, -5, 100, -50, 59}),
 	)
 }
 
-func TestMedianInt32(t *testing.T) {
+func TestMedian_Int32(t *testing.T) {
 	tests := map[string]struct {
 		input          []int32
 		expectedResult int32
@@ -720,7 +690,7 @@ func TestMedianInt32(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := lib.MedianInt32(tc.input)
+			result, err := lib.Median(tc.input)
 			require.Equal(t, tc.expectedResult, result)
 			if tc.expectedError {
 				require.EqualError(t, err, "input cannot be empty")
@@ -731,7 +701,7 @@ func TestMedianInt32(t *testing.T) {
 	}
 }
 
-func TestMedianUint64(t *testing.T) {
+func TestMedian_Uint64(t *testing.T) {
 	tests := map[string]struct {
 		input          []uint64
 		expectedResult uint64
@@ -770,7 +740,7 @@ func TestMedianUint64(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			result, err := lib.MedianUint64(tc.input)
+			result, err := lib.Median(tc.input)
 			require.Equal(t, tc.expectedResult, result)
 			if tc.expectedError {
 				require.EqualError(t, err, "input cannot be empty")

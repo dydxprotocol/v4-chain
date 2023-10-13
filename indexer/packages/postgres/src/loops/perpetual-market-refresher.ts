@@ -1,11 +1,12 @@
 import { stats, delay, NodeEnv } from '@dydxprotocol-indexer/base';
+import _ from 'lodash';
 
 import config from '../config';
 import * as PerpetualMarketTable from '../stores/perpetual-market-table';
-import { Options, PerpetualMarketFromDatabase, PerpetualMarketsMap } from '../types';
+import {
+  Options, PerpetualMarketColumns, PerpetualMarketFromDatabase, PerpetualMarketsMap,
+} from '../types';
 
-let clobPairIdToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
-let tickerToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
 let idToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
 
 // TODO(DEC-642): Update the in-memory mapping of perpetual market tickers to ids from websocket
@@ -29,8 +30,6 @@ export function clear(): void {
   if (config.NODE_ENV !== NodeEnv.TEST) {
     throw new Error('clear cannot be used in non-test env');
   }
-  clobPairIdToPerpetualMarket = {};
-  tickerToPerpetualMarket = {};
   idToPerpetualMarket = {};
 }
 
@@ -45,19 +44,13 @@ export async function updatePerpetualMarkets(options?: Options): Promise<void> {
     options || { readReplica: true },
   );
 
-  const tmpClobPairIdToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
-  const tmpTickerToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
   const tmpIdToPerpetualMarket: Record<string, PerpetualMarketFromDatabase> = {};
   perpetualMarkets.forEach(
     (market: PerpetualMarketFromDatabase) => {
-      tmpClobPairIdToPerpetualMarket[market.clobPairId] = market;
-      tmpTickerToPerpetualMarket[market.ticker] = market;
       tmpIdToPerpetualMarket[market.id] = market;
     },
   );
 
-  clobPairIdToPerpetualMarket = tmpClobPairIdToPerpetualMarket;
-  tickerToPerpetualMarket = tmpTickerToPerpetualMarket;
   idToPerpetualMarket = tmpIdToPerpetualMarket;
   stats.timing(`${config.SERVICE_NAME}.loops.update_perpetual_markets`, Date.now() - startTime);
 }
@@ -68,7 +61,13 @@ export async function updatePerpetualMarkets(options?: Options): Promise<void> {
  * @returns true if ticker matches a perpetual market ticker, false otherwise.
  */
 export function isValidPerpetualMarketTicker(ticker: string): boolean {
-  return tickerToPerpetualMarket[ticker] !== undefined && tickerToPerpetualMarket[ticker] !== null;
+  return _.some(idToPerpetualMarket, (perpetualMarket: PerpetualMarketFromDatabase) => {
+    return perpetualMarket.ticker === ticker;
+  });
+}
+
+export function getPerpetualMarketsList(): PerpetualMarketFromDatabase[] {
+  return Object.values(idToPerpetualMarket);
 }
 
 /**
@@ -78,7 +77,11 @@ export function isValidPerpetualMarketTicker(ticker: string): boolean {
  * with the given clob pair id, undefined is returned.
  */
 export function getClobPairIdFromTicker(ticker: string): string | undefined {
-  return tickerToPerpetualMarket[ticker]?.clobPairId;
+  const perpetualMarket: PerpetualMarketFromDatabase | undefined = getPerpetualMarketFromTicker(
+    ticker,
+  );
+
+  return perpetualMarket?.clobPairId;
 }
 
 /**
@@ -88,7 +91,11 @@ export function getClobPairIdFromTicker(ticker: string): string | undefined {
  * with the given clob pair id, undefined is returned.
  */
 export function getPerpetualMarketTicker(clobPairId: string): string | undefined {
-  return clobPairIdToPerpetualMarket[clobPairId]?.ticker;
+  const perpetualMarket: PerpetualMarketFromDatabase | undefined = getPerpetualMarketFromClobPairId(
+    clobPairId,
+  );
+
+  return perpetualMarket?.ticker;
 }
 
 /**
@@ -97,7 +104,12 @@ export function getPerpetualMarketTicker(clobPairId: string): string | undefined
 export function getPerpetualMarketFromTicker(
   ticker: string,
 ): PerpetualMarketFromDatabase | undefined {
-  return tickerToPerpetualMarket[ticker];
+  return _.find(
+    getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.ticker === ticker;
+    },
+  );
 }
 
 /**
@@ -106,11 +118,12 @@ export function getPerpetualMarketFromTicker(
 export function getPerpetualMarketFromClobPairId(
   clobPairId: string,
 ): PerpetualMarketFromDatabase | undefined {
-  const ticker: string | undefined = getPerpetualMarketTicker(clobPairId);
-  if (ticker === undefined) {
-    return undefined;
-  }
-  return getPerpetualMarketFromTicker(ticker);
+  return _.find(
+    getPerpetualMarketsList(),
+    (perpetualMarket: PerpetualMarketFromDatabase) => {
+      return perpetualMarket.clobPairId === clobPairId;
+    },
+  );
 }
 
 /**
@@ -121,7 +134,7 @@ export function getPerpetualMarketFromId(id: string): PerpetualMarketFromDatabas
 }
 
 export function getClobPairIdToPerpetualMarket(): Record<string, PerpetualMarketFromDatabase> {
-  return clobPairIdToPerpetualMarket;
+  return _.keyBy(getPerpetualMarketsList(), PerpetualMarketColumns.clobPairId);
 }
 
 export function getTickerToPerpetualMarketForTest(): Record<string, PerpetualMarketFromDatabase> {
@@ -130,9 +143,16 @@ export function getTickerToPerpetualMarketForTest(): Record<string, PerpetualMar
       `getTickerToPerpetualMarketForTest cannot be used in env ${config.NODE_ENV}`);
   }
 
-  return tickerToPerpetualMarket;
+  return _.keyBy(getPerpetualMarketsList(), PerpetualMarketColumns.ticker);
 }
 
 export function getPerpetualMarketsMap(): PerpetualMarketsMap {
   return idToPerpetualMarket;
+}
+
+/**
+ * Add or updates a perpetual market instance in the in memory cache
+ */
+export function upsertPerpetualMarket(perpetualMarket: PerpetualMarketFromDatabase): void {
+  idToPerpetualMarket[perpetualMarket.id] = perpetualMarket;
 }

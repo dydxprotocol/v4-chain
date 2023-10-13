@@ -16,15 +16,15 @@ import (
 // GetGroupMsgOther returns two separate slices of byte txs given a single slice of byte txs and max bytes.
 // The first slice contains the first N txs where the total bytes of the N txs is <= max bytes.
 // The second slice contains the rest of txs, if any.
-func GetGroupMsgOther(availableTxs [][]byte, maxBytes int64) ([][]byte, [][]byte) {
+func GetGroupMsgOther(availableTxs [][]byte, maxBytes uint64) ([][]byte, [][]byte) {
 	var (
 		txsToInclude [][]byte
 		txsRemainder [][]byte
-		byteCount    int64
+		byteCount    uint64
 	)
 
 	for _, tx := range availableTxs {
-		byteCount += int64(len(tx))
+		byteCount += uint64(len(tx))
 		if byteCount <= maxBytes {
 			txsToInclude = append(txsToInclude, tx)
 		} else {
@@ -69,7 +69,7 @@ func RemoveDisallowMsgs(ctx sdk.Context, decoder sdk.TxDecoder, txs [][]byte) []
 
 		// If tx contains disallowed msg, skip it.
 		if containsDisllowMsg {
-			ctx.Logger().Info(
+			ctx.Logger().Error(
 				fmt.Sprintf("RemoveDisallowMsgs: skipping tx with disallowed msg. Size: %d", len(txBytes)))
 			continue // continue to next tx.
 		}

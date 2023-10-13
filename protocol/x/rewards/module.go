@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -152,7 +153,11 @@ func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.Val
 	if err := am.keeper.ProcessRewardsForBlock(ctx); err != nil {
 		// Panicking here will only happen due to misconfiguration of the rewards module,
 		// and will lead to consensus failure.
-		panic(err)
+		am.keeper.Logger(ctx).Error(
+			"failed to process rewards for block",
+			constants.ErrorLogKey,
+			err,
+		)
 	}
 
 	return []abci.ValidatorUpdate{}

@@ -6,8 +6,9 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
@@ -371,7 +372,7 @@ func TestMustGetFundingEpochInfo(t *testing.T) {
 			ctx, keeper, _ := keepertest.EpochsKeeper(t)
 
 			// No epoch info created, should panic
-			require.PanicsWithError(t, sdkerrors.Wrapf(
+			require.PanicsWithError(t, errorsmod.Wrapf(
 				types.ErrEpochInfoNotFound,
 				"name: %s",
 				tc.epochInfoName,

@@ -6,12 +6,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/kraken"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"net/http"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/bitfinex"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 
@@ -36,7 +36,7 @@ func TestQueryingActualExchanges(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			requestHandler := lib.NewRequestHandlerImpl(http.DefaultClient)
+			requestHandler := types.NewRequestHandlerImpl(http.DefaultClient)
 
 			response, err := requestHandler.Get(context.Background(), tc.url)
 

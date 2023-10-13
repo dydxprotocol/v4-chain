@@ -3,10 +3,11 @@ package types
 import (
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
 const (
@@ -28,7 +29,7 @@ func (bq BaseQuantums) ToUint64() uint64 {
 
 func (m *SubaccountId) Validate() error {
 	if _, err := sdk.AccAddressFromBech32(m.Owner); err != nil {
-		return sdkerrors.Wrapf(ErrInvalidSubaccountIdOwner,
+		return errorsmod.Wrapf(ErrInvalidSubaccountIdOwner,
 			"invalid SubaccountId Owner address (%s). Error: (%s)", m.Owner, err)
 	}
 
@@ -84,7 +85,7 @@ func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *big.Int) error {
 		} else {
 			if usdcAssetPosition == nil {
 				usdcAssetPosition = &AssetPosition{
-					AssetId: lib.UsdcAssetId,
+					AssetId: assettypes.AssetUsdc.Id,
 				}
 				m.AssetPositions = append([]*AssetPosition{usdcAssetPosition}, m.AssetPositions...)
 			}
@@ -100,7 +101,7 @@ func (m *Subaccount) getUsdcAssetPosition() *AssetPosition {
 	}
 
 	firstAsset := m.AssetPositions[0]
-	if firstAsset.AssetId != lib.UsdcAssetId {
+	if firstAsset.AssetId != assettypes.AssetUsdc.Id {
 		return nil
 	}
 	return firstAsset

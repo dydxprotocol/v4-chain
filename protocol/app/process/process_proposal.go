@@ -2,6 +2,7 @@ package process
 
 import (
 	"cosmossdk.io/log"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"time"
 
@@ -62,7 +63,7 @@ func ProcessProposalHandler(
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
 		// consensus round to do so.
-		if err := pricesKeeper.UpdateSmoothedPrices(ctx); err != nil {
+		if err := pricesKeeper.UpdateSmoothedPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
 			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
 			error_lib.LogErrorWithOptionalContext(logger, "UpdateSmoothedPrices failed", err)
 		}
@@ -81,7 +82,10 @@ func ProcessProposalHandler(
 			return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_REJECT}
 		}
 
-		clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		// Measure MEV metrics if enabled.
+		if clobKeeper.RecordMevMetricsIsEnabled() {
+			clobKeeper.RecordMevMetrics(ctx, stakingKeeper, perpetualKeeper, txs.ProposedOperationsTx.msg)
+		}
 
 		// Record a success metric.
 		recordSuccessMetrics(ctx, txs, len(req.Txs))

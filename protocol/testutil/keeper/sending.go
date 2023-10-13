@@ -3,6 +3,8 @@ package keeper
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
@@ -12,37 +14,40 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
+type SendingKeepersTestContext struct {
+	Ctx               sdk.Context
+	SendingKeeper     *keeper.Keeper
+	AccountKeeper     *authkeeper.AccountKeeper
+	BankKeeper        *bankkeeper.BaseKeeper
+	PricesKeeper      *priceskeeper.Keeper
+	PerpetualsKeeper  *perpkeeper.Keeper
+	AssetsKeeper      *assetskeeper.Keeper
+	SubaccountsKeeper types.SubaccountsKeeper
+	StoreKey          storetypes.StoreKey
+}
+
 func SendingKeepers(t testing.TB) (
-	ctx sdk.Context,
-	sendingKeeper *keeper.Keeper,
-	accountKeeper *authkeeper.AccountKeeper,
-	pricesKeeper *priceskeeper.Keeper,
-	perpetualsKeeper *perpkeeper.Keeper,
-	assetsKeeper *assetskeeper.Keeper,
-	subaccountsKeeper types.SubaccountsKeeper,
-	storeKey storetypes.StoreKey,
+	ks SendingKeepersTestContext,
 ) {
 	return SendingKeepersWithSubaccountsKeeper(t, nil)
 }
 
 func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.SubaccountsKeeper) (
-	ctx sdk.Context,
-	sendingKeeper *keeper.Keeper,
-	accountKeeper *authkeeper.AccountKeeper,
-	pricesKeeper *priceskeeper.Keeper,
-	perpetualsKeeper *perpkeeper.Keeper,
-	assetsKeeper *assetskeeper.Keeper,
-	subaccountsKeeper types.SubaccountsKeeper,
-	storeKey storetypes.StoreKey,
+	ks SendingKeepersTestContext,
 ) {
-	ctx = initKeepers(t, func(
+	var mockTimeProvider *mocks.TimeProvider
+	ks.Ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
@@ -51,59 +56,56 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
-		perpetualsKeeper, _ = createPerpetualsKeeper(
+		ks.PricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
 			db,
 			cdc,
-			pricesKeeper,
+			ks.PricesKeeper,
 			epochsKeeper,
 			transientStoreKey,
 		)
-		assetsKeeper, _ = createAssetsKeeper(
+		ks.AssetsKeeper, _ = createAssetsKeeper(
 			stateStore,
 			db,
 			cdc,
-			pricesKeeper,
+			ks.PricesKeeper,
 			transientStoreKey,
 			true,
 		)
-		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
-		bankKeeper, _ := createBankKeeper(stateStore, db, cdc, accountKeeper)
+		ks.AccountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
+		ks.BankKeeper, _ = createBankKeeper(stateStore, db, cdc, ks.AccountKeeper)
 		if saKeeper == nil {
-			subaccountsKeeper, _ = createSubaccountsKeeper(
+			ks.SubaccountsKeeper, _ = createSubaccountsKeeper(
 				stateStore,
 				db,
 				cdc,
-				assetsKeeper,
-				bankKeeper,
-				perpetualsKeeper,
+				ks.AssetsKeeper,
+				ks.BankKeeper,
+				ks.PerpetualsKeeper,
 				transientStoreKey,
 				true,
 			)
 		} else {
-			subaccountsKeeper = saKeeper
+			ks.SubaccountsKeeper = saKeeper
 		}
-		sendingKeeper, storeKey = createSendingKeeper(
+		ks.SendingKeeper, ks.StoreKey = createSendingKeeper(
 			stateStore,
 			db,
 			cdc,
-			accountKeeper,
-			subaccountsKeeper,
+			ks.AccountKeeper,
+			ks.BankKeeper,
+			ks.SubaccountsKeeper,
 			transientStoreKey,
 		)
 
-		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, sendingKeeper}
+		return []GenesisInitializer{ks.PricesKeeper, ks.PerpetualsKeeper, ks.AssetsKeeper, ks.SendingKeeper}
 	})
 
-	return ctx,
-		sendingKeeper,
-		accountKeeper,
-		pricesKeeper,
-		perpetualsKeeper,
-		assetsKeeper,
-		subaccountsKeeper,
-		storeKey
+	// Mock time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	return ks
 }
 
 func createSendingKeeper(
@@ -111,6 +113,7 @@ func createSendingKeeper(
 	db *tmdb.MemDB,
 	cdc *codec.ProtoCodec,
 	accKeeper *authkeeper.AccountKeeper,
+	bankKeeper types.BankKeeper,
 	saKeeper types.SubaccountsKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -125,8 +128,13 @@ func createSendingKeeper(
 		cdc,
 		storeKey,
 		accKeeper,
+		bankKeeper,
 		saKeeper,
 		mockIndexerEventsManager,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 	)
 
 	return k, storeKey

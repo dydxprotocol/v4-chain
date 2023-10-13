@@ -10,7 +10,6 @@ func DefaultGenesis() *GenesisState {
 				5 * time.Minute,
 				30 * time.Minute,
 			},
-			ClockDriftGracePeriodDuration: 5 * time.Second,
 		},
 	}
 }

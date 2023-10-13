@@ -74,7 +74,7 @@ describe('helpers', () => {
 
   it('getFixedRepresentation', () => {
     const fixedRep: string = getFixedRepresentation(150125);
-    expect(fixedRep).toEqual('150125.000000');
+    expect(fixedRep).toEqual('150125');
   });
 
   it('filterAssetPositions with 0 size', () => {
@@ -174,7 +174,7 @@ describe('helpers', () => {
     );
 
     expect(equity).toEqual('25000');
-    expect(freeCollateral).toEqual('32500');
+    expect(freeCollateral).toEqual('17500');
   });
 
   it('filterPositionsByLatestEventIdPerPerpetual', async () => {
@@ -270,10 +270,10 @@ describe('helpers', () => {
     ['base', 100, 1_000_000, 50_000, 30_000],
     ['greater than base', 400, 4_000_000, 400_000, 240_000],
     ['max', 400_000, 4_000_000_000, 4_000_000_000, 4_000_000_000],
-    ['less than base SHORT', -20, -200_000, -10_000, -6_000],
-    ['base SHORT', -100, -1_000_000, -50_000, -30_000],
-    ['greater than base SHORT', -400, -4_000_000, -400_000, -240_000],
-    ['max SHORT', -400_000, -4_000_000_000, -4_000_000_000, -4_000_000_000],
+    ['less than base SHORT', -20, -200_000, 10_000, 6_000],
+    ['base SHORT', -100, -1_000_000, 50_000, 30_000],
+    ['greater than base SHORT', -400, -4_000_000, 400_000, 240_000],
+    ['max SHORT', -400_000, -4_000_000_000, 4_000_000_000, 4_000_000_000],
   ])('getSignedNotionalAndRisk: %s', async (
     _name: string,
     size: number,
@@ -348,7 +348,7 @@ describe('helpers', () => {
         latestBlock!,
       );
 
-      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(2);
+      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(3);
       expect(
         lastUpdatedFundingIndexMap[testConstants.defaultFundingIndexUpdate.perpetualId]
           .toString(),
@@ -357,10 +357,16 @@ describe('helpers', () => {
         lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket2.id]
           .toString(),
       ).toEqual(ZERO.toString());
-      expect(Object.keys(latestFundingIndexMap)).toHaveLength(2);
+      expect(
+        lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket3.id]
+          .toString(),
+      ).toEqual(ZERO.toString());
+      expect(Object.keys(latestFundingIndexMap)).toHaveLength(3);
       expect(latestFundingIndexMap[fundingIndexUpdate3.perpetualId].toString())
         .toEqual(fundingIndexUpdate3.fundingIndex);
       expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket2.id].toString())
+        .toEqual(ZERO.toString());
+      expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket3.id].toString())
         .toEqual(ZERO.toString());
     });
   });

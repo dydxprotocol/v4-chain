@@ -19,10 +19,15 @@ import {
   TransferFromDatabase,
   helpers,
   UpdatedPerpetualPositionSubaccountKafkaObject,
-  CURRENCY_DECIMAL_PRECISION,
   PerpetualPositionFromDatabase,
   AssetPositionSubaccountMessageContents,
   SubaccountTable,
+  LiquidityTiersFromDatabase,
+  liquidityTierRefresher,
+  LiquidityTiersMap,
+  PerpetualMarketColumns,
+  TradingPerpetualMarketMessage,
+  TradingMarketMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import { SubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -138,7 +143,7 @@ export function getPnl(
     realizedPnl = priceDiff
       .mul(updateObject.sumClose)
       .plus(updateObject.settledFunding)
-      .toFixed(CURRENCY_DECIMAL_PRECISION);
+      .toFixed();
     unrealizedPnl = helpers.getUnrealizedPnl(updateObject, perpetualMarket, marketIdToMarket);
   }
   return { realizedPnl, unrealizedPnl };
@@ -246,6 +251,8 @@ export function generateTransferContents(
         transfer,
         SubaccountTable.uuid(subaccountId.owner, subaccountId.number),
       ),
+      createdAt: transfer.createdAt,
+      createdAtHeight: transfer.createdAtHeight,
       transactionHash: transfer.transactionHash,
     },
   };
@@ -258,7 +265,7 @@ export function generateOraclePriceContents(
   return {
     oraclePrices: {
       [ticker]: {
-        price: oraclePrice.price,
+        oraclePrice: oraclePrice.price,
         effectiveAt: oraclePrice.effectiveAt,
         effectiveAtHeight: oraclePrice.effectiveAtHeight,
         marketId: oraclePrice.marketId,
@@ -293,5 +300,43 @@ export function generateOrderSubaccountMessage(
     goodTilBlock: order.goodTilBlock,
     goodTilBlockTime: order.goodTilBlockTime,
     ticker,
+  };
+}
+
+export function generatePerpetualMarketMessage(
+  perpetualMarkets: PerpetualMarketFromDatabase[],
+): MarketMessageContents {
+  const liquidityTierMap: LiquidityTiersMap = liquidityTierRefresher.getLiquidityTiersMap();
+
+  const tradingMarketMessageContents: TradingMarketMessageContents = _.chain(perpetualMarkets)
+    .keyBy(PerpetualMarketColumns.ticker)
+    .mapValues((perpetualMarket: PerpetualMarketFromDatabase): TradingPerpetualMarketMessage => {
+      const liquidityTier:
+      LiquidityTiersFromDatabase = liquidityTierMap[perpetualMarket.liquidityTierId];
+
+      return {
+        id: perpetualMarket.id,
+        clobPairId: perpetualMarket.clobPairId.toString(),
+        ticker: perpetualMarket.ticker,
+        marketId: perpetualMarket.marketId,
+        status: perpetualMarket.status,
+        quantumConversionExponent: perpetualMarket.quantumConversionExponent,
+        atomicResolution: perpetualMarket.atomicResolution,
+        subticksPerTick: perpetualMarket.subticksPerTick,
+        stepBaseQuantums: perpetualMarket.stepBaseQuantums,
+        initialMarginFraction: helpers.ppmToString(Number(liquidityTier.initialMarginPpm)),
+        maintenanceMarginFraction: helpers.ppmToString(
+          helpers.getMaintenanceMarginPpm(
+            Number(liquidityTier.initialMarginPpm),
+            Number(liquidityTier.maintenanceFractionPpm),
+          ),
+        ),
+        basePositionNotional: liquidityTier.basePositionNotional,
+      };
+    })
+    .value();
+
+  return {
+    trading: tradingMarketMessageContents,
   };
 }

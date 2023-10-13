@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // CryptoComResponseBody defines the overall CryptoCom response.
@@ -31,6 +31,9 @@ type CryptoComTicker struct {
 	LastPrice string `json:"a" validate:"required,positive-float-string"`
 }
 
+// Ensure that CryptoComTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*CryptoComTicker)(nil)
+
 func (t CryptoComTicker) GetPair() string {
 	return t.Pair
 }
@@ -52,7 +55,7 @@ func (t CryptoComTicker) GetLastPrice() string {
 func CryptoComPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var cryptoComResponseBody CryptoComResponseBody
@@ -68,6 +71,6 @@ func CryptoComPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		cryptoComResponseBody.Result.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

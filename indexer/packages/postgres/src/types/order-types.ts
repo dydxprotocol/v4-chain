@@ -1,5 +1,7 @@
 /* ------- ORDER TYPES ------- */
 
+import { IsoString } from './utility-types';
+
 export enum OrderSide {
   BUY = 'BUY',
   SELL = 'SELL',
@@ -56,6 +58,8 @@ export interface OrderCreateObject {
   timeInForce: TimeInForce;
   reduceOnly: boolean;
   orderFlags: string;
+  updatedAt: IsoString;
+  updatedAtHeight: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
   createdAtHeight?: string;
@@ -75,6 +79,8 @@ export interface OrderUpdateObject {
   timeInForce?: TimeInForce;
   reduceOnly?: boolean;
   orderFlags?: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string;
   goodTilBlock?: string | null;
   goodTilBlockTime?: string | null;
   clientMetadata?: string;
@@ -99,6 +105,8 @@ export enum OrderColumns {
   perpetualId = 'perpetualId',
   openEventId = 'openEventId',
   orderFlags = 'orderFlags',
+  updatedAt = 'updatedAt',
+  updatedAtHeight = 'updatedAtHeight',
   createdAtHeight = 'createdAtHeight',
   clientMetadata = 'clientMetadata',
   triggerPrice = 'triggerPrice',

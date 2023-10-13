@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 import { logger } from '@dydxprotocol-indexer/base';
 import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
@@ -12,29 +13,40 @@ import { PerpetualMarketValidator } from '../validators/perpetual-market-validat
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
 import { TransferValidator } from '../validators/transfer-validator';
+import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
+import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
-import { SyncHandlers, SyncSubtypes } from './sync-handlers';
+import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
 import {
-  DydxIndexerSubtypes, EventMessage, EventProtoWithType, GroupedEvents,
+  DydxIndexerSubtypes, EventMessage, EventProtoWithTypeAndVersion, GroupedEvents,
 } from './types';
 
-const TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
-  [DydxIndexerSubtypes.ORDER_FILL.toString()]: OrderFillValidator,
-  [DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()]: SubaccountUpdateValidator,
-  [DydxIndexerSubtypes.TRANSFER.toString()]: TransferValidator,
-  [DydxIndexerSubtypes.MARKET.toString()]: MarketValidator,
-  [DydxIndexerSubtypes.STATEFUL_ORDER.toString()]: StatefulOrderValidator,
-  [DydxIndexerSubtypes.ASSET.toString()]: AssetValidator,
-  [DydxIndexerSubtypes.PERPETUAL_MARKET.toString()]: PerpetualMarketValidator,
-  [DydxIndexerSubtypes.LIQUIDITY_TIER.toString()]: LiquidityTierValidator,
+const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.ORDER_FILL.toString(), 1)]: OrderFillValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString(), 1)]: SubaccountUpdateValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.TRANSFER.toString(), 1)]: TransferValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.MARKET.toString(), 1)]: MarketValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.STATEFUL_ORDER.toString(), 1)]: StatefulOrderValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.ASSET.toString(), 1)]: AssetValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.PERPETUAL_MARKET.toString(), 1)]: PerpetualMarketValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 1)]: LiquidityTierValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
 };
 
-const BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
-  [DydxIndexerSubtypes.FUNDING.toString()]: FundingValidator,
+const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.FUNDING.toString(), 1)]: FundingValidator,
 };
+
+function serializeSubtypeAndVersion(
+  subtype: string,
+  version: number,
+): string {
+  return `${subtype}-${version}`;
+}
 
 export class BlockProcessor {
   block: IndexerTendermintBlock;
@@ -90,7 +102,7 @@ export class BlockProcessor {
     _.forEach(this.block.events, (event: IndexerTendermintEvent) => {
       const transactionIndex: number = indexerTendermintEventToTransactionIndex(event);
       const eventProtoWithType:
-      EventProtoWithType | undefined = indexerTendermintEventToEventProtoWithType(
+      EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
         event,
       );
       if (eventProtoWithType === undefined) {
@@ -118,50 +130,53 @@ export class BlockProcessor {
       for (const eventProtoWithType of eventsInTransaction) {
         this.validateAndAddHandlerForEvent(
           eventProtoWithType,
-          TXN_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING,
+          TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING,
         );
       }
     }
     for (const eventProtoWithType of groupedEvents.blockEvents) {
       this.validateAndAddHandlerForEvent(
         eventProtoWithType,
-        BLOCK_EVENT_SUBTYPE_TO_VALIDATOR_MAPPING,
+        BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING,
       );
     }
   }
 
   private validateAndAddHandlerForEvent(
-    eventProtoWithType: EventProtoWithType,
+    eventProto: EventProtoWithTypeAndVersion,
     validatorMap: Record<string, ValidatorInitializer>,
   ): void {
     const Initializer:
     ValidatorInitializer | undefined = validatorMap[
-      eventProtoWithType.type
+      serializeSubtypeAndVersion(
+        eventProto.type,
+        eventProto.version,
+      )
     ];
     if (Initializer === undefined) {
-      const message: string = `cannot process subtype ${eventProtoWithType.type}`;
+      const message: string = `cannot process subtype ${eventProto.type} and version ${eventProto.version}`;
       logger.error({
         at: 'onMessage#saveTendermintEventData',
         message,
-        eventProtoWithType,
+        eventProto,
       });
       return;
     }
 
     const validator: Validator<EventMessage> = new Initializer(
-      eventProtoWithType.eventProto,
+      eventProto.eventProto,
       this.block,
     );
 
     validator.validate();
     const handlers: Handler<EventMessage>[] = validator.createHandlers(
-      eventProtoWithType.indexerTendermintEvent,
+      eventProto.indexerTendermintEvent,
       this.txId,
     );
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
-      if (Object.values(SyncSubtypes).includes(eventProtoWithType.type as DydxIndexerSubtypes)) {
-        this.syncHandlers.addHandler(eventProtoWithType.type, handler);
+      if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {
+        this.syncHandlers.addHandler(eventProto.type, handler);
       } else {
         this.batchedHandlers.addHandler(handler);
       }

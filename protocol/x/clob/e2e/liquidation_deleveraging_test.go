@@ -23,7 +23,8 @@ import (
 func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 	tests := map[string]struct {
 		// State.
-		subaccounts []satypes.Subaccount
+		subaccounts                   []satypes.Subaccount
+		marketIdToOraclePriceOverride map[uint32]uint64
 
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
@@ -121,6 +122,9 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
 				// Carl's bankruptcy price to close 1 BTC short is $50,499, and closing at $50,500
@@ -146,10 +150,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
-		`Can place a liquidation order that is partially-filled and remaining size is deleveraged`: {
+		`Can place a liquidation order that is partially-filled and deleveraging is skipped`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -166,13 +173,33 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_499_000_000 - (50_498_000_000 / 4) - 250_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-75_000_000), // -0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
 				},
 				{
 					Id: &constants.Dave_Num0,
 					AssetPositions: []*satypes.AssetPosition{
 						{
 							AssetId:  0,
-							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000 - 250_000),
+							Quantums: dtypes.NewInt(50_000_000_000 + (50_498_000_000 / 4)),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(75_000_000), // 0.75 BTC
+							FundingIndex: dtypes.NewInt(0),
 						},
 					},
 				},
@@ -301,62 +328,15 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
-		`Can place a liquidation order that is partially-filled, then deleveraged for only a
-		portion of the remaining size due to non-overlapping bankruptcy prices with some subaccounts`: {
-			subaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_1BTC_Short_49999USD,
-				constants.Dave_Num0_1BTC_Long_50000USD_Short,
-				constants.Dave_Num1_05BTC_Long_50000USD,
-			},
-
-			placedMatchableOrders: []clobtypes.MatchableOrder{
-				&constants.Order_Dave_Num1_Id0_Clob0_Sell025BTC_Price49999_GTB10,
-				// Carl's bankruptcy price to close 1 BTC short is $49,999, and closing 0.75 BTC at $50,000
-				// would require $0.75 from the insurance fund. Since the insurance fund is empty,
-				// deleveraging is required to close this position.
-				&constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
-			},
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
-			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
-
-			expectedSubaccounts: []satypes.Subaccount{
-				// Deleveraging fails for remaining amount.
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							// 0.25 BTC closed by liquidation order, 0.25 BTC closed by deleveraging.
-							Quantums: dtypes.NewInt(49_999_000_000 - 12_499_750_000 - 12_499_750_000),
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(-50_000_000), // -0.5 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				// Dave_Num0 does not change since deleveraging against this subaccount failed.
-				constants.Dave_Num0_1BTC_Long_50000USD_Short,
-				{
-					Id: &constants.Dave_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							// 0.25 BTC closed by liquidation order, 0.25 BTC closed by deleveraging.
-							Quantums: dtypes.NewInt(50_000_000_000 + 12_499_750_000 + 12_499_750_000),
-						},
-					},
-				},
-			},
-		},
-		`Deleveraging takes precedence - can place a liquidation order that would fail due to exceeding 
+		`Deleveraging takes precedence - can place a liquidation order that would fail due to exceeding
 		subaccount limit and full position size is deleveraged`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -408,7 +388,26 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *prices.GenesisState) {
-						*genesisState = constants.TestPricesGenesisState
+						// Set oracle prices in the genesis.
+						pricesGenesis := constants.TestPricesGenesisState
+
+						// Make a copy of the MarketPrices slice to avoid modifying by reference.
+						marketPricesCopy := make([]prices.MarketPrice, len(pricesGenesis.MarketPrices))
+						copy(marketPricesCopy, pricesGenesis.MarketPrices)
+
+						for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
+							exponent, exists := constants.TestMarketIdsToExponents[marketId]
+							require.True(t, exists)
+
+							marketPricesCopy[marketId] = prices.MarketPrice{
+								Id:       marketId,
+								Price:    oraclePrice,
+								Exponent: exponent,
+							}
+						}
+
+						pricesGenesis.MarketPrices = marketPricesCopy
+						*genesisState = pricesGenesis
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -456,7 +455,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				existingOrderMsgs[i] = clobtypes.MsgPlaceOrder{Order: matchableOrder.MustGetOrder()}
 			}
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, existingOrderMsgs...) {
-				require.True(t, tApp.CheckTx(checkTx).IsOK())
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{

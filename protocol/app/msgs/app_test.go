@@ -206,7 +206,7 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: string(constants.Alice_Num0.Owner),
+						AccAddressForSigning: constants.Alice_Num0.Owner,
 					},
 					msgs...,
 				)
@@ -224,10 +224,10 @@ func TestDisallowMsgs_CheckTx_Fail(t *testing.T) {
 			}
 
 			// Run & Validate.
-			result := tApp.CheckTx(reqCheckTx)
-			require.False(t, result.IsOK(), "expected CheckTx to fail")
-			require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), result.Code)
-			require.Equal(t, tc.expectedErrorLog, result.Log)
+			resp := tApp.CheckTx(reqCheckTx)
+			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+			require.Equal(t, sdkerrors.ErrInvalidRequest.ABCICode(), resp.Code)
+			require.Equal(t, tc.expectedErrorLog, resp.Log)
 		})
 	}
 }
@@ -345,12 +345,10 @@ func TestDisallowMsgs_ProcessProposal_Fail(t *testing.T) {
 }
 
 func getMsgs(tc testCase) []sdk.Msg {
-	msgs := make([]sdk.Msg, 0)
-	msgs = append(msgs, tc.msg)
 	if tc.multiMsgs { // append extra msg to the tx
-		msgs = append(msgs, constants.Msg_Send)
+		return []sdk.Msg{tc.msg, constants.Msg_Send}
 	}
-	return msgs
+	return []sdk.Msg{tc.msg}
 }
 
 func getProposalTxsWithOtherTxs(otherTxsToAppend []byte) [][]byte {

@@ -7,6 +7,8 @@ import (
 	context "context"
 	encoding_binary "encoding/binary"
 	fmt "fmt"
+	_ "github.com/cosmos/cosmos-proto"
+	_ "github.com/cosmos/cosmos-sdk/types/msgservice"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -29,6 +31,98 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// MsgCreateClobPair is a message used by x/gov for creating a new clob pair.
+type MsgCreateClobPair struct {
+	// The address that controls the module.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// `clob_pair` defines parameters for the new clob pair.
+	ClobPair ClobPair `protobuf:"bytes,2,opt,name=clob_pair,json=clobPair,proto3" json:"clob_pair"`
+}
+
+func (m *MsgCreateClobPair) Reset()         { *m = MsgCreateClobPair{} }
+func (m *MsgCreateClobPair) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClobPair) ProtoMessage()    {}
+func (*MsgCreateClobPair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{0}
+}
+func (m *MsgCreateClobPair) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClobPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClobPair.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClobPair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClobPair.Merge(m, src)
+}
+func (m *MsgCreateClobPair) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClobPair) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClobPair.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClobPair proto.InternalMessageInfo
+
+func (m *MsgCreateClobPair) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgCreateClobPair) GetClobPair() ClobPair {
+	if m != nil {
+		return m.ClobPair
+	}
+	return ClobPair{}
+}
+
+// MsgCreateClobPairResponse defines the CreateClobPair response type.
+type MsgCreateClobPairResponse struct {
+}
+
+func (m *MsgCreateClobPairResponse) Reset()         { *m = MsgCreateClobPairResponse{} }
+func (m *MsgCreateClobPairResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgCreateClobPairResponse) ProtoMessage()    {}
+func (*MsgCreateClobPairResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{1}
+}
+func (m *MsgCreateClobPairResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgCreateClobPairResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgCreateClobPairResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgCreateClobPairResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgCreateClobPairResponse.Merge(m, src)
+}
+func (m *MsgCreateClobPairResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgCreateClobPairResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgCreateClobPairResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgCreateClobPairResponse proto.InternalMessageInfo
+
 // MsgProposedOperations is a message injected by block proposers to
 // specify the operations that occurred in a block.
 type MsgProposedOperations struct {
@@ -40,7 +134,7 @@ func (m *MsgProposedOperations) Reset()         { *m = MsgProposedOperations{} }
 func (m *MsgProposedOperations) String() string { return proto.CompactTextString(m) }
 func (*MsgProposedOperations) ProtoMessage()    {}
 func (*MsgProposedOperations) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{0}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{2}
 }
 func (m *MsgProposedOperations) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -85,7 +179,7 @@ func (m *MsgProposedOperationsResponse) Reset()         { *m = MsgProposedOperat
 func (m *MsgProposedOperationsResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgProposedOperationsResponse) ProtoMessage()    {}
 func (*MsgProposedOperationsResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{1}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{3}
 }
 func (m *MsgProposedOperationsResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -123,7 +217,7 @@ func (m *MsgPlaceOrder) Reset()         { *m = MsgPlaceOrder{} }
 func (m *MsgPlaceOrder) String() string { return proto.CompactTextString(m) }
 func (*MsgPlaceOrder) ProtoMessage()    {}
 func (*MsgPlaceOrder) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{2}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{4}
 }
 func (m *MsgPlaceOrder) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -167,7 +261,7 @@ func (m *MsgPlaceOrderResponse) Reset()         { *m = MsgPlaceOrderResponse{} }
 func (m *MsgPlaceOrderResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgPlaceOrderResponse) ProtoMessage()    {}
 func (*MsgPlaceOrderResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{3}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{5}
 }
 func (m *MsgPlaceOrderResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -211,7 +305,7 @@ func (m *MsgCancelOrder) Reset()         { *m = MsgCancelOrder{} }
 func (m *MsgCancelOrder) String() string { return proto.CompactTextString(m) }
 func (*MsgCancelOrder) ProtoMessage()    {}
 func (*MsgCancelOrder) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{4}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{6}
 }
 func (m *MsgCancelOrder) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -300,7 +394,7 @@ func (m *MsgCancelOrderResponse) Reset()         { *m = MsgCancelOrderResponse{}
 func (m *MsgCancelOrderResponse) String() string { return proto.CompactTextString(m) }
 func (*MsgCancelOrderResponse) ProtoMessage()    {}
 func (*MsgCancelOrderResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{5}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{7}
 }
 func (m *MsgCancelOrderResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -329,6 +423,99 @@ func (m *MsgCancelOrderResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgCancelOrderResponse proto.InternalMessageInfo
 
+// MsgUpdateClobPair is a request type used for updating a ClobPair in state.
+type MsgUpdateClobPair struct {
+	// Authority is the address that may send this message.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// `clob_pair` is the ClobPair to write to state.
+	ClobPair ClobPair `protobuf:"bytes,2,opt,name=clob_pair,json=clobPair,proto3" json:"clob_pair"`
+}
+
+func (m *MsgUpdateClobPair) Reset()         { *m = MsgUpdateClobPair{} }
+func (m *MsgUpdateClobPair) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClobPair) ProtoMessage()    {}
+func (*MsgUpdateClobPair) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{8}
+}
+func (m *MsgUpdateClobPair) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClobPair) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClobPair.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClobPair) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClobPair.Merge(m, src)
+}
+func (m *MsgUpdateClobPair) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClobPair) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClobPair.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClobPair proto.InternalMessageInfo
+
+func (m *MsgUpdateClobPair) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateClobPair) GetClobPair() ClobPair {
+	if m != nil {
+		return m.ClobPair
+	}
+	return ClobPair{}
+}
+
+// MsgUpdateClobPairResponse is a response type used for setting a ClobPair's
+// status.
+type MsgUpdateClobPairResponse struct {
+}
+
+func (m *MsgUpdateClobPairResponse) Reset()         { *m = MsgUpdateClobPairResponse{} }
+func (m *MsgUpdateClobPairResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateClobPairResponse) ProtoMessage()    {}
+func (*MsgUpdateClobPairResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{9}
+}
+func (m *MsgUpdateClobPairResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateClobPairResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateClobPairResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateClobPairResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateClobPairResponse.Merge(m, src)
+}
+func (m *MsgUpdateClobPairResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateClobPairResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateClobPairResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateClobPairResponse proto.InternalMessageInfo
+
 // OperationRaw represents an operation in the proposed operations.
 // Note that the `order_placement` operation is a signed message.
 type OperationRaw struct {
@@ -336,6 +523,7 @@ type OperationRaw struct {
 	// a signed order placement, or an order removal.
 	//
 	// Types that are valid to be assigned to Operation:
+	//
 	//	*OperationRaw_Match
 	//	*OperationRaw_ShortTermOrderPlacement
 	//	*OperationRaw_OrderRemoval
@@ -346,7 +534,7 @@ func (m *OperationRaw) Reset()         { *m = OperationRaw{} }
 func (m *OperationRaw) String() string { return proto.CompactTextString(m) }
 func (*OperationRaw) ProtoMessage()    {}
 func (*OperationRaw) Descriptor() ([]byte, []int) {
-	return fileDescriptor_19b9e2c0de4ab64a, []int{6}
+	return fileDescriptor_19b9e2c0de4ab64a, []int{10}
 }
 func (m *OperationRaw) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -432,55 +620,381 @@ func (*OperationRaw) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// request type.
+type MsgUpdateEquityTierLimitConfiguration struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Defines the equity tier limit configuration to update to. All fields must
+	// be set.
+	EquityTierLimitConfig EquityTierLimitConfiguration `protobuf:"bytes,2,opt,name=equity_tier_limit_config,json=equityTierLimitConfig,proto3" json:"equity_tier_limit_config"`
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) Reset()         { *m = MsgUpdateEquityTierLimitConfiguration{} }
+func (m *MsgUpdateEquityTierLimitConfiguration) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateEquityTierLimitConfiguration) ProtoMessage()    {}
+func (*MsgUpdateEquityTierLimitConfiguration) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{11}
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.Merge(m, src)
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateEquityTierLimitConfiguration proto.InternalMessageInfo
+
+func (m *MsgUpdateEquityTierLimitConfiguration) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) GetEquityTierLimitConfig() EquityTierLimitConfiguration {
+	if m != nil {
+		return m.EquityTierLimitConfig
+	}
+	return EquityTierLimitConfiguration{}
+}
+
+// MsgUpdateEquityTierLimitConfiguration is the Msg/EquityTierLimitConfiguration
+// response type.
+type MsgUpdateEquityTierLimitConfigurationResponse struct {
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Reset() {
+	*m = MsgUpdateEquityTierLimitConfigurationResponse{}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateEquityTierLimitConfigurationResponse) ProtoMessage() {}
+func (*MsgUpdateEquityTierLimitConfigurationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{12}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.Merge(m, src)
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateEquityTierLimitConfigurationResponse proto.InternalMessageInfo
+
+// MsgUpdateBlockRateLimitConfiguration is the Msg/BlockRateLimitConfiguration
+// request type.
+type MsgUpdateBlockRateLimitConfiguration struct {
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Defines the block rate limit configuration to update to. All fields must be
+	// set.
+	BlockRateLimitConfig BlockRateLimitConfiguration `protobuf:"bytes,3,opt,name=block_rate_limit_config,json=blockRateLimitConfig,proto3" json:"block_rate_limit_config"`
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Reset()         { *m = MsgUpdateBlockRateLimitConfiguration{} }
+func (m *MsgUpdateBlockRateLimitConfiguration) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateBlockRateLimitConfiguration) ProtoMessage()    {}
+func (*MsgUpdateBlockRateLimitConfiguration) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{13}
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.Merge(m, src)
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateBlockRateLimitConfiguration proto.InternalMessageInfo
+
+func (m *MsgUpdateBlockRateLimitConfiguration) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) GetBlockRateLimitConfig() BlockRateLimitConfiguration {
+	if m != nil {
+		return m.BlockRateLimitConfig
+	}
+	return BlockRateLimitConfiguration{}
+}
+
+// MsgUpdateBlockRateLimitConfiguration is a response type for updating the
+// liquidations config.
+type MsgUpdateBlockRateLimitConfigurationResponse struct {
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Reset() {
+	*m = MsgUpdateBlockRateLimitConfigurationResponse{}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*MsgUpdateBlockRateLimitConfigurationResponse) ProtoMessage() {}
+func (*MsgUpdateBlockRateLimitConfigurationResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{14}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.Merge(m, src)
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateBlockRateLimitConfigurationResponse proto.InternalMessageInfo
+
+// MsgUpdateLiquidationsConfig is a request type for updating the liquidations
+// config.
+type MsgUpdateLiquidationsConfig struct {
+	// Authority is the address that may send this message.
+	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
+	// Defines the liquidations configuration to update to. All fields must
+	// be set.
+	LiquidationsConfig LiquidationsConfig `protobuf:"bytes,2,opt,name=liquidations_config,json=liquidationsConfig,proto3" json:"liquidations_config"`
+}
+
+func (m *MsgUpdateLiquidationsConfig) Reset()         { *m = MsgUpdateLiquidationsConfig{} }
+func (m *MsgUpdateLiquidationsConfig) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateLiquidationsConfig) ProtoMessage()    {}
+func (*MsgUpdateLiquidationsConfig) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{15}
+}
+func (m *MsgUpdateLiquidationsConfig) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateLiquidationsConfig) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateLiquidationsConfig.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateLiquidationsConfig) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateLiquidationsConfig.Merge(m, src)
+}
+func (m *MsgUpdateLiquidationsConfig) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateLiquidationsConfig) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateLiquidationsConfig.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateLiquidationsConfig proto.InternalMessageInfo
+
+func (m *MsgUpdateLiquidationsConfig) GetAuthority() string {
+	if m != nil {
+		return m.Authority
+	}
+	return ""
+}
+
+func (m *MsgUpdateLiquidationsConfig) GetLiquidationsConfig() LiquidationsConfig {
+	if m != nil {
+		return m.LiquidationsConfig
+	}
+	return LiquidationsConfig{}
+}
+
+// MsgUpdateLiquidationsConfig is the Msg/LiquidationsConfig response type.
+type MsgUpdateLiquidationsConfigResponse struct {
+}
+
+func (m *MsgUpdateLiquidationsConfigResponse) Reset()         { *m = MsgUpdateLiquidationsConfigResponse{} }
+func (m *MsgUpdateLiquidationsConfigResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgUpdateLiquidationsConfigResponse) ProtoMessage()    {}
+func (*MsgUpdateLiquidationsConfigResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_19b9e2c0de4ab64a, []int{16}
+}
+func (m *MsgUpdateLiquidationsConfigResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgUpdateLiquidationsConfigResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgUpdateLiquidationsConfigResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgUpdateLiquidationsConfigResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgUpdateLiquidationsConfigResponse.Merge(m, src)
+}
+func (m *MsgUpdateLiquidationsConfigResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgUpdateLiquidationsConfigResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgUpdateLiquidationsConfigResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgUpdateLiquidationsConfigResponse proto.InternalMessageInfo
+
 func init() {
+	proto.RegisterType((*MsgCreateClobPair)(nil), "dydxprotocol.clob.MsgCreateClobPair")
+	proto.RegisterType((*MsgCreateClobPairResponse)(nil), "dydxprotocol.clob.MsgCreateClobPairResponse")
 	proto.RegisterType((*MsgProposedOperations)(nil), "dydxprotocol.clob.MsgProposedOperations")
 	proto.RegisterType((*MsgProposedOperationsResponse)(nil), "dydxprotocol.clob.MsgProposedOperationsResponse")
 	proto.RegisterType((*MsgPlaceOrder)(nil), "dydxprotocol.clob.MsgPlaceOrder")
 	proto.RegisterType((*MsgPlaceOrderResponse)(nil), "dydxprotocol.clob.MsgPlaceOrderResponse")
 	proto.RegisterType((*MsgCancelOrder)(nil), "dydxprotocol.clob.MsgCancelOrder")
 	proto.RegisterType((*MsgCancelOrderResponse)(nil), "dydxprotocol.clob.MsgCancelOrderResponse")
+	proto.RegisterType((*MsgUpdateClobPair)(nil), "dydxprotocol.clob.MsgUpdateClobPair")
+	proto.RegisterType((*MsgUpdateClobPairResponse)(nil), "dydxprotocol.clob.MsgUpdateClobPairResponse")
 	proto.RegisterType((*OperationRaw)(nil), "dydxprotocol.clob.OperationRaw")
+	proto.RegisterType((*MsgUpdateEquityTierLimitConfiguration)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfiguration")
+	proto.RegisterType((*MsgUpdateEquityTierLimitConfigurationResponse)(nil), "dydxprotocol.clob.MsgUpdateEquityTierLimitConfigurationResponse")
+	proto.RegisterType((*MsgUpdateBlockRateLimitConfiguration)(nil), "dydxprotocol.clob.MsgUpdateBlockRateLimitConfiguration")
+	proto.RegisterType((*MsgUpdateBlockRateLimitConfigurationResponse)(nil), "dydxprotocol.clob.MsgUpdateBlockRateLimitConfigurationResponse")
+	proto.RegisterType((*MsgUpdateLiquidationsConfig)(nil), "dydxprotocol.clob.MsgUpdateLiquidationsConfig")
+	proto.RegisterType((*MsgUpdateLiquidationsConfigResponse)(nil), "dydxprotocol.clob.MsgUpdateLiquidationsConfigResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/clob/tx.proto", fileDescriptor_19b9e2c0de4ab64a) }
 
 var fileDescriptor_19b9e2c0de4ab64a = []byte{
-	// 552 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x94, 0xcf, 0x6e, 0xd3, 0x4e,
-	0x10, 0xc7, 0xed, 0xe6, 0xf7, 0xa3, 0x30, 0x49, 0x4a, 0x30, 0x7f, 0x6a, 0x59, 0xd4, 0x09, 0x39,
-	0x54, 0xe6, 0x40, 0x8c, 0x42, 0xc5, 0x05, 0x71, 0x49, 0x05, 0x0a, 0x87, 0xa8, 0xc1, 0xca, 0x01,
-	0xc1, 0xc1, 0x72, 0xec, 0xc5, 0xb1, 0xb0, 0x3d, 0xc6, 0xbb, 0x29, 0xe9, 0x5b, 0xf0, 0x24, 0x9c,
-	0x79, 0x84, 0x1e, 0x7b, 0xec, 0x09, 0xa1, 0xe4, 0x45, 0xd0, 0xae, 0x1d, 0xe3, 0x28, 0x8e, 0xca,
-	0xcd, 0x3b, 0xf3, 0x99, 0x99, 0xfd, 0x8e, 0xbf, 0x5a, 0xd0, 0xbc, 0x0b, 0x6f, 0x91, 0xa4, 0xc8,
-	0xd0, 0xc5, 0xd0, 0x74, 0x43, 0x9c, 0x9a, 0x6c, 0xd1, 0x13, 0x01, 0xe5, 0x5e, 0x39, 0xd7, 0xe3,
-	0x39, 0xed, 0x81, 0x8f, 0x3e, 0x8a, 0x90, 0xc9, 0xbf, 0x32, 0x50, 0x3b, 0xda, 0x6e, 0x82, 0xa9,
-	0x47, 0xd2, 0x3c, 0x7d, 0xbc, 0x23, 0x6d, 0xa7, 0x24, 0xc2, 0x73, 0x27, 0xa4, 0x39, 0xd7, 0xde,
-	0xe6, 0x22, 0x87, 0xb9, 0x33, 0x92, 0x03, 0xdd, 0x00, 0x1e, 0x8e, 0xa8, 0x3f, 0x4e, 0x31, 0x41,
-	0x4a, 0xbc, 0xb3, 0x84, 0xa4, 0x0e, 0x0b, 0x30, 0xa6, 0xca, 0x18, 0x5a, 0x58, 0x9c, 0xec, 0xaf,
-	0x73, 0x32, 0x27, 0xaa, 0xdc, 0xa9, 0x19, 0xf5, 0x7e, 0xbb, 0xb7, 0x25, 0xa2, 0x57, 0x14, 0x5a,
-	0xce, 0xb7, 0xc1, 0x7f, 0x97, 0xbf, 0xda, 0x92, 0x75, 0xf7, 0x6f, 0xf9, 0x7b, 0x5e, 0xdd, 0x6d,
-	0xc3, 0x51, 0xe5, 0x28, 0x8b, 0xd0, 0x04, 0x63, 0x4a, 0xba, 0x6f, 0xa0, 0xc9, 0x81, 0xd0, 0x71,
-	0xc9, 0x19, 0x17, 0xa3, 0x9c, 0xc0, 0xff, 0x42, 0x95, 0x2a, 0x77, 0x64, 0xa3, 0xde, 0x57, 0xab,
-	0x06, 0xf3, 0x7c, 0x3e, 0x31, 0x83, 0xbb, 0x87, 0x99, 0xa4, 0xa2, 0x4d, 0xd1, 0xff, 0xa7, 0x0c,
-	0x07, 0x23, 0xea, 0x9f, 0x3a, 0xb1, 0x4b, 0xc2, 0x6c, 0xc2, 0x2b, 0xb8, 0x9d, 0xed, 0x2d, 0xf0,
-	0xf2, 0x21, 0xda, 0xae, 0x21, 0xef, 0xbc, 0x7c, 0xcc, 0x3e, 0x66, 0x47, 0xe5, 0x18, 0x0e, 0x7c,
-	0x44, 0xcf, 0x66, 0x41, 0x68, 0x4f, 0x43, 0x74, 0xbf, 0xa8, 0x7b, 0x1d, 0xd9, 0x68, 0x0e, 0x25,
-	0xab, 0xc1, 0xe3, 0x93, 0x20, 0x1c, 0xf0, 0xa8, 0x62, 0xc2, 0xfd, 0x4d, 0xce, 0x66, 0x41, 0x44,
-	0xd4, 0x5a, 0x47, 0x36, 0xf6, 0x87, 0x92, 0xd5, 0x2a, 0xc3, 0x93, 0x20, 0x22, 0x83, 0x56, 0xa9,
-	0x31, 0xc6, 0x04, 0x3f, 0x77, 0x55, 0x78, 0xb4, 0x79, 0xf3, 0x42, 0xd4, 0xb5, 0x0c, 0x8d, 0xf2,
-	0xf6, 0xf9, 0xd2, 0xc4, 0x2f, 0xce, 0xf5, 0x3c, 0xae, 0xd0, 0x73, 0x1a, 0xe2, 0x74, 0xc4, 0x99,
-	0xa1, 0x64, 0x65, 0xb0, 0xf2, 0x1a, 0x34, 0x3a, 0xc3, 0x94, 0xd9, 0x8c, 0xa4, 0x91, 0x9d, 0xed,
-	0x24, 0xe1, 0x2b, 0x8c, 0x48, 0xcc, 0x84, 0xae, 0xc6, 0x50, 0xb2, 0x0e, 0x05, 0x33, 0x21, 0x69,
-	0x24, 0x2e, 0x31, 0x5e, 0x03, 0xca, 0x5b, 0x68, 0x6e, 0xf8, 0x4f, 0x88, 0xdb, 0x61, 0x95, 0xec,
-	0xfa, 0x02, 0xe3, 0xab, 0xc2, 0xd2, 0x79, 0x50, 0x87, 0x3b, 0x85, 0x6d, 0xfa, 0x3f, 0xf6, 0xa0,
-	0x36, 0xa2, 0xbe, 0x92, 0x80, 0x52, 0x61, 0x50, 0xa3, 0xa2, 0x77, 0xa5, 0xbf, 0xb4, 0xe7, 0xff,
-	0x4a, 0xae, 0x97, 0xaa, 0x7c, 0x00, 0x28, 0xd9, 0xb0, 0xb3, 0xa3, 0xbe, 0x20, 0x34, 0xe3, 0x26,
-	0xa2, 0xe8, 0xfc, 0x09, 0xea, 0x65, 0xff, 0x3d, 0xa9, 0x2e, 0x2c, 0x21, 0xda, 0xd3, 0x1b, 0x91,
-	0x75, 0xf3, 0xc1, 0xf8, 0x72, 0xa9, 0xcb, 0x57, 0x4b, 0x5d, 0xfe, 0xbd, 0xd4, 0xe5, 0xef, 0x2b,
-	0x5d, 0xba, 0x5a, 0xe9, 0xd2, 0xf5, 0x4a, 0x97, 0x3e, 0xbe, 0xf4, 0x03, 0x36, 0x9b, 0x4f, 0x7b,
-	0x2e, 0x46, 0xe6, 0xc6, 0x93, 0x70, 0x7e, 0xf2, 0xcc, 0x9d, 0x39, 0x41, 0x6c, 0x16, 0x91, 0x45,
-	0xfe, 0x64, 0x5d, 0x24, 0x84, 0x4e, 0x6f, 0x89, 0xf0, 0x8b, 0x3f, 0x01, 0x00, 0x00, 0xff, 0xff,
-	0x9f, 0x69, 0xc9, 0x92, 0xd4, 0x04, 0x00, 0x00,
+	// 968 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x57, 0x4f, 0x6f, 0xdc, 0x44,
+	0x14, 0xdf, 0x21, 0x40, 0x9a, 0xb7, 0x49, 0x48, 0xdd, 0x94, 0xb8, 0x0e, 0xdd, 0x6c, 0x96, 0xa6,
+	0x5a, 0xa0, 0x59, 0x97, 0x50, 0x05, 0x04, 0xe2, 0xdf, 0x46, 0x45, 0x41, 0x6a, 0xd4, 0xc5, 0x04,
+	0x09, 0x01, 0x92, 0xe5, 0xb5, 0xa7, 0xde, 0x51, 0x6d, 0x8f, 0x33, 0x9e, 0x0d, 0xc9, 0xb5, 0x9f,
+	0x80, 0x3b, 0x42, 0xe2, 0x23, 0x70, 0xe0, 0xc0, 0x19, 0x2e, 0x3d, 0x56, 0x9c, 0x2a, 0x21, 0x01,
+	0x4a, 0x0e, 0x7c, 0x0d, 0x64, 0x7b, 0x3c, 0xf1, 0xc6, 0xf6, 0x66, 0x59, 0x71, 0xe8, 0x65, 0x77,
+	0x67, 0xe6, 0xf7, 0xde, 0xef, 0xbd, 0xf7, 0x1b, 0xbf, 0xb7, 0x06, 0xcd, 0x39, 0x76, 0x8e, 0x42,
+	0x46, 0x39, 0xb5, 0xa9, 0xa7, 0xdb, 0x1e, 0xed, 0xeb, 0xfc, 0xa8, 0x93, 0x6c, 0x28, 0x97, 0xf3,
+	0x67, 0x9d, 0xf8, 0x4c, 0xbb, 0x66, 0xd3, 0xc8, 0xa7, 0x91, 0x99, 0xec, 0xea, 0xe9, 0x22, 0x45,
+	0x6b, 0x2b, 0xe9, 0x4a, 0xf7, 0x23, 0x57, 0x3f, 0x7c, 0x33, 0xfe, 0x12, 0x07, 0xcb, 0x2e, 0x75,
+	0x69, 0x6a, 0x10, 0xff, 0x12, 0xbb, 0x7a, 0x91, 0xb8, 0xef, 0x51, 0xfb, 0xa1, 0xc9, 0x2c, 0x8e,
+	0x4d, 0x8f, 0xf8, 0x84, 0x9b, 0x36, 0x0d, 0x1e, 0x90, 0xcc, 0xcd, 0x7a, 0xd1, 0x20, 0xfe, 0x30,
+	0x43, 0x8b, 0x30, 0x01, 0xb9, 0x5d, 0x84, 0xe0, 0x83, 0x21, 0xe1, 0xc7, 0x26, 0x27, 0x98, 0x95,
+	0x39, 0x5d, 0x2b, 0x5a, 0xf8, 0x16, 0xb7, 0x07, 0x38, 0xcb, 0xea, 0x7a, 0x11, 0x40, 0x99, 0x83,
+	0x33, 0xc6, 0x9b, 0x15, 0xc7, 0x26, 0xc3, 0x3e, 0x3d, 0xb4, 0xbc, 0xcc, 0xcd, 0x1b, 0x45, 0x9c,
+	0x47, 0x0e, 0x86, 0xc4, 0xb1, 0x38, 0xa1, 0x41, 0x34, 0x12, 0x54, 0xeb, 0x7b, 0x04, 0x97, 0xf7,
+	0x22, 0x77, 0x87, 0x61, 0x8b, 0xe3, 0x1d, 0x8f, 0xf6, 0x7b, 0x16, 0x61, 0xca, 0x36, 0xcc, 0x59,
+	0x43, 0x3e, 0xa0, 0x8c, 0xf0, 0x63, 0x15, 0x35, 0x51, 0x7b, 0xae, 0xab, 0xfe, 0xfe, 0xf3, 0xe6,
+	0xb2, 0x10, 0xe1, 0x63, 0xc7, 0x61, 0x38, 0x8a, 0x3e, 0xe7, 0x8c, 0x04, 0xae, 0x71, 0x06, 0x55,
+	0x3e, 0x80, 0x39, 0x59, 0x27, 0xf5, 0xb9, 0x26, 0x6a, 0xd7, 0xb7, 0x56, 0x3b, 0x05, 0x65, 0x3b,
+	0x19, 0x4f, 0xf7, 0xf9, 0xc7, 0x7f, 0xae, 0xd5, 0x8c, 0x4b, 0xb6, 0x58, 0xbf, 0xbb, 0xf8, 0xe8,
+	0x9f, 0x9f, 0x5e, 0x3f, 0xf3, 0xd7, 0x5a, 0x85, 0x6b, 0x85, 0xe0, 0x0c, 0x1c, 0x85, 0x34, 0x88,
+	0x70, 0x8b, 0xc0, 0xd5, 0xbd, 0xc8, 0xed, 0x31, 0x1a, 0xd2, 0x08, 0x3b, 0xf7, 0x43, 0xcc, 0xd2,
+	0x04, 0x95, 0x1e, 0x2c, 0x51, 0xb9, 0x32, 0x0f, 0x86, 0x78, 0x88, 0x55, 0xd4, 0x9c, 0x69, 0xd7,
+	0xb7, 0xd6, 0x4a, 0x82, 0x91, 0x86, 0x86, 0xf5, 0xad, 0x08, 0xe8, 0xa5, 0x33, 0xf3, 0xcf, 0x62,
+	0xeb, 0xd6, 0x1a, 0x5c, 0x2f, 0xa5, 0x92, 0xb1, 0xdc, 0x85, 0x85, 0x18, 0xe0, 0x59, 0x36, 0xbe,
+	0x1f, 0x6b, 0xa2, 0xdc, 0x81, 0x17, 0x12, 0x71, 0x92, 0xea, 0xd5, 0xb7, 0xd4, 0x32, 0xe2, 0xf8,
+	0x5c, 0x30, 0xa6, 0xe0, 0xd6, 0x4a, 0x9a, 0x92, 0x74, 0x23, 0xfd, 0xff, 0x82, 0x60, 0x31, 0xae,
+	0x84, 0x15, 0xd8, 0xd8, 0x4b, 0x19, 0xde, 0x83, 0x4b, 0xa9, 0xfc, 0xc4, 0x11, 0x24, 0x5a, 0x15,
+	0xc9, 0xa7, 0x8e, 0xa0, 0x99, 0xa5, 0xe9, 0x52, 0xb9, 0x09, 0x8b, 0x2e, 0xa5, 0x8e, 0xc9, 0x89,
+	0x67, 0x26, 0x8f, 0x42, 0xa2, 0xd6, 0xc2, 0x6e, 0xcd, 0x98, 0x8f, 0xf7, 0xf7, 0x89, 0xd7, 0x8d,
+	0x77, 0x15, 0x1d, 0xae, 0x8c, 0xe2, 0x4c, 0x4e, 0x7c, 0xac, 0xce, 0x34, 0x51, 0x7b, 0x76, 0xb7,
+	0x66, 0x2c, 0xe5, 0xc1, 0xfb, 0xc4, 0xc7, 0xdd, 0xa5, 0x9c, 0x63, 0x1a, 0x60, 0xfa, 0xa0, 0xa5,
+	0xc2, 0xcb, 0xa3, 0x91, 0xcb, 0xa4, 0xc4, 0xdd, 0xfb, 0x22, 0x74, 0x9e, 0xdd, 0xbb, 0x37, 0x1a,
+	0x9c, 0x0c, 0xfd, 0x29, 0x82, 0xf9, 0xfc, 0xc5, 0x89, 0xf5, 0x4e, 0x1e, 0x66, 0x21, 0xc5, 0x2b,
+	0x15, 0xcc, 0x7b, 0x31, 0x66, 0xb7, 0x66, 0xa4, 0x60, 0xe5, 0x7d, 0xd0, 0xa2, 0x01, 0x65, 0xdc,
+	0xe4, 0x98, 0xf9, 0x66, 0x2a, 0x67, 0x18, 0xab, 0xef, 0xe3, 0x80, 0x27, 0x49, 0xcc, 0xef, 0xd6,
+	0x8c, 0x95, 0x04, 0xb3, 0x8f, 0x99, 0x9f, 0xd4, 0xaf, 0x97, 0x01, 0x94, 0x4f, 0x60, 0x61, 0xa4,
+	0x03, 0x24, 0xba, 0x54, 0xdc, 0xf2, 0xb4, 0xf2, 0x09, 0x2c, 0x56, 0x99, 0xe6, 0xd6, 0xdd, 0x3a,
+	0xcc, 0xc9, 0x1b, 0xdf, 0xfa, 0x0b, 0xc1, 0x86, 0x4c, 0xfc, 0x6e, 0xd2, 0xd2, 0xf6, 0x09, 0x66,
+	0xf7, 0xe2, 0x86, 0xb6, 0x93, 0xb4, 0x8e, 0x61, 0x8a, 0x9c, 0x5a, 0xa9, 0x00, 0xd4, 0xaa, 0x56,
+	0x29, 0x84, 0xd3, 0x4b, 0x32, 0x18, 0x17, 0x8a, 0x10, 0xf3, 0x2a, 0x2e, 0xc3, 0x14, 0x94, 0xd5,
+	0x61, 0x73, 0xa2, 0x04, 0xa5, 0xda, 0x7f, 0x20, 0xb8, 0x21, 0x2d, 0x92, 0xbb, 0x6e, 0x58, 0x1c,
+	0xff, 0x8f, 0x15, 0x79, 0x08, 0x2b, 0x15, 0x03, 0x49, 0x48, 0xda, 0x29, 0x29, 0xc8, 0x98, 0x40,
+	0x44, 0x3d, 0x96, 0xfb, 0x25, 0x90, 0x42, 0x39, 0x3a, 0x70, 0x6b, 0x92, 0xe4, 0x64, 0x35, 0x7e,
+	0x43, 0xb0, 0x2a, 0x0d, 0xee, 0xe5, 0x26, 0x4b, 0x0a, 0x9f, 0xba, 0x08, 0xdf, 0xc0, 0x95, 0x92,
+	0x39, 0x25, 0x6e, 0xc4, 0x46, 0x49, 0x01, 0x8a, 0xdc, 0x22, 0x6f, 0xc5, 0x2b, 0x9c, 0x14, 0xb2,
+	0xde, 0x80, 0x57, 0xc7, 0x24, 0x91, 0x25, 0xbb, 0xf5, 0xeb, 0x2c, 0xcc, 0xec, 0x45, 0xae, 0x12,
+	0x82, 0x52, 0x32, 0x69, 0xda, 0x25, 0x51, 0x95, 0x0e, 0x0a, 0xed, 0xf6, 0xa4, 0xc8, 0x8c, 0x59,
+	0xf9, 0x12, 0x20, 0x37, 0x4f, 0x9a, 0x15, 0xf6, 0x12, 0xa1, 0xb5, 0x2f, 0x42, 0x48, 0xcf, 0x5f,
+	0x43, 0x3d, 0x3f, 0x48, 0xd6, 0xcb, 0x0d, 0x73, 0x10, 0xed, 0xb5, 0x0b, 0x21, 0xd2, 0xb9, 0x03,
+	0x8b, 0xe7, 0xfe, 0x4c, 0xdc, 0xa8, 0x30, 0x1e, 0x41, 0x69, 0xb7, 0x26, 0x41, 0xe5, 0x59, 0xce,
+	0x8d, 0x8d, 0x0a, 0x96, 0x51, 0x54, 0x15, 0x4b, 0x79, 0x97, 0x57, 0x7e, 0x44, 0xd0, 0x9a, 0xa0,
+	0x0f, 0xbe, 0x33, 0xce, 0xe9, 0x38, 0x4b, 0xed, 0xa3, 0x69, 0x2d, 0x65, 0x88, 0x3f, 0x20, 0x58,
+	0xbf, 0xb8, 0x2f, 0xbd, 0x3d, 0x8e, 0x67, 0x8c, 0xa1, 0xf6, 0xe1, 0x94, 0x86, 0x32, 0xbe, 0x47,
+	0x08, 0xd4, 0xca, 0x4e, 0xd1, 0x19, 0xe7, 0xbd, 0x88, 0xd7, 0xb6, 0xff, 0x1b, 0x3e, 0x0b, 0xa2,
+	0xdb, 0x7b, 0x7c, 0xd2, 0x40, 0x4f, 0x4e, 0x1a, 0xe8, 0xef, 0x93, 0x06, 0xfa, 0xee, 0xb4, 0x51,
+	0x7b, 0x72, 0xda, 0xa8, 0x3d, 0x3d, 0x6d, 0xd4, 0xbe, 0xda, 0x76, 0x09, 0x1f, 0x0c, 0xfb, 0x1d,
+	0x9b, 0xfa, 0xa3, 0x2f, 0x09, 0x87, 0x77, 0x36, 0xed, 0x81, 0x45, 0x02, 0x5d, 0xee, 0x1c, 0x89,
+	0x37, 0x96, 0xe3, 0x10, 0x47, 0xfd, 0x17, 0x93, 0xed, 0xb7, 0xfe, 0x0d, 0x00, 0x00, 0xff, 0xff,
+	0xbb, 0xf1, 0x76, 0x35, 0xd3, 0x0c, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -502,6 +1016,21 @@ type MsgClient interface {
 	PlaceOrder(ctx context.Context, in *MsgPlaceOrder, opts ...grpc.CallOption) (*MsgPlaceOrderResponse, error)
 	// CancelOrder allows accounts to cancel existing orders on the orderbook.
 	CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ...grpc.CallOption) (*MsgCancelOrderResponse, error)
+	// CreateClobPair creates a new clob pair.
+	CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error)
+	// UpdateClobPair sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair id is not found in state, or if the update includes
+	// an unsupported status transition.
+	UpdateClobPair(ctx context.Context, in *MsgUpdateClobPair, opts ...grpc.CallOption) (*MsgUpdateClobPairResponse, error)
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
+	UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
+	UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
+	// UpdateLiquidationsConfig updates the liquidations configuration in state.
+	UpdateLiquidationsConfig(ctx context.Context, in *MsgUpdateLiquidationsConfig, opts ...grpc.CallOption) (*MsgUpdateLiquidationsConfigResponse, error)
 }
 
 type msgClient struct {
@@ -539,6 +1068,51 @@ func (c *msgClient) CancelOrder(ctx context.Context, in *MsgCancelOrder, opts ..
 	return out, nil
 }
 
+func (c *msgClient) CreateClobPair(ctx context.Context, in *MsgCreateClobPair, opts ...grpc.CallOption) (*MsgCreateClobPairResponse, error) {
+	out := new(MsgCreateClobPairResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/CreateClobPair", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateClobPair(ctx context.Context, in *MsgUpdateClobPair, opts ...grpc.CallOption) (*MsgUpdateClobPairResponse, error) {
+	out := new(MsgUpdateClobPairResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateClobPair", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateEquityTierLimitConfiguration(ctx context.Context, in *MsgUpdateEquityTierLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
+	out := new(MsgUpdateEquityTierLimitConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateEquityTierLimitConfiguration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateBlockRateLimitConfiguration(ctx context.Context, in *MsgUpdateBlockRateLimitConfiguration, opts ...grpc.CallOption) (*MsgUpdateBlockRateLimitConfigurationResponse, error) {
+	out := new(MsgUpdateBlockRateLimitConfigurationResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateBlockRateLimitConfiguration", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *msgClient) UpdateLiquidationsConfig(ctx context.Context, in *MsgUpdateLiquidationsConfig, opts ...grpc.CallOption) (*MsgUpdateLiquidationsConfigResponse, error) {
+	out := new(MsgUpdateLiquidationsConfigResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.clob.Msg/UpdateLiquidationsConfig", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// ProposedOperations is a temporary message used by block proposers
@@ -548,6 +1122,21 @@ type MsgServer interface {
 	PlaceOrder(context.Context, *MsgPlaceOrder) (*MsgPlaceOrderResponse, error)
 	// CancelOrder allows accounts to cancel existing orders on the orderbook.
 	CancelOrder(context.Context, *MsgCancelOrder) (*MsgCancelOrderResponse, error)
+	// CreateClobPair creates a new clob pair.
+	CreateClobPair(context.Context, *MsgCreateClobPair) (*MsgCreateClobPairResponse, error)
+	// UpdateClobPair sets the status of a clob pair. Should return an error
+	// if the authority is not in the clob keeper's set of authorities,
+	// if the ClobPair id is not found in state, or if the update includes
+	// an unsupported status transition.
+	UpdateClobPair(context.Context, *MsgUpdateClobPair) (*MsgUpdateClobPairResponse, error)
+	// UpdateEquityTierLimitConfiguration updates the equity tier limit
+	// configuration in state.
+	UpdateEquityTierLimitConfiguration(context.Context, *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error)
+	// UpdateBlockRateLimitConfiguration updates the block rate limit
+	// configuration in state.
+	UpdateBlockRateLimitConfiguration(context.Context, *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error)
+	// UpdateLiquidationsConfig updates the liquidations configuration in state.
+	UpdateLiquidationsConfig(context.Context, *MsgUpdateLiquidationsConfig) (*MsgUpdateLiquidationsConfigResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -562,6 +1151,21 @@ func (*UnimplementedMsgServer) PlaceOrder(ctx context.Context, req *MsgPlaceOrde
 }
 func (*UnimplementedMsgServer) CancelOrder(ctx context.Context, req *MsgCancelOrder) (*MsgCancelOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelOrder not implemented")
+}
+func (*UnimplementedMsgServer) CreateClobPair(ctx context.Context, req *MsgCreateClobPair) (*MsgCreateClobPairResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateClobPair not implemented")
+}
+func (*UnimplementedMsgServer) UpdateClobPair(ctx context.Context, req *MsgUpdateClobPair) (*MsgUpdateClobPairResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateClobPair not implemented")
+}
+func (*UnimplementedMsgServer) UpdateEquityTierLimitConfiguration(ctx context.Context, req *MsgUpdateEquityTierLimitConfiguration) (*MsgUpdateEquityTierLimitConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateEquityTierLimitConfiguration not implemented")
+}
+func (*UnimplementedMsgServer) UpdateBlockRateLimitConfiguration(ctx context.Context, req *MsgUpdateBlockRateLimitConfiguration) (*MsgUpdateBlockRateLimitConfigurationResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateBlockRateLimitConfiguration not implemented")
+}
+func (*UnimplementedMsgServer) UpdateLiquidationsConfig(ctx context.Context, req *MsgUpdateLiquidationsConfig) (*MsgUpdateLiquidationsConfigResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateLiquidationsConfig not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -622,6 +1226,96 @@ func _Msg_CancelOrder_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_CreateClobPair_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgCreateClobPair)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).CreateClobPair(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/CreateClobPair",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).CreateClobPair(ctx, req.(*MsgCreateClobPair))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateClobPair_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateClobPair)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateClobPair(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateClobPair",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateClobPair(ctx, req.(*MsgUpdateClobPair))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateEquityTierLimitConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateEquityTierLimitConfiguration)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateEquityTierLimitConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateEquityTierLimitConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateEquityTierLimitConfiguration(ctx, req.(*MsgUpdateEquityTierLimitConfiguration))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateBlockRateLimitConfiguration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateBlockRateLimitConfiguration)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateBlockRateLimitConfiguration(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateBlockRateLimitConfiguration",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateBlockRateLimitConfiguration(ctx, req.(*MsgUpdateBlockRateLimitConfiguration))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Msg_UpdateLiquidationsConfig_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgUpdateLiquidationsConfig)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).UpdateLiquidationsConfig(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.clob.Msg/UpdateLiquidationsConfig",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).UpdateLiquidationsConfig(ctx, req.(*MsgUpdateLiquidationsConfig))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.clob.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -638,9 +1332,92 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 			MethodName: "CancelOrder",
 			Handler:    _Msg_CancelOrder_Handler,
 		},
+		{
+			MethodName: "CreateClobPair",
+			Handler:    _Msg_CreateClobPair_Handler,
+		},
+		{
+			MethodName: "UpdateClobPair",
+			Handler:    _Msg_UpdateClobPair_Handler,
+		},
+		{
+			MethodName: "UpdateEquityTierLimitConfiguration",
+			Handler:    _Msg_UpdateEquityTierLimitConfiguration_Handler,
+		},
+		{
+			MethodName: "UpdateBlockRateLimitConfiguration",
+			Handler:    _Msg_UpdateBlockRateLimitConfiguration_Handler,
+		},
+		{
+			MethodName: "UpdateLiquidationsConfig",
+			Handler:    _Msg_UpdateLiquidationsConfig_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "dydxprotocol/clob/tx.proto",
+}
+
+func (m *MsgCreateClobPair) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClobPair) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClobPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ClobPair.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgCreateClobPairResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgCreateClobPairResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgCreateClobPairResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
 }
 
 func (m *MsgProposedOperations) Marshal() (dAtA []byte, err error) {
@@ -849,6 +1626,69 @@ func (m *MsgCancelOrderResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgUpdateClobPair) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClobPair) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClobPair) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.ClobPair.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateClobPairResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateClobPairResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateClobPairResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func (m *OperationRaw) Marshal() (dAtA []byte, err error) {
 	size := m.Size()
 	dAtA = make([]byte, size)
@@ -939,6 +1779,195 @@ func (m *OperationRaw_OrderRemoval) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	}
 	return len(dAtA) - i, nil
 }
+func (m *MsgUpdateEquityTierLimitConfiguration) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateEquityTierLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.EquityTierLimitConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.BlockRateLimitConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x1a
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateLiquidationsConfig) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateLiquidationsConfig) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateLiquidationsConfig) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	{
+		size, err := m.LiquidationsConfig.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintTx(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	if len(m.Authority) > 0 {
+		i -= len(m.Authority)
+		copy(dAtA[i:], m.Authority)
+		i = encodeVarintTx(dAtA, i, uint64(len(m.Authority)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *MsgUpdateLiquidationsConfigResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgUpdateLiquidationsConfigResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgUpdateLiquidationsConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -950,6 +1979,30 @@ func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *MsgCreateClobPair) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.ClobPair.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgCreateClobPairResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *MsgProposedOperations) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1035,6 +2088,30 @@ func (m *MsgCancelOrderResponse) Size() (n int) {
 	return n
 }
 
+func (m *MsgUpdateClobPair) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.ClobPair.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateClobPairResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
 func (m *OperationRaw) Size() (n int) {
 	if m == nil {
 		return 0
@@ -1083,12 +2160,248 @@ func (m *OperationRaw_OrderRemoval) Size() (n int) {
 	}
 	return n
 }
+func (m *MsgUpdateEquityTierLimitConfiguration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.EquityTierLimitConfig.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateBlockRateLimitConfiguration) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.BlockRateLimitConfig.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgUpdateLiquidationsConfig) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Authority)
+	if l > 0 {
+		n += 1 + l + sovTx(uint64(l))
+	}
+	l = m.LiquidationsConfig.Size()
+	n += 1 + l + sovTx(uint64(l))
+	return n
+}
+
+func (m *MsgUpdateLiquidationsConfigResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
 
 func sovTx(x uint64) (n int) {
 	return (math_bits.Len64(x|1) + 6) / 7
 }
 func sozTx(x uint64) (n int) {
 	return sovTx(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *MsgCreateClobPair) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClobPair: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClobPair: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPair", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClobPair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgCreateClobPairResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgCreateClobPairResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgCreateClobPairResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *MsgProposedOperations) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1521,6 +2834,171 @@ func (m *MsgCancelOrderResponse) Unmarshal(dAtA []byte) error {
 	}
 	return nil
 }
+func (m *MsgUpdateClobPair) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClobPair: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClobPair: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ClobPair", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.ClobPair.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateClobPairResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateClobPairResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateClobPairResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
 func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
 	iNdEx := 0
@@ -1653,6 +3131,501 @@ func (m *OperationRaw) Unmarshal(dAtA []byte) error {
 			}
 			m.Operation = &OperationRaw_OrderRemoval{v}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateEquityTierLimitConfiguration) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfiguration: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfiguration: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field EquityTierLimitConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.EquityTierLimitConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateEquityTierLimitConfigurationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfigurationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateEquityTierLimitConfigurationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateBlockRateLimitConfiguration) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfiguration: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfiguration: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockRateLimitConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.BlockRateLimitConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateBlockRateLimitConfigurationResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfigurationResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateBlockRateLimitConfigurationResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateLiquidationsConfig) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateLiquidationsConfig: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateLiquidationsConfig: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Authority", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Authority = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidationsConfig", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowTx
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthTx
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthTx
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.LiquidationsConfig.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgUpdateLiquidationsConfigResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgUpdateLiquidationsConfigResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgUpdateLiquidationsConfigResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
 		default:
 			iNdEx = preIndex
 			skippy, err := skipTx(dAtA[iNdEx:])

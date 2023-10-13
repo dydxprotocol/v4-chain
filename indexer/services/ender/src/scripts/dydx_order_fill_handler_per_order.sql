@@ -66,21 +66,21 @@ BEGIN
       TODO(IND-238): Extract out calculation of quantums and subticks to their own SQL functions.
     */
     order_size = dydx_trim_scale(dydx_from_jsonlib_long(order_->'quantums') *
-                                 power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                 power(10, perpetual_market_record."atomicResolution")::numeric);
     order_price = dydx_trim_scale(dydx_from_jsonlib_long(order_->'subticks') *
-                                  power(10::numeric, perpetual_market_record."quantumConversionExponent"::numeric +
-                                                     asset_record."atomicResolution"::numeric -
-                                                     perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."quantumConversionExponent" +
+                                                     asset_record."atomicResolution" -
+                                                     perpetual_market_record."atomicResolution")::numeric);
     fill_amount = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'fillAmount') *
-                                  power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."atomicResolution")::numeric);
     maker_price = dydx_trim_scale(dydx_from_jsonlib_long(maker_order->'subticks') *
-                                  power(10::numeric, perpetual_market_record."quantumConversionExponent"::numeric +
-                                                     asset_record."atomicResolution"::numeric -
-                                                     perpetual_market_record."atomicResolution"::numeric));
+                                  power(10, perpetual_market_record."quantumConversionExponent" +
+                                                     asset_record."atomicResolution" -
+                                                     perpetual_market_record."atomicResolution")::numeric);
     total_filled = dydx_trim_scale(get_total_filled(fill_liquidity, event_data) *
-                                   power(10::numeric, perpetual_market_record."atomicResolution"::numeric));
+                                   power(10, perpetual_market_record."atomicResolution")::numeric);
     fee = dydx_trim_scale(get_fee(fill_liquidity, event_data) *
-                          power(10::numeric, asset_record."atomicResolution"::numeric));
+                          power(10, asset_record."atomicResolution")::numeric);
 
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
@@ -99,7 +99,7 @@ BEGIN
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
-        order_record."status" = get_order_status(total_filled, order_record.size, is_cancelled);
+        order_record."status" = get_order_status(total_filled, order_record.size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
 
         UPDATE orders
         SET
@@ -112,7 +112,9 @@ BEGIN
             "goodTilBlockTime" = order_record."goodTilBlockTime",
             "timeInForce" = order_record."timeInForce",
             "reduceOnly" = order_record."reduceOnly",
-            "clientMetadata" = order_record."clientMetadata"
+            "clientMetadata" = order_record."clientMetadata",
+            "updatedAt" = block_time,
+            "updatedAtHeight" = block_height
         WHERE id = order_uuid;
     ELSE
         order_record."id" = order_uuid;
@@ -123,11 +125,14 @@ BEGIN
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
-        order_record."status" = get_order_status(fill_amount, order_size, is_cancelled);
+        order_record."status" = get_order_status(fill_amount, order_size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
         order_record."createdAtHeight" = block_height;
+        order_record."updatedAt" = block_time;
+        order_record."updatedAtHeight" = block_height;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
-             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight", "clientMetadata", "triggerPrice")
+            "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
+            "clientMetadata", "triggerPrice", "updatedAt", "updatedAtHeight")
         VALUES (order_record.*);
     END IF;
 

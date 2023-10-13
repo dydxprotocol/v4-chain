@@ -2,11 +2,13 @@ package prices
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the x/prices module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
@@ -16,10 +18,23 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the market params and prices.
-	for i, elem := range genState.MarketParams {
-		if _, err := k.CreateMarket(ctx, elem, genState.MarketPrices[i]); err != nil {
+	for i, param := range genState.MarketParams {
+		if _, err := k.CreateMarket(ctx, param, genState.MarketPrices[i]); err != nil {
 			panic(err)
 		}
+	}
+
+	// Generate indexer events.
+	priceUpdateIndexerEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(genState.MarketPrices)
+	for _, update := range priceUpdateIndexerEvents {
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeMarket,
+			indexerevents.MarketEventVersion,
+			indexer_manager.GetBytes(
+				update,
+			),
+		)
 	}
 }
 

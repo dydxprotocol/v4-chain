@@ -58,8 +58,6 @@ describe('request-transformer', () => {
           clobPairId: perpetualMarket.clobPairId,
           ticker: perpetualMarket.ticker,
           status: perpetualMarket.status,
-          baseAsset: perpetualMarket.baseAsset,
-          quoteAsset: perpetualMarket.quoteAsset,
           lastPrice: perpetualMarket.lastPrice,
           oraclePrice: market.oraclePrice,
           priceChange24H: perpetualMarket.priceChange24H,
@@ -74,9 +72,6 @@ describe('request-transformer', () => {
             ),
           ),
           basePositionNotional: liquidityTier.basePositionNotional,
-          basePositionSize: perpetualMarket.basePositionSize,
-          incrementalPositionSize: perpetualMarket.incrementalPositionSize,
-          maxPositionSize: perpetualMarket.maxPositionSize,
           openInterest: perpetualMarket.openInterest,
           atomicResolution: perpetualMarket.atomicResolution,
           quantumConversionExponent: perpetualMarket.quantumConversionExponent,
@@ -84,7 +79,6 @@ describe('request-transformer', () => {
           stepSize: Big(10).pow(-9).toFixed(), // 10 * 1e-10 = 1e-9
           stepBaseQuantums: perpetualMarket.stepBaseQuantums,
           subticksPerTick: perpetualMarket.subticksPerTick,
-          minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
         },
       );
     });

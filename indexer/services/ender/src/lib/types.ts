@@ -28,6 +28,8 @@ import {
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
   LiquidityTierUpsertEventV1,
+  UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -39,7 +41,8 @@ export interface EventHandlerData {
   txId: number,
 }
 
-// Type sourced from protocol https://github.com/dydxprotocol/v4/blob/main/indexer/events/constants.go
+// Type sourced from protocol:
+// https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
 export enum DydxIndexerSubtypes {
   ORDER_FILL = 'order_fill',
   SUBACCOUNT_UPDATE = 'subaccount_update',
@@ -50,58 +53,80 @@ export enum DydxIndexerSubtypes {
   ASSET = 'asset',
   PERPETUAL_MARKET = 'perpetual_market',
   LIQUIDITY_TIER = 'liquidity_tier',
+  UPDATE_PERPETUAL = 'update_perpetual',
+  UPDATE_CLOB_PAIR = 'update_clob_pair',
 }
 
 // Generic interface used for creating the Handler objects
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type EventMessage = any;
 
-export type EventProtoWithType = {
+export type EventProtoWithTypeAndVersion = {
   type: string,
   eventProto: EventMessage,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } & ({
   type: DydxIndexerSubtypes.ORDER_FILL,
   eventProto: OrderFillEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
   eventProto: SubaccountUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.TRANSFER,
   eventProto: TransferEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.MARKET,
   eventProto: MarketEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.STATEFUL_ORDER,
   eventProto: StatefulOrderEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.ASSET,
   eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 } | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+  eventProto: UpdatePerpetualEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+} | {
+  type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+  eventProto: UpdateClobPairEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
 });
 
 // Events grouped into events block events and events for each transactionIndex
 export interface GroupedEvents {
-  transactionEvents: EventProtoWithType[][],
-  blockEvents: EventProtoWithType[],
+  transactionEvents: EventProtoWithTypeAndVersion[][],
+  blockEvents: EventProtoWithTypeAndVersion[],
 }
 
 export type MarketPriceUpdateEventMessage = {

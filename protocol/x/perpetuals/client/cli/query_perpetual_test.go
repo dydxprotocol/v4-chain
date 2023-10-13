@@ -4,6 +4,7 @@ package cli_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"testing"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -77,6 +78,10 @@ func networkWithLiquidityTierAndPerpetualObjects(
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
 
+	t.Cleanup(func() {
+		stoppable.StopServices(t, cfg.GRPCAddress)
+	})
+
 	return network.New(t, cfg), state.LiquidityTiers, state.Perpetuals
 }
 
@@ -132,16 +137,16 @@ func TestShowPerpetual(t *testing.T) {
 	}
 }
 
-// Check the recieved perpetual matches with expected.
+// Check the received perpetual matches with expected.
 // FundingIndex field is ignored since it can vary depending on funding-tick epoch.
 // TODO(DEC-606): Improve end-to-end testing related to ticking epochs.
 func checkExpectedPerp(t *testing.T, expected types.Perpetual, received types.Perpetual) {
 	if diff := cmp.Diff(expected, received, cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex")); diff != "" {
-		t.Errorf("resp.Perpetual mismatch (-want +recieved):\n%s", diff)
+		t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
 	}
 }
 
-// Check the recieved perpetual object matches one of the expected perpetuals.
+// Check the received perpetual object matches one of the expected perpetuals.
 func expectedContainsReceived(t *testing.T, expectedPerps []types.Perpetual, received types.Perpetual) {
 	for _, expected := range expectedPerps {
 		if received.Params.Id == expected.Params.Id {
@@ -149,7 +154,7 @@ func expectedContainsReceived(t *testing.T, expectedPerps []types.Perpetual, rec
 			return
 		}
 	}
-	t.Errorf("Recieved perp (%v) not found in expected perps (%v)", received, expectedPerps)
+	t.Errorf("Received perp (%v) not found in expected perps (%v)", received, expectedPerps)
 }
 
 func TestListPerpetual(t *testing.T) {
@@ -216,7 +221,7 @@ func TestListPerpetual(t *testing.T) {
 			}),
 		}
 		if diff := cmp.Diff(objs, resp.Perpetual, cmpOptions...); diff != "" {
-			t.Errorf("resp.Perpetual mismatch (-want +recieved):\n%s", diff)
+			t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
 		}
 	})
 }

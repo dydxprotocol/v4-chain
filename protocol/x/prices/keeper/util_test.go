@@ -58,6 +58,12 @@ func TestGetProposalPrice(t *testing.T) {
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(900_000),
 		},
+		"smoothedPrice: smoothedPrice < marketPrice < indexPrice": {
+			smoothedPrice: uint64(900_000),
+			indexPrice:    uint64(1_100_000),
+			marketPrice:   uint64(1_000_000),
+			expectedPrice: uint64(900_000),
+		},
 		"indexPrice: indexPrice < marketPrice << smoothedPrice": {
 			smoothedPrice: uint64(1_500_000),
 			indexPrice:    uint64(900_000),
@@ -67,6 +73,12 @@ func TestGetProposalPrice(t *testing.T) {
 		"smoothedPrice: indexPrice << marketPrice < smoothedPrice": {
 			smoothedPrice: uint64(1_100_000),
 			indexPrice:    uint64(500_000),
+			marketPrice:   uint64(1_000_000),
+			expectedPrice: uint64(1_100_000),
+		},
+		"smoothedPrice: indexPrice < marketPrice < smoothedPrice": {
+			smoothedPrice: uint64(1_100_000),
+			indexPrice:    uint64(900_000),
 			marketPrice:   uint64(1_000_000),
 			expectedPrice: uint64(1_100_000),
 		},
@@ -178,7 +190,7 @@ func TestIsTowardsIndexPrice(t *testing.T) {
 			indexPrice:     2,
 			expectedResult: true,
 		},
-		"Towards: idx < curr == new": {
+		"Towards: idx < new == curr": {
 			oldPrice:       2,
 			newPrice:       2,
 			indexPrice:     1,
@@ -190,7 +202,7 @@ func TestIsTowardsIndexPrice(t *testing.T) {
 			indexPrice:     2,
 			expectedResult: true,
 		},
-		"Towards: new == idx < curr": {
+		"Towards: idx == new < curr": {
 			oldPrice:       2,
 			newPrice:       1,
 			indexPrice:     1,
@@ -285,6 +297,12 @@ func TestIsCrossingIndexPrice(t *testing.T) {
 			indexPrice:     3,
 			expectedResult: false,
 		},
+		"Not Crossing: new = curr < index": {
+			oldPrice:       1,
+			newPrice:       1,
+			indexPrice:     3,
+			expectedResult: false,
+		},
 		"Not Crossing: curr < new = index": {
 			oldPrice:       1,
 			newPrice:       2,
@@ -311,6 +329,24 @@ func TestIsCrossingIndexPrice(t *testing.T) {
 		},
 		"Not Crossing: index < new < curr": {
 			oldPrice:       3,
+			newPrice:       2,
+			indexPrice:     1,
+			expectedResult: false,
+		},
+		"Not Crossing: index < new = curr": {
+			oldPrice:       2,
+			newPrice:       2,
+			indexPrice:     1,
+			expectedResult: false,
+		},
+		"Not Crossing: index = new < curr": {
+			oldPrice:       2,
+			newPrice:       1,
+			indexPrice:     1,
+			expectedResult: false,
+		},
+		"Not Crossing: index = curr < new": {
+			oldPrice:       1,
 			newPrice:       2,
 			indexPrice:     1,
 			expectedResult: false,

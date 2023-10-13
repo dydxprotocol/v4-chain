@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,9 +15,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/encoding"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -25,7 +25,7 @@ import (
 )
 
 func newTestHandlerOptions() HandlerOptions {
-	encodingConfig := encoding.MakeEncodingConfig(basic_manager.ModuleBasics)
+	encodingConfig := GetEncodingConfig()
 	appCodec := encodingConfig.Codec
 	txConfig := encodingConfig.TxConfig
 
@@ -49,14 +49,16 @@ func newTestHandlerOptions() HandlerOptions {
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(false)
-	untriggeredConditionalOrders := make(map[types.ClobPairId]*clobmodulekeeper.UntriggeredConditionalOrders)
 	clobKeeper := clobmodulekeeper.NewKeeper(
 		appCodec,
 		nil,
 		nil,
 		nil,
+		[]string{
+			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		},
 		memClob,
-		untriggeredConditionalOrders,
 		nil,
 		nil,
 		nil,
@@ -82,8 +84,6 @@ func newTestHandlerOptions() HandlerOptions {
 		ClobKeeper: clobKeeper,
 	}
 }
-
-type WrappedHandlerType reflect.Type
 
 func wrapDecoratorStr(decoratorStr string) string {
 	return "(" + decoratorStr + ")"

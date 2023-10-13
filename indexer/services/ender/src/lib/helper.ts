@@ -18,6 +18,9 @@ import {
   FundingEventV1,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
+  LiquidityTierUpsertEventV1,
+  UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
@@ -26,10 +29,9 @@ import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
 } from '../constants';
-import { base64StringToBinary } from '../helpers/encoding-helper';
 import {
   DydxIndexerSubtypes,
-  EventProtoWithType,
+  EventProtoWithTypeAndVersion,
 } from './types';
 
 export function indexerTendermintEventToTransactionIndex(
@@ -49,7 +51,7 @@ export function indexerTendermintEventToTransactionIndex(
   }
 
   throw new ParseMessageError(
-    'TendermintEventTable.orderingWithinBlock.oneOfKind cannot be undefined',
+    'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
   );
 }
 
@@ -76,14 +78,17 @@ export function dateToDateTime(
  */
 export function indexerTendermintEventToEventProtoWithType(
   event: IndexerTendermintEvent,
-): EventProtoWithType | undefined {
-  const eventDataBinary: Uint8Array = base64StringToBinary(event.data);
+): EventProtoWithTypeAndVersion | undefined {
+  const eventDataBinary: Uint8Array = event.dataBytes;
+  // set the default version to 1
+  const version: number = event.version === 0 ? 1 : event.version;
   switch (event.subtype) {
     case (DydxIndexerSubtypes.ORDER_FILL.toString()): {
       return {
         type: DydxIndexerSubtypes.ORDER_FILL,
         eventProto: OrderFillEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
@@ -91,6 +96,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
         eventProto: SubaccountUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.TRANSFER.toString()): {
@@ -98,6 +104,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.TRANSFER,
         eventProto: TransferEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.MARKET.toString()): {
@@ -105,6 +112,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.MARKET,
         eventProto: MarketEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
@@ -112,6 +120,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.STATEFUL_ORDER,
         eventProto: StatefulOrderEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.FUNDING.toString()): {
@@ -119,6 +128,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.FUNDING,
         eventProto: FundingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.ASSET.toString()): {
@@ -126,6 +136,7 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.ASSET,
         eventProto: AssetCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
       };
     }
     case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
@@ -133,6 +144,31 @@ export function indexerTendermintEventToEventProtoWithType(
         type: DydxIndexerSubtypes.PERPETUAL_MARKET,
         eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
+        version,
+      };
+    }
+    case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
+      return {
+        type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+        eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+      };
+    }
+    case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
+      return {
+        type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
+        eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+      };
+    }
+    case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
+      return {
+        type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
+        eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
       };
     }
     default: {

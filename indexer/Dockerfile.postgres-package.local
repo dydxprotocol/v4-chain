@@ -41,4 +41,4 @@ RUN pnpm i --loglevel warn --production --frozen-lockfile
 
 WORKDIR /home/dydx/app/packages/postgres
 
-CMD ["sh", "-c", "pnpm run migrate && pnpm run seed"]
+CMD ["sh", "-c", "pnpm run migrate"]

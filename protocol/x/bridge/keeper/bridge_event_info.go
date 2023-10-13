@@ -7,16 +7,12 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-const (
-	acknowledgedEventInfoKey = "AcknowledgedEventInfo"
-)
-
 // GetAcknowledgedEventInfo returns `AcknowledgedEventInfo` from state.
 func (k Keeper) GetAcknowledgedEventInfo(
 	ctx sdk.Context,
 ) (acknowledgedEventInfo types.BridgeEventInfo) {
 	store := ctx.KVStore(k.storeKey)
-	var rawBytes []byte = store.Get([]byte(acknowledgedEventInfoKey))
+	var rawBytes []byte = store.Get([]byte(types.AcknowledgedEventInfoKey))
 
 	k.cdc.MustUnmarshal(rawBytes, &acknowledgedEventInfo)
 	return acknowledgedEventInfo
@@ -33,7 +29,7 @@ func (k Keeper) SetAcknowledgedEventInfo(
 
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(&acknowledgedEventInfo)
-	store.Set([]byte(acknowledgedEventInfoKey), b)
+	store.Set([]byte(types.AcknowledgedEventInfoKey), b)
 
 	// Emit metrics on acknowledged event info.
 	telemetry.SetGauge(
@@ -54,7 +50,7 @@ func (k Keeper) SetAcknowledgedEventInfo(
 
 // GetRecognizedEventInfo returns `RecognizedEventInfo` from `BridgeEventManager`.
 // This has the next event id that has not yet been recognized by this node’s daemon.
-// This also has the height of the highest Ethereum block from which a bridge event
+// This also has the height of the highest Ethereum block at which a bridge event
 // was recognized. These values are not in-consensus.
 func (k Keeper) GetRecognizedEventInfo(
 	ctx sdk.Context,

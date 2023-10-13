@@ -85,6 +85,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
 
@@ -97,6 +98,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ks.Ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
@@ -112,17 +114,17 @@ func TestPlaceOrder_Error(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						clobtest.MustPerpetualId(clobPair),
-						ks.ClobKeeper.GetNumClobPairs(ks.Ctx),
+						clobPair.Id,
 						perpetual.Params.Ticker,
 						perpetual.Params.MarketId,
 						clobPair.Status,
 						clobPair.QuantumConversionExponent,
 						perpetual.Params.AtomicResolution,
 						clobPair.SubticksPerTick,
-						clobPair.MinOrderBaseQuantums,
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 					),
@@ -130,8 +132,8 @@ func TestPlaceOrder_Error(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
-				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
@@ -213,6 +215,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
+
 			ctx := ks.Ctx.WithBlockHeight(2)
 			ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
@@ -237,6 +241,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 			perpetual := constants.BtcUsd_100PercentMarginRequirement
 			_, err := ks.PerpetualsKeeper.CreatePerpetual(
 				ctx,
+				perpetual.Params.Id,
 				perpetual.Params.Ticker,
 				perpetual.Params.MarketId,
 				perpetual.Params.AtomicResolution,
@@ -250,7 +255,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						0,
 						0,
@@ -260,7 +266,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 						clobPair.QuantumConversionExponent,
 						perpetual.Params.AtomicResolution,
 						clobPair.SubticksPerTick,
-						clobPair.MinOrderBaseQuantums,
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 					),
@@ -268,8 +273,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 			).Once().Return()
 			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
+				clobPair.Id,
 				clobtest.MustPerpetualId(clobPair),
-				satypes.BaseQuantums(clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(clobPair.StepBaseQuantums),
 				clobPair.QuantumConversionExponent,
 				clobPair.SubticksPerTick,
@@ -283,7 +288,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderPlacementEvent(
 							tc.StatefulOrderPlacement,
 						),
@@ -294,7 +300,8 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
+					indexerevents.StatefulOrderEventVersion,
+					indexer_manager.GetBytes(
 						indexerevents.NewLongTermOrderPlacementEvent(
 							tc.StatefulOrderPlacement,
 						),

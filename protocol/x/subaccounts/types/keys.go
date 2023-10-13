@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "subaccounts"
@@ -8,6 +9,8 @@ const (
 	StoreKey = ModuleName
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
+// State
+const (
+	// SubaccountKeyPrefix is the prefix to retrieve all Subaccount
+	SubaccountKeyPrefix = "SA:"
+)

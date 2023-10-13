@@ -2,12 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"ATOMUSDT\"",
+      "ticker": "ATOMUSDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"ATOMUSD\""
     },
     {
       "exchangeName": "Bybit",
@@ -19,8 +15,8 @@
       "ticker": "ATOM-USD"
     },
     {
-      "exchangeName": "Huobi",
-      "ticker": "atomusdt",
+      "exchangeName": "Gate",
+      "ticker": "ATOM_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -30,6 +26,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "ATOM-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ATOM_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

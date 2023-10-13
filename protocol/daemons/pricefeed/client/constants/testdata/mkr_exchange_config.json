@@ -2,16 +2,7 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"MKRUSDT\"",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"MKRUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tMKRUSD",
+      "ticker": "MKRUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
@@ -19,18 +10,17 @@
       "ticker": "MKR-USD"
     },
     {
-      "exchangeName": "Gate",
-      "ticker": "MKR_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Huobi",
-      "ticker": "mkrusdt",
-      "adjustByMarket": "USDT-USD"
+      "exchangeName": "Kraken",
+      "ticker": "MKRUSD"
     },
     {
       "exchangeName": "Kucoin",
       "ticker": "MKR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "MKR_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

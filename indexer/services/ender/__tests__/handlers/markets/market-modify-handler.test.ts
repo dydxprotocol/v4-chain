@@ -12,14 +12,16 @@ import { createKafkaMessageFromMarketEvent } from '../../helpers/kafka-helpers';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
-import { binaryToBase64String, createIndexerTendermintBlock, createIndexerTendermintEvent } from '../../helpers/indexer-proto-helpers';
+import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../../helpers/indexer-proto-helpers';
 import { MarketModifyHandler } from '../../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketModifyHandler', () => {
 
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
   });
 
   beforeEach(async () => {
@@ -49,14 +51,12 @@ describe('marketModifyHandler', () => {
       const marketEvent: MarketEventV1 = {
         marketId: 0,
         priceUpdate: {
-          priceWithExponent: Long.fromValue(1),
+          priceWithExponent: Long.fromValue(1, true),
         },
       };
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.MARKET,
-        binaryToBase64String(
-          MarketEventV1.encode(marketEvent).finish(),
-        ),
+        MarketEventV1.encode(marketEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -84,7 +84,7 @@ describe('marketModifyHandler', () => {
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: defaultMarketModify,
+      marketEvents: [defaultMarketModify],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,
@@ -104,10 +104,10 @@ describe('marketModifyHandler', () => {
     const transactionIndex: number = 0;
 
     const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvent: {
+      marketEvents: [{
         ...defaultMarketModify,
         marketId: 5,
-      },
+      }],
       transactionIndex,
       height: defaultHeight,
       time: defaultTime,

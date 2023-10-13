@@ -1,0 +1,22 @@
+{
+  "delayed_messages": [
+    {
+      "id": 1,
+      "msg": {
+        "@type": "/dydxprotocol.bridge.MsgCompleteBridge",
+        "authority": "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+        "event": {
+          "id": 1,
+          "coin": {
+            "denom": "",
+            "amount": "0"
+          },
+          "address": "",
+          "eth_block_height": "0"
+        }
+      },
+      "block_height": 100
+    }
+  ],
+  "next_delayed_message_id": 2
+}

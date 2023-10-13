@@ -25,15 +25,14 @@
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
-    "test": "NODE_ENV=test jest --runInBand --forceExit",
-    "seed": "knex seed:run"
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "BSL-1.1",
   "bugs": {
     "url": "https://github.com/dydxprotocol/indexer/issues"
   },

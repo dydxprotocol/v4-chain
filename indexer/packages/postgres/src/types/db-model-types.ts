@@ -62,6 +62,8 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   timeInForce: TimeInForce;
   reduceOnly: boolean;
   orderFlags: string;
+  updatedAt: IsoString;
+  updatedAtHeight: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
   createdAtHeight?: string;
@@ -75,21 +77,15 @@ export interface PerpetualMarketFromDatabase {
   ticker: string;
   marketId: number;
   status: PerpetualMarketStatus;
-  baseAsset: string;
-  quoteAsset: string;
   lastPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;
   nextFundingRate: string;
-  basePositionSize: string;
-  incrementalPositionSize: string;
-  maxPositionSize: string;
   openInterest: string;
   quantumConversionExponent: number;
   atomicResolution: number;
   subticksPerTick: number;
-  minOrderBaseQuantums: number;
   stepBaseQuantums: number;
   liquidityTierId: number;
 }
@@ -216,6 +212,14 @@ export interface FundingIndexUpdatesFromDatabase extends IdBasedModelFromDatabas
   fundingIndex: string;
   effectiveAt: string;
   effectiveAtHeight: string;
+}
+
+export interface ComplianceDataFromDatabase {
+  address: string;
+  chain?: string;
+  blocked: boolean;
+  riskScore?: string;
+  updatedAt: string;
 }
 
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:

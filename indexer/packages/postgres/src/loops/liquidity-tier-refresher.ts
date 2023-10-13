@@ -1,4 +1,6 @@
-import { delay, logger, stats } from '@dydxprotocol-indexer/base';
+import {
+  NodeEnv, delay, logger, stats,
+} from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as LiquidityTiersTable from '../stores/liquidity-tiers-table';
@@ -56,4 +58,19 @@ export function getLiquidityTierFromId(id: number): LiquidityTiersFromDatabase {
 
 export function getLiquidityTiersMap(): LiquidityTiersMap {
   return idToLiquidityTier;
+}
+
+export function upsertLiquidityTier(liquidityTier: LiquidityTiersFromDatabase): void {
+  idToLiquidityTier[liquidityTier.id] = liquidityTier;
+}
+
+/**
+ * Clears the in-memory map of liquidity tier ids to liquidity tiers.
+ * Used for testing.
+ */
+export function clear(): void {
+  if (config.NODE_ENV !== NodeEnv.TEST) {
+    throw new Error('clear cannot be used in non-test env');
+  }
+  idToLiquidityTier = {};
 }

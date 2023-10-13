@@ -3,7 +3,10 @@ package keeper
 import (
 	"context"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -15,30 +18,44 @@ func NewMsgServerImpl(keeper types.DelayMsgKeeper) types.MsgServer {
 	return &msgServer{keeper}
 }
 
+// DelayMessage delays execution of a message by a given number of blocks.
 func (k msgServer) DelayMessage(
 	goCtx context.Context,
 	msg *types.MsgDelayMessage,
 ) (*types.MsgDelayMessageResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	authorities := k.GetAuthorities()
-	if _, ok := authorities[msg.GetAuthority()]; !ok {
-		panic(fmt.Errorf(
-			"%v is not recognized as a valid authority for sending delayed messages",
-			msg.GetAuthority(),
-		))
+	// x/delaymsg accepts messages that may have been created by other modules. In this case, the
+	// ValidateBasic method of the message will not have been called. We call it here to ensure
+	// that the message is valid before continuing.
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"msg.ValidateBasic failed, err = %v",
+			err,
+		)
 	}
 
-	var sdkMsg sdk.Msg
+	if !k.HasAuthority(msg.GetAuthority()) {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"%v is not recognized as a valid authority for sending messages",
+			msg.GetAuthority(),
+		)
+	}
 
-	if err := k.DecodeMessage(msg.Msg, &sdkMsg); err != nil {
-		panic(fmt.Errorf("UnmarshalInterface for DelayedMessage failed, err = %w", err))
+	sdkMsg, err := msg.GetMessage()
+	if err != nil {
+		return nil, errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"GetMessage for MsgDelayedMessage failed, err = %v",
+			err,
+		)
 	}
 
 	id, err := k.DelayMessageByBlocks(ctx, sdkMsg, msg.DelayBlocks)
 
 	if err != nil {
-		panic(fmt.Errorf("DelayMessageByBlocks failed, err  = %w", err))
+		return nil, fmt.Errorf("DelayMessageByBlocks failed, err = %w", err)
 	}
 
 	return &types.MsgDelayMessageResponse{

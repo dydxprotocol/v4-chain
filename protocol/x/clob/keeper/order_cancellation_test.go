@@ -130,7 +130,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	ctx := ks.Ctx.WithIsCheckTx(true)
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    1,
+		Height:    14,
 		Timestamp: time.Unix(int64(50), 0),
 	})
 
@@ -441,10 +441,10 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 			)
 
 			if tc.expectedErr != "" {
-				require.True(t, resp.IsErr())
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 				require.Contains(t, resp.Log, tc.expectedErr)
 			} else {
-				require.True(t, resp.IsOK())
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 		})
 	}

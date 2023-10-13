@@ -1,15 +1,18 @@
 package keeper_test
 
 import (
+	"testing"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
-func TestNumMessages(t *testing.T) {
+func TestNextDelayedMessageId(t *testing.T) {
 	tests := map[string]struct {
 		delayedMessages []sdk.Msg
 	}{
@@ -30,9 +33,9 @@ func TestNumMessages(t *testing.T) {
 			}
 
 			wctx := sdk.WrapSDKContext(ctx)
-			res, err := delaymsg.NumMessages(wctx, &types.QueryNumMessagesRequest{})
+			res, err := delaymsg.NextDelayedMessageId(wctx, &types.QueryNextDelayedMessageIdRequest{})
 			require.NoError(t, err)
-			require.Equal(t, uint32(len(tc.delayedMessages)), res.NumMessages)
+			require.Equal(t, uint32(len(tc.delayedMessages)), res.NextDelayedMessageId)
 		})
 	}
 }
@@ -40,12 +43,12 @@ func TestNumMessages(t *testing.T) {
 func TestMessage(t *testing.T) {
 	tests := map[string]struct {
 		delayedMessage sdk.Msg
-		bytes          []byte
+		expectedMsg    *codectypes.Any
 	}{
 		"Not found": {},
 		"Found": {
 			delayedMessage: constants.TestMsg1,
-			bytes:          constants.Msg1Bytes,
+			expectedMsg:    encoding.EncodeMessageToAny(t, constants.TestMsg1),
 		},
 	}
 	for name, tc := range tests {
@@ -64,7 +67,7 @@ func TestMessage(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, &types.DelayedMessage{
 					Id:          0,
-					Msg:         tc.bytes,
+					Msg:         tc.expectedMsg,
 					BlockHeight: 1,
 				}, resp.Message)
 			}

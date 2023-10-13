@@ -5,6 +5,10 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+
+	errorsmod "cosmossdk.io/errors"
+
 	sdklog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	gometrics "github.com/armon/go-metrics"
@@ -14,7 +18,6 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -28,7 +31,7 @@ type (
 		storeKey        storetypes.StoreKey
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
-		authority       string
+		authorities     map[string]struct{}
 	}
 )
 
@@ -37,24 +40,24 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
-	authority string,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:             cdc,
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authority:       authority,
+		authorities:     lib.UniqueSliceToSet(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
-}
-
-// GetAuthority returns the x/vest module's authority.
-func (k Keeper) GetAuthority() string {
-	return k.authority
 }
 
 // Process vesting for all vest entries. Intended to be called in BeginBlocker.
@@ -119,21 +122,41 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				entry.TreasuryAccount,
 				sdk.NewCoins(sdk.NewCoin(entry.Denom, vestAmount)),
 			); err != nil {
-				panic(err)
+				// This should never happen. However, if it does, we should not panic.
+				// ProcessVesting is called in BeginBlocker, and panicking in BeginBlocker could cause liveness issues.
+				// Instead, we generate an informative error log, emit an error metric, and continue.
+				k.Logger(ctx).Error(
+					"unexpected internal error: failed to transfer vest amount to treasury account",
+					constants.ErrorLogKey,
+					err,
+					"vester_account",
+					entry.VesterAccount,
+					"treasury_account",
+					entry.TreasuryAccount,
+					"denom",
+					entry.Denom,
+					"vest_amount",
+					vestAmount,
+					"vest_account_balance",
+					vesterBalance,
+				)
+				// Increment error counter.
+				telemetry.IncrCounter(1, metrics.ProcessVesting, metrics.AccountTransfer, metrics.Error)
+				continue
 			}
 		}
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.VestAmount},
-			float32(vestAmount.Int64()),
+			metrics.GetMetricValueFromBigInt(vestAmount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 		// Report vester account balance after vest event.
 		balanceAfterVest := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.BalanceAfterVestEvent},
-			float32(balanceAfterVest.Amount.Int64()),
+			metrics.GetMetricValueFromBigInt(balanceAfterVest.Amount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 	}
@@ -142,7 +165,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 func (k Keeper) GetAllVestEntries(ctx sdk.Context) (
 	list []types.VestEntry,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	iterator := sdk.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
@@ -164,12 +187,12 @@ func (k Keeper) GetVestEntry(ctx sdk.Context, vesterAccount string) (
 		metrics.Latency,
 	)
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
-	b := store.Get(types.VestEntryKey(vesterAccount))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
+	b := store.Get([]byte(vesterAccount))
 
 	// If VestEntry does not exist in state, return error
 	if b == nil {
-		return types.VestEntry{}, sdkerrors.Wrapf(types.ErrVestEntryNotFound, "vesterAccount: %s", vesterAccount)
+		return types.VestEntry{}, errorsmod.Wrapf(types.ErrVestEntryNotFound, "vesterAccount: %s", vesterAccount)
 	}
 
 	k.cdc.MustUnmarshal(b, &val)
@@ -186,11 +209,9 @@ func (k Keeper) SetVestEntry(
 		return err
 	}
 
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
 	b := k.cdc.MustMarshal(&entry)
-	store.Set(types.VestEntryKey(
-		entry.VesterAccount,
-	), b)
+	store.Set([]byte(entry.VesterAccount), b)
 	return nil
 }
 
@@ -201,10 +222,10 @@ func (k Keeper) DeleteVestEntry(
 	err error,
 ) {
 	if _, err := k.GetVestEntry(ctx, vesterAccount); err != nil {
-		return sdkerrors.Wrap(err, "failed to delete vest entry")
+		return errorsmod.Wrap(err, "failed to delete vest entry")
 	}
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.VestEntryKeyPrefix))
-	store.Delete(types.VestEntryKey(vesterAccount))
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
+	store.Delete([]byte(vesterAccount))
 
 	return nil
 }

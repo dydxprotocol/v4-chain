@@ -2,22 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BTCUSDT\"",
-      "adjustByMarket": "BTC-USD",
+      "ticker": "USDCUSDT",
       "invert": true
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"USDTUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tUSTUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Bitstamp",
-      "ticker": "USDT/USD"
     },
     {
       "exchangeName": "Bybit",
@@ -27,14 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "USDT-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "USDT_USD"
-    },
-    {
-      "exchangeName": "Gate",
-      "ticker": "USDT_USD"
     },
     {
       "exchangeName": "Huobi",
@@ -54,8 +32,7 @@
     },
     {
       "exchangeName": "Okx",
-      "ticker": "BTC-USDT",
-      "adjustByMarket": "BTC-USD",
+      "ticker": "USDC-USDT",
       "invert": true
     }
   ]

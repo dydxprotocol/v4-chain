@@ -13,9 +13,13 @@ import (
 	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
@@ -24,24 +28,41 @@ import (
 func IsInternalMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
-		// MsgUpdateParams
+		// ------- CosmosSDK default modules
+		// auth
 		*auth.MsgUpdateParams,
-		*blocktime.MsgUpdateDowntimeParams,
-		*bank.MsgUpdateParams,
-		*consensus.MsgUpdateParams,
-		*crisis.MsgUpdateParams,
-		*feetiers.MsgUpdatePerpetualFeeParams,
-		*distribution.MsgUpdateParams,
-		*gov.MsgUpdateParams,
-		*slashing.MsgUpdateParams,
-		*staking.MsgUpdateParams,
-		*stats.MsgUpdateParams,
-		*rewards.MsgUpdateParams,
-		*vest.MsgSetVestEntry,
-		*vest.MsgDeleteVestEntry,
 
 		// bank
 		*bank.MsgSetSendEnabled,
+		*bank.MsgUpdateParams,
+
+		// consensus
+		*consensus.MsgUpdateParams,
+
+		// crisis
+		*crisis.MsgUpdateParams,
+
+		// distribution
+		*distribution.MsgCommunityPoolSpend,
+		*distribution.MsgUpdateParams,
+
+		// gov
+		*gov.MsgExecLegacyContent,
+		*gov.MsgUpdateParams,
+
+		// slashing
+		*slashing.MsgUpdateParams,
+
+		// staking
+		*staking.MsgUpdateParams,
+
+		// upgrade
+		*upgrade.MsgCancelUpgrade,
+		*upgrade.MsgSoftwareUpgrade,
+
+		// ------- Custom modules
+		// blocktime
+		*blocktime.MsgUpdateDowntimeParams,
 
 		// bridge
 		*bridge.MsgCompleteBridge,
@@ -49,18 +70,41 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*bridge.MsgUpdateProposeParams,
 		*bridge.MsgUpdateSafetyParams,
 
+		// clob
+		*clob.MsgCreateClobPair,
+		*clob.MsgUpdateBlockRateLimitConfiguration,
+		*clob.MsgUpdateClobPair,
+		*clob.MsgUpdateEquityTierLimitConfiguration,
+		*clob.MsgUpdateLiquidationsConfig,
+
 		// delaymsg
 		*delaymsg.MsgDelayMessage,
 
-		// distribution
-		*distribution.MsgCommunityPoolSpend,
+		// feetiers
+		*feetiers.MsgUpdatePerpetualFeeParams,
 
-		// gov
-		*gov.MsgExecLegacyContent,
+		// perpetuals
+		*perpetuals.MsgCreatePerpetual,
+		*perpetuals.MsgSetLiquidityTier,
+		*perpetuals.MsgUpdateParams,
+		*perpetuals.MsgUpdatePerpetualParams,
 
-		// upgrade
-		*upgrade.MsgCancelUpgrade,
-		*upgrade.MsgSoftwareUpgrade:
+		// prices
+		*prices.MsgCreateOracleMarket,
+		*prices.MsgUpdateMarketParam,
+
+		// rewards
+		*rewards.MsgUpdateParams,
+
+		// sending
+		*sending.MsgSendFromModuleToAccount,
+
+		// stats
+		*stats.MsgUpdateParams,
+
+		// vest
+		*vest.MsgDeleteVestEntry,
+		*vest.MsgSetVestEntry:
 
 		return true
 

@@ -3,7 +3,8 @@ package types
 import (
 	"math/big"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -12,20 +13,20 @@ import (
 // - Base position notional is not 0.
 func (liquidityTier LiquidityTier) Validate() error {
 	if liquidityTier.InitialMarginPpm > MaxInitialMarginPpm {
-		return sdkerrors.Wrap(ErrInitialMarginPpmExceedsMax, lib.Uint32ToString(liquidityTier.InitialMarginPpm))
+		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.UintToString(liquidityTier.InitialMarginPpm))
 	}
 
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
-		return sdkerrors.Wrap(ErrMaintenanceFractionPpmExceedsMax,
-			lib.Uint32ToString(liquidityTier.MaintenanceFractionPpm))
+		return errorsmod.Wrap(ErrMaintenanceFractionPpmExceedsMax,
+			lib.UintToString(liquidityTier.MaintenanceFractionPpm))
 	}
 
 	if liquidityTier.BasePositionNotional == 0 {
-		return sdkerrors.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
+		return ErrBasePositionNotionalIsZero
 	}
 
 	if liquidityTier.ImpactNotional == 0 {
-		return sdkerrors.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
+		return ErrImpactNotionalIsZero
 	}
 
 	return nil
@@ -35,7 +36,9 @@ func (liquidityTier LiquidityTier) Validate() error {
 // and maintenance fraction ppm.
 func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
-		panic(sdkerrors.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
+		// Invariant broken: `MaintenanceFractionPpm` should always be less than `MaxMaintenanceFractionPpm`,
+		// which is checked in `SetLiquidityTier`.
+		panic(errorsmod.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
 			liquidityTier.MaintenanceFractionPpm))
 	}
 	// maintenance margin = initial margin * maintenance fraction
@@ -51,10 +54,17 @@ func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 // `|S| ≤ Clamp Factor * (Initial Margin - Maintenance Margin)`, which can be applied to both
 // funding rate clamping and premium vote clamping, each having their own clamp factor.
 func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint32) *big.Int {
+	maintenanceMarginPpm := liquidityTier.GetMaintenanceMarginPpm()
+	if maintenanceMarginPpm > liquidityTier.InitialMarginPpm {
+		// Invariant broken: maintenance margin fraction should never be larger than initial margin fraction.
+		panic(errorsmod.Wrapf(ErrMaintenanceMarginLargerThanInitialMargin, "maintenance fraction ppm: %d",
+			liquidityTier.MaintenanceFractionPpm))
+	}
+
 	// Need to divide by 1 million (done by `BigIntMulPpm`) as both clamp factor and margin are in units of ppm.
 	return lib.BigIntMulPpm(
 		new(big.Int).SetUint64(uint64(clampFactorPpm)),
-		liquidityTier.InitialMarginPpm-liquidityTier.GetMaintenanceMarginPpm(),
+		liquidityTier.InitialMarginPpm-maintenanceMarginPpm,
 	)
 }
 
@@ -94,13 +104,16 @@ func (liquidityTier LiquidityTier) GetMarginAdjustmentPpm(bigQuoteQuantums *big.
 func (liquidityTier LiquidityTier) GetAdjustedInitialMarginQuoteQuantums(bigQuoteQuantums *big.Int) *big.Int {
 	marginAdjustmentPpm := liquidityTier.GetMarginAdjustmentPpm(bigQuoteQuantums)
 
-	result := new(big.Int).SetUint64(uint64(liquidityTier.InitialMarginPpm))
-	// Multiply `initialMarginPpm` with `quoteQuantums`.
-	result = result.Mul(result, bigQuoteQuantums)
-	// Multiply above result with `marginAdjustmentPpm`.
-	result = result.Mul(result, marginAdjustmentPpm)
-	// Divide above result by 1 trillion.
-	result = result.Quo(result, lib.BigIntOneTrillion())
+	result := new(big.Rat).SetInt(marginAdjustmentPpm)
+	// Multiply `marginAdjustmentPpm` with `quoteQuantums`.
+	result = result.Mul(result, new(big.Rat).SetInt(bigQuoteQuantums))
+	// Multiply above result with `initialMarginPpm` and divide by 1 million.
+	result = lib.BigRatMulPpm(result, liquidityTier.InitialMarginPpm)
+	// Further divide above result by 1 million.
+	result = result.Quo(result, lib.BigRatOneMillion())
 	// Cap adjusted initial margin at 100% of notional.
-	return lib.BigMin(bigQuoteQuantums, result)
+	return lib.BigMin(
+		bigQuoteQuantums,
+		lib.BigRatRound(result, true), // Round up initial margin.
+	)
 }

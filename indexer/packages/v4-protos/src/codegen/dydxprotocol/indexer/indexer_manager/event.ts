@@ -118,12 +118,6 @@ export interface IndexerEventsStoreValueSDKType {
 export interface IndexerTendermintEvent {
   /** Subtype of the event e.g. "order_fill", "subaccount_update", etc. */
   subtype: string;
-  /**
-   * Base64 encoded proto from the Tendermint event.
-   * TODO(DEC-1720): Change to bytes post-migration.
-   */
-
-  data: string;
   transactionIndex?: number;
   blockEvent?: IndexerTendermintEvent_BlockEvent;
   /**
@@ -133,6 +127,12 @@ export interface IndexerTendermintEvent {
    */
 
   eventIndex: number;
+  /** Version of the event. */
+
+  version: number;
+  /** Tendermint event bytes. */
+
+  dataBytes: Uint8Array;
 }
 /**
  * IndexerTendermintEvent contains the base64 encoded event proto emitted from
@@ -143,12 +143,6 @@ export interface IndexerTendermintEvent {
 export interface IndexerTendermintEventSDKType {
   /** Subtype of the event e.g. "order_fill", "subaccount_update", etc. */
   subtype: string;
-  /**
-   * Base64 encoded proto from the Tendermint event.
-   * TODO(DEC-1720): Change to bytes post-migration.
-   */
-
-  data: string;
   transaction_index?: number;
   block_event?: IndexerTendermintEvent_BlockEventSDKType;
   /**
@@ -158,6 +152,12 @@ export interface IndexerTendermintEventSDKType {
    */
 
   event_index: number;
+  /** Version of the event. */
+
+  version: number;
+  /** Tendermint event bytes. */
+
+  data_bytes: Uint8Array;
 }
 /**
  * IndexerTendermintBlock contains all the events for the block along with
@@ -289,10 +289,11 @@ export const IndexerEventsStoreValue = {
 function createBaseIndexerTendermintEvent(): IndexerTendermintEvent {
   return {
     subtype: "",
-    data: "",
     transactionIndex: undefined,
     blockEvent: undefined,
-    eventIndex: 0
+    eventIndex: 0,
+    version: 0,
+    dataBytes: new Uint8Array()
   };
 }
 
@@ -300,10 +301,6 @@ export const IndexerTendermintEvent = {
   encode(message: IndexerTendermintEvent, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.subtype !== "") {
       writer.uint32(10).string(message.subtype);
-    }
-
-    if (message.data !== "") {
-      writer.uint32(18).string(message.data);
     }
 
     if (message.transactionIndex !== undefined) {
@@ -316,6 +313,14 @@ export const IndexerTendermintEvent = {
 
     if (message.eventIndex !== 0) {
       writer.uint32(40).uint32(message.eventIndex);
+    }
+
+    if (message.version !== 0) {
+      writer.uint32(48).uint32(message.version);
+    }
+
+    if (message.dataBytes.length !== 0) {
+      writer.uint32(58).bytes(message.dataBytes);
     }
 
     return writer;
@@ -334,10 +339,6 @@ export const IndexerTendermintEvent = {
           message.subtype = reader.string();
           break;
 
-        case 2:
-          message.data = reader.string();
-          break;
-
         case 3:
           message.transactionIndex = reader.uint32();
           break;
@@ -348,6 +349,14 @@ export const IndexerTendermintEvent = {
 
         case 5:
           message.eventIndex = reader.uint32();
+          break;
+
+        case 6:
+          message.version = reader.uint32();
+          break;
+
+        case 7:
+          message.dataBytes = reader.bytes();
           break;
 
         default:
@@ -362,10 +371,11 @@ export const IndexerTendermintEvent = {
   fromPartial(object: DeepPartial<IndexerTendermintEvent>): IndexerTendermintEvent {
     const message = createBaseIndexerTendermintEvent();
     message.subtype = object.subtype ?? "";
-    message.data = object.data ?? "";
     message.transactionIndex = object.transactionIndex ?? undefined;
     message.blockEvent = object.blockEvent ?? undefined;
     message.eventIndex = object.eventIndex ?? 0;
+    message.version = object.version ?? 0;
+    message.dataBytes = object.dataBytes ?? new Uint8Array();
     return message;
   }
 

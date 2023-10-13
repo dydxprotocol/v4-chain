@@ -2,21 +2,8 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"BTCUSDT\"",
+      "ticker": "BTCUSDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"BTCUSD\""
-    },
-    {
-      "exchangeName": "Bitfinex",
-      "ticker": "tBTCUSD",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "Bitstamp",
-      "ticker": "BTC/USD"
     },
     {
       "exchangeName": "Bybit",
@@ -28,12 +15,23 @@
       "ticker": "BTC-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "BTC_USD"
+      "exchangeName": "Huobi",
+      "ticker": "btcusdt",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Kraken",
       "ticker": "XXBTZUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "BTC-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "BTC_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Okx",

@@ -185,17 +185,56 @@ func (m *MsgWithdrawFromSubaccountResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgWithdrawFromSubaccountResponse proto.InternalMessageInfo
 
+// MsgSendFromModuleToAccountResponse is a response type used for new
+// module-to-account transfers.
+type MsgSendFromModuleToAccountResponse struct {
+}
+
+func (m *MsgSendFromModuleToAccountResponse) Reset()         { *m = MsgSendFromModuleToAccountResponse{} }
+func (m *MsgSendFromModuleToAccountResponse) String() string { return proto.CompactTextString(m) }
+func (*MsgSendFromModuleToAccountResponse) ProtoMessage()    {}
+func (*MsgSendFromModuleToAccountResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_056a3cb0feba7dbf, []int{4}
+}
+func (m *MsgSendFromModuleToAccountResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *MsgSendFromModuleToAccountResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_MsgSendFromModuleToAccountResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *MsgSendFromModuleToAccountResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_MsgSendFromModuleToAccountResponse.Merge(m, src)
+}
+func (m *MsgSendFromModuleToAccountResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *MsgSendFromModuleToAccountResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_MsgSendFromModuleToAccountResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_MsgSendFromModuleToAccountResponse proto.InternalMessageInfo
+
 func init() {
 	proto.RegisterType((*MsgCreateTransfer)(nil), "dydxprotocol.sending.MsgCreateTransfer")
 	proto.RegisterType((*MsgCreateTransferResponse)(nil), "dydxprotocol.sending.MsgCreateTransferResponse")
 	proto.RegisterType((*MsgDepositToSubaccountResponse)(nil), "dydxprotocol.sending.MsgDepositToSubaccountResponse")
 	proto.RegisterType((*MsgWithdrawFromSubaccountResponse)(nil), "dydxprotocol.sending.MsgWithdrawFromSubaccountResponse")
+	proto.RegisterType((*MsgSendFromModuleToAccountResponse)(nil), "dydxprotocol.sending.MsgSendFromModuleToAccountResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/sending/tx.proto", fileDescriptor_056a3cb0feba7dbf) }
 
 var fileDescriptor_056a3cb0feba7dbf = []byte{
-	// 306 bytes of a gzipped FileDescriptorProto
+	// 349 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4d, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4e, 0xcd, 0x4b, 0xc9, 0xcc, 0x4b,
 	0xd7, 0x2f, 0xa9, 0xd0, 0x03, 0x8b, 0x09, 0x89, 0x20, 0x4b, 0xeb, 0x41, 0xa5, 0xa5, 0x94, 0xb1,
@@ -205,17 +244,19 @@ var fileDescriptor_056a3cb0feba7dbf = []byte{
 	0xae, 0x5e, 0x49, 0x9a, 0x4b, 0x12, 0xc3, 0xc0, 0xa0, 0xd4, 0xe2, 0x82, 0xfc, 0xbc, 0xe2, 0x54,
 	0x25, 0x05, 0x2e, 0x39, 0xdf, 0xe2, 0x74, 0x97, 0xd4, 0x82, 0xfc, 0xe2, 0xcc, 0x92, 0x90, 0xfc,
 	0xe0, 0xd2, 0xa4, 0xc4, 0xe4, 0xe4, 0xfc, 0xd2, 0xbc, 0x12, 0xb8, 0x0a, 0x65, 0x2e, 0x45, 0xdf,
-	0xe2, 0xf4, 0xf0, 0xcc, 0x92, 0x8c, 0x94, 0xa2, 0xc4, 0x72, 0xb7, 0xa2, 0xfc, 0x5c, 0x4c, 0x45,
-	0x46, 0x1f, 0x99, 0xb8, 0x98, 0x7d, 0x8b, 0xd3, 0x85, 0xb2, 0xb8, 0xf8, 0xd0, 0x5c, 0xae, 0x8e,
-	0xdd, 0x9d, 0x18, 0x2e, 0x92, 0xd2, 0x27, 0x52, 0x21, 0xcc, 0x4e, 0xa1, 0x4a, 0x2e, 0x61, 0x2c,
-	0xee, 0x16, 0xd2, 0xc1, 0x69, 0x0e, 0x16, 0xd5, 0x52, 0x26, 0xa4, 0xa8, 0x86, 0x5b, 0xdd, 0xc4,
-	0xc8, 0x25, 0x86, 0x3d, 0x44, 0x84, 0x70, 0x7b, 0x03, 0xbb, 0x06, 0x29, 0x73, 0x12, 0x35, 0xc0,
-	0x1c, 0xe1, 0x14, 0x7c, 0xe2, 0x91, 0x1c, 0xe3, 0x85, 0x47, 0x72, 0x8c, 0x0f, 0x1e, 0xc9, 0x31,
-	0x4e, 0x78, 0x2c, 0xc7, 0x70, 0xe1, 0xb1, 0x1c, 0xc3, 0x8d, 0xc7, 0x72, 0x0c, 0x51, 0x96, 0xe9,
-	0x99, 0x25, 0x19, 0xa5, 0x49, 0x7a, 0xc9, 0xf9, 0xb9, 0xfa, 0x28, 0x49, 0xae, 0xcc, 0x44, 0x37,
-	0x39, 0x23, 0x31, 0x33, 0x4f, 0x1f, 0x2e, 0x52, 0x81, 0x48, 0x86, 0x95, 0x05, 0xa9, 0xc5, 0x49,
-	0x6c, 0x60, 0x19, 0x63, 0x40, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfe, 0x71, 0x7b, 0x1f, 0xe0, 0x02,
-	0x00, 0x00,
+	0xe2, 0xf4, 0xf0, 0xcc, 0x92, 0x8c, 0x94, 0xa2, 0xc4, 0x72, 0xb7, 0xa2, 0xfc, 0x5c, 0x2c, 0x8a,
+	0x54, 0xb8, 0x94, 0x7c, 0x8b, 0xd3, 0x83, 0x53, 0xf3, 0x52, 0x40, 0x0a, 0x7c, 0xf3, 0x53, 0x4a,
+	0x73, 0x52, 0x43, 0xf2, 0x1d, 0x51, 0x55, 0x19, 0xfd, 0x64, 0xe6, 0x62, 0xf6, 0x2d, 0x4e, 0x17,
+	0xca, 0xe2, 0xe2, 0x43, 0xf3, 0x9f, 0x3a, 0x76, 0xdf, 0x60, 0xb8, 0x5b, 0x4a, 0x9f, 0x48, 0x85,
+	0x30, 0x3b, 0x85, 0x2a, 0xb9, 0x84, 0xb1, 0xf8, 0x4e, 0x48, 0x07, 0xa7, 0x39, 0x58, 0x54, 0x4b,
+	0x99, 0x90, 0xa2, 0x1a, 0x6e, 0x75, 0x13, 0x23, 0x97, 0x18, 0xf6, 0x70, 0x13, 0xc2, 0xed, 0x0d,
+	0xec, 0x1a, 0xa4, 0xcc, 0x49, 0xd4, 0x00, 0x77, 0x44, 0x2b, 0x23, 0x97, 0x38, 0x8e, 0x78, 0x11,
+	0x32, 0xc0, 0x69, 0x28, 0x0e, 0x1d, 0x52, 0x16, 0xa4, 0xea, 0x80, 0xb9, 0xc3, 0x29, 0xf8, 0xc4,
+	0x23, 0x39, 0xc6, 0x0b, 0x8f, 0xe4, 0x18, 0x1f, 0x3c, 0x92, 0x63, 0x9c, 0xf0, 0x58, 0x8e, 0xe1,
+	0xc2, 0x63, 0x39, 0x86, 0x1b, 0x8f, 0xe5, 0x18, 0xa2, 0x2c, 0xd3, 0x33, 0x4b, 0x32, 0x4a, 0x93,
+	0xf4, 0x92, 0xf3, 0x73, 0xf5, 0x51, 0x32, 0x48, 0x99, 0x89, 0x6e, 0x72, 0x46, 0x62, 0x66, 0x9e,
+	0x3e, 0x5c, 0xa4, 0x02, 0x91, 0x69, 0x2a, 0x0b, 0x52, 0x8b, 0x93, 0xd8, 0xc0, 0x32, 0xc6, 0x80,
+	0x00, 0x00, 0x00, 0xff, 0xff, 0x4b, 0x8a, 0x93, 0x09, 0x8e, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -238,6 +279,9 @@ type MsgClient interface {
 	// WithdrawFromSubaccount initiates a new transfer from an `x/subaccounts`
 	// subaccount to an `x/bank` account.
 	WithdrawFromSubaccount(ctx context.Context, in *MsgWithdrawFromSubaccount, opts ...grpc.CallOption) (*MsgWithdrawFromSubaccountResponse, error)
+	// SendFromModuleToAccount initiates a new transfer from a module to an
+	// `x/bank` account (should only be executed by governance).
+	SendFromModuleToAccount(ctx context.Context, in *MsgSendFromModuleToAccount, opts ...grpc.CallOption) (*MsgSendFromModuleToAccountResponse, error)
 }
 
 type msgClient struct {
@@ -275,6 +319,15 @@ func (c *msgClient) WithdrawFromSubaccount(ctx context.Context, in *MsgWithdrawF
 	return out, nil
 }
 
+func (c *msgClient) SendFromModuleToAccount(ctx context.Context, in *MsgSendFromModuleToAccount, opts ...grpc.CallOption) (*MsgSendFromModuleToAccountResponse, error) {
+	out := new(MsgSendFromModuleToAccountResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.sending.Msg/SendFromModuleToAccount", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// CreateTransfer initiates a new transfer between subaccounts.
@@ -285,6 +338,9 @@ type MsgServer interface {
 	// WithdrawFromSubaccount initiates a new transfer from an `x/subaccounts`
 	// subaccount to an `x/bank` account.
 	WithdrawFromSubaccount(context.Context, *MsgWithdrawFromSubaccount) (*MsgWithdrawFromSubaccountResponse, error)
+	// SendFromModuleToAccount initiates a new transfer from a module to an
+	// `x/bank` account (should only be executed by governance).
+	SendFromModuleToAccount(context.Context, *MsgSendFromModuleToAccount) (*MsgSendFromModuleToAccountResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -299,6 +355,9 @@ func (*UnimplementedMsgServer) DepositToSubaccount(ctx context.Context, req *Msg
 }
 func (*UnimplementedMsgServer) WithdrawFromSubaccount(ctx context.Context, req *MsgWithdrawFromSubaccount) (*MsgWithdrawFromSubaccountResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WithdrawFromSubaccount not implemented")
+}
+func (*UnimplementedMsgServer) SendFromModuleToAccount(ctx context.Context, req *MsgSendFromModuleToAccount) (*MsgSendFromModuleToAccountResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SendFromModuleToAccount not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -359,6 +418,24 @@ func _Msg_WithdrawFromSubaccount_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Msg_SendFromModuleToAccount_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MsgSendFromModuleToAccount)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MsgServer).SendFromModuleToAccount(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.sending.Msg/SendFromModuleToAccount",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MsgServer).SendFromModuleToAccount(ctx, req.(*MsgSendFromModuleToAccount))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.sending.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -374,6 +451,10 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "WithdrawFromSubaccount",
 			Handler:    _Msg_WithdrawFromSubaccount_Handler,
+		},
+		{
+			MethodName: "SendFromModuleToAccount",
+			Handler:    _Msg_SendFromModuleToAccount_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -484,6 +565,29 @@ func (m *MsgWithdrawFromSubaccountResponse) MarshalToSizedBuffer(dAtA []byte) (i
 	return len(dAtA) - i, nil
 }
 
+func (m *MsgSendFromModuleToAccountResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *MsgSendFromModuleToAccountResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *MsgSendFromModuleToAccountResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -527,6 +631,15 @@ func (m *MsgDepositToSubaccountResponse) Size() (n int) {
 }
 
 func (m *MsgWithdrawFromSubaccountResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	return n
+}
+
+func (m *MsgSendFromModuleToAccountResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -754,6 +867,56 @@ func (m *MsgWithdrawFromSubaccountResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgWithdrawFromSubaccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipTx(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthTx
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *MsgSendFromModuleToAccountResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowTx
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: MsgSendFromModuleToAccountResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: MsgSendFromModuleToAccountResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

@@ -1,0 +1,32 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "BLUR-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "BLUR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "BLURUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "BLUR-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "BLUR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "BLUR-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

@@ -1,7 +1,6 @@
 package price_function
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"math/big"
@@ -19,12 +18,6 @@ const (
 )
 
 var (
-	resultJson = map[string]interface{}{
-		"lastPrice":      "100.002",
-		"bidPrice":       "200.3",
-		"askPrice":       "300.102",
-		"nonStringValue": 1000,
-	}
 	positiveTagValidationError = errors.New(
 		"Key: 'TestPositiveValidation.PositiveFloatString' Error:Field validation for 'PositiveFloatString' " +
 			"failed on the 'positive-float-string' tag",
@@ -44,32 +37,16 @@ func TestIsExchangeError_Mixed(t *testing.T) {
 			err:             fmt.Errorf(`http2: server sent GOAWAY and closed the connection blah blah blah`),
 			isExchangeError: true,
 		},
-		"Exchange Error - Huobi response status is not ok": {
-			err:             fmt.Errorf(`huobi response status is not "ok"`),
-			isExchangeError: true,
-		},
-		"Exchange Error - Crypto.com": {
-			err:             fmt.Errorf(`response code is not 0`),
-			isExchangeError: true,
-		},
-		"Exchange Error - Binance": {
-			err: fmt.Errorf(
-				`(Key: 'BinanceTicker.AskPrice' Error:Field validation for 'AskPrice' failed on the ` +
-					`'positive-float-string' tag\nKey: 'BinanceTicker.BidPrice' Error:Field validation for ` +
-					`'BidPrice' failed on the 'positive-float-string' tag)`,
-			),
-			isExchangeError: true,
-		},
-		"Exchange Error - Binance BidPrice": {
-			err:             fmt.Errorf(`Key: 'BinanceTicker.BidPrice' Error`),
-			isExchangeError: true,
-		},
 		"Exchange Error - internal error": {
 			err:             fmt.Errorf("internal error: something went wrong"),
 			isExchangeError: true,
 		},
 		"Exchange Error - Internal error": {
 			err:             fmt.Errorf("Internal error: something went wrong"),
+			isExchangeError: true,
+		},
+		"Exchange Error - INTERNAL_ERROR": {
+			err:             fmt.Errorf("INTERNAL_ERROR: something went wrong"),
 			isExchangeError: true,
 		},
 		"Exchange Error - generic": {
@@ -83,7 +60,7 @@ func TestIsExchangeError_Mixed(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			require.Equal(t, tc.isExchangeError, IsExchangeError(tc.err))
+			require.Equal(t, tc.isExchangeError, IsGenericExchangeError(tc.err))
 		})
 	}
 }
@@ -131,252 +108,6 @@ func TestGetApiResponseValidator_validatePositiveNumericString_Mixed(t *testing.
 	}
 }
 
-func TestExtractFirstStringFromSliceField(t *testing.T) {
-	tests := map[string]struct {
-		inputJson      string
-		nilInput       bool
-		expectedResult string
-		expectedError  error
-	}{
-		"Failure: nil input": {
-			nilInput:       true,
-			expectedResult: "",
-			expectedError:  errors.New("expected non-nil map"),
-		},
-		"Failure: field does not exist": {
-			inputJson:      "{}",
-			expectedResult: "",
-			expectedError:  errors.New("expected non-empty list for fieldname 'a'"),
-		},
-		"Failure: field is not a slice": {
-			inputJson:      `{"a": 1}`,
-			expectedResult: "",
-			expectedError:  errors.New("expected non-empty list for fieldname 'a'"),
-		},
-		"Failure: field is an empty slice": {
-			inputJson:      `{"a": []}`,
-			expectedResult: "",
-			expectedError:  errors.New("expected non-empty list for fieldname 'a'"),
-		},
-		"Failure: field is not a slice of strings": {
-			inputJson:      `{"a": [12.3]}`,
-			expectedResult: "",
-			expectedError:  errors.New("expected nonempty string value for field a[0], but found 12.3"),
-		},
-		"Success: field is a slice containing 1 string": {
-			inputJson:      `{"a": ["12.3"]}`,
-			expectedResult: "12.3",
-			expectedError:  nil,
-		},
-		"Success: field is a slice containing multiple strings": {
-			inputJson:      `{"a": ["12.3", "34.5", "67.8"]}`,
-			expectedResult: "12.3",
-			expectedError:  nil,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			var responseBody map[string]interface{}
-			if !tc.nilInput {
-				err := json.Unmarshal([]byte(tc.inputJson), &responseBody)
-				require.NoError(t, err)
-			}
-			result, err := ExtractFirstStringFromSliceField(responseBody, "a")
-			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-				require.Zero(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedResult, result)
-			}
-		})
-	}
-}
-
-func TestGetInnerMapFromMap(t *testing.T) {
-	responseJson := map[string]interface{}{
-		"result":    resultJson,
-		"nonMapKey": true,
-	}
-
-	tests := map[string]struct {
-		// parameters
-		key string
-
-		// expectations
-		expectedResult map[string]interface{}
-		expectedError  error
-	}{
-		"nonMapKey": {
-			key:            "result",
-			expectedResult: resultJson,
-		},
-		"Failure - missing field": {
-			key: "unknown key",
-			expectedError: fmt.Errorf(
-				"Value was either not present or not a valid JSON map for key: %v",
-				"unknown key",
-			),
-		},
-		"Failure - value is not a JSON map": {
-			key: "nonMapKey",
-			expectedError: fmt.Errorf(
-				"Value was either not present or not a valid JSON map for key: %v",
-				"nonMapKey",
-			),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result, err := GetInnerMapFromMap(responseJson, tc.key)
-			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-				require.Nil(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedResult, result)
-			}
-		})
-	}
-}
-
-func TestStringValuesFromMap(t *testing.T) {
-	resultJsonWithStrings := map[string]interface{}{
-		"lastPrice":  "100.002",
-		"bidPrice":   "200.3",
-		"askPrice":   "300.102",
-		"floatValue": 1000.0001,
-	}
-
-	tests := map[string]struct {
-		// parameters
-		fields []string
-
-		// expectations
-		expectedResult []string
-		expectedError  error
-	}{
-		"Success": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-			},
-			expectedResult: []string{
-				"100.002",
-				"200.3",
-				"300.102",
-			},
-		},
-		"Failure - missing field": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-				"superSecretField",
-			},
-			expectedError: fmt.Errorf(
-				"Value was either not present or not valid for field: %v",
-				"superSecretField",
-			),
-		},
-		"Failure - value is not a string": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-				"floatValue",
-			},
-			expectedError: fmt.Errorf(
-				"Value was either not present or not valid for field: %v",
-				"floatValue",
-			),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result, err := GetStringOrFloatValuesFromMap[string](resultJsonWithStrings, tc.fields)
-			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-				require.Nil(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedResult, result)
-			}
-		})
-	}
-}
-
-func TestGetFloatValuesFromMap(t *testing.T) {
-	resultJsonWithFloats := map[string]interface{}{
-		"lastPrice":   100.002,
-		"bidPrice":    200.3,
-		"askPrice":    300.102,
-		"stringValue": "1000.0001",
-	}
-
-	tests := map[string]struct {
-		// parameters
-		fields []string
-
-		// expectations
-		expectedResult []float64
-		expectedError  error
-	}{
-		"Success": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-			},
-			expectedResult: []float64{
-				100.002,
-				200.3,
-				300.102,
-			},
-		},
-		"Failure - missing field": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-				"superSecretField",
-			},
-			expectedError: fmt.Errorf(
-				"Value was either not present or not valid for field: %v",
-				"superSecretField",
-			),
-		},
-		"Failure - value is not a float64": {
-			fields: []string{
-				"lastPrice",
-				"bidPrice",
-				"askPrice",
-				"stringValue",
-			},
-			expectedError: fmt.Errorf(
-				"Value was either not present or not valid for field: %v",
-				"stringValue",
-			),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			result, err := GetStringOrFloatValuesFromMap[float64](resultJsonWithFloats, tc.fields)
-			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-				require.Nil(t, result)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.expectedResult, result)
-			}
-		})
-	}
-}
-
 func TestGetOnlyTickerAndExponent(t *testing.T) {
 	tests := map[string]struct {
 		//parameters
@@ -392,7 +123,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{
 				ETHUSDC: 6,
 			},
-			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
+			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedTicker:   ETHUSDC,
 			expectedExponent: 6,
 		},
@@ -401,13 +132,13 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 			tickerToExponent: map[string]int32{
 				ETHUSDC: -6,
 			},
-			exchange:         exchange_common.EXCHANGE_NAME_BITFINEX,
+			exchange:         exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedTicker:   ETHUSDC,
 			expectedExponent: -6,
 		},
 		"Failure - no exponents": {
 			tickerToExponent: map[string]int32{},
-			exchange:         exchange_common.EXCHANGE_NAME_BINANCE,
+			exchange:         exchange_common.EXCHANGE_ID_BINANCE,
 			expectedError: errors.New(
 				"Invalid market price exponent map for Binance price function of length: 0, expected length 1",
 			),
@@ -418,7 +149,7 @@ func TestGetOnlyTickerAndExponent(t *testing.T) {
 				ETHUSDC: -6,
 				BTCUSDC: -8,
 			},
-			exchange: exchange_common.EXCHANGE_NAME_BITFINEX,
+			exchange: exchange_common.EXCHANGE_ID_BITFINEX,
 			expectedError: errors.New(
 				"Invalid market price exponent map for Bitfinex price function of length: 2, expected length 1",
 			),
@@ -516,7 +247,7 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 			median, err := GetUint64MedianFromReverseShiftedBigFloatValues(
 				tc.bigFloatSlice,
 				tc.exponent,
-				&lib.MedianizerImpl{},
+				lib.Median[uint64],
 			)
 
 			if tc.expectedError != nil {
@@ -526,49 +257,6 @@ func TestGetUint64MedianFromShiftedBigFloatValues(t *testing.T) {
 				require.Equal(t, tc.expectedMedianValue, median)
 				require.NoError(t, err)
 			}
-		})
-	}
-}
-
-func TestReverseShiftBigFloat(t *testing.T) {
-	tests := map[string]struct {
-		// parameters
-		floatValue *big.Float
-		exponent   int32
-
-		// expectations
-		expectedUpdatedFloatValue *big.Float
-	}{
-		"Success with negative exponent": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100.123),
-			exponent:                  -3,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(100_123),
-		},
-		"Success with positive exponent": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100.1),
-			exponent:                  1,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(10.01),
-		},
-		"Success with exponent of 0": {
-			floatValue:                new(big.Float).SetPrec(64).SetFloat64(100),
-			exponent:                  0,
-			expectedUpdatedFloatValue: new(big.Float).SetPrec(64).SetFloat64(100),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			updatedFloatValue := ReverseShiftBigFloat(
-				tc.floatValue,
-				tc.exponent,
-			)
-
-			require.InDeltaSlice(
-				t,
-				bigSliceToFloatSlice([]*big.Float{tc.expectedUpdatedFloatValue}),
-				bigSliceToFloatSlice([]*big.Float{updatedFloatValue}),
-				deltaPrecision,
-			)
 		})
 	}
 }

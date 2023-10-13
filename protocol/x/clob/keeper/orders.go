@@ -6,10 +6,12 @@ import (
 	"math/big"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
+	gometrics "github.com/armon/go-metrics"
+
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -93,6 +95,7 @@ func (k Keeper) CancelShortTermOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
+//   - Equity tier limit exceeded.
 //   - The memclob itself returns an error.
 //
 // This method will panic if the provided order is not a Short-Term order.
@@ -128,18 +131,37 @@ func (k Keeper) PlaceShortTermOrder(
 func (k Keeper) CancelStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgCancelOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		}
+	}()
+
 	// 1. If this is a Short-Term order, panic.
 	msg.OrderId.MustBeStatefulOrder()
 
 	// 2. Perform stateful validation on the order cancellation.
-	err := k.PerformOrderCancellationStatefulValidation(
+	if err := k.PerformOrderCancellationStatefulValidation(
 		ctx,
 		msg,
 		// Note that the blockHeight is not used during stateful order cancellation validation.
 		0,
-	)
-	if err != nil {
+	); err != nil {
 		return err
 	}
 
@@ -148,13 +170,6 @@ func (k Keeper) CancelStatefulOrder(
 		// Remove the stateful order from state. Note that if the stateful order did not
 		// exist in state, then it would have failed validation in the previous step.
 		k.MustRemoveStatefulOrder(ctx, msg.OrderId)
-
-		// Decrement the `to be committed` stateful order count.
-		k.SetToBeCommittedStatefulOrderCount(
-			ctx,
-			msg.OrderId,
-			k.GetToBeCommittedStatefulOrderCount(ctx, msg.OrderId)-1,
-		)
 	} else {
 		// Write the stateful order cancellation to uncommitted state. PerformOrderCancellationStatefulValidation will
 		// return an error if the order cancellation already exists which will prevent
@@ -184,7 +199,27 @@ func (k Keeper) CancelStatefulOrder(
 func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
-) error {
+) (err error) {
+	defer func() {
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		} else {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+				},
+			)
+		}
+	}()
+
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.Order
 	order.OrderId.MustBeStatefulOrder()
@@ -215,7 +250,6 @@ func (k Keeper) PlaceStatefulOrder(
 				{
 					RemainingQuantums: order.GetBaseQuantums(),
 					IsBuy:             order.IsBuy(),
-					IsTaker:           true,
 					Subticks:          order.GetOrderSubticks(),
 					ClobPairId:        order.GetClobPairId(),
 				},
@@ -224,7 +258,7 @@ func (k Keeper) PlaceStatefulOrder(
 	)
 
 	if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrStatefulOrderCollateralizationCheckFailed,
 			"PlaceStatefulOrder: order (%+v), result (%s)",
 			order,
@@ -298,8 +332,9 @@ func (k Keeper) ReplayPlaceOrder(
 // calling `PlaceOrder` on the specified memclob.
 //
 // An error will be returned if any of the following conditions are true:
-// - Standard stateful validation fails.
-// - The memclob itself returns an error.
+//   - Standard stateful validation fails.
+//   - The subaccount's equity tier limit is exceeded.
+//   - Placing the stateful order on the memclob returns an error.
 func (k Keeper) placeOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
@@ -330,6 +365,12 @@ func (k Keeper) placeOrder(
 
 	// Perform stateful validation.
 	err = k.PerformStatefulOrderValidation(ctx, &order, blockHeight, true)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
+	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -418,19 +459,17 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 			continue
 		}
 
-		placeOrderCtx, writeCache := ctx.CacheContext()
-
 		order := orderPlacement.GetOrder()
 		// Validate and place order.
 		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
-			placeOrderCtx,
+			ctx,
 			&order,
 			0,
 			k.MemClob,
 		)
 
 		if err != nil {
-			ctx.Logger().Debug(
+			k.Logger(ctx).Debug(
 				fmt.Sprintf(
 					"MustPlaceStatefulOrdersFromLastBlock: PlaceOrder() returned an error %+v for order %+v",
 					err,
@@ -451,7 +490,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 				// In this case, Indexer could be learning of this order for the first
 				// time with this removal.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-					ctx.Logger(),
+					k.Logger(ctx),
 					order.OrderId,
 					orderStatus,
 					err,
@@ -461,12 +500,8 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
 				}
 			}
-		} else {
-			writeCache()
-
-			if k.indexerEventManager.Enabled() {
-				existingOffchainUpdates.Append(placeOrderOffchainUpdates)
-			}
+		} else if k.indexerEventManager.Enabled() {
+			existingOffchainUpdates.Append(placeOrderOffchainUpdates)
 		}
 	}
 
@@ -487,6 +522,20 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.PlaceConditionalOrdersFromLastBlock,
+		metrics.Latency,
+	)
+
+	telemetry.SetGauge(
+		float32(len(conditionalOrderIdsTriggeredInLastBlock)),
+		types.ModuleName,
+		metrics.PlaceConditionalOrdersFromLastBlock,
+		metrics.Count,
+	)
+
 	for _, orderId := range conditionalOrderIdsTriggeredInLastBlock {
 		// Panic if the order is not in triggered state.
 		if !k.IsConditionalOrderTriggered(ctx, orderId) {
@@ -521,19 +570,43 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 ) error {
 	orderIdToCancel := msgCancelOrder.GetOrderId()
 	if orderIdToCancel.IsStatefulOrder() {
+		previousBlockInfo := k.blockTimeKeeper.GetPreviousBlockInfo(ctx)
+
+		prevBlockHeight := previousBlockInfo.Height
+		currBlockHeight := uint32(ctx.BlockHeight())
+		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != currBlockHeight-1 {
+			k.Logger(ctx).Error(
+				"PerformOrderCancellationStatefulValidation: prev block height is not one below"+
+					"current block height in DeliverTx",
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
+			)
+		}
+
+		// CheckTx or ReCheckTx
+		if !lib.IsDeliverTxMode(ctx) && currBlockHeight > 1 && prevBlockHeight != currBlockHeight {
+			k.Logger(ctx).Error(
+				"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
+					metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx),
+				"previousBlockHeight", prevBlockHeight,
+				"currentBlockHeight", currBlockHeight,
+				"msgCancelOrder", msgCancelOrder,
+			)
+		}
+
 		cancelGoodTilBlockTime := msgCancelOrder.GetGoodTilBlockTime()
-		previousBlockTime := k.blockTimeKeeper.GetPreviousBlockInfo(ctx).Timestamp
 
 		// Return an error if `goodTilBlockTime` is less than previous block's blockTime
-		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockTime.Unix()) {
+		if cancelGoodTilBlockTime <= lib.MustConvertIntegerToUint32(previousBlockInfo.Timestamp.Unix()) {
 			return types.ErrTimeExceedsGoodTilBlockTime
 		}
 
 		// Return an error if `goodTilBlockTime` is further into the future
 		// than the previous block time plus `StatefulOrderTimeWindow`.
-		endTime := previousBlockTime.Add(types.StatefulOrderTimeWindow)
+		endTime := previousBlockInfo.Timestamp.Add(types.StatefulOrderTimeWindow)
 		if cancelGoodTilBlockTime > lib.MustConvertIntegerToUint32(endTime.Unix()) {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 				"GoodTilBlockTime %v exceeds the previous blockTime plus StatefulOrderTimeWindow %v. MsgCancelOrder: %+v",
 				cancelGoodTilBlockTime,
@@ -546,7 +619,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		// existing uncommitted cancellation for this order ID.
 		existingCancellation, uncommittedCancelExists := k.GetUncommittedStatefulOrderCancellation(ctx, orderIdToCancel)
 		if uncommittedCancelExists {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderCancellationAlreadyExists,
 				"An uncommitted stateful order cancellation with this OrderId already exists and stateful "+
 					"order cancellation replacement is not supported. Existing order cancellation GoodTilBlockTime "+
@@ -567,7 +640,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 			statefulOrderPlacement, orderToCancelExists = k.GetUncommittedStatefulOrderPlacement(ctx, orderIdToCancel)
 
 			if !orderToCancelExists {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					types.ErrStatefulOrderDoesNotExist,
 					"Order Id to cancel does not exist. OrderId : %+v",
 					orderIdToCancel,
@@ -579,7 +652,7 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		existingStatefulOrder := statefulOrderPlacement.Order
 		// Return an error if cancellation's GTBT is less than stateful order's GTBT.
 		if cancelGoodTilBlockTime < existingStatefulOrder.GetGoodTilBlockTime() {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrInvalidStatefulOrderCancellation,
 				"cancellation goodTilBlockTime less than stateful order goodTilBlockTime."+
 					" cancellation %+v, order %+v",
@@ -588,16 +661,35 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 			)
 		}
 	} else {
-		goodTilBlock := msgCancelOrder.GetGoodTilBlock()
-		// Return an error if `goodTilBlock` is in the past.
-		if goodTilBlock < blockHeight {
-			return types.ErrHeightExceedsGoodTilBlock
+		if err := k.validateGoodTilBlock(msgCancelOrder.GetGoodTilBlock(), blockHeight); err != nil {
+			return err
 		}
+	}
+	return nil
+}
 
-		// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
-		if goodTilBlock > types.ShortBlockWindow+blockHeight {
-			return types.ErrGoodTilBlockExceedsShortBlockWindow
-		}
+// validateGoodTilBlock validates that the good til block (GTB) is within valid bounds, specifically
+// blockHeight <= GTB <= blockHeight + ShortBlockWindow.
+func (k Keeper) validateGoodTilBlock(goodTilBlock uint32, blockHeight uint32) error {
+	// Return an error if `goodTilBlock` is in the past.
+	if goodTilBlock < blockHeight {
+		return errorsmod.Wrapf(
+			types.ErrHeightExceedsGoodTilBlock,
+			"GoodTilBlock %v is less than the current blockHeight %v",
+			goodTilBlock,
+			blockHeight,
+		)
+	}
+
+	// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
+	if goodTilBlock > types.ShortBlockWindow+blockHeight {
+		return errorsmod.Wrapf(
+			types.ErrGoodTilBlockExceedsShortBlockWindow,
+			"The GoodTilBlock %v exceeds the current blockHeight %v plus ShortBlockWindow %v",
+			goodTilBlock,
+			blockHeight,
+			types.ShortBlockWindow,
+		)
 	}
 	return nil
 }
@@ -638,7 +730,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	)
 	clobPair, found := k.GetClobPair(ctx, order.GetClobPairId())
 	if !found {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidClob,
 			"Clob %v is not a valid clob",
 			order.GetClobPairId(),
@@ -646,7 +738,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.Subticks%uint64(clobPair.SubticksPerTick) != 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidPlaceOrder,
 			"Order subticks %v must be a multiple of the ClobPair's SubticksPerTick %v",
 			order.Subticks,
@@ -655,7 +747,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.Quantums%clobPair.StepBaseQuantums != 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrInvalidPlaceOrder,
 			"Order Quantums %v must be a multiple of the ClobPair's StepBaseQuantums %v",
 			order.Quantums,
@@ -678,27 +770,8 @@ func (k Keeper) PerformStatefulOrderValidation(
 	}
 
 	if order.OrderId.IsShortTermOrder() {
-		goodTilBlock := order.GetGoodTilBlock()
-
-		// Return an error if `goodTilBlock` is in the past.
-		if goodTilBlock < blockHeight {
-			return sdkerrors.Wrapf(
-				types.ErrHeightExceedsGoodTilBlock,
-				"GoodTilBlock %v is less than the current blockHeight %v",
-				goodTilBlock,
-				blockHeight,
-			)
-		}
-
-		// Return an error if `goodTilBlock` is further into the future than `ShortBlockWindow`.
-		if goodTilBlock > types.ShortBlockWindow+blockHeight {
-			return sdkerrors.Wrapf(
-				types.ErrGoodTilBlockExceedsShortBlockWindow,
-				"The GoodTilBlock %v exceeds the current blockHeight %v plus ShortBlockWindow %v",
-				goodTilBlock,
-				blockHeight,
-				types.ShortBlockWindow,
-			)
+		if err := k.validateGoodTilBlock(order.GetGoodTilBlock(), blockHeight); err != nil {
+			return err
 		}
 	} else {
 		goodTilBlockTimeUnix := order.GetGoodTilBlockTime()
@@ -708,7 +781,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// Return an error if `goodTilBlockTime` is less than or equal to the
 		// block time of the previous block.
 		if goodTilBlockTimeUnix <= previousBlockTimeUnix {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrTimeExceedsGoodTilBlockTime,
 				"GoodTilBlockTime %v is less than the previous blockTime %v",
 				goodTilBlockTimeUnix,
@@ -722,7 +795,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 			previousBlockTime.Add(types.StatefulOrderTimeWindow).Unix(),
 		)
 		if goodTilBlockTimeUnix > endTimeUnix {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 				"GoodTilBlockTime %v exceeds the previous blockTime plus StatefulOrderTimeWindow %v",
 				goodTilBlockTimeUnix,
@@ -735,7 +808,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// TODO(DEC-1238): Support stateful order replacements.
 		if uncommittedCancel, uncommittedCancelExists := k.GetUncommittedStatefulOrderCancellation(
 			ctx, order.OrderId); uncommittedCancelExists {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderPreviouslyCancelled,
 				"An uncommitted stateful order cancellation with this OrderId already exists. "+
 					"Existing order cancellation: (%+v). New order: (%+v).",
@@ -749,7 +822,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		statefulOrderPlacement, found := k.GetUncommittedStatefulOrderPlacement(ctx, order.OrderId)
 		if !isPreexistingStatefulOrder && found {
 			existingOrder := statefulOrderPlacement.GetOrder()
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderAlreadyExists,
 				"An uncommitted stateful order with this OrderId already exists and stateful order replacement is not supported. "+
 					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
@@ -781,7 +854,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 		// TODO(DEC-1238): Support stateful order replacements.
 		if !isPreexistingStatefulOrder && found {
 			existingOrder := statefulOrderPlacement.GetOrder()
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrStatefulOrderAlreadyExists,
 				"A stateful order with this OrderId already exists and stateful order replacement is not supported. "+
 					"Existing order GoodTilBlockTime (%v), New order GoodTilBlockTime (%v). "+
@@ -795,7 +868,7 @@ func (k Keeper) PerformStatefulOrderValidation(
 
 		if order.IsConditionalOrder() {
 			if order.ConditionalOrderTriggerSubticks%uint64(clobPair.SubticksPerTick) != 0 {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					types.ErrInvalidPlaceOrder,
 					"Conditional order trigger subticks %v must be a multiple of the ClobPair's SubticksPerTick %v",
 					order.ConditionalOrderTriggerSubticks,
@@ -832,7 +905,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	// Validate that the reduce-only order is on the opposite side of the existing position.
 	if order.IsBuy() {
 		if currentPositionSize.Sign() != -1 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",
 				order,
@@ -841,7 +914,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 		}
 	} else {
 		if currentPositionSize.Sign() != 1 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				types.ErrReduceOnlyWouldIncreasePositionSize,
 				"Reduce-only order failed validation while matching. Order: (%+v), position-size: (%+v)",
 				order,
@@ -853,7 +926,7 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	// Validate that the reduce-only order does not change the subaccount's position side.
 	bigMatchedAmount := new(big.Int).SetUint64(matchedAmount)
 	if bigMatchedAmount.CmpAbs(currentPositionSize) == 1 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrReduceOnlyWouldChangePositionSide,
 			"Current position size: %v, reduce-only order fill amount: %v",
 			currentPositionSize,
@@ -928,7 +1001,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 			)
 			if satypes.ErrIntegerOverflow.Is(err) {
 				// TODO(DEC-1701): Determine best action to take if the oracle price overflows max uint64
-				ctx.Logger().Error(
+				k.Logger(ctx).Error(
 					fmt.Sprintf(
 						"Integer overflow: oracle price (subticks) exceeded uint64 max. "+
 							"perpetual ID = (%d), oracle price = (%+v), is buy = (%t)",
@@ -939,7 +1012,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 				)
 			} else if err != nil {
 				panic(
-					sdkerrors.Wrapf(
+					errorsmod.Wrapf(
 						err,
 						"perpetual id = (%d), oracle price = (%+v), is buy = (%t)",
 						perpetualId,
@@ -1018,7 +1091,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	perpetual, marketPrice, err := k.perpetualsKeeper.GetPerpetualAndMarketPrice(ctx, perpetualId)
 	// If an error is returned, this implies stateful order validation was not performed properly, therefore panic.
 	if err != nil {
-		panic(sdkerrors.Wrapf(err, "perpetual ID = (%d)", perpetualId))
+		panic(errorsmod.Wrapf(err, "perpetual ID = (%d)", perpetualId))
 	}
 
 	// Get the oracle price for the market.
@@ -1030,7 +1103,7 @@ func (k Keeper) GetOraclePriceSubticksRat(ctx sdk.Context, clobPair types.ClobPa
 	)
 	if oraclePriceSubticksRat.Cmp(big.NewRat(0, 1)) == 0 {
 		panic(
-			sdkerrors.Wrapf(
+			errorsmod.Wrapf(
 				types.ErrZeroPriceForOracle,
 				"clob pair ID = (%d), perpetual ID = (%d), market ID = (%d)",
 				clobPair.Id,
@@ -1057,7 +1130,7 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	perpetualId, err := clobPair.GetPerpetualId()
 	if err != nil {
 		panic(
-			sdkerrors.Wrap(
+			errorsmod.Wrap(
 				err,
 				"GetStatePosition: Reduce-only orders for assets not implemented",
 			),
@@ -1072,11 +1145,11 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	return position.GetBigQuantums()
 }
 
-// InitStatefulOrdersInMemClob places all stateful orders in state on the memclob, placed in ascending
-// order by time priority.
+// InitStatefulOrders places all stateful orders in state on the memclob, placed in ascending
+// order by time priority and initializes the stateful order count.
 // This is called during app initialization in `app.go`, before any ABCI calls are received
 // and after all MemClob orderbooks are instantiated.
-func (k Keeper) InitStatefulOrdersInMemClob(
+func (k Keeper) InitStatefulOrders(
 	ctx sdk.Context,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -1091,6 +1164,13 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 	// Place each order in the memclob, ignoring errors if they occur.
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
+		// Ensure that the stateful order count is accurately represented in the memstore on restart.
+		k.SetStatefulOrderCount(
+			ctx,
+			statefulOrder.OrderId.SubaccountId,
+			k.GetStatefulOrderCount(ctx, statefulOrder.OrderId.SubaccountId)+1,
+		)
+
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()
 
@@ -1115,8 +1195,8 @@ func (k Keeper) InitStatefulOrdersInMemClob(
 		if err != nil {
 			// TODO(DEC-847): Revisit this error log once `MsgRemoveOrder` is implemented,
 			// since it should potentially be a panic.
-			ctx.Logger().Error(
-				"InitStatefulOrdersInMemClob: PlaceOrder() returned an error",
+			k.Logger(ctx).Error(
+				"InitStatefulOrders: PlaceOrder() returned an error",
 				"error",
 				err,
 			)

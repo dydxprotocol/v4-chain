@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"math/big"
 	"testing"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -80,13 +82,14 @@ func TestGetAllVestEntries(t *testing.T) {
 	gotEntries := k.GetAllVestEntries(ctx)
 	expectedEntries := []types.VestEntry{
 		types.DefaultGenesis().VestEntries[0],
+		types.DefaultGenesis().VestEntries[1],
 		TestValidEntry,
 		TestValidEntry2,
 		TestValidEntry3,
 	}
 
-	// 1 default from genesis + 3 added
-	require.Len(t, gotEntries, 4)
+	// 2 default from genesis + 3 added
+	require.Len(t, gotEntries, 5)
 	for i := range gotEntries {
 		require.Equal(t, expectedEntries[i], gotEntries[i])
 	}
@@ -96,6 +99,8 @@ func TestProcessVesting(t *testing.T) {
 	testVestTokenDenom := "testdenom"
 	testVesterAccount := rewardstypes.VesterAccountName
 	testTreasuryAccount := rewardstypes.TreasuryAccountName
+	testPrevBlockTime := time.Date(2023, 11, 5, 8, 55, 20, 0, time.UTC).In(time.UTC)
+	testCurrBlockTime := time.Date(2023, 11, 5, 8, 55, 22, 0, time.UTC).In(time.UTC)
 
 	for name, tc := range map[string]struct {
 		vesterBalance           sdkmath.Int
@@ -107,7 +112,7 @@ func TestProcessVesting(t *testing.T) {
 		expectedTreasuryBalance sdkmath.Int
 	}{
 		"vesting has not started": {
-			vesterBalance: sdk.NewInt(1_000_000),
+			vesterBalance: sdkmath.NewInt(1_000_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -117,11 +122,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1000, 0).In(time.UTC),
 			blockTime:               time.Unix(1001, 0).In(time.UTC),
-			expectedVesterBalance:   sdk.NewInt(1_000_000),
-			expectedTreasuryBalance: sdk.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(1_000_000),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
 		},
 		"vesting has ended": {
-			vesterBalance: sdk.NewInt(0),
+			vesterBalance: sdkmath.NewInt(0),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -131,11 +136,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1000, 0).In(time.UTC),
 			blockTime:               time.Unix(1001, 0).In(time.UTC),
-			expectedVesterBalance:   sdk.NewInt(0),
-			expectedTreasuryBalance: sdk.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(0),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
 		},
 		"vesting in progress, start_time < prev_block_time < block_time < end_time": {
-			vesterBalance: sdk.NewInt(2_000_000),
+			vesterBalance: sdkmath.NewInt(2_000_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -146,11 +151,35 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(1000, 0),
 			blockTime:     time.Unix(1001, 0),
 			// (1001 - 1000) / (2000 - 1000) * 1_000_000 = 1_000
-			expectedTreasuryBalance: sdk.NewInt(2_000),
-			expectedVesterBalance:   sdk.NewInt(1_998_000),
+			expectedTreasuryBalance: sdkmath.NewInt(2_000),
+			expectedVesterBalance:   sdkmath.NewInt(1_998_000),
+		},
+		"vesting in progress, realistic values, start_time < prev_block_time < block_time < end_time": {
+			vesterBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.Int64MulPow10(20_000_000, 18), // 20 million full coin, 2e26 in base denom.
+			),
+			vestEntry: types.VestEntry{
+				VesterAccount:   testVesterAccount,
+				TreasuryAccount: testTreasuryAccount,
+				Denom:           testVestTokenDenom,
+				StartTime:       types.DefaultVestingStartTime,
+				EndTime:         types.DefaultVestingEndTime,
+			},
+			prevBlockTime: testPrevBlockTime,
+			blockTime:     testCurrBlockTime,
+			expectedTreasuryBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("1095437830069111172", 10), // 1.09e18
+				),
+			),
+			expectedVesterBalance: sdkmath.NewIntFromBigInt(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("19999998904562169930888828", 10), // 1.99e25
+				),
+			),
 		},
 		"vesting in progress, start_time < prev_block_time < block_time < end_time, rounds down": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -161,11 +190,25 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(1000, 0),
 			blockTime:     time.Unix(1001, 500_000_000),
 			// (1001.5 - 1000) / (2000 - 1000) * 2_005_000 = 3007
-			expectedTreasuryBalance: sdk.NewInt(3_007),
-			expectedVesterBalance:   sdk.NewInt(2_001_993),
+			expectedTreasuryBalance: sdkmath.NewInt(3_007),
+			expectedVesterBalance:   sdkmath.NewInt(2_001_993),
+		},
+		"vesting in progress,  start_time < prev_block_time < block_time < end_time, vester has empty balance": {
+			vesterBalance: sdkmath.NewInt(0),
+			vestEntry: types.VestEntry{
+				VesterAccount:   testVesterAccount,
+				TreasuryAccount: testTreasuryAccount,
+				Denom:           testVestTokenDenom,
+				StartTime:       time.Unix(500, 0).In(time.UTC),
+				EndTime:         time.Unix(2000, 0).In(time.UTC),
+			},
+			prevBlockTime:           time.Unix(1000, 0),
+			blockTime:               time.Unix(1001, 500_000_000),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(0),
 		},
 		"vesting about to end, start_time < prev_block_time < end_time < block_time, vest all balance": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -175,11 +218,11 @@ func TestProcessVesting(t *testing.T) {
 			},
 			prevBlockTime:           time.Unix(1999, 0).In(time.UTC),
 			blockTime:               time.Unix(2001, 0).In(time.UTC),
-			expectedTreasuryBalance: sdk.NewInt(2_005_000),
-			expectedVesterBalance:   sdk.NewInt(0),
+			expectedTreasuryBalance: sdkmath.NewInt(2_005_000),
+			expectedVesterBalance:   sdkmath.NewInt(0),
 		},
 		"vesting just started, prev_block_time < start_time < block_time < end_time": {
-			vesterBalance: sdk.NewInt(2_005_000),
+			vesterBalance: sdkmath.NewInt(2_005_000),
 			vestEntry: types.VestEntry{
 				VesterAccount:   testVesterAccount,
 				TreasuryAccount: testTreasuryAccount,
@@ -190,8 +233,22 @@ func TestProcessVesting(t *testing.T) {
 			prevBlockTime: time.Unix(499, 0),
 			blockTime:     time.Unix(500, 500_000_000),
 			// 0.5 / (2000 - 500) * 2_005_000 = 668
-			expectedTreasuryBalance: sdk.NewInt(668),
-			expectedVesterBalance:   sdk.NewInt(2_004_332),
+			expectedTreasuryBalance: sdkmath.NewInt(668),
+			expectedVesterBalance:   sdkmath.NewInt(2_004_332),
+		},
+		"vesting just started, prev_block_time < start_time < block_time < end_time, vester has empty balance": {
+			vesterBalance: sdkmath.NewInt(0),
+			vestEntry: types.VestEntry{
+				VesterAccount:   testVesterAccount,
+				TreasuryAccount: testTreasuryAccount,
+				Denom:           testVestTokenDenom,
+				StartTime:       time.Unix(500, 0).In(time.UTC),
+				EndTime:         time.Unix(2000, 0).In(time.UTC),
+			},
+			prevBlockTime:           time.Unix(499, 0),
+			blockTime:               time.Unix(500, 500_000_000),
+			expectedTreasuryBalance: sdkmath.NewInt(0),
+			expectedVesterBalance:   sdkmath.NewInt(0),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {

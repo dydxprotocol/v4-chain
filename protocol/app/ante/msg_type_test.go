@@ -1,7 +1,9 @@
 package ante_test
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
+	"golang.org/x/exp/slices"
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -37,31 +39,31 @@ var (
 
 	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 
-	invalidReqErrCannotBeEmpty = sdkerrors.Wrap(
+	invalidReqErrCannotBeEmpty = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"msgs cannot be empty",
 	)
-	invalidReqErrAppInjectedMustBeOnlyMsg = sdkerrors.Wrap(
+	invalidReqErrAppInjectedMustBeOnlyMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"app-injected msg must be the only msg in a tx",
 	)
-	invalidReqErrInternalMsg = sdkerrors.Wrap(
+	invalidReqErrInternalMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		"internal msg cannot be submitted externally",
 	)
-	invalidReqErrNestedUnsupportedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedUnsupportedMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: unsupported msg type").Error(),
 	)
-	invalidReqErrNestedAppInjectedMsg = sdkerrors.Wrap(
+	invalidReqErrNestedAppInjectedMsg = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: app-injected msg type").Error(),
 	)
-	invalidReqErrNestedDoubleNested = sdkerrors.Wrap(
+	invalidReqErrNestedDoubleNested = errorsmod.Wrap(
 		sdkerrors.ErrInvalidRequest,
 		fmt.Errorf("Invalid nested msg: double-nested msg type").Error(),
 	)
-	invalidReqErrUnsupportedMsg = sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
+	invalidReqErrUnsupportedMsg = errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "unsupported msg")
 )
 
 func TestValidateMsgType_Empty(t *testing.T) {
@@ -94,12 +96,11 @@ func TestValidateMsgType_Empty(t *testing.T) {
 	for name, tc := range tests {
 		// Run test for each tx mode.
 		for _, mode := range allTxModes {
-			testMsgs := copySlice(tc.msgs)
 			expectedErr, exists := tc.expectedErr[mode]
 			require.True(t, exists)
 
 			testName := fmt.Sprintf("Mode:%s / %s", mode, name)
-			allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
+			allTestCases = append(allTestCases, testCase{testName, mode, tc.msgs, expectedErr})
 		}
 	}
 	require.Len(t, allTestCases, len(tests)*len(allTxModes))
@@ -123,7 +124,7 @@ func TestValidateMsgType_AppInjectedMsg(t *testing.T) {
 
 			expectedErr: map[txMode]error{
 				reCheckTx: nil, // ReCheck skips the AnteHandler.
-				checkTx: sdkerrors.Wrap( // Should only be included in DeliverTx
+				checkTx: errorsmod.Wrap( // Should only be included in DeliverTx
 					sdkerrors.ErrInvalidRequest,
 					"app-injected msg must only be included in DeliverTx",
 				),
@@ -181,15 +182,14 @@ func TestValidateMsgType_AppInjectedMsg(t *testing.T) {
 				appInjectedSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.AppInjectedMsgSamples)
 				for _, sampleMsg := range appInjectedSampleMsgs {
 					testName := fmt.Sprintf(testNameFormat, name, mode, sampleMsg.Name)
-					testMsgs := append(tc.msgs, sampleMsg.Msg)
+					testMsgs := append(slices.Clone(tc.msgs), sampleMsg.Msg)
 					require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 3)
 					allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
 				}
 			} else {
 				testName := fmt.Sprintf(testNameFormat, name, mode, "none")
-				testMsgs := copySlice(tc.msgs)
-				require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 2)
-				allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
+				require.True(t, len(tc.msgs) > 0 && len(tc.msgs) <= 2)
+				allTestCases = append(allTestCases, testCase{testName, mode, tc.msgs, expectedErr})
 			}
 		}
 	}
@@ -273,15 +273,14 @@ func TestValidateMsgType_InternalOnlyMsg(t *testing.T) {
 				internalSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.InternalMsgSamplesAll)
 				for _, sampleMsg := range internalSampleMsgs {
 					testName := fmt.Sprintf(testNameFormat, name, mode, sampleMsg.Name)
-					testMsgs := append(tc.msgs, sampleMsg.Msg)
+					testMsgs := append(slices.Clone(tc.msgs), sampleMsg.Msg)
 					require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 3)
 					allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
 				}
 			} else {
 				testName := fmt.Sprintf(testNameFormat, name, mode, "none")
-				testMsgs := copySlice(tc.msgs)
-				require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 2)
-				allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
+				require.True(t, len(tc.msgs) > 0 && len(tc.msgs) <= 2)
+				allTestCases = append(allTestCases, testCase{testName, mode, tc.msgs, expectedErr})
 			}
 		}
 	}
@@ -438,15 +437,14 @@ func TestValidateMsgType_UnsupportedMsg(t *testing.T) {
 				unsupportedSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.UnsupportedMsgSamples)
 				for _, sampleMsg := range unsupportedSampleMsgs {
 					testName := fmt.Sprintf(testNameFormat, name, mode, sampleMsg.Name)
-					testMsgs := append(tc.msgs, sampleMsg.Msg)
+					testMsgs := append(slices.Clone(tc.msgs), sampleMsg.Msg)
 					require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 3)
 					allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
 				}
 			} else {
 				testName := fmt.Sprintf(testNameFormat, name, mode, "none")
-				testMsgs := copySlice(tc.msgs)
-				require.True(t, len(testMsgs) > 0 && len(testMsgs) <= 2)
-				allTestCases = append(allTestCases, testCase{testName, mode, testMsgs, expectedErr})
+				require.True(t, len(tc.msgs) > 0 && len(tc.msgs) <= 2)
+				allTestCases = append(allTestCases, testCase{testName, mode, tc.msgs, expectedErr})
 			}
 		}
 	}
@@ -500,10 +498,4 @@ func runTest(t *testing.T, name string, msgs []sdk.Msg, mode txMode, expectedErr
 			require.NoError(t, err)
 		}
 	})
-}
-
-func copySlice(src []sdk.Msg) []sdk.Msg {
-	dst := make([]sdk.Msg, len(src))
-	copy(dst, src)
-	return dst
 }

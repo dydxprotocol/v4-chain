@@ -51,12 +51,12 @@ func TestMsgServerAddPremiumVotes(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Initialize Mocks and Context.
 			mockKeeper := &mocks.PerpetualsKeeper{}
-			ctx, _, _, _, _ := keepertest.PerpetualsKeepers(t)
-			tc.setupMocks(ctx, mockKeeper)
+			pc := keepertest.PerpetualsKeepers(t)
+			tc.setupMocks(pc.Ctx, mockKeeper)
 
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
 
-			goCtx := sdk.WrapSDKContext(ctx)
+			goCtx := sdk.WrapSDKContext(pc.Ctx)
 
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr, func() {

@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -9,7 +9,7 @@ import (
 // It returns an error if any of the liquidation config fields fail the following validation:
 // - `maxLiquidationFee == 0 || maxLiquidationFee > 1_000_000`.
 // - `bankruptcyAdjustmentPpm < 1_000_000`.
-// - `spreadToMaintenanceMarginRatioPpm == 0 || spreadToMaintenanceMarginRatioPpm > 1_000_000`.
+// - `spreadToMaintenanceMarginRatioPpm == 0.
 // - `maxPositionPortionLiquidatedPpm == 0 || maxPositionPortionLiquidatedPpm > 1_000_000`.
 // - `maxNotionalLiquidated == 0`.
 // - `maxQuantumsInsuranceLost == 0`.
@@ -20,7 +20,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	// Validate the BankruptcyAdjustmentPpm.
 	bankruptcyAdjustmentPpm := lc.FillablePriceConfig.BankruptcyAdjustmentPpm
 	if bankruptcyAdjustmentPpm < lib.OneMillion {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid BankruptcyAdjustmentPpm",
 			bankruptcyAdjustmentPpm,
@@ -29,8 +29,8 @@ func (lc *LiquidationsConfig) Validate() error {
 
 	// Validate the SpreadToMaintenanceMarginRatioPpm.
 	spreadToMaintenanceMarginRatioPpm := lc.FillablePriceConfig.SpreadToMaintenanceMarginRatioPpm
-	if spreadToMaintenanceMarginRatioPpm == 0 || spreadToMaintenanceMarginRatioPpm > lib.OneMillion {
-		return sdkerrors.Wrapf(
+	if spreadToMaintenanceMarginRatioPpm == 0 {
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid SpreadToMaintenanceMarginRatioPpm",
 			spreadToMaintenanceMarginRatioPpm,
@@ -39,7 +39,7 @@ func (lc *LiquidationsConfig) Validate() error {
 
 	// Validate the MaxLiquidationFeePpm.
 	if lc.MaxLiquidationFeePpm == 0 || lc.MaxLiquidationFeePpm > lib.OneMillion {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid MaxLiquidationFeePpm",
 			lc.MaxLiquidationFeePpm,
@@ -49,7 +49,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	// Validate the MaxPositionPortionLiquidatedPpm.
 	maxPositionPortionLiquidatedPpm := lc.PositionBlockLimits.MaxPositionPortionLiquidatedPpm
 	if maxPositionPortionLiquidatedPpm == 0 || maxPositionPortionLiquidatedPpm > lib.OneMillion {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid MaxPositionPortionLiquidatedPpm",
 			maxPositionPortionLiquidatedPpm,
@@ -59,7 +59,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	// Validate the MaxNotionalLiquidated.
 	maxNotionalLiquidated := lc.SubaccountBlockLimits.MaxNotionalLiquidated
 	if maxNotionalLiquidated == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid MaxNotionalLiquidated",
 			maxNotionalLiquidated,
@@ -69,7 +69,7 @@ func (lc *LiquidationsConfig) Validate() error {
 	// Validate the MaxQuantumsInsuranceLost.
 	maxQuantumsInsuranceLost := lc.SubaccountBlockLimits.MaxQuantumsInsuranceLost
 	if maxQuantumsInsuranceLost == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationsConfig,
 			"%v is not a valid MaxQuantumsInsuranceLost",
 			maxQuantumsInsuranceLost,

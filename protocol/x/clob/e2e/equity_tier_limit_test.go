@@ -2,6 +2,7 @@ package clob_test
 
 import (
 	"github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -159,6 +160,34 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			advanceBlock: true,
 			expectError:  true,
 		},
+		"Long-term order would exceed max open stateful orders (due to untriggered conditional order) across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+			expectError:  true,
+		},
 		"Conditional order would exceed max open stateful orders across blocks": {
 			firstOrder: MustScaleOrder(
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -166,6 +195,62 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			),
 			secondOrder: MustScaleOrder(
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+				testapp.DefaultGenesis(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+			expectError:  true,
+		},
+		"Conditional FoK order would exceed max open stateful orders across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price50_GTBT10_StopLoss51_FOK,
+				testapp.DefaultGenesis(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+			expectError:  true,
+		},
+		"Conditional IoC order would exceed max open stateful orders across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price50_GTBT10_StopLoss51_FOK,
 				testapp.DefaultGenesis(),
 			),
 			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
@@ -229,6 +314,37 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			cancellation: clobtypes.NewMsgCancelOrderStateful(
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.OrderId,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20.GetGoodTilBlockTime(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+		},
+		"Order cancellation of untriggered order prevents exceeding max open stateful orders for long-term order in " +
+			"same block": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			cancellation: clobtypes.NewMsgCancelOrderStateful(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.GetGoodTilBlockTime(),
 			),
 			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
 				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
@@ -339,6 +455,38 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			},
 			advanceBlock: true,
 		},
+		"Order cancellation of untriggered order prevents exceeding max open stateful orders for long-term order " +
+			"across blocks": {
+			firstOrder: MustScaleOrder(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20,
+				testapp.DefaultGenesis(),
+			),
+			secondOrder: MustScaleOrder(
+				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
+				testapp.DefaultGenesis(),
+			),
+			cancellation: clobtypes.NewMsgCancelOrderStateful(
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.OrderId,
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_TakeProfit20.GetGoodTilBlockTime(),
+			),
+			equityTierLimitConfiguration: clobtypes.EquityTierLimitConfiguration{
+				StatefulOrderEquityTiers: []clobtypes.EquityTierLimit{
+					{
+						UsdTncRequired: dtypes.NewInt(0),
+						Limit:          0,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(5_000_000_000), // $5,000
+						Limit:          1,
+					},
+					{
+						UsdTncRequired: dtypes.NewInt(70_000_000_000), // $70,000
+						Limit:          100,
+					},
+				},
+			},
+			advanceBlock: true,
+		},
 		"Order cancellation prevents exceeding max open stateful orders for conditional order across blocks": {
 			firstOrder: MustScaleOrder(
 				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
@@ -390,7 +538,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			if tc.advanceBlock {
@@ -399,22 +548,29 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 			if tc.cancellation != nil {
 				for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *tc.cancellation) {
-					require.True(t, tApp.CheckTx(tx).IsOK())
+					resp := tApp.CheckTx(tx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
+			}
+
+			if tc.advanceBlock {
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.secondOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
+
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			// Ensure that any successful transactions can be delivered.
+			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 		})
 	}
 }
@@ -557,7 +713,8 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.firstOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
 			ctx = tApp.AdvanceToBlock(
@@ -566,16 +723,18 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			)
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.secondOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
+
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
+			// Ensure that any successful transactions can be delivered.
 			tApp.AdvanceToBlock(lib.MustConvertIntegerToUint32(tApp.GetBlockHeight()+1), testapp.AdvanceToBlockOptions{})
 		})
 	}
@@ -862,31 +1021,48 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.makerOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
 				ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.takerOrder)) {
-				require.True(t, tApp.CheckTx(tx).IsOK())
+				resp := tApp.CheckTx(tx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			if tc.advanceBlock {
-				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			}
 
 			for _, tx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(tc.extraOrder)) {
-				response := tApp.CheckTx(tx)
+				resp := tApp.CheckTx(tx)
 				if tc.expectError {
-					require.False(t, response.IsOK())
-					require.Contains(t, response.Log, "Opening order would exceed equity tier limit of 1.")
+					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 				} else {
-					require.True(t, response.IsOK())
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 
-			// Ensure that any succesful transactions can be delivered.
-			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			// Ensure that any successful transactions can be delivered.
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 		})
+	}
+}
+
+func checkThatFoKOrderIsNotBlockedByEquityTierLimits(t *testing.T, tApp *testapp.TestApp, ctx sdk.Context) {
+	for _, fokTx := range testapp.MustMakeCheckTxsWithClobMsg(
+		ctx,
+		tApp.App,
+		*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+			constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
+			testapp.DefaultGenesis(),
+		)),
+	) {
+		fokResponse := tApp.CheckTx(fokTx)
+		require.Conditionf(t, fokResponse.IsErr, "Expected CheckTx to error. Response: %+v", fokResponse)
+		require.Contains(t, fokResponse.Log, "FillOrKill order could not be fully filled")
 	}
 }

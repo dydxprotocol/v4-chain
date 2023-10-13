@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -247,9 +248,11 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup memclob state.
 			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+			ctx = ctx.WithIsCheckTx(true)
 			mockMemClobKeeper := &mocks.MemClobKeeper{}
 			memclob := NewMemClobPriceTimePriority(true)
 			memclob.SetClobKeeper(mockMemClobKeeper)
+			mockMemClobKeeper.On("Logger", mock.Anything).Return(log.NewNopLogger()).Maybe()
 
 			for _, operation := range tc.placedOperations {
 				switch operation.Operation.(type) {
@@ -264,7 +267,6 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 					).Times(4)
 					mockMemClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
 						Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult)).Once()
-					mockMemClobKeeper.On("ValidateSubaccountEquityTierLimitForNewOrder", mock.Anything, mock.Anything).Return(nil)
 
 					// Mock out all remaining calls to GetOrderFillAmount, which is called in
 					// `memclob.PurgeInvalidMemclobState` and during test assertions.
@@ -335,6 +337,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateCanceledStatefulOrderIds(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(true)
 	canceledStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -363,6 +366,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateCanceledStatefulO
 func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
 	memclob := NewMemClobPriceTimePriority(true)
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 
@@ -388,6 +392,8 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateExpiredStatefulOrders(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
 	memclob := NewMemClobPriceTimePriority(true)
 	expiredStatefulOrderIds := []types.OrderId{
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
@@ -416,6 +422,8 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateExpiredStatefulOr
 func TestPurgeInvalidMemclobState_PanicsWhenCalledWithShortTermExpiredStatefulOrders(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
+	ctx = ctx.WithIsCheckTx(true)
+
 	memclob := NewMemClobPriceTimePriority(true)
 	shortTermOrderId := constants.Order_Alice_Num0_Id0_Clob2_Buy5_Price10_GTB15.OrderId
 

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // BitstampTicker is our representation of ticker information returned in Bitstamp response.
@@ -16,6 +16,9 @@ type BitstampTicker struct {
 	BidPrice  string `json:"bid" validate:"required,positive-float-string"`
 	LastPrice string `json:"last" validate:"required,positive-float-string"`
 }
+
+// Ensure that BitstampTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BitstampTicker)(nil)
 
 func (t BitstampTicker) GetPair() string {
 	return t.Pair
@@ -38,7 +41,7 @@ func (t BitstampTicker) GetLastPrice() string {
 func BitstampPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var bitstampTickers []BitstampTicker
@@ -50,6 +53,6 @@ func BitstampPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		bitstampTickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

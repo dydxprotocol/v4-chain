@@ -74,7 +74,7 @@ type SubaccountsKeeper interface {
 }
 
 type AssetsKeeper interface {
-	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, err error)
+	GetAsset(ctx sdk.Context, id uint32) (val assettypes.Asset, exists bool)
 }
 
 type BlockTimeKeeper interface {
@@ -127,7 +127,7 @@ type PerpetualsKeeper interface {
 		ctx sdk.Context,
 		perpetualId uint32,
 	) (perpetualsmoduletypes.Perpetual, pricestypes.MarketPrice, error)
-	GetSettlement(
+	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
 		quantums *big.Int,

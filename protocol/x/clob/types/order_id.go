@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sort"
 
+	errorsmod "cosmossdk.io/errors"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const (
@@ -92,9 +92,20 @@ func (o *OrderId) Validate() error {
 		return err
 	}
 	if !o.IsShortTermOrder() && !o.IsStatefulOrder() {
-		return sdkerrors.Wrapf(ErrInvalidOrderFlag, "orderId: %v", o)
+		return errorsmod.Wrapf(ErrInvalidOrderFlag, "orderId: %v", o)
 	}
 	return nil
+}
+
+// ToStateKey returns a bytes representation of a OrderId for use as a state key.
+// The key uses the proto marshaling of the object such that it can be unmarshalled in
+// the same way if it needs to be.
+func (o *OrderId) ToStateKey() []byte {
+	b, err := o.Marshal()
+	if err != nil {
+		panic(err)
+	}
+	return b
 }
 
 // SortedOrders is type alias for `*OrderId` which supports deterministic

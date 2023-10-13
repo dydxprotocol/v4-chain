@@ -261,7 +261,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	interfaceRegistry := codectypes.NewInterfaceRegistry()
 	cdc := codec.NewProtoCodec(interfaceRegistry)
-	msg := `{"subaccounts": [{ "id": {"owner": "foo", "number": 127 } }]}`
+	msg := `{"subaccounts": [{ "id": {"owner": "foo", "number": 127 },`
+	msg += `"asset_positions":[{"asset_id": 0, "index": 0, "quantums": "1000" }] }]}`
 	gs := json.RawMessage(msg)
 
 	result := am.InitGenesis(ctx, cdc, gs)
@@ -275,7 +276,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"subaccounts":[{"id":{"owner":"foo","number":127},`
-	expected += `"asset_positions":[],"perpetual_positions":[],"margin_enabled":false}]}`
+	expected += `"asset_positions":[{"asset_id":0,"quantums":"1000","index":"0"}],`
+	expected += `"perpetual_positions":[],"margin_enabled":false}]}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

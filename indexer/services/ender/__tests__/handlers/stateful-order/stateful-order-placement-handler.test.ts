@@ -24,6 +24,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
   defaultTime,
@@ -32,7 +34,6 @@ import {
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  binaryToBase64String,
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
@@ -43,10 +44,12 @@ import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('statefulOrderPlacementHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
+    await createPostgresFunctions();
     jest.spyOn(stats, 'increment');
     jest.spyOn(stats, 'timing');
     jest.spyOn(stats, 'gauge');
@@ -107,9 +110,7 @@ describe('statefulOrderPlacementHandler', () => {
 
       const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
         DydxIndexerSubtypes.STATEFUL_ORDER,
-        binaryToBase64String(
-          StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
-        ),
+        StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
         transactionIndex,
         eventIndex,
       );
@@ -168,6 +169,8 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
 
@@ -213,6 +216,8 @@ describe('statefulOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
@@ -239,6 +244,8 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     // TODO[IND-20]: Add tests for vulcan messages

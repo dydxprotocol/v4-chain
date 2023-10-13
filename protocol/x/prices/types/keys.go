@@ -1,5 +1,6 @@
 package types
 
+// Module name and store keys
 const (
 	// ModuleName defines the module name
 	ModuleName = "prices"
@@ -8,6 +9,11 @@ const (
 	StoreKey = ModuleName
 )
 
-func KeyPrefix(p string) []byte {
-	return []byte(p)
-}
+// State
+const (
+	// MarketParamKeyPrefix is the prefix to retrieve all MarketParams
+	MarketParamKeyPrefix = "Param:"
+
+	// MarketPriceKeyPrefix is the prefix to retrieve all MarketPrices
+	MarketPriceKeyPrefix = "Price:"
+)

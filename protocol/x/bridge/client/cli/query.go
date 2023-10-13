@@ -26,6 +26,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	cmd.AddCommand(CmdQuerySafetyParams())
 	cmd.AddCommand(CmdQueryAcknowledgedEventInfo())
 	cmd.AddCommand(CmdQueryRecognizedEventInfo())
+	cmd.AddCommand(CmdQueryDelayedCompleteBridgeMessages())
 
 	return cmd
 }
@@ -132,6 +133,38 @@ func CmdQueryRecognizedEventInfo() *cobra.Command {
 			res, err := queryClient.RecognizedEventInfo(
 				context.Background(),
 				&types.QueryRecognizedEventInfoRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryDelayedCompleteBridgeMessages() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-delayed-complete-bridge-messages",
+		Short: "get complete bridge messages that are delayed (not yet executed)",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			address := ""
+			if len(args) > 0 {
+				address = args[0]
+			}
+
+			res, err := queryClient.DelayedCompleteBridgeMessages(
+				context.Background(),
+				&types.QueryDelayedCompleteBridgeMessagesRequest{
+					Address: address,
+				},
 			)
 			if err != nil {
 				return err

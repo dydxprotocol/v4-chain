@@ -4,6 +4,8 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -17,8 +19,8 @@ import (
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -38,6 +40,7 @@ func SubaccountsKeepers(
 	assetsKeeper *asskeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
+	var mockTimeProvider *mocks.TimeProvider
 	ctx = initKeepers(t, func(
 		db *tmdb.MemDB,
 		registry codectypes.InterfaceRegistry,
@@ -46,7 +49,7 @@ func SubaccountsKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		pricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
 		perpetualsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)
 		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
@@ -67,6 +70,9 @@ func SubaccountsKeepers(
 
 		return []GenesisInitializer{pricesKeeper, perpetualsKeeper, assetsKeeper, keeper}
 	})
+
+	// Mock time provider response for market creation.
+	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, storeKey
 }
@@ -106,7 +112,7 @@ func CreateUsdcAssetPosition(
 ) []*types.AssetPosition {
 	return []*types.AssetPosition{
 		{
-			AssetId:  lib.UsdcAssetId,
+			AssetId:  assettypes.AssetUsdc.Id,
 			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
 		},
 	}
@@ -117,7 +123,7 @@ func CreateUsdcAssetUpdate(
 ) []types.AssetUpdate {
 	return []types.AssetUpdate{
 		{
-			AssetId:          lib.UsdcAssetId,
+			AssetId:          assettypes.AssetUsdc.Id,
 			BigQuantumsDelta: deltaQuoteBalance,
 		},
 	}
@@ -138,10 +144,9 @@ func GetSubaccountUpdateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
-		err := unmarshaler.Unmarshal(bytes, &subaccountUpdate)
+		err := unmarshaler.Unmarshal(event.DataBytes, &subaccountUpdate)
 		if err != nil {
 			panic(err)
 		}

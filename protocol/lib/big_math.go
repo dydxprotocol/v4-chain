@@ -45,7 +45,8 @@ func RatPow10(exponent int32) *big.Rat {
 	return result
 }
 
-// BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
+// BigIntMulPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`. This method rounds towards
+// negative infinity.
 func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 	result := new(big.Int)
 	result.Mul(input, big.NewInt(int64(ppm)))
@@ -53,10 +54,14 @@ func BigIntMulPpm(input *big.Int, ppm uint32) *big.Int {
 }
 
 // BigIntMulSignedPpm takes a `big.Int` and returns the result of `input * ppm / 1_000_000`.
-func BigIntMulSignedPpm(input *big.Int, ppm int32) *big.Int {
-	result := new(big.Int)
-	result.Mul(input, big.NewInt(int64(ppm)))
-	return result.Div(result, big.NewInt(int64(OneMillion)))
+func BigIntMulSignedPpm(input *big.Int, ppm int32, roundUp bool) *big.Int {
+	result := new(big.Rat)
+	result.Mul(
+		new(big.Rat).SetInt(input),
+		new(big.Rat).SetInt64(int64(ppm)),
+	)
+	result.Quo(result, BigRatOneMillion())
+	return BigRatRound(result, roundUp)
 }
 
 // BigMin takes two `big.Int` as parameters and returns the smaller one.

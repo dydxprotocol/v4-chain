@@ -20,12 +20,6 @@ func TestCreateOrderbook_PerpetualClobPairSucceeds(t *testing.T) {
 	})
 
 	require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
-	require.Len(t, memclob.perpetualIdToClobPairId, 1)
-	require.Equal(
-		t,
-		[]types.ClobPairId{clobPair.GetClobPairId()},
-		memclob.perpetualIdToClobPairId[clobPair.GetPerpetualClobMetadata().PerpetualId],
-	)
 }
 
 func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
@@ -63,11 +57,6 @@ func TestCreateOrderbook_MultiplePerpetualClobPairSucceeds(t *testing.T) {
 		)
 
 		require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
-		require.Equal(
-			t,
-			expectedPerpetualIdToClobPairIds,
-			memclob.perpetualIdToClobPairId,
-		)
 	}
 }
 
@@ -82,7 +71,6 @@ func TestCreateOrderbook_AssetClobPairSucceeds(t *testing.T) {
 	})
 
 	require.Contains(t, memclob.openOrders.orderbooksMap, clobPair.GetClobPairId())
-	require.Empty(t, memclob.perpetualIdToClobPairId)
 }
 
 func TestCreateOrderbook_PanicsWhenCreatingDuplicateOrderbook(t *testing.T) {
@@ -116,7 +104,7 @@ func TestCreateOrderbook_PanicsWhenSubticksPerTickIsZero(t *testing.T) {
 	})
 }
 
-func TestCreateOrderbook_PanicsWhenMinOrderBaseQuantumsIsZero(t *testing.T) {
+func TestCreateOrderbook_PanicsWhenStepBaseQuantumsIsZero(t *testing.T) {
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 
 	memclob := NewMemClobPriceTimePriority(false)

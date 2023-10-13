@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 )
 
 // BybitResponseBody defines the overall Bybit response.
@@ -21,13 +21,16 @@ type BybitResponseResult struct {
 }
 
 // BybitTicker is our representation of ticker information returned in Bybit response.
-// Need to implement interface `Ticker` in util.go.
+// It implements the Ticker interface in util.go.
 type BybitTicker struct {
 	Pair      string `json:"symbol" validate:"required"`
 	AskPrice  string `json:"ask1Price" validate:"required,positive-float-string"`
 	BidPrice  string `json:"bid1Price" validate:"required,positive-float-string"`
 	LastPrice string `json:"lastPrice" validate:"required,positive-float-string"`
 }
+
+// Ensure that BybitTicker implements the Ticker interface at compile time.
+var _ price_function.Ticker = (*BybitTicker)(nil)
 
 func (t BybitTicker) GetPair() string {
 	return t.Pair
@@ -50,7 +53,7 @@ func (t BybitTicker) GetLastPrice() string {
 func BybitPriceFunction(
 	response *http.Response,
 	tickerToExponent map[string]int32,
-	medianizer lib.Medianizer,
+	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
 	// Unmarshal response body into a list of tickers.
 	var bybitResponseBody BybitResponseBody
@@ -66,6 +69,6 @@ func BybitPriceFunction(
 	return price_function.GetMedianPricesFromTickers(
 		bybitResponseBody.Result.Tickers,
 		tickerToExponent,
-		medianizer,
+		resolver,
 	)
 }

@@ -105,7 +105,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":`
 	expected += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",`
 	expected += `"denom_exponent":-6,"has_market":false,`
-	expected += `"market_id":0,"atomic_resolution":-6,"long_interest":"0"}]}`
+	expected += `"market_id":0,"atomic_resolution":-6}]}`
 	require.Equal(t, expected, string(json))
 }
 
@@ -204,9 +204,9 @@ func TestAppModule_RegisterServices(t *testing.T) {
 	mockMsgServer := new(mocks.Server)
 
 	mockConfigurator.On("QueryServer").Return(mockQueryServer)
-	// Since there's no MsgServer for assets module, configurator does not call `MsgServer`.
+	mockConfigurator.On("MsgServer").Return(mockMsgServer)
 	mockQueryServer.On("RegisterService", mock.Anything, mock.Anything).Return()
-	// Since there's no MsgServer for assets module, MsgServer does not call `RegisterServer`.
+	mockMsgServer.On("RegisterService", mock.Anything, mock.Anything).Return()
 
 	am := createAppModule(t)
 	am.RegisterServices(mockConfigurator)
@@ -244,13 +244,12 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.False(t, assets[0].HasMarket)
 	require.Equal(t, uint32(0), assets[0].MarketId)
 	require.Equal(t, int32(-6), assets[0].AtomicResolution)
-	require.Equal(t, uint64(0), assets[0].LongInterest)
 
 	genesisJson := am.ExportGenesis(ctx, cdc)
 	expected := `{"assets":[{"id":0,"symbol":"USDC","denom":`
 	expected += `"ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",`
 	expected += `"denom_exponent":-6,"has_market":false,`
-	expected += `"market_id":0,"atomic_resolution":-6,"long_interest":"0"}]}`
+	expected += `"market_id":0,"atomic_resolution":-6}]}`
 	require.Equal(t, expected, string(genesisJson))
 }
 

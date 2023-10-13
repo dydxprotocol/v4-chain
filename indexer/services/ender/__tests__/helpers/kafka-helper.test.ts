@@ -357,6 +357,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_OUT,
+        createdAt: transfer.createdAt,
+        createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
     });
@@ -382,6 +384,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: transfer.size,
         type: TransferType.TRANSFER_IN,
+        createdAt: transfer.createdAt,
+        createdAtHeight: transfer.createdAtHeight,
         transactionHash: transfer.transactionHash,
       });
     });
@@ -406,6 +410,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.DEPOSIT,
+        createdAt: deposit.createdAt,
+        createdAtHeight: deposit.createdAtHeight,
         transactionHash: deposit.transactionHash,
       });
     });
@@ -430,6 +436,8 @@ describe('kafka-helper', () => {
         symbol: defaultAsset.symbol,
         size: deposit.size,
         type: TransferType.WITHDRAWAL,
+        createdAt: withdrawal.createdAt,
+        createdAtHeight: withdrawal.createdAtHeight,
         transactionHash: withdrawal.transactionHash,
       });
     });
@@ -460,7 +468,7 @@ describe('kafka-helper', () => {
 
       expect(contents.oraclePrices).toEqual({
         [market.pair]: {
-          price: oraclePrice.price,
+          oraclePrice: oraclePrice.price,
           effectiveAt: oraclePrice.effectiveAt,
           effectiveAtHeight: oraclePrice.effectiveAtHeight,
           marketId: oraclePrice.marketId,
@@ -525,8 +533,8 @@ describe('kafka-helper', () => {
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject.perpetualId],
         defaultMarketMap,
       );
-      expect(realizedPnl).toEqual('-199998.000000');  // 0*0-199998
-      expect(unrealizedPnl).toEqual('1.500000');  // 0.0001*(15000-0)
+      expect(realizedPnl).toEqual('-199998');  // 0*0-199998
+      expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
     });
 
     it('getPnl with non-negative sumClose', () => {
@@ -546,8 +554,8 @@ describe('kafka-helper', () => {
         perpetualMarketRefresher.getPerpetualMarketsMap()[updatedObject2.perpetualId],
         defaultMarketMap,
       );
-      expect(realizedPnl).toEqual('-199993.000000');  // 1*5-199998
-      expect(unrealizedPnl).toEqual('1.500000');  // 0.0001*(15000-0)
+      expect(realizedPnl).toEqual('-199993');  // 1*5-199998
+      expect(unrealizedPnl).toEqual('1.5');  // 0.0001*(15000-0)
     });
 
     it('convertPerpetualPosition', async () => {
@@ -592,8 +600,8 @@ describe('kafka-helper', () => {
         updatedObjectWithPnl,
       ).toEqual({
         ...updatedObject2,
-        realizedPnl: '-199993.000000',
-        unrealizedPnl: '1.500000',
+        realizedPnl: '-199993',
+        unrealizedPnl: '1.5',
       });
     });
   });

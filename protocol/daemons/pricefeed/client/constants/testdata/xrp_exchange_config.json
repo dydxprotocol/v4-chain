@@ -1,0 +1,47 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "XRPUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "XRPUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "XRP-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "XRP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "xrpusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "XXRPZUSD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "XRP-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "XRP_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "XRP-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
@@ -64,7 +64,7 @@ var (
 		Transfer: &sendingtypes.Transfer{
 			Sender:    Carl_Num0,
 			Recipient: Dave_Num0,
-			AssetId:   lib.UsdcAssetId,
+			AssetId:   assettypes.AssetUsdc.Id,
 			Amount:    500_000_000, // $500
 		},
 	}

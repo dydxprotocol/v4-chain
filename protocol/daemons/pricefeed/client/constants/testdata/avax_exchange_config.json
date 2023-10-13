@@ -2,17 +2,17 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"AVAXUSDT\"",
+      "ticker": "AVAXUSDT",
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"AVAXUSD\""
+      "exchangeName": "Bybit",
+      "ticker": "AVAXUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitfinex",
-      "ticker": "tAVAX:USD",
-      "adjustByMarket": "USDT-USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "AVAX-USD"
     },
     {
       "exchangeName": "Gate",
@@ -23,6 +23,10 @@
       "exchangeName": "Huobi",
       "ticker": "avaxusdt",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kraken",
+      "ticker": "AVAXUSD"
     },
     {
       "exchangeName": "Kucoin",

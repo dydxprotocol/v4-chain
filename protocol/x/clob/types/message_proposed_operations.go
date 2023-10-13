@@ -4,8 +4,9 @@ import (
 	fmt "fmt"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 const TypeMsgProposedOperations = "proposed_operations"
@@ -29,22 +30,31 @@ func (msg *MsgProposedOperations) ValidateBasic() error {
 		case *OperationRaw_OrderRemoval:
 			orderId := operation.OrderRemoval.GetOrderId()
 			if orderId.IsShortTermOrder() {
-				return sdkerrors.Wrapf(
+				return errorsmod.Wrapf(
 					ErrInvalidMsgProposedOperations,
 					"order removal is not allowed for short-term orders: %v",
 					orderId,
 				)
 			}
 
-			if operation.OrderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
-				return sdkerrors.Wrapf(
+			switch operation.OrderRemoval.RemovalReason {
+			case OrderRemoval_REMOVAL_REASON_UNSPECIFIED:
+				return errorsmod.Wrapf(
 					ErrInvalidMsgProposedOperations,
 					"order removal reason must be specified: %v",
 					orderId,
 				)
+			case OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
+				// TODO: remove this case when reduce-only orders are enabled.
+				return errorsmod.Wrapf(
+					ErrInvalidMsgProposedOperations,
+					"order removals for invalid reduce-only orders are not allowed. Reduce-only orders"+
+						" are not currently supported.",
+				)
 			}
+
 		default:
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidMsgProposedOperations,
 				"operation queue type not implemented yet for raw operation %v",
 				rawOperation,
@@ -100,6 +110,17 @@ func ValidateAndTransformRawOperations(
 				return nil, err
 			}
 		case *OperationRaw_OrderRemoval:
+			orderRemoval := rawOperation.GetOrderRemoval()
+			if err := orderRemoval.OrderId.Validate(); err != nil {
+				return nil, err
+			}
+			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+				return nil, errorsmod.Wrapf(
+					ErrInvalidOrderRemoval,
+					"Invalid order removal reason: %+v",
+					orderRemoval.RemovalReason,
+				)
+			}
 			operation.Operation = &InternalOperation_OrderRemoval{
 				OrderRemoval: rawOperation.GetOrderRemoval(),
 			}
@@ -138,7 +159,7 @@ func (validator *operationsQueueValidator) validateMatchOperation(match *ClobMat
 	case *ClobMatch_MatchPerpetualDeleveraging:
 		matchPerpetualDeleveraging := match.GetMatchPerpetualDeleveraging()
 		if err := matchPerpetualDeleveraging.Validate(); err != nil {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				err,
 				"match: %+v",
 				matchPerpetualDeleveraging,
@@ -173,7 +194,7 @@ func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperat
 	if prevOrder, placedPreviously := validator.ordersPlacedInBlock[orderId]; placedPreviously {
 		// No duplicate order placements allowed.
 		if prevOrder.MustCmpReplacementOrder(&order) == 0 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidPlaceOrder,
 				"Duplicate Order %s",
 				order.GetOrderTextString(),
@@ -183,7 +204,7 @@ func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperat
 		// All short term replacement orders should be checked here. Note that for long term orders,
 		// this check only takes effect if the order being replaced is in the same block.
 		if prevOrder.MustCmpReplacementOrder(&order) != -1 {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidReplacement,
 				"Replacement order is not higher priority. order: %s, prevOrder: %s",
 				order.GetOrderTextString(),
@@ -212,7 +233,7 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 ) error {
 	fills := matchOrders.GetFills()
 	if len(fills) == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidMatchOrder,
 			"Match has no fills: %+v",
 			matchOrders,
@@ -235,7 +256,7 @@ func (validator *operationsQueueValidator) validateMatchOrdersOperation(
 
 		// No duplicate maker order IDs in fills.
 		if _, exists := makerOrderIdSet[makerOrderId]; exists {
-			return sdkerrors.Wrapf(
+			return errorsmod.Wrapf(
 				ErrInvalidMatchOrder,
 				"duplicate Maker OrderId in a MatchOrder's fills, maker: %+v, taker %+v",
 				makerOrderId,
@@ -278,7 +299,7 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 ) error {
 	fills := liquidationMatch.GetFills()
 	if len(fills) == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidMatchOrder,
 			"Liquidation match has no fills: %+v",
 			liquidationMatch,
@@ -288,7 +309,7 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 	// Make sure the total size greater than zero.
 	totalSize := liquidationMatch.GetTotalSize()
 	if totalSize == 0 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrInvalidLiquidationOrderTotalSize,
 			"Liquidation match total size is zero. match: %+v",
 			liquidationMatch,
@@ -321,8 +342,12 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 		}
 	}
 
+	if err := liquidationMatch.Liquidated.Validate(); err != nil {
+		return err
+	}
+
 	if bigQuantumsFilled.Cmp(new(big.Int).SetUint64(totalSize)) == 1 {
-		return sdkerrors.Wrapf(
+		return errorsmod.Wrapf(
 			ErrTotalFillAmountExceedsOrderSize,
 			"Total fill size: %v match total size: %v",
 			bigQuantumsFilled,
@@ -340,7 +365,7 @@ func (validator *operationsQueueValidator) validateMatchPerpetualLiquidationOper
 func (validator *operationsQueueValidator) verifyOrderPlacementInOperationsQueue(orderId OrderId) error {
 	if orderId.IsShortTermOrder() {
 		if _, prevPlaced := validator.ordersPlacedInBlock[orderId]; !prevPlaced {
-			return sdkerrors.Wrapf(ErrOrderPlacementNotInOperationsQueue, "short term orderId: %v", orderId)
+			return errorsmod.Wrapf(ErrOrderPlacementNotInOperationsQueue, "short term orderId: %v", orderId)
 		}
 	}
 

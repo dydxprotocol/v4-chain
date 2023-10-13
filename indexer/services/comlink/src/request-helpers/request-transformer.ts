@@ -4,7 +4,6 @@ import {
   BestEffortOpenedStatus,
   CandleColumns,
   CandleFromDatabase,
-  CURRENCY_DECIMAL_PRECISION,
   FillFromDatabase,
   FundingIndexUpdatesFromDatabase,
   helpers,
@@ -78,7 +77,7 @@ export function perpetualPositionToResponseObject(
   const realizedPnl: string = priceDiff
     .mul(position.sumClose)
     .plus(netFunding)
-    .toFixed(CURRENCY_DECIMAL_PRECISION);
+    .toFixed();
 
   return {
     market: perpetualMarketsMap[position.perpetualId].ticker,
@@ -86,8 +85,8 @@ export function perpetualPositionToResponseObject(
     side: position.side,
     size: position.size,
     maxSize: position.maxSize,
-    entryPrice: Big(position.entryPrice).toFixed(CURRENCY_DECIMAL_PRECISION),
-    exitPrice: position.exitPrice && Big(position.exitPrice).toFixed(CURRENCY_DECIMAL_PRECISION),
+    entryPrice: Big(position.entryPrice).toFixed(),
+    exitPrice: position.exitPrice && Big(position.exitPrice).toFixed(),
     realizedPnl,
     unrealizedPnl: helpers.getUnrealizedPnl(
       position, perpetualMarketsMap[position.perpetualId], marketsMap,
@@ -97,7 +96,7 @@ export function perpetualPositionToResponseObject(
     closedAt: position.closedAt,
     sumOpen: position.sumOpen,
     sumClose: position.sumClose,
-    netFunding: netFunding.toFixed(CURRENCY_DECIMAL_PRECISION),
+    netFunding: netFunding.toFixed(),
   };
 }
 
@@ -253,8 +252,8 @@ export function subaccountToResponseObject({
   return {
     address: subaccount.address,
     subaccountNumber: subaccount.subaccountNumber,
-    equity: Big(equity).toFixed(CURRENCY_DECIMAL_PRECISION),
-    freeCollateral: Big(freeCollateral).toFixed(CURRENCY_DECIMAL_PRECISION),
+    equity: Big(equity).toFixed(),
+    freeCollateral: Big(freeCollateral).toFixed(),
     openPerpetualPositions,
     assetPositions,
     // TODO(DEC-687): Track `marginEnabled` for subaccounts.
@@ -271,8 +270,6 @@ export function perpetualMarketToResponseObject(
     clobPairId: perpetualMarket.clobPairId,
     ticker: perpetualMarket.ticker,
     status: perpetualMarket.status,
-    baseAsset: perpetualMarket.baseAsset,
-    quoteAsset: perpetualMarket.quoteAsset,
     lastPrice: perpetualMarket.lastPrice,
     oraclePrice: market.oraclePrice!,
     priceChange24H: perpetualMarket.priceChange24H,
@@ -287,9 +284,6 @@ export function perpetualMarketToResponseObject(
       ),
     ),
     basePositionNotional: liquidityTier.basePositionNotional,
-    basePositionSize: perpetualMarket.basePositionSize,
-    incrementalPositionSize: perpetualMarket.incrementalPositionSize,
-    maxPositionSize: perpetualMarket.maxPositionSize,
     openInterest: perpetualMarket.openInterest,
     atomicResolution: perpetualMarket.atomicResolution,
     quantumConversionExponent: perpetualMarket.quantumConversionExponent,
@@ -297,7 +291,6 @@ export function perpetualMarketToResponseObject(
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
     stepBaseQuantums: perpetualMarket.stepBaseQuantums,
     subticksPerTick: perpetualMarket.subticksPerTick,
-    minOrderBaseQuantums: perpetualMarket.minOrderBaseQuantums,
   };
 }
 

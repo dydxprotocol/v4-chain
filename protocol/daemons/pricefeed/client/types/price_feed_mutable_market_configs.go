@@ -3,13 +3,14 @@ package types
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"sort"
-	"strings"
-	"sync"
 )
 
 const (
@@ -21,7 +22,7 @@ const (
 type PricefeedMutableMarketConfigs interface {
 	AddPriceFetcher(updater ExchangeConfigUpdater)
 	AddPriceEncoder(updater ExchangeConfigUpdater)
-	UpdateMarkets(marketParams []types.MarketParam) error
+	UpdateMarkets(marketParams []types.MarketParam) (marketParamErrors map[MarketId]error, err error)
 	GetExchangeMarketConfigCopy(
 		id ExchangeId,
 	) (
@@ -63,11 +64,11 @@ func (ufe *UpdatersForExchange) Validate() error {
 
 // PricefeedMutableMarketConfigsImpl implements PricefeedMutableMarketConfigs.
 type PricefeedMutableMarketConfigsImpl struct {
-	sync.RWMutex
+	sync.Mutex
 
 	// mutableExchangeToConfigs contains the latest market configuration for each exchange.
 	// These maps are updated when the exchange market params are updated. Map reads
-	// and updates are synchronized by the RWMutex.
+	// and updates are synchronized by the Mutex.
 	mutableExchangeToConfigs map[ExchangeId]*MutableExchangeMarketConfig
 
 	// mutableMarketToConfigs contains the latest market configuration for each market, common
@@ -180,13 +181,20 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) addExchangeConfigUpdater(
 // ValidateAndTransformParams validates the market params and transforms them into the internal representation used
 // by the PricefeedMutableMarketConfigsImpl. The method guarantees that the returned mutableExchangeConfigs will have
 // an entry for all current exchange feeds. This method is exposed for testing.
+// MarketParams are validated and applied independently. If any market param is invalid, the method will populate
+// marketParamErrors with the error and continue processing the remaining market params. If the entire validation fails,
+// the method will return an error.
 func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marketParams []types.MarketParam) (
 	mutableExchangeConfigs map[ExchangeId]*MutableExchangeMarketConfig,
 	mutableMarketConfigs map[MarketId]*MutableMarketConfig,
+	marketParamErrors map[MarketId]error,
 	err error,
 ) {
+	// Track individual errors for each market param that fails to apply.
+	marketParamErrors = make(map[MarketId]error, len(marketParams))
+
 	if marketParams == nil {
-		return nil, nil, fmt.Errorf("marketParams cannot be nil")
+		return nil, nil, nil, fmt.Errorf("marketParams cannot be nil")
 	}
 
 	mutableMarketConfigs = make(map[MarketId]*MutableMarketConfig, len(marketParams))
@@ -213,46 +221,52 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 		exchangeNames = append(exchangeNames, exchangeName)
 	}
 
-	for i, marketParam := range marketParams {
+	for _, marketParam := range marketParams {
 		// Perform validation on the market params.
 		if err := marketParam.Validate(); err != nil {
-			return nil, nil, fmt.Errorf("invalid market param %v: %w", i, err)
+			marketParamErrors[marketParam.Id] = fmt.Errorf("invalid market param %v: %w", marketParam.Id, err)
+			continue
 		}
 
 		// Check for duplicate market params.
 		if _, exists := mutableMarketConfigs[marketParam.Id]; exists {
-			return nil, nil, fmt.Errorf("invalid market param %v: duplicate market id %v", i, marketParam.Id)
-		}
-
-		mutableMarketConfigs[marketParam.Id] = &MutableMarketConfig{
-			Id:           marketParam.Id,
-			Pair:         marketParam.Pair,
-			Exponent:     marketParam.Exponent,
-			MinExchanges: marketParam.MinExchanges,
+			// In this case, return an error, because we do not know which market param is the correct one.
+			return nil,
+				nil,
+				nil,
+				fmt.Errorf("invalid market params: duplicate market id %v", marketParam.Id)
 		}
 
 		var exchangeConfigJson ExchangeConfigJson
 		err = json.Unmarshal([]byte(marketParam.ExchangeConfigJson), &exchangeConfigJson)
 		if err != nil {
-			wrappedErr := fmt.Errorf("invalid exchange config json for market param %v: %w", i, err)
-			return nil, nil, wrappedErr
+			wrappedErr := fmt.Errorf("invalid exchange config json for market param %v: %w", marketParam.Id, err)
+			marketParamErrors[marketParam.Id] = wrappedErr
+			continue
 		}
 
 		err = exchangeConfigJson.Validate(exchangeNames, marketNameToId)
 		if err != nil {
-			return nil, nil, fmt.Errorf("invalid exchange config json for market param %v: %w", i, err)
+			marketParamErrors[marketParam.Id] = fmt.Errorf(
+				"invalid exchange config json for market param %v: %w",
+				marketParam.Id,
+				err,
+			)
+			continue
 		}
 
+		// Errors in the following loop are unexpected because we have already validated the exchange config json.
+		// In this case, we return an error.
 		for _, exchangeConfig := range exchangeConfigJson.Exchanges {
 			exchangeId := exchangeConfig.ExchangeName
 			mutableExchangeConfig, ok := mutableExchangeConfigs[exchangeId]
 			if !ok {
 				err := fmt.Errorf(
-					"internal error: exchange '%v' not found in mutableExchangeConfigs for market %v",
+					"unexpected internal error: exchange '%v' not found in mutableExchangeConfigs for market %v",
 					exchangeId,
 					marketParam.Pair,
 				)
-				return nil, nil, err
+				return nil, nil, nil, err
 			}
 			marketConfig := MarketConfig{
 				Ticker: exchangeConfig.Ticker,
@@ -263,8 +277,9 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 			if exchangeConfig.AdjustByMarket != "" {
 				adjustByMarketId, ok := marketNameToId[exchangeConfig.AdjustByMarket]
 				if !ok {
-					return nil, nil, fmt.Errorf(
-						"invalid exchange config json for exchange '%v' on market param %v: adjustByMarket '%v' not found",
+					return nil, nil, nil, fmt.Errorf(
+						"unexpected internal error: invalid exchange config json for exchange '%v' "+
+							"on market param %v: adjustByMarket '%v' not found",
 						exchangeConfig.ExchangeName,
 						marketParam.Id,
 						exchangeConfig.AdjustByMarket,
@@ -275,8 +290,16 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 			}
 			mutableExchangeConfig.MarketToMarketConfig[marketParam.Id] = marketConfig
 		}
+
+		// If we've reached this point, the market param is valid. Add it to the mutable market configs.
+		mutableMarketConfigs[marketParam.Id] = &MutableMarketConfig{
+			Id:           marketParam.Id,
+			Pair:         marketParam.Pair,
+			Exponent:     marketParam.Exponent,
+			MinExchanges: marketParam.MinExchanges,
+		}
 	}
-	return mutableExchangeConfigs, mutableMarketConfigs, nil
+	return mutableExchangeConfigs, mutableMarketConfigs, marketParamErrors, nil
 }
 
 // getUpdateParametersForExchange returns a copy of the exchange config and all relevant market configs for the
@@ -326,7 +349,13 @@ func getUpdateParametersForExchange(
 // 4. Take the writer lock on the pricefeed mutable market configs.
 // 5. Swap in new markets and exchange configs.
 // 6. For each changed exchange config, send an update to each updater.
-func (pfmmc *PricefeedMutableMarketConfigsImpl) UpdateMarkets(marketParams []types.MarketParam) error {
+// UpdateMarkets applies market settings independently. If any market param is invalid, the method will populate
+// marketParamErrors with the error and continue processing the remaining market params. If the entire validation fails,
+// the method will return an error.
+func (pfmmc *PricefeedMutableMarketConfigsImpl) UpdateMarkets(marketParams []types.MarketParam) (
+	marketParamErrors map[MarketId]error,
+	err error,
+) {
 	// Wait for all updaters to be added. This should happen quickly after the daemon starts.
 	pfmmc.updatersInitialized.Wait()
 
@@ -336,12 +365,15 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) UpdateMarkets(marketParams []typ
 	// 1. Validate and parse market params into a new mapping of MutableExchangeMarketConfigs and MutableMarketConfigs.
 	// maps.
 	if marketParams == nil {
-		return fmt.Errorf("UpdateMarkets: marketParams cannot be nil")
+		return nil, fmt.Errorf("UpdateMarkets: marketParams cannot be nil")
 	}
 
-	newMutableExchangeConfigs, newMutableMarketConfigs, err := pfmmc.ValidateAndTransformParams(marketParams)
+	newMutableExchangeConfigs,
+		newMutableMarketConfigs,
+		marketParamErrors,
+		err := pfmmc.ValidateAndTransformParams(marketParams)
 	if err != nil {
-		return fmt.Errorf("UpdateMarkets market param validation failed: %w", err)
+		return nil, fmt.Errorf("UpdateMarkets market param validation failed: %w", err)
 	}
 
 	// 2. As a sanity check, validate all new configs have a set of updaters.
@@ -350,18 +382,18 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) UpdateMarkets(marketParams []typ
 		// Validate that a previous exchange config should always exist for each exchange.
 		// An error here would be unexpected.
 		if _, ok := previousExchangeConfigs[exchangeId]; !ok {
-			return fmt.Errorf("internal error: exchange %v not found in previousExchangeConfigs", exchangeId)
+			return nil, fmt.Errorf("internal error: exchange %v not found in previousExchangeConfigs", exchangeId)
 		}
 
 		// Validate we have an encoder and fetcher subscribed for updates to each exchange.
 		// An error here would be unexpected.
 		if _, ok := pfmmc.mutableExchangeConfigUpdaters[exchangeId]; !ok {
-			return fmt.Errorf("internal error: price fetcher not found for exchange %v", exchangeId)
+			return nil, fmt.Errorf("internal error: price fetcher not found for exchange %v", exchangeId)
 		}
 
 		exchangeUpdaters := pfmmc.mutableExchangeConfigUpdaters[exchangeId]
 		if err := exchangeUpdaters.Validate(); err != nil {
-			return fmt.Errorf("internal error for exchange %v: %w", exchangeId, err)
+			return nil, fmt.Errorf("internal error for exchange %v: %w", exchangeId, err)
 		}
 	}
 
@@ -437,10 +469,10 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) UpdateMarkets(marketParams []typ
 	}
 
 	if len(updaterErrors) > 0 {
-		return fmt.Errorf("UpdateMarkets: failed to update some fetchers or encoders: %v", strings.Join(updaterErrors, ", "))
+		err = fmt.Errorf("UpdateMarkets: failed to update some fetchers or encoders: %v", strings.Join(updaterErrors, ", "))
 	}
 
-	return nil
+	return marketParamErrors, err
 }
 
 // GetExchangeMarketConfigCopy retrieves a copy of the current market-specific mutable configuration
@@ -452,8 +484,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetExchangeMarketConfigCopy(
 	mutableExchangeMarketConfig *MutableExchangeMarketConfig,
 	err error,
 ) {
-	pfmmc.RLock()
-	defer func() { pfmmc.RUnlock() }()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 	memc, ok := pfmmc.mutableExchangeToConfigs[id]
 	if !ok {
 		return nil, fmt.Errorf("mutableExchangeMarketConfig not found for exchange %v", id)
@@ -470,8 +502,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetMarketConfigCopies(
 	mutableMarketConfigs []*MutableMarketConfig,
 	err error,
 ) {
-	pfmmc.RLock()
-	defer func() { pfmmc.RUnlock() }()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 
 	mutableMarketConfigs = make([]*MutableMarketConfig, 0, len(markets))
 	for _, market := range markets {
@@ -495,8 +527,8 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) GetMarketConfigCopies(
 // for static config that is used within the types directory. The ultimate solution is to either remove this
 // config or pass all of it
 func (pfmmc *PricefeedMutableMarketConfigsImpl) emitMarketAndExchangeCountMetrics() {
-	pfmmc.RLock()
-	defer pfmmc.RUnlock()
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
 
 	// Set configured market count.
 	telemetry.SetGauge(

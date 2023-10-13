@@ -92,8 +92,24 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 	return r0
 }
 
+// GetMarketIdToValidIndexPrice provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketPrice {
+	ret := _m.Called(ctx)
+
+	var r0 map[uint32]pricestypes.MarketPrice
+	if rf, ok := ret.Get(0).(func(types.Context) map[uint32]pricestypes.MarketPrice); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[uint32]pricestypes.MarketPrice)
+		}
+	}
+
+	return r0
+}
+
 // GetMarketParam provides a mock function with given fields: ctx, id
-func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, error) {
+func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestypes.MarketParam, bool) {
 	ret := _m.Called(ctx, id)
 
 	var r0 pricestypes.MarketParam
@@ -103,11 +119,11 @@ func (_m *PricesKeeper) GetMarketParam(ctx types.Context, id uint32) (pricestype
 		r0 = ret.Get(0).(pricestypes.MarketParam)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) bool); ok {
 		r1 = rf(ctx, id)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
 	return r0, r1
@@ -132,6 +148,20 @@ func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestype
 	}
 
 	return r0, r1
+}
+
+// HasAuthority provides a mock function with given fields: authority
+func (_m *PricesKeeper) HasAuthority(authority string) bool {
+	ret := _m.Called(authority)
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(string) bool); ok {
+		r0 = rf(authority)
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
 }
 
 // Logger provides a mock function with given fields: ctx
@@ -199,13 +229,13 @@ func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricest
 	return r0
 }
 
-// UpdateSmoothedPrices provides a mock function with given fields: ctx
-func (_m *PricesKeeper) UpdateSmoothedPrices(ctx types.Context) error {
-	ret := _m.Called(ctx)
+// UpdateSmoothedPrices provides a mock function with given fields: ctx, linearInterpolateFunc
+func (_m *PricesKeeper) UpdateSmoothedPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
+	ret := _m.Called(ctx, linearInterpolateFunc)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context) error); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func(types.Context, func(uint64, uint64, uint32) (uint64, error)) error); ok {
+		r0 = rf(ctx, linearInterpolateFunc)
 	} else {
 		r0 = ret.Error(0)
 	}

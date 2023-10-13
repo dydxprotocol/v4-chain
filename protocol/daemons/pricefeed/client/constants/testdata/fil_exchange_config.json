@@ -2,16 +2,17 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"FILUSDT\"",
+      "ticker": "FILUSDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"FILUSD\""
     },
     {
       "exchangeName": "CoinbasePro",
       "ticker": "FIL-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "FIL_USDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
       "exchangeName": "Huobi",
@@ -23,8 +24,8 @@
       "ticker": "FILUSD"
     },
     {
-      "exchangeName": "Kucoin",
-      "ticker": "FIL-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "FIL_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

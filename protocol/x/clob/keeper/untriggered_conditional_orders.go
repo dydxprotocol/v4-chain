@@ -3,14 +3,13 @@ package keeper
 import (
 	"fmt"
 	"math/big"
-	"sort"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.
@@ -130,7 +129,7 @@ func (k Keeper) PruneUntriggeredConditionalOrders(
 	cancelledStatefulOrderIds []types.OrderId,
 ) {
 	// Merge lists of order ids.
-	orderIdsToPrune := lib.SliceToSet(expiredStatefulOrderIds)
+	orderIdsToPrune := lib.UniqueSliceToSet(expiredStatefulOrderIds)
 	for _, orderId := range cancelledStatefulOrderIds {
 		if _, exists := orderIdsToPrune[orderId]; exists {
 			panic(
@@ -198,7 +197,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) RemoveUntriggeredConditio
 		}
 	}
 
-	orderIdsToRemoveSet := lib.SliceToSet(orderIdsToRemove)
+	orderIdsToRemoveSet := lib.UniqueSliceToSet(orderIdsToRemove)
 
 	newOrdersToTriggerWhenOraclePriceLTETriggerPrice := make([]types.Order, 0)
 	for _, order := range untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
@@ -273,8 +272,7 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 	triggeredConditionalOrderIds = make([]types.OrderId, 0)
 	// Sort the keys for the untriggered conditional orders struct. We need to trigger
 	// the conditional orders in an ordered way to have deterministic state writes.
-	sortedKeys := types.SortedClobPairId(lib.ConvertMapToSliceOfKeys(k.UntriggeredConditionalOrders))
-	sort.Sort(sortedKeys)
+	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](k.UntriggeredConditionalOrders)
 
 	// For all clob pair ids in UntriggeredConditionalOrders, fetch the updated
 	// oracle price and poll out triggered conditional orders.
@@ -308,7 +306,8 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
+			indexerevents.StatefulOrderEventVersion,
+			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderTriggeredEvent(
 					triggeredConditionalOrderId,
 				),
@@ -316,4 +315,25 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		)
 	}
 	return triggeredConditionalOrderIds
+}
+
+// CountUntriggeredSubaccountStatefulOrders will count all untriggered stateful conditional orders for a given
+// subaccount.
+func (k Keeper) CountUntriggeredSubaccountStatefulOrders(ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+) uint32 {
+	count := uint32(0)
+	for _, untriggeredConditionalOrders := range k.UntriggeredConditionalOrders {
+		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
+			if order.OrderId.SubaccountId == subaccountId && order.IsStatefulOrder() {
+				count++
+			}
+		}
+		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
+			if order.OrderId.SubaccountId == subaccountId && order.IsStatefulOrder() {
+				count++
+			}
+		}
+	}
+	return count
 }

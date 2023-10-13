@@ -4,27 +4,29 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 func (k msgServer) ProposedOperations(
 	goCtx context.Context,
 	msg *types.MsgProposedOperations,
-) (*types.MsgProposedOperationsResponse, error) {
+) (resp *types.MsgProposedOperationsResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.ProposedOperations, metrics.DeliverTx)
+		if err != nil {
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "ProposedOperations", msg)
+		}
+	}()
 
 	if err := k.Keeper.ProcessProposerOperations(
 		ctx,
 		msg.GetOperationsQueue(),
 	); err != nil {
-		panic(
-			sdkerrors.Wrapf(
-				err,
-				"Block height: %d",
-				ctx.BlockHeight(),
-			),
-		)
+		return nil, err
 	}
 
 	return &types.MsgProposedOperationsResponse{}, nil

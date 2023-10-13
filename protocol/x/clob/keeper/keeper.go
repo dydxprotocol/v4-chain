@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
 
@@ -26,9 +26,11 @@ type (
 		storeKey          storetypes.StoreKey
 		memKey            storetypes.StoreKey
 		transientStoreKey storetypes.StoreKey
+		authorities       map[string]struct{}
 
 		MemClob                      types.MemClob
 		UntriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders
+		PerpetualIdToClobPairId      map[uint32][]types.ClobPairId
 
 		subaccountsKeeper   types.SubaccountsKeeper
 		assetsKeeper        types.AssetsKeeper
@@ -42,11 +44,9 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock uint32
+		Flags flags.ClobFlags
 
-		// mev telemetry config
-		mevTelemetryHost       string
-		mevTelemetryIdentifier string
+		mevTelemetryConfig MevTelemetryConfig
 
 		// txValidation decoder and antehandler
 		txDecoder sdk.TxDecoder
@@ -66,8 +66,8 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	memKey storetypes.StoreKey,
 	liquidationsStoreKey storetypes.StoreKey,
+	authorities []string,
 	memClob types.MemClob,
-	untriggeredConditionalOrders map[types.ClobPairId]*UntriggeredConditionalOrders,
 	subaccountsKeeper types.SubaccountsKeeper,
 	assetsKeeper types.AssetsKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
@@ -87,8 +87,10 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
+		authorities:                  lib.UniqueSliceToSet(authorities),
 		MemClob:                      memClob,
-		UntriggeredConditionalOrders: untriggeredConditionalOrders,
+		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
+		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
 		subaccountsKeeper:            subaccountsKeeper,
 		assetsKeeper:                 assetsKeeper,
 		blockTimeKeeper:              blockTimeKeeper,
@@ -100,11 +102,14 @@ func NewKeeper(
 		indexerEventManager:          indexerEventManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
-		mevTelemetryHost:             clobFlags.MevTelemetryHost,
-		mevTelemetryIdentifier:       clobFlags.MevTelemetryIdentifier,
-		MaxLiquidationOrdersPerBlock: clobFlags.MaxLiquidationOrdersPerBlock,
-		placeOrderRateLimiter:        placeOrderRateLimiter,
-		cancelOrderRateLimiter:       cancelOrderRateLimiter,
+		mevTelemetryConfig: MevTelemetryConfig{
+			Enabled:    clobFlags.MevTelemetryEnabled,
+			Host:       clobFlags.MevTelemetryHost,
+			Identifier: clobFlags.MevTelemetryIdentifier,
+		},
+		Flags:                  clobFlags,
+		placeOrderRateLimiter:  placeOrderRateLimiter,
+		cancelOrderRateLimiter: cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -112,6 +117,11 @@ func NewKeeper(
 	memClob.SetClobKeeper(keeper)
 
 	return keeper
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
@@ -123,7 +133,6 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.setNumClobPairs(ctx, uint32(0))
 }
 
 // InitMemStore initializes the memstore of the `clob` keeper.
@@ -154,13 +163,13 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 		// Retrieve an instance of the memstore.
 		memPrefixStore := prefix.NewStore(
 			memStore,
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Retrieve an instance of the store.
 		store := prefix.NewStore(
 			ctx.KVStore(k.storeKey),
-			types.KeyPrefix(keyPrefix),
+			[]byte(keyPrefix),
 		)
 
 		// Copy over all keys and values with the current key prefix to the `MemStore`.

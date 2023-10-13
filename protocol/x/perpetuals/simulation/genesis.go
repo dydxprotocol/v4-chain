@@ -170,6 +170,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		basePositionNotional := genBasePositionNotional(r, isReasonableGenesis)
 		impactNotional := calculateImpactNotional(initialMarginPpm)
 		liquidityTiers[i] = types.LiquidityTier{
+			Id:                     uint32(i),
 			Name:                   fmt.Sprintf("%d", i),
 			InitialMarginPpm:       initialMarginPpm,
 			MaintenanceFractionPpm: maintenanceFractionPpm,
@@ -203,6 +204,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 
 		perpetuals[i] = types.Perpetual{
 			Params: types.PerpetualParams{
+				Id:                uint32(i),
 				Ticker:            genTicker(r),
 				MarketId:          marketId,
 				AtomicResolution:  genAtomicResolution(r, isReasonableGenesis),
@@ -210,7 +212,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 				LiquidityTier:     uint32(simtypes.RandIntBetween(r, 0, numLiquidityTiers)),
 			},
 			FundingIndex: dtypes.ZeroInt(),
-			OpenInterest: types.DefaultOpenInterest,
 		}
 	}
 

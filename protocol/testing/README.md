@@ -10,7 +10,7 @@ Overall, the steps involve:
 
 Currently, step 1 is a manual process and steps 2, 3 and 4 are automated within the scripts (`local.sh`, `dev.sh`, and `staging.sh`).
 
-> More info can be found in [Cloud Setup notion doc](https://www.notion.so/dydx/Cloud-Setup-ccc68e7b6a4b4e83a8d0c35029a9997f)
+TODO(CORE-512): add info/resources around cloud setup. [Doc](https://www.notion.so/dydx/Cloud-Setup-ccc68e7b6a4b4e83a8d0c35029a9997f)
 
 # [Manual] Add new validator node keys to `dev.sh` or `staging.sh`
 

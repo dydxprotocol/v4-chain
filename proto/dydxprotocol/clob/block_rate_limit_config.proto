@@ -8,18 +8,17 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 // Defines the block rate limits for CLOB specific operations.
 message BlockRateLimitConfiguration {
   // How many short term order attempts (successful and failed) are allowed for
-  // a subaccount per market and N blocks. Note that the rate limits are applied
-  // in an AND fashion such that an order must pass all rate limit
+  // an account per N blocks. Note that the rate limits are applied
+  // in an AND fashion such that an order placement must pass all rate limit
   // configurations.
   //
   // Specifying 0 values disables this rate limit.
-  repeated MaxPerNBlocksRateLimit
-      max_short_term_orders_per_market_per_n_blocks = 1
+  repeated MaxPerNBlocksRateLimit max_short_term_orders_per_n_blocks = 1
       [ (gogoproto.nullable) = false ];
 
-  // How many stateful order attempts (successful and failed) are allowed for a
-  // subaccount per N blocks. Note that the rate limits are applied
-  // in an AND fashion such that an order must pass all rate limit
+  // How many stateful order attempts (successful and failed) are allowed for
+  // an account per N blocks. Note that the rate limits are applied
+  // in an AND fashion such that an order placement must pass all rate limit
   // configurations.
   //
   // Specifying 0 values disables this rate limit.
@@ -27,10 +26,13 @@ message BlockRateLimitConfiguration {
       [ (gogoproto.nullable) = false ];
 
   // How many short term order cancellation attempts (successful and failed) are
-  // allowed for a subaccount per market and N blocks. Specifying 0 values
-  // disables this rate limit.
+  // allowed for an account per N blocks. Note that the rate limits are
+  // applied in an AND fashion such that an order cancellation must pass all
+  // rate limit configurations.
+  //
+  // Specifying 0 values disables this rate limit.
   repeated MaxPerNBlocksRateLimit
-      max_short_term_order_cancellations_per_market_per_n_blocks = 3
+      max_short_term_order_cancellations_per_n_blocks = 3
       [ (gogoproto.nullable) = false ];
 }
 

@@ -1,8 +1,12 @@
 package constants
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )
@@ -30,11 +34,13 @@ func init() {
 var (
 	// Private
 	coin = sdk.Coin{
-		Denom:  "dv4tnt",
-		Amount: sdk.NewIntFromUint64(888),
+		Denom:  "adv4tnt",
+		Amount: sdkmath.NewIntFromUint64(888),
 	}
 
 	// Public
+	GovModuleAccAddressString      = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+	DelayMsgModuleAccAddressString = authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
 	// Bridge Event.
 	BridgeEvent_Id0_Height0 = types.BridgeEvent{
 		Id:             0,

@@ -16,6 +16,7 @@ import {
   TransactionFromDatabase,
   IsolationLevel,
   CandleFromDatabase,
+  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -33,6 +34,7 @@ import {
 import { updateCandleCacheWithCandle } from '../caches/candle-cache';
 import config from '../config';
 import { BlockProcessor } from './block-processor';
+import { refreshDataCaches } from './cache-manager';
 import { CandlesGenerator } from './candles-generator';
 import {
   dateToDateTime,
@@ -73,25 +75,10 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
-    await runFuncWithTimingStat(
-      Promise.all([
-        BlockTable.create({
-          blockHeight,
-          time: indexerTendermintBlock.time!.toISOString(),
-        }, { txId }),
-        ...createTransactions(
-          indexerTendermintBlock.txHashes,
-          blockHeight,
-          txId,
-        ),
-        ...createTendermintEvents(
-          indexerTendermintBlock.events,
-          blockHeight,
-          txId,
-        ),
-      ]),
-      {},
-      'create_initial_rows',
+    await createInitialRows(
+      blockHeight,
+      txId,
+      indexerTendermintBlock,
     );
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
@@ -126,6 +113,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     success = true;
   } catch (error) {
     await Transaction.rollback(txId);
+    await refreshDataCaches();
     stats.increment(`${config.SERVICE_NAME}.update_event_tables.failure`, 1);
     if (error instanceof ParseMessageError) {
       logger.crit({
@@ -270,4 +258,70 @@ function createTransactions(
       );
     },
   );
+}
+
+async function createInitialRowsViaSqlFunction(
+  blockHeight: string,
+  txId: number,
+  block: IndexerTendermintBlock,
+): Promise<void> {
+  const txHashesString = block.txHashes.length > 0 ? `ARRAY['${block.txHashes.join("','")}']::text[]` : 'null';
+  const eventsString = block.events.length > 0 ? `ARRAY['${block.events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[]` : 'null';
+
+  const queryString: string = `SELECT dydx_create_initial_rows_for_tendermint_block(
+      '${blockHeight}'::text, 
+      '${block.time!.toISOString()}'::text,
+      ${txHashesString},
+      ${eventsString}
+  ) AS result;`;
+  await storeHelpers.rawQuery(
+    queryString,
+    { txId },
+  ).catch((error) => {
+    logger.error({
+      at: 'on-message#createInitialRowsViaSqlFunction',
+      message: 'Failed to create initial rows',
+      error,
+    });
+    throw error;
+  });
+}
+
+async function createInitialRows(
+  blockHeight: string,
+  txId: number,
+  indexerTendermintBlock: IndexerTendermintBlock,
+): Promise<void> {
+  if (config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS) {
+    return runFuncWithTimingStat(
+      createInitialRowsViaSqlFunction(
+        blockHeight,
+        txId,
+        indexerTendermintBlock,
+      ),
+      {},
+      'create_initial_rows',
+    );
+  } else {
+    await runFuncWithTimingStat(
+      Promise.all([
+        BlockTable.create({
+          blockHeight,
+          time: indexerTendermintBlock.time!.toISOString(),
+        }, { txId }),
+        ...createTransactions(
+          indexerTendermintBlock.txHashes,
+          blockHeight,
+          txId,
+        ),
+        ...createTendermintEvents(
+          indexerTendermintBlock.events,
+          blockHeight,
+          txId,
+        ),
+      ]),
+      {},
+      'create_initial_rows',
+    );
+  }
 }

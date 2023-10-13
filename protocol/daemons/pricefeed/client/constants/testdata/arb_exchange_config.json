@@ -1,0 +1,43 @@
+{
+  "exchanges": [
+    {
+      "exchangeName": "Binance",
+      "ticker": "ARBUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Bybit",
+      "ticker": "ARBUSDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "CoinbasePro",
+      "ticker": "ARB-USD"
+    },
+    {
+      "exchangeName": "Gate",
+      "ticker": "ARB_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Huobi",
+      "ticker": "arbusdt",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Kucoin",
+      "ticker": "ARB-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "ARB_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "ARB-USDT",
+      "adjustByMarket": "USDT-USD"
+    }
+  ]
+}

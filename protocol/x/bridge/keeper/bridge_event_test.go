@@ -37,7 +37,7 @@ func TestGetBridgeEventFromServer(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context, keeper, and bridgeEventManager.
-			ctx, bridgeKeeper, _, mockTimeProvider, bridgeEventManager, _ := keepertest.BridgeKeepers(t)
+			ctx, bridgeKeeper, _, mockTimeProvider, bridgeEventManager, _, _ := keepertest.BridgeKeepers(t)
 			mockTimeProvider.On("Now").Return(time.Now())
 			err := bridgeEventManager.AddBridgeEvents([]types.BridgeEvent{tc.bridgeEvent})
 			require.NoError(t, err)

@@ -2,15 +2,6 @@
   "exchanges": [
     {
       "exchangeName": "Binance",
-      "ticker": "\"NEARUSDT\"",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "BinanceUS",
-      "ticker": "\"NEARUSD\""
-    },
-    {
-      "exchangeName": "Bybit",
       "ticker": "NEARUSDT",
       "adjustByMarket": "USDT-USD"
     },
@@ -34,8 +25,8 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Okx",
-      "ticker": "NEAR-USDT",
+      "exchangeName": "Mexc",
+      "ticker": "NEAR_USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

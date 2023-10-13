@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -20,7 +19,6 @@ func TestProposedOperations(t *testing.T) {
 
 	tests := map[string]struct {
 		setupMocks  func(ctx sdk.Context, mck *mocks.ClobKeeper)
-		shouldPanic bool
 		expectedErr error
 	}{
 		"Success": {
@@ -31,8 +29,17 @@ func TestProposedOperations(t *testing.T) {
 		"Propagate Process Error": {
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.On("ProcessProposerOperations", ctx, operationsQueue).Return(testError)
+				mockLogger := &mocks.Logger{}
+				mockLogger.On(
+					"Error",
+					[]interface{}{
+						testError.Error(),
+						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+					}...,
+				).Return()
+				mck.On("Logger", ctx).Return(mockLogger)
 			},
-			shouldPanic: true,
 			expectedErr: testError,
 		},
 	}
@@ -59,25 +66,14 @@ func TestProposedOperations(t *testing.T) {
 			}
 			goCtx := sdk.WrapSDKContext(ctx)
 
-			// Call ProposedOperations.
-			if tc.shouldPanic {
-				require.PanicsWithError(
-					t,
-					sdkerrors.Wrapf(
-						tc.expectedErr,
-						"Block height: %d",
-						blockHeight,
-					).Error(),
-					func() {
-						msgServer.ProposedOperations(goCtx, msg) //nolint:errcheck
-					},
-				)
-				return
-			}
-
 			resp, err := msgServer.ProposedOperations(goCtx, msg)
-			require.NoError(t, err)
-			require.NotNil(t, resp)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				require.Nil(t, resp)
+			} else {
+				require.NoError(t, err)
+				require.NotNil(t, resp)
+			}
 
 			// Assert mock expectations.
 			result := mockKeeper.AssertExpectations(t)

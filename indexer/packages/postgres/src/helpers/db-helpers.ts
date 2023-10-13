@@ -2,7 +2,6 @@ import { logger } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import { SQL_TO_JSON_DEFINED_MODELS } from '../constants';
-import { seed } from '../db/seeds/01_genesis_seeds';
 import { knexPrimary, knexReadReplica } from './knex';
 import { rawQuery } from './stores-helpers';
 
@@ -23,6 +22,7 @@ const layer1Tables = [
   'candles',
   'liquidity_tiers',
   'wallets',
+  'compliance_data',
 ];
 
 /**
@@ -170,8 +170,4 @@ export async function teardown() {
   if (config.IS_USING_DB_READONLY) {
     await knexReadReplica.getConnection().destroy();
   }
-}
-
-export async function seedGenesis() {
-  await seed(knexPrimary);
 }

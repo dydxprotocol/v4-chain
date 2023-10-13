@@ -12,6 +12,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
+import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckLimitSchema, CheckTickerParamSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import { candleToResponseObject } from '../../../request-helpers/request-transformer';
@@ -39,7 +40,6 @@ class CandleController extends Controller {
         limit,
       },
       [],
-      { readReplica: true },
     );
 
     return {
@@ -50,6 +50,7 @@ class CandleController extends Controller {
 
 router.get(
   '/perpetualMarkets/:ticker',
+  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,

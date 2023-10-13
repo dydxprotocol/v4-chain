@@ -32,10 +32,40 @@ import (
 )
 
 var (
-	Clob_0                                             = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	Clob_0                                            = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+		},
+		testapp.DefaultGenesis(),
+	))
 	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 27},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num1, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     5,
 			Subticks:     10,
@@ -87,6 +117,22 @@ var (
 		},
 		20,
 	)
+	CancelOrder_Alice_Num0_Id0_Clob0_GTB27 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		27,
+	)
+	CancelOrder_Alice_Num1_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num1,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		20,
+	)
 	PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
@@ -122,12 +168,16 @@ var (
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 		testapp.DefaultGenesis(),
 	))
-	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
-		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.LongTermOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
 	ConditionalPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+		testapp.DefaultGenesis(),
+	))
+	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 		testapp.DefaultGenesis(),
 	))
 )
@@ -235,7 +285,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(msg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(msg),
 				},
 				privKeySupplier,
 				msg,
@@ -273,7 +323,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(placeOrderMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(placeOrderMsg),
 				},
 				privKeySupplier,
 				placeOrderMsg,
@@ -283,7 +333,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetSignerAddress(cancelOrderMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(cancelOrderMsg),
 				},
 				privKeySupplier,
 				cancelOrderMsg,
@@ -311,7 +361,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 			wgStart.Wait()
 			for _, checkTx := range checkTxs {
 				resp := tApp.CheckTx(checkTx)
-				require.True(t, resp.IsOK())
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 		}()
 	}
@@ -333,7 +383,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 	}
 }
 
-func TestProcessProposalFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
+func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 	tests := map[string]struct {
 		accAddressForSigning string
 		msg                  sdktypes.Msg
@@ -401,7 +451,7 @@ func TestProcessProposalFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testi
 	}
 }
 
-func TestProcessProposalFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
+func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 	tests := map[string]struct {
 		proposedOperationsTx []byte
 	}{
@@ -539,7 +589,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	currTime := startTime
@@ -555,7 +606,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	// Don't advance the epoch, so these stats are on the same epoch as the previous block
@@ -579,7 +631,8 @@ func TestStats(t *testing.T) {
 	}
 	for _, order := range orderMsgs {
 		for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *order) {
-			require.True(t, tApp.CheckTx(checkTx).IsOK())
+			resp := tApp.CheckTx(checkTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		}
 	}
 	currTime = currTime.Add(time.Duration(epochtypes.StatsEpochDuration) * time.Second)

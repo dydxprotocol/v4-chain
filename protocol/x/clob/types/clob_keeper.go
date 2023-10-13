@@ -4,12 +4,16 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type ClobKeeper interface {
+	LiquidationsKeeper
+	LiquidationsConfigKeeper
+
 	AddOrderToOrderbookCollatCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
@@ -22,8 +26,8 @@ type ClobKeeper interface {
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(
 		ctx sdk.Context,
+		clobPairId uint32,
 		perpetualId uint32,
-		minOrderInBaseQuantums satypes.BaseQuantums,
 		stepSizeInBaseQuantums satypes.BaseQuantums,
 		quantumConversionExponent int32,
 		subticksPerTick uint32,
@@ -32,8 +36,9 @@ type ClobKeeper interface {
 		ClobPair,
 		error,
 	)
-	GetAllClobPair(ctx sdk.Context) (list []ClobPair)
+	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
+	HasAuthority(authority string) bool
 	PlaceShortTermOrder(ctx sdk.Context, msg *MsgPlaceOrder) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
 		orderStatus OrderStatus,
@@ -49,8 +54,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		operations []OperationRaw,
 	) error
-	LiquidationsKeeper
-	LiquidationsConfigKeeper
 	GetStatePosition(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
@@ -102,7 +105,6 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		processProposerMatchesEvents ProcessProposerMatchesEvents,
 	)
-	GetNumClobPairs(ctx sdk.Context) uint32
 	PerformOrderCancellationStatefulValidation(
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,
@@ -117,4 +119,12 @@ type ClobKeeper interface {
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
 	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
+	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
+	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
+	Logger(ctx sdk.Context) log.Logger
+	UpdateClobPair(
+		ctx sdk.Context,
+		clobPair ClobPair,
+	) error
+	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
 }

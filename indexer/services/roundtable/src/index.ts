@@ -2,6 +2,7 @@ import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/
 import { producer } from '@dydxprotocol-indexer/kafka';
 
 import config from './config';
+import { complianceProvider } from './helpers/compliance-clients';
 import { startLoop } from './helpers/loops-helper';
 import {
   redisClient,
@@ -13,6 +14,8 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
+import trackLag from './tasks/track-lag';
+import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
 
 process.on('SIGTERM', () => {
@@ -92,6 +95,20 @@ async function start(): Promise<void> {
       updateResearchEnvironmentTask,
       'update_research_environment',
       config.LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT,
+    );
+  }
+
+  startLoop(
+    () => updateComplianceDataTask(complianceProvider),
+    'update_compliance_data',
+    config.LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA,
+  );
+
+  if (config.LOOPS_ENABLED_TRACK_LAG) {
+    startLoop(
+      trackLag,
+      'track_lag',
+      config.LOOPS_INTERVAL_MS_TRACK_LAG,
     );
   }
 

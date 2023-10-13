@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestMsgServerUpdateEventParams(t *testing.T) {
-	k, ms, ctx := setupMsgServer(t)
+	_, ms, ctx := setupMsgServer(t)
 
 	tests := map[string]struct {
 		testMsg      types.MsgUpdateEventParams
@@ -18,7 +19,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateEventParams{
-				Authority: k.GetGovAuthority(),
+				Authority: constants.GovModuleAccAddressString,
 				Params: types.EventParams{
 					Denom:      "denom",
 					EthChainId: 1,
@@ -26,6 +27,17 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 				},
 			},
 			expectedResp: &types.MsgUpdateEventParamsResponse{},
+		},
+		"Failure: invalid params": {
+			testMsg: types.MsgUpdateEventParams{
+				Authority: constants.GovModuleAccAddressString,
+				Params: types.EventParams{
+					Denom:      "7coin",
+					EthChainId: 1,
+					EthAddress: "ethAddress",
+				},
+			},
+			expectedErr: "invalid denom",
 		},
 		"Failure: invalid authority": {
 			testMsg: types.MsgUpdateEventParams{
@@ -37,8 +49,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 				},
 			},
 			expectedErr: fmt.Sprintf(
-				"invalid authority: expected %s, got %s",
-				k.GetGovAuthority(),
+				"message authority %s is not valid for sending update event params messages",
 				"12345",
 			),
 		},

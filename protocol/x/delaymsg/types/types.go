@@ -1,12 +1,16 @@
 package types
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	"github.com/cometbft/cometbft/libs/log"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+)
 
 type DelayMsgKeeper interface {
 	// Delayed messages
-	SetNumMessages(
+	SetNextDelayedMessageId(
 		ctx sdk.Context,
-		numMessages uint32,
+		nextDelayedMessageId uint32,
 	)
 
 	SetDelayedMessage(
@@ -44,18 +48,16 @@ type DelayMsgKeeper interface {
 	// Block message ids
 	GetBlockMessageIds(
 		ctx sdk.Context,
-		blockHeight int64,
+		blockHeight uint32,
 	) (
 		blockMessageIds BlockMessageIds,
 		found bool,
 	)
 
-	// DecodeMessage decodes a message from bytes.
-	DecodeMessage(msgBytes []byte, msg *sdk.Msg) error
+	// HasAuthority returns whether the authority is permitted to send delayed messages.
+	HasAuthority(authority string) bool
 
-	// GetAuthorities returns the set of authorities that can send delayed messages.
-	GetAuthorities() map[string]struct{}
+	Logger(ctx sdk.Context) log.Logger
 
-	// DispatchMessagesForBlock executes all delayed messages scheduled for the given block height and deletes them.
-	DispatchMessagesForBlock(ctx sdk.Context)
+	Router() lib.MsgRouter
 }

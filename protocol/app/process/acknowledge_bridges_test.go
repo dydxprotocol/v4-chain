@@ -4,6 +4,8 @@ import (
 	"errors"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -66,7 +68,7 @@ func TestDecodeAcknowledgeBridgesTx(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, k, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, k, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			abt, err := process.DecodeAcknowledgeBridgesTx(ctx, k, encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
@@ -84,6 +86,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 		txBytes []byte // tx bytes.
 
 		// Mocking.
+		bridgingDisabled      bool                // whether bridging is disabled.
 		bridgeEventsInServer  []types.BridgeEvent // events in bridge server that a bridge tx is validated against.
 		acknowledgedEventInfo types.BridgeEventInfo
 		recognizedEventInfo   types.BridgeEventInfo
@@ -154,7 +157,7 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 						Id: event.Id,
 						Coin: sdk.NewCoin(
 							event.Coin.Denom,
-							sdk.NewInt(1000000000000000000), // incorrect amount.
+							sdkmath.NewInt(1000000000000000000), // incorrect amount.
 						),
 						Address:        event.Address,
 						EthBlockHeight: event.EthBlockHeight,
@@ -164,6 +167,21 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
 			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
 			expectedErr:           types.ErrBridgeEventContentMismatch,
+		},
+		"Error: one event and bridging disabled": {
+			txBytes:               constants.MsgAcknowledgeBridges_Id0_Height0_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_Id0_Height0.Events,
+			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
+			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
+			bridgingDisabled:      true,
+			expectedErr:           types.ErrBridgingDisabled,
+		},
+		"Valid: empty events and bridging disabled": {
+			txBytes:               constants.MsgAcknowledgeBridges_NoEvents_TxBytes,
+			bridgeEventsInServer:  constants.MsgAcknowledgeBridges_NoEvents.Events,
+			acknowledgedEventInfo: constants.AcknowledgedEventInfo_Id0_Height0,
+			recognizedEventInfo:   constants.RecognizedEventInfo_Id2_Height0,
+			bridgingDisabled:      true,
 		},
 		"Valid: empty events": {
 			txBytes:               constants.MsgAcknowledgeBridges_NoEvents_TxBytes,
@@ -188,8 +206,12 @@ func TestAcknowledgeBridgesTx_Validate(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, _, _, _, _, _ := keepertest.BridgeKeepers(t)
+			ctx, _, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetSafetyParams", ctx).Return(types.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: 7, // dummy value
+			})
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", ctx).Return(tc.acknowledgedEventInfo)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", ctx).Return(tc.recognizedEventInfo)
 			for _, event := range tc.bridgeEventsInServer {
@@ -234,7 +256,7 @@ func TestAcknowledgeBridgesTx_GetMsg(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			var msg sdk.Msg
 			if tc.txBytes != nil {
-				ctx, k, _, _, _, _ := keepertest.BridgeKeepers(t)
+				ctx, k, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 				abt, err := process.DecodeAcknowledgeBridgesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
 				require.NoError(t, err)
 				msg = abt.GetMsg()

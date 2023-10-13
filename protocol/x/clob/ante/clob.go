@@ -1,6 +1,7 @@
 package ante
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -75,7 +76,7 @@ func (cd ClobDecorator) AnteHandle(
 			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
 			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
 		}
-		ctx.Logger().Debug("Received new order cancelation",
+		cd.clobKeeper.Logger(ctx).Debug("Received new order cancelation",
 			"tx",
 			log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			"msg",
@@ -91,7 +92,7 @@ func (cd ClobDecorator) AnteHandle(
 	case *types.MsgPlaceOrder:
 		if msg.Order.OrderId.IsStatefulOrder() {
 			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
-			ctx.Logger().Debug("Received new stateful order",
+			cd.clobKeeper.Logger(ctx).Debug("Received new stateful order",
 				"tx",
 				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
@@ -106,7 +107,7 @@ func (cd ClobDecorator) AnteHandle(
 				lib.TxMode(ctx),
 			)
 		} else {
-			// No need to process short term order cancelations on `ReCheckTx`.
+			// No need to process short term orders on `ReCheckTx`.
 			if ctx.IsReCheckTx() {
 				return next(ctx, tx, simulate)
 			}
@@ -119,7 +120,7 @@ func (cd ClobDecorator) AnteHandle(
 				ctx,
 				msg,
 			)
-			ctx.Logger().Debug("Received new short term order",
+			cd.clobKeeper.Logger(ctx).Debug("Received new short term order",
 				"tx",
 				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
@@ -170,7 +171,7 @@ func IsSingleClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)
@@ -214,7 +215,7 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 
 	numMsgs := len(msgs)
 	if numMsgs > 1 {
-		return false, sdkerrors.Wrap(
+		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
 		)

@@ -1,8 +1,9 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
+
+	"golang.org/x/exp/slices"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -17,6 +18,7 @@ import (
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -38,7 +40,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20),
 		},
 		&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
 	)
@@ -46,7 +48,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20),
 		},
 		&PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
 	)
@@ -54,7 +56,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetSignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20),
 		},
 		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 	)
@@ -147,8 +149,11 @@ func TestPlaceOrder(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
@@ -162,19 +167,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          0,
 						},
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
@@ -188,19 +194,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          1,
 						},
 						{
-							Subtype: indexerevents.SubtypeOrderFill,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeOrderFill,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewOrderFillEvent(
 									PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order,
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
@@ -211,8 +218,6 @@ func TestPlaceOrder(t *testing.T) {
 									PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBaseQuantums(),
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          2,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -303,8 +308,11 @@ func TestPlaceOrder(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
@@ -318,19 +326,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          0,
 						},
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
@@ -344,19 +353,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          1,
 						},
 						{
-							Subtype: indexerevents.SubtypeOrderFill,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeOrderFill,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewOrderFillEvent(
 									PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
@@ -367,8 +377,6 @@ func TestPlaceOrder(t *testing.T) {
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          2,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -459,8 +467,11 @@ func TestPlaceOrder(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Alice_Num0,
 									[]*satypes.PerpetualPosition{
@@ -474,19 +485,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Taker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          0,
 						},
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewSubaccountUpdateEvent(
 									&constants.Bob_Num0,
 									[]*satypes.PerpetualPosition{
@@ -500,19 +512,20 @@ func TestPlaceOrder(t *testing.T) {
 									// Maker fees calculate to 0 so asset position doesn't change.
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assettypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
 										},
 									},
 									nil, // no funding payments
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          1,
 						},
 						{
-							Subtype: indexerevents.SubtypeOrderFill,
-							Data: indexer_manager.GetB64EncodedEventMessage(
+							Subtype:             indexerevents.SubtypeOrderFill,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          2,
+							Version:             indexerevents.OrderFillEventVersion,
+							DataBytes: indexer_manager.GetBytes(
 								indexerevents.NewOrderFillEvent(
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
 									PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
@@ -523,8 +536,6 @@ func TestPlaceOrder(t *testing.T) {
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 								),
 							),
-							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
-							EventIndex:          2,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
@@ -566,8 +577,8 @@ func TestPlaceOrder(t *testing.T) {
 			msgSender.Clear()
 			for _, order := range tc.orders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
-					checkTxResp := tApp.CheckTx(checkTx)
-					require.True(t, checkTxResp.IsOK(), fmt.Sprintf("CheckTx failed: %v\n", checkTxResp))
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
 			require.ElementsMatch(
@@ -583,7 +594,7 @@ func TestPlaceOrder(t *testing.T) {
 			require.ElementsMatch(t, tc.expectedOffchainMessagesInNextBlock, msgSender.GetOffchainMessages())
 			require.ElementsMatch(t, tc.expectedOnchainMessagesInNextBlock, msgSender.GetOnchainMessages())
 			for _, order := range tc.orders {
-				if lib.ContainsValue(tc.expectedOrdersFilled, order.Order.OrderId) {
+				if slices.Contains(tc.expectedOrdersFilled, order.Order.OrderId) {
 					exists, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(
 						ctx,
 						order.Order.OrderId,

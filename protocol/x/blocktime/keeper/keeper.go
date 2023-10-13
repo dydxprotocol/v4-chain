@@ -11,30 +11,34 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
-const (
-	allDowntimeInfoKey   = "AllDowntimeInfo/value"
-	previousBlockInfoKey = "PreviousBlockInfo/value/"
-)
-
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
+		cdc         codec.BinaryCodec
+		storeKey    storetypes.StoreKey
+		authorities map[string]struct{}
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:      cdc,
-		storeKey: storeKey,
+		cdc:         cdc,
+		storeKey:    storeKey,
+		authorities: lib.UniqueSliceToSet(authorities),
 	}
+}
+
+func (k Keeper) HasAuthority(authority string) bool {
+	_, ok := k.authorities[authority]
+	return ok
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -45,7 +49,7 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}
 
 func (k Keeper) GetAllDowntimeInfo(ctx sdk.Context) *types.AllDowntimeInfo {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get([]byte(allDowntimeInfoKey))
+	bytes := store.Get([]byte(types.AllDowntimeInfoKey))
 
 	if bytes == nil {
 		return &types.AllDowntimeInfo{}
@@ -61,12 +65,12 @@ func (k Keeper) GetAllDowntimeInfo(ctx sdk.Context) *types.AllDowntimeInfo {
 func (k Keeper) SetAllDowntimeInfo(ctx sdk.Context, info *types.AllDowntimeInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(info)
-	store.Set([]byte(allDowntimeInfoKey), b)
+	store.Set([]byte(types.AllDowntimeInfoKey), b)
 }
 
 func (k Keeper) GetPreviousBlockInfo(ctx sdk.Context) types.BlockInfo {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get([]byte(previousBlockInfoKey))
+	bytes := store.Get([]byte(types.PreviousBlockInfoKey))
 
 	if bytes == nil {
 		return types.BlockInfo{}
@@ -80,7 +84,7 @@ func (k Keeper) GetPreviousBlockInfo(ctx sdk.Context) types.BlockInfo {
 func (k Keeper) SetPreviousBlockInfo(ctx sdk.Context, info *types.BlockInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(info)
-	store.Set([]byte(previousBlockInfoKey), b)
+	store.Set([]byte(types.PreviousBlockInfoKey), b)
 }
 
 // UpdateAllDowntimeInfo updates AllDowntimeInfo by considering the downtime between the current block and

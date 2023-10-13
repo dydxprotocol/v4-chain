@@ -2,12 +2,14 @@ package keeper_test
 
 import (
 	"errors"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"testing"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -23,16 +25,9 @@ import (
 )
 
 type testMemClobMethodArgs struct {
-	// Input args for `MemClob.GetClobPairForPerpetual`
-	perpetualId uint32
-
-	// Return values from `MemClob.GetClobPairForPerpetual`
-	clobPairId                 types.ClobPairId
-	getClobPairForPerpetualErr error
-
 	// Input args for `MemClob.GetPricePremium`
 	clobPair              types.ClobPair
-	marketPrice           pricestypes.MarketPrice
+	indexPrice            pricestypes.MarketPrice
 	baseAtomicResolution  int32
 	quoteAtomicResolution int32
 	impactNotionalAmount  *big.Int
@@ -44,19 +39,20 @@ type testMemClobMethodArgs struct {
 }
 
 type testCase map[string]struct {
-	setUpMockMemClob func(mck *mocks.MemClob, args testMemClobMethodArgs)
-	args             testMemClobMethodArgs
-	expectedErr      error
+	setUpMockMemClob        func(mck *mocks.MemClob, args testMemClobMethodArgs)
+	args                    testMemClobMethodArgs
+	perpetualId             uint32
+	perpetualIdToClobPairId map[uint32][]types.ClobPairId
+	expectedErr             error
 }
 
 func TestGetPricePremiumForPerpetual(t *testing.T) {
 	tests := testCase{
 		"Success": {
+			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				perpetualId: 0,
-				clobPairId:  0,
-				clobPair:    constants.ClobPair_Btc,
-				marketPrice: pricestypes.MarketPrice{
+				clobPair: constants.ClobPair_Btc,
+				indexPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
 				},
@@ -67,19 +63,11 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
-					mock.Anything,
-					args.perpetualId,
-				).Return(
-					args.clobPairId,
-					args.getClobPairForPerpetualErr,
-				)
-				mck.On(
 					"GetPricePremium",
 					mock.Anything,
 					args.clobPair,
 					perptypes.GetPricePremiumParams{
-						MarketPrice:                 args.marketPrice,
+						IndexPrice:                  args.indexPrice,
 						BaseAtomicResolution:        args.baseAtomicResolution,
 						QuoteAtomicResolution:       args.quoteAtomicResolution,
 						ImpactNotionalQuoteQuantums: args.impactNotionalAmount,
@@ -91,30 +79,22 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				)
 			},
 		},
-		"Failure: GetClobPairForPerpetual error": {
+		"Failure: GetClobPairIdForPerpetual error": {
+			perpetualId: 1,
 			args: testMemClobMethodArgs{
-				perpetualId:                0,
-				clobPair:                   constants.ClobPair_Btc,
-				getClobPairForPerpetualErr: errors.New("GetClobPairForPerpetual error"),
+				clobPair: constants.ClobPair_Btc,
 			},
-			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
-				mck.On(
-					"GetClobPairForPerpetual",
-					mock.Anything,
-					args.perpetualId,
-				).Return(
-					args.clobPairId,
-					args.getClobPairForPerpetualErr,
-				)
-			},
-			expectedErr: errors.New("GetClobPairForPerpetual error"),
+			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
+			expectedErr: errors.New(
+				"Perpetual ID 1 has no associated CLOB pairs: " +
+					"The provided perpetual ID does not have any associated CLOB pairs",
+			),
 		},
 		"Failure: GetPricePremium failure": {
+			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				perpetualId: 0,
-				clobPairId:  0,
-				clobPair:    constants.ClobPair_Btc,
-				marketPrice: pricestypes.MarketPrice{
+				clobPair: constants.ClobPair_Btc,
+				indexPrice: pricestypes.MarketPrice{
 					Price:    1_000_000_000, // $10_000
 					Exponent: -5,
 				},
@@ -126,19 +106,11 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
-					"GetClobPairForPerpetual",
-					mock.Anything,
-					args.perpetualId,
-				).Return(
-					args.clobPairId,
-					args.getClobPairForPerpetualErr,
-				)
-				mck.On(
 					"GetPricePremium",
 					mock.Anything,
 					args.clobPair,
 					perptypes.GetPricePremiumParams{
-						MarketPrice:                 args.marketPrice,
+						IndexPrice:                  args.indexPrice,
 						BaseAtomicResolution:        args.baseAtomicResolution,
 						QuoteAtomicResolution:       args.quoteAtomicResolution,
 						ImpactNotionalQuoteQuantums: args.impactNotionalAmount,
@@ -152,26 +124,27 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			expectedErr: errors.New("GetPricePremium error"),
 		},
 		"Failure, clob pair not found": {
+			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				perpetualId: 0,
-				clobPairId:  types.ClobPairId(1),
-				clobPair:    constants.ClobPair_Btc, // clobPairId = 1000
+				clobPair: constants.ClobPair_Btc, // clobPairId = 1000
 			},
-			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
-				mck.On(
-					"GetClobPairForPerpetual",
-					mock.Anything,
-					args.perpetualId,
-				).Return(
-					args.clobPairId,
-					args.getClobPairForPerpetualErr,
-				)
+			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
+			// clob pair is created with id 0, but we override in-memory datastructure with 1 to cause error
+			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
+				0: {1},
 			},
-			expectedErr: sdkerrors.Wrapf(
+			expectedErr: errorsmod.Wrapf(
 				types.ErrInvalidClob,
 				"GetPricePremiumForPerpetual: did not find clob pair with clobPairId = %d",
 				1,
 			),
+		},
+		"Success, premium is zeroed for initializing clob pair": {
+			perpetualId: 0,
+			args: testMemClobMethodArgs{
+				clobPair: constants.ClobPair_Btc_Init,
+			},
+			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
 		},
 	}
 
@@ -197,7 +170,8 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
+				indexerevents.PerpetualMarketEventVersion,
+				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
 						perpetualId,
 						0,
@@ -207,7 +181,6 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 						tc.args.clobPair.QuantumConversionExponent,
 						perpetual.Params.AtomicResolution,
 						tc.args.clobPair.SubticksPerTick,
-						tc.args.clobPair.MinOrderBaseQuantums,
 						tc.args.clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
 					),
@@ -215,8 +188,8 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			).Return()
 			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
 				ks.Ctx,
+				tc.args.clobPair.Id,
 				clobtest.MustPerpetualId(tc.args.clobPair),
-				satypes.BaseQuantums(tc.args.clobPair.MinOrderBaseQuantums),
 				satypes.BaseQuantums(tc.args.clobPair.StepBaseQuantums),
 				tc.args.clobPair.QuantumConversionExponent,
 				tc.args.clobPair.SubticksPerTick,
@@ -224,11 +197,16 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 			)
 			require.NoError(t, err)
 
+			// override clob keeper's PerpetualIdToClobPairId
+			if tc.perpetualIdToClobPairId != nil {
+				ks.ClobKeeper.PerpetualIdToClobPairId = tc.perpetualIdToClobPairId
+			}
+
 			premiumPpm, err := ks.ClobKeeper.GetPricePremiumForPerpetual(
 				ks.Ctx,
-				tc.args.perpetualId,
+				tc.perpetualId,
 				perptypes.GetPricePremiumParams{
-					MarketPrice:                 tc.args.marketPrice,
+					IndexPrice:                  tc.args.indexPrice,
 					BaseAtomicResolution:        tc.args.baseAtomicResolution,
 					QuoteAtomicResolution:       tc.args.quoteAtomicResolution,
 					ImpactNotionalQuoteQuantums: tc.args.impactNotionalAmount,

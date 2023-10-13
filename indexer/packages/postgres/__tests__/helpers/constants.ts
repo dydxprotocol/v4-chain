@@ -21,6 +21,8 @@ import {
   BlockCreateObject,
   CandleCreateObject,
   CandleResolution,
+  ComplianceDataCreateObject,
+  ComplianceProvider,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
@@ -49,7 +51,9 @@ import {
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
 export const invalidTicker: string = 'INVALID-INVALID';
+export const dydxChain: string = 'dydx';
 export const defaultAddress: string = 'dydx1n88uc38xhjgxzw9nwre4ep2c8ga4fjxc565lnf';
+export const blockedAddress: string = 'dydx1f9k5qldwmqrnwy8hcgp4fw6heuvszt35egvtx2';
 
 // ============== Subaccounts ==============
 
@@ -147,21 +151,15 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   ticker: 'BTC-USD',
   marketId: 0,
   status: PerpetualMarketStatus.ACTIVE,
-  baseAsset: 'BTC',
-  quoteAsset: 'USD',
   lastPrice: '15000',
   priceChange24H: '23',
   volume24H: '1000000',
   trades24H: 250,
   nextFundingRate: '10.2',
-  basePositionSize: '25',
-  incrementalPositionSize: '5',
-  maxPositionSize: '500',
   openInterest: '400000',
   quantumConversionExponent: -8,
   atomicResolution: -10,
   subticksPerTick: 100,
-  minOrderBaseQuantums: 10,
   stepBaseQuantums: 10,
   liquidityTierId: 0,
 };
@@ -171,21 +169,33 @@ export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   ticker: 'ETH-USD',
   marketId: 1,
   status: PerpetualMarketStatus.ACTIVE,
-  baseAsset: 'ETH',
-  quoteAsset: 'USD',
   lastPrice: '1500',
   priceChange24H: '23',
   volume24H: '100000',
   trades24H: 200,
   nextFundingRate: '1.2',
-  basePositionSize: '10',
-  incrementalPositionSize: '1',
-  maxPositionSize: '5000',
   openInterest: '40000',
   quantumConversionExponent: -6,
   atomicResolution: -18,
   subticksPerTick: 10,
-  minOrderBaseQuantums: 100,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+};
+export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
+  id: '2',
+  clobPairId: '3',
+  ticker: 'SHIB-USD',
+  marketId: 2,
+  status: PerpetualMarketStatus.ACTIVE,
+  lastPrice: '0.000000065',
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
   stepBaseQuantums: 1,
   liquidityTierId: 0,
 };
@@ -207,6 +217,8 @@ export const defaultOrder: OrderCreateObject = {
   goodTilBlock: '100',
   orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
   clientMetadata: '0',
+  updatedAt: '2023-01-22T00:00:00.000Z',
+  updatedAtHeight: '1',
 };
 
 export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
@@ -437,6 +449,14 @@ export const defaultMarket2: MarketCreateObject = {
   oraclePrice: '1000',
 };
 
+export const defaultMarket3: MarketCreateObject = {
+  id: 2,
+  pair: 'SHIB-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000065',
+};
+
 // ============== LiquidityTiers ==============
 
 export const defaultLiquidityTier: LiquidityTiersCreateObject = {
@@ -532,3 +552,23 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
   defaultFundingIndexUpdate.eventId,
   defaultFundingIndexUpdate.perpetualId,
 );
+
+// ========= Compliance Data ==========
+
+export const blockedComplianceData: ComplianceDataCreateObject = {
+  address: blockedAddress,
+  provider: ComplianceProvider.ELLIPTIC,
+  chain: dydxChain,
+  blocked: true,
+  riskScore: '100.00',
+  updatedAt: createdDateTime.toISO(),
+};
+
+export const nonBlockedComplianceData: ComplianceDataCreateObject = {
+  address: defaultAddress,
+  provider: ComplianceProvider.ELLIPTIC,
+  chain: dydxChain,
+  blocked: false,
+  riskScore: '10.00',
+  updatedAt: createdDateTime.plus(1).toISO(),
+};

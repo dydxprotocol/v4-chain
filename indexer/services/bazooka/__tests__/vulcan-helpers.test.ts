@@ -163,7 +163,7 @@ describe('vulcan-helpers', () => {
                     orderUpdate: {
                       orderId: expectedOrderId,
                       // eslint-disable-next-line max-len
-                      totalFilledQuantums: Long.fromValue(10_000_000_000_000),  // 1e3 / 1e-10 = 1e13
+                      totalFilledQuantums: Long.fromValue(10_000_000_000_000, true),  // 1e3 / 1e-10 = 1e13
                     },
                   }),
                 ).finish(),
