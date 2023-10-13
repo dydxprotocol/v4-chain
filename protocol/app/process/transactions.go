@@ -21,9 +21,9 @@ const (
 func init() {
 	txIndicesAndOffsets := []int{
 		proposedOperationsTxIndex,
-		updateMarketPricesTxLenOffset,
-		addPremiumVotesTxLenOffset,
 		acknowledgeBridgesTxLenOffset,
+		addPremiumVotesTxLenOffset,
+		updateMarketPricesTxLenOffset,
 	}
 	if minTxsCount != len(txIndicesAndOffsets) {
 		panic("minTxsCount does not match expected count of Txs.")
@@ -39,9 +39,9 @@ func init() {
 	}
 	txIndicesForMinTxsCount := []int{
 		proposedOperationsTxIndex,
-		updateMarketPricesTxLenOffset + minTxsCount,
-		addPremiumVotesTxLenOffset + minTxsCount,
 		acknowledgeBridgesTxLenOffset + minTxsCount,
+		addPremiumVotesTxLenOffset + minTxsCount,
+		updateMarketPricesTxLenOffset + minTxsCount,
 	}
 	if minTxsCount != len(txIndicesForMinTxsCount) {
 		panic("minTxsCount does not match expected count of Txs.")
