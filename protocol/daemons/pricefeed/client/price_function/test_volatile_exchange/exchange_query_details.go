@@ -17,7 +17,7 @@ type VolatileExchangeParams struct {
 var (
 	TestVolatileExchangeParams = VolatileExchangeParams{
 		AveragePrice: 100,
-		Amplitude:    0.5,
+		Amplitude:    0.95,
 		Frequency:    1,
 	}
 	TestVolatileExchangeDetails = types.ExchangeQueryDetails{
