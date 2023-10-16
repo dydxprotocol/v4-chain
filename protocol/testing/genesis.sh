@@ -1518,7 +1518,7 @@ function update_genesis_use_test_volatile_market() {
 	test_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/test_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.last().exchange_config_json' -v "$test_exchange_config_json"
 
-	# Liquidity Tier: For TEST-USD. 1% leverage and regular nonlinear margin thresholds.
+	# Liquidity Tier: For TEST-USD. 1% leverage and regular 1m nonlinear margin thresholds.
 	NUM_LIQUIDITY_TIERS=$(jq -c '.app_state.perpetuals.liquidity_tiers | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().id' -v "${NUM_LIQUIDITY_TIERS}"
@@ -1528,7 +1528,7 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().base_position_notional' -v '1000000000007' # 1_000_000 USDC + a little prime
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().impact_notional' -v '50000000000' # 50_000 USDC (500 USDC / 1%)
 
-	# Liquidity Tier: For TEST-USD. 1% leverage and low nonlinear margin thresholds.
+	# Liquidity Tier: For TEST-USD. 1% leverage and 100 nonlinear margin thresholds.
 	NUM_LIQUIDITY_TIERS_2=$(jq -c '.app_state.perpetuals.liquidity_tiers | length' < ${GENESIS})
 	dasel put -t json -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.perpetuals.liquidity_tiers.last().id' -v "${NUM_LIQUIDITY_TIERS_2}"
