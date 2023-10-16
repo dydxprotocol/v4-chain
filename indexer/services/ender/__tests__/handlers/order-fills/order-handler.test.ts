@@ -22,7 +22,6 @@ import {
   FillTable,
   FillType,
   Liquidity,
-  OrderFromDatabase,
   OrderSide,
   OrderStatus,
   OrderTable,
@@ -281,7 +280,7 @@ describe('OrderHandler', () => {
         goodTilOneof: takerGoodTilOneof,
         clobPairId: defaultClobPairId,
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: true,
         clientMetadata: 0,
       });
@@ -355,7 +354,7 @@ describe('OrderHandler', () => {
         clobPairId: defaultClobPairId,
         side: protocolTranslations.protocolOrderSideToOrderSide(takerOrderProto.side),
         orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
-        timeInForce: TimeInForce.GTT,
+        timeInForce: TimeInForce.IOC,
         reduceOnly: true,
         goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(takerOrderProto),
@@ -870,7 +869,7 @@ describe('OrderHandler', () => {
       },
       clobPairId: defaultClobPairId,
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
       reduceOnly: false,
       clientMetadata: 0,
     });
@@ -955,7 +954,7 @@ describe('OrderHandler', () => {
       clobPairId: defaultClobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
       orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
-      timeInForce: TimeInForce.GTT,
+      timeInForce: TimeInForce.FOK,
       reduceOnly: false,
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
@@ -1075,7 +1074,7 @@ describe('OrderHandler', () => {
       },
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
       reduceOnly: false,
       clientMetadata: 0,
     });
@@ -1166,7 +1165,7 @@ describe('OrderHandler', () => {
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
       orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
-      timeInForce: TimeInForce.GTT,
+      timeInForce: TimeInForce.FOK,
       reduceOnly: false,
       goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
@@ -1358,238 +1357,6 @@ describe('OrderHandler', () => {
       message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
     }));
     await expectNoCandles();
-  });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('correctly sets status for short term IOC orders (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
-    const makerQuantums: number = 100;
-    const makerSubticks: number = 1_000_000;
-
-    const makerOrderProto: IndexerOrder = createOrder({
-      subaccountId: defaultSubaccountId,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_BUY,
-      quantums: makerQuantums,
-      subticks: makerSubticks,
-      goodTilOneof: {
-        goodTilBlock: 10,
-      },
-      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
-      reduceOnly: false,
-      clientMetadata: 0,
-    });
-
-    const takerSubticks: number = 150_000;
-    const takerQuantums: number = 10;
-    const takerOrderProto: IndexerOrder = createOrder({
-      subaccountId: defaultSubaccountId2,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_SELL,
-      quantums: takerQuantums,
-      subticks: takerSubticks,
-      goodTilOneof: {
-        goodTilBlock: 10,
-      },
-      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
-      reduceOnly: true,
-      clientMetadata: 0,
-    });
-
-    const fillAmount: number = takerQuantums;
-    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
-      makerOrderProto,
-      takerOrderProto,
-      fillAmount,
-      fillAmount,
-      fillAmount,
-    );
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
-      orderFillEvent,
-      transactionIndex,
-      eventIndex,
-      height: parseInt(defaultHeight, 10),
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    await Promise.all([
-      // initial position for subaccount 1
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
-        perpetualId: testConstants.defaultPerpetualMarket3.id,
-      }),
-      // initial position for subaccount 2
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
-        subaccountId: testConstants.defaultSubaccountId2,
-        perpetualId: testConstants.defaultPerpetualMarket3.id,
-      }),
-    ]);
-
-    await onMessage(kafkaMessage);
-
-    const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
-    const takerOrderId: string = OrderTable.orderIdToUuid(takerOrderProto.orderId!);
-
-    const [makerOrder, takerOrder]: [
-      OrderFromDatabase | undefined,
-      OrderFromDatabase | undefined
-    ] = await Promise.all([
-      OrderTable.findById(makerOrderId),
-      OrderTable.findById(takerOrderId),
-    ]);
-
-    expect(makerOrder).toBeDefined();
-    expect(takerOrder).toBeDefined();
-
-    // maker order is partially filled
-    expect(makerOrder!.status).toEqual(OrderStatus.CANCELED);
-    // taker order is fully filled
-    expect(takerOrder!.status).toEqual(OrderStatus.FILLED);
-  });
-
-  it.each([
-    [
-      'limit',
-      'via knex',
-      false,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-    ],
-    [
-      'limit',
-      'via SQL function',
-      true,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-    ],
-    [
-      'post-only',
-      'via knex',
-      false,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-    ],
-    [
-      'post-only',
-      'via SQL function',
-      true,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-    ],
-  ])('correctly sets status for short term %s orders (%s)', async (
-    _orderType: string,
-    _name: string,
-    useSqlFunction: boolean,
-    timeInForce: IndexerOrder_TimeInForce,
-  ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
-    const makerQuantums: number = 100;
-    const makerSubticks: number = 1_000_000;
-
-    const makerOrderProto: IndexerOrder = createOrder({
-      subaccountId: defaultSubaccountId,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_BUY,
-      quantums: makerQuantums,
-      subticks: makerSubticks,
-      goodTilOneof: {
-        goodTilBlock: 10,
-      },
-      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce,
-      reduceOnly: false,
-      clientMetadata: 0,
-    });
-
-    const takerSubticks: number = 150_000;
-    const takerQuantums: number = 100;
-    const takerOrderProto: IndexerOrder = createOrder({
-      subaccountId: defaultSubaccountId2,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_SELL,
-      quantums: takerQuantums,
-      subticks: takerSubticks,
-      goodTilOneof: {
-        goodTilBlock: 10,
-      },
-      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce,
-      reduceOnly: true,
-      clientMetadata: 0,
-    });
-
-    const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
-    await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
-
-    const fillAmount: number = 10;
-    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
-      makerOrderProto,
-      takerOrderProto,
-      fillAmount,
-      fillAmount,
-      fillAmount,
-    );
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
-      orderFillEvent,
-      transactionIndex,
-      eventIndex,
-      height: parseInt(defaultHeight, 10),
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    await Promise.all([
-      // initial position for subaccount 1
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
-        perpetualId: testConstants.defaultPerpetualMarket3.id,
-      }),
-      // initial position for subaccount 2
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
-        subaccountId: testConstants.defaultSubaccountId2,
-        perpetualId: testConstants.defaultPerpetualMarket3.id,
-      }),
-    ]);
-
-    await onMessage(kafkaMessage);
-
-    const takerOrderId: string = OrderTable.orderIdToUuid(takerOrderProto.orderId!);
-
-    const [makerOrder, takerOrder]: [
-      OrderFromDatabase | undefined,
-      OrderFromDatabase | undefined
-    ] = await Promise.all([
-      OrderTable.findById(makerOrderId),
-      OrderTable.findById(takerOrderId),
-    ]);
-
-    expect(makerOrder).toBeDefined();
-    expect(takerOrder).toBeDefined();
-
-    // maker order is partially filled, and in CanceledOrdersCache
-    expect(makerOrder!.status).toEqual(OrderStatus.BEST_EFFORT_CANCELED);
-    // taker order is partially filled, and not in CanceledOrdersCache
-    expect(takerOrder!.status).toEqual(OrderStatus.OPEN);
   });
 
   async function expectDefaultOrderAndFillSubaccountKafkaMessages(

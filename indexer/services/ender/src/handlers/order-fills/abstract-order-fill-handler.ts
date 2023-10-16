@@ -22,12 +22,11 @@ import {
   SubaccountMessageContents,
   SubaccountTable,
   TendermintEventTable,
-  TimeInForce,
   TradeMessageContents,
   UpdatedPerpetualPositionSubaccountKafkaObject,
   USDC_ASSET_ID,
 } from '@dydxprotocol-indexer/postgres';
-import { getOrderIdHash, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
   IndexerOrder_Side,
@@ -290,11 +289,6 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     return updatedPerpetualPosition;
   }
 
-  /**
-   * Upsert the an order based on the event processed by the handler
-   * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
-   * orders
-   */
   protected upsertOrderFromEvent(
     perpetualMarket: PerpetualMarketFromDatabase,
     order: IndexerOrder,
@@ -307,14 +301,6 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
       totalFilledFromProto.toString(10),
       perpetualMarket.atomicResolution,
     );
-    const timeInForce: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(order.timeInForce);
-    const status: OrderStatus = this.getOrderStatus(
-      isCanceled,
-      size,
-      totalFilled,
-      order.orderId!.orderFlags,
-      timeInForce,
-    );
 
     const orderToCreate: OrderCreateObject = {
       subaccountId: SubaccountTable.subaccountIdToUuid(order.orderId!.subaccountId!),
@@ -325,8 +311,8 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
       totalFilled,
       price,
       type: OrderType.LIMIT, // TODO: Add additional order types once we support
-      status,
-      timeInForce,
+      status: this.getOrderStatus(isCanceled, size, totalFilled),
+      timeInForce: protocolTranslations.protocolOrderTIFToTIF(order.timeInForce),
       reduceOnly: order.reduceOnly,
       orderFlags: order.orderId!.orderFlags.toString(),
       goodTilBlock: protocolTranslations.getGoodTilBlock(order)?.toString(),
@@ -339,48 +325,16 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     return OrderTable.upsert(orderToCreate, { txId: this.txId });
   }
 
-  /**
-   * The obvious case is if totalFilled >= size, then the order status should always be `FILLED`.
-   * The difficult case is if totalFilled < size after a fill, then we need to keep the following
-   * cases in mind:
-   * 1. Stateful Orders - All cancelations are on-chain events, so the order can be `OPEN` or
-   *    `BEST_EFFORT_CANCELED` if the order is in the CanceledOrdersCache.
-   * 2. Short-term FOK - FOK orders can never be `OPEN`, since they don't rest on the orderbook, so
-   *    totalFilled cannot be < size.
-   * 3. Short-term IOC - Protocol guarantees that an IOC order will only ever be filled in a single
-   *    block, so status should be `CANCELED`.
-   * 4. Short-term Limit & Post-only - If the order is in the CanceledOrdersCache, then it should be
-   *    set to `BEST_EFFORT_CANCELED`, otherwise `OPEN`.
-   * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
-   * orders
-   */
   protected getOrderStatus(
     isCanceled: boolean,
     size: string,
     totalFilled: string,
-    orderFlags: number,
-    timeInForce: TimeInForce,
   ): OrderStatus {
-    if (Big(totalFilled).gte(size)) {
-      return OrderStatus.FILLED;
-    } else if (orderFlags === ORDER_FLAG_LONG_TERM) { // 1. Stateful Order
-      if (isCanceled) {
-        return OrderStatus.BEST_EFFORT_CANCELED;
-      }
-      return OrderStatus.OPEN;
-    } else if (timeInForce === TimeInForce.FOK) { // 2. Short-term FOK
-      logger.error({
-        at: 'orderFillHandler#getOrderStatus',
-        message: 'FOK orders should never be partially filled',
-        blockHeight: this.block.height,
-        transactionIndex: this.indexerTendermintEvent.transactionIndex,
-        eventIndex: this.indexerTendermintEvent.eventIndex,
-      });
-      return OrderStatus.CANCELED;
-    } else if (timeInForce === TimeInForce.IOC) { // 3. Short-term IOC
-      return OrderStatus.CANCELED;
-    } else if (isCanceled) { // 4. Short-term Limit & Post-only
+    if (isCanceled) {
       return OrderStatus.BEST_EFFORT_CANCELED;
+    }
+    if (Big(size).lte(totalFilled)) {
+      return OrderStatus.FILLED;
     }
     return OrderStatus.OPEN;
   }

@@ -237,7 +237,7 @@ describe('LiquidationHandler', () => {
         goodTilOneof,
         clobPairId: defaultClobPairId,
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
         reduceOnly: true,
         clientMetadata: 0,
       });
@@ -300,7 +300,7 @@ describe('LiquidationHandler', () => {
         clobPairId: defaultClobPairId,
         side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
-        timeInForce: TimeInForce.GTT,
+        timeInForce: TimeInForce.IOC,
         reduceOnly: true,
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),

@@ -99,7 +99,7 @@ BEGIN
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
-        order_record."status" = get_order_status(total_filled, order_record.size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = get_order_status(total_filled, order_record.size, is_cancelled);
 
         UPDATE orders
         SET
@@ -125,7 +125,7 @@ BEGIN
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
-        order_record."status" = get_order_status(fill_amount, order_size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = get_order_status(fill_amount, order_size, is_cancelled);
         order_record."createdAtHeight" = block_height;
         order_record."updatedAt" = block_time;
         order_record."updatedAtHeight" = block_height;
