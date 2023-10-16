@@ -135,7 +135,7 @@ function overwrite_genesis_public_testnet() {
 	# TODO(CORE-512): add info/resources around genesis params.
 	
 	# Slashing params
-	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12000' # ~5 hr
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12288' # ~5 hr
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.min_signed_per_window' -v '0.2' # 20%
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '60s'
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_double_sign' -v '0.0' # 0%
