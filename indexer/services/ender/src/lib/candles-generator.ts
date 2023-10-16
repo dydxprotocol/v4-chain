@@ -442,7 +442,7 @@ export class CandlesGenerator {
     _.forEach(candles, (candle: CandleFromDatabase) => {
       const candleMessageContents: CandleMessageContents = _.omit(
         candle,
-        [CandleColumns.id, CandleColumns.resolution],
+        [CandleColumns.id],
       );
       const message: CandleMessage = {
         contents: JSON.stringify(candleMessageContents),
