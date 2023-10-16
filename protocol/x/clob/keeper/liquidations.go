@@ -138,8 +138,13 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
 		liquidationOrder := unfilledLiquidations[i]
 
-		subaccountId := liquidationOrder.GetSubaccountId()
 		perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
+		subaccountId := liquidationOrder.GetSubaccountId()
+
+		subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+		if _, exists := subaccount.GetPerpetualPositionForId(perpetualId); !exists {
+			continue
+		}
 
 		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
 		if err != nil {
