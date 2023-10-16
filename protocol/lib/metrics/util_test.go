@@ -14,7 +14,7 @@ import (
 )
 
 func TestIncrCountMetricWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
@@ -54,34 +54,8 @@ func TestIncrCountMetricWithLabels(t *testing.T) {
 
 func TestIncrCountMetricWithLabelsDoesntPanic(t *testing.T) {
 	require.NotPanics(t, func() {
-		metrics.IncrCountMetricWithLabels("module", "metric", metrics.NewBinaryStringLabel("label", true))
+		metrics.IncrCountMetricWithLabels("module", "metric", metrics.GetLabelForBoolValue("label", true))
 	})
-}
-
-func TestNewBinaryStringLabel(t *testing.T) {
-	tests := map[string]struct {
-		name               string
-		condition          bool
-		expectedLabelValue string
-	}{
-		"positive condition": {
-			name:               "labelname",
-			condition:          true,
-			expectedLabelValue: metrics.Yes,
-		},
-		"negative condition": {
-			name:               "labelname",
-			condition:          false,
-			expectedLabelValue: metrics.No,
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			label := metrics.NewBinaryStringLabel(tc.name, tc.condition)
-			require.Equal(t, tc.name, label.Name)
-			require.Equal(t, tc.expectedLabelValue, label.Value)
-		})
-	}
 }
 
 func TestGetLabelForBoolValue(t *testing.T) {
@@ -220,7 +194,7 @@ func TestGetMetricValueFromBigInt(t *testing.T) {
 }
 
 func TestModuleMeasureSinceWithLabels(t *testing.T) {
-	defer gometrics.Shutdown()
+	t.Cleanup(gometrics.Shutdown)
 
 	conf := gometrics.DefaultConfig("testService")
 	sink := gometrics.NewInmemSink(time.Hour, time.Hour)

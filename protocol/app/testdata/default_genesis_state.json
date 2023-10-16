@@ -38,8 +38,7 @@
       "durations": [
         "300s",
         "1800s"
-      ],
-      "clock_drift_grace_period_duration": "5s"
+      ]
     }
   },
   "bridge": {
@@ -70,7 +69,6 @@
   "clob": {
     "clob_pairs": [],
     "liquidations_config": {
-      "max_insurance_fund_quantums_for_deleveraging": "0",
       "max_liquidation_fee_ppm": 5000,
       "position_block_limits": {
         "min_position_notional_liquidated": "1000",
@@ -104,7 +102,7 @@
   },
   "delaymsg": {
     "delayed_messages": [],
-    "num_messages": 0
+    "next_delayed_message_id": 0
   },
   "distribution": {
     "params": {

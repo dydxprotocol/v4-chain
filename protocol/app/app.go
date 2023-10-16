@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"math"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+	"runtime/debug"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	sdklog "cosmossdk.io/log"
-	gometrics "github.com/armon/go-metrics"
 
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -35,7 +35,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
@@ -96,8 +95,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
-
 	// Lib
 	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -113,6 +110,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
+	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
@@ -187,11 +185,6 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// `Upgrades` defines the upgrade handlers and store loaders for the application.
-	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{}
-	Forks    = []upgrades.Fork{}
 )
 
 var (
@@ -315,6 +308,7 @@ func New(
 
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed App flags", "Flags", appFlags)
 	// Panic if this is not a full node and gRPC is disabled.
 	if err := appFlags.Validate(); err != nil {
 		panic(err)
@@ -543,6 +537,7 @@ func New(
 
 	// Get Daemon Flags.
 	daemonFlags := daemonflags.GetDaemonFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed Daemon flags", "Flags", daemonFlags)
 
 	// Create server that will ingest gRPC messages from daemon clients.
 	// Note that gRPC clients will block on new gRPC connection until the gRPC server is ready to
@@ -643,6 +638,33 @@ func New(
 				}
 			}()
 		}
+
+		// Start the Metrics Daemon.
+		// The metrics daemon is purely used for observability. It should never bring the app down.
+		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					logger.Error(
+						"Metrics Daemon exited unexpectedly with a panic.",
+						"panic",
+						r,
+						"stack",
+						string(debug.Stack()),
+					)
+				}
+			}()
+			// Don't panic if metrics daemon loops are delayed. Use maximum value.
+			app.Server.ExpectMetricsDaemon(
+				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
+			)
+			metricsclient.Start(
+				// The client will use `context.Background` so that it can have a different context from
+				// the main application.
+				context.Background(),
+				logger,
+			)
+		}()
 	}
 
 	app.PricesKeeper = *pricesmodulekeeper.NewKeeper(
@@ -786,6 +808,7 @@ func New(
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
+	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 
@@ -1165,6 +1188,16 @@ func New(
 	app.ScopedIBCKeeper = scopedIBCKeeper
 	app.ScopedTransferKeeper = scopedTransferKeeper
 
+	// Report out app version and git commit. This will be run when validators restart.
+	version := version.NewInfo()
+	app.Logger().Info(
+		"App instantiated",
+		metrics.AppVersion,
+		version.Version,
+		metrics.GitCommit,
+		version.GitCommit,
+	)
+
 	return app
 }
 
@@ -1225,20 +1258,6 @@ func (app *App) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.R
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(req.Header.ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
-
-	// Report app version and git commit if not in dev. Delay by 100 blocks to get a metric on initial startup.
-	// TODO(DEC-2107): Doing this based on chain id seems brittle.
-	if !strings.Contains(req.Header.ChainID, "dev") && ctx.BlockHeight()%10_100 == 0 {
-		version := version.NewInfo()
-		telemetry.SetGaugeWithLabels(
-			[]string{metrics.AppInfo},
-			1,
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.AppVersion, version.Version),
-				metrics.GetLabelForStringValue(metrics.GitCommit, version.GitCommit),
-			},
-		)
-	}
 
 	app.scheduleForkUpgrade(ctx)
 	return app.ModuleManager.BeginBlock(ctx, req)
@@ -1448,6 +1467,11 @@ func getIndexerFromOptions(
 	}
 
 	indexerFlags := indexer.GetIndexerFlagValuesFromOptions(appOpts)
+	logger.Info(
+		"Parsed Indexer flags",
+		"Flags", indexerFlags,
+	)
+
 	var indexerMessageSender msgsender.IndexerMessageSender
 	if len(indexerFlags.KafkaAddrs) == 0 {
 		indexerMessageSender = msgsender.NewIndexerMessageSenderNoop()

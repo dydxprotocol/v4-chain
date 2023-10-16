@@ -42,7 +42,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.SliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
@@ -50,7 +50,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			order,
 		)
 	}
-	removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyRemoved,

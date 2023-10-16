@@ -2,7 +2,9 @@ package clob
 
 import (
 	"fmt"
+	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
@@ -86,8 +88,8 @@ func EndBlocker(
 	keeper.AddUntriggeredConditionalOrders(
 		ctx,
 		processProposerMatchesEvents.PlacedConditionalOrderIds,
-		lib.SliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
-		lib.SliceToSet(expiredStatefulOrderIds),
+		lib.UniqueSliceToSet(processProposerMatchesEvents.GetPlacedStatefulCancellationOrderIds()),
+		lib.UniqueSliceToSet(expiredStatefulOrderIds),
 	)
 
 	// Poll out all triggered conditional orders from `UntriggeredConditionalOrders` and update state.
@@ -104,6 +106,13 @@ func EndBlocker(
 
 	// Prune any rate limiting information that is no longer relevant.
 	keeper.PruneRateLimits(ctx)
+
+	// Emit relevant metrics at the end of every block.
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.InsuranceFundBalance},
+		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		[]gometrics.Label{},
+	)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -112,6 +121,13 @@ func PrepareCheckState(
 	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobPrepareCheckState,
+		metrics.Latency,
+	)
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -148,10 +164,25 @@ func PrepareCheckState(
 	)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
+	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
+	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.
+	startPlaceLongTermOrders := time.Now()
 	offchainUpdates = keeper.PlaceStatefulOrdersFromLastBlock(
 		ctx,
 		processProposerMatchesEvents.PlacedLongTermOrderIds,
 		offchainUpdates,
+	)
+	telemetry.MeasureSince(
+		startPlaceLongTermOrders,
+		types.ModuleName,
+		metrics.PlaceLongTermOrdersFromLastBlock,
+		metrics.Latency,
+	)
+	telemetry.SetGauge(
+		float32(len(processProposerMatchesEvents.PlacedLongTermOrderIds)),
+		types.ModuleName,
+		metrics.PlaceLongTermOrdersFromLastBlock,
+		metrics.Count,
 	)
 
 	// 4. Place all conditional orders triggered in EndBlocker of last block on the memclob.
@@ -179,20 +210,6 @@ func PrepareCheckState(
 	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
 		panic(err)
 	}
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		float32(len(subaccountIds)),
-		metrics.Liquidations,
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
-	)
-
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
-		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
-		metrics.InsuranceFundBalance,
-	)
 
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)

@@ -44,8 +44,7 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock    uint32
-		MaxDeleveragingAttemptsPerBlock uint32
+		Flags flags.ClobFlags
 
 		mevTelemetryConfig MevTelemetryConfig
 
@@ -88,7 +87,7 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
-		authorities:                  lib.SliceToSet(authorities),
+		authorities:                  lib.UniqueSliceToSet(authorities),
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
 		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
@@ -108,10 +107,9 @@ func NewKeeper(
 			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		MaxLiquidationOrdersPerBlock:    clobFlags.MaxLiquidationOrdersPerBlock,
-		MaxDeleveragingAttemptsPerBlock: clobFlags.MaxDeleveragingAttemptsPerBlock,
-		placeOrderRateLimiter:           placeOrderRateLimiter,
-		cancelOrderRateLimiter:          cancelOrderRateLimiter,
+		Flags:                  clobFlags,
+		placeOrderRateLimiter:  placeOrderRateLimiter,
+		cancelOrderRateLimiter: cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.

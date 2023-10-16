@@ -9,12 +9,6 @@ export interface DowntimeParams {
    * shortest to longest and must all be positive.
    */
   durations: Duration[];
-  /**
-   * Grace-period duration when validating `MsgIsDelayedBlock` messages. Must be
-   * positive.
-   */
-
-  clockDriftGracePeriodDuration?: Duration;
 }
 /** DowntimeParams defines the parameters for downtime. */
 
@@ -24,18 +18,11 @@ export interface DowntimeParamsSDKType {
    * shortest to longest and must all be positive.
    */
   durations: DurationSDKType[];
-  /**
-   * Grace-period duration when validating `MsgIsDelayedBlock` messages. Must be
-   * positive.
-   */
-
-  clock_drift_grace_period_duration?: DurationSDKType;
 }
 
 function createBaseDowntimeParams(): DowntimeParams {
   return {
-    durations: [],
-    clockDriftGracePeriodDuration: undefined
+    durations: []
   };
 }
 
@@ -43,10 +30,6 @@ export const DowntimeParams = {
   encode(message: DowntimeParams, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     for (const v of message.durations) {
       Duration.encode(v!, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.clockDriftGracePeriodDuration !== undefined) {
-      Duration.encode(message.clockDriftGracePeriodDuration, writer.uint32(18).fork()).ldelim();
     }
 
     return writer;
@@ -65,10 +48,6 @@ export const DowntimeParams = {
           message.durations.push(Duration.decode(reader, reader.uint32()));
           break;
 
-        case 2:
-          message.clockDriftGracePeriodDuration = Duration.decode(reader, reader.uint32());
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -81,7 +60,6 @@ export const DowntimeParams = {
   fromPartial(object: DeepPartial<DowntimeParams>): DowntimeParams {
     const message = createBaseDowntimeParams();
     message.durations = object.durations?.map(e => Duration.fromPartial(e)) || [];
-    message.clockDriftGracePeriodDuration = object.clockDriftGracePeriodDuration !== undefined && object.clockDriftGracePeriodDuration !== null ? Duration.fromPartial(object.clockDriftGracePeriodDuration) : undefined;
     return message;
   }
 

@@ -32,14 +32,15 @@ func GetSortedKeys[R interface {
 	return keys
 }
 
-// SliceToSet converts a slice to a set. Function will panic if there are duplicate values.
-func SliceToSet[K comparable](values []K) map[K]struct{} {
+// UniqueSliceToSet converts a slice of unique values to a set.
+// The function will panic if there are duplicate values.
+func UniqueSliceToSet[K comparable](values []K) map[K]struct{} {
 	set := make(map[K]struct{}, len(values))
 	for _, sliceVal := range values {
 		if _, exists := set[sliceVal]; exists {
 			panic(
 				fmt.Sprintf(
-					"SliceToSet: duplicate value: %+v",
+					"UniqueSliceToSet: duplicate value: %+v",
 					sliceVal,
 				),
 			)

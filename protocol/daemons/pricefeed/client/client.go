@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"sync"
 	"time"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -273,6 +274,12 @@ func StartNewClient(
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
 ) (client *Client) {
+	// Log the daemon flags.
+	logger.Info(
+		"Starting pricefeed daemon with flags",
+		"PriceFlags", daemonFlags.Price,
+	)
+
 	client = newClient()
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {

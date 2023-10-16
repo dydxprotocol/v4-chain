@@ -5,7 +5,6 @@
 [Describe how this PR was tested (if applicable)]
 
 ### Author/Reviewer Checklist
-- [ ] If this change affects functionality (features, bug fixes, breaking changes, etc.), update `protocol/CHANGELOG.md` and/or `indexer/CHANGELOG.md` appropriately.
 - [ ] If this PR has changes that result in a different app state given the same prior state and transaction list, manually add the `state-breaking` label.
 - [ ] If this PR isn't state-breaking but has changes that modify behavior in `PrepareProposal` or `ProcessProposal`, manually add the label `proposal-breaking`.
 - [ ] If this PR is one of many that implement a specific feature, manually label them all `feature:[feature-name]`.

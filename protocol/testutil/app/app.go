@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -18,20 +19,19 @@ import (
 	"github.com/cometbft/cometbft/mempool"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkproto "github.com/cosmos/gogoproto/proto"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -47,7 +47,6 @@ import (
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -108,7 +107,10 @@ type AdvanceToBlockOptions struct {
 // with the option to override specific flags.
 func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
-	logger := log.TestingLogger()
+	logger, ok := appOptions.Get(testlog.LoggerInstanceForTest).(log.Logger)
+	if !ok {
+		logger, _ = testlog.TestLogger()
+	}
 	db := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
@@ -301,7 +303,7 @@ func (tApp TestAppBuilder) Build() TestApp {
 //
 // Note that TestApp.CheckTx is thread safe. All other methods are not thread safe.
 type TestApp struct {
-	// Should only be used to fetch read only state, all mutations should preferrably happen through Genesis state,
+	// Should only be used to fetch read only state, all mutations should preferably happen through Genesis state,
 	// TestApp.CheckTx, and block proposals.
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.
@@ -577,6 +579,17 @@ func (tApp *TestApp) GetHalted() bool {
 	return tApp.halted
 }
 
+// newTestingLogger returns a logger that will write to stdout if testing is verbose. This method replaces
+// cometbft's log.TestingLogger, which re-uses the same logger for all tests, which can cause race test false positives
+// when accessed by concurrent go routines in the same test.
+func newTestingLogger() log.Logger {
+	if testing.Verbose() {
+		return log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	} else {
+		return log.NewNopLogger()
+	}
+}
+
 // CheckTx adds the transaction to a test specific "mempool" that will be used to deliver the transaction during
 // Prepare/Process proposal. Note that this must be invoked over TestApp.App.CheckTx as the transaction will not
 // be added to the "mempool" causing the transaction to not be supplied during the Prepare/Process proposal phase.
@@ -587,7 +600,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	res := tApp.App.CheckTx(req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
-	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, log.TestingLogger()) {
+	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()
