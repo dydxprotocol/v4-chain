@@ -22,7 +22,7 @@ var (
 	}
 	TestVolatileExchangeDetails = types.ExchangeQueryDetails{
 		Exchange:      exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
-		Url:           "https://www.google.com/",
+		Url:           "http://date.jsontest.com/",
 		PriceFunction: VolatileExchangePriceFunction,
 		IsMultiMarket: false,
 	}
