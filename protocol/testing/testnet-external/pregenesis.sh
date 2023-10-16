@@ -49,7 +49,7 @@ done
 echo "Running with SEED_FAUCET_USDC=$SEED_FAUCET_USDC..."
 
 source "./testing/genesis.sh"
-CHAIN_ID="dydx-testnet-3"
+CHAIN_ID="dydx-testnet-4"
 FAUCET_ACCOUNTS=(
 	"dydx1g2ygh8ufgwwpg5clp2qh3tmcmlewuyt2z6px8k" # main faucet
 	"dydx1fzhzmcvcy7nycvu46j9j4f7f8cnqxn3770q260" # backup #1
@@ -163,10 +163,6 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
-
-	# Consensus params
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '22020096'
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
 }
 
 create_pregenesis_file() {
@@ -174,7 +170,7 @@ create_pregenesis_file() {
 	VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 
 	VALIDATOR_INITIAL_STAKE_BALANCE=100000000000
-	VALIDATOR_INITIAL_SELF_DELEGATION=$((VALIDATOR_INITIAL_STAKE_BALANCE/2))
+	VALIDATOR_INITIAL_SELF_DELEGATION="$TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT"
 
 	# This initializes the $VAL_HOME_DIR folder.
 	$DYDX_BINARY init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
@@ -225,12 +221,12 @@ create_pregenesis_file() {
 		echo "${MNEMONICS[$i]}" | $DYDX_BINARY keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$INDIVIDUAL_VAL_HOME_DIR"
 
 		# Initialize the validator account in `genesis.json` under their individual home directory, which is used to create their gentx.
-		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$INDIVIDUAL_VAL_HOME_DIR"
+		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE}$NATIVE_TOKEN" --home "$INDIVIDUAL_VAL_HOME_DIR"
 
 		# Initialize the validator account in `genesis.json` under the common home directory, which is used as the output geneis file.
-		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${VALIDATOR_INITIAL_STAKE_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
+		$DYDX_BINARY add-genesis-account "${VALIDATOR_ACCOUNTS[$i]}" "${TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE}$NATIVE_TOKEN" --home "$VAL_HOME_DIR"
 
-		$DYDX_BINARY gentx "${MONIKERS[$i]}" "${VALIDATOR_INITIAL_SELF_DELEGATION}$NATIVE_TOKEN" --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR" --ip="${IPS[$i]}"
+		$DYDX_BINARY gentx "${MONIKERS[$i]}" "${TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT}$NATIVE_TOKEN" --moniker="${MONIKERS[$i]}" --keyring-backend=test --chain-id=$CHAIN_ID --home "$INDIVIDUAL_VAL_HOME_DIR" --ip="${IPS[$i]}"
 
 		# Copy the gentx to a shared directory.
 		cp -a "$INDIVIDUAL_VAL_CONFIG_DIR/gentx/." "$TMP_GENTX_DIR"
