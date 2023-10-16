@@ -121,13 +121,6 @@ func PrepareCheckState(
 	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
-	defer telemetry.MeasureSince(
-		time.Now(),
-		types.ModuleName,
-		metrics.ClobPrepareCheckState,
-		metrics.Latency,
-	)
-
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {

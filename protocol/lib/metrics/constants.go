@@ -98,7 +98,6 @@ const (
 	CancelShortTermOrder                         = "cancel_short_term_order"
 	CancelStatefulOrder                          = "cancel_stateful_order"
 	ClobPairId                                   = "clob_pair_id"
-	ClobPrepareCheckState                        = "prepare_check_state"
 	ClobLiquidateSubaccountsAgainstOrderbook     = "liquidate_subaccounts_against_orderbook"
 	LiquidateSubaccounts_GetLiquidations         = "liquidate_subaccounts_against_orderbook_get_liquidations"
 	LiquidateSubaccounts_PlaceLiquidations       = "liquidate_subaccounts_against_orderbook_place_liquidations"
