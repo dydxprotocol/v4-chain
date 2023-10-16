@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -32,6 +33,16 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			msg.Order.GetOrderLabels()...,
 		)
 		if err != nil {
+			if errors.Is(err, types.ErrStatefulOrderCollateralizationCheckFailed) {
+				k.Keeper.Logger(ctx).Info(
+					err.Error(),
+					metrics.BlockHeight, ctx.BlockHeight(),
+					metrics.Handler, "PlaceOrder",
+					metrics.Callback, metrics.DeliverTx,
+					metrics.Msg, msg,
+				)
+				return
+			}
 			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
 		}
 	}()
