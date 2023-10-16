@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -34,6 +35,15 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		)
 		if err != nil {
 			if errors.Is(err, types.ErrStatefulOrderCollateralizationCheckFailed) {
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						types.ModuleName,
+						metrics.PlaceOrder,
+						metrics.CollateralizationCheckFailed,
+					},
+					1,
+					msg.Order.GetOrderLabels(),
+				)
 				k.Keeper.Logger(ctx).Info(
 					err.Error(),
 					metrics.BlockHeight, ctx.BlockHeight(),
