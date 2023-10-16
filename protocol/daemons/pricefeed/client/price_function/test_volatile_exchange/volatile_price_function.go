@@ -50,7 +50,6 @@ func VolatileExchangePriceFunction(
 	tickerToExponent map[string]int32,
 	resolver types.Resolver,
 ) (tickerToPrice map[string]uint64, unavailableTickers map[string]error, err error) {
-	fmt.Println("VOL PRICE FN")
 	// Calculate the phase, how far in the period we are.
 	// The phase is a value that goes from 0 to 1 over the timespan of (1 day / frequency).
 	phase := math.Mod(
