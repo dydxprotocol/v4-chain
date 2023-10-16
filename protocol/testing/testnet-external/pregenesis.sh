@@ -169,9 +169,6 @@ create_pregenesis_file() {
 	VAL_HOME_DIR="$TMP_CHAIN_DIR/.dydxprotocol"
 	VAL_CONFIG_DIR="$VAL_HOME_DIR/config"
 
-	VALIDATOR_INITIAL_STAKE_BALANCE=100000000000
-	VALIDATOR_INITIAL_SELF_DELEGATION="$TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT"
-
 	# This initializes the $VAL_HOME_DIR folder.
 	$DYDX_BINARY init "test-moniker" -o --chain-id=$CHAIN_ID --home "$VAL_HOME_DIR"
 
