@@ -338,11 +338,20 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		},
 	)
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO := *clobtypes.NewMsgPlaceOrder(
-		MustScaleOrder(
-			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
-			testapp.DefaultGenesis(),
-		),
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000,
+			Subticks:     499_990_000,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_POST_ONLY,
+		},
 	)
 
 	// CheckTx Txs needed for indexer expectation assertions
@@ -382,15 +391,15 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		},
 		&PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20,
 	)
-	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO := testapp.MustMakeCheckTx(
+	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO := testapp.MustMakeCheckTx(
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
 			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO,
 			),
 		},
-		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO,
 	)
 
 	type ordersAndExpectations struct {
@@ -418,6 +427,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: true,
 			expectedOrderFillAmount:    0,
+			expectedSubaccounts:        []satypes.Subaccount{aliceSubaccount},
 
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
@@ -478,7 +488,58 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: false,
 			expectedOrderFillAmount:    0, // order is fully-filled and removed from state
-
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Sub(
+									aliceSubaccount.GetUsdcPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+25_000_000, // taker fee of .5%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled: true,
+				},
+				{
+					Id: &constants.Bob_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(-int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Add(
+									bobSubaccount.GetUsdcPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+5_500_000, // maker rebate of .110%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled: true,
+				},
+			},
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
 					blockHeight: 2,
@@ -666,21 +727,40 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			},
 		},
 		"Test post-only order placed on the book": {
-			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order,
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order,
 			orderShouldRestOnOrderbook: true,
 			expectedOrderFillAmount:    0,
+			expectedSubaccounts:        []satypes.Subaccount{aliceSubaccount, bobSubaccount},
 
 			ordersAndExpectationsPerBlock: []ordersAndExpectations{
 				{
 					blockHeight: 2,
 					orderMsgs: []clobtypes.MsgPlaceOrder{
-						LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO,
+						PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20,
+						LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO,
+					},
+					expectedOffchainMessagesCheckTx: []msgsender.Message{
+						off_chain_updates.MustCreateOrderPlaceMessage(
+							nil,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+						).AddHeader(msgsender.MessageHeader{
+							Key:   msgsender.TransactionHashHeaderKey,
+							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
+						}),
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							nil,
+							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							0,
+						).AddHeader(msgsender.MessageHeader{
+							Key:   msgsender.TransactionHashHeaderKey,
+							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
+						}),
 					},
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// post-only shouldn't match and will have 0 fill size in update message
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							nil,
-							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order.OrderId,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order.OrderId,
 							0,
 						),
 					},
@@ -696,14 +776,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									Version:             indexerevents.StatefulOrderEventVersion,
 									DataBytes: indexer_manager.GetBytes(
 										indexerevents.NewLongTermOrderPlacementEvent(
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Order,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order,
 										),
 									),
 								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(
-									CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO.Tx,
+									CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Tx,
 								)),
 							},
 						},
@@ -745,6 +825,34 @@ func TestPlaceLongTermOrder(t *testing.T) {
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000+ // taker fee of .5%
 											50_000_000_000-5_500_000, // maker rebate of .110%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled: true,
+				},
+				{
+					Id: &constants.Bob_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(-int64(
+								PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums() +
+									PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetQuantums(),
+							)),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Add(
+									bobSubaccount.GetUsdcPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+5_500_000+ // maker rebate of .110% from first order
+											50_000_000_000-25_000_000, // taker fee of .5% from second order
 									),
 								),
 							),
