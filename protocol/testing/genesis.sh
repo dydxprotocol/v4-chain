@@ -21,16 +21,22 @@ REWARD_TOKEN="adv4tnt"
 NATIVE_TOKEN="adv4tnt" # public testnet token
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE=100000000000000000
 DEFAULT_SUBACCOUNT_QUOTE_BALANCE_FAUCET=900000000000000000
+NATIVE_TOKEN_WHOLE_COIN="dv4tnt"
+COIN_NAME="dYdX V4 Testnet Token"
 # Each testnet validator has 1 million whole coins of native token.
-TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24
+TESTNET_VALIDATOR_NATIVE_TOKEN_BALANCE=1000000$EIGHTEEN_ZEROS # 1e24 or 1 million native tokens.
 # Each testnet validator self-delegates 500k whole coins of native token.
-TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000$EIGHTEEN_ZEROS # 5e23
+TESTNET_VALIDATOR_SELF_DELEGATE_AMOUNT=500000$EIGHTEEN_ZEROS # 5e23 or 500k native tokens.
+FAUCET_NATIVE_TOKEN_BALANCE=50000000$EIGHTEEN_ZEROS # 5e25 or 50 million native tokens. 
 ETH_CHAIN_ID=11155111 # sepolia
 # https://sepolia.etherscan.io/address/0xf75012c350e4ad55be2048bd67ce6e03b20de82d
 ETH_BRIDGE_ADDRESS="0xf75012c350e4ad55be2048bd67ce6e03b20de82d"
 TOTAL_NATIVE_TOKEN_SUPPLY=1000000000$EIGHTEEN_ZEROS # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=5
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=4322136
+
+# Use a fix genesis time from the past.
+GENESIS_TIME="2023-01-01T00:00:00Z"
 
 function edit_genesis() {
 	GENESIS=$1/genesis.json
@@ -60,6 +66,9 @@ function edit_genesis() {
 		# Default to initialie clob pairs as active.
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
+
+	# Genesis time
+	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
@@ -1017,6 +1026,9 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${bridge_module_account_balance}"
+
+	# Set denom metadata
+	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"
 
 	# Use ATOM-USD as test oracle price of the reward token.
 	dasel put -t int -f "$GENESIS" '.app_state.rewards.params.market_id' -v '11'
