@@ -58,6 +58,10 @@ func (k msgServer) CancelOrder(
 					)
 					k.Keeper.Logger(ctx).Info(
 						err.Error(),
+						metrics.BlockHeight, ctx.BlockHeight(),
+						metrics.Handler, "CancelOrder",
+						metrics.Callback, metrics.DeliverTx,
+						metrics.Msg, msg,
 					)
 					return
 				}
