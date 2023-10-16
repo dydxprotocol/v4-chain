@@ -346,8 +346,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
    * 1. Stateful Orders - All cancelations are on-chain events, so the order can be `OPEN` or
    *    `BEST_EFFORT_CANCELED` if the order is in the CanceledOrdersCache.
    * 2. Short-term FOK - FOK orders can never be `OPEN`, since they don't rest on the orderbook, so
-    *    totalFilled cannot be < size. By the end of the block, the order will be filled, so we mark
-    *    it as `FILLED`.
+   *    totalFilled cannot be < size.
    * 3. Short-term IOC - Protocol guarantees that an IOC order will only ever be filled in a single
    *    block, so status should be `CANCELED`.
    * 4. Short-term Limit & Post-only - If the order is in the CanceledOrdersCache, then it should be
@@ -370,7 +369,14 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
       }
       return OrderStatus.OPEN;
     } else if (timeInForce === TimeInForce.FOK) { // 2. Short-term FOK
-      return OrderStatus.FILLED;
+      logger.error({
+        at: 'orderFillHandler#getOrderStatus',
+        message: 'FOK orders should never be partially filled',
+        blockHeight: this.block.height,
+        transactionIndex: this.indexerTendermintEvent.transactionIndex,
+        eventIndex: this.indexerTendermintEvent.eventIndex,
+      });
+      return OrderStatus.CANCELED;
     } else if (timeInForce === TimeInForce.IOC) { // 3. Short-term IOC
       return OrderStatus.CANCELED;
     } else if (isCanceled) { // 4. Short-term Limit & Post-only
