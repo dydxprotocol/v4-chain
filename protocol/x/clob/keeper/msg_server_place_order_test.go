@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -88,7 +89,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 
 			mockLogger := &mocks.Logger{}
 			mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
-			if tc.ExpectedError == types.ErrStatefulOrderCollateralizationCheckFailed {
+			if errors.Is(tc.ExpectedError, types.ErrStatefulOrderCollateralizationCheckFailed) {
 				mockLogger.On("Info",
 					errorsmod.Wrapf(
 						types.ErrStatefulOrderCollateralizationCheckFailed,
