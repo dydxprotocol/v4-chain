@@ -54,10 +54,17 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, exists := subaccount.GetPerpetualPositionForId(perpetualId)
 	if !exists {
-		return nil, types.ErrNoOpenPositionForPerpetual
+		// Early return to skip deleveraging if the subaccount does not have an open position for the perpetual.
+		// This could happen if the subaccount's position was closed by other liquidation matches.
+		k.Logger(ctx).Debug(
+			"Subaccount does not have an open position for the perpetual that is being deleveraged",
+			"subaccount", subaccount,
+			"perpetualId", perpetualId,
+		)
+		return new(big.Int), nil
 	}
-	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
 
+	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
 	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 
 	labels := []gometrics.Label{
