@@ -1,6 +1,5 @@
 import { IncomingMessage as IncomingMessageHttp } from 'http';
 
-import { CandleResolution } from '@dydxprotocol-indexer/postgres';
 import express from 'express';
 import WebSocket from 'ws';
 
@@ -122,48 +121,13 @@ export interface Connection {
   disconnect?: NodeJS.Timeout;
 }
 
-export interface MessageToForwardBase {
+export interface MessageToForward {
   channel: Channel;
   id: string;
   // eslint-disable-next-line  @typescript-eslint/no-explicit-any
   contents: any;
   version: string;
 }
-
-export type OrderbooksChannelMessageToForward = MessageToForwardBase & {
-  channel: Channel.V4_ORDERBOOK;
-  clobPairId: string;
-};
-
-export type SubaccountsChannelMessageToForward = MessageToForwardBase & {
-  channel: Channel.V4_ACCOUNTS;
-  blockHeight: string;
-  transactionIndex: number;
-  eventIndex: number;
-  subaccountId?: string;
-};
-
-export type TradesChannelMessageToForward = MessageToForwardBase & {
-  channel: Channel.V4_TRADES;
-  blockHeight: string;
-  clobPairId: string;
-};
-
-export type MarketsChannelMessageToForward = MessageToForwardBase & {
-  channel: Channel.V4_MARKETS;
-};
-
-export type CandlesChannelMessageToForward = MessageToForwardBase & {
-  channel: Channel.V4_CANDLES;
-  clobPairId: string;
-  resolution: CandleResolution;
-};
-
-export type MessageToForward = OrderbooksChannelMessageToForward
-| SubaccountsChannelMessageToForward
-| TradesChannelMessageToForward
-| MarketsChannelMessageToForward
-| CandlesChannelMessageToForward;
 
 export interface ResponseWithBody extends express.Response {
   body: unknown

@@ -1,12 +1,8 @@
 import { getChannel, getMessageToForward } from '../../src/helpers/from-kafka-helpers';
 import { InvalidForwardMessageError, InvalidTopicError } from '../../src/lib/errors';
 import {
-  CandlesChannelMessageToForward,
   Channel,
   MessageToForward,
-  OrderbooksChannelMessageToForward,
-  SubaccountsChannelMessageToForward,
-  TradesChannelMessageToForward,
   WebsocketTopics,
 } from '../../src/types';
 import {
@@ -26,7 +22,7 @@ import {
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from './kafka';
 import {
-  CandleMessage, CandleMessage_Resolution,
+  CandleMessage,
   MarketMessage,
   OrderbookMessage,
   SubaccountMessage,
@@ -37,7 +33,6 @@ import {
   dbHelpers,
   testMocks,
   perpetualMarketRefresher,
-  PROTO_TO_CANDLE_RESOLUTION,
   CandleResolution,
 } from '@dydxprotocol-indexer/postgres';
 
@@ -74,37 +69,28 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish())),
       );
-      const messageToForward: SubaccountsChannelMessageToForward = getMessageToForward(
+      const messageToForward: MessageToForward = getMessageToForward(
         Channel.V4_ACCOUNTS,
         message,
-      ) as SubaccountsChannelMessageToForward;
+      );
 
       expect(messageToForward.channel).toEqual(Channel.V4_ACCOUNTS);
       expect(messageToForward.id).toEqual(`${defaultOwner}/${defaultAccNumber}`);
       expect(messageToForward.contents).toEqual(defaultContents);
-      expect(messageToForward.blockHeight).toEqual(subaccountMessage.blockHeight);
-      expect(messageToForward.transactionIndex).toEqual(subaccountMessage.transactionIndex);
-      expect(messageToForward.eventIndex).toEqual(subaccountMessage.eventIndex);
     });
 
     it('gets correct MessageToForward for candles message', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(CandleMessage.encode(candlesMessage).finish())),
       );
-      const messageToForward: CandlesChannelMessageToForward = getMessageToForward(
+      const messageToForward: MessageToForward = getMessageToForward(
         Channel.V4_CANDLES,
         message,
-      ) as CandlesChannelMessageToForward;
+      );
 
       expect(messageToForward.channel).toEqual(Channel.V4_CANDLES);
       expect(messageToForward.id).toEqual(`${btcTicker}/${CandleResolution.ONE_MINUTE}`);
       expect(messageToForward.contents).toEqual(defaultContents);
-      expect(messageToForward.clobPairId).toEqual(candlesMessage.clobPairId);
-      if (candlesMessage.resolution !== CandleMessage_Resolution.UNRECOGNIZED) {
-        expect(messageToForward.resolution).toEqual(
-          PROTO_TO_CANDLE_RESOLUTION[candlesMessage.resolution],
-        );
-      }
     });
 
     it('gets correct MessageToForward for market message', () => {
@@ -122,30 +108,28 @@ describe('from-kafka-helpers', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(OrderbookMessage.encode(orderbookMessage).finish())),
       );
-      const messageToForward: OrderbooksChannelMessageToForward = getMessageToForward(
+      const messageToForward: MessageToForward = getMessageToForward(
         Channel.V4_ORDERBOOK,
         message,
-      ) as OrderbooksChannelMessageToForward;
+      );
 
       expect(messageToForward.channel).toEqual(Channel.V4_ORDERBOOK);
       expect(messageToForward.id).toEqual(btcTicker);
       expect(messageToForward.contents).toEqual(defaultContents);
-      expect(messageToForward.clobPairId).toEqual(orderbookMessage.clobPairId);
     });
 
     it('gets correct MessageToForward for trade message', () => {
       const message: KafkaMessage = createKafkaMessage(
         Buffer.from(Uint8Array.from(TradeMessage.encode(tradesMessage).finish())),
       );
-      const messageToForward: TradesChannelMessageToForward = getMessageToForward(
+      const messageToForward: MessageToForward = getMessageToForward(
         Channel.V4_TRADES,
         message,
-      ) as TradesChannelMessageToForward;
+      );
 
       expect(messageToForward.channel).toEqual(Channel.V4_TRADES);
       expect(messageToForward.id).toEqual(btcTicker);
       expect(messageToForward.contents).toEqual(defaultContents);
-      expect(messageToForward.blockHeight).toEqual(tradesMessage.blockHeight);
     });
 
     it('throws InvalidForwardMessageError for empty message', () => {
