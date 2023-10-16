@@ -60,9 +60,7 @@ TMP_CHAIN_DIR="/tmp/chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/exchange_config"
 AWS_REGION="us-east-2"
 
-# initialize faucet address with 1e27 native tokens.
-FAUCET_STAKE_BALANCE=1000000000000000000000000000
-# initialize faucet with 1e13 micro USDC (10 million USDC).
+# initialize faucet with 1e13 micro USDC (10 million USDC). Only used when `SEED_FAUCET_USDC` is true.
 FAUCET_USDC_BALANCE=10000000000000
 
 # Define monikers for each validator. These are made up strings and can be anything.
@@ -184,7 +182,7 @@ create_pregenesis_file() {
 	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" ""
 	overwrite_genesis_public_testnet
 
-	FAUCET_BALANCE="${FAUCET_STAKE_BALANCE}$NATIVE_TOKEN"
+	FAUCET_BALANCE="${FAUCET_NATIVE_TOKEN_BALANCE}$NATIVE_TOKEN"
 	# If SEED_FAUCET_USDC is true, faucet is initalized with USDC balance in addition to native token balance.
 	if [ "$SEED_FAUCET_USDC" = true ]; then
 		FAUCET_BALANCE="${FAUCET_BALANCE},${FAUCET_USDC_BALANCE}$USDC_DENOM"
