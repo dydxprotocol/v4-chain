@@ -33,6 +33,9 @@ TOTAL_NATIVE_TOKEN_SUPPLY=1000000000$EIGHTEEN_ZEROS # 1e27
 BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=5
 BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=4322136
 
+# Use a fix genesis time from the past.
+GENESIS_TIME="2023-01-01T00:00:00Z"
+
 function edit_genesis() {
 	GENESIS=$1/genesis.json
 
@@ -61,6 +64,9 @@ function edit_genesis() {
 		# Default to initialie clob pairs as active.
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
+
+	# Genesis time
+	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 
 	# Consensus params
 	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '4194304'
