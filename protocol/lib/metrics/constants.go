@@ -103,6 +103,7 @@ const (
 	LiquidateSubaccounts_PlaceLiquidations       = "liquidate_subaccounts_against_orderbook_place_liquidations"
 	LiquidateSubaccounts_Deleverage              = "liquidate_subaccounts_against_orderbook_deleverage"
 	CollateralizationCheck                       = "place_order_collateralization_check"
+	CollateralizationCheckFailed                 = "collateralization_check_failed"
 	CollateralizationCheckSubaccounts            = "collateralization_check_subaccounts"
 	Conditional                                  = "conditional"
 	ConditionalOrderTriggered                    = "conditional_order_triggered"
