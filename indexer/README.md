@@ -167,7 +167,7 @@ git rev-parse --short=7 HEAD
 
 
 ### Replicating a production environment with the load-tester
-To test the Indexer APIs/websockets, orders need to placed and matched on the V4 application that the
+To test the Indexer APIs/websockets, orders need to be placed and matched on the V4 application that the
 Indexer is connected to. 
 To do this locally, run a local instance of the 
 [load-tester](https://github.com/dydxprotocol/load-tester) against the local V4 node the Indexer
@@ -203,7 +203,7 @@ curl http://localhost:3002/v4/trades/perpetualMarket/BTC-USD
 ```
 
 ## Subscribing to websocket messages from Indexer
-`socks` will accepting websocket connections from `http://localhost:3003`.
+`socks` will accept websocket connections from `http://localhost:3003`.
 
 To connect to the dev/staging endpoints, use the following commands:
 ```
