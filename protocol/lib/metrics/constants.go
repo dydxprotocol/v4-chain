@@ -153,6 +153,7 @@ const (
 	ProcessOperations                            = "process_operations"
 	ProposedOperations                           = "proposed_operations"
 	Proposer                                     = "proposer"
+	ProposerConsAddress                          = "proposer_cons_addr"
 	QuoteQuantums                                = "quote_quantums"
 	RateLimit                                    = "rate_limit"
 	ReduceOnly                                   = "reduce_only"

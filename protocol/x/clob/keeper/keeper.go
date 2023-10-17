@@ -7,6 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -129,7 +130,12 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, "x/clob")
+	return ctx.Logger().With(
+		sdklog.ModuleKey, "x/clob",
+		metrics.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		metrics.CheckTx, ctx.IsCheckTx(),
+		metrics.ReCheckTx, ctx.IsReCheckTx(),
+	)
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
