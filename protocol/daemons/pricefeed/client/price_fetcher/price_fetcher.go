@@ -28,11 +28,11 @@ type PriceFetcherSubtaskResponse struct {
 // PriceFetcher fetches prices from an exchange by making a query based on the
 // `exchangeConfig` specifications and then encodes the price or any associated error.
 type PriceFetcher struct {
-	exchangeStartupConfig types.ExchangeStartupConfig
-	exchangeDetails       types.ExchangeQueryDetails
-	queryHandler          handler.ExchangeQueryHandler
-	logger                log.Logger
-	bCh                   chan<- *PriceFetcherSubtaskResponse
+	exchangeQueryConfig types.ExchangeQueryConfig
+	exchangeDetails     types.ExchangeQueryDetails
+	queryHandler        handler.ExchangeQueryHandler
+	logger              log.Logger
+	bCh                 chan<- *PriceFetcherSubtaskResponse
 
 	// mutableState contains all mutable state on the price fetcher is consolidated into a single object with access
 	// and update protected by a mutex.
@@ -43,7 +43,7 @@ type PriceFetcher struct {
 // queries to an exchange and encodes the responses or related errors into the shared buffered
 // channel `bCh`.
 func NewPriceFetcher(
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	mutableExchangeConfig *types.MutableExchangeMarketConfig,
 	mutableMarketConfigs []*types.MutableMarketConfig,
@@ -59,16 +59,16 @@ func NewPriceFetcher(
 		constants.SubmoduleLogKey,
 		constants.PriceFetcherSubmoduleName,
 		constants.ExchangeIdLogKey,
-		exchangeStartupConfig.ExchangeId,
+		exchangeQueryConfig.ExchangeId,
 	)
 
 	pf := &PriceFetcher{
-		exchangeStartupConfig: exchangeStartupConfig,
-		exchangeDetails:       exchangeDetails,
-		queryHandler:          queryHandler,
-		logger:                pfLogger,
-		bCh:                   bCh,
-		mutableState:          &mutableState{},
+		exchangeQueryConfig: exchangeQueryConfig,
+		exchangeDetails:     exchangeDetails,
+		queryHandler:        queryHandler,
+		logger:              pfLogger,
+		bCh:                 bCh,
+		mutableState:        &mutableState{},
 	}
 
 	// This will instantiate the price fetcher's mutable state.
@@ -83,7 +83,7 @@ func NewPriceFetcher(
 // GetExchangeId returns the exchange id for the exchange queried by the price fetcher.
 // This method is added to support the MutableExchangeConfigUpdater interface.
 func (p *PriceFetcher) GetExchangeId() types.ExchangeId {
-	return p.exchangeStartupConfig.ExchangeId
+	return p.exchangeQueryConfig.ExchangeId
 }
 
 // UpdateMutableExchangeConfig updates the price fetcher with the most current copy of the exchange config, as
@@ -94,7 +94,7 @@ func (p *PriceFetcher) UpdateMutableExchangeConfig(
 	newMarketConfigs []*types.MutableMarketConfig,
 ) error {
 	// 1. Validate new config.
-	if newConfig.Id != p.exchangeStartupConfig.ExchangeId {
+	if newConfig.Id != p.exchangeQueryConfig.ExchangeId {
 		return fmt.Errorf("PriceFetcher.UpdateMutableExchangeConfig: exchange id mismatch")
 	}
 
@@ -147,7 +147,7 @@ func (p *PriceFetcher) getNumQueriesPerTaskLoop() int {
 		return 1
 	}
 	return lib.Min(
-		int(p.exchangeStartupConfig.MaxQueries),
+		int(p.exchangeQueryConfig.MaxQueries),
 		len(p.mutableState.GetMarketIds()),
 	)
 }
@@ -195,7 +195,7 @@ func (pf *PriceFetcher) runSubTask(
 	marketIds []types.MarketId,
 	taskLoopDefinition *taskLoopDefinition,
 ) {
-	exchangeId := pf.exchangeStartupConfig.ExchangeId
+	exchangeId := pf.exchangeQueryConfig.ExchangeId
 
 	// Measure total latency for subtask to run for one API call and creating a context with timeout.
 	defer metrics.ModuleMeasureSinceWithLabels(
@@ -211,7 +211,7 @@ func (pf *PriceFetcher) runSubTask(
 
 	ctxWithTimeout, cancelFunc := context.WithTimeout(
 		context.Background(),
-		time.Duration(pf.exchangeStartupConfig.TimeoutMs)*time.Millisecond,
+		time.Duration(pf.exchangeQueryConfig.TimeoutMs)*time.Millisecond,
 	)
 
 	defer cancelFunc()

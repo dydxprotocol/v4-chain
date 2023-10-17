@@ -9,18 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestStaticExchangeStartupConfigCache(t *testing.T) {
+func TestStaticExchangeQueryConfigCache(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
 		exchangeId types.ExchangeId
 
 		// expectations
-		expectedValue *types.ExchangeStartupConfig
+		expectedValue *types.ExchangeQueryConfig
 		expectedFound bool
 	}{
 		"Get BINANCE exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_BINANCE,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE,
 				IntervalMs: 2_500,
 				TimeoutMs:  3_000,
@@ -30,7 +30,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get BINANCEUS exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BINANCE_US,
 				IntervalMs: 2_500,
 				TimeoutMs:  3_000,
@@ -40,7 +40,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get BITFINEX exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_BITFINEX,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BITFINEX,
 				IntervalMs: 2_500,
 				TimeoutMs:  3_000,
@@ -50,7 +50,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Kraken exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_KRAKEN,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_KRAKEN,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -60,7 +60,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get GATE exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_GATE,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_GATE,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -70,7 +70,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Bitstamp exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_BITSTAMP,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BITSTAMP,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -80,7 +80,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Bybit exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_BYBIT,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_BYBIT,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -90,7 +90,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get CryptoCom exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_CRYPTO_COM,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_CRYPTO_COM,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -100,7 +100,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Huobi exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_HUOBI,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_HUOBI,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -110,7 +110,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Kucoin exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_KUCOIN,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_KUCOIN,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -120,7 +120,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Okx exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_OKX,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_OKX,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -130,7 +130,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get Mexc exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_MEXC,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_MEXC,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -140,7 +140,7 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 		},
 		"Get CoinbasePro exchangeDetails": {
 			exchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
-			expectedValue: &types.ExchangeStartupConfig{
+			expectedValue: &types.ExchangeQueryConfig{
 				ExchangeId: exchange_common.EXCHANGE_ID_COINBASE_PRO,
 				IntervalMs: 2_000,
 				TimeoutMs:  3_000,
@@ -156,13 +156,13 @@ func TestStaticExchangeStartupConfigCache(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			value, ok := constants.StaticExchangeStartupConfig[tc.exchangeId]
+			value, ok := constants.StaticExchangeQueryConfig[tc.exchangeId]
 			require.Equal(t, tc.expectedValue, value)
 			require.Equal(t, ok, tc.expectedFound)
 		})
 	}
 }
 
-func TestStaticExchangeStartupConfigCacheLength(t *testing.T) {
-	require.Len(t, constants.StaticExchangeStartupConfig, 14)
+func TestStaticExchangeQueryConfigCacheLength(t *testing.T) {
+	require.Len(t, constants.StaticExchangeQueryConfig, 14)
 }

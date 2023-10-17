@@ -11,7 +11,7 @@ import (
 
 func TestGetNextNMarkets(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		types.ExchangeQueryDetails{},
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -41,7 +41,7 @@ func TestGetNextNMarkets(t *testing.T) {
 
 func TestGetMarketIds(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		types.ExchangeQueryDetails{},
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -57,7 +57,7 @@ func TestGetMarketIds(t *testing.T) {
 
 func TestGetMarketExponents(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		types.ExchangeQueryDetails{},
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -76,7 +76,7 @@ func TestGetMarketExponents(t *testing.T) {
 
 func TestGetMutableExchangeConfig(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		types.ExchangeQueryDetails{},
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -96,7 +96,7 @@ func TestGetMutableExchangeConfig(t *testing.T) {
 // set from mutable state and that it uses copies of all identical data structures.
 func TestGetTaskLoopDefinition(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		types.ExchangeQueryDetails{},
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
