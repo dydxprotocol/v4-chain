@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -67,7 +68,7 @@ func TestCreateClobPair(t *testing.T) {
 				).Return()
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -93,7 +94,7 @@ func TestCreateClobPair(t *testing.T) {
 				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -120,7 +121,7 @@ func TestCreateClobPair(t *testing.T) {
 				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  *clobtest.GenerateClobPair(clobtest.WithId(3), clobtest.WithPerpetualId(1)),
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -130,7 +131,7 @@ func TestCreateClobPair(t *testing.T) {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: nil,

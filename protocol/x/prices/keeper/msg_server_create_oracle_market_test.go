@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,7 +29,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Succeeds: create new oracle market (id = 1)": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params:    testMarket1.Param,
 			},
 			expectedMarkets: []pricestypes.MarketParamPrice{testMarket1},
@@ -36,7 +37,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Failure: empty pair": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithPair(""),
 					pricestest.WithExponent(-8), // for both Param and Price
@@ -48,7 +49,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Failure: typo in exchange config json": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithPair("BTC-USD"),
 					pricestest.WithExponent(-8), // for both Param and Price
@@ -68,7 +69,7 @@ func TestCreateOracleMarket(t *testing.T) {
 				)
 			},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(1), // same id as testMarket1
 				).Param,

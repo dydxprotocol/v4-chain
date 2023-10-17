@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +44,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",
@@ -66,7 +67,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "PIKACHU-XXX",
@@ -89,7 +90,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id + 1,
 					Ticker:            "DUMMY-USD",
@@ -113,7 +114,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",
@@ -137,7 +138,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",

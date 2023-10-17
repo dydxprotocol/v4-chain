@@ -1,12 +1,12 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -35,7 +35,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 		perptest.WithMarketId(testId),
 	)
 	msgUpdateClobPairToActive := &clobtypes.MsgUpdateClobPair{
-		Authority: authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		Authority: lib.GovModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
 			clobtest.WithId(testId),
 			clobtest.WithPerpetualId(testId),
@@ -43,7 +43,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 		),
 	}
 	msgUpdateClobPairToActive_WrongClobPairId := &clobtypes.MsgUpdateClobPair{
-		Authority: authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+		Authority: delaymsgtypes.ModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
 			clobtest.WithId(9999), // non existing clob pair
 			clobtest.WithPerpetualId(testId),
@@ -51,7 +51,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 		),
 	}
 	msgUpdateClobPairToActive_WrongAuthority := &clobtypes.MsgUpdateClobPair{
-		Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Authority: lib.GovModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
 			clobtest.WithId(testId),
 			clobtest.WithPerpetualId(testId),
@@ -69,19 +69,19 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Success with 4 standard messages": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 10,
 				},
@@ -92,19 +92,19 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Success with 4 standard messages, delay blocks = 1": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 1,
 				},
@@ -115,19 +115,19 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Success with 4 standard messages, delay blocks = 0": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 0,
 				},
@@ -138,19 +138,19 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Success with 4 standard messages, delayed `UpdateClobPair` msg failure": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive_WrongClobPairId),
 					DelayBlocks: 10,
 				},
@@ -162,20 +162,20 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Fail: proposal execution fails due to incorrectly ordered messages": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				// Create clob pair before creating perpetual, which will fail.
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 10,
 				},
@@ -186,25 +186,25 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Fail: proposal execution fails due to existing objects": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params: pricestest.GenerateMarketParamPrice(
 						pricestest.WithId(5), // already exists
 					).Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params: perptest.GeneratePerpetual(
 						perptest.WithId(5), // already exists
 					).Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair: *clobtest.GenerateClobPair(
 						clobtest.WithId(5), // already exists
 					),
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 10,
 				},
@@ -219,15 +219,15 @@ func TestAddNewMarketProposal(t *testing.T) {
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive),
 					DelayBlocks: 10,
 				},
@@ -239,19 +239,19 @@ func TestAddNewMarketProposal(t *testing.T) {
 		"Fail: proposal execution fails - invalid signer on `MsgDelayMessage`": {
 			proposedMsgs: []sdk.Msg{
 				&pricestypes.MsgCreateOracleMarket{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testMarketParam.Param,
 				},
 				&perptypes.MsgCreatePerpetual{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					Params:    testPerpetual.Params,
 				},
 				&clobtypes.MsgCreateClobPair{
-					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority: lib.GovModuleAddress.String(),
 					ClobPair:  *testClobPair,
 				},
 				&delaymsgtypes.MsgDelayMessage{
-					Authority:   authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Authority:   lib.GovModuleAddress.String(),
 					Msg:         encoding.EncodeMessageToAny(t, msgUpdateClobPairToActive_WrongAuthority),
 					DelayBlocks: 10,
 				},

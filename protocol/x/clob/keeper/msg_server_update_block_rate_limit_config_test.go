@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"github.com/cometbft/cometbft/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -79,7 +80,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 	require.Equal(t, originalConfig, tApp.App.ClobKeeper.GetBlockRateLimitConfiguration(ctx))
 
 	requestWithAuthority := clobtypes.MsgUpdateBlockRateLimitConfiguration{
-		Authority:            GovAuthority,
+		Authority:            lib.GovModuleAddress.String(),
 		BlockRateLimitConfig: expectedConfig,
 	}
 	_, err = handler(ctx, &requestWithAuthority)

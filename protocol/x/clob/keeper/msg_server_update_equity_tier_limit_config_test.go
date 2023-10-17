@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -85,7 +86,7 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	require.Equal(t, originalConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
 
 	requestWithAuthority := clobtypes.MsgUpdateEquityTierLimitConfiguration{
-		Authority:             GovAuthority,
+		Authority:             lib.GovModuleAddress.String(),
 		EquityTierLimitConfig: expectedConfig,
 	}
 	_, err = handler(ctx, &requestWithAuthority)

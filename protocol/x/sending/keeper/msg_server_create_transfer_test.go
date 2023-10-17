@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -268,7 +269,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgSendFromModuleToAccount{
-				Authority:        constants.GovModuleAccAddressString,
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
@@ -289,7 +290,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 		},
 		"Failure: keeper method returns error": {
 			testMsg: types.MsgSendFromModuleToAccount{
-				Authority:        constants.GovModuleAccAddressString,
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),

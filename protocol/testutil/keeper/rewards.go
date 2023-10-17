@@ -2,6 +2,7 @@ package keeper
 
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"testing"
 
@@ -9,9 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
@@ -101,8 +100,8 @@ func createRewardsKeeper(
 	mockMsgSender.On("Enabled").Return(true)
 
 	authorities := []string{
-		authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		delaymsgtypes.ModuleAddress.String(),
+		lib.GovModuleAddress.String(),
 	}
 	k := rewardskeeper.NewKeeper(
 		cdc,

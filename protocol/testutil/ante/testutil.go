@@ -1,6 +1,7 @@
 package ante
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -71,7 +72,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 		types.ProtoBaseAccount,
 		maccPerms,
 		sdk.Bech32MainPrefix,
-		types.NewModuleAddress("gov").String(),
+		lib.GovModuleAddress.String(),
 	)
 	suite.AccountKeeper.GetModuleAccount(suite.Ctx, types.FeeCollectorName)
 	err := suite.AccountKeeper.SetParams(suite.Ctx, types.DefaultParams())

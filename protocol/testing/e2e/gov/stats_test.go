@@ -1,13 +1,13 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -22,7 +22,7 @@ func TestUpdateParams(t *testing.T) {
 	}{
 		"Success": {
 			msg: &statstypes.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: statstypes.Params{
 					WindowDuration: time.Hour,
 				},

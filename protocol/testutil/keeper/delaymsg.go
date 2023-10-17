@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
@@ -10,9 +11,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bridgekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -56,8 +55,8 @@ func DelayMsgKeepers(
 		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
 
 		authorities = []string{
-			authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			bridgetypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		}
 		delayMsgKeeper, storeKey = createDelayMsgKeeper(
 			stateStore,
@@ -106,8 +105,8 @@ func DelayMsgKeeperWithMockBridgeKeeper(
 		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
 
 		authorities = []string{
-			authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			bridgetypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		}
 		delayMsgKeeper, storeKey = createDelayMsgKeeper(
 			stateStore,

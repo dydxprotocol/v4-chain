@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -41,7 +42,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1},
@@ -58,7 +59,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params:    testPerp2.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1, testPerp2},
@@ -75,7 +76,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1},
@@ -86,7 +87,7 @@ func TestCreatePerpetual(t *testing.T) {
 				keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: nil,

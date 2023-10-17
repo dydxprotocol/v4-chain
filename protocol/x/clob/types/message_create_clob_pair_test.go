@@ -1,18 +1,13 @@
 package types_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
-)
-
-var (
-	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 )
 
 func TestMsgCreateClobPair_GetSigners(t *testing.T) {
@@ -31,7 +26,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Invalid Metadata (SpotClobMetadata)",
 			msg: types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_SpotClobMetadata{},
 					StepBaseQuantums: 1,
@@ -57,7 +52,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Unsupported Status",
 			msg: types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,
@@ -70,7 +65,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "StepBaseQuantums <= 0",
 			msg: types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 0,
@@ -83,7 +78,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "SubticksPerTick <= 0",
 			msg: types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,
@@ -96,7 +91,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Valid ClobPair",
 			msg: types.MsgCreateClobPair{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,

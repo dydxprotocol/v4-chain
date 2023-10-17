@@ -1,21 +1,16 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-)
-
-var (
-	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
 )
 
 func TestUpdateMarketParam(t *testing.T) {
@@ -33,7 +28,7 @@ func TestUpdateMarketParam(t *testing.T) {
 	}{
 		"Succeeds: update all parameters except exponent": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               "PIKACHU-XXX",
@@ -46,7 +41,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Succeeds: update min price change ppm only": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -59,7 +54,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to an empty pair": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               "", // invalid
@@ -73,7 +68,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to 0 min exchanges": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -87,7 +82,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to 0 min price change ppm": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -101,7 +96,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to invalid exchange config json": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -115,7 +110,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update market exponent": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,

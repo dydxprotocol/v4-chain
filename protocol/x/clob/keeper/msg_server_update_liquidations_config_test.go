@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -22,13 +23,13 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 	}{
 		"Succeeds": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority:          GovAuthority,
+				Authority:          lib.GovModuleAddress.String(),
 				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
 			},
 		},
 		"Error: invalid liquidations config": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority: GovAuthority,
+				Authority: lib.GovModuleAddress.String(),
 				LiquidationsConfig: types.LiquidationsConfig{
 					MaxLiquidationFeePpm: 5_000,
 					FillablePriceConfig: types.FillablePriceConfig{
