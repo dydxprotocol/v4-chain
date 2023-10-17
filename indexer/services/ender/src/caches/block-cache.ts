@@ -54,6 +54,12 @@ export async function shouldSkipBlock(
     });
     return true;
   } else if (isNextBlock(blockHeight)) {
+    logger.info({
+      at: 'block-cache#shouldSkipBlock',
+      message: 'Block will be processed',
+      blockHeight,
+      currentBlockHeight,
+    });
     return false;
   } else if (canRefreshCache) {
     const previousBlockHeight: string = getCurrentBlockHeight();
@@ -78,7 +84,7 @@ export async function shouldSkipBlock(
     currentlyProcessingBlockHeight: blockHeight,
     alreadyProcessedBlockHeight: getCurrentBlockHeight(),
   });
-  return false;
+  return true;
 }
 
 function blockAlreadyProcessed(blockHeight: string): boolean {
