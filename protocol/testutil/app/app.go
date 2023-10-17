@@ -393,12 +393,6 @@ func (tApp *TestApp) AdvanceToBlock(
 		return tApp.App.NewContext(true, tApp.header)
 	}
 
-	// First advance to the prior block using the current block time. This ensures that we only update the time on
-	// the requested block.
-	if int64(block)-tApp.header.Height > 1 && options.BlockTime != tApp.header.Time {
-		tApp.AdvanceToBlock(block-1, options)
-	}
-
 	// Ensure that we grab the lock so that we can read and write passingCheckTxs correctly.
 	tApp.passingCheckTxsMtx.Lock()
 	defer tApp.passingCheckTxsMtx.Unlock()
@@ -407,7 +401,10 @@ func (tApp *TestApp) AdvanceToBlock(
 	for tApp.App.LastBlockHeight() < int64(block) {
 		tApp.panicIfChainIsHalted()
 		tApp.header.Height = tApp.App.LastBlockHeight() + 1
-		tApp.header.Time = options.BlockTime
+		// By default, only update block time at the requested block.
+		if tApp.header.Height == int64(block) {
+			tApp.header.Time = options.BlockTime
+		}
 		tApp.header.LastCommitHash = tApp.App.LastCommitID().Hash
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
 
