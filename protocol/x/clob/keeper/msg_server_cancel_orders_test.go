@@ -68,7 +68,8 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	ctx := ks.Ctx.WithBlockHeight(2)
 	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
-	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
+	mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On("Info",
 		errorsmod.Wrapf(
 			types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
@@ -113,7 +114,8 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	ctx := ks.Ctx.WithBlockHeight(2)
 	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
-	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
+	mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On(
 		"Error",
 		types.ErrTimeExceedsGoodTilBlockTime.Error(),
