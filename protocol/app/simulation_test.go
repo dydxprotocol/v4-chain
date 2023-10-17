@@ -90,7 +90,7 @@ func NewSimApp(t testing.TB, appCreator func() *app.App) *SimApp {
 	// TODO(CORE-682): Remove shutdown override hook once Cosmos SDK invokes it as part of simapp.
 	t.Cleanup(func() {
 		if err := simApp.App.Close(); err != nil {
-			panic(err)
+			t.Fatal(err)
 		}
 	})
 	return simApp

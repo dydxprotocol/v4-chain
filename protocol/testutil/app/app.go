@@ -299,7 +299,7 @@ func (tApp TestAppBuilder) Build() *TestApp {
 		tApp.t.Cleanup(func() {
 			if rval.App != nil {
 				if err := rval.App.Close(); err != nil {
-					panic(err)
+					tApp.t.Fatal(err)
 				}
 			}
 		})
@@ -568,7 +568,13 @@ func (tApp *TestApp) AdvanceToBlock(
 // Reset resets the chain such that it can be initialized and executed again.
 func (tApp *TestApp) Reset() {
 	if tApp.App != nil {
-		tApp.App.Close()
+		if err := tApp.App.Close(); err != nil {
+			if tApp.builder.t != nil {
+				tApp.builder.t.Fatal(err)
+			} else {
+				panic(err)
+			}
+		}
 	}
 	tApp.App = nil
 	tApp.genesis = types.GenesisDoc{}
