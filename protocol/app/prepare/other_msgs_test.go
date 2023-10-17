@@ -162,7 +162,7 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testApp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			txs := prepare.RemoveDisallowMsgs(ctx, encodingCfg.TxConfig.TxDecoder(), tc.txs)
 			require.Equal(t, tc.expectedTxs, txs)

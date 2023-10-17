@@ -12,7 +12,7 @@ import (
 func TestEquityTierLimitConfiguration(
 	t *testing.T,
 ) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	expected := types.QueryEquityTierLimitConfigurationResponse{
 		EquityTierLimitConfig: tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx),

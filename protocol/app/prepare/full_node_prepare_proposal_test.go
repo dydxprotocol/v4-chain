@@ -28,7 +28,7 @@ func TestFullNodePrepareProposalHandler(t *testing.T) {
 		flags.NonValidatingFullNodeFlag: true,
 		testlog.LoggerInstanceForTest:   logger,
 	}
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testApp.DefaultTestAppCreatorFn(appOpts)).Build()
+	tApp := testApp.NewTestAppBuilder(t).WithAppCreatorFn(testApp.DefaultTestAppCreatorFn(appOpts)).Build()
 
 	found := false
 	tApp.AdvanceToBlock(2, testApp.AdvanceToBlockOptions{

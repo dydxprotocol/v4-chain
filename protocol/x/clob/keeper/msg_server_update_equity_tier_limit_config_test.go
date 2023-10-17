@@ -14,7 +14,7 @@ import (
 )
 
 func TestUpdateEquityTierLimitConfig(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() types.GenesisDoc {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
 		genesis := testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
 			state.Subaccounts = []satypes.Subaccount{

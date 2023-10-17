@@ -8,7 +8,7 @@ import (
 )
 
 func TestPanicRateLimiter(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewPanicRateLimiter[int]()
 	require.Panics(t, func() {

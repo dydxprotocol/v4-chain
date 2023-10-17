@@ -8,7 +8,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	logger := tApp.App.BridgeKeeper.Logger(ctx)

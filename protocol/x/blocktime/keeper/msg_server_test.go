@@ -15,7 +15,7 @@ import (
 )
 
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 

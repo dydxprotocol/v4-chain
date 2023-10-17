@@ -246,7 +246,10 @@ type ExecuteCheckTxs func(ctx sdk.Context, app *app.App) (stop bool)
 //   - DefaultGenesis
 //   - DefaultTestAppCreatorFn with no custom flags
 //   - an ExecuteCheckTxs function that will stop on after the first block
-func NewTestAppBuilder() TestAppBuilder {
+func NewTestAppBuilder(t testing.TB) TestAppBuilder {
+	if t == nil {
+		panic("t must not be nil")
+	}
 	return TestAppBuilder{
 		genesisDocFn:         DefaultGenesis,
 		appCreatorFn:         DefaultTestAppCreatorFn(nil),
@@ -254,6 +257,7 @@ func NewTestAppBuilder() TestAppBuilder {
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
+		t: t,
 	}
 }
 
@@ -284,26 +288,18 @@ func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
 	return tApp
 }
 
-// WithTesting returns a builder like this one with the specified testing environment being specified.
-func (tApp TestAppBuilder) WithTesting(t testing.TB) TestAppBuilder {
-	tApp.t = t
-	return tApp
-}
-
 // Build returns a new TestApp capable of being executed.
 func (tApp TestAppBuilder) Build() *TestApp {
 	rval := TestApp{
 		builder: tApp,
 	}
-	if tApp.t != nil {
-		tApp.t.Cleanup(func() {
-			if rval.App != nil {
-				if err := rval.App.Close(); err != nil {
-					tApp.t.Fatal(err)
-				}
+	tApp.t.Cleanup(func() {
+		if rval.App != nil {
+			if err := rval.App.Close(); err != nil {
+				tApp.t.Fatal(err)
 			}
-		})
-	}
+		}
+	})
 	return &rval
 }
 
@@ -473,23 +469,13 @@ func (tApp *TestApp) AdvanceToBlock(
 				}
 			}
 
-			if tApp.builder.t == nil {
-				if !processResponse.IsAccepted() {
-					panic(fmt.Errorf(
-						"Expected process proposal request %+v to be accepted, but failed with %+v.",
-						processRequest,
-						processResponse,
-					))
-				}
-			} else {
-				require.Truef(
-					tApp.builder.t,
-					processResponse.IsAccepted(),
-					"Expected process proposal request %+v to be accepted, but failed with %+v.",
-					processRequest,
-					processResponse,
-				)
-			}
+			require.Truef(
+				tApp.builder.t,
+				processResponse.IsAccepted(),
+				"Expected process proposal request %+v to be accepted, but failed with %+v.",
+				processRequest,
+				processResponse,
+			)
 			deliverTxs = prepareResponse.Txs
 		}
 
@@ -526,21 +512,12 @@ func (tApp *TestApp) AdvanceToBlock(
 					return tApp.App.NewContext(true, tApp.header)
 				}
 			} else {
-				if tApp.builder.t == nil {
-					if !deliverTxResponse.IsOK() {
-						panic(fmt.Errorf(
-							"Failed to deliver transaction that was accepted: %+v.",
-							deliverTxResponse,
-						))
-					}
-				} else {
-					require.Truef(
-						tApp.builder.t,
-						deliverTxResponse.IsOK(),
-						"Failed to deliver transaction that was accepted: %+v.",
-						deliverTxResponse,
-					)
-				}
+				require.Truef(
+					tApp.builder.t,
+					deliverTxResponse.IsOK(),
+					"Failed to deliver transaction that was accepted: %+v.",
+					deliverTxResponse,
+				)
 			}
 		}
 
@@ -569,11 +546,7 @@ func (tApp *TestApp) AdvanceToBlock(
 func (tApp *TestApp) Reset() {
 	if tApp.App != nil {
 		if err := tApp.App.Close(); err != nil {
-			if tApp.builder.t != nil {
-				tApp.builder.t.Fatal(err)
-			} else {
-				panic(err)
-			}
+			tApp.builder.t.Fatal(err)
 		}
 	}
 	tApp.App = nil

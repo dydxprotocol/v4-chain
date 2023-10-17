@@ -10,7 +10,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	logger := tApp.App.BlockTimeKeeper.Logger(ctx)
@@ -128,7 +128,7 @@ func TestUpdateAllDowntimeInfo(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
 			ctx := tApp.AdvanceToBlock(
 				tc.previousBlockInfo.Height+1,
@@ -196,7 +196,7 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
 			ctx := tApp.AdvanceToBlock(
 				40,

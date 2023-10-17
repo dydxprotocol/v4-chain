@@ -8,7 +8,7 @@ import (
 )
 
 func TestNoOpRateLimiter(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewNoOpRateLimiter[int]()
 	for i := 0; i < 100_000; i += 1 {

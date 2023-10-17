@@ -10,7 +10,7 @@ import (
 )
 
 func TestGenesis(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	got := feetiers.ExportGenesis(ctx, tApp.App.FeeTiersKeeper)
 	require.NotNil(t, got)

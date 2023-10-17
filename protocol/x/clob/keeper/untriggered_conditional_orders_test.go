@@ -88,7 +88,7 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testApp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
@@ -201,7 +201,7 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testApp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders

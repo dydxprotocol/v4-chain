@@ -133,7 +133,7 @@ func TestBridge_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -143,7 +143,7 @@ func TestBridge_Success(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Get initial balances of addresses and their expected balances after bridging.
@@ -303,7 +303,7 @@ func TestBridge_REJECT(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -315,7 +315,7 @@ func TestBridge_REJECT(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Add good bridge events to app server.
@@ -358,7 +358,7 @@ func TestBridge_REJECT(t *testing.T) {
 //     accepted by the rest of the chain.
 //   - the node restarts.
 func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -370,7 +370,7 @@ func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Verify that AcknowledgedEventInfo.NextId is 2.
