@@ -70,9 +70,9 @@ cleanup_tmp_dir() {
 # Set production default genesis params.
 function overwrite_genesis_production() {	
 	# Slashing params
-	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12288' # ~5 hr
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '8192' # ~3 hr
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.min_signed_per_window' -v '0.2' # 20%
-	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '3600s'
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '7200s'
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_double_sign' -v '0.0' # 0%
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_downtime' -v '0.0' # 0%
 
