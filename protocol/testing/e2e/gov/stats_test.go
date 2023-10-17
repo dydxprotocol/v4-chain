@@ -68,7 +68,7 @@ func TestUpdateParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,

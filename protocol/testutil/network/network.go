@@ -83,6 +83,18 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 		cfg = configs[0]
 	}
 
+	// TODO(CORE-682): Remove shutdown override hook once Cosmos SDK invokes it as part of network#Cleanup.
+	appConstructor := cfg.AppConstructor
+	cfg.AppConstructor = func(val network.ValidatorI) servertypes.Application {
+		app := appConstructor(val)
+		t.Cleanup(func() {
+			if err := app.Close(); err != nil {
+				panic(err)
+			}
+		})
+		return app
+	}
+
 	net, err := network.New(t, t.TempDir(), cfg)
 	if err != nil {
 		panic(err)

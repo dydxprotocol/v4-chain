@@ -244,7 +244,7 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 			1: clobtypes.ErrLongTermOrdersCannotRequireImmediateExecution.Error(),
 		},
 	}
-	blockAdvancement.AdvanceToBlock(ctx, 2, &tApp, t)
+	blockAdvancement.AdvanceToBlock(ctx, 2, tApp, t)
 }
 
 func TestLongTermOrderExpires(t *testing.T) {

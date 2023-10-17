@@ -83,9 +83,16 @@ type SimApp struct {
 }
 
 // Constructs an application capable of simulation using the appCreator
-func NewSimApp(appCreator func() *app.App) *SimApp {
+func NewSimApp(t testing.TB, appCreator func() *app.App) *SimApp {
 	simApp := &SimApp{appCreator(), nil}
 	baseapp.SetChainID(simChainId)(simApp.GetBaseApp())
+
+	// TODO(CORE-682): Remove shutdown override hook once Cosmos SDK invokes it as part of simapp.
+	t.Cleanup(func() {
+		if err := simApp.App.Close(); err != nil {
+			panic(err)
+		}
+	})
 	return simApp
 }
 
@@ -192,6 +199,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 	appOptions := defaultAppOptionsForSimulation()
 
 	dydxApp := NewSimApp(
+		b,
 		func() *app.App {
 			return app.New(
 				logger,
@@ -264,6 +272,7 @@ func TestFullAppSimulation(t *testing.T) {
 	appOptions := defaultAppOptionsForSimulation()
 
 	dydxApp := NewSimApp(
+		t,
 		func() *app.App {
 			return app.New(
 				logger,
@@ -335,6 +344,7 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			dydxApp := NewSimApp(
+				t,
 				func() *app.App {
 					return app.New(
 						logger,

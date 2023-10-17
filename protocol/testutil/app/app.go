@@ -266,7 +266,7 @@ type TestAppBuilder struct {
 	appCreatorFn         func() *app.App
 	usesDefaultAppConfig bool
 	executeCheckTxs      ExecuteCheckTxs
-	t                    *testing.T
+	t                    testing.TB
 }
 
 // WithGenesisDocFn returns a builder like this one with specified function that will be used to create
@@ -285,16 +285,26 @@ func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
 }
 
 // WithTesting returns a builder like this one with the specified testing environment being specified.
-func (tApp TestAppBuilder) WithTesting(t *testing.T) TestAppBuilder {
+func (tApp TestAppBuilder) WithTesting(t testing.TB) TestAppBuilder {
 	tApp.t = t
 	return tApp
 }
 
 // Build returns a new TestApp capable of being executed.
-func (tApp TestAppBuilder) Build() TestApp {
-	return TestApp{
+func (tApp TestAppBuilder) Build() *TestApp {
+	rval := TestApp{
 		builder: tApp,
 	}
+	if tApp.t != nil {
+		tApp.t.Cleanup(func() {
+			if rval.App != nil {
+				if err := rval.App.Close(); err != nil {
+					panic(err)
+				}
+			}
+		})
+	}
+	return &rval
 }
 
 // A TestApp used to executed ABCI++ flows. Note that callers should invoke `TestApp.CheckTx` over `TestApp.App.CheckTx`
@@ -557,6 +567,9 @@ func (tApp *TestApp) AdvanceToBlock(
 
 // Reset resets the chain such that it can be initialized and executed again.
 func (tApp *TestApp) Reset() {
+	if tApp.App != nil {
+		tApp.App.Close()
+	}
 	tApp.App = nil
 	tApp.genesis = types.GenesisDoc{}
 	tApp.header = tmproto.Header{}

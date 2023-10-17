@@ -563,7 +563,7 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 
-					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, tApp, ctx)
 				} else {
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
@@ -728,7 +728,7 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 					require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 					require.Contains(t, resp.Log, "Opening order would exceed equity tier limit of 1.")
 
-					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, &tApp, ctx)
+					checkThatFoKOrderIsNotBlockedByEquityTierLimits(t, tApp, ctx)
 				} else {
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}

@@ -216,7 +216,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
 }
 
 func TestMsgWithdrawFromSubaccount(t *testing.T) {
@@ -408,7 +408,7 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
 }
 
 // testNonExistentSender is a helper function that tests sending transfer messages with non-existent sender.
