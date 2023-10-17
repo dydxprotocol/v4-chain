@@ -60,7 +60,7 @@ describe('block-cache', () => {
       [true, 'block.height == currentBlockHeight', '2', false],
       [false, 'block.height == currentBlockHeight + 1', '3', false],
       [false, 'block.height == currentBlockHeight + 1 with refresh', '4', true],
-      [false, 'block.height >= currentBlockHeight + 1 with refresh', '5', false],
+      [true, 'block.height >= currentBlockHeight + 1 with refresh', '5', true],
     ])('returns %s when %s', async (
       skip: boolean,
       _condition: string,
