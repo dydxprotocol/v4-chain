@@ -86,7 +86,7 @@ func (f *FakeSubTaskRunner) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeQueryConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
@@ -121,9 +121,9 @@ const (
 )
 
 var (
-	validExchangeId                 = constants.ExchangeId1
-	closeConnectionFailsError       = errors.New(closeConnectionFailsErrorMsg)
-	testExchangeStartupConfigLength = len(constants.TestExchangeStartupConfigs)
+	validExchangeId               = constants.ExchangeId1
+	closeConnectionFailsError     = errors.New(closeConnectionFailsErrorMsg)
+	testExchangeQueryConfigLength = len(constants.TestExchangeQueryConfigs)
 )
 
 func TestFixedBufferSize(t *testing.T) {
@@ -136,7 +136,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		mockGrpcClient              *mocks.GrpcClient
 		initialMarketConfig         map[types.MarketId]*types.MutableMarketConfig
 		initialExchangeMarketConfig map[types.ExchangeId]*types.MutableExchangeMarketConfig
-		exchangeIdToStartupConfig   map[types.ExchangeId]*types.ExchangeQueryConfig
+		exchangeIdToQueryConfig     map[types.ExchangeId]*types.ExchangeQueryConfig
 		exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails
 
 		// expectations
@@ -144,7 +144,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		expectGrpcConnection      bool
 		expectCloseTcpConnection  bool
 		expectCloseGrpcConnection bool
-		// This should equal the length of the `exchangeIdToStartupConfig` passed into
+		// This should equal the length of the `exchangeIdToQueryConfig` passed into
 		// `client.Start`.
 		expectedNumExchangeTasks int
 	}{
@@ -168,16 +168,16 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Valid: 2 exchanges": {
 			mockGrpcClient:              grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
-		"Invalid: empty exchange startup config": {
+		"Invalid: empty exchange query config": {
 			mockGrpcClient:            grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[types.ExchangeId]*types.ExchangeQueryConfig{},
+			exchangeIdToQueryConfig:   map[types.ExchangeId]*types.ExchangeQueryConfig{},
 			expectedError:             errors.New("exchangeIds must not be empty"),
 			expectGrpcConnection:      true,
 			expectCloseTcpConnection:  true,
@@ -185,8 +185,8 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Invalid: missing exchange query details": {
 			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[string]*types.ExchangeQueryConfig{
-				validExchangeId: constants.TestExchangeStartupConfigs[validExchangeId],
+			exchangeIdToQueryConfig: map[string]*types.ExchangeQueryConfig{
+				validExchangeId: constants.TestExchangeQueryConfigs[validExchangeId],
 			},
 			expectedError:             fmt.Errorf("no exchange details exists for exchangeId: %v", validExchangeId),
 			expectGrpcConnection:      true,
@@ -199,13 +199,13 @@ func TestStart_InvalidConfig(t *testing.T) {
 				closeConnectionFailsError,
 				true,
 			),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectedError:               closeConnectionFailsError,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
 		"Invalid: grpc close connection fails with good inputs": {
 			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(
@@ -213,13 +213,13 @@ func TestStart_InvalidConfig(t *testing.T) {
 				closeConnectionFailsError,
 				true,
 			),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectedError:               closeConnectionFailsError,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
 	}
 	for name, tc := range tests {
@@ -242,7 +242,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 				log.NewNopLogger(),
 				tc.mockGrpcClient,
-				tc.exchangeIdToStartupConfig,
+				tc.exchangeIdToQueryConfig,
 				tc.exchangeIdToExchangeDetails,
 				&faketaskRunner,
 			)
@@ -335,7 +335,7 @@ func TestStop(t *testing.T) {
 		appFlags,
 		log.NewNopLogger(),
 		&daemontypes.GrpcClientImpl{},
-		constants.TestExchangeStartupConfigs,
+		constants.TestExchangeQueryConfigs,
 		constants.TestExchangeIdToExchangeQueryDetails,
 		&SubTaskRunnerImpl{},
 	)

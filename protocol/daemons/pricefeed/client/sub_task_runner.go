@@ -53,7 +53,7 @@ type SubTaskRunner interface {
 		ticker *time.Ticker,
 		stop <-chan bool,
 		configs types.PricefeedMutableMarketConfigs,
-		exchangeStartupConfig types.ExchangeQueryConfig,
+		exchangeQueryConfig types.ExchangeQueryConfig,
 		exchangeDetails types.ExchangeQueryDetails,
 		queryHandler handler.ExchangeQueryHandler,
 		logger log.Logger,
@@ -153,13 +153,13 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeQueryConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
 	bCh chan<- *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
-	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeStartupConfig.ExchangeId)
+	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeQueryConfig.ExchangeId)
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +171,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 
 	// Create PriceFetcher to begin querying with.
 	priceFetcher, err := price_fetcher.NewPriceFetcher(
-		exchangeStartupConfig,
+		exchangeQueryConfig,
 		exchangeDetails,
 		exchangeMarketConfig,
 		marketConfigs,
