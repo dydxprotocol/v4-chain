@@ -197,12 +197,13 @@ func TestExpireOldStats(t *testing.T) {
 	})
 	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
 	// 5 epochs are out of the window
-	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 		BlockTime: time.Unix(0, 0).
 			Add(windowDuration).
 			Add((time.Duration(5*epochstypes.StatsEpochDuration) + 1) * time.Second).
 			UTC(),
 	})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
 	k := tApp.App.StatsKeeper
 
 	// Create a bunch of EpochStats.
