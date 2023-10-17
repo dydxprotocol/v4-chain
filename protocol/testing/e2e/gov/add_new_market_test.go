@@ -35,7 +35,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 		perptest.WithMarketId(testId),
 	)
 	msgUpdateClobPairToActive := &clobtypes.MsgUpdateClobPair{
-		Authority: lib.GovModuleAddress.String(),
+		Authority: delaymsgtypes.ModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
 			clobtest.WithId(testId),
 			clobtest.WithPerpetualId(testId),
