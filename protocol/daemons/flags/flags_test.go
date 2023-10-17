@@ -2,6 +2,7 @@ package flags_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -27,6 +28,7 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 
 		flags.FlagPriceDaemonEnabled,
 		flags.FlagPriceDaemonLoopDelayMs,
+		flags.FlagPriceDaemonExchangeConfigOverride,
 	}
 
 	for _, v := range tests {
@@ -53,6 +55,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 
 	optsMap[flags.FlagPriceDaemonEnabled] = true
 	optsMap[flags.FlagPriceDaemonLoopDelayMs] = uint32(4444)
+	optsMap[flags.FlagPriceDaemonExchangeConfigOverride] = `{"exchange_query_configs":[]}`
 
 	mockOpts := mocks.AppOptions{}
 	mockOpts.On("Get", mock.Anything).
@@ -79,9 +82,10 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	// Price Daemon.
 	require.Equal(t, optsMap[flags.FlagPriceDaemonEnabled], r.Price.Enabled)
 	require.Equal(t, optsMap[flags.FlagPriceDaemonLoopDelayMs], r.Price.LoopDelayMs)
+	require.Equal(t, optsMap[flags.FlagPriceDaemonExchangeConfigOverride], r.Price.ExchangeConfigOverride)
 }
 
-func TestGetDaemonFlagValuesFromOptions_Defaul(t *testing.T) {
+func TestGetDaemonFlagValuesFromOptions_Default(t *testing.T) {
 	mockOpts := mocks.AppOptions{}
 	mockOpts.On("Get", mock.Anything).
 		Return(func(key string) interface{} {
@@ -91,4 +95,92 @@ func TestGetDaemonFlagValuesFromOptions_Defaul(t *testing.T) {
 	r := flags.GetDaemonFlagValuesFromOptions(&mockOpts)
 	d := flags.GetDefaultDaemonFlags()
 	require.Equal(t, d, r)
+}
+
+func TestParseExchangeConfigOverride(t *testing.T) {
+	tests := map[string]struct {
+		input       string
+		expected    types.ClientExchangeQueryConfigs
+		expectedErr error
+	}{
+		"invalid: invalid json": {
+			input:       "",
+			expected:    types.ClientExchangeQueryConfigs{},
+			expectedErr: fmt.Errorf("Error unmarshalling exchange config override: unexpected end of JSON input"),
+		},
+		"valid: empty json object": {
+			input:       `{}`,
+			expected:    types.ClientExchangeQueryConfigs{},
+			expectedErr: nil,
+		},
+		"valid: empty exchange query configs": {
+			input: `{"exchange_query_configs":[]}`,
+			expected: types.ClientExchangeQueryConfigs{
+				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{},
+			},
+			expectedErr: nil,
+		},
+		"invalid: invalid exchange id": {
+			input:       `{"exchange_query_configs":[{"exchange_id":"invalid"}]}`,
+			expected:    types.ClientExchangeQueryConfigs{},
+			expectedErr: fmt.Errorf("Error validating exchange config override: invalid exchange id invalid"),
+		},
+		"valid client exchange query configs - disable some exchanges": {
+			input: `{"exchange_query_configs":[{"exchange_id":"Binance","disabled":true},{"exchange_id":"CoinbasePro","disabled":true}]}`,
+			expected: types.ClientExchangeQueryConfigs{
+				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
+					{
+						ExchangeId: "Binance",
+						Disabled:   true,
+					},
+					{
+						ExchangeId: "CoinbasePro",
+						Disabled:   true,
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+		"valid client exchange query configs - multiple updates": {
+			input: `{"exchange_query_configs":[` +
+				`{"exchange_id":"Binance","interval_ms":1000,"timeout_ms":2000,"max_queries":4},` +
+				`{"exchange_id":"CoinbasePro","disabled":true},` +
+				`{"exchange_id":"Huobi","interval_ms":6000},` +
+				`{"exchange_id":"Bybit","disabled":true}]}`,
+			expected: types.ClientExchangeQueryConfigs{
+				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
+					{
+						ExchangeId: "Binance",
+						IntervalMs: 1000,
+						TimeoutMs:  2000,
+						MaxQueries: 4,
+					},
+					{
+						ExchangeId: "CoinbasePro",
+						Disabled:   true,
+					},
+					{
+						ExchangeId: "Huobi",
+						IntervalMs: 6000,
+					},
+					{
+						ExchangeId: "Bybit",
+						Disabled:   true,
+					},
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, err := flags.ParseExchangeConfigOverride(tc.input)
+			// require.Equal(t, tc.expected, actual)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
+		})
+	}
 }

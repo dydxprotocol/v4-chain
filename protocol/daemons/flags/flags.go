@@ -1,7 +1,11 @@
 package flags
 
 import (
+	"encoding/json"
+	"fmt"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
@@ -11,8 +15,9 @@ const (
 	// Flag names
 	FlagUnixSocketAddress = "unix-socket-address"
 
-	FlagPriceDaemonEnabled     = "price-daemon-enabled"
-	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
+	FlagPriceDaemonEnabled                = "price-daemon-enabled"
+	FlagPriceDaemonLoopDelayMs            = "price-daemon-loop-delay-ms"
+	FlagPriceDaemonExchangeConfigOverride = "price-daemon-exchange-config-override"
 
 	FlagBridgeDaemonEnabled        = "bridge-daemon-enabled"
 	FlagBridgeDaemonLoopDelayMs    = "bridge-daemon-loop-delay-ms"
@@ -57,6 +62,8 @@ type PriceFlags struct {
 	Enabled bool
 	// LoopDelayMs configures the update frequency of the price daemon.
 	LoopDelayMs uint32
+	// ExchangeConfigOverride is a JSON string that overrides the default exchange config.
+	ExchangeConfigOverride string
 }
 
 // DaemonFlags contains the collected configuration flags for all daemons.
@@ -88,8 +95,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				RequestChunkSize:    50,
 			},
 			Price: PriceFlags{
-				Enabled:     true,
-				LoopDelayMs: 3_000,
+				Enabled:                true,
+				LoopDelayMs:            3_000,
+				ExchangeConfigOverride: "{}",
 			},
 		}
 	}
@@ -163,6 +171,22 @@ func AddDaemonFlagsToCmd(
 		df.Price.LoopDelayMs,
 		"Delay in milliseconds between sending price updates to the application.",
 	)
+	cmd.Flags().String(
+		FlagPriceDaemonExchangeConfigOverride,
+		df.Price.ExchangeConfigOverride,
+		"JSON string that overrides the default exchange config.",
+	)
+}
+
+func ParseExchangeConfigOverride(exchangeConfigOverrideJson string) (types.ClientExchangeQueryConfigs, error) {
+	var clientExchangeQueryConfigs types.ClientExchangeQueryConfigs
+	if err := json.Unmarshal([]byte(exchangeConfigOverrideJson), &clientExchangeQueryConfigs); err != nil {
+		return types.ClientExchangeQueryConfigs{}, fmt.Errorf("Error unmarshalling exchange config override: %w", err)
+	}
+	if err := clientExchangeQueryConfigs.ValidateDelta(constants.GetValidExchanges()); err != nil {
+		return types.ClientExchangeQueryConfigs{}, fmt.Errorf("Error validating exchange config override: %w", err)
+	}
+	return clientExchangeQueryConfigs, nil
 }
 
 // GetDaemonFlagValuesFromOptions gets all daemon flag values from the `AppOptions` struct.
@@ -227,6 +251,11 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagPriceDaemonLoopDelayMs); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Price.LoopDelayMs = v
+		}
+	}
+	if option := appOpts.Get(FlagPriceDaemonExchangeConfigOverride); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.Price.ExchangeConfigOverride = v
 		}
 	}
 

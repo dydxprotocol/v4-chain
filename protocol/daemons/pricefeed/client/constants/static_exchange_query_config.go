@@ -129,3 +129,12 @@ var (
 		},
 	}
 )
+
+// GetValidExchanges uses the keys in the above static map to compute and return a map of valid exchange ids.
+func GetValidExchanges() map[string]struct{} {
+	validExchanges := make(map[string]struct{}, len(StaticExchangeQueryConfig))
+	for _, eqc := range StaticExchangeQueryConfig {
+		validExchanges[eqc.ExchangeId] = struct{}{}
+	}
+	return validExchanges
+}
