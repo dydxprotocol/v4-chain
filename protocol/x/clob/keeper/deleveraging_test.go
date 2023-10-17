@@ -10,7 +10,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -94,7 +93,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 				bankMock.On(
 					"GetBalance",
 					mock.Anything,
-					authtypes.NewModuleAddress(types.InsuranceFundName),
+					types.InsuranceFundAddress,
 					constants.Usdc.Denom,
 				).Return(
 					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -192,7 +191,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -269,7 +268,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),

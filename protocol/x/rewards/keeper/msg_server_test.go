@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
@@ -41,7 +45,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    types.DefaultParams(),
 			},
 			expErr: false,
@@ -58,7 +62,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: invalid denom",
 			input: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: types.Params{
 					TreasuryAccount: "rewards_treasury",
 					Denom:           "",

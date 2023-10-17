@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
@@ -26,7 +24,7 @@ func TestUpdateParams(t *testing.T) {
 	}{
 		"Success: modify funding rate clamp factor": {
 			msg: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: 1_234,
 					PremiumVoteClampFactorPpm: initialParams.PremiumVoteClampFactorPpm,
@@ -36,7 +34,7 @@ func TestUpdateParams(t *testing.T) {
 		},
 		"Success: modify premium vote clamp factor and min num votes": {
 			msg: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: initialParams.FundingRateClampFactorPpm,
 					PremiumVoteClampFactorPpm: 1_234,
@@ -46,7 +44,7 @@ func TestUpdateParams(t *testing.T) {
 		},
 		"Failure: parameters are not valid": {
 			msg: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: types.Params{
 					FundingRateClampFactorPpm: initialParams.FundingRateClampFactorPpm,
 					PremiumVoteClampFactorPpm: 0, // invalid

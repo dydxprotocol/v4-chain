@@ -2,8 +2,6 @@ package keeper_test
 
 import (
 	"github.com/cometbft/cometbft/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -81,7 +79,7 @@ func TestUpdateBlockRateLimitConfig(t *testing.T) {
 	require.Equal(t, originalConfig, tApp.App.ClobKeeper.GetBlockRateLimitConfiguration(ctx))
 
 	requestWithAuthority := clobtypes.MsgUpdateBlockRateLimitConfiguration{
-		Authority:            authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Authority:            GovAuthority,
 		BlockRateLimitConfig: expectedConfig,
 	}
 	_, err = handler(ctx, &requestWithAuthority)

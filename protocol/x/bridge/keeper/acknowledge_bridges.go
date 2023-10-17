@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -102,7 +101,7 @@ func (k Keeper) AcknowledgeBridges(
 
 	// For each bridge event, delay a `MsgCompleteBridge` to be executed `safetyParams.DelayBlocks`
 	// blocks in the future. Returns error if fails to delay any of the messages.
-	delayMsgModuleAccAddrString := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
+	delayMsgModuleAccAddrString := delaymsgtypes.ModuleAddress.String()
 	for _, bridgeEvent := range bridgeEvents {
 		// delaymsg module should be the authority for completing bridges.
 		msgCompleteBridge := types.MsgCompleteBridge{

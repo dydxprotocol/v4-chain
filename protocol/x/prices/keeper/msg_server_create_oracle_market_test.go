@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -30,7 +28,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Succeeds: create new oracle market (id = 1)": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    testMarket1.Param,
 			},
 			expectedMarkets: []pricestypes.MarketParamPrice{testMarket1},
@@ -38,7 +36,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Failure: empty pair": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithPair(""),
 					pricestest.WithExponent(-8), // for both Param and Price
@@ -50,7 +48,7 @@ func TestCreateOracleMarket(t *testing.T) {
 		"Failure: typo in exchange config json": {
 			setup: func(t *testing.T, ctx sdk.Context, pricesKeeper *keeper.Keeper) {},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithPair("BTC-USD"),
 					pricestest.WithExponent(-8), // for both Param and Price
@@ -70,7 +68,7 @@ func TestCreateOracleMarket(t *testing.T) {
 				)
 			},
 			msg: &pricestypes.MsgCreateOracleMarket{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: pricestest.GenerateMarketParamPrice(
 					pricestest.WithId(1), // same id as testMarket1
 				).Param,

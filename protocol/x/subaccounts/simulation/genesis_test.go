@@ -9,7 +9,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testutil_rand "github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
@@ -75,7 +74,7 @@ func TestRandomizedGenState(t *testing.T) {
 		simState.Cdc.MustUnmarshalJSON(bankGenStateJson, &bankGenesis)
 
 		foundSubaccountsBalance := false
-		subaccountsAddress := authtypes.NewModuleAddress(types.ModuleName).String()
+		subaccountsAddress := types.ModuleAddress.String()
 
 		for _, balance := range bankGenesis.Balances {
 			if balance.Address == subaccountsAddress {

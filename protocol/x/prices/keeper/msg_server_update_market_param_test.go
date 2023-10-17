@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func TestUpdateMarketParam(t *testing.T) {
 	testMarket := *pricestest.GenerateMarketParamPrice(
 		pricestest.WithId(1),
@@ -29,7 +33,7 @@ func TestUpdateMarketParam(t *testing.T) {
 	}{
 		"Succeeds: update all parameters except exponent": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               "PIKACHU-XXX",
@@ -42,7 +46,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Succeeds: update min price change ppm only": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -55,7 +59,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to an empty pair": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               "", // invalid
@@ -69,7 +73,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to 0 min exchanges": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -83,7 +87,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to 0 min price change ppm": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -97,7 +101,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update to invalid exchange config json": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,
@@ -111,7 +115,7 @@ func TestUpdateMarketParam(t *testing.T) {
 		},
 		"Failure: update market exponent": {
 			msg: &pricestypes.MsgUpdateMarketParam{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
 					Pair:               testMarketParam.Pair,

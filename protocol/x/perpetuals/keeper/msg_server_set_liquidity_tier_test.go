@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func TestSetLiquidityTier(t *testing.T) {
 	testLt := *lttest.GenerateLiquidityTier(
 		lttest.WithId(1),
@@ -30,7 +34,7 @@ func TestSetLiquidityTier(t *testing.T) {
 	}{
 		"Success: update name and initial margin ppm": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "large-cap",
@@ -43,7 +47,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Success: update all parameters": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",
@@ -56,7 +60,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Success: create a new liquidity tier": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id + 1,
 					Name:                   "medium-cap",
@@ -69,7 +73,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Failure: initial margin ppm exceeds max": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",
@@ -83,7 +87,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",

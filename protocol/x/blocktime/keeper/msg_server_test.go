@@ -14,6 +14,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
 	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
 	ctx := tApp.InitChain()
@@ -41,7 +45,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    types.DefaultGenesis().Params,
 			},
 			expErr: false,
@@ -58,7 +62,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: unordered durations",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params: types.DowntimeParams{
 					Durations: []time.Duration{
 						5 * time.Second,

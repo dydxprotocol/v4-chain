@@ -11,6 +11,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func TestMsgCreateClobPair_GetSigners(t *testing.T) {
 	msg := types.MsgCreateClobPair{
 		Authority: constants.AliceAccAddress.String(),
@@ -27,7 +31,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Invalid Metadata (SpotClobMetadata)",
 			msg: types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_SpotClobMetadata{},
 					StepBaseQuantums: 1,
@@ -53,7 +57,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Unsupported Status",
 			msg: types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,
@@ -66,7 +70,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "StepBaseQuantums <= 0",
 			msg: types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 0,
@@ -79,7 +83,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "SubticksPerTick <= 0",
 			msg: types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,
@@ -92,7 +96,7 @@ func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 		{
 			desc: "Valid ClobPair",
 			msg: types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				ClobPair: types.ClobPair{
 					Metadata:         &types.ClobPair_PerpetualClobMetadata{},
 					StepBaseQuantums: 1,

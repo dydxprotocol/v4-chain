@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -23,13 +22,13 @@ func TestUpdateLiquidationsConfig(t *testing.T) {
 	}{
 		"Succeeds": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority:          authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:          GovAuthority,
 				LiquidationsConfig: constants.LiquidationsConfig_No_Limit,
 			},
 		},
 		"Error: invalid liquidations config": {
 			msg: &types.MsgUpdateLiquidationsConfig{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				LiquidationsConfig: types.LiquidationsConfig{
 					MaxLiquidationFeePpm: 5_000,
 					FillablePriceConfig: types.FillablePriceConfig{

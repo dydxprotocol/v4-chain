@@ -12,7 +12,6 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -27,10 +26,10 @@ import (
 )
 
 var (
-	BridgeAuthority      = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
+	BridgeAuthority      = bridgetypes.ModuleAddress.String()
 	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
 
-	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
+	DelayMsgAuthority = types.ModuleAddress
 
 	testDenom = "adv4tnt"
 
@@ -347,7 +346,7 @@ func TestDispatchMessagesForBlock_Mixed(t *testing.T) {
 // generateBridgeEventMsgAny wraps bridge event in a MsgCompleteBridge and encodes it into an Any.
 func generateBridgeEventMsgAny(t *testing.T, event bridgetypes.BridgeEvent) *codectypes.Any {
 	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
-		Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
+		Authority: DelayMsgAuthority.String(),
 		Event:     event,
 	}
 	any, err := codectypes.NewAnyWithValue(&msgCompleteBridge)
@@ -536,7 +535,7 @@ func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
 	_, err = k.DelayMessageByBlocks(
 		ctx,
 		&bridgetypes.MsgCompleteBridge{
-			Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
+			Authority: DelayMsgAuthority.String(),
 			Event:     bridgeEvent,
 		},
 		0,

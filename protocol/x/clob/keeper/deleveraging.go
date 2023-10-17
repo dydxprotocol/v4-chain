@@ -12,7 +12,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -125,7 +124,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		authtypes.NewModuleAddress(types.InsuranceFundName),
+		types.InsuranceFundAddress,
 		usdcAsset.Denom,
 	)
 

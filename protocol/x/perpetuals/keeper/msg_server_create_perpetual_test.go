@@ -4,8 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -43,7 +41,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1},
@@ -60,7 +58,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    testPerp2.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1, testPerp2},
@@ -77,7 +75,7 @@ func TestCreatePerpetual(t *testing.T) {
 				)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1},
@@ -88,7 +86,7 @@ func TestCreatePerpetual(t *testing.T) {
 				keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
 			},
 			msg: &types.MsgCreatePerpetual{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Params:    testPerp1.Params,
 			},
 			expectedPerpetuals: nil,
