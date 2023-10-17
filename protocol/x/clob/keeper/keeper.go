@@ -130,11 +130,12 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	logger := ctx.Logger().With(sdklog.ModuleKey, "x/clob")
-	if lib.IsDeliverTxMode(ctx) {
-		return logger.With(metrics.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress))
-	}
-	return logger
+	return ctx.Logger().With(
+		sdklog.ModuleKey, "x/clob",
+		metrics.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		metrics.CheckTx, ctx.IsCheckTx(),
+		metrics.ReCheckTx, ctx.IsReCheckTx(),
+	)
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
