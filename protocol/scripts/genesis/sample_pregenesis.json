@@ -1655,9 +1655,9 @@
     "slashing": {
       "missed_blocks": [],
       "params": {
-        "downtime_jail_duration": "3600s",
+        "downtime_jail_duration": "7200s",
         "min_signed_per_window": "0.2",
-        "signed_blocks_window": "12288",
+        "signed_blocks_window": "8192",
         "slash_fraction_double_sign": "0.0",
         "slash_fraction_downtime": "0.0"
       },
