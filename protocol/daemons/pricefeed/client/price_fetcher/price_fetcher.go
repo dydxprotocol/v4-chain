@@ -153,9 +153,11 @@ func (p *PriceFetcher) getNumQueriesPerTaskLoop() int {
 }
 
 // RunTaskLoop queries the exchange for market prices.
-// Each goroutine makes a single exchange query for a specific set of one or more markets.
+// Each goroutine makes a single exchange query for a specific set of one or more markets. If the exchange
+// is disabled, this method will return immediately.
 // RunTaskLoop blocks until all spawned goroutines have completed.
 func (pf *PriceFetcher) RunTaskLoop(requestHandler daemontypes.RequestHandler) {
+	// Do not execute any queries for a disabled exchange.
 	if pf.mutableState.GetMutableExchangeConfig().Disabled {
 		return
 	}
