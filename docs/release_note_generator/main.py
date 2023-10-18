@@ -32,6 +32,7 @@ def commit_to_entry(session, commit_json):
         return "- %s ([#%s](%s))" % (pull["title"], pull["number"], pull["html_url"])
     else:
         # If there is no associated PR, use first line of commit message and link to commit.
+        # This may happen if cherry-picks are pushed directly to a release branch.
         return "- %s ([%s](%s))" % (
             commit_json["commit"]["message"].partition('\n')[0],
             commit_json["sha"][:7],
