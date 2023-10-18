@@ -513,7 +513,7 @@
         "max_liquidation_fee_ppm": 15000,
         "position_block_limits": {
           "max_position_portion_liquidated_ppm": 100000,
-          "min_position_notional_liquidated": 1000
+          "min_position_notional_liquidated": 1000000000
         },
         "subaccount_block_limits": {
           "max_notional_liquidated": 100000000000,
