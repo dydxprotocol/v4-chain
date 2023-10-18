@@ -10,19 +10,22 @@ import { TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
   CandleMessage, MarketMessage, OffChainUpdateV1, SubaccountMessage, TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
-import Big from 'big.js';
 import _ from 'lodash';
 
 import config from '../config';
-import { ConsolidatedKafkaEvent, SingleTradeMessage, VulcanMessage } from './types';
+import {
+  AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage, VulcanMessage,
+} from './types';
 
 type TopicKafkaMessages = {
   topic: KafkaTopics;
   messages: ProducerMessage[];
 };
 
+type OrderedMessage = AnnotatedSubaccountMessage | SingleTradeMessage;
+
 export class KafkaPublisher {
-  subaccountMessages: SubaccountMessage[];
+  subaccountMessages: AnnotatedSubaccountMessage[];
   tradeMessages: SingleTradeMessage[];
   marketMessages: MarketMessage[];
   candleMessages: CandleMessage[];
@@ -43,37 +46,94 @@ export class KafkaPublisher {
   }
 
   public addEvent(event: ConsolidatedKafkaEvent) {
-    switch (event.topic) {
+    this.getMessages(event.topic)!.push(event.message);
+  }
+
+  /**
+   * Helper function to get messages for a given topic.
+   *
+   * @param kafkaTopic
+   * @private
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private getMessages(kafkaTopic: KafkaTopics): any[] | undefined {
+    switch (kafkaTopic) {
       case KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS:
-        this.subaccountMessages.push(event.message);
-        break;
+        return this.subaccountMessages;
       case KafkaTopics.TO_WEBSOCKETS_TRADES:
-        this.tradeMessages.push(event.message);
-        break;
+        return this.tradeMessages;
       case KafkaTopics.TO_WEBSOCKETS_MARKETS:
-        this.marketMessages.push(event.message);
-        break;
+        return this.marketMessages;
       case KafkaTopics.TO_WEBSOCKETS_CANDLES:
-        this.candleMessages.push(event.message);
-        break;
+        return this.candleMessages;
       case KafkaTopics.TO_VULCAN:
-        this.vulcanMessages.push(event.message);
-        break;
+        return this.vulcanMessages;
       default:
         throw new Error('Invalid Topic');
     }
   }
 
   /**
-   * Sort trade events by block height, transaction index, and event index in ascending order,
-   * where the first trade event should be the earliest trade in the block.
+   * Sort subaccountMessages that represent fills by block height, transaction index,
+   * and event index in ascending order per order id. Only keep the subaccount message if
+   * it represents the last fill event per order id.
    */
-  public sortTradeEvents() {
-    this.tradeMessages = this.tradeMessages.sort(
-      (a: SingleTradeMessage, b: SingleTradeMessage) => {
-        if (Big(a.blockHeight).lt(b.blockHeight)) {
+  public retainLastFillEventsForSubaccountMessages() {
+    // Create a map to store the last fill event per order ID
+    const lastFillEvents: Record<string, AnnotatedSubaccountMessage> = {};
+    const nonFillEvents: AnnotatedSubaccountMessage[] = [];
+
+    this.subaccountMessages.forEach((message) => {
+      if (message.isFill && message.orderId) {
+        const orderId = message.orderId;
+        // If we haven't seen this order ID before or if the current message
+        // has a higher block height, update the lastFillEvents for this order ID
+        if (
+          !lastFillEvents[orderId] ||
+          this.compareMessages(message, lastFillEvents[orderId]) > 0
+        ) {
+          lastFillEvents[orderId] = message;
+        }
+      } else {
+        nonFillEvents.push(message);
+      }
+    });
+
+    this.subaccountMessages = Object.values(lastFillEvents).concat(nonFillEvents);
+    this.sortEvents(KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+  }
+
+  /** Helper function to compare two AnnotatedSubaccountMessages based on block height,
+   * transaction index, and event index.
+   */
+  private compareMessages(a: AnnotatedSubaccountMessage, b: AnnotatedSubaccountMessage) {
+    if (a.blockHeight === b.blockHeight) {
+      if (a.transactionIndex === b.transactionIndex) {
+        return a.eventIndex - b.eventIndex;
+      }
+      return a.transactionIndex - b.transactionIndex;
+    }
+    return Number(a.blockHeight) - Number(b.blockHeight);
+  }
+
+  /**
+   * Sort events by block height, transaction index, and event index in ascending order,
+   * where the first event should be the earliest event in the block.
+   */
+  public sortEvents(kafkaTopic: KafkaTopics) {
+    if (![
+      KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+      KafkaTopics.TO_WEBSOCKETS_TRADES,
+    ].includes(kafkaTopic)) {
+      throw new Error('Sorting events is only supported for subaccount and trade kafka websocket topics');
+    }
+    const msgs: OrderedMessage[] = this.getMessages(kafkaTopic) as OrderedMessage[];
+
+    if (msgs) {
+      msgs.sort((a: OrderedMessage, b: OrderedMessage) => {
+        if (a.blockHeight < b.blockHeight) {
           return -1;
-        } else if (Big(a.blockHeight).gt(b.blockHeight)) {
+        } else if (a.blockHeight > b.blockHeight) {
           return 1;
         }
 
@@ -83,9 +143,9 @@ export class KafkaPublisher {
           return 1;
         }
 
-        return a.eventIndex < b.eventIndex ? -1 : 1;
-      },
-    );
+        return a.eventIndex - b.eventIndex;
+      });
+    }
   }
 
   public async publish() {
@@ -112,6 +172,7 @@ export class KafkaPublisher {
   private generateAllTopicKafkaMessages(): TopicKafkaMessages[] {
     const allTopicKafkaMessages: TopicKafkaMessages[] = [];
     if (this.subaccountMessages.length > 0) {
+      this.retainLastFillEventsForSubaccountMessages();
       allTopicKafkaMessages.push({
         topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
         messages: _.map(this.subaccountMessages, (message: SubaccountMessage) => {

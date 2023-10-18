@@ -188,6 +188,11 @@ export interface SingleTradeMessage extends TradeMessage {
   eventIndex: number,
 }
 
+export interface AnnotatedSubaccountMessage extends SubaccountMessage {
+  orderId?: string,
+  isFill?: boolean,
+}
+
 export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
@@ -195,7 +200,7 @@ export interface VulcanMessage {
 
 export type ConsolidatedKafkaEvent = {
   topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-  message: SubaccountMessage,
+  message: AnnotatedSubaccountMessage,
 } | {
   topic: KafkaTopics.TO_WEBSOCKETS_TRADES,
   message: SingleTradeMessage,

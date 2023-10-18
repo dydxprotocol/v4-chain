@@ -407,6 +407,8 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     return this.generateConsolidatedSubaccountKafkaEvent(
       JSON.stringify(message),
       subaccountIdProto,
+      order?.id,
+      true,
     );
   }
 

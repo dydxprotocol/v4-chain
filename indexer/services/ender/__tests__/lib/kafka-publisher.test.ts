@@ -1,8 +1,5 @@
 import {
-  producer,
-  TRADES_WEBSOCKET_MESSAGE_VERSION,
-  KafkaTopics,
-  ProducerMessage,
+  KafkaTopics, producer, ProducerMessage, TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
 import { testConstants, TradeContent, TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import { SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
@@ -12,9 +9,16 @@ import { ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types'
 
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import {
-  defaultSubaccountMessage, defaultTradeContent, defaultTradeMessage, defaultTradeKafkaEvent,
+  defaultSubaccountMessage,
+  defaultTradeContent,
+  defaultTradeKafkaEvent,
+  defaultTradeMessage,
 } from '../helpers/constants';
-import { contentToSingleTradeMessage, contentToTradeMessage, createConsolidatedKafkaEventFromTrade } from '../helpers/kafka-publisher-helpers';
+import {
+  contentToSingleTradeMessage,
+  contentToTradeMessage,
+  createConsolidatedKafkaEventFromTrade,
+} from '../helpers/kafka-publisher-helpers';
 
 describe('kafka-publisher', () => {
   let producerSendMock: jest.SpyInstance;
@@ -139,7 +143,7 @@ describe('kafka-publisher', () => {
         consolidatedBeforeTrade,
       ]);
 
-      publisher.sortTradeEvents();
+      publisher.sortEvents(KafkaTopics.TO_WEBSOCKETS_TRADES);
       expect(publisher.tradeMessages).toEqual([beforeTrade, trade, afterTrade]);
     });
   });
