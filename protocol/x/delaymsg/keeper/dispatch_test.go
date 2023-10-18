@@ -400,7 +400,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
 	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Get initial Alice balance
 	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
@@ -414,8 +414,8 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, aliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, aliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -492,7 +492,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 	ctx := tApp.InitChain()
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Sanity check: a message with this id exists within the keeper.
 	_, found := tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -507,7 +507,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)

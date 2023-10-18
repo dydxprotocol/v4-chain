@@ -247,7 +247,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for i, blockAdvancement := range tc.blockAdvancements {
-				ctx = blockAdvancement.AdvanceToBlock(ctx, uint32(i+2), &tApp, t)
+				ctx = blockAdvancement.AdvanceToBlock(ctx, uint32(i+2), tApp, t)
 			}
 		})
 	}

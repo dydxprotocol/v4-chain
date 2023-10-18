@@ -282,7 +282,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				tc.proposedMsgs,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,

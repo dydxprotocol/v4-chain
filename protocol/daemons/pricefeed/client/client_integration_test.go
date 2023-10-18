@@ -50,7 +50,7 @@ var (
 
 	// Initialize the daemon client with Bitfinex and TestExchange exchanges. Shorten intervals for testing
 	// since we're using a mock exchange server on localhost with no rate limits.
-	testExchangeStartupConfigs = map[types.ExchangeId]*types.ExchangeStartupConfig{
+	testExchangeQueryConfigs = map[types.ExchangeId]*types.ExchangeQueryConfig{
 		exchange_common.EXCHANGE_ID_TEST_EXCHANGE: {
 			ExchangeId: exchange_common.EXCHANGE_ID_TEST_EXCHANGE,
 			IntervalMs: 100,
@@ -326,7 +326,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		s.appFlags,
 		log.TestingLogger(),
 		&daemontypes.GrpcClientImpl{},
-		testExchangeStartupConfigs,
+		testExchangeQueryConfigs,
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},
 	)

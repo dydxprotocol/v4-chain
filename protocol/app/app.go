@@ -107,7 +107,6 @@ import (
 
 	// Daemons
 	bridgeclient "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
 	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
@@ -598,7 +597,7 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeStartupConfig := configs.ReadExchangeStartupConfigFile(homePath)
+			exchangeQueryConfig := constants.StaticExchangeQueryConfig
 			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
@@ -611,7 +610,7 @@ func New(
 				appFlags,
 				logger,
 				&daemontypes.GrpcClientImpl{},
-				exchangeStartupConfig,
+				exchangeQueryConfig,
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
@@ -1417,6 +1416,10 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 	// Prevent a cycle between when we create the clob keeper and the ante handler.
 	app.ClobKeeper.SetAnteHandler(anteHandler)
 	app.SetAnteHandler(anteHandler)
+}
+
+func (app *App) Close() error {
+	return app.BaseApp.Close()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

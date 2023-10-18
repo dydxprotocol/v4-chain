@@ -64,7 +64,7 @@ func TestUpdateEventParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
@@ -131,7 +131,7 @@ func TestUpdateProposeParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
@@ -194,7 +194,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,

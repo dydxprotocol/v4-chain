@@ -19,7 +19,7 @@ const (
 )
 
 var (
-	StaticExchangeStartupConfig = map[types.ExchangeId]*types.ExchangeStartupConfig{
+	StaticExchangeQueryConfig = map[types.ExchangeId]*types.ExchangeQueryConfig{
 		// See above for rate limiting information of Binance.
 		// https://binance-docs.github.io/apidocs/spot/en/#24hr-ticker-price-change-statistics
 		exchange_common.EXCHANGE_ID_BINANCE: {
