@@ -250,7 +250,6 @@ func (c *Client) start(ctx context.Context,
 		}()
 
 		ticker, stop := c.newTickerWithStop(int(exchangeConfig.IntervalMs))
-		logger.Info("Starting price fetcher", "exchangeId", _exchangeId, "IntervalMs", exchangeConfig.IntervalMs)
 		c.runningSubtasksWaitGroup.Add(1)
 		go func() {
 			defer c.runningSubtasksWaitGroup.Done()

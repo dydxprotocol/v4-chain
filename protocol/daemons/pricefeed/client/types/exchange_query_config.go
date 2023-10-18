@@ -74,26 +74,41 @@ func (eqc *ExchangeQueryConfig) ValidateDelta(validExchanges map[ExchangeId]stru
 	return nil
 }
 
-func (eqc *ExchangeQueryConfig) ApplyDelta(delta *ExchangeQueryConfig) error {
+// ApplyDeltaAndValidate applies the delta to the exchange query config and validates the result. It does not mutate
+// the original exchange query config.
+func (eqc *ExchangeQueryConfig) ApplyDeltaAndValidate(
+	delta *ExchangeQueryConfig,
+	validExchanges map[ExchangeId]struct{},
+) (
+	updatedConfig *ExchangeQueryConfig,
+	err error,
+) {
 	if delta.ExchangeId != eqc.ExchangeId {
-		return fmt.Errorf("exchange id mismatch: %v, %v", delta.ExchangeId, eqc.ExchangeId)
+		return nil, fmt.Errorf("exchange id mismatch: %v, %v", delta.ExchangeId, eqc.ExchangeId)
 	}
 
+	updatedConfig = eqc.Copy()
+
 	// Always update disabled status.
-	eqc.Disabled = delta.Disabled
+	updatedConfig.Disabled = delta.Disabled
 
 	// Only update other fields if the value is specified. We consider 0 to be invalid / not set.
 	if delta.IntervalMs != 0 {
-		eqc.IntervalMs = delta.IntervalMs
+		updatedConfig.IntervalMs = delta.IntervalMs
 	}
 
 	if delta.TimeoutMs != 0 {
-		eqc.TimeoutMs = delta.TimeoutMs
+		updatedConfig.TimeoutMs = delta.TimeoutMs
 	}
 
 	if delta.MaxQueries != 0 {
-		eqc.MaxQueries = delta.MaxQueries
+		updatedConfig.MaxQueries = delta.MaxQueries
 	}
 
-	return nil
+	// After applying delta, validate the exchange query config.
+	if err = updatedConfig.Validate(validExchanges); err != nil {
+		return nil, fmt.Errorf("invalid exchange query config for %v: %w", eqc.ExchangeId, err)
+	}
+
+	return updatedConfig, nil
 }

@@ -179,15 +179,15 @@ func AddDaemonFlagsToCmd(
 }
 
 // ParseExchangeConfigOverride validates and parses the exchange config override JSON string into a
-// ClientExchangeQueryConfigs struct, which is a list of deltas that can be applied to the default exchange query
+// ClientExchangeQueryConfigOverrides struct, which is a list of deltas that can be applied to the default exchange query
 // configs.
-func ParseExchangeConfigOverride(exchangeConfigOverrideJson string) (types.ClientExchangeQueryConfigs, error) {
-	var clientExchangeQueryConfigs types.ClientExchangeQueryConfigs
+func ParseExchangeConfigOverride(exchangeConfigOverrideJson string) (types.ClientExchangeQueryConfigOverrides, error) {
+	var clientExchangeQueryConfigs types.ClientExchangeQueryConfigOverrides
 	if err := json.Unmarshal([]byte(exchangeConfigOverrideJson), &clientExchangeQueryConfigs); err != nil {
-		return types.ClientExchangeQueryConfigs{}, fmt.Errorf("Error unmarshalling exchange config override: %w", err)
+		return types.ClientExchangeQueryConfigOverrides{}, fmt.Errorf("Error unmarshalling exchange config override: %w", err)
 	}
-	if err := clientExchangeQueryConfigs.ValidateDelta(constants.GetValidExchanges()); err != nil {
-		return types.ClientExchangeQueryConfigs{}, fmt.Errorf("Error validating exchange config override: %w", err)
+	if err := clientExchangeQueryConfigs.Validate(constants.GetValidExchanges()); err != nil {
+		return types.ClientExchangeQueryConfigOverrides{}, fmt.Errorf("Error validating exchange config override: %w", err)
 	}
 	return clientExchangeQueryConfigs, nil
 }

@@ -419,20 +419,20 @@ func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon_DisableExchangeWithFla
 	// Setup daemon flags to disable Bitfinex.
 	s.daemonFlags.Price.ExchangeConfigOverride = disableBitfinexFlags
 
-	// Set up the mock prices query server to return market params that reflect the same markets and exchanges the
-	// daemon is initialized with.
+	// Set up the mock prices query server to return market params that reflect the default params with one caveat -
+	// we've decreased the min exchanges to 1 so that a valid price can be computed from a single exchange.
 	s.mockAllMarketParamsResponse(&pricetypes.QueryAllMarketParamsResponse{
 		MarketParams: defaultMarketParams_1MinExchange,
 	})
 
 	s.startClient()
 
+	// Expect median prices that are informed only by the test exchange.
 	s.expectPricesWithTimeout(
 		expectedPricesDisabledExchange,
 		defaultMarketParams_1MinExchange,
 		testPriceCacheExpirationDuration,
 	)
-
 }
 
 // increasingPriceFunction returns a price function that returns 1 for the first 10 calls, then returns
@@ -453,6 +453,12 @@ func increasingPriceFunction() func() float64 {
 func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon_ChangeQueryIntervalWithFlag() {
 	// Setup daemon flags to disable Bitfinex.
 	s.daemonFlags.Price.ExchangeConfigOverride = changeIntervalBitfinexFlags
+
+	// Using the increasingPriceFunction, the first 10 queries to bitfinex will return a << BTC price, after which
+	// bitfinex will return the normal BTC price for the rest of the test. If the bitfinex query interval is left to the
+	// default value of 2.5s, the test will time out before the daemon can make 10 queries to bitfinex. But if we
+	// shorten the interval to 100ms, it should take about 1 second to make 10 queries, and the daemon will then be
+	// able to retrieve the normal BTC price and compute the expected median price before the test times out.
 	s.exchangeServer.SetPriceFunction(
 		exchange_config.MARKET_BTC_USD,
 		exchange_common.EXCHANGE_ID_BITFINEX,
@@ -467,13 +473,11 @@ func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon_ChangeQueryIntervalWit
 
 	s.startClient()
 
-	//
 	s.expectPricesWithTimeout(
 		expectedPrices1Market,
 		defaultMarketParams,
 		testPriceCacheExpirationDuration*2,
 	)
-
 }
 
 // TestUpdateMarkets_AddMarket tests that the pricefeed daemon produces prices for a new market after it is added.

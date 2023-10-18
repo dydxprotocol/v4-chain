@@ -10,15 +10,15 @@ import (
 
 func TestClientExchangeQueryConfigs_Validate(t *testing.T) {
 	tests := map[string]struct {
-		configs     types.ClientExchangeQueryConfigs
+		configs     types.ClientExchangeQueryConfigOverrides
 		expectedErr error
 	}{
 		"valid: empty configs": {
-			configs:     types.ClientExchangeQueryConfigs{},
+			configs:     types.ClientExchangeQueryConfigOverrides{},
 			expectedErr: nil,
 		},
 		"valid: populated_configs": {
-			configs: types.ClientExchangeQueryConfigs{
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -43,7 +43,7 @@ func TestClientExchangeQueryConfigs_Validate(t *testing.T) {
 			expectedErr: nil,
 		},
 		"invalid: duplicate exchange id": {
-			configs: types.ClientExchangeQueryConfigs{
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -62,125 +62,7 @@ func TestClientExchangeQueryConfigs_Validate(t *testing.T) {
 			expectedErr: fmt.Errorf("duplicate exchange id Binance"),
 		},
 		"invalid: invalid config (invalid exchange id)": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "InvalidExchange",
-						IntervalMs: 1,
-						TimeoutMs:  1,
-						MaxQueries: 1,
-					},
-				},
-			},
-			expectedErr: fmt.Errorf("invalid exchange id InvalidExchange"),
-		},
-		"invalid: interval_ms = 0": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 0, // invalid
-						TimeoutMs:  1,
-						MaxQueries: 1,
-					},
-				},
-			},
-			expectedErr: fmt.Errorf("validation for 'IntervalMs' failed on the 'gt' tag"),
-		},
-		"invalid: timeout_ms = 0": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 1,
-						TimeoutMs:  0, // invalid
-						MaxQueries: 1,
-					},
-				},
-			},
-			expectedErr: fmt.Errorf("validation for 'TimeoutMs' failed on the 'gt' tag"),
-		},
-		"invalid: max_queries = 0": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 1,
-						TimeoutMs:  1,
-						MaxQueries: 0, // invalid
-					},
-				},
-			},
-			expectedErr: fmt.Errorf("validation for 'MaxQueries' failed on the 'gt' tag"),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			err := tc.configs.Validate(constants.GetValidExchanges())
-			if tc.expectedErr == nil {
-				require.NoError(t, err)
-			} else {
-				require.ErrorContains(t, err, tc.expectedErr.Error())
-			}
-		})
-	}
-}
-
-func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
-	tests := map[string]struct {
-		configs     types.ClientExchangeQueryConfigs
-		expectedErr error
-	}{
-		"valid: empty configs": {
-			configs:     types.ClientExchangeQueryConfigs{},
-			expectedErr: nil,
-		},
-		"valid: populated_configs": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 1,
-						TimeoutMs:  1,
-						MaxQueries: 1,
-					},
-					{
-						ExchangeId: "CoinbasePro",
-						IntervalMs: 2,
-						TimeoutMs:  2,
-						MaxQueries: 2,
-					},
-					{
-						ExchangeId: "Bybit",
-						IntervalMs: 3,
-						TimeoutMs:  3,
-						MaxQueries: 3,
-					},
-				},
-			},
-			expectedErr: nil,
-		},
-		"invalid: duplicate exchange id": {
-			configs: types.ClientExchangeQueryConfigs{
-				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 1,
-						TimeoutMs:  1,
-						MaxQueries: 1,
-					},
-					{
-						ExchangeId: "Binance",
-						IntervalMs: 1,
-						TimeoutMs:  1,
-						MaxQueries: 1,
-					},
-				},
-			},
-			expectedErr: fmt.Errorf("duplicate exchange id Binance"),
-		},
-		"invalid: invalid config (invalid exchange id)": {
-			configs: types.ClientExchangeQueryConfigs{
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "InvalidExchange",
@@ -193,7 +75,7 @@ func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
 			expectedErr: fmt.Errorf("invalid exchange id InvalidExchange"),
 		},
 		"valid: interval_ms = 0": {
-			configs: types.ClientExchangeQueryConfigs{
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -205,8 +87,8 @@ func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
-		"invalid: timeout_ms = 0": {
-			configs: types.ClientExchangeQueryConfigs{
+		"valid: timeout_ms = 0": {
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -218,8 +100,8 @@ func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
 			},
 			expectedErr: nil,
 		},
-		"invalid: max_queries = 0": {
-			configs: types.ClientExchangeQueryConfigs{
+		"valid: max_queries = 0": {
+			configs: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -234,7 +116,7 @@ func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := tc.configs.ValidateDelta(constants.GetValidExchanges())
+			err := tc.configs.Validate(constants.GetValidExchanges())
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
 			} else {
@@ -247,18 +129,18 @@ func TestClientExchangeQueryConfigs_ValidateDelta(t *testing.T) {
 func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 	tests := map[string]struct {
 		exchangeQueryConfigs map[types.ExchangeId]*types.ExchangeQueryConfig
-		overrideConfigs      *types.ClientExchangeQueryConfigs
+		overrideConfigs      *types.ClientExchangeQueryConfigOverrides
 		expected             map[types.ExchangeId]*types.ExchangeQueryConfig
 		expectedErr          error
 	}{
 		"valid: no overrides": {
 			exchangeQueryConfigs: map[types.ExchangeId]*types.ExchangeQueryConfig{},
-			overrideConfigs:      &types.ClientExchangeQueryConfigs{},
+			overrideConfigs:      &types.ClientExchangeQueryConfigOverrides{},
 			expected:             map[types.ExchangeId]*types.ExchangeQueryConfig{},
 		},
 		"invalid: invalid override exchange id": {
 			exchangeQueryConfigs: map[types.ExchangeId]*types.ExchangeQueryConfig{},
-			overrideConfigs: &types.ClientExchangeQueryConfigs{
+			overrideConfigs: &types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "InvalidExchange", // invalid
@@ -288,7 +170,7 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 					MaxQueries: 3,
 				},
 			},
-			overrideConfigs: &types.ClientExchangeQueryConfigs{
+			overrideConfigs: &types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -301,11 +183,25 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 				},
 			},
 			expected: map[types.ExchangeId]*types.ExchangeQueryConfig{
+				"Binance": {
+					ExchangeId: "Binance",
+					Disabled:   true,
+					IntervalMs: 1,
+					TimeoutMs:  1,
+					MaxQueries: 1,
+				},
 				"CoinbasePro": {
 					ExchangeId: "CoinbasePro",
 					IntervalMs: 2,
 					TimeoutMs:  2,
 					MaxQueries: 2,
+				},
+				"Huobi": {
+					ExchangeId: "Huobi",
+					Disabled:   true,
+					IntervalMs: 3,
+					TimeoutMs:  3,
+					MaxQueries: 3,
 				},
 			},
 		},
@@ -330,7 +226,7 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 					MaxQueries: 3,
 				},
 			},
-			overrideConfigs: &types.ClientExchangeQueryConfigs{
+			overrideConfigs: &types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",

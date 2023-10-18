@@ -100,29 +100,29 @@ func TestGetDaemonFlagValuesFromOptions_Default(t *testing.T) {
 func TestParseExchangeConfigOverride(t *testing.T) {
 	tests := map[string]struct {
 		input       string
-		expected    types.ClientExchangeQueryConfigs
+		expected    types.ClientExchangeQueryConfigOverrides
 		expectedErr error
 	}{
 		"invalid: invalid json": {
 			input:       "",
-			expected:    types.ClientExchangeQueryConfigs{},
+			expected:    types.ClientExchangeQueryConfigOverrides{},
 			expectedErr: fmt.Errorf("Error unmarshalling exchange config override: unexpected end of JSON input"),
 		},
 		"valid: empty json object": {
 			input:       `{}`,
-			expected:    types.ClientExchangeQueryConfigs{},
+			expected:    types.ClientExchangeQueryConfigOverrides{},
 			expectedErr: nil,
 		},
 		"valid: empty exchange query configs": {
 			input: `{"exchange_query_configs":[]}`,
-			expected: types.ClientExchangeQueryConfigs{
+			expected: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{},
 			},
 			expectedErr: nil,
 		},
 		"invalid: invalid exchange id": {
 			input:       `{"exchange_query_configs":[{"exchange_id":"invalid"}]}`,
-			expected:    types.ClientExchangeQueryConfigs{},
+			expected:    types.ClientExchangeQueryConfigOverrides{},
 			expectedErr: fmt.Errorf("Error validating exchange config override: invalid exchange id invalid"),
 		},
 		"valid client exchange query configs - disable some exchanges": {
@@ -130,7 +130,7 @@ func TestParseExchangeConfigOverride(t *testing.T) {
 				`{"exchange_id":"Binance","disabled":true},` +
 				`{"exchange_id":"CoinbasePro","disabled":true}` +
 				`]}`,
-			expected: types.ClientExchangeQueryConfigs{
+			expected: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -150,7 +150,7 @@ func TestParseExchangeConfigOverride(t *testing.T) {
 				`{"exchange_id":"CoinbasePro","disabled":true},` +
 				`{"exchange_id":"Huobi","interval_ms":6000},` +
 				`{"exchange_id":"Bybit","disabled":true}]}`,
-			expected: types.ClientExchangeQueryConfigs{
+			expected: types.ClientExchangeQueryConfigOverrides{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{
 						ExchangeId: "Binance",
@@ -178,7 +178,6 @@ func TestParseExchangeConfigOverride(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			_, err := flags.ParseExchangeConfigOverride(tc.input)
-			// require.Equal(t, tc.expected, actual)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
 			} else {

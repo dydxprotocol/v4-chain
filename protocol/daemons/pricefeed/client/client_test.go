@@ -130,6 +130,24 @@ func TestFixedBufferSize(t *testing.T) {
 	require.Equal(t, fiveKilobytes, pricefeed_constants.FixedBufferSize)
 }
 
+func TestUpdateExchangeQueryConfigFromFlags(t *testing.T) {
+	tests := map[string]struct {
+		overrideConfigString string
+		exchangeQueryConfig  map[types.ExchangeId]*types.ExchangeQueryConfig
+		expectedError        error
+		expectedConfig       map[types.ExchangeId]*types.ExchangeQueryConfig
+	}{
+		"valid: empty flags does not update config": {
+			overrideConfigString: "",
+			exchangeQueryConfig:  constants.TestExchangeQueryConfigs,
+			expectedConfig:       constants.TestExchangeQueryConfigs, // no change
+		},
+		"invalid: parse failures bubble up": {},
+		"invalid: apply errors bubble up":   {},
+		"valid: multiple updates":           {},
+	}
+}
+
 func TestStart_InvalidConfig(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
