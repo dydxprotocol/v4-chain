@@ -363,7 +363,8 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 		for marketId, expectedPrice := range expectedPrices {
 			actualPrice, ok := prices[marketId]
 			if !ok {
-				continue
+				allPricesMatch = false
+				break
 			}
 
 			if actualPrice != expectedPrice {
