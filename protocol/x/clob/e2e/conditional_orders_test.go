@@ -572,9 +572,48 @@ func TestConditionalOrder(t *testing.T) {
 		// "TakeProfit/Sell FOK conditional order can place, trigger, partially match, and be removed from state.": {
 
 		// },
-		// "StopLoss/Buy IOC conditional order can place, trigger, fully match, and be removed from state.": {
-			
-		// },
+		"StopLoss/Buy IOC conditional order can place, trigger, fully match, and be removed from state.": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+				constants.Dave_Num0_500000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC,
+			},
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_400_000),
+				},
+			},
+			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
+				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
+				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
+			},
+			expectedExistInState: map[clobtypes.OrderId]bool{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(10_000_000_000 - 25_000_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(50_000_000),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
 		// "StopLoss/Buy FOK conditional order can place, trigger, fully match, and be removed from state.": {
 
 		// },
