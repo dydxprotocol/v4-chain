@@ -152,7 +152,14 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
 	orderKey := orderId.ToStateKey()
 	if memStore.Has(orderKey) {
-		count--
+		if count == 0 {
+			k.Logger(ctx).Error(
+				"Stateful order count is zero but but order is in state. Underflow",
+				"subaccountId", orderId.SubaccountId,
+			)
+		} else {
+			count--
+		}
 	}
 
 	// Delete the `StatefulOrderPlacement` from state.
