@@ -58,8 +58,8 @@ func newMockUpdatersForExchange(exchangeId types.ExchangeId) (
 // market configurations for testing.
 func newTestPriceFeedMutableMarketConfigs() (
 	pfmmc *types.PricefeedMutableMarketConfigsImpl,
-	encoder *mocks.ExchangeConfigUpdater,
-	fetcher *mocks.ExchangeConfigUpdater,
+	encoders []*mocks.ExchangeConfigUpdater,
+	fetchers []*mocks.ExchangeConfigUpdater,
 	marketParamErrors map[types.MarketId]error,
 	err error,
 ) {
@@ -67,14 +67,42 @@ func newTestPriceFeedMutableMarketConfigs() (
 		[]types.ExchangeId{exchangeIdCoinbase, exchangeIdBinance},
 	)
 	for _, exchange := range []types.ExchangeId{exchangeIdCoinbase, exchangeIdBinance} {
-		encoder, fetcher = newMockUpdatersForExchange(exchange)
+		encoder, fetcher := newMockUpdatersForExchange(exchange)
 		pfmmc.AddPriceEncoder(encoder)
 		pfmmc.AddPriceFetcher(fetcher)
+
+		encoders = append(encoders, encoder)
+		fetchers = append(fetchers, fetcher)
 	}
 
 	marketParamErrors, err = pfmmc.UpdateMarkets(constants.TestMarket7And8Params)
 
-	return pfmmc, encoder, fetcher, marketParamErrors, err
+	return pfmmc, encoders, fetchers, marketParamErrors, err
+}
+
+func TestDisableExchange(t *testing.T) {
+	// Setup.
+	pfmmc, encoders, fetchers, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
+	require.Empty(t, marketParamErrors)
+	require.NoError(t, err)
+
+	// Act.
+	// Disable the exchange, and update with modified params to force an update to the fetchers and encoders.
+	pfmmc.DisableExchange(exchangeIdCoinbase)
+	pfmmc.UpdateMarkets(constants.TestMarket7And8Params_CoinbaseUpdate)
+
+	// Assert.
+	// Assert the exchange is disabled for the returned updated exchange market config.
+	coinbase, err := pfmmc.GetExchangeMarketConfigCopy(exchangeIdCoinbase)
+
+	require.NoError(t, err)
+	require.Equal(t, coinbase.Disabled, true)
+
+	// Assert the disabled flag is propagated to coinbase fetchers and encoders. It should be the final
+	// call observed on each mock.
+	numCalls := len(fetchers[0].Calls)
+	require.Equal(t, coinbase, fetchers[0].Calls[numCalls-1].Arguments[0])
+	require.Equal(t, coinbase, encoders[0].Calls[numCalls-1].Arguments[0])
 }
 
 func TestGetExchangeMarketConfigCopy_Mixed(t *testing.T) {
@@ -504,7 +532,7 @@ func TestValidateAndTransformParams_Mixed(t *testing.T) {
 // TestUpdatesEncoderAndFetcherInOrder tests that the price feed mutable market configs updates the encoder
 // before the fetcher. This test is confirmed to fail if update order is switched.
 func TestUpdatesEncoderAndFetcherInOrder(t *testing.T) {
-	pfmmc, encoder, fetcher, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
+	pfmmc, encoders, fetchers, marketParamErrors, err := newTestPriceFeedMutableMarketConfigs()
 	require.NoError(t, err)
 	require.Empty(t, marketParamErrors)
 
@@ -514,6 +542,8 @@ func TestUpdatesEncoderAndFetcherInOrder(t *testing.T) {
 
 	// Assert that an update happened. If it happened out of order, this test should fail due to the
 	// mock call configurations.
-	encoder.AssertCalled(t, "UpdateMutableExchangeConfig", mock.Anything, mock.Anything)
-	fetcher.AssertCalled(t, "UpdateMutableExchangeConfig", mock.Anything, mock.Anything)
+	for i := range encoders {
+		encoders[i].AssertCalled(t, "UpdateMutableExchangeConfig", mock.Anything, mock.Anything)
+		fetchers[i].AssertCalled(t, "UpdateMutableExchangeConfig", mock.Anything, mock.Anything)
+	}
 }

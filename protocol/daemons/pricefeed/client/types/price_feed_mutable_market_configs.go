@@ -23,6 +23,7 @@ type PricefeedMutableMarketConfigs interface {
 	AddPriceFetcher(updater ExchangeConfigUpdater)
 	AddPriceEncoder(updater ExchangeConfigUpdater)
 	UpdateMarkets(marketParams []types.MarketParam) (marketParamErrors map[MarketId]error, err error)
+	DisableExchange(id ExchangeId)
 	GetExchangeMarketConfigCopy(
 		id ExchangeId,
 	) (
@@ -128,6 +129,10 @@ func NewPriceFeedMutableMarketConfigs(
 }
 
 // DisableExchange disables the exchange with the given id. This method is synchronized.
+// Once an exchange is disabled, it will stay disabled, regardless of market updates. Any updated configs will be
+// propagated to price fetchers and encoders as usual, which can choose to ignore the disabled exchange.
+// Once an exchange is disabled, we expect it to be updated shortly with a disabled config since the market
+// param updater run periodically.
 func (pfmmc *PricefeedMutableMarketConfigsImpl) DisableExchange(id ExchangeId) {
 	pfmmc.Lock()
 	defer pfmmc.Unlock()
@@ -196,6 +201,9 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) addExchangeConfigUpdater(
 // MarketParams are validated and applied independently. If any market param is invalid, the method will populate
 // marketParamErrors with the error and continue processing the remaining market params. If the entire validation fails,
 // the method will return an error.
+// If an exchange has been marked as disabled, all new configs derived from market param updates will also have
+// the exchange disabled. This is to ensure that disabled exchanges stay disabled even if the market params cause
+// the exchange config to change.
 func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marketParams []types.MarketParam) (
 	mutableExchangeConfigs map[ExchangeId]*MutableExchangeMarketConfig,
 	mutableMarketConfigs map[MarketId]*MutableMarketConfig,

@@ -550,6 +550,27 @@ var (
 		},
 	}
 
+	TestMarket7And8Params_CoinbaseUpdate = []types.MarketParam{
+		{
+			Id:       7,
+			Pair:     BtcUsdPair,
+			Exponent: BtcUsdExponent,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"},` +
+				`{"exchangeName":"Coinbase","ticker":"BTC-USD"}]}`,
+			MinExchanges:      1,
+			MinPriceChangePpm: 50,
+		},
+		{
+			Id:           8,
+			Pair:         EthUsdPair,
+			Exponent:     EthUsdExponent,
+			MinExchanges: 1,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Binance","ticker":"ETHUSDT"},` +
+				`{"exchangeName":"Coinbase","ticker":"XETHZ-USD"}]}`, // ticker has changed
+			MinPriceChangePpm: 50,
+		},
+	}
+
 	TestMutableMarketConfigs = map[daemonClientTypes.MarketId]*daemonClientTypes.MutableMarketConfig{
 		MarketId7: {
 			Id:           MarketId7,
