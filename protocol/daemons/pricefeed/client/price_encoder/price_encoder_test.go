@@ -82,8 +82,11 @@ func TestUpdateMutableExchangeConfig_Mixed(t *testing.T) {
 			updateExchangeConfig: &constants.Exchange1_1Markets_MutableExchangeMarketConfig,
 			updateMarketConfigs:  []*types.MutableMarketConfig{},
 			expectedError: fmt.Errorf(
-				"PriceEncoder.UpdateMutableExchangeConfig: invalid exchange config update: no market config " +
-					"for market 7 on exchange 'Exchange1'"),
+				"PriceEncoder.UpdateMutableExchangeConfig: invalid exchange config update: no market config "+
+					"for market %v on exchange '%v'",
+				constants.MarketId7,
+				constants.ExchangeId1,
+			),
 		},
 		"Success": {
 			updateExchangeConfig: &constants.Exchange1_5Markets_MutableExchangeMarketConfig,

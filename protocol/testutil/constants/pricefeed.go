@@ -26,10 +26,12 @@ var (
 	Exponent7 = int32(-7)
 
 	// Exchanges
-	ExchangeId0 = "Exchange0"
-	ExchangeId1 = "Exchange1"
-	ExchangeId2 = "Exchange2"
-	ExchangeId3 = "Exchange3"
+	// Note: use real exchange ids here since these sometimes have to pass through validation against supported
+	// exchanges when used to start the pricefeed client.
+	ExchangeId0 = "Binance"
+	ExchangeId1 = "CoinbasePro"
+	ExchangeId2 = "Bitfinex"
+	ExchangeId3 = "Kucoin"
 
 	// ExchangeArray
 	Exchange1Exchange2Array = []string{

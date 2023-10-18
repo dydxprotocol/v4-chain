@@ -124,6 +124,22 @@ var (
 	validExchangeId               = constants.ExchangeId1
 	closeConnectionFailsError     = errors.New(closeConnectionFailsErrorMsg)
 	testExchangeQueryConfigLength = len(constants.TestExchangeQueryConfigs)
+
+	updatedIntervalMs = uint32(999)
+	updatedTimeoutMs  = uint32(1498)
+	updatedMaxQueries = uint32(7)
+
+	validOverrideConfigString = fmt.Sprintf(
+		`{"exchange_query_configs":[`+
+			`{"exchange_id":"%v","disabled":true,"interval_ms":%v,"timeout_ms":%v,"max_queries":%v},`+
+			`{"exchange_id":"%v","disabled":true}`+
+			`]}`,
+		constants.ExchangeId1,
+		updatedIntervalMs,
+		updatedTimeoutMs,
+		updatedMaxQueries,
+		constants.ExchangeId2,
+	)
 )
 
 func TestFixedBufferSize(t *testing.T) {
@@ -142,20 +158,59 @@ func TestUpdateExchangeQueryConfigFromFlags(t *testing.T) {
 			exchangeQueryConfig:  constants.TestExchangeQueryConfigs,
 			expectedConfig:       constants.TestExchangeQueryConfigs, // no change
 		},
-		"invalid: parse failures bubble up": {},
-		"invalid: apply errors bubble up":   {},
-		"valid: multiple updates":           {},
+		"invalid: parse failures bubble up": {
+			overrideConfigString: "invalid",
+			exchangeQueryConfig:  constants.TestExchangeQueryConfigs,
+			expectedError: fmt.Errorf(
+				"Could not parse exchange config flag: Error unmarshalling exchange config override",
+			),
+		},
+		"valid: multiple updates": {
+			overrideConfigString: validOverrideConfigString,
+			exchangeQueryConfig:  constants.TestExchangeQueryConfigs,
+			expectedConfig: map[types.ExchangeId]*types.ExchangeQueryConfig{
+				constants.ExchangeId1: {
+					ExchangeId: constants.ExchangeId1,
+					Disabled:   true,
+					IntervalMs: updatedIntervalMs,
+					TimeoutMs:  updatedTimeoutMs,
+					MaxQueries: updatedMaxQueries,
+				},
+				constants.ExchangeId2: {
+					ExchangeId: constants.ExchangeId2,
+					Disabled:   true,
+					IntervalMs: constants.TestExchangeQueryConfigs[constants.ExchangeId2].IntervalMs,
+					TimeoutMs:  constants.TestExchangeQueryConfigs[constants.ExchangeId2].TimeoutMs,
+					MaxQueries: constants.TestExchangeQueryConfigs[constants.ExchangeId2].MaxQueries,
+				},
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			daemonFlags := daemonflags.GetDefaultDaemonFlags()
+			daemonFlags.Price.ExchangeConfigOverride = tc.overrideConfigString
+			updatedExchangeConfig, err := UpdateExchangeQueryConfigFromFlags(tc.exchangeQueryConfig, daemonFlags)
+			if tc.expectedError == nil {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedConfig, updatedExchangeConfig)
+			} else {
+				require.Zero(t, updatedExchangeConfig)
+				require.ErrorContains(t, err, tc.expectedError.Error())
+			}
+		})
 	}
 }
 
 func TestStart_InvalidConfig(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		mockGrpcClient              *mocks.GrpcClient
-		initialMarketConfig         map[types.MarketId]*types.MutableMarketConfig
-		initialExchangeMarketConfig map[types.ExchangeId]*types.MutableExchangeMarketConfig
-		exchangeIdToQueryConfig     map[types.ExchangeId]*types.ExchangeQueryConfig
-		exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails
+		mockGrpcClient                  *mocks.GrpcClient
+		initialMarketConfig             map[types.MarketId]*types.MutableMarketConfig
+		initialExchangeMarketConfig     map[types.ExchangeId]*types.MutableExchangeMarketConfig
+		exchangeIdToQueryConfig         map[types.ExchangeId]*types.ExchangeQueryConfig
+		exchangeIdToExchangeDetails     map[types.ExchangeId]types.ExchangeQueryDetails
+		exchangeQueryConfigOverrideJson string
 
 		// expectations
 		expectedError             error
@@ -184,6 +239,19 @@ func TestStart_InvalidConfig(t *testing.T) {
 			expectGrpcConnection:     true,
 			expectCloseTcpConnection: true,
 		},
+		"Invalid: invalid exchange config override": {
+			mockGrpcClient:                  grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
+			exchangeIdToQueryConfig:         constants.TestExchangeQueryConfigs,
+			exchangeIdToExchangeDetails:     constants.TestExchangeIdToExchangeQueryDetails,
+			exchangeQueryConfigOverrideJson: "invalid",
+			expectGrpcConnection:            true,
+			expectCloseTcpConnection:        true,
+			expectCloseGrpcConnection:       true,
+			expectedError: fmt.Errorf(
+				"Could not update exchange config for daemon: Could not parse exchange config flag: Error " +
+					"unmarshalling exchange config override: invalid character 'i' looking for beginning of value",
+			),
+		},
 		"Valid: 2 exchanges": {
 			mockGrpcClient:              grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
 			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
@@ -192,6 +260,16 @@ func TestStart_InvalidConfig(t *testing.T) {
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
 			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
+		},
+		"Valid: 2 exchanges with valid exchange config override": {
+			mockGrpcClient:                  grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
+			exchangeIdToQueryConfig:         constants.TestExchangeQueryConfigs,
+			exchangeIdToExchangeDetails:     constants.TestExchangeIdToExchangeQueryDetails,
+			exchangeQueryConfigOverrideJson: validOverrideConfigString,
+			expectGrpcConnection:            true,
+			expectCloseTcpConnection:        true,
+			expectCloseGrpcConnection:       true,
+			expectedNumExchangeTasks:        testExchangeQueryConfigLength,
 		},
 		"Invalid: empty exchange query config": {
 			mockGrpcClient:            grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
@@ -252,11 +330,16 @@ func TestStart_InvalidConfig(t *testing.T) {
 			// Wait for each encoder and fetcher call to complete.
 			faketaskRunner.WaitGroup.Add(tc.expectedNumExchangeTasks * 2)
 
+			daemonFlags := daemonflags.GetDefaultDaemonFlags()
+			if tc.exchangeQueryConfigOverrideJson != "" {
+				daemonFlags.Price.ExchangeConfigOverride = tc.exchangeQueryConfigOverrideJson
+			}
+
 			// Run Start.
 			client := newClient()
 			err := client.start(
 				grpc_util.Ctx,
-				daemonflags.GetDefaultDaemonFlags(),
+				daemonFlags,
 				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 				log.NewNopLogger(),
 				tc.mockGrpcClient,

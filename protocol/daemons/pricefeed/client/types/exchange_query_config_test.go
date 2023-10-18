@@ -101,14 +101,14 @@ func TestValidateDelta(t *testing.T) {
 	}
 }
 
-func TestApplyDeltaAndValidate(t *testing.T) {
+func TestApplyDelta(t *testing.T) {
 	tests := map[string]struct {
 		exchangeQueryConfig *types.ExchangeQueryConfig
 		delta               *types.ExchangeQueryConfig
 		expected            *types.ExchangeQueryConfig
 		expectedError       error
 	}{
-		"valid, applies all fields": {
+		"success, applies all fields": {
 			exchangeQueryConfig: &types.ExchangeQueryConfig{
 				ExchangeId: "Binance",
 				IntervalMs: 1,
@@ -130,7 +130,7 @@ func TestApplyDeltaAndValidate(t *testing.T) {
 				MaxQueries: 2,
 			},
 		},
-		"invalid - mismatched exchange id": {
+		"failure - mismatched exchange id": {
 			exchangeQueryConfig: &types.ExchangeQueryConfig{
 				ExchangeId: "Binance",
 				IntervalMs: 1,
@@ -142,7 +142,7 @@ func TestApplyDeltaAndValidate(t *testing.T) {
 			},
 			expectedError: fmt.Errorf("exchange id mismatch: CoinbasePro, Binance"),
 		},
-		"valid, enables disabled exchange": {
+		"success, enables disabled exchange": {
 			exchangeQueryConfig: &types.ExchangeQueryConfig{
 				ExchangeId: "Binance",
 				Disabled:   true,
@@ -161,22 +161,10 @@ func TestApplyDeltaAndValidate(t *testing.T) {
 				MaxQueries: 1,
 			},
 		},
-		"invalid - invalid exchange config": {
-			exchangeQueryConfig: &types.ExchangeQueryConfig{
-				ExchangeId: "Binance",
-				IntervalMs: 0, // invalid
-				TimeoutMs:  1,
-				MaxQueries: 1,
-			},
-			delta: &types.ExchangeQueryConfig{
-				ExchangeId: "Binance",
-			},
-			expectedError: fmt.Errorf("Error:Field validation for 'IntervalMs' failed on the 'gt' tag"),
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			updatedConfig, err := tc.exchangeQueryConfig.ApplyDeltaAndValidate(tc.delta, validExchanges)
+			updatedConfig, err := tc.exchangeQueryConfig.ApplyDelta(tc.delta)
 			if tc.expectedError == nil {
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, updatedConfig)

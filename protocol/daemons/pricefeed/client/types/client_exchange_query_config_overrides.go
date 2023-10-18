@@ -38,12 +38,8 @@ func ApplyClientExchangeQueryConfigOverride(
 	updatedConfigs map[ExchangeId]*ExchangeQueryConfig,
 	err error,
 ) {
-	// Compute list of valid exchanges here from the input `exchangeQueryConfigs` map in order to avoid import
-	// loops by referencing the default config directly.
-	validExchanges := make(map[ExchangeId]struct{}, len(exchangeQueryConfigs))
 	updatedConfigs = make(map[ExchangeId]*ExchangeQueryConfig, len(exchangeQueryConfigs))
 	for exchangeId := range exchangeQueryConfigs {
-		validExchanges[exchangeId] = struct{}{}
 		updatedConfigs[exchangeId] = exchangeQueryConfigs[exchangeId].Copy()
 	}
 
@@ -52,7 +48,7 @@ func ApplyClientExchangeQueryConfigOverride(
 		if !ok {
 			return nil, fmt.Errorf("invalid exchange id %v", eqc.ExchangeId)
 		}
-		updatedConfig, err := config.ApplyDeltaAndValidate(eqc, validExchanges)
+		updatedConfig, err := config.ApplyDelta(eqc)
 		if err != nil {
 			return nil, err
 		}

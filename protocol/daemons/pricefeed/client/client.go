@@ -102,29 +102,30 @@ func UpdateExchangeQueryConfigFromFlags(
 	err error,
 ) {
 	if daemonFlags.Price.ExchangeConfigOverride == "" {
-		return
+		return exchangeQueryConfig, nil
 	}
+
 	exchangeConfigOverrides, err := flags.ParseExchangeConfigOverride(
 		daemonFlags.Price.ExchangeConfigOverride,
 	)
 	// Panic if the exchange config override flag is invalid, since we cannot start the daemon with
 	// the specified config.
 	if err != nil {
-		return nil, fmt.Errorf("Could not start price daemon: %w", err)
+		return nil, fmt.Errorf("Could not parse exchange config flag: %w", err)
 	}
 
 	// Apply the exchange config override to the static exchange config.
-	exchangeQueryConfig, err = types.ApplyClientExchangeQueryConfigOverride(
+	updatedExchangeConfig, err = types.ApplyClientExchangeQueryConfigOverride(
 		exchangeQueryConfig,
 		&exchangeConfigOverrides,
 	)
 	// Panic if we cannot apply the exchange config override, since we cannot start the daemon with
 	// the specified config.
 	if err != nil {
-		return nil, fmt.Errorf("Could not start price daemon: %w", err)
+		return nil, fmt.Errorf("Could not apply exchange config: %w", err)
 	}
 
-	return exchangeQueryConfig, nil
+	return updatedExchangeConfig, nil
 }
 
 // start begins a job that:
@@ -187,7 +188,7 @@ func (c *Client) start(ctx context.Context,
 		daemonFlags,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("Could not update exchange config for daemon: %w", err)
 	}
 
 	// 2. Validate daemon configuration.

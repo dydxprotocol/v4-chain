@@ -2,6 +2,7 @@ package price_fetcher
 
 import (
 	"errors"
+	"fmt"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"testing"
 
@@ -646,7 +647,11 @@ func TestRunSubTask_Mixed(t *testing.T) {
 				constants.Market8_TimeT_Price1,
 			},
 			expectedErrors: []error{
-				errors.New("Invalid price of 0 for exchange: 'Exchange1' and market: 7"),
+				fmt.Errorf(
+					"Invalid price of 0 for exchange: '%v' and market: %v",
+					constants.ExchangeId1,
+					constants.MarketId7,
+				),
 			},
 		},
 		"Mixed - unavailable tickers": {

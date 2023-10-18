@@ -74,11 +74,10 @@ func (eqc *ExchangeQueryConfig) ValidateDelta(validExchanges map[ExchangeId]stru
 	return nil
 }
 
-// ApplyDeltaAndValidate applies the delta to the exchange query config and validates the result. It does not mutate
+// ApplyDelta applies the delta to the exchange query config and validates the result. It does not mutate
 // the original exchange query config.
-func (eqc *ExchangeQueryConfig) ApplyDeltaAndValidate(
+func (eqc *ExchangeQueryConfig) ApplyDelta(
 	delta *ExchangeQueryConfig,
-	validExchanges map[ExchangeId]struct{},
 ) (
 	updatedConfig *ExchangeQueryConfig,
 	err error,
@@ -103,11 +102,6 @@ func (eqc *ExchangeQueryConfig) ApplyDeltaAndValidate(
 
 	if delta.MaxQueries != 0 {
 		updatedConfig.MaxQueries = delta.MaxQueries
-	}
-
-	// After applying delta, validate the exchange query config.
-	if err = updatedConfig.Validate(validExchanges); err != nil {
-		return nil, fmt.Errorf("invalid exchange query config for %v: %w", eqc.ExchangeId, err)
 	}
 
 	return updatedConfig, nil
