@@ -89,7 +89,9 @@ func TestDisableExchange(t *testing.T) {
 	// Act.
 	// Disable the exchange, and update with modified params to force an update to the fetchers and encoders.
 	pfmmc.DisableExchange(exchangeIdCoinbase)
-	pfmmc.UpdateMarkets(constants.TestMarket7And8Params_CoinbaseUpdate)
+	marketParamErrors, err = pfmmc.UpdateMarkets(constants.TestMarket7And8Params_CoinbaseUpdate)
+	require.Empty(t, marketParamErrors)
+	require.NoError(t, err)
 
 	// Assert.
 	// Assert the exchange is disabled for the returned updated exchange market config.

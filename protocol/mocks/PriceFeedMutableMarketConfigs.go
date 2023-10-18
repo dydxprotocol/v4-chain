@@ -23,6 +23,11 @@ func (_m *PricefeedMutableMarketConfigs) AddPriceFetcher(updater types.ExchangeC
 	_m.Called(updater)
 }
 
+// DisableExchange provides a mock function with given fields: id
+func (_m *PricefeedMutableMarketConfigs) DisableExchange(id string) {
+	_m.Called(id)
+}
+
 // GetExchangeMarketConfigCopy provides a mock function with given fields: id
 func (_m *PricefeedMutableMarketConfigs) GetExchangeMarketConfigCopy(id string) (*types.MutableExchangeMarketConfig, error) {
 	ret := _m.Called(id)

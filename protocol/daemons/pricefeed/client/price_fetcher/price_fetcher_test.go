@@ -644,7 +644,6 @@ func TestRunSubTask_IgnoresDisabledExchanges(t *testing.T) {
 	pf.RunTaskLoop(requestHandler)
 	// No query calls occur.
 	mock.AssertExpectationsForObjects(t, mockExchangeQueryHandler)
-
 }
 
 // Test runSubTask behavior with different query handler responses
