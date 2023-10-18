@@ -277,7 +277,6 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
-		"test",
 	)
 	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
