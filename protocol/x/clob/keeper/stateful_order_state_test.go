@@ -63,17 +63,19 @@ func TestLongTermOrderInitMemStore_Success(t *testing.T) {
 	longTermOrderStore := ks.ClobKeeper.GetLongTermOrderPlacementStore(ks.Ctx)
 
 	// Set orders only on the store, not the memstore.
+	index := uint32(0)
 	storeOrder := func(order types.Order, store prefix.Store) {
 		longTermOrderPlacement := types.LongTermOrderPlacement{
 			Order: order,
 			PlacementIndex: types.TransactionOrdering{
 				BlockHeight:      0,
-				TransactionIndex: 0,
+				TransactionIndex: index,
 			},
 		}
 		longTermOrderPlacementBytes := ks.Cdc.MustMarshal(&longTermOrderPlacement)
 		orderKey := order.OrderId.ToStateKey()
 		store.Set(orderKey, longTermOrderPlacementBytes)
+		index++
 	}
 
 	// Set some long term orders.

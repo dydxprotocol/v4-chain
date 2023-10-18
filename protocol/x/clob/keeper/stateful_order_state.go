@@ -7,6 +7,7 @@ import (
 
 	gometrics "github.com/armon/go-metrics"
 	db "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -152,7 +153,14 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	count := k.GetStatefulOrderCount(ctx, orderId.SubaccountId)
 	orderKey := orderId.ToStateKey()
 	if memStore.Has(orderKey) {
-		count--
+		if count == 0 {
+			k.Logger(ctx).Error(
+				"Stateful order count is zero but order is in the memstore. Underflow",
+				"orderId", log.NewLazySprintf("%+v", orderId),
+			)
+		} else {
+			count--
+		}
 	}
 
 	// Delete the `StatefulOrderPlacement` from state.
@@ -397,6 +405,12 @@ func (k Keeper) RemoveExpiredStatefulOrdersTimeSlices(ctx sdk.Context, blockTime
 	return expiredOrderIds
 }
 
+// GetAllStatefulOrders iterates over all stateful order placements and returns a list
+// of orders, ordered by ascending time priority.
+func (k Keeper) GetAllStatefulOrders(ctx sdk.Context) []types.Order {
+	return k.getStatefulOrders(k.getAllOrdersIterator(ctx))
+}
+
 // GetAllPlacedStatefulOrders iterates over all stateful order placements and returns a list
 // of orders, ordered by ascending time priority. Note that this only returns placed orders,
 // and therefore will not return untriggered conditional orders.
@@ -472,6 +486,16 @@ func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time
 		startKey,
 		endKey,
 	)
+}
+
+// getAllOrdersIterator returns an iterator over all stateful orders, which includes all
+// Long-Term orders, triggered and untriggered conditional orders.
+func (k Keeper) getAllOrdersIterator(ctx sdk.Context) sdk.Iterator {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.StatefulOrderKeyPrefix),
+	)
+	return sdk.KVStorePrefixIterator(store, []byte{})
 }
 
 // getPlacedOrdersIterator returns an iterator over all placed orders, which includes all

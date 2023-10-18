@@ -1146,7 +1146,7 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 }
 
 // InitStatefulOrders places all stateful orders in state on the memclob, placed in ascending
-// order by time priority and initializes the stateful order count.
+// order by time priority.
 // This is called during app initialization in `app.go`, before any ABCI calls are received
 // and after all MemClob orderbooks are instantiated.
 func (k Keeper) InitStatefulOrders(
@@ -1164,13 +1164,6 @@ func (k Keeper) InitStatefulOrders(
 	// Place each order in the memclob, ignoring errors if they occur.
 	statefulOrders := k.GetAllPlacedStatefulOrders(ctx)
 	for _, statefulOrder := range statefulOrders {
-		// Ensure that the stateful order count is accurately represented in the memstore on restart.
-		k.SetStatefulOrderCount(
-			ctx,
-			statefulOrder.OrderId.SubaccountId,
-			k.GetStatefulOrderCount(ctx, statefulOrder.OrderId.SubaccountId)+1,
-		)
-
 		// First fork the multistore. If `PlaceOrder` fails, we don't want to write to state.
 		placeOrderCtx, writeCache := ctx.CacheContext()
 
@@ -1230,7 +1223,6 @@ func (k Keeper) HydrateUntriggeredConditionalOrders(
 
 	// Get all untriggered conditional orders in state, ordered by time priority ascending order,
 	// and add them to the `UntriggeredConditionalOrders` data structure.
-	// Place each order in the memclob, ignoring errors if they occur.
 	untriggeredConditionalOrders := k.GetAllUntriggeredConditionalOrders(ctx)
 	k.AddUntriggeredConditionalOrders(
 		ctx,
