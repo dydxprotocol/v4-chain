@@ -621,6 +621,32 @@ func TestGetExchangeId(t *testing.T) {
 	require.Equal(t, constants.Exchange1_1MaxQueries_QueryConfig.ExchangeId, pf.GetExchangeId())
 }
 
+func TestRunSubTask_IgnoresDisabledExchanges(t *testing.T) {
+	exchangeQueryConfig := constants.Exchange1_1MaxQueries_QueryConfig
+	mutableExchangeMarketConfig := constants.Exchange1_Disabled_MutableExchangeMarketConfig
+	mutableMarketConfigs := constants.MutableMarketConfigs_1Markets
+	mockExchangeQueryHandler := &mocks.ExchangeQueryHandler{}
+	requestHandler := &daemontypes.RequestHandlerImpl{}
+
+	bCh := newTestPriceFetcherBufferedChannel()
+
+	pf, err := NewPriceFetcher(
+		exchangeQueryConfig,
+		constants.MultiMarketExchangeQueryDetails,
+		&mutableExchangeMarketConfig,
+		mutableMarketConfigs,
+		mockExchangeQueryHandler,
+		log.NewNopLogger(),
+		bCh,
+	)
+	require.NoError(t, err)
+
+	pf.RunTaskLoop(requestHandler)
+	// No query calls occur.
+	mock.AssertExpectationsForObjects(t, mockExchangeQueryHandler)
+
+}
+
 // Test runSubTask behavior with different query handler responses
 func TestRunSubTask_Mixed(t *testing.T) {
 	tests := map[string]struct {

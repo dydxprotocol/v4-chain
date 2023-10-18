@@ -392,6 +392,16 @@ var (
 		},
 	}
 
+	Exchange1_Disabled_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
+		Id:       ExchangeId1,
+		Disabled: true,
+		MarketToMarketConfig: map[daemonClientTypes.MarketId]daemonClientTypes.MarketConfig{
+			MarketId7: {
+				Ticker: "BTC-USD",
+			},
+		},
+	}
+
 	Exchange1_2Markets_MutableExchangeMarketConfig = daemonClientTypes.MutableExchangeMarketConfig{
 		Id: ExchangeId1,
 		MarketToMarketConfig: map[daemonClientTypes.MarketId]daemonClientTypes.MarketConfig{
