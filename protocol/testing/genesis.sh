@@ -72,6 +72,7 @@ function edit_genesis() {
 		# Default to 10 million full coins.
 		REWARDS_VESTER_ACCOUNT_BALANCE="10000000$EIGHTEEN_ZEROS"
 	fi
+	
 	# Genesis time
 	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 
