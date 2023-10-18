@@ -265,7 +265,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.exchangeServer.SetPrice(exchange_config.MARKET_LINK_USD, 3_000_000)
 
 	// Set USDT to 90 cents.
-	s.exchangeServer.SetPrice(exchange_config.MARKET_USDT_USD, 900_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_USDT_USD, .9)
 
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
@@ -357,6 +357,9 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 		if len(prices) != len(expectedPrices) {
 			continue
 		}
+
+		allPricesMatch := true
+
 		for marketId, expectedPrice := range expectedPrices {
 			actualPrice, ok := prices[marketId]
 			if !ok {
@@ -364,10 +367,13 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 			}
 
 			if actualPrice != expectedPrice {
-				continue
+				allPricesMatch = false
+				break
 			}
 		}
-		return
+		if allPricesMatch {
+			return
+		}
 	}
 }
 
