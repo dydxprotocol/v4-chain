@@ -371,6 +371,9 @@ func getUpdateParametersForExchange(
 // 4. Take the writer lock on the pricefeed mutable market configs.
 // 5. Swap in new markets and exchange configs.
 // 6. For each changed exchange config, send an update to each updater.
+// This sequence progresses as usual even if an exchange is disabled. Configs for isabled exchanges are marked
+// as disabled whenever an update occurs, and the disabled flag is propagated to the updaters, which can then
+// choose to behave differently for disabled exchanges.
 // UpdateMarkets applies market settings independently. If any market param is invalid, the method will populate
 // marketParamErrors with the error and continue processing the remaining market params. If the entire validation fails,
 // the method will return an error.
