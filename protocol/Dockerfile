@@ -47,7 +47,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 FROM golang@sha256:${GOLANG_1_21_ALPINE_DIGEST}
 
-RUN apk add --no-cache bash
+RUN apk add --no-cache bash dasel jq
 
 COPY --from=builder /dydxprotocol/build/dydxprotocold /bin/dydxprotocold
 

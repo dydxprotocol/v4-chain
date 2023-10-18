@@ -414,9 +414,8 @@ update-sample-pregenesis:
 	@echo "Updated ./scripts/genesis/sample_pregenesis.json"
 
 check-sample-pregenesis-up-to-date:
-	docker build --tag check-sample-pregenesis -f scripts/genesis/Dockerfile . --no-cache
-	docker run --platform linux/amd64 \
-		-v $(CURDIR):/workspace \
-		check-sample-pregenesis 
+	$(MAKE) localnet-build
+	@docker build . -t check-sample-pregenesis  -f scripts/genesis/Dockerfile --no-cache
+	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
 
 .PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date
