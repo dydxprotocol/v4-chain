@@ -48,7 +48,7 @@ func TestUpdateEventParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -57,7 +57,7 @@ func TestUpdateEventParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Submit and tally governance proposal that includes `MsgUpdateEventParams`.
@@ -115,7 +115,7 @@ func TestUpdateProposeParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -124,7 +124,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Submit and tally governance proposal that includes `MsgUpdateProposeParams`.
@@ -178,7 +178,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -187,7 +187,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Submit and tally governance proposal that includes `MsgUpdateSafetyParams`.

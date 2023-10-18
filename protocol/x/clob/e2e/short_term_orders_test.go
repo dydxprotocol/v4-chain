@@ -29,8 +29,7 @@ func TestPlaceOrder(t *testing.T) {
 	appOpts := map[string]interface{}{
 		indexer.MsgSenderInstanceForTest: msgSender,
 	}
-	tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-	tApp := tAppBuilder.Build()
+	tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 	ctx := tApp.InitChain()
 
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)

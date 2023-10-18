@@ -37,7 +37,7 @@ var (
 )
 
 func TestRewardShareStorage_DefaultValue(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RewardsKeeper
 
@@ -51,7 +51,7 @@ func TestRewardShareStorage_DefaultValue(t *testing.T) {
 }
 
 func TestRewardShareStorage_Exists(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RewardsKeeper
 
@@ -66,7 +66,7 @@ func TestRewardShareStorage_Exists(t *testing.T) {
 }
 
 func TestSetRewardShare_FailsWithNonpositiveWeight(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RewardsKeeper
 
@@ -80,7 +80,7 @@ func TestSetRewardShare_FailsWithNonpositiveWeight(t *testing.T) {
 }
 
 func TestAddRewardShareToAddress(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 
 	tests := map[string]struct {
 		prevRewardShare     *types.RewardShare // nil if no previous share
@@ -143,7 +143,7 @@ func TestAddRewardShareToAddress(t *testing.T) {
 }
 
 func TestAddRewardSharesForFill(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	makerAddress := TestAddress1
 	takerAdderss := TestAddress2
 
@@ -637,7 +637,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				// Set up treasury account balance in genesis state
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -652,7 +652,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 
 			tApp.Reset()
 			ctx := tApp.InitChain()

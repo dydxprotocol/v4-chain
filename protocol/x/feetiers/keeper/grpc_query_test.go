@@ -12,7 +12,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
@@ -47,7 +47,7 @@ func TestParams(t *testing.T) {
 }
 
 func TestUserFeeTier(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 

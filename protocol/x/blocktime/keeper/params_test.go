@@ -10,7 +10,7 @@ import (
 )
 
 func TestGetDowntimeParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 
@@ -18,7 +18,7 @@ func TestGetDowntimeParams(t *testing.T) {
 }
 
 func TestSetDowntimeParams_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	tApp.InitChain()
 	ctx := tApp.AdvanceToBlock(
 		40,

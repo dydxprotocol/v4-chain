@@ -405,7 +405,7 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() cmt.GenesisDoc {
 				genesis := testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
 					state.ClobPairs = []types.ClobPair{

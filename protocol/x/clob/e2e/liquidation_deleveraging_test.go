@@ -375,7 +375,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -445,7 +445,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
