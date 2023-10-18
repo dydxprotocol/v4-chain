@@ -283,21 +283,21 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
 		},
 		float32(numSubaccountsIterated),
 		labels,
 	)
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
 		},
 		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
 		labels,
 	)
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
 		},
@@ -428,7 +428,7 @@ func (k Keeper) ProcessDeleveraging(
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
 			metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
 		}
-		telemetry.IncrCounterWithLabels(
+		gometrics.AddSampleWithLabels(
 			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
 			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
 			labels,
