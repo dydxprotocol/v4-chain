@@ -3,16 +3,14 @@ name: Protocol Pregenesis
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:
-      - 'protocol/scripts/genesis/**'
-      - 'protocol/testing/**'
+      - protocol/**
   push:
     branches:
       - main
       - 'release/protocol/v0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
       - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
     paths:
-      - 'protocol/scripts/genesis/**'
-      - 'protocol/testing/**'
+      - protocol/**
 
 # Ensure only a single instance of this workflow is running, and cancel any that are in-progress
 # before this workflow instance starts
