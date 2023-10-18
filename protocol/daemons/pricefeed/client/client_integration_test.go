@@ -47,6 +47,10 @@ var (
 			IsMultiMarket: true,
 		},
 	}
+	// disableBitfinexFlags disables the Bitfinex exchange.
+	disableBitfinexFlags = `{"exchange_query_configs":[{"exchange_id":"Bitfinex","disabled":true}]}`
+	// changeIntervalBitfinexFlags changes the interval for Bitfinex to 100ms, supporting up to 10 queries per second.
+	changeIntervalBitfinexFlags = `{"exchange_query_configs":[{"exchange_id":"Bitfinex","interval_ms":100}]}`
 
 	// Initialize the daemon client with Bitfinex and TestExchange exchanges. Shorten intervals for testing
 	// since we're using a mock exchange server on localhost with no rate limits.
@@ -74,6 +78,19 @@ var (
 			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"},` +
 				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
 			MinExchanges:      2,
+			MinPriceChangePpm: 1,
+		},
+	}
+
+	// defaultMarketParams_1MinExchange allows BTC price to be set by both exchanges, but only require one exchange.
+	defaultMarketParams_1MinExchange = []pricetypes.MarketParam{
+		{
+			Id:       0,
+			Pair:     "BTC-USD",
+			Exponent: -5,
+			ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"},` +
+				`{"exchangeName":"TestExchange","ticker":"BTC-USD"}]}`,
+			MinExchanges:      1,
 			MinPriceChangePpm: 1,
 		},
 	}
@@ -175,9 +192,13 @@ var (
 
 	// The test exchange adds 100 to the set prices for the Bitfinex exchange response, so median prices will
 	// fall halfway between the set price and set price + 100.
-	expectedMedianBtcPrice = uint64(100_005_000_000)
-	expectedMedianEthPrice = uint64(2_000_050_000_000)
-	testExchangeLinkPrice  = uint64(300_000_000_000_000) // Link not available on Bitfinex.
+	expectedTestExchangeBtcPrice = uint64(100_000_000_000)
+	expectedMedianBtcPrice       = uint64(100_005_000_000)
+	expectedMedianEthPrice       = uint64(2_000_050_000_000)
+	testExchangeLinkPrice        = uint64(300_000_000_000_000) // Link not available on Bitfinex.
+
+	// The default price used for bitfinex when price is set to 1 million.
+	bitfinexBtcPrice = float64(1_000_100)
 
 	// USDT is set to $.90, so expect 90% of the expected median price after applying USDT conversion.
 	expectedAdjustedMedianEthPrice = uint64(1_800_045_000_000)
@@ -185,6 +206,10 @@ var (
 
 	expectedPrices1Market = map[types.MarketId]uint64{
 		exchange_config.MARKET_BTC_USD: expectedMedianBtcPrice,
+	}
+
+	expectedPricesDisabledExchange = map[types.MarketId]uint64{
+		exchange_config.MARKET_BTC_USD: expectedTestExchangeBtcPrice,
 	}
 
 	// expectedPricesPartialUpdate preserves the expected price of BTC, ignoring the invalid update params, and also
@@ -388,6 +413,67 @@ func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon() {
 		defaultMarketParams,
 		testPriceCacheExpirationDuration,
 	)
+}
+
+func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon_DisableExchangeWithFlag() {
+	// Setup daemon flags to disable Bitfinex.
+	s.daemonFlags.Price.ExchangeConfigOverride = disableBitfinexFlags
+
+	// Set up the mock prices query server to return market params that reflect the same markets and exchanges the
+	// daemon is initialized with.
+	s.mockAllMarketParamsResponse(&pricetypes.QueryAllMarketParamsResponse{
+		MarketParams: defaultMarketParams_1MinExchange,
+	})
+
+	s.startClient()
+
+	s.expectPricesWithTimeout(
+		expectedPricesDisabledExchange,
+		defaultMarketParams_1MinExchange,
+		testPriceCacheExpirationDuration,
+	)
+
+}
+
+// increasingPriceFunction returns a price function that returns 1 for the first 10 calls, then returns
+// a constant value which is the default price for bitfinex when the exchange server price is set to 1
+// million.
+func increasingPriceFunction() func() float64 {
+	calls := 0
+	return func() float64 {
+		price := float64(1)
+		if calls >= 10 {
+			price = bitfinexBtcPrice
+		}
+		calls += 1
+		return price
+	}
+}
+
+func (s *PriceDaemonIntegrationTestSuite) TestPriceDaemon_ChangeQueryIntervalWithFlag() {
+	// Setup daemon flags to disable Bitfinex.
+	s.daemonFlags.Price.ExchangeConfigOverride = changeIntervalBitfinexFlags
+	s.exchangeServer.SetPriceFunction(
+		exchange_config.MARKET_BTC_USD,
+		exchange_common.EXCHANGE_ID_BITFINEX,
+		increasingPriceFunction(),
+	)
+
+	// Set up the mock prices query server to return market params that reflect the same markets and exchanges the
+	// daemon is initialized with.
+	s.mockAllMarketParamsResponse(&pricetypes.QueryAllMarketParamsResponse{
+		MarketParams: defaultMarketParams,
+	})
+
+	s.startClient()
+
+	//
+	s.expectPricesWithTimeout(
+		expectedPrices1Market,
+		defaultMarketParams,
+		testPriceCacheExpirationDuration*2,
+	)
+
 }
 
 // TestUpdateMarkets_AddMarket tests that the pricefeed daemon produces prices for a new market after it is added.

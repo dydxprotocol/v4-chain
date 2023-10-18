@@ -178,6 +178,9 @@ func AddDaemonFlagsToCmd(
 	)
 }
 
+// ParseExchangeConfigOverride validates and parses the exchange config override JSON string into a
+// ClientExchangeQueryConfigs struct, which is a list of deltas that can be applied to the default exchange query
+// configs.
 func ParseExchangeConfigOverride(exchangeConfigOverrideJson string) (types.ClientExchangeQueryConfigs, error) {
 	var clientExchangeQueryConfigs types.ClientExchangeQueryConfigs
 	if err := json.Unmarshal([]byte(exchangeConfigOverrideJson), &clientExchangeQueryConfigs); err != nil {

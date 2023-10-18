@@ -11,4 +11,4 @@ RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
 RUN /dydxprotocol/local.sh
 
 ENV DAEMON_NAME=dydxprotocold
-ENTRYPOINT ["cosmovisor", "run"]
+ENTRYPOINT ["cosmovisor", "run", "start"]

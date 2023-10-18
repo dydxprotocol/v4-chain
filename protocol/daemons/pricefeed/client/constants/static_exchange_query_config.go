@@ -130,7 +130,8 @@ var (
 	}
 )
 
-// GetValidExchanges uses the keys in the above static map to compute and return a map of valid exchange ids.
+// GetValidExchanges uses the keys in the `StaticExchangeQueryConfig` map to compute and return a map of valid exchange
+// ids. The `StaticExchangeQueryConfig` map is used by the application to specify the list of canonical exchanges.
 func GetValidExchanges() map[string]struct{} {
 	validExchanges := make(map[string]struct{}, len(StaticExchangeQueryConfig))
 	for _, eqc := range StaticExchangeQueryConfig {

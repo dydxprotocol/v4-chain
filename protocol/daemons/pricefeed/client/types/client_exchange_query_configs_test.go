@@ -301,25 +301,11 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 				},
 			},
 			expected: map[types.ExchangeId]*types.ExchangeQueryConfig{
-				"Binance": {
-					ExchangeId: "Binance",
-					Disabled:   true,
-					IntervalMs: 1,
-					TimeoutMs:  1,
-					MaxQueries: 1,
-				},
 				"CoinbasePro": {
 					ExchangeId: "CoinbasePro",
 					IntervalMs: 2,
 					TimeoutMs:  2,
 					MaxQueries: 2,
-				},
-				"Huobi": {
-					ExchangeId: "Huobi",
-					Disabled:   true,
-					IntervalMs: 3,
-					TimeoutMs:  3,
-					MaxQueries: 3,
 				},
 			},
 		},
@@ -353,10 +339,6 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 						MaxQueries: 99,
 					},
 					{
-						ExchangeId: "CoinbasePro",
-						Disabled:   true,
-					},
-					{
 						ExchangeId: "Huobi",
 						IntervalMs: 333,
 					},
@@ -371,7 +353,6 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 				},
 				"CoinbasePro": {
 					ExchangeId: "CoinbasePro",
-					Disabled:   true,
 					IntervalMs: 2,
 					TimeoutMs:  2,
 					MaxQueries: 2,

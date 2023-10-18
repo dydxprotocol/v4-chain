@@ -156,6 +156,10 @@ func (p *PriceFetcher) getNumQueriesPerTaskLoop() int {
 // Each goroutine makes a single exchange query for a specific set of one or more markets.
 // RunTaskLoop blocks until all spawned goroutines have completed.
 func (pf *PriceFetcher) RunTaskLoop(requestHandler daemontypes.RequestHandler) {
+	if pf.mutableState.GetMutableExchangeConfig().Disabled {
+		return
+	}
+
 	taskLoopDefinition := pf.getTaskLoopDefinition()
 
 	if pf.isMultiMarketAndHasMarkets() {

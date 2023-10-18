@@ -8,7 +8,8 @@ import (
 
 // MutableExchangeMarketConfig stores all mutable market configuration per exchange.
 type MutableExchangeMarketConfig struct {
-	Id ExchangeId
+	Id       ExchangeId
+	Disabled bool
 	// We use the keys of MarketToMarketConfig to infer which markets are supported
 	// by the exchange.
 	MarketToMarketConfig map[MarketId]MarketConfig
@@ -22,6 +23,7 @@ func (memc *MutableExchangeMarketConfig) Copy() *MutableExchangeMarketConfig {
 	}
 	return &MutableExchangeMarketConfig{
 		Id:                   memc.Id,
+		Disabled:             memc.Disabled,
 		MarketToMarketConfig: marketToMarketConfig,
 	}
 }
@@ -66,6 +68,11 @@ func (memc *MutableExchangeMarketConfig) Equal(other *MutableExchangeMarketConfi
 	if memc.Id != other.Id {
 		return false
 	}
+
+	if memc.Disabled != other.Disabled {
+		return false
+	}
+
 	if len(memc.MarketToMarketConfig) != len(other.MarketToMarketConfig) {
 		return false
 	}

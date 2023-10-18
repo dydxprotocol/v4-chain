@@ -1,9 +1,10 @@
-package handler
+package handler_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"net/http"
 	"testing"
@@ -64,7 +65,7 @@ var (
 
 func TestQuery(t *testing.T) {
 	lastUpdatedAt := time.Unix(0, 0)
-	eqh := ExchangeQueryHandlerImpl{generateMockTimeProvider(lastUpdatedAt)}
+	eqh := handler.ExchangeQueryHandlerImpl{generateMockTimeProvider(lastUpdatedAt)}
 
 	tests := map[string]struct {
 		// parameters
@@ -86,7 +87,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFunc,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
 				nil,
 			),
@@ -103,7 +104,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFunc,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{
+				handler.CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
 					constants.EthUsdPair,
 				}),
@@ -128,7 +129,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFuncWithValidAndUnavailableTickers,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD, unavailableId},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{
+				handler.CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
 					constants.EthUsdPair,
 					unavailableTicker,
@@ -157,7 +158,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFuncReturnsInvalidUnavailableTicker,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{
+				handler.CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
 				}),
 				successStatus,
@@ -169,7 +170,7 @@ func TestQuery(t *testing.T) {
 		"Failure - no marketIds queried": {
 			marketIds: []types.MarketId{},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
 				nil,
 			),
@@ -179,7 +180,7 @@ func TestQuery(t *testing.T) {
 		"Failure - market config not defined for market": {
 			marketIds: []types.MarketId{FAKEUSD_ID},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{}),
 				successStatus,
 				nil,
 			),
@@ -189,7 +190,7 @@ func TestQuery(t *testing.T) {
 		"Failure - market price exponent not defined for market": {
 			marketIds: []types.MarketId{noPriceExponentMarketId},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
 				nil,
 			),
@@ -199,7 +200,7 @@ func TestQuery(t *testing.T) {
 		"Failure - query fails": {
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
 				queryError,
 			),
@@ -210,7 +211,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFunc,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				failStatus400,
 				nil,
 			),
@@ -221,7 +222,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFunc,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				failStatus500,
 				nil,
 			),
@@ -232,7 +233,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFuncWithErr,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
+				handler.CreateRequestUrl(baseEqd.Url, []string{constants.BtcUsdPair}),
 				successStatus,
 				nil,
 			),
@@ -243,7 +244,7 @@ func TestQuery(t *testing.T) {
 			priceFunc: priceFuncWithInvalidResponse,
 			marketIds: []types.MarketId{exchange_config.MARKET_BTC_USD, exchange_config.MARKET_ETH_USD},
 			requestHandler: generateMockRequestHandler(
-				CreateRequestUrl(baseEqd.Url, []string{
+				handler.CreateRequestUrl(baseEqd.Url, []string{
 					constants.BtcUsdPair,
 					constants.EthUsdPair,
 				}),

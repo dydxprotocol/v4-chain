@@ -126,7 +126,10 @@ func TestParseExchangeConfigOverride(t *testing.T) {
 			expectedErr: fmt.Errorf("Error validating exchange config override: invalid exchange id invalid"),
 		},
 		"valid client exchange query configs - disable some exchanges": {
-			input: `{"exchange_query_configs":[{"exchange_id":"Binance","disabled":true},{"exchange_id":"CoinbasePro","disabled":true}]}`,
+			input: `{"exchange_query_configs":[` +
+				`{"exchange_id":"Binance","disabled":true},` +
+				`{"exchange_id":"CoinbasePro","disabled":true}` +
+				`]}`,
 			expected: types.ClientExchangeQueryConfigs{
 				ExchangeQueryConfigs: []*types.ExchangeQueryConfig{
 					{

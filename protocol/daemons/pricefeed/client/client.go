@@ -94,6 +94,39 @@ func (c *Client) Stop() {
 	})
 }
 
+func UpdateExchangeQueryConfigFromFlags(
+	exchangeQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
+	daemonFlags flags.DaemonFlags,
+) (
+	updatedExchangeConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
+	err error,
+) {
+	if daemonFlags.Price.ExchangeConfigOverride == "" {
+		return
+	}
+	exchangeConfigOverrides, err := flags.ParseExchangeConfigOverride(
+		daemonFlags.Price.ExchangeConfigOverride,
+	)
+	// Panic if the exchange config override flag is invalid, since we cannot start the daemon with
+	// the specified config.
+	if err != nil {
+		return nil, fmt.Errorf("Could not start price daemon: %w", err)
+	}
+
+	// Apply the exchange config override to the static exchange config.
+	exchangeQueryConfig, err = types.ApplyClientExchangeQueryConfigOverride(
+		exchangeQueryConfig,
+		&exchangeConfigOverrides,
+	)
+	// Panic if we cannot apply the exchange config override, since we cannot start the daemon with
+	// the specified config.
+	if err != nil {
+		return nil, fmt.Errorf("Could not start price daemon: %w", err)
+	}
+
+	return exchangeQueryConfig, nil
+}
+
 // start begins a job that:
 // A) periodically queries prices from external data sources and saves the retrieved prices in an
 // in-memory datastore
@@ -149,6 +182,14 @@ func (c *Client) start(ctx context.Context,
 
 	pricesQueryClient := pricestypes.NewQueryClient(queryConn)
 
+	exchangeIdToQueryConfig, err = UpdateExchangeQueryConfigFromFlags(
+		exchangeIdToQueryConfig,
+		daemonFlags,
+	)
+	if err != nil {
+		return err
+	}
+
 	// 2. Validate daemon configuration.
 	if err := validateDaemonConfiguration(
 		exchangeIdToQueryConfig,
@@ -167,6 +208,12 @@ func (c *Client) start(ctx context.Context,
 	priceFeedMutableMarketConfigs := types.NewPriceFeedMutableMarketConfigs(
 		canonicalExchangeIds,
 	)
+	// Disable any exchanges disabled by the daemon flags.
+	for exchangeId, exchangeConfig := range exchangeIdToQueryConfig {
+		if exchangeConfig.Disabled {
+			priceFeedMutableMarketConfigs.DisableExchange(exchangeId)
+		}
+	}
 
 	exchangeToMarketPrices, err := types.NewExchangeToMarketPrices(canonicalExchangeIds)
 	if err != nil {
@@ -203,6 +250,7 @@ func (c *Client) start(ctx context.Context,
 		}()
 
 		ticker, stop := c.newTickerWithStop(int(exchangeConfig.IntervalMs))
+		logger.Info("Starting price fetcher", "exchangeId", _exchangeId, "IntervalMs", exchangeConfig.IntervalMs)
 		c.runningSubtasksWaitGroup.Add(1)
 		go func() {
 			defer c.runningSubtasksWaitGroup.Done()

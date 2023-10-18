@@ -2,6 +2,9 @@ package types
 
 import "fmt"
 
+// ClientExchangeQueryConfigs is a struct representation of the client exchange query config overrides passed into the
+// application as daemon flag arguments. The struct contains a list of deltas that can be applied to the default
+// exchange query configs.
 type ClientExchangeQueryConfigs struct {
 	ExchangeQueryConfigs []*ExchangeQueryConfig `json:"exchange_query_configs"`
 }

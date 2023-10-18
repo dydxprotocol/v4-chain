@@ -127,6 +127,18 @@ func NewPriceFeedMutableMarketConfigs(
 	return pfmmc
 }
 
+// DisableExchange disables the exchange with the given id. This method is synchronized.
+func (pfmmc *PricefeedMutableMarketConfigsImpl) DisableExchange(id ExchangeId) {
+	pfmmc.Lock()
+	defer pfmmc.Unlock()
+
+	exchangeConfig, exists := pfmmc.mutableExchangeToConfigs[id]
+	if !exists {
+		return
+	}
+	exchangeConfig.Disabled = true
+}
+
 // AddPriceFetcher adds a new price fetcher to the pricefeed mutable market configs. This method is synchronized.
 func (pfmmc *PricefeedMutableMarketConfigsImpl) AddPriceFetcher(
 	priceFetcher ExchangeConfigUpdater,
@@ -203,9 +215,11 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 	// Initialize mutableExchangeConfigs with empty MutableExchangeMarketConfigs to make sure that each exchange
 	// has an entry in the map. The set of exchanges is fixed and defined at compile time. We need
 	// mutableExchangeMarketConfigs to be defined for all exchanges so that we can update the respective updaters.
-	for exchangeId := range pfmmc.mutableExchangeToConfigs {
+	for exchangeId, mutableExchangeConfig := range pfmmc.mutableExchangeToConfigs {
 		mutableExchangeConfigs[exchangeId] = &MutableExchangeMarketConfig{
-			Id:                   exchangeId,
+			Id: exchangeId,
+			// propagate the disabled flag from the previous config.
+			Disabled:             mutableExchangeConfig.Disabled,
 			MarketToMarketConfig: map[MarketId]MarketConfig{},
 		}
 	}
@@ -216,9 +230,9 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 		marketNameToId[param.Pair] = param.Id
 	}
 
-	exchangeNames := make([]ExchangeId, 0, len(pfmmc.mutableExchangeToConfigs))
+	validExchangeNames := make([]ExchangeId, 0, len(pfmmc.mutableExchangeToConfigs))
 	for exchangeName := range pfmmc.mutableExchangeToConfigs {
-		exchangeNames = append(exchangeNames, exchangeName)
+		validExchangeNames = append(validExchangeNames, exchangeName)
 	}
 
 	for _, marketParam := range marketParams {
@@ -245,7 +259,7 @@ func (pfmmc *PricefeedMutableMarketConfigsImpl) ValidateAndTransformParams(marke
 			continue
 		}
 
-		err = exchangeConfigJson.Validate(exchangeNames, marketNameToId)
+		err = exchangeConfigJson.Validate(validExchangeNames, marketNameToId)
 		if err != nil {
 			marketParamErrors[marketParam.Id] = fmt.Errorf(
 				"invalid exchange config json for market param %v: %w",

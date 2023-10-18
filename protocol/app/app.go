@@ -596,7 +596,6 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := constants.StaticExchangeQueryConfig
 			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
@@ -609,7 +608,7 @@ func New(
 				appFlags,
 				logger,
 				&daemontypes.GrpcClientImpl{},
-				exchangeQueryConfig,
+				constants.StaticExchangeQueryConfig,
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)

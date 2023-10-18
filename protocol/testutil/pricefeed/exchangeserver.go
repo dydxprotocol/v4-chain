@@ -38,9 +38,14 @@ func init() {
 	}
 }
 
+type ExchangeToPriceFn map[pricefeed.ExchangeId]func() float64
+
 type ExchangeServer struct {
 	fakeServer *http.Server
 	priceMap   map[pricefeed.MarketId]float64
+
+	// Optionally allow for custom price functions to be used for specific markets and exchanges.
+	priceFunctionMap map[pricefeed.MarketId]ExchangeToPriceFn
 }
 
 // NewExchangeServer creates a new ExchangeServer that can be used to fake price data from exchanges.
@@ -48,23 +53,65 @@ type ExchangeServer struct {
 // It is appropriate to run locally or on containers.
 func NewExchangeServer() *ExchangeServer {
 	ret := &ExchangeServer{
-		priceMap: map[pricefeed.MarketId]float64{},
+		priceMap:         map[pricefeed.MarketId]float64{},
+		priceFunctionMap: map[pricefeed.MarketId]ExchangeToPriceFn{},
 	}
 	ret.startFakeServer()
 	return ret
 }
 
-func (p *ExchangeServer) GetPrice(marketId pricefeed.MarketId) float64 {
-	val, ok := p.priceMap[marketId]
-	if ok {
-		return val
+// getPriceFunction returns a price function for a market, exchange pair if defined.
+func (p *ExchangeServer) getPriceFunction(
+	marketId pricefeed.MarketId,
+	exchange pricefeed.ExchangeId,
+) func() float64 {
+	exchangeToPriceFunctions, ok := p.priceFunctionMap[marketId]
+	if !ok {
+		return nil
 	}
-	return defaultPrice
+
+	return exchangeToPriceFunctions[exchange]
+}
+
+func (p *ExchangeServer) GetPrice(marketId pricefeed.MarketId, exchange pricefeed.ExchangeId) float64 {
+	// Get price function if defined.
+	priceFn := p.getPriceFunction(marketId, exchange)
+	if priceFn != nil {
+		return priceFn()
+	}
+
+	// Otherwise, use the price in the price map, if defined.
+	price, ok := p.priceMap[marketId]
+	if !ok {
+		price = defaultPrice
+	}
+
+	// Add a constant offset to the price for bitfinex to help tests distinguish between prices medianized from
+	// multiple exchanges.
+	if exchange == exchange_common.EXCHANGE_ID_BITFINEX {
+		price = price + bitfinexPriceOffset
+	}
+
+	return price
 }
 
 func (p *ExchangeServer) SetPrice(marketId pricefeed.MarketId, price float64) {
 	p.priceMap[marketId] = price
-	print(p.priceMap)
+}
+
+// SetPriceFunction sets a price function for a market, exchange pair. Instead of returning the price in the price map,
+// the price function will be called to get the price for each query.
+func (p *ExchangeServer) SetPriceFunction(
+	marketId pricefeed.MarketId,
+	exchangeId pricefeed.ExchangeId,
+	priceFunc func() float64,
+) {
+	exchangeToPriceFn, ok := p.priceFunctionMap[marketId]
+	if !ok {
+		exchangeToPriceFn = ExchangeToPriceFn{}
+		p.priceFunctionMap[marketId] = exchangeToPriceFn
+	}
+	exchangeToPriceFn[exchangeId] = priceFunc
 }
 
 // addTestExchangeHandler updates the mux to respond to requests for the test exchange with the
@@ -72,7 +119,7 @@ func (p *ExchangeServer) SetPrice(marketId pricefeed.MarketId, price float64) {
 func addTestExchangeHandler(mux *http.ServeMux, es *ExchangeServer) {
 	mux.HandleFunc("/ticker", func(w http.ResponseWriter, r *http.Request) {
 		symbol := r.URL.Query().Get("symbol")
-		currentPrice := es.GetPrice(testExchangeSymbolToMarketId[symbol])
+		currentPrice := es.GetPrice(testExchangeSymbolToMarketId[symbol], exchange_common.EXCHANGE_ID_TEST_EXCHANGE)
 		_, _ = io.WriteString(
 			w,
 			fmt.Sprintf(
@@ -92,7 +139,7 @@ func addTestBitfinexExchangeHandler(mux *http.ServeMux, es *ExchangeServer) {
 		symbols := strings.Split(r.URL.Query().Get("symbols"), ",")
 		tickers := make([]string, 0, len(symbols))
 		for _, symbol := range symbols {
-			currentPrice := es.GetPrice(bitfinexExchangeSymbolToMarketId[symbol]) + bitfinexPriceOffset
+			currentPrice := es.GetPrice(bitfinexExchangeSymbolToMarketId[symbol], exchange_common.EXCHANGE_ID_BITFINEX)
 			tickers = append(tickers, fmt.Sprintf(
 				`["%s",%g,"",%g,"","","",%g,"","",""]`,
 				symbol,

@@ -47,6 +47,7 @@ func (mte *MarketToExchangePrices) UpdatePrices(
 			exchangeToPrices = NewExchangeToPrice(marketId)
 			mte.marketToExchangePrices[marketId] = exchangeToPrices
 		}
+
 		exchangeToPrices.UpdatePrices(marketPriceUpdate.ExchangePrices)
 	}
 }
