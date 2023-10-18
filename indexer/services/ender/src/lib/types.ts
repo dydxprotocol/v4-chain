@@ -31,6 +31,7 @@ import {
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import _ from 'lodash';
 import Long from 'long';
 import { DateTime } from 'luxon';
 
@@ -191,6 +192,13 @@ export interface SingleTradeMessage extends TradeMessage {
 export interface AnnotatedSubaccountMessage extends SubaccountMessage {
   orderId?: string,
   isFill?: boolean,
+}
+
+export function convertToSubaccountMessage(
+  annotatedMessage: AnnotatedSubaccountMessage,
+): SubaccountMessage {
+  const subaccountMessage: SubaccountMessage = _.omit(annotatedMessage, ['orderId', 'isFill']);
+  return subaccountMessage;
 }
 
 export interface VulcanMessage {

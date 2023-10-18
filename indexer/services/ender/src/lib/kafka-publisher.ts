@@ -10,11 +10,16 @@ import { TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
   CandleMessage, MarketMessage, OffChainUpdateV1, SubaccountMessage, TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
+import Big from 'big.js';
 import _ from 'lodash';
 
 import config from '../config';
 import {
-  AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage, VulcanMessage,
+  AnnotatedSubaccountMessage,
+  ConsolidatedKafkaEvent,
+  convertToSubaccountMessage,
+  SingleTradeMessage,
+  VulcanMessage,
 } from './types';
 
 type TopicKafkaMessages = {
@@ -99,7 +104,9 @@ export class KafkaPublisher {
       }
     });
 
-    this.subaccountMessages = Object.values(lastFillEvents).concat(nonFillEvents);
+    this.subaccountMessages = Object.values(lastFillEvents)
+      .concat(nonFillEvents)
+      .map((annotatedMessage) => convertToSubaccountMessage(annotatedMessage));
     this.sortEvents(KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
   }
 
@@ -131,9 +138,9 @@ export class KafkaPublisher {
 
     if (msgs) {
       msgs.sort((a: OrderedMessage, b: OrderedMessage) => {
-        if (a.blockHeight < b.blockHeight) {
+        if (Big(a.blockHeight).lt(b.blockHeight)) {
           return -1;
-        } else if (a.blockHeight > b.blockHeight) {
+        } else if (Big(a.blockHeight).gt(b.blockHeight)) {
           return 1;
         }
 
@@ -143,7 +150,7 @@ export class KafkaPublisher {
           return 1;
         }
 
-        return a.eventIndex - b.eventIndex;
+        return a.eventIndex < b.eventIndex ? -1 : 1;
       });
     }
   }
