@@ -814,6 +814,10 @@ var (
 					Ticker:         "XLM-USDT",
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
+				MARKET_NEAR_USD: {
+					Ticker:         "NEAR-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
+				},
 			},
 		},
 		exchange_common.EXCHANGE_ID_MEXC: {
