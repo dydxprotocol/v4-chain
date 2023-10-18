@@ -804,7 +804,8 @@ var (
 					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_LDO_USD: {
-					Ticker: "LDO-USDT",
+					Ticker:         "LDO-USDT",
+					AdjustByMarket: newMarketIdWithValue(MARKET_USDT_USD),
 				},
 				MARKET_USDT_USD: {
 					Ticker: "USDC-USDT",

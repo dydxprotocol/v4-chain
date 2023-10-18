@@ -1392,7 +1392,7 @@
           "pair": "BLUR-USD"
         },
         {
-          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LDOUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LDO-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LDOUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LDO_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LDO-USDT\"}]}",
+          "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LDOUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LDO-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LDOUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LDO_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
           "exponent": -9,
           "id": 26,
           "min_exchanges": 3,
