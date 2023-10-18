@@ -143,6 +143,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	ctx sdk.Context,
 	orderId types.OrderId,
 ) {
+	fmt.Printf("block: %d\n", ctx.BlockHeight())
 	// If this is a Short-Term order, panic.
 	orderId.MustBeStatefulOrder()
 
