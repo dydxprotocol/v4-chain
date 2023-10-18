@@ -1,6 +1,7 @@
 {
   "app_hash": "",
   "app_state": {
+    "07-tendermint": null,
     "assets": {
       "assets": [
         {
@@ -521,6 +522,7 @@
         }
       }
     },
+    "consensus": null,
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
@@ -754,6 +756,7 @@
       "gen_txs": []
     },
     "gov": {
+      "deposit_params": null,
       "deposits": [],
       "params": {
         "burn_proposal_deposit_prevote": false,
@@ -774,7 +777,9 @@
       },
       "proposals": [],
       "starting_proposal_id": "1",
-      "votes": []
+      "tally_params": null,
+      "votes": [],
+      "voting_params": null
     },
     "ibc": {
       "channel_genesis": {
@@ -808,6 +813,7 @@
         }
       }
     },
+    "params": null,
     "perpetuals": {
       "liquidity_tiers": [
         {
@@ -835,7 +841,7 @@
           "name": "Long-Tail"
         },
         {
-          "base_position_notional": 1000000000,
+          "base_position_notional": 100000000000,
           "id": 3,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 1000000,
