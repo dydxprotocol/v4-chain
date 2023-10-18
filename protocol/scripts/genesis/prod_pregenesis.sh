@@ -170,6 +170,11 @@ create_pregenesis_file() {
 	overwrite_genesis_production
 }
 
+sort_genesis_file(){
+	jq -S . $VAL_CONFIG_DIR/genesis.json > $VAL_CONFIG_DIR/sorted_genesis.json
+}
+
 cleanup_tmp_dir
 create_pregenesis_file
-echo "Wrote pregenesis file to $VAL_CONFIG_DIR/genesis.json"
+sort_genesis_file
+echo "Wrote pregenesis file to $VAL_CONFIG_DIR/sorted_genesis.json"
