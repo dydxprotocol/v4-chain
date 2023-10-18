@@ -7,6 +7,7 @@ import (
 
 	gometrics "github.com/armon/go-metrics"
 	db "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -154,8 +155,8 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	if memStore.Has(orderKey) {
 		if count == 0 {
 			k.Logger(ctx).Error(
-				"Stateful order count is zero but but order is in state. Underflow",
-				"subaccountId", orderId.SubaccountId,
+				"Stateful order count is zero but order is in the memstore. Underflow",
+				"orderId", log.NewLazySprintf("%+v", orderId),
 			)
 		} else {
 			count--
