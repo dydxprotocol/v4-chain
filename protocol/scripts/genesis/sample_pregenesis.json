@@ -819,7 +819,7 @@
           "name": "Large-Cap"
         },
         {
-          "base_position_notional": 1000000000,
+          "base_position_notional": 250000000000,
           "id": 1,
           "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
@@ -827,7 +827,7 @@
           "name": "Mid-Cap"
         },
         {
-          "base_position_notional": 1000000000,
+          "base_position_notional": 100000000000,
           "id": 2,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
