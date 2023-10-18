@@ -1019,7 +1019,7 @@ function edit_genesis() {
 		next_bank_idx=$(($next_bank_idx+1))
 	fi
 
-	if [ "$REWARDS_VESTER_ACCOUNT_BALANCE" -gt 0 ]; then
+	if [ $(echo "$REWARDS_VESTER_ACCOUNT_BALANCE > 0" | bc -l) -eq 1 ]; then
 		# Initialize bank balance of reward vester account.
 		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
 		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
