@@ -1,5 +1,5 @@
 # Usage:
-# GITHUB_TOKEN=<token> python main.py --old <old> --new <new> --path <path>
+# GITHUB_TOKEN=<token> python main.py --old <old commit> --new <new commit> --path <path>
 #
 # The above command will create release notes for changes between the <old> commit and the <new> commit.
 # Only commits that change files in <path> will be included. A github token is required to avoid rate limits.
