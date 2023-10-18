@@ -21,8 +21,9 @@ import (
 
 func TestConditionalOrder(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts []satypes.Subaccount
-		orders      []clobtypes.Order
+		subaccounts          []satypes.Subaccount
+		orders               []clobtypes.Order
+		ordersForSecondBlock []clobtypes.Order
 
 		priceUpdateForFirstBlock  *prices.MsgUpdateMarketPrices
 		priceUpdateForSecondBlock *prices.MsgUpdateMarketPrices
@@ -689,7 +690,7 @@ func TestConditionalOrder(t *testing.T) {
 				constants.Dave_Num0_500000USD,
 			},
 			orders: []clobtypes.Order{
-				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50001_GTBT10,
+				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10,
 				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
 			},
 			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
@@ -699,18 +700,66 @@ func TestConditionalOrder(t *testing.T) {
 			},
 			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
-				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
-				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
-				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
+				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
 			},
 			expectedExistInState: map[clobtypes.OrderId]bool{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Carl_Num0,
 					AssetPositions: []*satypes.AssetPosition{
 						&constants.Usdc_Asset_10_000,
+					},
+				},
+			},
+		},
+		"TakeProfit/Buy post-only conditional order can place, trigger, not cross, and partially fill in a later block": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_10000USD,
+				constants.Dave_Num0_500000USD,
+			},
+			orders: []clobtypes.Order{
+				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO,
+			},
+			ordersForSecondBlock: []clobtypes.Order{
+				constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50000_GTBT10,
+			},
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 4_999_600_000),
+				},
+			},
+			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+			},
+			expectedExistInState: map[clobtypes.OrderId]bool{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: 25_000_000,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(10_000_000_000 - 12_500_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(25_000_000),
+							FundingIndex: dtypes.NewInt(0),
+						},
 					},
 				},
 			},
@@ -731,12 +780,12 @@ func TestConditionalOrder(t *testing.T) {
 			},
 			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
-				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: true},
-				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
-				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false},
+				2: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: true},
+				3: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: false},
+				4: {constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: false},
 			},
 			expectedExistInState: map[clobtypes.OrderId]bool{
-				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_SL_50003_IOC.OrderId: false,
+				constants.ConditionalOrder_Carl_Num0_Id0_Clob0_Buy05BTC_Price50000_GTBT10_TP_49999_PO.OrderId: false,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -846,13 +895,31 @@ func TestConditionalOrder(t *testing.T) {
 			}
 
 			// Advance to the next block with new price updates.
+			deliverTxsOverride = [][]byte{tApp.GetProposedOperationsTx()}
 			txBuilder = encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
 			require.NoError(t, txBuilder.SetMsgs(tc.priceUpdateForSecondBlock))
 			priceUpdateTxBytes, err = encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
 			require.NoError(t, err)
+			deliverTxsOverride = append(deliverTxsOverride, priceUpdateTxBytes)
+
+			// Place orders for second block
+			for _, order := range tc.ordersForSecondBlock {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					*clobtypes.NewMsgPlaceOrder(order),
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+
+					if order.IsStatefulOrder() {
+						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
+					}
+				}
+			}
 
 			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-				DeliverTxsOverride: [][]byte{tApp.GetProposedOperationsTx(), priceUpdateTxBytes},
+				DeliverTxsOverride: deliverTxsOverride,
 			})
 
 			if expectedTriggeredOrders, ok := tc.expectedInTriggeredStateAfterBlock[3]; ok {

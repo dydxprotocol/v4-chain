@@ -354,10 +354,10 @@ var (
 		Subticks:     50_000_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 10},
 	}
-	LongTermOrder_Dave_Num0_Id0_Clob0_Sell025BTC_Price50001_GTBT10 = clobtypes.Order{
+	LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10 = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
 			SubaccountId: Dave_Num0,
-			ClientId:     0,
+			ClientId:     1,
 			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 			ClobPairId:   0,
 		},
