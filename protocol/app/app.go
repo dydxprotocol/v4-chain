@@ -14,7 +14,6 @@ import (
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	sdklog "cosmossdk.io/log"
-
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -95,8 +94,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
@@ -284,6 +282,8 @@ type App struct {
 	// delayed until after the gRPC service is initialized so that the gRPC service will be available and the daemons
 	// can correctly operate.
 	startDaemons func()
+
+	PriceFeedClient *pricefeedclient.Client
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -546,7 +546,6 @@ func New(
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
-		appFlags.GrpcAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -602,7 +601,7 @@ func New(
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
-			client := pricefeedclient.StartNewClient(
+			app.PriceFeedClient = pricefeedclient.StartNewClient(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
@@ -614,7 +613,6 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
 		}
 
 		// Start Bridge Daemon.
@@ -1418,8 +1416,15 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 	app.SetAnteHandler(anteHandler)
 }
 
+// Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
-	return app.BaseApp.Close()
+	if app.PriceFeedClient != nil {
+		app.PriceFeedClient.Stop()
+	}
+	if app.Server != nil {
+		app.Server.Stop()
+	}
+	return nil
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
