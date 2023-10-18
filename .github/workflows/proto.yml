@@ -80,7 +80,7 @@ jobs:
   protocol-gen:
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/cosmos/proto-builder:0.11.5
+      image: ghcr.io/cosmos/proto-builder:0.14.0
       options: --user root
     steps:
       - uses: actions/checkout@v3

@@ -79,6 +79,8 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 				orderToCancel.OrderId,
 			).Error(),
 		).Error(),
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
@@ -114,11 +116,9 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On(
 		"Error",
-		[]interface{}{
-			types.ErrTimeExceedsGoodTilBlockTime.Error(),
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-			mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-		}...,
+		types.ErrTimeExceedsGoodTilBlockTime.Error(),
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))

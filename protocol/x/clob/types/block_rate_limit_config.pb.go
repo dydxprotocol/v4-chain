@@ -32,8 +32,8 @@ type BlockRateLimitConfiguration struct {
 	//
 	// Specifying 0 values disables this rate limit.
 	MaxShortTermOrdersPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,1,rep,name=max_short_term_orders_per_n_blocks,json=maxShortTermOrdersPerNBlocks,proto3" json:"max_short_term_orders_per_n_blocks"`
-	// How many stateful order attempts (successful and failed) are allowed for a
-	// subaccount per N blocks. Note that the rate limits are applied
+	// How many stateful order attempts (successful and failed) are allowed for
+	// an account per N blocks. Note that the rate limits are applied
 	// in an AND fashion such that an order placement must pass all rate limit
 	// configurations.
 	//

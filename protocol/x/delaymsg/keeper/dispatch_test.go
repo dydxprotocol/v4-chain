@@ -385,7 +385,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis
@@ -484,7 +484,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis

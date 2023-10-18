@@ -220,9 +220,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 		// Expectations.
 		expectedCanDeleverageSubaccount bool
 	}{
-		`Cannot deleverage when subaccount has positive TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Cannot deleverage when subaccount has positive TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
@@ -231,9 +230,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			expectedCanDeleverageSubaccount: false,
 		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Cannot deleverage when subaccount has zero TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
@@ -242,54 +240,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			expectedCanDeleverageSubaccount: false,
 		},
-		`Cannot deleverage when subaccount has negative TNC, insurance fund balance is greater than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is equal to
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
+		`Can deleverage when subaccount has negative TNC`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
 			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Cannot deleverage when subaccount has zero TNC, insurance fund balance is less than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(0), // $0
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: false,
-		},
-		`Can deleverage when subaccount has negative TNC, insurance fund balance is equal to
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
-			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
-			},
-
-			expectedCanDeleverageSubaccount: true,
-		},
-		`Can deleverage when subaccount has negative TNC, insurance fund balance is less than
-			MaxInsuranceFundQuantumsForDeleveraging`: {
-			liquidationConfig:    constants.LiquidationsConfig_10bMaxInsuranceFundQuantumsForDeleveraging,
-			insuranceFundBalance: big.NewInt(0), // $0
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
@@ -389,7 +342,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 		expectedFills             []types.MatchPerpetualDeleveraging_Fill
 		expectedQuantumsRemaining *big.Int
 	}{
-		"Can get one offsetting subaccount": {
+		"Can get one offsetting subaccount for deleveraged short": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -407,6 +360,33 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					// to close 1 BTC short is $54,999 and we close both positions at this price.
 					AssetPositions: keepertest.CreateUsdcAssetPosition(
 						big.NewInt(50_000_000_000 + 54_999_000_000),
+					),
+				},
+			},
+			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
+				{
+					OffsettingSubaccountId: constants.Dave_Num0,
+					FillAmount:             100_000_000,
+				},
+			},
+			expectedQuantumsRemaining: new(big.Int),
+		},
+		"Can get one offsetting subaccount for deleveraged long": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Long_54999USD,
+				constants.Dave_Num0_1BTC_Short_100000USD,
+			},
+			liquidatedSubaccountId: constants.Carl_Num0,
+			perpetualId:            0,
+			deltaQuantums:          big.NewInt(-100_000_000),
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(100_000_000_000 - 54_999_000_000),
 					),
 				},
 			},
@@ -586,6 +566,45 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			expectedSubaccounts:       nil,
 			expectedFills:             []types.MatchPerpetualDeleveraging_Fill{},
 			expectedQuantumsRemaining: big.NewInt(100_000_000),
+		},
+		"Can offset subaccount with multiple positions, first position is offset leaving TNC constant": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_1ETH_Long_47000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			liquidatedSubaccountId: constants.Carl_Num0,
+			perpetualId:            0,
+			deltaQuantums:          big.NewInt(100_000_000),
+			expectedSubaccounts: []satypes.Subaccount{
+				// Carl's BTC short position is offset by Dave's BTC long position at $50,000 leaving
+				// his ETH long position untouched and dropping his asset position to -$3000.
+				{
+					Id: &constants.Carl_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  1,
+							Quantums:     dtypes.NewInt(1_000_000_000), // 1 ETH
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(-3_000_000_000),
+					),
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: keepertest.CreateUsdcAssetPosition(
+						big.NewInt(50_000_000_000 + 50_000_000_000),
+					),
+				},
+			},
+			expectedFills: []types.MatchPerpetualDeleveraging_Fill{
+				{
+					OffsettingSubaccountId: constants.Dave_Num0,
+					FillAmount:             100_000_000,
+				},
+			},
+			expectedQuantumsRemaining: big.NewInt(0),
 		},
 	}
 

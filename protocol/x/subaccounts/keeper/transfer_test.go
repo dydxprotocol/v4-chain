@@ -69,7 +69,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			},
 			accAddressBalance:          big.NewInt(2_500_000),  // $2.5
 			subaccountModuleAccBalance: big.NewInt(10_000_000), // $10
-			quantums:                   big.NewInt(20_000_001), // $2.0000001, only $2 transfered.
+			quantums:                   big.NewInt(20_000_001), // $2.0000001, only $2 transferred.
 			assetPositions: keepertest.CreateUsdcAssetPosition(
 				big.NewInt(30_000_001),
 			), // $3.0001

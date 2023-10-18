@@ -8,16 +8,14 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -39,16 +37,26 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 }
 
 // GetSubaccount returns a subaccount from its index.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetSubaccount(
 	ctx sdk.Context,
 	id types.SubaccountId,
 ) (val types.Subaccount) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetSubaccount,
-		metrics.Latency,
-	)
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetSubaccount, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
 
 	// Check state for the subaccount.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))

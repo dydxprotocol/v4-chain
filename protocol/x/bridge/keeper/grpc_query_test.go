@@ -274,11 +274,11 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 				)
 			}
 
-			// Get all in flight complete bridge messages and verify they are as expected.
+			// Get all delayed complete bridge messages and verify they are as expected.
 			msgs := k.GetDelayedCompleteBridgeMessages(ctx, "")
 			require.Equal(t, expectedMsgs, msgs)
 
-			// Get in flight complete bridge messages for each address and verify they are as expected.
+			// Get delayed complete bridge messages for each address and verify they are as expected.
 			for address, expectedMsgsForAddr := range expectedMsgsByAddress {
 				msgs := k.GetDelayedCompleteBridgeMessages(ctx, address)
 				require.Equal(t, expectedMsgsForAddr, msgs)

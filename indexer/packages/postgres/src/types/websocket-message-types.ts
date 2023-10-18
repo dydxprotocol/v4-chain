@@ -1,3 +1,4 @@
+import { CandleResolution } from './candle-types';
 import { FillType, Liquidity } from './fill-types';
 import {
   OrderSide,
@@ -226,8 +227,8 @@ export interface OraclePriceMarket {
 
 /* ------- CandleMessageContents ------- */
 
-// Does not include resolution, because resolution is included in CandleMessage
 export interface CandleMessageContents {
+  resolution: CandleResolution,
   startedAt: IsoString,
   ticker: string,
   low: string,

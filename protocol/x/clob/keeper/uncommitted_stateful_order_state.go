@@ -2,9 +2,8 @@ package keeper
 
 import (
 	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -71,7 +70,7 @@ func (k Keeper) GetUncommittedStatefulOrderCount(
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
 
 	b := store.Get(orderId.SubaccountId.ToStateKey())
-	result := generic.Int32{Value: 0}
+	result := gogotypes.Int32Value{Value: 0}
 	if b != nil {
 		k.cdc.MustUnmarshal(b, &result)
 	}
@@ -92,14 +91,14 @@ func (k Keeper) SetUncommittedStatefulOrderCount(
 	orderId.MustBeStatefulOrder()
 
 	store := k.GetUncommittedStatefulOrderCountTransientStore(ctx)
-	value := generic.Int32{Value: count}
+	value := gogotypes.Int32Value{Value: count}
 	store.Set(
 		orderId.SubaccountId.ToStateKey(),
 		k.cdc.MustMarshal(&value),
 	)
 }
 
-// MustAddUncommittedStatefulOrderPlacement adds a new order placemenet by `OrderId` to a transient store and
+// MustAddUncommittedStatefulOrderPlacement adds a new order placements by `OrderId` to a transient store and
 // increments the per subaccount uncommitted stateful order count.
 //
 // This method will panic if the order already exists.

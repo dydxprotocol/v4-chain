@@ -8,7 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// InitGenesis initializes the capability module's state from a provided genesis
+// InitGenesis initializes the x/prices module's state from a provided genesis
 // state.
 func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) {
 	k.InitializeForGenesis(ctx)
@@ -18,14 +18,15 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 	}
 
 	// Set all the market params and prices.
-	for i, elem := range genState.MarketParams {
-		if _, err := k.CreateMarket(ctx, elem, genState.MarketPrices[i]); err != nil {
+	for i, param := range genState.MarketParams {
+		if _, err := k.CreateMarket(ctx, param, genState.MarketPrices[i]); err != nil {
 			panic(err)
 		}
 	}
 
-	marketPriceUpdates := keeper.GenerateMarketPriceUpdateEvents(genState.MarketPrices)
-	for _, update := range marketPriceUpdates {
+	// Generate indexer events.
+	priceUpdateIndexerEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(genState.MarketPrices)
+	for _, update := range priceUpdateIndexerEvents {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeMarket,

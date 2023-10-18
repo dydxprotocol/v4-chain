@@ -74,13 +74,18 @@ func newAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
 				ante.NewSetUpContextDecorator(), // outermost AnteDecorator. SetUpContext must be called first
 			),
 		),
+
 		// Set `FreeInfiniteGasMeter` for app-injected messages, and clob transactions.
 		customante.NewFreeInfiniteGasDecorator(),
+
 		ante.NewExtensionOptionsDecorator(options.ExtensionOptionChecker),
 		customante.NewValidateMsgTypeDecorator(),
+
+		// Note: app-injected messages are not signed on purpose.
 		libante.NewAppInjectedMsgAnteWrapper(
 			ante.NewValidateBasicDecorator(),
 		),
+
 		ante.NewTxTimeoutHeightDecorator(),
 		ante.NewValidateMemoDecorator(options.AccountKeeper),
 		ante.NewConsumeGasForTxSizeDecorator(options.AccountKeeper),
@@ -98,21 +103,30 @@ func newAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
 		),
 
 		// SetPubKeyDecorator must be called before all signature verification decorators
+		// Note: app-injected messages are not signed on purpose.
 		libante.NewAppInjectedMsgAnteWrapper(
 			ante.NewSetPubKeyDecorator(options.AccountKeeper),
 		),
+
 		ante.NewValidateSigCountDecorator(options.AccountKeeper),
+
+		// Note: app-injected messages don't require Gas fees.
 		libante.NewAppInjectedMsgAnteWrapper(
 			ante.NewSigGasConsumeDecorator(options.AccountKeeper, options.SigGasConsumer),
 		),
+
+		// Note: app-injected messages are not signed on purpose.
 		libante.NewAppInjectedMsgAnteWrapper(
 			customante.NewSigVerificationDecorator(options.AccountKeeper, options.SignModeHandler),
 		),
+
+		// Note: app-injected messages, and short-term clob txs don't have sequence numbers on purpose.
 		libante.NewAppInjectedMsgAnteWrapper(
 			clobante.NewShortTermSingleMsgClobTxAnteWrapper(
 				ante.NewIncrementSequenceDecorator(options.AccountKeeper),
 			),
 		),
+
 		clobante.NewRateLimitDecorator(options.ClobKeeper),
 		clobante.NewClobDecorator(options.ClobKeeper),
 	}

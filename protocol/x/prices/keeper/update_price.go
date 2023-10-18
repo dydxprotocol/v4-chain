@@ -158,7 +158,7 @@ func logPriceUpdateBehavior(
 		labels = append(labels, marketMetricsLabel)
 
 		for _, reason := range reasons {
-			labels = append(labels, metrics.NewBinaryStringLabel(reason.Reason, reason.Value))
+			labels = append(labels, metrics.GetLabelForBoolValue(reason.Reason, reason.Value))
 		}
 
 		metrics.IncrCountMetricWithLabels(

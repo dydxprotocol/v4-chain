@@ -134,8 +134,6 @@ var (
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       {},
 
 		// blocktime
-		"/dydxprotocol.blocktime.MsgIsDelayedBlock":               {},
-		"/dydxprotocol.blocktime.MsgIsDelayedBlockResponse":       {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         {},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": {},
 

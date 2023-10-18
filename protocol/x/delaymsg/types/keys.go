@@ -17,6 +17,11 @@ const (
 	// DelayedMessageKeyPrefix is the prefix to retrieve all DelayedMessages.
 	DelayedMessageKeyPrefix = "Msg:"
 
-	// NumDelayedMessagesKey is the prefix to retrieve the number of DelayedMessages.
-	NumDelayedMessagesKey = "NumMsgs"
+	// NextDelayedMessageIdKey is the key to retrieve next delayed message id.
+	NextDelayedMessageIdKey = "NextDelayedMessageId"
+)
+
+// Log
+const (
+	IdLogKey = "id"
 )

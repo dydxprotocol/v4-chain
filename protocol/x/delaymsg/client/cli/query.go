@@ -22,23 +22,23 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	cmd.AddCommand(CmdQueryNumMessages())
+	cmd.AddCommand(CmdQueryNextDelayedMessageId())
 	cmd.AddCommand(CmdQueryMessage())
 	cmd.AddCommand(CmdQueryBlockMessageIds())
 
 	return cmd
 }
 
-func CmdQueryNumMessages() *cobra.Command {
+func CmdQueryNextDelayedMessageId() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "get-num-messages",
-		Short: "get the number of delayed messages",
+		Use:   "get-next-delayed-message-id",
+		Short: "get next delayed message id",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
-			res, err := queryClient.NumMessages(
+			res, err := queryClient.NextDelayedMessageId(
 				context.Background(),
-				&types.QueryNumMessagesRequest{},
+				&types.QueryNextDelayedMessageIdRequest{},
 			)
 			if err != nil {
 				return err

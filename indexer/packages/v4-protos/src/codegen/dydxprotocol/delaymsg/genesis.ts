@@ -4,34 +4,26 @@ import { DeepPartial } from "../../helpers";
 /** GenesisState defines the delaymsg module's genesis state. */
 
 export interface GenesisState {
+  /** delayed_messages is a list of delayed messages. */
   delayedMessages: DelayedMessage[];
-  /**
-   * num_messages is the number of messages that have been created. It denotes
-   * the id to be assigned to the next message. This number may not match the
-   * number of messages currently stored on the chain because messages are
-   * deleted from the chain after they are executed.
-   */
+  /** next_delayed_message_id is the id to be assigned to next delayed message. */
 
-  numMessages: number;
+  nextDelayedMessageId: number;
 }
 /** GenesisState defines the delaymsg module's genesis state. */
 
 export interface GenesisStateSDKType {
+  /** delayed_messages is a list of delayed messages. */
   delayed_messages: DelayedMessageSDKType[];
-  /**
-   * num_messages is the number of messages that have been created. It denotes
-   * the id to be assigned to the next message. This number may not match the
-   * number of messages currently stored on the chain because messages are
-   * deleted from the chain after they are executed.
-   */
+  /** next_delayed_message_id is the id to be assigned to next delayed message. */
 
-  num_messages: number;
+  next_delayed_message_id: number;
 }
 
 function createBaseGenesisState(): GenesisState {
   return {
     delayedMessages: [],
-    numMessages: 0
+    nextDelayedMessageId: 0
   };
 }
 
@@ -41,8 +33,8 @@ export const GenesisState = {
       DelayedMessage.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
-    if (message.numMessages !== 0) {
-      writer.uint32(16).uint32(message.numMessages);
+    if (message.nextDelayedMessageId !== 0) {
+      writer.uint32(16).uint32(message.nextDelayedMessageId);
     }
 
     return writer;
@@ -62,7 +54,7 @@ export const GenesisState = {
           break;
 
         case 2:
-          message.numMessages = reader.uint32();
+          message.nextDelayedMessageId = reader.uint32();
           break;
 
         default:
@@ -77,7 +69,7 @@ export const GenesisState = {
   fromPartial(object: DeepPartial<GenesisState>): GenesisState {
     const message = createBaseGenesisState();
     message.delayedMessages = object.delayedMessages?.map(e => DelayedMessage.fromPartial(e)) || [];
-    message.numMessages = object.numMessages ?? 0;
+    message.nextDelayedMessageId = object.nextDelayedMessageId ?? 0;
     return message;
   }
 

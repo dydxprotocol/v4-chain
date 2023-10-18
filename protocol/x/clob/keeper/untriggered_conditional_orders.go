@@ -2,15 +2,14 @@ package keeper
 
 import (
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.
@@ -130,7 +129,7 @@ func (k Keeper) PruneUntriggeredConditionalOrders(
 	cancelledStatefulOrderIds []types.OrderId,
 ) {
 	// Merge lists of order ids.
-	orderIdsToPrune := lib.SliceToSet(expiredStatefulOrderIds)
+	orderIdsToPrune := lib.UniqueSliceToSet(expiredStatefulOrderIds)
 	for _, orderId := range cancelledStatefulOrderIds {
 		if _, exists := orderIdsToPrune[orderId]; exists {
 			panic(
@@ -198,7 +197,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) RemoveUntriggeredConditio
 		}
 	}
 
-	orderIdsToRemoveSet := lib.SliceToSet(orderIdsToRemove)
+	orderIdsToRemoveSet := lib.UniqueSliceToSet(orderIdsToRemove)
 
 	newOrdersToTriggerWhenOraclePriceLTETriggerPrice := make([]types.Order, 0)
 	for _, order := range untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {

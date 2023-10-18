@@ -147,10 +147,9 @@ comlink:
 ```
 
 ### Deploying to AWS Dev Environment
-While we use [Terraform](https://github.com/dydxprotocol/v4-terraform) to describe our infrastructure, we use
-[orb](https://github.com/dydxprotocol/orb) to deploy services. On merging to master branch, we automatically build
-ECR images of each service for both the dev/staging environments (see .github/workflows directory). However, if you
-want to test and deploy local changes, you can use the `scripts/deploy-commit-to-dev.sh` script.
+We use [Terraform](https://github.com/dydxprotocol/v4-infrastructure) to describe our infrastructure. On merging to
+master branch, we automatically build ECR images of each service for both the dev/staging environments (see .github/workflows directory).
+However, if you want to test and deploy local changes, you can use the `scripts/deploy-commit-to-dev.sh` script.
 
 Example usage:
 scripts/deploy-commit-to-dev.sh <service> <commit_hash>, e.g.
@@ -164,19 +163,6 @@ git add .
 git commit -m "<commit_msg>"
 git rev-parse --short=7 HEAD
 ```
-
-
-### Replicating a production environment with the load-tester
-To test the Indexer APIs/websockets, orders need to placed and matched on the V4 application that the
-Indexer is connected to. 
-To do this locally, run a local instance of the 
-[load-tester](https://github.com/dydxprotocol/load-tester) against the local V4 node the Indexer
-services are connected to.
-
-NOTE: Follow the instructions in the `load-tester` repo to set up a loadtester instance executing 
-the match making strategy to generate order fills and position updates in the V4 network for the
-Indexer to process.
-
 
 ## Redeploying
 The docker image for each container must be rebuilt for each code change or update to `Dockerfile.local`.

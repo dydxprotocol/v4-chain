@@ -46,15 +46,6 @@ func IncrSuccessOrErrorCounter(err error, module string, handler string, callbac
 	)
 }
 
-// NewBinaryStringLabel returns a metrics label with a value of "yes" or "no" depending on the condition.
-func NewBinaryStringLabel(metricName string, condition bool) gometrics.Label {
-	labelValue := No
-	if condition {
-		labelValue = Yes
-	}
-	return GetLabelForStringValue(metricName, labelValue)
-}
-
 // GetLabelForBoolValue returns a telemetry label for a given label and bool value.
 func GetLabelForBoolValue(labelName string, labelValue bool) gometrics.Label {
 	return GetLabelForStringValue(labelName, strconv.FormatBool(labelValue))

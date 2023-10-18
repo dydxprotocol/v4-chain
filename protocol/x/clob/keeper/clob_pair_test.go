@@ -599,10 +599,9 @@ func TestClobPairGetAll(t *testing.T) {
 
 func TestUpdateClobPair(t *testing.T) {
 	testCases := map[string]struct {
-		setup         func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
-		status        types.ClobPair_Status
-		expectedErr   string
-		expectedPanic string
+		setup       func(t *testing.T, ks keepertest.ClobKeepersTestContext, manager *mocks.IndexerEventManager)
+		status      types.ClobPair_Status
+		expectedErr string
 	}{
 		"Succeeds with valid status transition": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
@@ -655,11 +654,11 @@ func TestUpdateClobPair(t *testing.T) {
 			},
 			status: types.ClobPair_STATUS_ACTIVE,
 		},
-		"Panics with missing clob pair": {
+		"Errors with missing clob pair": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 			},
-			status:        types.ClobPair_STATUS_ACTIVE,
-			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
+			status:      types.ClobPair_STATUS_ACTIVE,
+			expectedErr: "UpdateClobPair: ClobPair with id 0 not found in state",
 		},
 		"Errors with unsupported transition to supported status": {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
@@ -748,24 +747,13 @@ func TestUpdateClobPair(t *testing.T) {
 			tc.setup(t, ks, mockIndexerEventManager)
 			clobPair := constants.ClobPair_Btc
 			clobPair.Status = tc.status
-			if tc.expectedPanic != "" {
-				require.PanicsWithValue(
-					t,
-					tc.expectedPanic,
-					func() {
-						err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
-						require.NoError(t, err)
-					},
-				)
-			} else {
-				err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
-				mockIndexerEventManager.AssertExpectations(t)
+			err := ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
+			mockIndexerEventManager.AssertExpectations(t)
 
-				if tc.expectedErr != "" {
-					require.ErrorContains(t, err, tc.expectedErr)
-				} else {
-					require.NoError(t, err)
-				}
+			if tc.expectedErr != "" {
+				require.ErrorContains(t, err, tc.expectedErr)
+			} else {
+				require.NoError(t, err)
 			}
 		})
 	}

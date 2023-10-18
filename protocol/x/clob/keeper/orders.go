@@ -522,6 +522,20 @@ func (k Keeper) PlaceConditionalOrdersTriggeredInLastBlock(
 ) (
 	offchainUpdates *types.OffchainUpdates,
 ) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.PlaceConditionalOrdersFromLastBlock,
+		metrics.Latency,
+	)
+
+	telemetry.SetGauge(
+		float32(len(conditionalOrderIdsTriggeredInLastBlock)),
+		types.ModuleName,
+		metrics.PlaceConditionalOrdersFromLastBlock,
+		metrics.Count,
+	)
+
 	for _, orderId := range conditionalOrderIdsTriggeredInLastBlock {
 		// Panic if the order is not in triggered state.
 		if !k.IsConditionalOrderTriggered(ctx, orderId) {

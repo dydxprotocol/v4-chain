@@ -158,7 +158,7 @@ func AssertPriceUpdateEventsInIndexerBlock(
 	updatedMarketPrices []types.MarketPrice,
 ) {
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
-	expectedEvents := keeper.GenerateMarketPriceUpdateEvents(updatedMarketPrices)
+	expectedEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
 	for _, expectedEvent := range expectedEvents {
 		require.Contains(t, marketEvents, expectedEvent)
 	}
