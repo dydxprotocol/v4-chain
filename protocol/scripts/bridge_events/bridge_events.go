@@ -110,7 +110,7 @@ func main() {
 	// Iterate over each event and populate the above fields
 	for _, log := range logs {
 		event := libeth.BridgeLogToEvent(log, denom)
-		aei.NextId = lib.Max(aei.NextId, event.Id)
+		aei.NextId = lib.Max(aei.NextId, event.Id+1)
 		aei.EthBlockHeight = lib.Max(aei.EthBlockHeight, log.BlockNumber)
 
 		// Add amount to total bridged amount.
