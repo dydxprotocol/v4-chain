@@ -94,7 +94,7 @@ export class KafkaPublisher {
       SubaccountMessageContents = JSON.parse(contents) as SubaccountMessageContents;
       return subaccountContents.fills;
     } catch (error) {
-      throw new ParseMessageError(`Error parsing JSON: ${error}`);
+      throw new ParseMessageError(`Error parsing SubaccountMessageContents JSON: ${error}`);
     }
   }
 
@@ -105,7 +105,7 @@ export class KafkaPublisher {
       subaccountContents.fills = fills;
       return JSON.stringify(subaccountContents);
     } catch (error) {
-      throw new ParseMessageError(`Error parsing JSON: ${error}`);
+      throw new ParseMessageError(`Error parsing SubaccountMessageContents JSON: ${error}`);
     }
   }
 
