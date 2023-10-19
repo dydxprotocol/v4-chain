@@ -28,12 +28,13 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) error {
 	lib.AssertCheckTxMode(ctx)
 
-	telemetry.ModuleSetGauge(
-		types.ModuleName,
+	gometrics.AddSample(
+		[]string{
+			metrics.Liquidations,
+			metrics.LiquidatableSubaccountIds,
+			metrics.Count,
+		},
 		float32(len(subaccountIds)),
-		metrics.Liquidations,
-		metrics.LiquidatableSubaccountIds,
-		metrics.Count,
 	)
 
 	// Early return if there are 0 subaccounts to liquidate.

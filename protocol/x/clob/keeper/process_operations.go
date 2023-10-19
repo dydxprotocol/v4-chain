@@ -7,7 +7,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -551,22 +550,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 		return err
 	}
 
-	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		matchLiquidation.PerpetualId,
-		new(big.Int).SetUint64(matchLiquidation.TotalSize),
-	)
-	if err != nil {
-		return err
-	}
-	absNotionalQuoteQuantums := new(big.Int).Abs(notionalQuoteQuantums)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
-		metrics.GetMetricValueFromBigInt(absNotionalQuoteQuantums),
-		matchLiquidation.GetMetricLabels(),
-	)
-
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order from either short term orders or state.
 		makerOrder, err := k.FetchOrderFromOrderId(ctx, fill.MakerOrderId, ordersMap)
@@ -694,21 +677,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				perpetualId,
 				deltaQuantums,
 				err,
-			)
-		}
-
-		if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-			ctx,
-			perpetualId,
-			new(big.Int).SetUint64(fill.FillAmount),
-		); err == nil {
-			labels := []gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-			}
-			telemetry.IncrCounterWithLabels(
-				[]string{metrics.ProcessOperations, metrics.Deleveraging, metrics.QuoteQuantums},
-				metrics.GetMetricValueFromBigInt(quoteQuantums),
-				labels,
 			)
 		}
 	}
