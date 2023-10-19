@@ -114,24 +114,20 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 
 	equityTierCount := uint32(0)
 	if order.IsStatefulOrder() {
-		// For stateful orders we get the stateful order count which represents how many long term and
-		// triggered conditional orders exist in state. We add to that all untriggered conditional orders.
+		// For stateful orders we get the stateful order count.
 		// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
 		// is aware of (orders that are part of the mempool but have yet to proposed in a block).
 		equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
-		equityTierCount += k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId)
 		if !lib.IsDeliverTxMode(ctx) {
 			equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
 			if equityTierCountMaybeNegative < 0 {
 				panic(
 					fmt.Errorf(
 						"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
-							"equityTierCount %d, statefulOrderCount %d, untriggeredSubaccountOrders %d, "+
-							"uncommittedStatefulOrderCount %d.",
+							"equityTierCount %d, statefulOrderCount %d, uncommittedStatefulOrderCount %d.",
 						order,
 						equityTierCountMaybeNegative,
 						k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId),
-						k.CountUntriggeredSubaccountStatefulOrders(ctx, subaccountId),
 						k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
 					),
 				)
@@ -149,8 +145,10 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order id: %+v",
+			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
 			equityTierLimit.Limit,
+			equityTierCount,
+			netCollateral,
 			order.GetOrderId(),
 		)
 	}
