@@ -69,7 +69,7 @@ export class CandlesGenerator {
   public async updateCandles(): Promise<CandleFromDatabase[]> {
     const start: number = Date.now();
     // 1. Sort trade messages by order in the block
-    this.kafkaPublisher.sortEvents(KafkaTopics.TO_WEBSOCKETS_TRADES);
+    this.kafkaPublisher.sortEvents(this.kafkaPublisher.tradeMessages);
 
     // 2. Generate BlockCandleUpdatesMap
     const blockCandleUpdatesMap: BlockCandleUpdatesMap = this.generateBlockCandleUpdatesMap();

@@ -1,8 +1,21 @@
 import {
   KafkaTopics, producer, ProducerMessage, TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
-import { testConstants, TradeContent, TradeMessageContents } from '@dydxprotocol-indexer/postgres';
-import { SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
+import {
+  FillFromDatabase,
+  FillTable,
+  FillType,
+  Liquidity,
+  OrderFromDatabase,
+  OrderSide,
+  SubaccountMessageContents,
+  SubaccountTable,
+  testConstants,
+  TradeContent,
+  TradeMessageContents,
+  TransferFromDatabase,
+} from '@dydxprotocol-indexer/postgres';
+import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 import {
@@ -18,6 +31,7 @@ import {
   defaultTradeContent,
   defaultTradeKafkaEvent,
   defaultTradeMessage,
+  defaultWalletAddress,
 } from '../helpers/constants';
 import {
   contentToSingleTradeMessage,
@@ -25,6 +39,12 @@ import {
   createConsolidatedKafkaEventFromSubaccount,
   createConsolidatedKafkaEventFromTrade,
 } from '../helpers/kafka-publisher-helpers';
+import {
+  generateFillSubaccountMessage,
+  generateOrderSubaccountMessage,
+  generateTransferContents,
+} from '../../src/helpers/kafka-helper';
+import { DateTime } from 'luxon';
 
 describe('kafka-publisher', () => {
   let producerSendMock: jest.SpyInstance;
@@ -149,7 +169,7 @@ describe('kafka-publisher', () => {
         consolidatedBeforeTrade,
       ]);
 
-      publisher.sortEvents(KafkaTopics.TO_WEBSOCKETS_TRADES);
+      publisher.sortEvents(publisher.tradeMessages);
       expect(publisher.tradeMessages).toEqual([beforeTrade, trade, afterTrade]);
     });
   });
@@ -213,21 +233,67 @@ describe('kafka-publisher', () => {
         consolidatedBeforeSubaccount,
       ]);
 
-      publisher.sortEvents(KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+      publisher.sortEvents(publisher.subaccountMessages);
       expect(publisher.subaccountMessages).toEqual([beforeSubaccount, subaccount, afterSubaccount]);
     });
   });
 
-  describe('retainLastFillEventsForSubaccountMessages', () => {
-    it('successfully retains the last fill event per order id and sorts messages', async () => {
+  describe('aggregateFillEventsForSubaccountMessages', () => {
+    const fill: FillFromDatabase = {
+      id: FillTable.uuid(testConstants.defaultTendermintEventId, Liquidity.TAKER),
+      subaccountId: testConstants.defaultSubaccountId,
+      side: OrderSide.BUY,
+      liquidity: Liquidity.TAKER,
+      type: FillType.MARKET,
+      clobPairId: '1',
+      orderId: testConstants.defaultOrderId,
+      size: '10',
+      price: '20000',
+      quoteAmount: '200000',
+      eventId: testConstants.defaultTendermintEventId,
+      transactionHash: '', // TODO: Add a real transaction Hash
+      createdAt: testConstants.createdDateTime.toISO(),
+      createdAtHeight: testConstants.createdHeight,
+      clientMetadata: '0',
+      fee: '1.1',
+    };
+    const order: OrderFromDatabase = {
+      ...testConstants.defaultOrderGoodTilBlockTime,
+      id: testConstants.defaultOrderId,
+    };
+
+    const recipientSubaccountId: IndexerSubaccountId = IndexerSubaccountId.fromPartial({
+      owner: 'recipient',
+      number: 1,
+    });
+    const deposit: TransferFromDatabase = {
+      id: '',
+      senderWalletAddress: defaultWalletAddress,
+      recipientSubaccountId: SubaccountTable.uuid(
+        recipientSubaccountId.owner,
+        recipientSubaccountId.number,
+      ),
+      assetId: testConstants.defaultAsset.id,
+      size: '10',
+      eventId: testConstants.defaultTendermintEventId,
+      transactionHash: 'hash',
+      createdAt: DateTime.utc().toISO(),
+      createdAtHeight: '1',
+    };
+    it('successfully aggregates all fill events per order id and sorts messages', async () => {
       const publisher: KafkaPublisher = new KafkaPublisher();
 
-      // over-written by message 3.
+      // merged with message 3.
+      const msg1Contents: SubaccountMessageContents = {
+        fills: [
+          generateFillSubaccountMessage(fill, 'BTC-USD'),
+        ],
+      };
       const message1: AnnotatedSubaccountMessage = {
         blockHeight: '1',
         transactionIndex: 1,
         eventIndex: 1,
-        contents: 'Message 1',
+        contents: JSON.stringify(msg1Contents),
         subaccountId: {
           owner: 'owner1',
           number: 0,
@@ -237,11 +303,16 @@ describe('kafka-publisher', () => {
         isFill: true,
       };
 
+      const msg2Contents: SubaccountMessageContents = {
+        fills: [
+          generateFillSubaccountMessage(fill, 'ETH-USD'),
+        ],
+      };
       const message2: AnnotatedSubaccountMessage = {
         blockHeight: '1',
         transactionIndex: 2,
         eventIndex: 2,
-        contents: 'Message 2',
+        contents: JSON.stringify(msg2Contents),
         subaccountId: {
           owner: 'owner2',
           number: 0,
@@ -251,11 +322,22 @@ describe('kafka-publisher', () => {
         isFill: true,
       };
 
+      const msg3Contents: SubaccountMessageContents = {
+        fills: [
+          generateFillSubaccountMessage({
+            ...fill,
+            size: '100',
+          }, 'BTC-USD'),
+        ],
+        orders: [
+          generateOrderSubaccountMessage(order, 'BTC-USD'),
+        ],
+      };
       const message3: AnnotatedSubaccountMessage = {
         blockHeight: '1',
         transactionIndex: 3,
         eventIndex: 3,
-        contents: 'Message 3',
+        contents: JSON.stringify(msg3Contents),
         subaccountId: {
           owner: 'owner3',
           number: 0,
@@ -266,16 +348,37 @@ describe('kafka-publisher', () => {
       };
 
       // non-fill subaccount message.
+      const msg4Contents: SubaccountMessageContents = generateTransferContents(
+        deposit,
+        testConstants.defaultAsset,
+        recipientSubaccountId,
+        undefined,
+        recipientSubaccountId,
+      );
       const message4: AnnotatedSubaccountMessage = {
         blockHeight: '1',
         transactionIndex: 3,
         eventIndex: 4,
-        contents: 'Message 3',
+        contents: JSON.stringify(msg4Contents),
         subaccountId: {
           owner: 'owner3',
           number: 0,
         },
         version: '4',
+      };
+
+      const expectedMergedContents: SubaccountMessageContents = {
+        fills: [
+          msg1Contents.fills![0],
+          msg3Contents.fills![0],
+        ],
+        orders: [
+          generateOrderSubaccountMessage(order, 'BTC-USD'),
+        ],
+      };
+      const mergedMessage3: AnnotatedSubaccountMessage = {
+        ...message3,
+        contents: JSON.stringify(expectedMergedContents),
       };
 
       publisher.addEvents([
@@ -285,10 +388,10 @@ describe('kafka-publisher', () => {
         createConsolidatedKafkaEventFromSubaccount(message4),
       ]);
 
-      publisher.retainLastFillEventsForSubaccountMessages();
+      publisher.aggregateFillEventsForSubaccountMessages();
       const expectedMsgs: SubaccountMessage[] = [
         convertToSubaccountMessage(message2),
-        convertToSubaccountMessage(message3),
+        convertToSubaccountMessage(mergedMessage3),
         convertToSubaccountMessage(message4),
       ];
       expect(publisher.subaccountMessages).toEqual(expectedMsgs);
