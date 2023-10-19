@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"math/big"
 	"math/rand"
 	"sort"
@@ -449,10 +450,10 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
 				k.Logger(ctx).Error(
-					fmt.Sprintf(
-						"Perpetual (%d) does not have valid index price. Skipping premium",
-						perp.Params.Id,
-					))
+					"Perpetual does not have valid index price. Skipping premium",
+					constants.MarketIdLogKey,
+					perp.Params.MarketId,
+				)
 				telemetry.IncrCounterWithLabels(
 					[]string{
 						types.ModuleName,
