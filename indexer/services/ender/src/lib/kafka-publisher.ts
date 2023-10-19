@@ -88,8 +88,10 @@ export class KafkaPublisher {
    * contents contains all individual fills from that block.
    *
    * Due to separate handlers for order fills, we can be sure that if a message is annotated
-   * with a fill, it should only contain data about a single fill / order and not transfers.
+   * with a fill, it should only contain data about a single fill / order and not transfers
+   * or positions.
    */
+  // TODO(IND-453): Generalize this to beyond subaccount messages.
   public aggregateFillEventsForSubaccountMessages() {
     // Create a map to store the last event for fills per order ID
     const lastEventForFills: Record<string, AnnotatedSubaccountMessage> = {};
@@ -101,7 +103,7 @@ export class KafkaPublisher {
       if (message.isFill && message.orderId) {
         const fills:
         FillSubaccountMessageContents[] | undefined = message.subaccountMessageContents?.fills;
-        const orderId = message.orderId;
+        const orderId: string = message.orderId;
         if (fills !== undefined) {
           allFillEvents[orderId] = allFillEvents[orderId]
             ? allFillEvents[orderId].concat(fills)
@@ -124,8 +126,8 @@ export class KafkaPublisher {
     // Update the last event for the order ID such that it has all the fills
     // that occurred for the order ID.
     Object.keys(lastEventForFills).forEach((orderId: string) => {
-      const lastEvent = lastEventForFills[orderId];
-      const fills = allFillEvents[orderId];
+      const lastEvent: AnnotatedSubaccountMessage = lastEventForFills[orderId];
+      const fills: FillSubaccountMessageContents[] = allFillEvents[orderId];
       if (fills) {
         lastEvent.subaccountMessageContents!.fills = fills;
         lastEvent.contents = JSON.stringify(lastEvent.subaccountMessageContents);
