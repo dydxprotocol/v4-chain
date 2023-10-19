@@ -268,7 +268,6 @@ func TestApplyClientExchangeQueryConfigOverride(t *testing.T) {
 				tc.exchangeQueryConfigs,
 				tc.overrideConfigs,
 			)
-			// require.Equal(t, tc.expected, actual)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
 				require.Equal(t, tc.expected, actual)
