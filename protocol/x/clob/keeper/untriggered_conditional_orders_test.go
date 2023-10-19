@@ -88,13 +88,8 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-<<<<<<< HEAD
 			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
-			ctx := tApp.InitChain()
-=======
-			tApp := testApp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
->>>>>>> 07b61028 ([CLO-987] Subaccount equity tier count was double counting conditional orders. (#666))
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
@@ -199,13 +194,8 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-<<<<<<< HEAD
 			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
-			ctx := tApp.InitChain()
-=======
-			tApp := testApp.NewTestAppBuilder(t).Build()
 			tApp.InitChain()
->>>>>>> 07b61028 ([CLO-987] Subaccount equity tier count was double counting conditional orders. (#666))
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
