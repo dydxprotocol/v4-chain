@@ -265,7 +265,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.exchangeServer.SetPrice(exchange_config.MARKET_LINK_USD, 3_000_000)
 
 	// Set USDT to 90 cents.
-	s.exchangeServer.SetPrice(exchange_config.MARKET_USDT_USD, 900_000_000)
+	s.exchangeServer.SetPrice(exchange_config.MARKET_USDT_USD, .9)
 
 	// Save daemon flags to use for client startup.
 	s.daemonFlags = flags.GetDefaultDaemonFlags()
@@ -277,7 +277,6 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
-		"test",
 	)
 	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
@@ -357,17 +356,19 @@ func (s *PriceDaemonIntegrationTestSuite) expectPricesWithTimeout(
 		if len(prices) != len(expectedPrices) {
 			continue
 		}
+
+		allPricesMatch := true
+
 		for marketId, expectedPrice := range expectedPrices {
 			actualPrice, ok := prices[marketId]
-			if !ok {
-				continue
-			}
-
-			if actualPrice != expectedPrice {
-				continue
+			if !ok || actualPrice != expectedPrice {
+				allPricesMatch = false
+				break
 			}
 		}
-		return
+		if allPricesMatch {
+			return
+		}
 	}
 }
 

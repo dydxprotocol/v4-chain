@@ -142,6 +142,7 @@ func TestBridge_Success(t *testing.T) {
 						genesisState.SafetyParams = tc.safetyParams
 					},
 				)
+				genesis.GenesisTime = tc.blockTime
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
@@ -178,9 +179,7 @@ func TestBridge_Success(t *testing.T) {
 
 			// Advance to block right before bridge completion, if necessary.
 			if blockHeightOfBridgeCompletion-1 > uint32(ctx.BlockHeight()) {
-				ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion-1, testapp.AdvanceToBlockOptions{
-					BlockTime: tc.blockTime.Add(-time.Second * 1),
-				})
+				ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion-1, testapp.AdvanceToBlockOptions{})
 			}
 			// Verify that balances have not changed yet.
 			for _, event := range tc.bridgeEvents {
@@ -194,9 +193,7 @@ func TestBridge_Success(t *testing.T) {
 
 			// Verify that balances are updated, if bridge events were proposed, at the block of
 			// bridge completion.
-			ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion, testapp.AdvanceToBlockOptions{
-				BlockTime: tc.blockTime,
-			})
+			ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion, testapp.AdvanceToBlockOptions{})
 			for _, event := range tc.bridgeEvents {
 				balance := tApp.App.BankKeeper.GetBalance(
 					ctx,

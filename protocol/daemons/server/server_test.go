@@ -6,7 +6,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
@@ -41,7 +40,7 @@ func TestStartServer_ListenFailsWhenInUse(t *testing.T) {
 			return nil
 		})
 
-	s := createServerWithMocks(mockGrpcServer, mockFileHandler)
+	s := createServerWithMocks(t, mockGrpcServer, mockFileHandler)
 
 	errorString := fmt.Sprintf(
 		"listen %s %s: bind: address already in use",
@@ -67,6 +66,7 @@ func TestStart_Valid(t *testing.T) {
 	mockFileHandler := &mocks.FileHandler{}
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	)
@@ -115,6 +115,7 @@ func TestStart_MixedInvalid(t *testing.T) {
 			mockFileHandler := &mocks.FileHandler{}
 
 			s := createServerWithMocks(
+				t,
 				mockGrpcServer,
 				mockFileHandler,
 			)
@@ -166,7 +167,6 @@ func TestRegisterDaemon_DoesNotPanic(t *testing.T) {
 		grpcServer,
 		&mocks.FileHandler{},
 		grpc.SocketPath,
-		"test",
 	)
 	defer server.Stop()
 
@@ -183,7 +183,6 @@ func TestRegisterDaemon_DoubleRegistrationPanics(t *testing.T) {
 		grpcServer,
 		&mocks.FileHandler{},
 		grpc.SocketPath,
-		"test",
 	)
 	defer server.Stop()
 
@@ -203,16 +202,18 @@ func TestRegisterDaemon_DoubleRegistrationPanics(t *testing.T) {
 }
 
 func createServerWithMocks(
-	mockGrpcServer daemontypes.GrpcServer,
-	mockFileHandler daemontypes.FileHandler,
+	t testing.TB,
+	mockGrpcServer *mocks.GrpcServer,
+	mockFileHandler *mocks.FileHandler,
 ) *server.Server {
 	server := server.NewServer(
 		log.NewNopLogger(),
 		mockGrpcServer,
 		mockFileHandler,
 		grpc.SocketPath,
-		"test",
 	)
+	mockGrpcServer.On("Stop").Return().Once()
+	t.Cleanup(server.Stop)
 	server.DisableUpdateMonitoringForTesting()
 	return server
 }

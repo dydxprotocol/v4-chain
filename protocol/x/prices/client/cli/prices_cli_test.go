@@ -5,7 +5,6 @@ package cli_test
 import (
 	"fmt"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"time"
 
 	"testing"
@@ -98,11 +97,6 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 
 			// Make sure the daemon is using the correct GRPC address.
 			appOptions.Set(appflags.GrpcAddress, testval.AppConfig.GRPC.Address)
-
-			// Make sure all daemon-related services are properly stopped.
-			s.T().Cleanup(func() {
-				stoppable.StopServices(s.T(), testval.AppConfig.GRPC.Address)
-			})
 		},
 	})
 

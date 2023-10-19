@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
-
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
@@ -81,10 +79,6 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 	buf, err := cfg.Codec.MarshalJSON(&state)
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
-
-	t.Cleanup(func() {
-		stoppable.StopServices(t, cfg.GRPCAddress)
-	})
 
 	return network.New(t, cfg), state.ClobPairs
 }
