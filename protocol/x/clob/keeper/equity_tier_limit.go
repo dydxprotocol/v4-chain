@@ -145,9 +145,10 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order count: %d, order id: %+v",
+			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
 			equityTierLimit.Limit,
 			equityTierCount,
+			netCollateral,
 			order.GetOrderId(),
 		)
 	}

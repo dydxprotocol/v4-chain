@@ -533,8 +533,7 @@ func (k Keeper) GetStatefulOrderCount(
 	return result.Value
 }
 
-// SetStatefulOrderCount sets a count of how many stateful orders are written to state. This does not
-// include any untriggered conditional orders.
+// SetStatefulOrderCount sets a count of how many stateful orders are written to state.
 func (k Keeper) SetStatefulOrderCount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,

@@ -74,6 +74,10 @@ const (
 	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
+
+	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
+	// represents the number of stateful orders stored in state.
+	StatefulOrderCountPrefix = "NumSO:"
 )
 
 // Transient Store
@@ -101,10 +105,6 @@ const (
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
 	UncommittedStatefulOrderCountPrefix = "NumUncmtLT:"
-
-	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
-	// represents the number of long term order placements and triggered conditional orders stored in state.
-	StatefulOrderCountPrefix = "NumLT:"
 )
 
 // Module Accounts
