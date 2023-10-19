@@ -1,7 +1,6 @@
 {
   "app_hash": "",
   "app_state": {
-    "07-tendermint": null,
     "assets": {
       "assets": [
         {
@@ -522,7 +521,6 @@
         }
       }
     },
-    "consensus": null,
     "crisis": {
       "constant_fee": {
         "amount": "1000000000000000000",
@@ -756,7 +754,6 @@
       "gen_txs": []
     },
     "gov": {
-      "deposit_params": null,
       "deposits": [],
       "params": {
         "burn_proposal_deposit_prevote": false,
@@ -777,9 +774,7 @@
       },
       "proposals": [],
       "starting_proposal_id": "1",
-      "tally_params": null,
-      "votes": [],
-      "voting_params": null
+      "votes": []
     },
     "ibc": {
       "channel_genesis": {
@@ -813,7 +808,6 @@
         }
       }
     },
-    "params": null,
     "perpetuals": {
       "liquidity_tiers": [
         {
