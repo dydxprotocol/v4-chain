@@ -91,20 +91,20 @@ const (
 	NextStatefulOrderBlockTransactionIndexKey = "NextTxIdx"
 
 	// UncommittedStatefulOrderPlacementKeyPrefix is the key to retrieve an uncommitted stateful order and information
-	// about when it was placed. uncommitted orders are orders that this validator is aware of that have yet to be
+	// about when it was placed. Uncommitted orders are orders that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtLT:"
+	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtSO:"
 
 	// UncommittedStatefulOrderCancellationKeyPrefix is the key to retrieve an uncommitted stateful order cancellation.
-	// uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
+	// Uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtLTCxl:"
+	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtSOCxl:"
 
 	// UncommittedStatefulOrderCountPrefix is the key to retrieve an uncommitted stateful order count.
-	// uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
+	// Uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
-	UncommittedStatefulOrderCountPrefix = "NumUncmtLT:"
+	UncommittedStatefulOrderCountPrefix = "NumUncmtSO:"
 )
 
 // Module Accounts

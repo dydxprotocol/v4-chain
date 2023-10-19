@@ -32,6 +32,7 @@ func TestStoreAndMemstoreKeys(t *testing.T) {
 	require.Equal(t, "SO/P/T:", types.TriggeredConditionalOrderKeyPrefix)
 	require.Equal(t, "SO/P/L:", types.LongTermOrderPlacementKeyPrefix)
 	require.Equal(t, "SO/U:", types.UntriggeredConditionalOrderKeyPrefix)
+	require.Equal(t, "NumSO:", types.StatefulOrderCountPrefix)
 
 	require.Equal(t, "ProposerEvents", types.ProcessProposerMatchesEventsKey)
 }
@@ -39,10 +40,9 @@ func TestStoreAndMemstoreKeys(t *testing.T) {
 func TestTransientStoreKeys(t *testing.T) {
 	require.Equal(t, "SaLiqInfo:", types.SubaccountLiquidationInfoKeyPrefix)
 	require.Equal(t, "NextTxIdx", types.NextStatefulOrderBlockTransactionIndexKey)
-	require.Equal(t, "UncmtLT:", types.UncommittedStatefulOrderPlacementKeyPrefix)
-	require.Equal(t, "UncmtLTCxl:", types.UncommittedStatefulOrderCancellationKeyPrefix)
-	require.Equal(t, "NumUncmtLT:", types.UncommittedStatefulOrderCountPrefix)
-	require.Equal(t, "NumLT:", types.StatefulOrderCountPrefix)
+	require.Equal(t, "UncmtSO:", types.UncommittedStatefulOrderPlacementKeyPrefix)
+	require.Equal(t, "UncmtSOCxl:", types.UncommittedStatefulOrderCancellationKeyPrefix)
+	require.Equal(t, "NumUncmtSO:", types.UncommittedStatefulOrderCountPrefix)
 }
 
 func TestModuleAccountKeys(t *testing.T) {
