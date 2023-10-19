@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -141,27 +142,27 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 
 func TestSubmitTxnWithGas(t *testing.T) {
 	tests := map[string]struct {
-		gasFee   sdk.Coins
-		expectOk bool
+		gasFee       sdk.Coins
+		responseCode uint32
 	}{
 		"Success - 5 cents usdc gas fee": {
-			gasFee:   constants.TestFeeCoins_5Cents,
-			expectOk: true,
+			gasFee:       constants.TestFeeCoins_5Cents,
+			responseCode: errors.SuccessABCICode,
 		},
 		"Success - 5 cents native token gas fee": {
-			gasFee:   constants.TestFeeCoins_5Cents_NativeToken,
-			expectOk: true,
+			gasFee:       constants.TestFeeCoins_5Cents_NativeToken,
+			responseCode: errors.SuccessABCICode,
 		},
 		"Failure: 0 gas fee": {
-			gasFee:   sdk.Coins{},
-			expectOk: false,
+			gasFee:       sdk.Coins{},
+			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 		},
 		"Failure: unsupported gas fee denom": {
 			gasFee: sdk.Coins{
 				// 1BTC, which is not supported as a gas fee denom, and should be plenty to cover gas.
 				sdk.NewCoin(constants.BtcUsd.Denom, sdkmath.NewInt(100_000_000)),
 			},
-			expectOk: false,
+			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
 		},
 	}
 	for name, tc := range tests {
@@ -198,7 +199,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			checkTx := tApp.CheckTx(msgSendCheckTx)
 			// Sanity check that gas was used.
 			require.Greater(t, checkTx.GasUsed, int64(0))
-			require.Equal(t, tc.expectOk, checkTx.IsOK())
+			require.Equal(t, tc.responseCode, checkTx.Code)
 		})
 	}
 }
