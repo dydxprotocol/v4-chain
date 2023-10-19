@@ -8,6 +8,7 @@ import {
   Liquidity,
   OrderFromDatabase,
   OrderSide,
+  OrderStatus,
   SubaccountMessageContents,
   SubaccountTable,
   testConstants,
@@ -21,7 +22,6 @@ import _ from 'lodash';
 import {
   AnnotatedSubaccountMessage,
   ConsolidatedKafkaEvent,
-  convertToSubaccountMessage,
   SingleTradeMessage,
 } from '../../src/lib/types';
 
@@ -45,6 +45,7 @@ import {
   generateTransferContents,
 } from '../../src/helpers/kafka-helper';
 import { DateTime } from 'luxon';
+import { convertToSubaccountMessage } from '../../src/lib/helper';
 
 describe('kafka-publisher', () => {
   let producerSendMock: jest.SpyInstance;
@@ -288,6 +289,9 @@ describe('kafka-publisher', () => {
         fills: [
           generateFillSubaccountMessage(fill, 'BTC-USD'),
         ],
+        orders: [
+          generateOrderSubaccountMessage(order, 'BTC-USD'),
+        ],
       };
       const message1: AnnotatedSubaccountMessage = {
         blockHeight: '1',
@@ -301,6 +305,7 @@ describe('kafka-publisher', () => {
         version: '1',
         orderId: 'order1',
         isFill: true,
+        subaccountMessageContents: msg1Contents,
       };
 
       const msg2Contents: SubaccountMessageContents = {
@@ -309,17 +314,11 @@ describe('kafka-publisher', () => {
         ],
       };
       const message2: AnnotatedSubaccountMessage = {
-        blockHeight: '1',
+        ...message1,
         transactionIndex: 2,
-        eventIndex: 2,
         contents: JSON.stringify(msg2Contents),
-        subaccountId: {
-          owner: 'owner2',
-          number: 0,
-        },
-        version: '1',
         orderId: 'order2',
-        isFill: true,
+        subaccountMessageContents: msg2Contents,
       };
 
       const msg3Contents: SubaccountMessageContents = {
@@ -330,21 +329,17 @@ describe('kafka-publisher', () => {
           }, 'BTC-USD'),
         ],
         orders: [
-          generateOrderSubaccountMessage(order, 'BTC-USD'),
+          generateOrderSubaccountMessage({
+            ...order,
+            status: OrderStatus.FILLED,
+          }, 'BTC-USD'),
         ],
       };
       const message3: AnnotatedSubaccountMessage = {
-        blockHeight: '1',
+        ...message1,
         transactionIndex: 3,
-        eventIndex: 3,
         contents: JSON.stringify(msg3Contents),
-        subaccountId: {
-          owner: 'owner3',
-          number: 0,
-        },
-        version: '1',
-        orderId: 'order1',
-        isFill: true,
+        subaccountMessageContents: msg3Contents,
       };
 
       // non-fill subaccount message.
@@ -356,15 +351,11 @@ describe('kafka-publisher', () => {
         recipientSubaccountId,
       );
       const message4: AnnotatedSubaccountMessage = {
-        blockHeight: '1',
-        transactionIndex: 3,
+        ...message1,
         eventIndex: 4,
+        orderId: undefined,
+        isFill: undefined,
         contents: JSON.stringify(msg4Contents),
-        subaccountId: {
-          owner: 'owner3',
-          number: 0,
-        },
-        version: '4',
       };
 
       const expectedMergedContents: SubaccountMessageContents = {
@@ -373,12 +364,13 @@ describe('kafka-publisher', () => {
           msg3Contents.fills![0],
         ],
         orders: [
-          generateOrderSubaccountMessage(order, 'BTC-USD'),
+          msg3Contents.orders![0],
         ],
       };
       const mergedMessage3: AnnotatedSubaccountMessage = {
         ...message3,
         contents: JSON.stringify(expectedMergedContents),
+        subaccountMessageContents: expectedMergedContents,
       };
 
       publisher.addEvents([
@@ -390,9 +382,9 @@ describe('kafka-publisher', () => {
 
       publisher.aggregateFillEventsForSubaccountMessages();
       const expectedMsgs: SubaccountMessage[] = [
+        convertToSubaccountMessage(message4),
         convertToSubaccountMessage(message2),
         convertToSubaccountMessage(mergedMessage3),
-        convertToSubaccountMessage(message4),
       ];
       expect(publisher.subaccountMessages).toEqual(expectedMsgs);
 

@@ -409,6 +409,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
       subaccountIdProto,
       order?.id,
       true,
+      message,
     );
   }
 

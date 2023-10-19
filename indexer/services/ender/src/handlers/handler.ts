@@ -10,6 +10,7 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
   KafkaTopics,
 } from '@dydxprotocol-indexer/kafka';
+import { SubaccountMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -106,6 +107,7 @@ export abstract class Handler<T> {
     subaccountId: SubaccountId,
     orderId?: string,
     isFill?: boolean,
+    subaccountMessageContents?: SubaccountMessageContents,
   ): ConsolidatedKafkaEvent {
     stats.increment(`${config.SERVICE_NAME}.create_subaccount_kafka_event`, 1);
     const subaccountMessage: AnnotatedSubaccountMessage = {
@@ -119,6 +121,7 @@ export abstract class Handler<T> {
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
       orderId,
       isFill,
+      subaccountMessageContents,
     };
 
     return {

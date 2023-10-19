@@ -1,4 +1,4 @@
-import { ParseMessageError, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import { stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
 import {
   BatchKafkaProducer,
   KafkaTopics,
@@ -6,24 +6,21 @@ import {
   ProducerMessage,
   TRADES_WEBSOCKET_MESSAGE_VERSION,
 } from '@dydxprotocol-indexer/kafka';
+import { FillSubaccountMessageContents, TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
-  FillSubaccountMessageContents,
-  SubaccountMessageContents,
-  TradeMessageContents,
-} from '@dydxprotocol-indexer/postgres';
-import {
-  CandleMessage, MarketMessage, OffChainUpdateV1, SubaccountMessage, TradeMessage,
+  CandleMessage,
+  MarketMessage,
+  OffChainUpdateV1,
+  SubaccountMessage,
+  TradeMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 
 import config from '../config';
+import { convertToSubaccountMessage } from './helper';
 import {
-  AnnotatedSubaccountMessage,
-  ConsolidatedKafkaEvent,
-  convertToSubaccountMessage,
-  SingleTradeMessage,
-  VulcanMessage,
+  AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage, VulcanMessage,
 } from './types';
 
 type TopicKafkaMessages = {
@@ -32,6 +29,9 @@ type TopicKafkaMessages = {
 };
 
 type OrderedMessage = AnnotatedSubaccountMessage | SingleTradeMessage;
+
+type Message = AnnotatedSubaccountMessage | SingleTradeMessage | MarketMessage |
+CandleMessage | VulcanMessage;
 
 export class KafkaPublisher {
   subaccountMessages: AnnotatedSubaccountMessage[];
@@ -64,8 +64,7 @@ export class KafkaPublisher {
    * @param kafkaTopic
    * @private
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private getMessages(kafkaTopic: KafkaTopics): any[] | undefined {
+  private getMessages(kafkaTopic: KafkaTopics): Message[] | undefined {
     switch (kafkaTopic) {
       case KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS:
         return this.subaccountMessages;
@@ -83,40 +82,13 @@ export class KafkaPublisher {
   }
 
   /**
-   * Extract fills from subaccount message contents.
-   *
-   * @param contents
-   * @private
-   */
-  private extractFills(contents: string): FillSubaccountMessageContents[] | undefined {
-    try {
-      const subaccountContents:
-      SubaccountMessageContents = JSON.parse(contents) as SubaccountMessageContents;
-      return subaccountContents.fills;
-    } catch (error) {
-      throw new ParseMessageError(`Error parsing SubaccountMessageContents JSON: ${error}`);
-    }
-  }
-
-  private replaceFills(contents: string, fills: FillSubaccountMessageContents[]): string {
-    try {
-      const subaccountContents:
-      SubaccountMessageContents = JSON.parse(contents) as SubaccountMessageContents;
-      subaccountContents.fills = fills;
-      return JSON.stringify(subaccountContents);
-    } catch (error) {
-      throw new ParseMessageError(`Error parsing SubaccountMessageContents JSON: ${error}`);
-    }
-  }
-
-  /**
    * Sort subaccountMessages that represent fills by block height, transaction index,
    * and event index in ascending order per order id. Only keep the subaccount message if
    * it represents the last fill event per order id, but make sure the subaccount message
    * contents contains all individual fills from that block.
    *
    * Due to separate handlers for order fills, we can be sure that if a message is annotated
-   * with a fill, it should only contain data about a fill / order and not transfers.
+   * with a fill, it should only contain data about a single fill / order and not transfers.
    */
   public aggregateFillEventsForSubaccountMessages() {
     // Create a map to store the last event for fills per order ID
@@ -128,7 +100,7 @@ export class KafkaPublisher {
     this.subaccountMessages.forEach((message: AnnotatedSubaccountMessage) => {
       if (message.isFill && message.orderId) {
         const fills:
-        FillSubaccountMessageContents[] | undefined = this.extractFills(message.contents);
+        FillSubaccountMessageContents[] | undefined = message.subaccountMessageContents?.fills;
         const orderId = message.orderId;
         if (fills !== undefined) {
           allFillEvents[orderId] = allFillEvents[orderId]
@@ -149,12 +121,14 @@ export class KafkaPublisher {
       }
     });
 
-    // Replace the fills in the last event for fills with all the fills for that order ID
+    // Update the last event for the order ID such that it has all the fills
+    // that occurred for the order ID.
     Object.keys(lastEventForFills).forEach((orderId: string) => {
       const lastEvent = lastEventForFills[orderId];
       const fills = allFillEvents[orderId];
       if (fills) {
-        lastEvent.contents = this.replaceFills(lastEvent.contents, fills);
+        lastEvent.subaccountMessageContents!.fills = fills;
+        lastEvent.contents = JSON.stringify(lastEvent.subaccountMessageContents);
       }
     });
 
@@ -182,23 +156,21 @@ export class KafkaPublisher {
    * where the first event should be the earliest event in the block.
    */
   public sortEvents(msgs: OrderedMessage[]) {
-    if (msgs) {
-      msgs.sort((a: OrderedMessage, b: OrderedMessage) => {
-        if (Big(a.blockHeight).lt(b.blockHeight)) {
-          return -1;
-        } else if (Big(a.blockHeight).gt(b.blockHeight)) {
-          return 1;
-        }
+    msgs.sort((a: OrderedMessage, b: OrderedMessage) => {
+      if (Big(a.blockHeight).lt(b.blockHeight)) {
+        return -1;
+      } else if (Big(a.blockHeight).gt(b.blockHeight)) {
+        return 1;
+      }
 
-        if (a.transactionIndex < b.transactionIndex) {
-          return -1;
-        } else if (a.transactionIndex > b.transactionIndex) {
-          return 1;
-        }
+      if (a.transactionIndex < b.transactionIndex) {
+        return -1;
+      } else if (a.transactionIndex > b.transactionIndex) {
+        return 1;
+      }
 
-        return a.eventIndex < b.eventIndex ? -1 : 1;
-      });
-    }
+      return a.eventIndex < b.eventIndex ? -1 : 1;
+    });
   }
 
   public async publish() {

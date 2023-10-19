@@ -3,10 +3,10 @@ import {
   Liquidity,
   PerpetualPositionColumns,
   PerpetualPositionFromDatabase,
+  SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import {
   StatefulOrderEventV1,
-  IndexerTendermintBlock,
   IndexerTendermintEvent,
   CandleMessage,
   LiquidationOrderV1,
@@ -31,16 +31,7 @@ import {
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
-import _ from 'lodash';
 import Long from 'long';
-import { DateTime } from 'luxon';
-
-export interface EventHandlerData {
-  block: IndexerTendermintBlock,
-  event: IndexerTendermintEvent,
-  timestamp: DateTime,
-  txId: number,
-}
 
 // Type sourced from protocol:
 // https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
@@ -192,13 +183,7 @@ export interface SingleTradeMessage extends TradeMessage {
 export interface AnnotatedSubaccountMessage extends SubaccountMessage {
   orderId?: string,
   isFill?: boolean,
-}
-
-export function convertToSubaccountMessage(
-  annotatedMessage: AnnotatedSubaccountMessage,
-): SubaccountMessage {
-  const subaccountMessage: SubaccountMessage = _.omit(annotatedMessage, ['orderId', 'isFill']);
-  return subaccountMessage;
+  subaccountMessageContents?: SubaccountMessageContents,
 }
 
 export interface VulcanMessage {
