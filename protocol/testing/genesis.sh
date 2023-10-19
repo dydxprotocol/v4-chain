@@ -83,6 +83,8 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 	# reduced voting period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
+	# set initial deposit ratio to prevent spamming
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 
 	# Update staking module.
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
