@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryParamsRequest, QueryParamsResponseSDKType } from "./query";
+import { QueryParamsRequest, QueryParamsResponseSDKType, QueryRewardShareRequest, QueryRewardShareResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -10,6 +10,7 @@ export class LCDQueryClient {
   }) {
     this.req = requestClient;
     this.params = this.params.bind(this);
+    this.rewardShare = this.rewardShare.bind(this);
   }
   /* Queries the Params. */
 
@@ -17,6 +18,13 @@ export class LCDQueryClient {
   async params(_params: QueryParamsRequest = {}): Promise<QueryParamsResponseSDKType> {
     const endpoint = `dydxprotocol/v4/rewards/params`;
     return await this.req.get<QueryParamsResponseSDKType>(endpoint);
+  }
+  /* Queries a reward share by address. */
+
+
+  async rewardShare(params: QueryRewardShareRequest): Promise<QueryRewardShareResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/rewards/shares/${params.address}`;
+    return await this.req.get<QueryRewardShareResponseSDKType>(endpoint);
   }
 
 }
