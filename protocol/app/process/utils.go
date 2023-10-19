@@ -2,7 +2,6 @@ package process
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"fmt"
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,26 +33,4 @@ func getUnexpectedMsgTypeError(expectedMsgType reflect.Type, actualMsg sdk.Msg) 
 	return errorsmod.Wrapf(
 		ErrUnexpectedMsgType, "Expected MsgType %s, but got %T", expectedMsgType, actualMsg,
 	)
-}
-
-// GetAppInjectedMsgIdxMaps returns two maps. The first map is `txtype` to the index where that particular
-// `txtype` msg can be found in the block proposal's list of txs. The second map is the reverse of the
-// first map.
-func GetAppInjectedMsgIdxMaps(numTxs int) (map[txtype]int, map[int]txtype) {
-	if numTxs < MinTxsCount {
-		panic(fmt.Errorf("num of txs must be at least %d", MinTxsCount))
-	}
-	txTypeToIdx := map[txtype]int{
-		ProposedOperationsTxType: 0,
-		AcknowledgeBridgesTxType: numTxs - 3,
-		AddPremiumVotesTxType:    numTxs - 2,
-		UpdateMarketPricesTxType: numTxs - 1,
-	}
-
-	idxToTxType := make(map[int]txtype, len(txTypeToIdx))
-	for k, v := range txTypeToIdx {
-		idxToTxType[v] = k
-	}
-
-	return txTypeToIdx, idxToTxType
 }

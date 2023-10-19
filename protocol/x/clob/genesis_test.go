@@ -81,7 +81,7 @@ func TestGenesis(t *testing.T) {
 						},
 						{
 							UsdTncRequired: dtypes.NewInt(100000),
-							Limit:          200,
+							Limit:          1000,
 						},
 					},
 					StatefulOrderEquityTiers: []types.EquityTierLimit{

@@ -480,7 +480,7 @@ function verifyAllCandlesEqualsKafkaMessages(
   Partial<Record<CandleResolution, CandleMessageContents>> = _.chain(expectedCandles)
     .keyBy(CandleColumns.resolution)
     .mapValues((candle: CandleFromDatabase) => {
-      return _.omit(candle, [CandleColumns.id, CandleColumns.resolution]);
+      return _.omit(candle, [CandleColumns.id]);
     })
     .value();
 
@@ -516,7 +516,7 @@ function verifyContainsCandlesKafkaMessages(
 
   _.forEach(expectedCandles, (expectedCandle: CandleFromDatabase) => {
     expect(
-      _.omit(expectedCandle, [CandleColumns.id, CandleColumns.resolution]),
+      _.omit(expectedCandle, [CandleColumns.id]),
     ).toEqual(resolutionToContent[expectedCandle.resolution]);
   });
 }

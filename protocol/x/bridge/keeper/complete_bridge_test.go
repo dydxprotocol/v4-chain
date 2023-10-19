@@ -19,6 +19,8 @@ func TestCompleteBridge(t *testing.T) {
 		initialBalance sdk.Coin
 		// Bridge event to complete.
 		bridgeEvent types.BridgeEvent
+		// Whether bridging is disabled.
+		bridgingDisabled bool
 
 		// Expected error, if any.
 		expectedError string
@@ -41,6 +43,20 @@ func TestCompleteBridge(t *testing.T) {
 			expectedError:   "invalid coin",
 			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		},
+		"Failure: coin amount is negative": {
+			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+			bridgeEvent: types.BridgeEvent{
+				Id:      7,
+				Address: constants.BobAccAddress.String(),
+				Coin: sdk.Coin{
+					Denom:  "adv4tnt",
+					Amount: sdkmath.NewInt(-1),
+				},
+				EthBlockHeight: 3,
+			},
+			expectedError:   "invalid coin",
+			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+		},
 		"Failure: invalid address string": {
 			initialBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 			bridgeEvent: types.BridgeEvent{
@@ -58,14 +74,26 @@ func TestCompleteBridge(t *testing.T) {
 			expectedError:   "insufficient funds",
 			expectedBalance: sdk.NewCoin("adv4tnt", sdkmath.NewInt(500)),
 		},
+		"Failure: bridging is disabled": {
+			initialBalance:   sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
+			bridgeEvent:      constants.BridgeEvent_Id0_Height0, // bridges 888 tokens.
+			bridgingDisabled: true,
+			expectedError:    types.ErrBridgingDisabled.Error(),
+			expectedBalance:  sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)), // same as initial.
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Initialize context and keeper.
 			ctx, bridgeKeeper, _, _, _, bankKeeper, _ := keepertest.BridgeKeepers(t)
+			err := bridgeKeeper.UpdateSafetyParams(ctx, types.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: bridgeKeeper.GetSafetyParams(ctx).DelayBlocks,
+			})
+			require.NoError(t, err)
 			// Fund bridge module account with enought balance.
-			err := bankKeeper.MintCoins(
+			err = bankKeeper.MintCoins(
 				ctx,
 				types.ModuleName,
 				sdk.NewCoins(tc.initialBalance),

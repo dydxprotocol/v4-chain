@@ -95,7 +95,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -203,7 +203,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 	// Setup tApp.
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 	// Generate a random account.
 	randomAccount := simtypes.RandomAccounts(rand.NewRand(), 1)[0]
@@ -216,7 +216,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
 }
 
 func TestMsgWithdrawFromSubaccount(t *testing.T) {
@@ -284,7 +284,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -392,7 +392,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 	// Setup tApp.
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 	// Generate a random account.
 	randomAccount := simtypes.RandomAccounts(rand.NewRand(), 1)[0]
@@ -408,7 +408,7 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
 }
 
 // testNonExistentSender is a helper function that tests sending transfer messages with non-existent sender.

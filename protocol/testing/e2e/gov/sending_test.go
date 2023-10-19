@@ -68,7 +68,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			senderModuleAddress := authtypes.NewModuleAddress(tc.msg.SenderModuleName)
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -89,7 +89,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialModuleBalance := tApp.App.BankKeeper.GetBalance(ctx, senderModuleAddress, tc.msg.Coin.Denom)
 			initialRecipientBalance := tApp.App.BankKeeper.GetBalance(
@@ -102,7 +102,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,

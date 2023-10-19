@@ -14,7 +14,10 @@ const (
 	// Minimum number of votes per sample is by default 15.
 	DefaultMinNumVotesPerSample = 15
 
-	MaxDefaultFundingPpmAbs   = lib.OneMillion
+	// Maximum default funding rate magnitude is 100%.
+	MaxDefaultFundingPpmAbs = lib.OneMillion
+
+	// Liquidity-tier related constants
 	MaxInitialMarginPpm       = lib.OneMillion
 	MaxMaintenanceFractionPpm = lib.OneMillion
 )

@@ -19,7 +19,7 @@ func TestMsgUpdateSafetyParams_GetSigners(t *testing.T) {
 func TestMsgUpdateSafetyParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		msg         types.MsgUpdateSafetyParams
-		expectedErr error
+		expectedErr string
 	}{
 		"Success": {
 			msg: types.MsgUpdateSafetyParams{
@@ -30,20 +30,27 @@ func TestMsgUpdateSafetyParams_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"Failure: Invalid authority": {
+		"Failure: empty authority": {
 			msg: types.MsgUpdateSafetyParams{
 				Authority: "",
 			},
-			expectedErr: types.ErrInvalidAuthority,
+			expectedErr: types.ErrInvalidAuthority.Error(),
+		},
+		"Failure: invalid authority": {
+			msg: types.MsgUpdateSafetyParams{
+				Authority: "dydx1abc",
+			},
+			expectedErr: types.ErrInvalidAuthority.Error(),
 		},
 	}
+
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			err := tc.msg.ValidateBasic()
-			if tc.expectedErr == nil {
+			if tc.expectedErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.ErrorIs(t, err, tc.expectedErr)
+				require.ErrorContains(t, err, tc.expectedErr)
 			}
 		})
 	}

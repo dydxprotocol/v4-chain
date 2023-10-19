@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -975,7 +976,8 @@ func TestRecordMevMetrics(t *testing.T) {
 			}
 
 			mockLogger := &mocks.Logger{}
-			mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
+			mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
 			mockLogger.On(
 				"Info",
 				"Measuring MEV for proposed matches",

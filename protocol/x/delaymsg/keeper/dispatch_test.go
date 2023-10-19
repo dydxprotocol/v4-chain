@@ -378,18 +378,18 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: the delayed message is in the keeper scheduled for block 2.
@@ -400,7 +400,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
 	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Get initial Alice balance
 	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
@@ -414,8 +414,8 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, aliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, aliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -431,7 +431,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
 // correctly.
 func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Update the genesis state to execute the perpetual fee params update at block 2.
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -443,7 +443,7 @@ func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	resp, err := tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
@@ -477,22 +477,22 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Sanity check: a message with this id exists within the keeper.
 	_, found := tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -507,7 +507,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)

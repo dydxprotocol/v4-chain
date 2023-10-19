@@ -1,8 +1,9 @@
 package process_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -55,6 +56,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	tests := map[string]struct {
 		txsBytes             [][]byte
 		bridgeEventsInServer []bridgetypes.BridgeEvent
+		bridgingDisabled     bool
 
 		expectedResponse abci.ResponseProcessProposal
 	}{
@@ -70,6 +72,17 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				invalidUpdatePriceTx, // invalid.
 			},
 			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			expectedResponse:     rejectResponse,
+		},
+		"Reject: bridge events are non-empty and bridging is disabled": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validAcknowledgeBridgesTx,
+				validAddFundingTx,
+				validAcknowledgeBridgesTx,
+			},
+			bridgeEventsInServer: validAcknowledgeBridgesMsg.Events,
+			bridgingDisabled:     true,
 			expectedResponse:     rejectResponse,
 		},
 		"Reject: bridge event IDs not consecutive": {
@@ -217,6 +230,17 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			},
 			expectedResponse: acceptResponse,
 		},
+		"Accept: bridge tx with no events and bridging is disabled": {
+			txsBytes: [][]byte{
+				validOperationsTx,
+				validSingleMsgOtherTx,
+				validAcknowledgeBridgesTx_NoEvents,
+				validAddFundingTx,
+				validUpdatePriceTx,
+			},
+			bridgingDisabled: true,
+			expectedResponse: acceptResponse,
+		},
 		"Accept: Valid txs": {
 			txsBytes: [][]byte{
 				validOperationsTx,
@@ -244,6 +268,10 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			mockClobKeeper.On("RecordMevMetrics", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockBridgeKeeper := &mocks.ProcessBridgeKeeper{}
+			mockBridgeKeeper.On("GetSafetyParams", mock.Anything).Return(bridgetypes.SafetyParams{
+				IsDisabled:  tc.bridgingDisabled,
+				DelayBlocks: 5, // dummy value, not considered by ProcessProposal.
+			})
 			mockBridgeKeeper.On("GetAcknowledgedEventInfo", mock.Anything).Return(constants.AcknowledgedEventInfo_Id0_Height0)
 			mockBridgeKeeper.On("GetRecognizedEventInfo", mock.Anything).Return(constants.RecognizedEventInfo_Id2_Height0)
 			for _, bridgeEvent := range tc.bridgeEventsInServer {

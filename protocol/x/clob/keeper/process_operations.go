@@ -532,7 +532,16 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
+	// If the subaccount is not liquidatable, do nothing.
+	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {
+		return err
+	}
+
+	takerOrder, err := k.GetLiquidationOrderForPerpetual(
+		ctx,
+		matchLiquidation.Liquidated,
+		matchLiquidation.PerpetualId,
+	)
 	if err != nil {
 		return err
 	}
@@ -554,7 +563,7 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
-		float32(absNotionalQuoteQuantums.Uint64()),
+		metrics.GetMetricValueFromBigInt(absNotionalQuoteQuantums),
 		matchLiquidation.GetMetricLabels(),
 	)
 
@@ -589,24 +598,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 				),
 			)
 		}
-
-		// Stat fill amount in quote quantums as ratio of notional quote quantums
-		fillAmountToTotalSizeRat := new(big.Rat).Quo(
-			new(big.Rat).SetUint64(matchWithOrders.FillAmount.ToUint64()),
-			new(big.Rat).SetUint64(matchLiquidation.TotalSize),
-		)
-		filledQuoteQuantums := lib.BigRatRound(
-			new(big.Rat).Mul(
-				fillAmountToTotalSizeRat,
-				new(big.Rat).SetInt(absNotionalQuoteQuantums),
-			),
-			true,
-		)
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
-			float32(filledQuoteQuantums.Uint64()),
-			matchLiquidation.GetMetricLabels(),
-		)
 
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
@@ -681,14 +672,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	}
 	deltaQuantumsIsNegative := position.GetIsLong()
 
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForBoolValue(metrics.Positive, !deltaQuantumsIsNegative),
-		},
-	)
-
 	for _, fill := range matchDeleveraging.GetFills() {
 		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)
 		if deltaQuantumsIsNegative {
@@ -711,6 +694,21 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				perpetualId,
 				deltaQuantums,
 				err,
+			)
+		}
+
+		if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+			ctx,
+			perpetualId,
+			new(big.Int).SetUint64(fill.FillAmount),
+		); err == nil {
+			labels := []gometrics.Label{
+				metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			}
+			telemetry.IncrCounterWithLabels(
+				[]string{metrics.ProcessOperations, metrics.Deleveraging, metrics.QuoteQuantums},
+				metrics.GetMetricValueFromBigInt(quoteQuantums),
+				labels,
 			)
 		}
 	}

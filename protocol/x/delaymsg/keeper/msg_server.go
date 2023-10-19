@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"context"
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -18,6 +18,7 @@ func NewMsgServerImpl(keeper types.DelayMsgKeeper) types.MsgServer {
 	return &msgServer{keeper}
 }
 
+// DelayMessage delays execution of a message by a given number of blocks.
 func (k msgServer) DelayMessage(
 	goCtx context.Context,
 	msg *types.MsgDelayMessage,
@@ -27,11 +28,6 @@ func (k msgServer) DelayMessage(
 	// ValidateBasic method of the message will not have been called. We call it here to ensure
 	// that the message is valid before continuing.
 	if err := msg.ValidateBasic(); err != nil {
-		k.Logger(ctx).Error(
-			"DelayMessage failed because msg.ValidateBasic failed",
-			constants.ErrorLogKey,
-			err,
-		)
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"msg.ValidateBasic failed, err = %v",
@@ -40,11 +36,6 @@ func (k msgServer) DelayMessage(
 	}
 
 	if !k.HasAuthority(msg.GetAuthority()) {
-		k.Logger(ctx).Error(
-			"DelayMessage failed because msg.Authority is not recognized as a valid authority for sending messages",
-			"authority",
-			msg.GetAuthority(),
-		)
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"%v is not recognized as a valid authority for sending messages",
@@ -54,11 +45,6 @@ func (k msgServer) DelayMessage(
 
 	sdkMsg, err := msg.GetMessage()
 	if err != nil {
-		k.Logger(ctx).Error(
-			"GetMessage for MsgDelayMessage failed",
-			constants.ErrorLogKey,
-			err,
-		)
 		return nil, errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"GetMessage for MsgDelayedMessage failed, err = %v",
@@ -69,12 +55,7 @@ func (k msgServer) DelayMessage(
 	id, err := k.DelayMessageByBlocks(ctx, sdkMsg, msg.DelayBlocks)
 
 	if err != nil {
-		k.Logger(ctx).Error(
-			"DelayMessageByBlocks failed",
-			constants.ErrorLogKey,
-			err,
-		)
-		return nil, fmt.Errorf("DelayMessageByBlocks failed, err  = %w", err)
+		return nil, fmt.Errorf("DelayMessageByBlocks failed, err = %w", err)
 	}
 
 	return &types.MsgDelayMessageResponse{

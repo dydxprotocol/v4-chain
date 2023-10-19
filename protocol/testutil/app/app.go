@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -18,20 +19,19 @@ import (
 	"github.com/cometbft/cometbft/mempool"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkproto "github.com/cosmos/gogoproto/proto"
-
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -47,7 +47,6 @@ import (
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -108,7 +107,10 @@ type AdvanceToBlockOptions struct {
 // with the option to override specific flags.
 func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
-	logger := log.TestingLogger()
+	logger, ok := appOptions.Get(testlog.LoggerInstanceForTest).(log.Logger)
+	if !ok {
+		logger, _ = testlog.TestLogger()
+	}
 	db := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
@@ -244,7 +246,10 @@ type ExecuteCheckTxs func(ctx sdk.Context, app *app.App) (stop bool)
 //   - DefaultGenesis
 //   - DefaultTestAppCreatorFn with no custom flags
 //   - an ExecuteCheckTxs function that will stop on after the first block
-func NewTestAppBuilder() TestAppBuilder {
+func NewTestAppBuilder(t testing.TB) TestAppBuilder {
+	if t == nil {
+		panic("t must not be nil")
+	}
 	return TestAppBuilder{
 		genesisDocFn:         DefaultGenesis,
 		appCreatorFn:         DefaultTestAppCreatorFn(nil),
@@ -252,6 +257,7 @@ func NewTestAppBuilder() TestAppBuilder {
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
+		t: t,
 	}
 }
 
@@ -264,7 +270,7 @@ type TestAppBuilder struct {
 	appCreatorFn         func() *app.App
 	usesDefaultAppConfig bool
 	executeCheckTxs      ExecuteCheckTxs
-	t                    *testing.T
+	t                    testing.TB
 }
 
 // WithGenesisDocFn returns a builder like this one with specified function that will be used to create
@@ -282,17 +288,19 @@ func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
 	return tApp
 }
 
-// WithTesting returns a builder like this one with the specified testing environment being specified.
-func (tApp TestAppBuilder) WithTesting(t *testing.T) TestAppBuilder {
-	tApp.t = t
-	return tApp
-}
-
 // Build returns a new TestApp capable of being executed.
-func (tApp TestAppBuilder) Build() TestApp {
-	return TestApp{
+func (tApp TestAppBuilder) Build() *TestApp {
+	rval := TestApp{
 		builder: tApp,
 	}
+	tApp.t.Cleanup(func() {
+		if rval.App != nil {
+			if err := rval.App.Close(); err != nil {
+				tApp.t.Fatal(err)
+			}
+		}
+	})
+	return &rval
 }
 
 // A TestApp used to executed ABCI++ flows. Note that callers should invoke `TestApp.CheckTx` over `TestApp.App.CheckTx`
@@ -301,7 +309,7 @@ func (tApp TestAppBuilder) Build() TestApp {
 //
 // Note that TestApp.CheckTx is thread safe. All other methods are not thread safe.
 type TestApp struct {
-	// Should only be used to fetch read only state, all mutations should preferrably happen through Genesis state,
+	// Should only be used to fetch read only state, all mutations should preferably happen through Genesis state,
 	// TestApp.CheckTx, and block proposals.
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.
@@ -391,12 +399,6 @@ func (tApp *TestApp) AdvanceToBlock(
 		return tApp.App.NewContext(true, tApp.header)
 	}
 
-	// First advance to the prior block using the current block time. This ensures that we only update the time on
-	// the requested block.
-	if int64(block)-tApp.header.Height > 1 && options.BlockTime != tApp.header.Time {
-		tApp.AdvanceToBlock(block-1, options)
-	}
-
 	// Ensure that we grab the lock so that we can read and write passingCheckTxs correctly.
 	tApp.passingCheckTxsMtx.Lock()
 	defer tApp.passingCheckTxsMtx.Unlock()
@@ -405,7 +407,10 @@ func (tApp *TestApp) AdvanceToBlock(
 	for tApp.App.LastBlockHeight() < int64(block) {
 		tApp.panicIfChainIsHalted()
 		tApp.header.Height = tApp.App.LastBlockHeight() + 1
-		tApp.header.Time = options.BlockTime
+		// By default, only update block time at the requested block.
+		if tApp.header.Height == int64(block) {
+			tApp.header.Time = options.BlockTime
+		}
 		tApp.header.LastCommitHash = tApp.App.LastCommitID().Hash
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
 
@@ -461,23 +466,13 @@ func (tApp *TestApp) AdvanceToBlock(
 				}
 			}
 
-			if tApp.builder.t == nil {
-				if !processResponse.IsAccepted() {
-					panic(fmt.Errorf(
-						"Expected process proposal request %+v to be accepted, but failed with %+v.",
-						processRequest,
-						processResponse,
-					))
-				}
-			} else {
-				require.Truef(
-					tApp.builder.t,
-					processResponse.IsAccepted(),
-					"Expected process proposal request %+v to be accepted, but failed with %+v.",
-					processRequest,
-					processResponse,
-				)
-			}
+			require.Truef(
+				tApp.builder.t,
+				processResponse.IsAccepted(),
+				"Expected process proposal request %+v to be accepted, but failed with %+v.",
+				processRequest,
+				processResponse,
+			)
 			deliverTxs = prepareResponse.Txs
 		}
 
@@ -514,21 +509,12 @@ func (tApp *TestApp) AdvanceToBlock(
 					return tApp.App.NewContext(true, tApp.header)
 				}
 			} else {
-				if tApp.builder.t == nil {
-					if !deliverTxResponse.IsOK() {
-						panic(fmt.Errorf(
-							"Failed to deliver transaction that was accepted: %+v.",
-							deliverTxResponse,
-						))
-					}
-				} else {
-					require.Truef(
-						tApp.builder.t,
-						deliverTxResponse.IsOK(),
-						"Failed to deliver transaction that was accepted: %+v.",
-						deliverTxResponse,
-					)
-				}
+				require.Truef(
+					tApp.builder.t,
+					deliverTxResponse.IsOK(),
+					"Failed to deliver transaction that was accepted: %+v.",
+					deliverTxResponse,
+				)
 			}
 		}
 
@@ -555,6 +541,11 @@ func (tApp *TestApp) AdvanceToBlock(
 
 // Reset resets the chain such that it can be initialized and executed again.
 func (tApp *TestApp) Reset() {
+	if tApp.App != nil {
+		if err := tApp.App.Close(); err != nil {
+			tApp.builder.t.Fatal(err)
+		}
+	}
 	tApp.App = nil
 	tApp.genesis = types.GenesisDoc{}
 	tApp.header = tmproto.Header{}
@@ -577,6 +568,17 @@ func (tApp *TestApp) GetHalted() bool {
 	return tApp.halted
 }
 
+// newTestingLogger returns a logger that will write to stdout if testing is verbose. This method replaces
+// cometbft's log.TestingLogger, which re-uses the same logger for all tests, which can cause race test false positives
+// when accessed by concurrent go routines in the same test.
+func newTestingLogger() log.Logger {
+	if testing.Verbose() {
+		return log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	} else {
+		return log.NewNopLogger()
+	}
+}
+
 // CheckTx adds the transaction to a test specific "mempool" that will be used to deliver the transaction during
 // Prepare/Process proposal. Note that this must be invoked over TestApp.App.CheckTx as the transaction will not
 // be added to the "mempool" causing the transaction to not be supplied during the Prepare/Process proposal phase.
@@ -587,7 +589,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	res := tApp.App.CheckTx(req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
-	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, log.TestingLogger()) {
+	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()

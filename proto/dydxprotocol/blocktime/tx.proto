@@ -5,7 +5,6 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types
 
 import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
-import "google/protobuf/duration.proto";
 import "dydxprotocol/blocktime/params.proto";
 import "gogoproto/gogo.proto";
 
@@ -14,10 +13,6 @@ service Msg {
   // UpdateDowntimeParams updates the DowntimeParams in state.
   rpc UpdateDowntimeParams(MsgUpdateDowntimeParams)
       returns (MsgUpdateDowntimeParamsResponse);
-
-  // IsDelayedBlock indicates a significant difference between wall time and the
-  // time of the proposed block.
-  rpc IsDelayedBlock(MsgIsDelayedBlock) returns (MsgIsDelayedBlockResponse);
 }
 
 // MsgUpdateDowntimeParams is the Msg/UpdateDowntimeParams request type.
@@ -33,14 +28,3 @@ message MsgUpdateDowntimeParams {
 // MsgUpdateDowntimeParamsResponse is the Msg/UpdateDowntimeParams response
 // type.
 message MsgUpdateDowntimeParamsResponse {}
-
-// MsgIsDelayedBlock is the Msg/IsDelayedBlock request type.
-message MsgIsDelayedBlock {
-  // The duration that the block is delayed by.
-  // This value could possibly be negative in rare cases.
-  google.protobuf.Duration delay_duration = 1
-      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
-}
-
-// MsgIsDelayedBlock is the Msg/IsDelayedBlock response type.
-message MsgIsDelayedBlockResponse {}

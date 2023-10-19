@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -168,16 +169,13 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 	tests := map[string]struct {
 		msg           sdk.Msg
 		expectedError string
+		overflow      bool
 	}{
 		"No handler found": {
 			msg:           constants.NoHandlerMsg,
 			expectedError: "/testpb.TestMsg: Message not recognized by router",
 		},
-		"Message fails ValidateBasic": {
-			msg:           routableInvalidSdkMsg(),
-			expectedError: "message failed basic validation: Invalid msg: Invalid input",
-		},
-		"Message fails validateSigners": {
+		"Message fails validation": {
 			msg: &bridgetypes.MsgCompleteBridge{
 				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
@@ -188,11 +186,23 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 			msg:           unencodableSdkMsg(),
 			expectedError: "failed to convert message to Any: Invalid input",
 		},
+		"Block number overflows": {
+			msg:           constants.TestMsg1,
+			overflow:      true,
+			expectedError: "failed to add block delay",
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-			_, err := delaymsg.DelayMessageByBlocks(ctx, tc.msg, blockDelay1)
+
+			delay := uint32(blockDelay1)
+			if tc.overflow {
+				ctx = ctx.WithBlockHeight(math.MaxInt64 - blockDelay1 - 1)
+				delay = math.MaxUint32
+			}
+
+			_, err := delaymsg.DelayMessageByBlocks(ctx, tc.msg, delay)
 			require.ErrorContains(t, err, tc.expectedError)
 		})
 	}
@@ -217,7 +227,7 @@ func TestDeleteMessage(t *testing.T) {
 	err = delaymsg.DeleteMessage(ctx, 0)
 	require.NoError(t, err)
 
-	// Assert - message is gone, removed from block message ids, and num messages is 0.
+	// Assert - message is gone, removed from block message ids.
 	_, found := delaymsg.GetMessage(ctx, 0)
 	require.False(t, found)
 
@@ -225,15 +235,15 @@ func TestDeleteMessage(t *testing.T) {
 	_, found = delaymsg.GetBlockMessageIds(ctx, 10)
 	require.False(t, found)
 
-	// Message count unaffected.
-	require.Equal(t, uint32(1), delaymsg.GetNumMessages(ctx))
+	// Next delayed message id unaffected.
+	require.Equal(t, uint32(1), delaymsg.GetNextDelayedMessageId(ctx))
 }
 
-func TestGetNumMessages(t *testing.T) {
+func TestGetNextDelayedMessageId(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
-	// No messages.
-	require.Equal(t, uint32(0), delaymsg.GetNumMessages(ctx))
+	// Next delayed message id should be 0.
+	require.Equal(t, uint32(0), delaymsg.GetNextDelayedMessageId(ctx))
 }
 
 func expectDelayedMessagesAndBlockIds(
@@ -242,7 +252,7 @@ func expectDelayedMessagesAndBlockIds(
 	delayMsg *keeper.Keeper,
 	delayedMsgs map[uint32]types.DelayedMessage,
 	blockMessageIds map[uint32]types.BlockMessageIds,
-	expectedNumMessages uint32,
+	expectedNextDelayedMessageId uint32,
 ) {
 	for i, testDelayedMsg := range delayedMsgs {
 		delayedMsg, found := delayMsg.GetMessage(ctx, uint32(i))
@@ -257,14 +267,14 @@ func expectDelayedMessagesAndBlockIds(
 		require.Equal(t, expectedMessageIds, actualMessageIds)
 	}
 
-	require.Equal(t, expectedNumMessages, delayMsg.GetNumMessages(ctx))
+	require.Equal(t, expectedNextDelayedMessageId, delayMsg.GetNextDelayedMessageId(ctx))
 }
 
-func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
+func TestGetNextDelayedMessageId_AddAndDeleteMessages(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	// No messages.
-	require.Equal(t, uint32(0), delaymsg.GetNumMessages(ctx))
+	require.Equal(t, uint32(0), delaymsg.GetNextDelayedMessageId(ctx))
 
 	// Add a message, then delete it.
 	_, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
@@ -298,7 +308,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 		delaymsg,
 		map[uint32]types.DelayedMessage{},
 		map[uint32]types.BlockMessageIds{},
-		1, // Message count unaffected.
+		1, // Next delayed message id unaffected.
 	)
 
 	// Add another message - expect an incremented id.
@@ -321,7 +331,7 @@ func TestGetNumMessages_AddAndDeleteMessages(t *testing.T) {
 				Ids: []uint32{1}, // Id incremented.
 			},
 		},
-		2, // Message count incremented.
+		2, // Next delayed message id incremented.
 	)
 }
 
@@ -333,10 +343,47 @@ func TestGetMessage_NotFound(t *testing.T) {
 	require.Zero(t, delayedMsg)
 }
 
+func TestValidateMsg(t *testing.T) {
+	tests := map[string]struct {
+		msg           sdk.Msg
+		expectedError string
+	}{
+		"No handler found": {
+			msg:           constants.NoHandlerMsg,
+			expectedError: "/testpb.TestMsg: Message not recognized by router",
+		},
+		"Message fails ValidateBasic": {
+			msg:           routableInvalidSdkMsg(),
+			expectedError: "message failed basic validation: Invalid msg: Invalid input",
+		},
+		"Message fails validateSigners": {
+			msg: &bridgetypes.MsgCompleteBridge{
+				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+				Event:     constants.BridgeEvent_Id0_Height0,
+			},
+			expectedError: "message signer must be delaymsg module address: Invalid signer",
+		},
+		"Valid message": {
+			msg: constants.TestMsg1,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			_, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			err := delaymsg.ValidateMsg(tc.msg)
+			if tc.expectedError == "" {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
 func TestSetDelayedMessage(t *testing.T) {
 	tests := map[string]struct {
 		msg    types.DelayedMessage
-		expErr error
+		expErr string
 	}{
 		"Success": {
 			msg: types.DelayedMessage{
@@ -345,13 +392,31 @@ func TestSetDelayedMessage(t *testing.T) {
 				BlockHeight: 1,
 			},
 		},
+		"nil msg": {
+			msg:    types.DelayedMessage{},
+			expErr: "failed to delay msg: failed to get message with error 'Delayed msg is nil': Invalid input",
+		},
+		"invalid msg": {
+			msg: types.DelayedMessage{
+				Id: 0,
+				Msg: encoding.EncodeMessageToAny(
+					t,
+					&bridgetypes.MsgCompleteBridge{
+						Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+						Event:     constants.BridgeEvent_Id0_Height0,
+					},
+				),
+				BlockHeight: 1,
+			},
+			expErr: "failed to delay message: failed to validate with error 'message signer must be delaymsg",
+		},
 		"invalid block height": {
 			msg: types.DelayedMessage{
 				Id:          0,
 				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 0,
 			},
-			expErr: fmt.Errorf("failed to delay message: block height 0 is in the past: Invalid input"),
+			expErr: "failed to delay message: block height 0 is in the past: Invalid input",
 		},
 		"duplicate id": {
 			msg: types.DelayedMessage{
@@ -359,7 +424,7 @@ func TestSetDelayedMessage(t *testing.T) {
 				Msg:         encoding.EncodeMessageToAny(t, constants.TestMsg1),
 				BlockHeight: 1,
 			},
-			expErr: fmt.Errorf("failed to delay message: message with id 1 already exists: Invalid input"),
+			expErr: "failed to delay message: message with id 1 already exists: Invalid input",
 		},
 	}
 	for name, tc := range tests {
@@ -378,10 +443,10 @@ func TestSetDelayedMessage(t *testing.T) {
 			ctx = ctx.WithBlockHeight(1)
 
 			err = delaymsg.SetDelayedMessage(ctx, &tc.msg)
-			if tc.expErr == nil {
+			if tc.expErr == "" {
 				require.NoError(t, err)
 			} else {
-				require.EqualError(t, tc.expErr, err.Error())
+				require.ErrorContains(t, err, tc.expErr)
 			}
 		})
 	}

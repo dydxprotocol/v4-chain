@@ -850,6 +850,20 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
 
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.MemClobReplayOperations,
+		metrics.Latency,
+	)
+
+	telemetry.SetGauge(
+		float32(len(localOperations)),
+		types.ModuleName,
+		metrics.MemClobReplayOperations,
+		metrics.OperationsQueueLength,
+	)
+
 	// Recover from any panics that occur during replay operations.
 	// This could happen in cases where i.e. A subaccount balance overflowed
 	// during a match. We don't want to halt the entire chain in this case.
@@ -861,6 +875,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		}
 	}()
 
+	placedPreexistingStatefulOrderIds := make(map[types.OrderId]struct{})
+	placedOrderRemovalOrderIds := make(map[types.OrderId]struct{})
 	// Iterate over all provided operations.
 	for _, operation := range localOperations {
 		switch operation.Operation.(type) {
@@ -935,15 +951,22 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			if m.operationsToPropose.IsOrderRemovalInOperationsQueue(statefulOrderPlacement.Order.OrderId) {
-				// If an order removal for this order is found in the ops queue, then we should not attempt to
-				// place the order. Any generated matches would fail in DeliverTx as the order would be missing from
-				// state (due to the order removal being processed).
-				telemetry.IncrCounter(
-					1,
-					types.ModuleName,
-					metrics.ReplayOperations,
-					metrics.SkipStatefulReplayPlaceOrder,
+			// Log an error if the order was already placed. We should not see duplicate Preexisting Stateful Orders
+			// and Order Removals (which, when replayed, can result in placements) should never precede a Preexisting
+			// Stateful Order operation.
+			if _, found := placedPreexistingStatefulOrderIds[*orderId]; found {
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: PreexistingStatefulOrder operation for order which was already placed",
+					metrics.OrderId, *orderId,
+					metrics.BlockHeight, ctx.BlockHeight()+1,
+				)
+				continue
+			}
+			if _, found := placedOrderRemovalOrderIds[*orderId]; found {
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: PreexistingStatefulOrder preceded by Order Removal",
+					metrics.OrderId, *orderId,
+					metrics.BlockHeight, ctx.BlockHeight()+1,
 				)
 				continue
 			}
@@ -954,6 +977,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
+			placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
@@ -966,10 +990,32 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 		// Matches are a no-op.
 		case *types.InternalOperation_Match:
 		case *types.InternalOperation_OrderRemoval:
+			orderId := operation.GetOrderRemoval().OrderId
+
+			// Prevent double placement caused by PreexistingStatefulOrder and Order Removal
+			// both existing in local operations.
+			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+				telemetry.IncrCounterWithLabels(
+					[]string{types.ModuleName, metrics.ReplayOperations, metrics.SkipOrderRemovalAfterPlacement},
+					1,
+					orderId.GetOrderIdLabels(),
+				)
+				continue
+			}
+
+			// Log an error if there are two Order Removals for the same OrderId
+			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+				m.clobKeeper.Logger(ctx).Error(
+					"ReplayOperations: OrderRemoval operation for order which was already removed",
+					metrics.OrderId, orderId,
+					metrics.BlockHeight, ctx.BlockHeight()+1,
+				)
+				continue
+			}
+
 			// Re-place orders which were not removed by the previous block proposer to give them a "second chance".
 			// It is possible that this placement or a subsequent match operation will
 			// cause the Order Removal to be generated once again.
-			orderId := operation.GetOrderRemoval().OrderId
 			statefulOrderPlacement, found := m.clobKeeper.GetLongTermOrderPlacement(ctx, orderId)
 
 			// if not in state anymore, this means it was removed in the previous block. No-op.
@@ -981,6 +1027,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				ctx,
 				statefulOrderPlacement.Order,
 			)
+			placedOrderRemovalOrderIds[orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
 				ctx,
 				err,
@@ -1066,6 +1113,13 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.RemoveAndClearOperationsQueue,
+		metrics.Latency,
+	)
+
 	// Clear the OTP. This will also remove nonces for every operation in `operationsQueueCopy`.
 	m.operationsToPropose.ClearOperationsQueue()
 
@@ -1118,6 +1172,13 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	existingOffchainUpdates *types.OffchainUpdates,
 ) *types.OffchainUpdates {
 	lib.AssertCheckTxMode(ctx)
+
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.MemClobPurgeInvalidState,
+		metrics.Latency,
+	)
 
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 

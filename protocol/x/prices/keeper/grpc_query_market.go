@@ -23,7 +23,7 @@ func (k Keeper) AllMarketPrices(
 	var marketPrices []types.MarketPrice
 	ctx := sdk.UnwrapSDKContext(c)
 
-	marketPriceStore := k.newMarketPriceStore(ctx)
+	marketPriceStore := k.getMarketPriceStore(ctx)
 
 	pageRes, err := query.Paginate(marketPriceStore, req.Pagination, func(key []byte, value []byte) error {
 		var marketPrice types.MarketPrice
@@ -80,7 +80,7 @@ func (k Keeper) AllMarketParams(
 	var marketParams []types.MarketParam
 	ctx := sdk.UnwrapSDKContext(c)
 
-	marketParamStore := k.newMarketParamStore(ctx)
+	marketParamStore := k.getMarketParamStore(ctx)
 
 	pageRes, err := query.Paginate(marketParamStore, req.Pagination, func(key []byte, value []byte) error {
 		var marketParam types.MarketParam

@@ -490,6 +490,11 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			balanceToSend:        100,
 			recipientAddress:     authtypes.NewModuleAddress(testModuleName).String(),
 		},
+		"Success - send 0 amount": {
+			initialModuleBalance: 700,
+			balanceToSend:        0,
+			recipientAddress:     authtypes.NewModuleAddress(testModuleName).String(),
+		},
 		"Error - insufficient fund": {
 			initialModuleBalance: 100,
 			balanceToSend:        101,
@@ -611,4 +616,18 @@ func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 	ks := keepertest.SendingKeepers(t)
 	err := ks.SendingKeeper.SendFromModuleToAccount(ks.Ctx, msgNonExistentSender)
 	require.NoError(t, err) // this line is never reached, just here for lint check.
+}
+
+func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
+	ks := keepertest.SendingKeepers(t)
+	err := ks.SendingKeeper.SendFromModuleToAccount(
+		ks.Ctx,
+		&types.MsgSendFromModuleToAccount{
+			Authority:        constants.GovModuleAccAddressString,
+			SenderModuleName: "bridge",
+			Recipient:        "dydx1abc", // invalid recipient address
+			Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+		},
+	)
+	require.ErrorContains(t, err, "Account address is invalid")
 }

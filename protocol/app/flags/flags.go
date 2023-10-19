@@ -2,8 +2,10 @@ package flags
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -85,24 +87,34 @@ func GetFlagValuesFromOptions(
 	}
 
 	// Populate the flags if they exist.
-	if v, ok := appOpts.Get(NonValidatingFullNodeFlag).(bool); ok {
-		result.NonValidatingFullNode = v
+	if option := appOpts.Get(NonValidatingFullNodeFlag); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.NonValidatingFullNode = v
+		}
 	}
 
-	if v, ok := appOpts.Get(DdAgentHost).(string); ok {
-		result.DdAgentHost = v
+	if option := appOpts.Get(DdAgentHost); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.DdAgentHost = v
+		}
 	}
 
-	if v, ok := appOpts.Get(DdTraceAgentPort).(uint16); ok {
-		result.DdTraceAgentPort = v
+	if option := appOpts.Get(DdTraceAgentPort); option != nil {
+		if v, err := cast.ToUint16E(option); err == nil {
+			result.DdTraceAgentPort = v
+		}
 	}
 
-	if v, ok := appOpts.Get(GrpcAddress).(string); ok {
-		result.GrpcAddress = v
+	if option := appOpts.Get(GrpcAddress); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.GrpcAddress = v
+		}
 	}
 
-	if v, ok := appOpts.Get(GrpcEnable).(bool); ok {
-		result.GrpcEnable = v
+	if option := appOpts.Get(GrpcEnable); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.GrpcEnable = v
+		}
 	}
 
 	return result

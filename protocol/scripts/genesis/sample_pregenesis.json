@@ -63,7 +63,6 @@
     },
     "blocktime": {
       "params": {
-        "clock_drift_grace_period_duration": "5s",
         "durations": [
           "300s",
           "1800s"
@@ -475,7 +474,7 @@
             "usd_tnc_required": "10000000000"
           },
           {
-            "limit": 200,
+            "limit": 1000,
             "usd_tnc_required": "100000000000"
           }
         ],
@@ -511,11 +510,10 @@
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 1500000
         },
-        "max_insurance_fund_quantums_for_deleveraging": 100000000000,
         "max_liquidation_fee_ppm": 15000,
         "position_block_limits": {
           "max_position_portion_liquidated_ppm": 100000,
-          "min_position_notional_liquidated": 1000
+          "min_position_notional_liquidated": 1000000000
         },
         "subaccount_block_limits": {
           "max_notional_liquidated": 100000000000,
@@ -616,7 +614,7 @@
           }
         }
       ],
-      "num_messages": 1
+      "next_delayed_message_id": 1
     },
     "distribution": {
       "delegator_starting_infos": [],
@@ -821,7 +819,7 @@
           "name": "Large-Cap"
         },
         {
-          "base_position_notional": 1000000000,
+          "base_position_notional": 250000000000,
           "id": 1,
           "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
@@ -829,7 +827,7 @@
           "name": "Mid-Cap"
         },
         {
-          "base_position_notional": 1000000000,
+          "base_position_notional": 100000000000,
           "id": 2,
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
@@ -1657,9 +1655,9 @@
     "slashing": {
       "missed_blocks": [],
       "params": {
-        "downtime_jail_duration": "3600s",
+        "downtime_jail_duration": "7200s",
         "min_signed_per_window": "0.2",
-        "signed_blocks_window": "12288",
+        "signed_blocks_window": "8192",
         "slash_fraction_double_sign": "0.0",
         "slash_fraction_downtime": "0.0"
       },

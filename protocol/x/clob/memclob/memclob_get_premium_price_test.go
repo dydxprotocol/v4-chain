@@ -499,7 +499,7 @@ func TestGetPremiumPrice(t *testing.T) {
 			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          -100_000,
 		},
-		`Index < Impact Bid < Impact Ask = Infinitey (low liquidity); positive premium`: {
+		`Index < Impact Bid < Impact Ask = Infinity (low liquidity); positive premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
 				&types.Order{
 					OrderId: types.OrderId{

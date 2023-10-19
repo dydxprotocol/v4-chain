@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -25,7 +26,33 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	defer func() {
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.PlaceOrder,
+			metrics.DeliverTx,
+			msg.Order.GetOrderLabels()...,
+		)
 		if err != nil {
+			if errors.Is(err, types.ErrStatefulOrderCollateralizationCheckFailed) {
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						types.ModuleName,
+						metrics.PlaceOrder,
+						metrics.CollateralizationCheckFailed,
+					},
+					1,
+					msg.Order.GetOrderLabels(),
+				)
+				k.Keeper.Logger(ctx).Info(
+					err.Error(),
+					metrics.BlockHeight, ctx.BlockHeight(),
+					metrics.Handler, "PlaceOrder",
+					metrics.Callback, metrics.DeliverTx,
+					metrics.Msg, msg,
+				)
+				return
+			}
 			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
 		}
 	}()
@@ -36,7 +63,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.SliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
@@ -44,7 +71,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			order,
 		)
 	}
-	removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyRemoved,
@@ -97,12 +124,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	k.Keeper.MustSetProcessProposerMatchesEvents(
 		ctx,
 		processProposerMatchesEvents,
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.StatefulOrderMsgHandlerSuccess, metrics.Count},
-		1,
-		order.GetOrderLabels(),
 	)
 
 	return &types.MsgPlaceOrderResponse{}, nil

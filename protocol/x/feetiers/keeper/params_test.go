@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 
@@ -17,7 +17,7 @@ func TestGetParams(t *testing.T) {
 }
 
 func TestSetPerpetualFeeParams_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.FeeTiersKeeper
 

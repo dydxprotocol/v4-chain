@@ -399,7 +399,7 @@ export async function getOrderbookSideData({
   const quantumsMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[0], 2));
   const lastUpdatedMapping: {[field: string]: string} = _.fromPairs(_.chunk(rawRedisResults[1], 2));
 
-  return convertToPriceLevels(quantumsMapping, lastUpdatedMapping);
+  return convertToPriceLevels(ticker, side, quantumsMapping, lastUpdatedMapping);
 
 }
 
@@ -430,6 +430,8 @@ async function getOrderbookSide(
 }
 
 function convertToPriceLevels(
+  ticker: string,
+  side: OrderSide,
   price2QuantumsMapping: {[field: string]: string},
   price2LastUpdatedMapping: {[field: string]: string},
 ): PriceLevel[] {
@@ -444,6 +446,8 @@ function convertToPriceLevels(
       message: 'Key mismatch detected amongst orderbook levels caches.',
       quantumsKeysWithoutMatchingData: _.intersection(quantumsKeys, pricesMissingData),
       lastUpdatedKeysWithoutMatchingData: _.intersection(lastUpdatedKeys, pricesMissingData),
+      ticker,
+      side,
     });
   }
 

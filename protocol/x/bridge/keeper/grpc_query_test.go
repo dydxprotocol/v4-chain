@@ -19,7 +19,7 @@ import (
 )
 
 func TestEventParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -54,7 +54,7 @@ func TestEventParams(t *testing.T) {
 }
 
 func TestProposeParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -89,7 +89,7 @@ func TestProposeParams(t *testing.T) {
 }
 
 func TestSafetyParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -124,7 +124,7 @@ func TestSafetyParams(t *testing.T) {
 }
 
 func TestAcknowledgedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -159,7 +159,7 @@ func TestAcknowledgedEventInfo(t *testing.T) {
 }
 
 func TestRecognizedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -222,7 +222,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			// Initialize test app.
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.BridgeKeeper
 			delayMsgKeeper := tApp.App.DelayMsgKeeper
@@ -274,11 +274,11 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 				)
 			}
 
-			// Get all in flight complete bridge messages and verify they are as expected.
+			// Get all delayed complete bridge messages and verify they are as expected.
 			msgs := k.GetDelayedCompleteBridgeMessages(ctx, "")
 			require.Equal(t, expectedMsgs, msgs)
 
-			// Get in flight complete bridge messages for each address and verify they are as expected.
+			// Get delayed complete bridge messages for each address and verify they are as expected.
 			for address, expectedMsgsForAddr := range expectedMsgsByAddress {
 				msgs := k.GetDelayedCompleteBridgeMessages(ctx, address)
 				require.Equal(t, expectedMsgsForAddr, msgs)

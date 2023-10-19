@@ -8,9 +8,6 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	// RouterKey defines the module's message routing key
-	RouterKey = ModuleName
-
 	// TransientStoreKey defines the primary module transient store key
 	TransientStoreKey = "tmp_" + ModuleName
 )

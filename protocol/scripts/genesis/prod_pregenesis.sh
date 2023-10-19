@@ -23,8 +23,6 @@ source "./testing/genesis.sh"
 
 TMP_CHAIN_DIR="/tmp/prod-chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
-NINE_ZEROS="000000000"
-EIGHTEEN_ZEROS="$NINE_ZEROS$NINE_ZEROS"
 BRIDGE_MODACC_BALANCE="1$NINE_ZEROS$EIGHTEEN_ZEROS" # 1e27
 BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 
@@ -72,9 +70,9 @@ cleanup_tmp_dir() {
 # Set production default genesis params.
 function overwrite_genesis_production() {	
 	# Slashing params
-	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '12288' # ~5 hr
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.signed_blocks_window' -v '8192' # ~3 hr
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.min_signed_per_window' -v '0.2' # 20%
-	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '3600s'
+	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.downtime_jail_duration' -v '7200s'
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_double_sign' -v '0.0' # 0%
 	dasel put -t string -f "$GENESIS" '.app_state.slashing.params.slash_fraction_downtime' -v '0.0' # 0%
 
@@ -134,7 +132,7 @@ function overwrite_genesis_production() {
 
 	# Delayed message params
 	# Schedule a delayed message to swap fee tiers to the standard schedule after ~120 days of blocks.
-	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.num_messages' -v '1'
+	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.next_delayed_message_id' -v '1'
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages' -v "[]"
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].id' -v '0'
@@ -172,6 +170,11 @@ create_pregenesis_file() {
 	overwrite_genesis_production
 }
 
+sort_genesis_file(){
+	jq -S . $VAL_CONFIG_DIR/genesis.json > $VAL_CONFIG_DIR/sorted_genesis.json
+}
+
 cleanup_tmp_dir
 create_pregenesis_file
-echo "Wrote pregenesis file to $VAL_CONFIG_DIR/genesis.json"
+sort_genesis_file
+echo "Wrote pregenesis file to $VAL_CONFIG_DIR/sorted_genesis.json"

@@ -42,9 +42,6 @@ export function getMessageToForward(
         channel,
         id: getSubaccountMessageId(subaccountMessage),
         contents: JSON.parse(subaccountMessage.contents),
-        blockHeight: subaccountMessage.blockHeight,
-        transactionIndex: subaccountMessage.transactionIndex,
-        eventIndex: subaccountMessage.eventIndex,
         version: subaccountMessage.version,
       };
     }
@@ -57,8 +54,6 @@ export function getMessageToForward(
         channel,
         id: getCandleMessageId(candleMessage),
         contents: JSON.parse(candleMessage.contents),
-        clobPairId: candleMessage.clobPairId,
-        resolution: PROTO_TO_CANDLE_RESOLUTION[candleMessage.resolution],
         version: candleMessage.version,
       };
     }
@@ -77,7 +72,6 @@ export function getMessageToForward(
         channel,
         id: getTickerOrThrow(orderbookMessage.clobPairId),
         contents: JSON.parse(orderbookMessage.contents),
-        clobPairId: orderbookMessage.clobPairId,
         version: orderbookMessage.version,
       };
     }
@@ -87,8 +81,6 @@ export function getMessageToForward(
         channel,
         id: getTickerOrThrow(tradeMessage.clobPairId),
         contents: JSON.parse(tradeMessage.contents),
-        blockHeight: tradeMessage.blockHeight,
-        clobPairId: tradeMessage.clobPairId,
         version: tradeMessage.version,
       };
     }

@@ -188,8 +188,7 @@ const GenesisState = `{
         "durations": [
           "300s",
           "1800s"
-        ],
-        "clock_drift_grace_period_duration": "5s"
+        ]
       }
     },
     "bridge": {
@@ -287,7 +286,7 @@ const GenesisState = `{
             "usd_tnc_required": "10000"
           },
           {
-            "limit": 200,
+            "limit": 1000,
             "usd_tnc_required": "100000"
           }
         ],
@@ -323,7 +322,6 @@ const GenesisState = `{
           "bankruptcy_adjustment_ppm": 1000000,
           "spread_to_maintenance_margin_ratio_ppm": 100000
         },
-        "max_insurance_fund_quantums_for_deleveraging": "0",
         "max_liquidation_fee_ppm": 5000,
         "position_block_limits": {
           "max_position_portion_liquidated_ppm": 1000000,
@@ -428,7 +426,7 @@ const GenesisState = `{
           "block_height": "6480000"
         }
       ],
-      "num_messages": 1
+      "next_delayed_message_id": 1
     },
     "distribution": {
       "delegator_starting_infos": [],

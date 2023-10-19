@@ -133,9 +133,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 	clobGenesis.ClobPairs = clobPairs
 
 	clobGenesis.LiquidationsConfig = types.LiquidationsConfig{
-		MaxInsuranceFundQuantumsForDeleveraging: uint64(
-			sim_helpers.GetRandomBucketValue(r, sim_helpers.MaxInsuranceFundQuantumsForDeleveragingBuckets),
-		),
 		// MaxLiquidationFeePpm determines the fee that subaccount usually pays for liquidating a position.
 		// This is typically a very small percentage, so skewing towards lower values here.
 		MaxLiquidationFeePpm: genRandomPositivePpm(r, true),

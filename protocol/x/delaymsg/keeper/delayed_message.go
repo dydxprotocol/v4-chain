@@ -9,7 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	generic "github.com/dydxprotocol/v4-chain/protocol/generic/types"
+	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -19,25 +19,25 @@ func (k Keeper) newDelayedMessageStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DelayedMessageKeyPrefix))
 }
 
-// GetNumMessages returns the number of messages in the store.
-func (k Keeper) GetNumMessages(
+// GetNextDelayedMessageId returns the next delayed message id in the store.
+func (k Keeper) GetNextDelayedMessageId(
 	ctx sdk.Context,
 ) uint32 {
 	store := ctx.KVStore(k.storeKey)
-	b := store.Get([]byte(types.NumDelayedMessagesKey))
-	var result generic.Uint32
+	b := store.Get([]byte(types.NextDelayedMessageIdKey))
+	var result gogotypes.UInt32Value
 	k.cdc.MustUnmarshal(b, &result)
 	return result.Value
 }
 
-// SetNumMessages sets the number of messages in the store.
-func (k Keeper) SetNumMessages(
+// SetNextDelayedMessageId sets the next delayed message id in the store.
+func (k Keeper) SetNextDelayedMessageId(
 	ctx sdk.Context,
-	numMessages uint32,
+	nextId uint32,
 ) {
 	store := ctx.KVStore(k.storeKey)
-	value := generic.Uint32{Value: numMessages}
-	store.Set([]byte(types.NumDelayedMessagesKey), k.cdc.MustMarshal(&value))
+	value := gogotypes.UInt32Value{Value: nextId}
+	store.Set([]byte(types.NextDelayedMessageIdKey), k.cdc.MustMarshal(&value))
 }
 
 // GetMessage returns a message from its id.
@@ -119,6 +119,29 @@ func (k Keeper) SetDelayedMessage(
 ) (
 	err error,
 ) {
+	// Unpack the message and validate it.
+	// For messages that are being set from genesis state, we need to unpack the Any type to hydrate the cached value.
+	if err = msg.UnpackInterfaces(k.cdc); err != nil {
+		return err
+	}
+
+	sdkMsg, err := msg.GetMessage()
+	if err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay msg: failed to get message with error '%v'",
+			err,
+		)
+	}
+
+	if err := k.ValidateMsg(sdkMsg); err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay message: failed to validate with error '%v'",
+			err,
+		)
+	}
+
 	if msg.BlockHeight < lib.MustConvertIntegerToUint32(ctx.BlockHeight()) {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
@@ -166,6 +189,32 @@ func validateSigners(msg sdk.Msg) error {
 	return nil
 }
 
+// ValidateMsg validates that a message is routable, passes ValidateBasic, and has the expected signer.
+func (k Keeper) ValidateMsg(msg sdk.Msg) error {
+	handler := k.router.Handler(msg)
+	// If the message type is not routable, return an error.
+	if handler == nil {
+		return errorsmod.Wrapf(
+			types.ErrMsgIsUnroutable,
+			sdk.MsgTypeURL(msg),
+		)
+	}
+
+	if err := msg.ValidateBasic(); err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"message failed basic validation: %v",
+			err,
+		)
+	}
+
+	if err := validateSigners(msg); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // DelayMessageByBlocks registers an sdk.Msg to be executed after blockDelay blocks.
 func (k Keeper) DelayMessageByBlocks(
 	ctx sdk.Context,
@@ -175,28 +224,6 @@ func (k Keeper) DelayMessageByBlocks(
 	id uint32,
 	err error,
 ) {
-	handler := k.router.Handler(msg)
-	// If the message type is not routable, return an error.
-	if handler == nil {
-		return 0, errorsmod.Wrapf(
-			types.ErrMsgIsUnroutable,
-			sdk.MsgTypeURL(msg),
-		)
-	}
-
-	if err := msg.ValidateBasic(); err != nil {
-		return 0, errorsmod.Wrapf(
-			types.ErrInvalidInput,
-			"message failed basic validation: %v",
-			err,
-		)
-	}
-
-	if err := validateSigners(msg); err != nil {
-		return 0, err
-	}
-
-	nextId := k.GetNumMessages(ctx)
 	blockHeight, err := lib.AddUint32(ctx.BlockHeight(), blockDelay)
 	if err != nil {
 		return 0, errorsmod.Wrapf(
@@ -215,6 +242,7 @@ func (k Keeper) DelayMessageByBlocks(
 		)
 	}
 
+	nextId := k.GetNextDelayedMessageId(ctx)
 	delayedMessage := types.DelayedMessage{
 		Id:          nextId,
 		Msg:         anyMsg,
@@ -226,8 +254,8 @@ func (k Keeper) DelayMessageByBlocks(
 		return 0, err
 	}
 
-	// Increment the number of messages in the store.
-	k.SetNumMessages(ctx, nextId+1)
+	// Increment next delayed message id in the store.
+	k.SetNextDelayedMessageId(ctx, nextId+1)
 
 	return nextId, nil
 }

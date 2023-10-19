@@ -416,11 +416,32 @@ func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) error {
-	oldClobPair := k.mustGetClobPair(ctx, types.ClobPairId(clobPair.Id))
+	oldClobPair, found := k.GetClobPair(ctx, types.ClobPairId(clobPair.Id))
+	if !found {
+		return errorsmod.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: ClobPair with id %d not found in state",
+			clobPair.Id,
+		)
+	}
 
 	// Note, only perpetual clob pairs are currently supported. Neither the old nor the
 	// new clob pair should be spot.
-	if clobPair.MustGetPerpetualId() != oldClobPair.MustGetPerpetualId() {
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		return errorsmod.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			err.Error(),
+		)
+	}
+	oldPerpetualId, err := oldClobPair.GetPerpetualId()
+	if err != nil {
+		return errorsmod.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			err.Error(),
+		)
+	}
+	if perpetualId != oldPerpetualId {
 		return errorsmod.Wrap(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair perpetual id",

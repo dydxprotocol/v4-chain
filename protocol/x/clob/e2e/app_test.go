@@ -221,7 +221,7 @@ var (
 func TestConcurrentMatchesAndCancels(t *testing.T) {
 	r := rand.NewRand()
 	simAccounts := simtypes.RandomAccounts(r, 1000)
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -430,23 +430,11 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					require.ErrorContains(
-						t,
-						r.(error),
-						"invalid pubkey: MsgProposedOperations is invalid",
-					)
-				} else {
-					t.Error("Expected panic")
-				}
-			}()
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-			tApp := tAppBuilder.Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 			tApp.InitChain()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -479,7 +467,21 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				},
 			)
 
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{RequestProcessProposalTxsOverride: proposal.Txs})
+			tApp.AdvanceToBlock(3,
+				testapp.AdvanceToBlockOptions{
+					RequestProcessProposalTxsOverride: proposal.Txs,
+					ValidateDeliverTxs: func(
+						ctx sdktypes.Context,
+						request abcitypes.RequestDeliverTx,
+						response abcitypes.ResponseDeliverTx,
+						txIndex int,
+					) (haltchain bool) {
+						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, response.Log, "invalid pubkey: MsgProposedOperations is invalid")
+						return true
+					},
+				},
+			)
 		})
 	}
 }
@@ -501,31 +503,33 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					require.ErrorContains(
-						t,
-						r.(error),
-						"Error: no signatures supplied: MsgProposedOperations is invalid",
-					)
-				} else {
-					t.Error("Expected panic")
-				}
-			}()
-
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-			tApp := tAppBuilder.Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 			tApp.InitChain()
 			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			proposal := tApp.PrepareProposal()
 			proposal.Txs[0] = tc.proposedOperationsTx
 
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{RequestProcessProposalTxsOverride: proposal.Txs})
+			tApp.AdvanceToBlock(
+				3,
+				testapp.AdvanceToBlockOptions{
+					RequestProcessProposalTxsOverride: proposal.Txs,
+					ValidateDeliverTxs: func(
+						ctx sdktypes.Context,
+						request abcitypes.RequestDeliverTx,
+						response abcitypes.ResponseDeliverTx,
+						txIndex int,
+					) (haltchain bool) {
+						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, response.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
+						return true
+					},
+				},
+			)
 		})
 	}
 }
@@ -535,8 +539,7 @@ func TestStats(t *testing.T) {
 	appOpts := map[string]interface{}{
 		indexer.MsgSenderInstanceForTest: msgSender,
 	}
-	tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-	tApp := tAppBuilder.Build()
+	tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 
 	// Epochs start at block height 2.
 	startTime := time.Unix(10, 0).UTC()

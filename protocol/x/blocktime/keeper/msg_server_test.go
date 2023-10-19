@@ -15,7 +15,7 @@ import (
 )
 
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 
@@ -56,18 +56,18 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "invalid params: negative duration",
+			name: "invalid params: unordered durations",
 			input: &types.MsgUpdateDowntimeParams{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				Params: types.DowntimeParams{
 					Durations: []time.Duration{
-						1,
+						5 * time.Second,
+						1 * time.Second,
 					},
-					ClockDriftGracePeriodDuration: -1,
 				},
 			},
 			expErr:    true,
-			expErrMsg: "Durations must be positive",
+			expErrMsg: "Durations must be in ascending order by length",
 		},
 	}
 

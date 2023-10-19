@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 
@@ -36,7 +37,7 @@ var (
 )
 
 func TestRewardShareStorage_DefaultValue(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RewardsKeeper
 
@@ -50,7 +51,7 @@ func TestRewardShareStorage_DefaultValue(t *testing.T) {
 }
 
 func TestRewardShareStorage_Exists(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.RewardsKeeper
 
@@ -59,17 +60,33 @@ func TestRewardShareStorage_Exists(t *testing.T) {
 		Weight:  dtypes.NewInt(12_345_678),
 	}
 
-	k.SetRewardShare(ctx, val)
+	err := k.SetRewardShare(ctx, val)
+	require.NoError(t, err)
 	require.Equal(t, val, k.GetRewardShare(ctx, TestAddress1))
 }
 
+func TestSetRewardShare_FailsWithNonpositiveWeight(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RewardsKeeper
+
+	val := types.RewardShare{
+		Address: TestAddress1,
+		Weight:  dtypes.NewInt(0),
+	}
+
+	err := k.SetRewardShare(ctx, val)
+	require.ErrorContains(t, err, "Invalid weight 0: weight must be positive")
+}
+
 func TestAddRewardShareToAddress(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 
 	tests := map[string]struct {
 		prevRewardShare     *types.RewardShare // nil if no previous share
 		newWeight           *big.Int
 		expectedRewardShare types.RewardShare
+		expectedErr         error
 	}{
 		"no previous share": {
 			prevRewardShare: nil,
@@ -90,6 +107,14 @@ func TestAddRewardShareToAddress(t *testing.T) {
 				Weight:  dtypes.NewInt(100_500),
 			},
 		},
+		"fails with non-positive weight": {
+			newWeight:   big.NewInt(0),
+			expectedErr: fmt.Errorf("Invalid weight 0: weight must be positive"),
+			expectedRewardShare: types.RewardShare{
+				Address: TestAddress1,
+				Weight:  dtypes.NewInt(0),
+			},
+		},
 	}
 
 	// Run tests.
@@ -100,10 +125,16 @@ func TestAddRewardShareToAddress(t *testing.T) {
 			k := tApp.App.RewardsKeeper
 
 			if tc.prevRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevRewardShare)
+				require.NoError(t, err)
 			}
 
-			k.AddRewardShareToAddress(ctx, TestAddress1, tc.newWeight)
+			err := k.AddRewardShareToAddress(ctx, TestAddress1, tc.newWeight)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
 
 			// Check the new reward share.
 			require.Equal(t, tc.expectedRewardShare, k.GetRewardShare(ctx, TestAddress1))
@@ -112,7 +143,7 @@ func TestAddRewardShareToAddress(t *testing.T) {
 }
 
 func TestAddRewardSharesForFill(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	makerAddress := TestAddress1
 	takerAdderss := TestAddress2
 
@@ -248,10 +279,12 @@ func TestAddRewardSharesForFill(t *testing.T) {
 			require.NoError(t, err)
 
 			if tc.prevTakerRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevTakerRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevTakerRewardShare)
+				require.NoError(t, err)
 			}
 			if tc.prevMakerRewardShare != nil {
-				k.SetRewardShare(ctx, *tc.prevMakerRewardShare)
+				err := k.SetRewardShare(ctx, *tc.prevMakerRewardShare)
+				require.NoError(t, err)
 			}
 
 			k.AddRewardSharesForFill(
@@ -604,7 +637,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				// Set up treasury account balance in genesis state
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -619,7 +652,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 
 			tApp.Reset()
 			ctx := tApp.InitChain()
@@ -654,7 +687,8 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			require.NoError(t, err)
 
 			for _, rewardShare := range tc.rewardShares {
-				k.AddRewardShareToAddress(ctx, rewardShare.Address, rewardShare.Weight.BigInt())
+				err := k.AddRewardShareToAddress(ctx, rewardShare.Address, rewardShare.Weight.BigInt())
+				require.NoError(t, err)
 			}
 
 			err = k.ProcessRewardsForBlock(ctx)

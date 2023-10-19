@@ -37,7 +37,6 @@ func TestIsUnsupportedMsg_Invalid(t *testing.T) {
 		delete(allMsgsMinusUnsupported, key)
 	}
 	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusUnsupported)
-	require.Len(t, allNonNilSampleMsgs, 89)
 
 	for _, sampleMsg := range allNonNilSampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {

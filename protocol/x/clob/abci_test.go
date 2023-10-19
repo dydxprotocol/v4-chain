@@ -655,7 +655,17 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				authtypes.NewModuleAddress(types.InsuranceFundName),
+				constants.Usdc.Denom,
+			).Return(
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+			)
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			// Set up prices keeper markets with default prices.
@@ -680,6 +690,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
@@ -703,7 +716,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -1006,7 +1019,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -1036,7 +1049,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Create all existing orders.

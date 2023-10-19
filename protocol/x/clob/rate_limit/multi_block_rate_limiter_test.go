@@ -10,7 +10,7 @@ import (
 )
 
 func TestMultiBlockRateLimiter_SingleRateLimit(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewMultiBlockRateLimiter[string]("test", []types.MaxPerNBlocksRateLimit{
 		{
@@ -47,7 +47,7 @@ func TestMultiBlockRateLimiter_SingleRateLimit(t *testing.T) {
 }
 
 func TestMultiBlockRateLimiter_MultipleRateLimits(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewMultiBlockRateLimiter[string]("test", []types.MaxPerNBlocksRateLimit{
 		{

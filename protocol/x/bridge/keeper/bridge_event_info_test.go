@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetAcknowledgedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -24,7 +24,7 @@ func TestGetAcknowledgedEventInfo(t *testing.T) {
 }
 
 func TestSetAcknowledgedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 

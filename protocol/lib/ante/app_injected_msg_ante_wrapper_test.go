@@ -86,9 +86,6 @@ func TestValidateMsgType_AppInjectedMsg(t *testing.T) {
 		}
 	}
 
-	// (2 * num of "addAppInjectedMsg=true" * num of app-injected msgs) + num of "addAppInjectedMsg=false")
-	// (2 * 1 * 5) + 3 = 11
-	require.Len(t, allTestCases, 13)
 	for _, tc := range allTestCases {
 		runTest(t, tc.name, tc.msgs, tc.expectSkip)
 	}

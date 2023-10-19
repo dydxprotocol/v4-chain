@@ -6,7 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -17,12 +16,6 @@ func (k msgServer) UpdateBlockRateLimitConfiguration(
 	msg *types.MsgUpdateBlockRateLimitConfiguration,
 ) (resp *types.MsgUpdateBlockRateLimitConfigurationResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	defer func() {
-		if err != nil {
-			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "UpdateBlockRateLimitConfiguration", msg)
-		}
-	}()
 
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(

@@ -89,7 +89,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 			err := delaymsg.DeleteMessage(ctx, tc.idToDelete)
 			require.NoError(t, err)
 
-			// Assert - message is gone, removed from block message ids, and num messages is unchanged.
+			// Assert - message is gone, removed from block message ids, and next id is unchanged.
 			_, found := delaymsg.GetMessage(ctx, tc.idToDelete)
 			require.False(t, found)
 
@@ -97,7 +97,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, tc.expectedRemainingIds, blockMessageIds.Ids)
 
-			require.Equal(t, uint32(len(constants.AllMsgs)), delaymsg.GetNumMessages(ctx))
+			require.Equal(t, uint32(len(constants.AllMsgs)), delaymsg.GetNextDelayedMessageId(ctx))
 		})
 	}
 }

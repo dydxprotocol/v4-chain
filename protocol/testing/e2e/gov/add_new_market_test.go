@@ -263,7 +263,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -272,7 +272,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			initMarketParams := tApp.App.PricesKeeper.GetAllMarketParams(ctx)
@@ -282,7 +282,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				tc.proposedMsgs,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
