@@ -19,3 +19,17 @@ func (k Keeper) Params(goCtx context.Context, req *types.QueryParamsRequest) (*t
 
 	return &types.QueryParamsResponse{Params: k.GetParams(ctx)}, nil
 }
+
+func (k Keeper) RewardShare(
+	goCtx context.Context,
+	req *types.QueryRewardShareRequest,
+) (*types.QueryRewardShareResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	return &types.QueryRewardShareResponse{
+		RewardShare: k.GetRewardShare(ctx, req.Address),
+	}, nil
+}
