@@ -518,8 +518,7 @@ func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Ite
 	return sdk.KVStorePrefixIterator(store, []byte{})
 }
 
-// GetStatefulOrderCount gets a count of how many stateful orders are written to state for a subaccount. This does not
-// include any untriggered conditional orders.
+// GetStatefulOrderCount gets a count of how many stateful orders are written to state for a subaccount.
 func (k Keeper) GetStatefulOrderCount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
