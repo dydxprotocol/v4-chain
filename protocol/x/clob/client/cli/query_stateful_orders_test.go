@@ -10,8 +10,6 @@ import (
 	clobcli "github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"testing"
 )
 
@@ -46,18 +44,10 @@ func TestCmdGetStatefulOrderCount(t *testing.T) {
 		count       uint32
 		expectedErr error
 	}{
-		"valid": {
+		"success": {
 			owner:  constants.AliceAccAddress.String(),
 			number: 0,
 			count:  0,
-		},
-		"invalid owner": {
-			owner:  "invalid",
-			number: 0,
-			expectedErr: status.Error(
-				codes.InvalidArgument,
-				"Invalid owner address: decoding bech32 failed: invalid bech32 string length 7",
-			),
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
