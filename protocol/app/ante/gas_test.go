@@ -1,6 +1,13 @@
 package ante_test
 
 import (
+	"cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/baseapp"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"reflect"
 	"testing"
 
@@ -128,6 +135,77 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 				require.Equal(t, suite.Ctx, resultCtx)
 			} else {
 				require.Equal(t, freeInfiniteGasMeterType, reflect.TypeOf(meter).String())
+			}
+		})
+	}
+}
+
+func TestSubmitTxnWithGas(t *testing.T) {
+	tests := map[string]struct {
+		gasFee       sdk.Coins
+		responseCode uint32
+		logMessage   string
+	}{
+		"Success - 5 cents usdc gas fee": {
+			gasFee:       constants.TestFeeCoins_5Cents,
+			responseCode: errors.SuccessABCICode,
+		},
+		"Success - 5 cents native token gas fee": {
+			gasFee:       constants.TestFeeCoins_5Cents_NativeToken,
+			responseCode: errors.SuccessABCICode,
+		},
+		"Failure: 0 gas fee": {
+			gasFee:       sdk.Coins{},
+			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
+			logMessage: "insufficient fees; got:  required: 25000000000000000adv4tnt," +
+				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+		},
+		"Failure: unsupported gas fee denom": {
+			gasFee: sdk.Coins{
+				// 1BTC, which is not supported as a gas fee denom, and should be plenty to cover gas.
+				sdk.NewCoin(constants.BtcUsd.Denom, sdkmath.NewInt(100_000_000)),
+			},
+			responseCode: sdkerrors.ErrInsufficientFee.ABCICode(),
+			logMessage: "insufficient fees; got: 100000000btc-denom required: 25000000000000000adv4tnt," +
+				"25000ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5: insufficient fee",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			msg := &bank.MsgSend{
+				FromAddress: constants.BobAccAddress.String(),
+				ToAddress:   constants.AliceAccAddress.String(),
+				Amount: []sdk.Coin{
+					sdk.NewCoin(assets.AssetUsdc.Denom, sdkmath.NewInt(1)),
+				},
+			}
+
+			tApp := testapp.NewTestAppBuilder(t).
+				WithAppCreatorFn(
+					testapp.DefaultTestAppCreatorFn(map[string]interface{}{},
+						baseapp.SetMinGasPrices(cmd.MinGasPrice),
+					)).
+				Build()
+			ctx := tApp.InitChain()
+
+			msgSendCheckTx := testapp.MustMakeCheckTxWithPrivKeySupplier(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: constants.BobAccAddress.String(),
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               tc.gasFee,
+				},
+				constants.GetPrivateKeyFromAddress,
+				msg,
+			)
+
+			checkTx := tApp.CheckTx(msgSendCheckTx)
+			// Sanity check that gas was used.
+			require.Greater(t, checkTx.GasUsed, int64(0))
+			require.Equal(t, tc.responseCode, checkTx.Code)
+			if tc.responseCode != errors.SuccessABCICode {
+				require.Equal(t, tc.logMessage, checkTx.Log)
 			}
 		})
 	}
