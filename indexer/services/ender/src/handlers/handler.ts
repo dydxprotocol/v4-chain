@@ -10,19 +10,21 @@ import {
   TRADES_WEBSOCKET_MESSAGE_VERSION,
   KafkaTopics,
 } from '@dydxprotocol-indexer/kafka';
+import { SubaccountMessageContents } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketMessage,
   OffChainUpdateV1,
   SubaccountId,
-  SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
 
 import config from '../config';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
-import { ConsolidatedKafkaEvent, EventMessage, SingleTradeMessage } from '../lib/types';
+import {
+  AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, EventMessage, SingleTradeMessage,
+} from '../lib/types';
 
 export type HandlerInitializer = new (
   block: IndexerTendermintBlock,
@@ -103,9 +105,12 @@ export abstract class Handler<T> {
   protected generateConsolidatedSubaccountKafkaEvent(
     contents: string,
     subaccountId: SubaccountId,
+    orderId?: string,
+    isFill?: boolean,
+    subaccountMessageContents?: SubaccountMessageContents,
   ): ConsolidatedKafkaEvent {
     stats.increment(`${config.SERVICE_NAME}.create_subaccount_kafka_event`, 1);
-    const subaccountMessage: SubaccountMessage = {
+    const subaccountMessage: AnnotatedSubaccountMessage = {
       blockHeight: this.block.height.toString(),
       transactionIndex: indexerTendermintEventToTransactionIndex(
         this.indexerTendermintEvent,
@@ -114,6 +119,9 @@ export abstract class Handler<T> {
       contents,
       subaccountId,
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+      orderId,
+      isFill,
+      subaccountMessageContents,
     };
 
     return {
