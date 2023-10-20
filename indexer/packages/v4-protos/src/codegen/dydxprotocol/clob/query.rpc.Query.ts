@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryAllStatefulOrdersRequest, QueryAllStatefulOrdersResponse, QueryStatefulOrderCountRequest, QueryStatefulOrderCountResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -19,6 +19,12 @@ export interface Query {
   /** Queries EquityTierLimitConfiguration. */
 
   equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse>;
+  /** Queries all stateful orders. */
+
+  allStatefulOrders(request?: QueryAllStatefulOrdersRequest): Promise<QueryAllStatefulOrdersResponse>;
+  /** Queries the count of all stateful orders. */
+
+  statefulOrderCount(request: QueryStatefulOrderCountRequest): Promise<QueryStatefulOrderCountResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -30,6 +36,8 @@ export class QueryClientImpl implements Query {
     this.areSubaccountsLiquidatable = this.areSubaccountsLiquidatable.bind(this);
     this.mevNodeToNodeCalculation = this.mevNodeToNodeCalculation.bind(this);
     this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
+    this.allStatefulOrders = this.allStatefulOrders.bind(this);
+    this.statefulOrderCount = this.statefulOrderCount.bind(this);
   }
 
   clobPair(request: QueryGetClobPairRequest): Promise<QueryClobPairResponse> {
@@ -64,6 +72,20 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryEquityTierLimitConfigurationResponse.decode(new _m0.Reader(data)));
   }
 
+  allStatefulOrders(request: QueryAllStatefulOrdersRequest = {
+    pagination: undefined
+  }): Promise<QueryAllStatefulOrdersResponse> {
+    const data = QueryAllStatefulOrdersRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "AllStatefulOrders", data);
+    return promise.then(data => QueryAllStatefulOrdersResponse.decode(new _m0.Reader(data)));
+  }
+
+  statefulOrderCount(request: QueryStatefulOrderCountRequest): Promise<QueryStatefulOrderCountResponse> {
+    const data = QueryStatefulOrderCountRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "StatefulOrderCount", data);
+    return promise.then(data => QueryStatefulOrderCountResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -87,6 +109,14 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse> {
       return queryService.equityTierLimitConfiguration(request);
+    },
+
+    allStatefulOrders(request?: QueryAllStatefulOrdersRequest): Promise<QueryAllStatefulOrdersResponse> {
+      return queryService.allStatefulOrders(request);
+    },
+
+    statefulOrderCount(request: QueryStatefulOrderCountRequest): Promise<QueryStatefulOrderCountResponse> {
+      return queryService.statefulOrderCount(request);
     }
 
   };

@@ -3,6 +3,7 @@ import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
+import { Order, OrderSDKType } from "./order";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
@@ -186,6 +187,68 @@ export interface QueryEquityTierLimitConfigurationResponse {
 
 export interface QueryEquityTierLimitConfigurationResponseSDKType {
   equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
+}
+/** QueryAllStatefulOrdersRequest is a request message for AllStatefulOrders. */
+
+export interface QueryAllStatefulOrdersRequest {
+  pagination?: PageRequest;
+}
+/** QueryAllStatefulOrdersRequest is a request message for AllStatefulOrders. */
+
+export interface QueryAllStatefulOrdersRequestSDKType {
+  pagination?: PageRequestSDKType;
+}
+/**
+ * QueryAllStateOrdersResponse is a response message that contains all stateful
+ * orders.
+ */
+
+export interface QueryAllStatefulOrdersResponse {
+  statefulOrders: Order[];
+  pagination?: PageResponse;
+}
+/**
+ * QueryAllStateOrdersResponse is a response message that contains all stateful
+ * orders.
+ */
+
+export interface QueryAllStatefulOrdersResponseSDKType {
+  stateful_orders: OrderSDKType[];
+  pagination?: PageResponseSDKType;
+}
+/** QueryStatefulOrderCountRequest is a request message for StatefulOrderCount. */
+
+export interface QueryStatefulOrderCountRequest {
+  subaccountId?: SubaccountId;
+}
+/** QueryStatefulOrderCountRequest is a request message for StatefulOrderCount. */
+
+export interface QueryStatefulOrderCountRequestSDKType {
+  subaccount_id?: SubaccountIdSDKType;
+}
+/**
+ * QueryStatefulOrderCountResponse is a response message for StatefulOrderCount
+ * that contains the count of all stateful orders.
+ */
+
+export interface QueryStatefulOrderCountResponse {
+  /**
+   * QueryStatefulOrderCountResponse is a response message for StatefulOrderCount
+   * that contains the count of all stateful orders.
+   */
+  count: number;
+}
+/**
+ * QueryStatefulOrderCountResponse is a response message for StatefulOrderCount
+ * that contains the count of all stateful orders.
+ */
+
+export interface QueryStatefulOrderCountResponseSDKType {
+  /**
+   * QueryStatefulOrderCountResponse is a response message for StatefulOrderCount
+   * that contains the count of all stateful orders.
+   */
+  count: number;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -762,6 +825,196 @@ export const QueryEquityTierLimitConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryEquityTierLimitConfigurationResponse>): QueryEquityTierLimitConfigurationResponse {
     const message = createBaseQueryEquityTierLimitConfigurationResponse();
     message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryAllStatefulOrdersRequest(): QueryAllStatefulOrdersRequest {
+  return {
+    pagination: undefined
+  };
+}
+
+export const QueryAllStatefulOrdersRequest = {
+  encode(message: QueryAllStatefulOrdersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllStatefulOrdersRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllStatefulOrdersRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryAllStatefulOrdersRequest>): QueryAllStatefulOrdersRequest {
+    const message = createBaseQueryAllStatefulOrdersRequest();
+    message.pagination = object.pagination !== undefined && object.pagination !== null ? PageRequest.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryAllStatefulOrdersResponse(): QueryAllStatefulOrdersResponse {
+  return {
+    statefulOrders: [],
+    pagination: undefined
+  };
+}
+
+export const QueryAllStatefulOrdersResponse = {
+  encode(message: QueryAllStatefulOrdersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.statefulOrders) {
+      Order.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.pagination !== undefined) {
+      PageResponse.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllStatefulOrdersResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllStatefulOrdersResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.statefulOrders.push(Order.decode(reader, reader.uint32()));
+          break;
+
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryAllStatefulOrdersResponse>): QueryAllStatefulOrdersResponse {
+    const message = createBaseQueryAllStatefulOrdersResponse();
+    message.statefulOrders = object.statefulOrders?.map(e => Order.fromPartial(e)) || [];
+    message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryStatefulOrderCountRequest(): QueryStatefulOrderCountRequest {
+  return {
+    subaccountId: undefined
+  };
+}
+
+export const QueryStatefulOrderCountRequest = {
+  encode(message: QueryStatefulOrderCountRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryStatefulOrderCountRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryStatefulOrderCountRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryStatefulOrderCountRequest>): QueryStatefulOrderCountRequest {
+    const message = createBaseQueryStatefulOrderCountRequest();
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryStatefulOrderCountResponse(): QueryStatefulOrderCountResponse {
+  return {
+    count: 0
+  };
+}
+
+export const QueryStatefulOrderCountResponse = {
+  encode(message: QueryStatefulOrderCountResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.count !== 0) {
+      writer.uint32(8).uint32(message.count);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryStatefulOrderCountResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryStatefulOrderCountResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.count = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryStatefulOrderCountResponse>): QueryStatefulOrderCountResponse {
+    const message = createBaseQueryStatefulOrderCountResponse();
+    message.count = object.count ?? 0;
     return message;
   }
 

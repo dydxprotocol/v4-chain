@@ -23,6 +23,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdListClobPair())
 	cmd.AddCommand(CmdShowClobPair())
+	cmd.AddCommand(CmdListStatefulOrders())
+	cmd.AddCommand(CmdGetStatefulOrderCount())
 
 	return cmd
 }

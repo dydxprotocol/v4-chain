@@ -2,18 +2,18 @@ package cli
 
 import (
 	"context"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
-func CmdListSubaccount() *cobra.Command {
+func CmdListStatefulOrders() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "list-subaccount",
-		Short: "list all subaccount",
+		Use:   "list-stateful-orders",
+		Short: "list all stateful orders",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -24,11 +24,11 @@ func CmdListSubaccount() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			params := &types.QueryAllSubaccountRequest{
+			req := &types.QueryAllStatefulOrdersRequest{
 				Pagination: pageReq,
 			}
 
-			res, err := queryClient.SubaccountAll(context.Background(), params)
+			res, err := queryClient.AllStatefulOrders(context.Background(), req)
 			if err != nil {
 				return err
 			}
@@ -43,10 +43,10 @@ func CmdListSubaccount() *cobra.Command {
 	return cmd
 }
 
-func CmdShowSubaccount() *cobra.Command {
+func CmdGetStatefulOrderCount() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "show-subaccount [owner] [account-number]",
-		Short: "shows a subaccount",
+		Use:   "show-stateful-order-count [owner] [account-number]",
+		Short: "shows stateful order count for a subaccount",
 		Args:  cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
@@ -54,18 +54,20 @@ func CmdShowSubaccount() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			argOwner := args[0]
-			argNumber, err := cast.ToUint32E(args[1])
-			if err != nil {
+			var argNumber uint32
+			if argNumber, err = cast.ToUint32E(args[1]); err != nil {
 				return err
 			}
 
-			params := &types.QueryGetSubaccountRequest{
-				Owner:  argOwner,
-				Number: argNumber,
+			params := &types.QueryStatefulOrderCountRequest{
+				SubaccountId: &satypes.SubaccountId{
+					Owner:  argOwner,
+					Number: argNumber,
+				},
 			}
 
-			res, err := queryClient.Subaccount(context.Background(), params)
-			if err != nil {
+			var res *types.QueryStatefulOrderCountResponse
+			if res, err = queryClient.StatefulOrderCount(context.Background(), params); err != nil {
 				return err
 			}
 

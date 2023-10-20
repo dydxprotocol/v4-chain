@@ -7,6 +7,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/mev.proto";
+import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
@@ -41,6 +42,16 @@ service Query {
       returns (QueryEquityTierLimitConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/equity_tier";
   }
+
+  // Queries all stateful orders.
+  rpc AllStatefulOrders(QueryAllStatefulOrdersRequest)
+      returns (QueryAllStatefulOrdersResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/orders/stateful";
+  }
+
+  // Queries the count of all stateful orders.
+  rpc StatefulOrderCount(QueryStatefulOrderCountRequest)
+      returns (QueryStatefulOrderCountResponse) {}
 }
 
 // QueryGetClobPairRequest is request type for the ClobPair method.
@@ -116,3 +127,24 @@ message QueryEquityTierLimitConfigurationResponse {
   EquityTierLimitConfiguration equity_tier_limit_config = 1
       [ (gogoproto.nullable) = false ];
 }
+
+// QueryAllStatefulOrdersRequest is a request message for AllStatefulOrders.
+message QueryAllStatefulOrdersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllStateOrdersResponse is a response message that contains all stateful
+// orders.
+message QueryAllStatefulOrdersResponse {
+  repeated Order stateful_orders = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryStatefulOrderCountRequest is a request message for StatefulOrderCount.
+message QueryStatefulOrderCountRequest {
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1;
+}
+
+// QueryStatefulOrderCountResponse is a response message for StatefulOrderCount
+// that contains the count of all stateful orders.
+message QueryStatefulOrderCountResponse { uint32 count = 1; }
