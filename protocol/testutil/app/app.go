@@ -84,6 +84,8 @@ type AdvanceToBlockOptions struct {
 	BlockTime time.Time
 
 	// Whether to increment the block time gradually and evenly among the advanced blocks.
+	// TODO(DEC-2156): Instead of an option, pass in a `BlockTimeFunc` to map each block to a
+	// time. This gives user more flexibility.
 	GradualBlockTimeIncrement bool
 
 	// RequestPrepareProposalTxsOverride allows overriding the txs that gets passed into the
