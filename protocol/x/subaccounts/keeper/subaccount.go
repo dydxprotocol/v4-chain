@@ -427,6 +427,7 @@ func (k Keeper) getSettledSubaccount(
 		// division result always rounds towards negative infinity.
 		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
 	)
+	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
 }
