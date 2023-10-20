@@ -163,10 +163,7 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
-
-	# Consensus params
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_bytes' -v '22020096'
-	dasel put -t string -f "$GENESIS" '.consensus_params.block.max_gas' -v '-1'
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 }
 
 create_pregenesis_file() {
