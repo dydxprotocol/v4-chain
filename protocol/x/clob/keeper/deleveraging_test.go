@@ -313,11 +313,10 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.subaccount)
 
-			canDeleverageSubaccount, err := ks.ClobKeeper.CanDeleverageSubaccount(
+			canDeleverageSubaccount := ks.ClobKeeper.CanDeleverageSubaccount(
 				ks.Ctx,
 				*tc.subaccount.Id,
 			)
-			require.NoError(t, err)
 			require.Equal(
 				t,
 				tc.expectedCanDeleverageSubaccount,

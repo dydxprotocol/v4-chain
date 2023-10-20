@@ -108,11 +108,8 @@ func (f *FakeMemClobKeeper) CancelShortTermOrder(
 func (f *FakeMemClobKeeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	msg satypes.SubaccountId,
-) (
-	bool,
-	error,
-) {
-	return f.subaccountsToDeleverage[msg], nil
+) bool {
+	return f.subaccountsToDeleverage[msg]
 }
 
 // Commit simulates `checkState.Commit()`.

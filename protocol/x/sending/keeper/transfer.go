@@ -27,10 +27,7 @@ func (k Keeper) ProcessTransfer(
 		pendingTransfer.GetRecipientSubaccountUpdate(),
 	}
 
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates)
-	if err != nil {
-		return err
-	}
+	success, successPerUpdate := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates)
 
 	// If not successful, return error indicating why.
 	if err := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {

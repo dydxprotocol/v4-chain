@@ -1067,12 +1067,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 		metrics.Latency,
 	)
 
-	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(ctx, updates)
-	// TODO(DEC-191): Remove the error case from `CanUpdateSubaccounts`, which can only occur on overflow and specifying
-	// duplicate accounts.
-	if err != nil {
-		panic(err)
-	}
+	success, successPerSubaccountUpdate := k.subaccountsKeeper.CanUpdateSubaccounts(ctx, updates)
 
 	result := make(map[satypes.SubaccountId]satypes.UpdateResult, len(updates))
 	for i, update := range updates {

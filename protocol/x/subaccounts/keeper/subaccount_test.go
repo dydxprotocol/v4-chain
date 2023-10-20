@@ -2217,11 +2217,16 @@ func TestUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates)
 			if tc.expectedErr != nil {
-				require.ErrorIs(t, tc.expectedErr, err)
+				require.PanicsWithValue(
+					t,
+					tc.expectedErr,
+					func() {
+						keeper.UpdateSubaccounts(ctx, tc.updates)
+					},
+				)
 			} else {
-				require.NoError(t, err)
+				success, successPerUpdate := keeper.UpdateSubaccounts(ctx, tc.updates)
 				require.Equal(t, tc.expectedSuccessPerUpdate, successPerUpdate)
 				require.Equal(t, tc.expectedSuccess, success)
 			}
@@ -2831,11 +2836,16 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates)
 			if tc.expectedErr != nil {
-				require.ErrorIs(t, tc.expectedErr, err)
+				require.PanicsWithValue(
+					t,
+					tc.expectedErr,
+					func() {
+						keeper.CanUpdateSubaccounts(ctx, tc.updates)
+					},
+				)
 			} else {
-				require.NoError(t, err)
+				success, successPerUpdate := keeper.CanUpdateSubaccounts(ctx, tc.updates)
 				require.Equal(t, tc.expectedSuccessPerUpdate, successPerUpdate)
 				require.Equal(t, tc.expectedSuccess, success)
 			}
@@ -2920,7 +2930,7 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				},
 			},
 		},
-		"non-existing perpetual heled by subaccount (should never happen)": {
+		"non-existing perpetual held by subaccount (should never happen)": {
 			assetPositions: testutil.CreateUsdcAssetPosition(
 				big.NewInt(-10_000_000_001), // -$10,000.000001
 			),
@@ -3246,11 +3256,17 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				PerpetualUpdates: tc.perpetualUpdates,
 			}
 
-			netCollateral, initialMargin, maintenanceMargin, err :=
+			netCollateral, initialMargin, maintenanceMargin :=
 				keeper.GetNetCollateralAndMarginRequirements(ctx, update)
 
 			if tc.expectedErr != nil {
-				require.ErrorIs(t, tc.expectedErr, err)
+				require.PanicsWithValue(
+					t,
+					tc.expectedErr,
+					func() {
+						keeper.GetNetCollateralAndMarginRequirements(ctx, update)
+					},
+				)
 			} else {
 				// Testify is bad at printing unsigned integers and prints values as hex
 				// https://github.com/stretchr/testify/issues/1116
@@ -3264,7 +3280,6 @@ func TestGetNetCollateralAndMarginRequirements(t *testing.T) {
 				if tc.expectedMaintenanceMargin != nil {
 					require.Equal(t, tc.expectedMaintenanceMargin.String(), maintenanceMargin.String())
 				}
-				require.NoError(t, err)
 			}
 		})
 	}

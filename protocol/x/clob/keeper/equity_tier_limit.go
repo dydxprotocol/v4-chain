@@ -85,15 +85,12 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, or
 	}
 
 	subaccountId := order.GetSubaccountId()
-	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	netCollateral, _, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
 			SubaccountId: subaccountId,
 		},
 	)
-	if err != nil {
-		return err
-	}
 
 	equityTierLimit := types.EquityTierLimit{}
 	for _, limit := range equityTierLimits {

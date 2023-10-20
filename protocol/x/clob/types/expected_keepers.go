@@ -20,7 +20,6 @@ type SubaccountsKeeper interface {
 	) (
 		success bool,
 		successPerUpdate []satypes.UpdateResult,
-		err error,
 	)
 	GetNetCollateralAndMarginRequirements(
 		ctx sdk.Context,
@@ -29,7 +28,6 @@ type SubaccountsKeeper interface {
 		bigNetCollateral *big.Int,
 		bigInitialMargin *big.Int,
 		bigMaintenanceMargin *big.Int,
-		err error,
 	)
 	GetSubaccount(
 		ctx sdk.Context,
@@ -60,7 +58,6 @@ type SubaccountsKeeper interface {
 	) (
 		success bool,
 		successPerUpdate []satypes.UpdateResult,
-		err error,
 	)
 	TransferFeesToFeeCollectorModule(
 		ctx sdk.Context,

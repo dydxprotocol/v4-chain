@@ -351,14 +351,10 @@ func (k Keeper) IsLiquidatable(
 ) {
 	bigNetCollateral,
 		_,
-		bigMaintenanceMargin,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		bigMaintenanceMargin := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
-	if err != nil {
-		return false, err
-	}
 
 	// The subaccount is liquidatable if both of the following are true:
 	// - The maintenance margin requirements are greater than zero (note that they can never be negative).
@@ -414,13 +410,10 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
 
-	tncBig, _, tmmrBig, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	tncBig, _, tmmrBig := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	// Position size is necessary for calculating DNNV and DMMR.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
@@ -562,14 +555,10 @@ func (k Keeper) GetFillablePrice(
 
 	tncBig,
 		_,
-		tmmrBig,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		tmmrBig := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
-	if err != nil {
-		return nil, err
-	}
 
 	// stat liquidation order for negative TNC
 	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
