@@ -21,8 +21,10 @@ import {
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
+  SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import {
@@ -30,6 +32,7 @@ import {
   SECONDS_IN_MILLIS,
 } from '../constants';
 import {
+  AnnotatedSubaccountMessage,
   DydxIndexerSubtypes,
   EventProtoWithTypeAndVersion,
 } from './types';
@@ -53,6 +56,16 @@ export function indexerTendermintEventToTransactionIndex(
   throw new ParseMessageError(
     'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
   );
+}
+
+export function convertToSubaccountMessage(
+  annotatedMessage: AnnotatedSubaccountMessage,
+): SubaccountMessage {
+  const subaccountMessage: SubaccountMessage = _.omit(
+    annotatedMessage,
+    ['orderId', 'isFill', 'subaccountMessageContents'],
+  );
+  return subaccountMessage;
 }
 
 export function protoTimestampToDate(
