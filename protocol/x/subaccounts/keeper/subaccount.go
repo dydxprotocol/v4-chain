@@ -283,17 +283,17 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to perpetual positions.
-	success, err = UpdatePerpetualPositions(
+	success = UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
 	)
-	if !success || err != nil {
+	if !success {
 		return success, successPerUpdate, err
 	}
 
 	// Apply the updates to asset positions.
-	success, err = UpdateAssetPositions(settledUpdates)
-	if !success || err != nil {
+	success = UpdateAssetPositions(settledUpdates)
+	if !success {
 		return success, successPerUpdate, err
 	}
 
@@ -433,10 +433,7 @@ func (k Keeper) getSettledSubaccount(
 		// division result always rounds towards negative infinity.
 		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
 	)
-	err = newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
+	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
 }
 

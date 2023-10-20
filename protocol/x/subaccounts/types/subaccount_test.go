@@ -205,7 +205,6 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 		subaccount             *types.Subaccount
 		newQuoteBalance        *big.Int
 		expectedAssetPositions []*types.AssetPosition
-		expectedError          error
 	}{
 		"can set nil subaccount": {
 			subaccount:      nil,
@@ -311,12 +310,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			err := tc.subaccount.SetUsdcAssetPosition(tc.newQuoteBalance)
-			if tc.expectedError == nil {
-				require.NoError(t, err)
-			} else {
-				require.ErrorIs(t, tc.expectedError, err)
-			}
+			tc.subaccount.SetUsdcAssetPosition(tc.newQuoteBalance)
 			if tc.subaccount != nil {
 				require.Equal(
 					t,
