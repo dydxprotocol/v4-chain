@@ -104,8 +104,6 @@ func getUpdatedPerpetualPositions(
 func UpdatePerpetualPositions(
 	settledUpdates []settledUpdate,
 	perpIdToFundingIndex map[uint32]dtypes.SerializableInt,
-) (
-	success bool,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -163,16 +161,12 @@ func UpdatePerpetualPositions(
 
 		settledUpdates[i].SettledSubaccount.PerpetualPositions = perpetualPositions
 	}
-
-	return true
 }
 
 // For each settledUpdate in settledUpdates, updates its SettledSubaccount.AssetPositions
 // to reflect settledUpdate.AssetUpdates.
 func UpdateAssetPositions(
 	settledUpdates []settledUpdate,
-) (
-	success bool,
 ) {
 	// Apply the updates.
 	for i, u := range settledUpdates {
@@ -225,6 +219,4 @@ func UpdateAssetPositions(
 
 		settledUpdates[i].SettledSubaccount.AssetPositions = assetPositions
 	}
-
-	return true
 }

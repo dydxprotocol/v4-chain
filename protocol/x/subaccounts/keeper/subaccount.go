@@ -283,19 +283,13 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to perpetual positions.
-	success = UpdatePerpetualPositions(
+	UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
 	)
-	if !success {
-		return success, successPerUpdate, err
-	}
 
 	// Apply the updates to asset positions.
-	success = UpdateAssetPositions(settledUpdates)
-	if !success {
-		return success, successPerUpdate, err
-	}
+	UpdateAssetPositions(settledUpdates)
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
