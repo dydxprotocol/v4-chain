@@ -283,19 +283,13 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to perpetual positions.
-	success, err = UpdatePerpetualPositions(
+	UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
 	)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
 
 	// Apply the updates to asset positions.
-	success, err = UpdateAssetPositions(settledUpdates)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
+	UpdateAssetPositions(settledUpdates)
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
@@ -433,10 +427,8 @@ func (k Keeper) getSettledSubaccount(
 		// division result always rounds towards negative infinity.
 		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
 	)
-	err = newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
+	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
+	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
 }
 
