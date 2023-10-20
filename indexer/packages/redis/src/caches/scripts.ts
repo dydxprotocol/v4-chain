@@ -60,6 +60,8 @@ export const updateOrderScript: LuaScript = newLuaScript('updateOrder', '../scri
 export const placeOrderScript: LuaScript = newLuaScript('placeOrder', '../scripts/place_order.lua');
 export const removeOrderScript: LuaScript = newLuaScript('removeOrder', '../scripts/remove_order.lua');
 export const addCanceledOrderIdScript: LuaScript = newLuaScript('addCanceledOrderId', '../scripts/add_canceled_order_id.lua');
+export const addStatefulOrderUpdateScript: LuaScript = newLuaScript('addStatefulOrderUpdate', '../scripts/add_stateful_order_update.lua');
+export const removeStatefulOrderUpdateScript: LuaScript = newLuaScript('removeStatefulOrderUpdate', '../scripts/remove_stateful_order_update.lua');
 
 export const allLuaScripts: LuaScript[] = [
   deleteZeroPriceLevelScript,
@@ -69,4 +71,6 @@ export const allLuaScripts: LuaScript[] = [
   placeOrderScript,
   removeOrderScript,
   addCanceledOrderIdScript,
+  addStatefulOrderUpdateScript,
+  removeStatefulOrderUpdateScript,
 ];

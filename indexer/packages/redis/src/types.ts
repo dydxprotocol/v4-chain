@@ -74,3 +74,9 @@ export type PnlTickForSubaccounts = {
   // the uuid.
   [subaccountId: string]: PnlTicksCreateObject
 };
+
+/* -------- Stateful order update cache types -------- */
+export interface StatefulOrderUpdateInfo {
+  orderId: string,
+  timestamp: number,
+}
