@@ -2,12 +2,16 @@ package cli
 
 import (
 	"context"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func CmdListStatefulOrders() *cobra.Command {
@@ -57,6 +61,13 @@ func CmdGetStatefulOrderCount() *cobra.Command {
 			var argNumber uint32
 			if argNumber, err = cast.ToUint32E(args[1]); err != nil {
 				return err
+			}
+
+			if _, err := sdk.AccAddressFromBech32(argOwner); err != nil {
+				return status.Error(
+					codes.InvalidArgument,
+					fmt.Sprintf("Invalid owner address: %v", err),
+				)
 			}
 
 			params := &types.QueryStatefulOrderCountRequest{
