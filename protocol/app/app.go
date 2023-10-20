@@ -1098,6 +1098,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		icatypes.ModuleName,
 
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
