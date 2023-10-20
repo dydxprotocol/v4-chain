@@ -982,7 +982,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						fok_replacement,
+						ioc_replacement,
 					},
 					orderIdsExpectations: map[clobtypes.OrderId]orderIdExpectations{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId: {
