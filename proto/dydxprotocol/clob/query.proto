@@ -43,7 +43,7 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/clob/equity_tier";
   }
 
-  // Queries all stateful orders.
+  // Queries all stateful orders for a given subaccount.
   rpc AllStatefulOrders(QueryAllStatefulOrdersRequest)
       returns (QueryAllStatefulOrdersResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/orders/stateful";
