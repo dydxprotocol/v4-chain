@@ -9,7 +9,7 @@ export * as NextFundingCache from './caches/next-funding-cache';
 export * as OrderbookLevelsCache from './caches/orderbook-levels-cache';
 export * as LatestAccountPnlTicksCache from './caches/latest-account-pnl-ticks-cache';
 export * as CanceledOrdersCache from './caches/canceled-orders-cache';
-export * as StatefulORderUpdatesCache from './caches/stateful-order-updates-cache';
+export * as StatefulOrderUpdatesCache from './caches/stateful-order-updates-cache';
 export { placeOrder } from './caches/place-order';
 export { removeOrder } from './caches/remove-order';
 export { updateOrder } from './caches/update-order';
