@@ -3,10 +3,10 @@ import {
   Liquidity,
   PerpetualPositionColumns,
   PerpetualPositionFromDatabase,
+  SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import {
   StatefulOrderEventV1,
-  IndexerTendermintBlock,
   IndexerTendermintEvent,
   CandleMessage,
   LiquidationOrderV1,
@@ -32,14 +32,6 @@ import {
   UpdateClobPairEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
-import { DateTime } from 'luxon';
-
-export interface EventHandlerData {
-  block: IndexerTendermintBlock,
-  event: IndexerTendermintEvent,
-  timestamp: DateTime,
-  txId: number,
-}
 
 // Type sourced from protocol:
 // https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
@@ -188,6 +180,12 @@ export interface SingleTradeMessage extends TradeMessage {
   eventIndex: number,
 }
 
+export interface AnnotatedSubaccountMessage extends SubaccountMessage {
+  orderId?: string,
+  isFill?: boolean,
+  subaccountMessageContents?: SubaccountMessageContents,
+}
+
 export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
@@ -195,7 +193,7 @@ export interface VulcanMessage {
 
 export type ConsolidatedKafkaEvent = {
   topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-  message: SubaccountMessage,
+  message: AnnotatedSubaccountMessage,
 } | {
   topic: KafkaTopics.TO_WEBSOCKETS_TRADES,
   message: SingleTradeMessage,
