@@ -188,19 +188,18 @@ func (k Keeper) getRandomBytes(ctx sdk.Context, rand *rand.Rand) ([]byte, error)
 	return lib.RandomBytesBetween(firstKey, lastKey, rand), nil
 }
 
-// getSettledUpdates takes in a list of updates and for each update, retrieves
+// mustGetSettledUpdates takes in a list of updates and for each update, retrieves
 // the updated subaccount in its settled form, and returns a list of settledUpdate
 // structs and a map that indicates for each subaccount which perpetuals had funding
 // updates. If requireUniqueSubaccount is true, the SubaccountIds in the input updates
-// must be unique.
-func (k Keeper) getSettledUpdates(
+// must be unique or this function will panic.
+func (k Keeper) mustGetSettledUpdates(
 	ctx sdk.Context,
 	updates []types.Update,
 	requireUniqueSubaccount bool,
 ) (
 	settledUpdates []settledUpdate,
 	subaccountIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
-	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
 	settledUpdates = make([]settledUpdate, len(updates))
@@ -212,7 +211,7 @@ func (k Keeper) getSettledUpdates(
 		var fundingPayments map[uint32]dtypes.SerializableInt
 
 		if exists && requireUniqueSubaccount {
-			return nil, nil, types.ErrNonUniqueUpdatesSubaccount
+			panic(fmt.Sprintf("getSettledUpdates: Non-unique updates for subaccount update: %+v", u))
 		}
 
 		// Get and store the settledSubaccount if SubaccountId doesn't exist in
@@ -234,7 +233,7 @@ func (k Keeper) getSettledUpdates(
 		settledUpdates[i] = settledUpdate
 	}
 
-	return settledUpdates, subaccountIdToFundingPayments, nil
+	return settledUpdates, subaccountIdToFundingPayments
 }
 
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
@@ -261,10 +260,7 @@ func (k Keeper) UpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, subaccountIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
-	if err != nil {
-		return false, nil, err
-	}
+	settledUpdates, subaccountIdToFundingPayments := k.mustGetSettledUpdates(ctx, updates, true)
 
 	success, successPerUpdate = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
 	if !success {
@@ -353,10 +349,7 @@ func (k Keeper) CanUpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
-	if err != nil {
-		return false, nil, err
-	}
+	settledUpdates, _ := k.mustGetSettledUpdates(ctx, updates, false)
 
 	success, successPerUpdate = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
 	return success, successPerUpdate, nil
@@ -755,7 +748,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 // If a given `PositionSize` shares an ID with an `UpdatablePositionSize`, the update and position are merged
 // into a single `PositionSize`.
 //
-// An error is returned if two updates share the same position id.
+// This function panics if two updates share the same position id.
 //
 // Note: There are probably performance implications here for allocating a new slice of PositionSize,
 // and for allocating new slices when converting the concrete types to interfaces. However, without doing
