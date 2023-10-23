@@ -23,7 +23,9 @@ func TestQueryPremiumSamples(t *testing.T) {
 
 	var resp types.QueryPremiumSamplesResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	require.Equal(t, types.PremiumStore{}, resp.PremiumSamples)
+	require.Equal(t, types.PremiumStore{
+		AllMarketPremiums: []types.MarketPremiums{},
+	}, resp.PremiumSamples)
 }
 
 func TestQueryPremiumVotes(t *testing.T) {
@@ -37,5 +39,7 @@ func TestQueryPremiumVotes(t *testing.T) {
 
 	var resp types.QueryPremiumVotesResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	require.Equal(t, types.PremiumStore{}, resp.PremiumVotes)
+	require.Equal(t, types.PremiumStore{
+		AllMarketPremiums: []types.MarketPremiums{},
+	}, resp.PremiumVotes)
 }
