@@ -99,7 +99,7 @@ create_validators() {
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 		# Note: `edit_genesis` must be called before `add-genesis-account` or `update_genesis_use_test_exchange`.
-		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" "" ""
+		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" "" "" ""
 		# Configure the genesis file to only use the test exchange to compute index prices.
 		update_genesis_use_test_exchange "$VAL_CONFIG_DIR"
 
