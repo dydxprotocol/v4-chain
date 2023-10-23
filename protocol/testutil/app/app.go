@@ -103,9 +103,9 @@ type AdvanceToBlockOptions struct {
 	ValidateDeliverTxs  ValidateDeliverTxsFn
 }
 
-// Create an instance of app.App with default settings, suitable for unit testing,
-// with the option to override specific flags.
-func DefaultTestApp(customFlags map[string]interface{}) *app.App {
+// DefaultTestApp creates an instance of app.App with default settings, suitable for unit testing. The app will be
+// initialized with any specified flags as overrides, and with any specified base app options.
+func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*baseapp.BaseApp)) *app.App {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", customFlags)
 	logger, ok := appOptions.Get(testlog.LoggerInstanceForTest).(log.Logger)
 	if !ok {
@@ -118,14 +118,19 @@ func DefaultTestApp(customFlags map[string]interface{}) *app.App {
 		nil,
 		true,
 		appOptions,
+		baseAppOptions...,
 	)
 	return dydxApp
 }
 
-// DefaultTestAppCreatorFn is a wrapper function around DefaultTestApp using the specified custom flags.
-func DefaultTestAppCreatorFn(customFlags map[string]interface{}) AppCreatorFn {
+// DefaultTestAppCreatorFn is a wrapper function around DefaultTestApp using the specified custom flags, and allowing
+// for optional base app options.
+func DefaultTestAppCreatorFn(
+	customFlags map[string]interface{},
+	baseAppOptions ...func(*baseapp.BaseApp),
+) AppCreatorFn {
 	return func() *app.App {
-		return DefaultTestApp(customFlags)
+		return DefaultTestApp(customFlags, baseAppOptions...)
 	}
 }
 

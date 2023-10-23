@@ -766,7 +766,7 @@
             "denom": "asample"
           }
         ],
-        "min_initial_deposit_ratio": "0.000000000000000000",
+        "min_initial_deposit_ratio": "0.20000",
         "quorum": "0.33400",
         "threshold": "0.50000",
         "veto_threshold": "0.33400",
