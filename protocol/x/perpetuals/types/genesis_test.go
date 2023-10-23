@@ -302,7 +302,7 @@ func TestGenesisState_Validate(t *testing.T) {
 					MinNumVotesPerSample:      0,
 				},
 			},
-			expectedError: errors.New("MinNumVotesPerSamle is zero"),
+			expectedError: errors.New("MinNumVotesPerSample is zero"),
 		},
 		"invalid: impact notional is zero": {
 			genState: &types.GenesisState{

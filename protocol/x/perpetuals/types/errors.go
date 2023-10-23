@@ -110,7 +110,7 @@ var (
 	ErrMinNumVotesPerSampleIsZero = errorsmod.Register(
 		ModuleName,
 		22,
-		"MinNumVotesPerSamle is zero",
+		"MinNumVotesPerSample is zero",
 	)
 
 	// Errors for Not Implemented
