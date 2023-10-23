@@ -6,14 +6,17 @@ import {
   perpetualMarketRefresher,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
+import { StatefulOrderUpdatesCache } from '@dydxprotocol-indexer/redis';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OrderPlaceV1_OrderPlacementStatus,
   OffChainUpdateV1,
   IndexerOrder,
   StatefulOrderEventV1,
+  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import { redisClient } from '../../helpers/redis/redis-controller';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -60,18 +63,34 @@ export class StatefulOrderPlacementHandler extends
       this.generateTimingStatsOptions('upsert_order'),
     );
 
+    const kafakEvents: ConsolidatedKafkaEvent[] = [];
+
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderPlace: {
         order,
         placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     });
+    kafakEvents.push(this.generateConsolidatedVulcanKafkaEvent(
+      getOrderIdHash(order.orderId!),
+      offChainUpdate,
+    ));
 
-    return [
-      this.generateConsolidatedVulcanKafkaEvent(
+    const pendingOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
+      .removeStatefulOrderUpdate(
+        OrderTable.orderIdToUuid(order.orderId!),
+        Date.now(),
+        redisClient,
+      );
+    if (pendingOrderUpdate !== undefined) {
+      kafakEvents.push(this.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(order.orderId!),
-        offChainUpdate,
-      ),
-    ];
+        OffChainUpdateV1.fromPartial({
+          orderUpdate: pendingOrderUpdate,
+        }),
+      ));
+    }
+
+    return kafakEvents;
   }
 }
