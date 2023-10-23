@@ -41,6 +41,7 @@ export const configSchema = {
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: true }),
   LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
+  LOOPS_ENABLED_REMOVE_OLD_ORDER_UPDATES: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -69,6 +70,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_TRACK_LAG: parseInteger({
     default: TEN_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
   // Start delay
@@ -119,6 +123,9 @@ export const configSchema = {
   MAX_COMPLIANCE_DATA_QUERY_PER_LOOP: parseInteger({ default: 100 }),
   COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 100 }),
   COMPLIANCE_PROVIDER_QUERY_DELAY_MS: parseInteger({ default: ONE_SECOND_IN_MILLISECONDS }),
+
+  // Remove old cached order updates
+  OLD_CACHED_ORDER_UPDATES_WINDOW_MS: parseInteger({ default: 30 * ONE_SECOND_IN_MILLISECONDS }),
 };
 
 export default parseSchema(configSchema);
