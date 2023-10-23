@@ -39,6 +39,12 @@ func TestParamsValidate(t *testing.T) {
 			minNumVotesPerSample:      15,
 			expectedError:             types.ErrPremiumVoteClampFactorPpmIsZero,
 		},
+		"Failure: MinNumVotesPerSample is zero": {
+			fundingRateClampFactorPpm: 6_000_000,
+			premiumVoteClampFactorPpm: 60_000_000,
+			minNumVotesPerSample:      0,
+			expectedError:             types.ErrMinNumVotesPerSampleIsZero,
+		},
 	}
 
 	// Run tests.

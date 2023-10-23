@@ -255,6 +255,14 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			liquidityTier:     0,
 			expectedError:     types.ErrTickerEmptyString,
 		},
+		"Modified to empty liquidity tier": {
+			id:                0,
+			ticker:            "ticker",
+			marketId:          0,
+			defaultFundingPpm: 0,
+			liquidityTier:     999,
+			expectedError:     errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(999)),
+		},
 	}
 
 	// Test setup.
@@ -2535,6 +2543,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"Not new epoch": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     25,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				AllMarketPremiums: []types.MarketPremiums{
 					{
@@ -2557,6 +2566,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"New epoch, empty premium samples storage": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 4,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2589,6 +2599,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"New epoch, add new sample to existing samples, skip zero samples": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 6,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2608,6 +2619,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			},
 			prevPremiumSamples: types.PremiumStore{
 				NumPremiums: 2,
+
 				AllMarketPremiums: []types.MarketPremiums{
 					{
 						PerpetualId: 0,
@@ -2723,6 +2735,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"Panic: `NumPremiums` < premium entries length": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 1,
 				AllMarketPremiums: []types.MarketPremiums{
