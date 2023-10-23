@@ -174,8 +174,8 @@ func TestFunding(t *testing.T) {
 			)
 
 			ctx = tApp.AdvanceToBlock(BlockHeightAtFirstFundingTick, testapp.AdvanceToBlockOptions{
-				BlockTime:                 FirstFundingTick,
-				GradualBlockTimeIncrement: true,
+				BlockTime:                    FirstFundingTick,
+				LinearBlockTimeInterpolation: true,
 			})
 
 			premiumSamples := tApp.App.PerpetualsKeeper.GetPremiumSamples(ctx)
@@ -201,8 +201,8 @@ func TestFunding(t *testing.T) {
 			ctx = tApp.AdvanceToBlock(
 				testapp.EstimatedHeightForBlockTime(GenesisTime, LastFundingSampleOfSecondFundingTickEpoch, BlockTimeDuration),
 				testapp.AdvanceToBlockOptions{
-					BlockTime:                 LastFundingSampleOfSecondFundingTickEpoch,
-					GradualBlockTimeIncrement: true,
+					BlockTime:                    LastFundingSampleOfSecondFundingTickEpoch,
+					LinearBlockTimeInterpolation: true,
 				})
 
 			premiumSamples = tApp.App.PerpetualsKeeper.GetPremiumSamples(ctx)

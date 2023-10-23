@@ -83,10 +83,10 @@ type AdvanceToBlockOptions struct {
 	// The time associated with the block. If left at the default value then block time will be left unchanged.
 	BlockTime time.Time
 
-	// Whether to increment the block time gradually and evenly among the advanced blocks.
+	// Whether to increment the block time using linear extrapolation among the blocks.
 	// TODO(DEC-2156): Instead of an option, pass in a `BlockTimeFunc` to map each block to a
-	// time. This gives user more flexibility.
-	GradualBlockTimeIncrement bool
+	// time giving user greater flexibility.
+	LinearBlockTimeInterpolation bool
 
 	// RequestPrepareProposalTxsOverride allows overriding the txs that gets passed into the
 	// PrepareProposalHandler. This is useful for testing scenarios where unintended msg txs
@@ -417,13 +417,13 @@ func (tApp *TestApp) AdvanceToBlock(
 	for tApp.App.LastBlockHeight() < int64(block) {
 		tApp.panicIfChainIsHalted()
 		tApp.header.Height = tApp.App.LastBlockHeight() + 1
-		if options.GradualBlockTimeIncrement {
+		if tApp.header.Height == int64(block) {
+			// By default, only update block time at the requested block.
+			tApp.header.Time = options.BlockTime
+		} else if options.LinearBlockTimeInterpolation {
 			remainingDuration := options.BlockTime.Sub(tApp.header.Time)
 			nextBlockDuration := remainingDuration / time.Duration(int64(block)-tApp.App.LastBlockHeight())
 			tApp.header.Time = tApp.header.Time.Add(nextBlockDuration)
-		} else if tApp.header.Height == int64(block) {
-			// By default, only update block time at the requested block.
-			tApp.header.Time = options.BlockTime
 		}
 		tApp.header.LastCommitHash = tApp.App.LastCommitID().Hash
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
