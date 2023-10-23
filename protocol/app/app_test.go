@@ -93,8 +93,9 @@ func TestAppIsFullyInitialized(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			dydxApp := testapp.DefaultTestApp(tc.customFlags)
-			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*dydxApp))
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(tc.customFlags).Build()
+			tApp.InitChain()
+			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*tApp.App))
 
 			// Note that the PriceFeedClient is currently hard coded as disabled in GetDefaultTestAppOptions.
 			// Normally it would be only disabled for non-validating full nodes or for nodes where the
