@@ -8,13 +8,16 @@ import {
   PerpetualMarketFromDatabase,
   protocolTranslations,
   perpetualMarketRefresher,
+  OrderTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
   updateOrder,
   UpdateOrderResult,
   OrderbookLevelsCache,
   OpenOrdersCache,
+  StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
+import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   OrderUpdateV1,
@@ -73,6 +76,36 @@ export class OrderUpdateHandler extends Handler {
       orderUpdate,
       updateResult,
     });
+
+    if (updateResult.updated !== true) {
+      const orderFlags: number = orderUpdate.orderId!.orderFlags;
+      if (isStatefulOrder(orderFlags)) {
+        // If the order update was for a stateful order, add it to a cache of order updates
+        // for stateful orders, so it can be re-sent after `ender` processes the on-chain
+        // event for the stateful order placement
+        await StatefulOrderUpdatesCache.addStatefulOrderUpdate(
+          OrderTable.orderIdToUuid(orderUpdate.orderId!),
+          orderUpdate,
+          Date.now(),
+          redisClient,
+        );
+      }
+      logger.info({
+        at: 'OrderUpdateHandler#handle',
+        message: 'Received order update for order that does not exist, order id ' +
+                 `${JSON.stringify(orderUpdate.orderId!)}`,
+        update,
+        updateResult,
+      });
+      stats.increment(
+        `${config.SERVICE_NAME}.order_update_order_does_not_exist`,
+        1,
+        {
+          orderFlags: String(orderFlags),
+        },
+      );
+      return;
+    }
 
     if (updateResult.updated !== true) {
       logger.info({
