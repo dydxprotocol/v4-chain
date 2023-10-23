@@ -23,5 +23,7 @@ const (
 
 // Log
 const (
-	IdLogKey = "id"
+	IdLogKey             = "id"
+	MessageContentLogKey = "message_content"
+	MessageTypeUrlLogKey = "message_type_url"
 )
