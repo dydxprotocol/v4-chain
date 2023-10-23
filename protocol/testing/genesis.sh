@@ -69,8 +69,8 @@ function edit_genesis() {
 
 	REWARDS_VESTER_ACCOUNT_BALANCE="$7"
 	if [ -z "$REWARDS_VESTER_ACCOUNT_BALANCE" ]; then
-		# Default to 10 million full coins.
-		REWARDS_VESTER_ACCOUNT_BALANCE="10000000$EIGHTEEN_ZEROS"
+		# Default to 200 million full coins.
+		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
 	fi
 	
 	# Genesis time
