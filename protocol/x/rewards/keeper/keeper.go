@@ -284,7 +284,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	bigIntRewardTokenAmount := lib.BigRatRound(bigRatRewardTokenAmount, false)
 
 	// Calculate value of `T`, the reward tokens balance in the `treasury_account`.
-	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryAddress, params.Denom)
+	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
 
 	// Get tokenToDistribute as the min(F, T).
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
@@ -343,7 +343,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	}
 
 	// Measure treasury balance after distribution.
-	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryAddress, params.Denom)
+	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
 	telemetry.SetGauge(
 		metrics.GetMetricValueFromBigInt(remainingTreasuryBalance.Amount.BigInt()),
 		types.ModuleName,

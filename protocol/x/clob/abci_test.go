@@ -658,7 +658,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundAddress,
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
@@ -1336,7 +1336,7 @@ func TestPrepareCheckState(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundAddress,
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(

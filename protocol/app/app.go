@@ -676,8 +676,8 @@ func New(
 		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
@@ -695,8 +695,8 @@ func New(
 		keys[blocktimemoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
@@ -747,8 +747,8 @@ func New(
 		tkeys[statsmoduletypes.TransientStoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
@@ -759,8 +759,8 @@ func New(
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
@@ -772,8 +772,8 @@ func New(
 		app.BlockTimeKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
@@ -788,8 +788,8 @@ func New(
 		app.PricesKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
@@ -819,8 +819,8 @@ func New(
 		tkeys[clobmoduletypes.TransientStoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 		memClob,
 		app.SubaccountsKeeper,

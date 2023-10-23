@@ -124,7 +124,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		types.InsuranceFundAddress,
+		types.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 

@@ -87,7 +87,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	mockBankKeeper.On(
 		"GetBalance",
 		mock.Anything,
-		clob_types.InsuranceFundAddress,
+		clob_types.InsuranceFundModuleAddress,
 		constants.Usdc.Denom,
 	).Return(
 		sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),

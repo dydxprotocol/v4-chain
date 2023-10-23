@@ -260,7 +260,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundAddress,
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(
@@ -4513,7 +4513,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundAddress,
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(
