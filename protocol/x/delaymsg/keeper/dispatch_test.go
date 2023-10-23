@@ -378,7 +378,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -389,7 +389,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: the delayed message is in the keeper scheduled for block 2.
@@ -431,7 +431,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
 // correctly.
 func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Update the genesis state to execute the perpetual fee params update at block 2.
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -443,7 +443,7 @@ func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	resp, err := tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
@@ -477,7 +477,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -488,7 +488,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.

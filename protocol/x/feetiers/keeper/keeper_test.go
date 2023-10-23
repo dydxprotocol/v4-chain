@@ -10,7 +10,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	logger := tApp.App.FeeTiersKeeper.Logger(ctx)
@@ -72,7 +72,7 @@ func TestGetPerpetualFeePpm(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			user := "alice"
 			k := tApp.App.FeeTiersKeeper
@@ -187,7 +187,7 @@ func TestGetMaxMakerRebate(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.FeeTiersKeeper
 			err := k.SetPerpetualFeeParams(

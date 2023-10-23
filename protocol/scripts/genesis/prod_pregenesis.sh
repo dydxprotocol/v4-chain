@@ -107,6 +107,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_proposal_deposit_prevote' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_quorum' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_veto' -v 'true'
@@ -170,6 +171,11 @@ create_pregenesis_file() {
 	overwrite_genesis_production
 }
 
+sort_genesis_file(){
+	jq -S . $VAL_CONFIG_DIR/genesis.json > $VAL_CONFIG_DIR/sorted_genesis.json
+}
+
 cleanup_tmp_dir
 create_pregenesis_file
-echo "Wrote pregenesis file to $VAL_CONFIG_DIR/genesis.json"
+sort_genesis_file
+echo "Wrote pregenesis file to $VAL_CONFIG_DIR/sorted_genesis.json"

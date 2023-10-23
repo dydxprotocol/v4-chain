@@ -1,6 +1,7 @@
 package app_test
 
 import (
+	"gopkg.in/typ.v4/slices"
 	"reflect"
 	"strings"
 	"testing"
@@ -94,6 +95,14 @@ func TestAppIsFullyInitialized(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			dydxApp := testapp.DefaultTestApp(tc.customFlags)
 			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*dydxApp))
+
+			// Note that the PriceFeedClient is currently hard coded as disabled in GetDefaultTestAppOptions.
+			// Normally it would be only disabled for non-validating full nodes or for nodes where the
+			// price feed client is explicitly disabled.
+			if idx := slices.Index(uninitializedFields, "PriceFeedClient"); idx >= 0 {
+				slices.Remove(&uninitializedFields, idx)
+			}
+
 			require.Len(
 				t,
 				uninitializedFields,

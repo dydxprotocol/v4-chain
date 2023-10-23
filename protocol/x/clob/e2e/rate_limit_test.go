@@ -98,7 +98,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -115,7 +115,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 						}
 					})
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			firstCheckTx := testapp.MustMakeCheckTx(
@@ -168,7 +168,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 }
 
 func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 
 	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
@@ -293,7 +293,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 				ctx, tApp.App, LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20) {
@@ -375,7 +375,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -386,7 +386,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// First placement should pass since the order is unknown.
@@ -428,7 +428,7 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 }
 
 func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -444,7 +444,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	firstMarketCheckTx := testapp.MustMakeCheckTx(
@@ -513,7 +513,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -530,7 +530,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 						}
 					})
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 
 			replayLessGTBTx := testapp.MustMakeCheckTx(

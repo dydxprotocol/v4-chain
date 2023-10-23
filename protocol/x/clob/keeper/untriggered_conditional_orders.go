@@ -9,7 +9,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.
@@ -315,25 +314,4 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		)
 	}
 	return triggeredConditionalOrderIds
-}
-
-// CountUntriggeredSubaccountStatefulOrders will count all untriggered stateful conditional orders for a given
-// subaccount.
-func (k Keeper) CountUntriggeredSubaccountStatefulOrders(ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-) uint32 {
-	count := uint32(0)
-	for _, untriggeredConditionalOrders := range k.UntriggeredConditionalOrders {
-		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
-			if order.OrderId.SubaccountId == subaccountId && order.IsStatefulOrder() {
-				count++
-			}
-		}
-		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
-			if order.OrderId.SubaccountId == subaccountId && order.IsStatefulOrder() {
-				count++
-			}
-		}
-	}
-	return count
 }

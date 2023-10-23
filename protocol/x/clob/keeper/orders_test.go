@@ -1675,7 +1675,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() cmt.GenesisDoc {
 				genesis := testapp.DefaultGenesis()
 				clobPairs := []types.ClobPair{
 					{
@@ -2040,7 +2040,6 @@ func TestInitStatefulOrders(t *testing.T) {
 
 			// Create each stateful order placement in state and properly mock the MemClob call.
 			expectedPlacedOrders := make([]types.Order, 0)
-			expectedStatefulOrderCounts := make(map[satypes.SubaccountId]uint32)
 			for i, order := range tc.statefulOrdersInState {
 				require.True(t, order.IsStatefulOrder())
 
@@ -2061,12 +2060,6 @@ func TestInitStatefulOrders(t *testing.T) {
 					ks.ClobKeeper.MustTriggerConditionalOrder(ks.Ctx, order.OrderId)
 				}
 
-				// Increment the expected count for non-conditional stateful orders and triggered conditional orders.
-				if (order.IsStatefulOrder() && !order.IsConditionalOrder()) ||
-					(order.IsConditionalOrder() && tc.isConditionalOrderTriggered[order.OrderId]) {
-					expectedStatefulOrderCounts[order.GetSubaccountId()] = expectedStatefulOrderCounts[order.GetSubaccountId()] + 1
-				}
-
 				orderPlacementErr := tc.orderPlacementErrors[order.OrderId]
 				memClob.On("PlaceOrder", mock.Anything, order).Return(
 					satypes.BaseQuantums(0),
@@ -2084,16 +2077,6 @@ func TestInitStatefulOrders(t *testing.T) {
 
 			// Run the test and verify expectations.
 			ks.ClobKeeper.InitStatefulOrders(ks.Ctx)
-			for subaccountId, count := range expectedStatefulOrderCounts {
-				require.Equal(
-					t,
-					count,
-					ks.ClobKeeper.GetStatefulOrderCount(
-						ks.Ctx,
-						subaccountId,
-					),
-				)
-			}
 			indexerEventManager.AssertExpectations(t)
 			indexerEventManager.AssertNumberOfCalls(
 				t,

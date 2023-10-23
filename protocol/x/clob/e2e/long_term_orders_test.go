@@ -25,7 +25,7 @@ import (
 )
 
 func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	// Place the order.
@@ -170,7 +170,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 
 			for _, blockWithMessages := range tc.blockWithMessages {
 				ctx := tApp.AdvanceToBlock(blockWithMessages.Block, testapp.AdvanceToBlockOptions{})
@@ -202,7 +202,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 }
 
 func TestImmediateExecutionLongTermOrders(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	// Reject long-term IOC in CheckTx
@@ -248,7 +248,7 @@ func TestImmediateExecutionLongTermOrders(t *testing.T) {
 }
 
 func TestLongTermOrderExpires(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	order := constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15
@@ -284,7 +284,7 @@ func TestLongTermOrderExpires(t *testing.T) {
 }
 
 func TestPlaceLongTermOrder(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	// subaccounts for indexer expectation assertions
@@ -1221,7 +1221,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
 			ctx := tApp.InitChain()
 
 			for _, ordersAndExpectations := range tc.ordersAndExpectationsPerBlock {

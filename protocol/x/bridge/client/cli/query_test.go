@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
-
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
@@ -40,10 +38,6 @@ func setupNetwork(
 	cfg.GenesisState[types.ModuleName] = buf
 	net := network.New(t, cfg)
 	ctx := net.Validators[0].ClientCtx
-
-	t.Cleanup(func() {
-		stoppable.StopServices(t, cfg.GRPCAddress)
-	})
 
 	return net, ctx
 }

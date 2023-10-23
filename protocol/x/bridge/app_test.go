@@ -133,7 +133,7 @@ func TestBridge_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -142,8 +142,9 @@ func TestBridge_Success(t *testing.T) {
 						genesisState.SafetyParams = tc.safetyParams
 					},
 				)
+				genesis.GenesisTime = tc.blockTime
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Get initial balances of addresses and their expected balances after bridging.
@@ -178,9 +179,7 @@ func TestBridge_Success(t *testing.T) {
 
 			// Advance to block right before bridge completion, if necessary.
 			if blockHeightOfBridgeCompletion-1 > uint32(ctx.BlockHeight()) {
-				ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion-1, testapp.AdvanceToBlockOptions{
-					BlockTime: tc.blockTime.Add(-time.Second * 1),
-				})
+				ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion-1, testapp.AdvanceToBlockOptions{})
 			}
 			// Verify that balances have not changed yet.
 			for _, event := range tc.bridgeEvents {
@@ -194,9 +193,7 @@ func TestBridge_Success(t *testing.T) {
 
 			// Verify that balances are updated, if bridge events were proposed, at the block of
 			// bridge completion.
-			ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion, testapp.AdvanceToBlockOptions{
-				BlockTime: tc.blockTime,
-			})
+			ctx = tApp.AdvanceToBlock(blockHeightOfBridgeCompletion, testapp.AdvanceToBlockOptions{})
 			for _, event := range tc.bridgeEvents {
 				balance := tApp.App.BankKeeper.GetBalance(
 					ctx,
@@ -303,7 +300,7 @@ func TestBridge_REJECT(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -315,7 +312,7 @@ func TestBridge_REJECT(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// Add good bridge events to app server.
@@ -358,7 +355,7 @@ func TestBridge_REJECT(t *testing.T) {
 //     accepted by the rest of the chain.
 //   - the node restarts.
 func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -370,7 +367,7 @@ func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Verify that AcknowledgedEventInfo.NextId is 2.

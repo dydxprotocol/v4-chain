@@ -49,7 +49,7 @@ var (
 )
 
 func TestVestEntryStorage_NotFound(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 
@@ -58,7 +58,7 @@ func TestVestEntryStorage_NotFound(t *testing.T) {
 }
 
 func TestVestEntryStorage_Exists(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 
@@ -71,7 +71,7 @@ func TestVestEntryStorage_Exists(t *testing.T) {
 }
 
 func TestGetAllVestEntries(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 
@@ -252,7 +252,7 @@ func TestProcessVesting(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				// Update x/vest genesis state with test vest entry
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -274,7 +274,7 @@ func TestProcessVesting(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Set previous block time
@@ -306,7 +306,7 @@ func TestProcessVesting(t *testing.T) {
 }
 
 func TestDeleteVestEntry_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 
@@ -322,7 +322,7 @@ func TestDeleteVestEntry_Success(t *testing.T) {
 }
 
 func TestDeleteVestEntry_NotFound(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 

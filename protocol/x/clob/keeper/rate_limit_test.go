@@ -9,7 +9,7 @@ import (
 )
 
 func TestRateLimitPlaceOrderIsNoopOutsideOfCheckTxAndReCheckTx(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	checkTxCtx := tApp.AdvanceToBlock(21, testApp.AdvanceToBlockOptions{})
 	deliverTxCtx := checkTxCtx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	msg := clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price5_GTB20)
@@ -26,7 +26,7 @@ func TestRateLimitPlaceOrderIsNoopOutsideOfCheckTxAndReCheckTx(t *testing.T) {
 }
 
 func TestRateLimitCancelOrderIsNoopOutsideOfCheckTxAndReCheckTx(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	checkTxCtx := tApp.AdvanceToBlock(21, testApp.AdvanceToBlockOptions{})
 	deliverTxCtx := checkTxCtx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	msg := clobtypes.NewMsgCancelOrderShortTerm(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price5_GTB20.OrderId, 20)
