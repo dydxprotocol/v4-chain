@@ -120,13 +120,6 @@ export async function printMessageAtHeight(
       message: 'Printing block',
       block: annotatedBlock,
     });
-  } else {
-    logger.info({
-      at: 'printMessageAtHeight',
-      message: 'Overshot target height',
-      currentBlockHeight,
-      targetHeight,
-    });
     await stopConsumer();
   }
 }
