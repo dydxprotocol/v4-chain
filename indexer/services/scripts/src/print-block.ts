@@ -83,6 +83,10 @@ export async function connect(height: number): Promise<void> {
   });
 
   logger.info({
+    at: 'consumer#connect',
+    message: 'Added onMessage function',
+  });
+  logger.info({
     at: 'consumers#connect',
     message: 'Connected to Kafka',
   });
@@ -92,6 +96,10 @@ export async function printMessageAtHeight(
   currentMessage: KafkaMessage,
   targetHeight: number,
 ): Promise<void> {
+  logger.info({
+    at: 'consumer#printMessageAtHeight',
+    message: 'Received message',
+  });
   const indexerTendermintBlock: IndexerTendermintBlock | undefined = getIndexerTendermintBlock(
     currentMessage,
   );
