@@ -544,7 +544,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					Address: TestAddress1,
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
-						Amount: sdkmath.NewInt(1666666666666666666), // 1/6 of 10 = 1.666666 full coins
+						Amount: sdkmath.NewInt(1_666_666_666_666_666_666), // 1/6 of 10 = 1.666666 full coins
 					}},
 				},
 				{
