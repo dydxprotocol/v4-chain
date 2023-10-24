@@ -1,0 +1,113 @@
+import { logger } from '@dydxprotocol-indexer/base';
+import {
+  AssetCreateEventV1,
+  FundingEventV1,
+  IndexerTendermintEvent,
+  LiquidityTierUpsertEventV1,
+  MarketEventV1,
+  OrderFillEventV1,
+  PerpetualMarketCreateEventV1,
+  StatefulOrderEventV1,
+  SubaccountUpdateEventV1,
+  TransferEventV1,
+  UpdateClobPairEventV1,
+  UpdatePerpetualEventV1,
+} from '@dydxprotocol-indexer/v4-protos';
+
+import { AnnotatedIndexerTendermintEvent } from './types';
+
+export enum DydxIndexerSubtypes {
+  ORDER_FILL = 'order_fill',
+  SUBACCOUNT_UPDATE = 'subaccount_update',
+  TRANSFER = 'transfer',
+  MARKET = 'market',
+  STATEFUL_ORDER = 'stateful_order',
+  FUNDING = 'funding_values',
+  ASSET = 'asset',
+  PERPETUAL_MARKET = 'perpetual_market',
+  LIQUIDITY_TIER = 'liquidity_tier',
+  UPDATE_PERPETUAL = 'update_perpetual',
+  UPDATE_CLOB_PAIR = 'update_clob_pair',
+}
+
+export function annotateIndexerTendermintEvent(
+  event: IndexerTendermintEvent,
+): AnnotatedIndexerTendermintEvent | undefined {
+  const eventDataBinary: Uint8Array = event.dataBytes;
+  switch (event.subtype) {
+    case (DydxIndexerSubtypes.ORDER_FILL.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(OrderFillEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(SubaccountUpdateEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.TRANSFER.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(TransferEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.MARKET.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(MarketEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(StatefulOrderEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.FUNDING.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(FundingEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.ASSET.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(AssetCreateEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(PerpetualMarketCreateEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(LiquidityTierUpsertEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(UpdatePerpetualEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
+      return {
+        ...event,
+        data: JSON.stringify(UpdateClobPairEventV1.decode(eventDataBinary)),
+      };
+    }
+    default: {
+      const message: string = `Unable to parse event subtype: ${event.subtype}`;
+      logger.error({
+        at: 'block-helpers#annotateIndexerTendermintEvent',
+        message,
+      });
+      return undefined;
+    }
+  }
+}

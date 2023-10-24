@@ -7,12 +7,14 @@ import {
   stopConsumer,
   TO_ENDER_TOPIC,
 } from '@dydxprotocol-indexer/kafka';
-import { IndexerTendermintBlock } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
+import _ from 'lodash';
 import yargs from 'yargs';
 
 import config from './config';
-import { runAsyncScript } from './helpers/util';
+import { annotateIndexerTendermintEvent } from './helpers/block-helpers';
+import { AnnotatedIndexerTendermintBlock, AnnotatedIndexerTendermintEvent } from './helpers/types';
 
 /**
  * Creates an IndexerTendermintBlock from a KafkaMessage.
@@ -25,22 +27,10 @@ function getIndexerTendermintBlock(
     throw Error('Empty message');
   }
   const messageValueBinary: Uint8Array = new Uint8Array(message.value);
-  logger.info({
-    at: 'onMessage#getIndexerTendermintBlock',
-    message: 'Received message',
-    offset: message.offset,
-  });
 
   const block: IndexerTendermintBlock = IndexerTendermintBlock.decode(
     messageValueBinary,
   );
-  logger.info({
-    at: 'onMessage#getIndexerTendermintBlock',
-    message: 'Parsed message',
-    offset: message.offset,
-    height: block.height,
-    block,
-  });
 
   return block;
 }
@@ -83,10 +73,6 @@ export async function connect(height: number): Promise<void> {
   });
 
   logger.info({
-    at: 'consumer#connect',
-    message: 'Added onMessage function',
-  });
-  logger.info({
     at: 'consumers#connect',
     message: 'Connected to Kafka',
   });
@@ -96,10 +82,6 @@ export async function printMessageAtHeight(
   currentMessage: KafkaMessage,
   targetHeight: number,
 ): Promise<void> {
-  logger.info({
-    at: 'consumer#printMessageAtHeight',
-    message: 'Received message',
-  });
   const indexerTendermintBlock: IndexerTendermintBlock | undefined = getIndexerTendermintBlock(
     currentMessage,
   );
@@ -108,16 +90,44 @@ export async function printMessageAtHeight(
   }
 
   const currentBlockHeight: number = parseInt(indexerTendermintBlock.height.toString(), 10);
-  console.log(`Current block height: ${currentBlockHeight}`);
   if (currentBlockHeight < targetHeight) {
-    const offsetToSeek = BigInt(targetHeight - currentBlockHeight) + currentMessage.offset;
-    console.log(`Seeking to offset: ${offsetToSeek}`);
-    const desiredMessage = await seek(BigInt(offsetToSeek));
-    console.log(JSON.stringify(desiredMessage));
+    const offsetToSeek: number = targetHeight - currentBlockHeight + Number(currentMessage.offset);
+    await seek(BigInt(offsetToSeek));
   } else if (currentBlockHeight === targetHeight) {
-    console.log(JSON.stringify(currentMessage));
+    const annotatedEvents: AnnotatedIndexerTendermintEvent[] = [];
+    _.forEach(indexerTendermintBlock.events, (event: IndexerTendermintEvent) => {
+      const annotatedEvent:
+      AnnotatedIndexerTendermintEvent | undefined = annotateIndexerTendermintEvent(
+        event,
+      );
+      if (annotatedEvent === undefined) {
+        logger.error({
+          at: 'printMessageAtHeight',
+          message: 'Failed to parse event',
+          event,
+        });
+        throw Error('Failed to parse event');
+      }
+      annotatedEvents.push(annotatedEvent);
+    });
+    const annotatedBlock: AnnotatedIndexerTendermintBlock = {
+      ...indexerTendermintBlock,
+      events: [],
+      annotatedEvents,
+    };
+    logger.info({
+      at: 'printMessageAtHeight',
+      message: 'Printing block',
+      block: annotatedBlock,
+    });
   } else {
-    throw Error(`Current block height ${currentBlockHeight} is greater than target height ${targetHeight}`);
+    logger.info({
+      at: 'printMessageAtHeight',
+      message: 'Overshot target height',
+      currentBlockHeight,
+      targetHeight,
+    });
+    await stopConsumer();
   }
 }
 
@@ -165,4 +175,4 @@ const args = yargs.options({
   },
 }).argv;
 
-wrapBackgroundTask(start(args.height), true, 'main');
+wrapBackgroundTask(start(args.height), false, 'main');
