@@ -71,7 +71,7 @@ jest.mock('@dydxprotocol-indexer/base', () => ({
 interface OffchainUpdateRecord {
   key: Buffer,
   offchainUpdate: OffChainUpdateV1
-};
+}
 
 describe('order-place-handler', () => {
   beforeAll(() => {
@@ -708,7 +708,7 @@ describe('order-place-handler', () => {
           key: getOrderIdHash(orderToPlace.orderId!),
           offchainUpdate: {
             orderUpdate: cachedOrderUpdate,
-          }
+          },
         };
       }
 
