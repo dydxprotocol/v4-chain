@@ -21,6 +21,7 @@ const (
 var (
 	// TestFeeCoins_5Cents is the gas fee offered for test transactions.
 	TestFeeCoins_5Cents = lib.MustParseCoinsNormalized(TestFee)
+	TestFeeCoin_5Cents  = TestFeeCoins_5Cents[0]
 )
 
 // BigNegMaxUint64 returns a `big.Int` that is set to -math.MaxUint64.

@@ -50,7 +50,7 @@ const (
 
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
-func NewRootCmd(option *RootCmdOption) *cobra.Command {
+func NewRootCmd(option *RootCmdOption, interceptServerContext func(serverCtxPtr *server.Context), appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig), appInterceptor func(app *dydxapp.App)) *cobra.Command {
 	encodingConfig := dydxapp.GetEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -85,7 +85,7 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initAppConfig()
+			customAppTemplate, customAppConfig := appConfigInterceptor(initAppConfig())
 			customTMConfig := initTendermintConfig()
 
 			if err := server.InterceptConfigsPreRunHandler(
@@ -97,18 +97,20 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 				return err
 			}
 
+			interceptServerContext(server.GetServerContextFromCmd(cmd))
+
 			return nil
 		},
 		SilenceUsage: true,
 	}
 
-	initRootCmd(rootCmd, option, encodingConfig)
+	initRootCmd(rootCmd, option, encodingConfig, appInterceptor)
 
 	return rootCmd
 }
 
 // initRootCmd initializes the app's root command with useful commands.
-func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig) {
+func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig, appInterceptor func(app *dydxapp.App)) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
@@ -131,7 +133,9 @@ func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig d
 	server.AddCommands(
 		rootCmd,
 		dydxapp.DefaultNodeHome,
-		a.newApp,
+		func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
+			return a.newApp(logger, db, writer, options, appInterceptor)
+		},
 		a.appExport,
 		func(cmd *cobra.Command) {
 			addModuleInitFlags(cmd)
@@ -222,6 +226,7 @@ func (a appCreator) newApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
+	appInterceptor func(app *dydxapp.App),
 ) servertypes.Application {
 	var cache sdk.MultiStorePersistentCache
 
@@ -266,7 +271,7 @@ func (a appCreator) newApp(
 		cast.ToUint32(appOpts.Get(server.FlagStateSyncSnapshotKeepRecent)),
 	)
 
-	return dydxapp.New(
+	app := dydxapp.New(
 		logger,
 		db,
 		traceStore,
@@ -284,6 +289,8 @@ func (a appCreator) newApp(
 		baseapp.SetIAVLCacheSize(int(cast.ToUint64(appOpts.Get(flagIAVLCacheSize)))),
 		baseapp.SetChainID(chainID),
 	)
+	appInterceptor(app)
+	return app
 }
 
 // appExport creates and exports a new app, returns the state of the app for a genesis file.

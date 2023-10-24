@@ -2,13 +2,22 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 	"math"
 	"math/rand"
 	"os"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -267,6 +276,7 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 // immutable.
 type TestAppBuilder struct {
 	genesisDocFn         GenesisDocCreatorFn
+	customFlags          map[string]interface{}
 	appCreatorFn         func() *app.App
 	usesDefaultAppConfig bool
 	executeCheckTxs      ExecuteCheckTxs
@@ -280,11 +290,8 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 	return tApp
 }
 
-// WithAppCreatorFn returns a builder like this one with the specified function that will be used to create
-// the application.
-func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
-	tApp.appCreatorFn = fn
-	tApp.usesDefaultAppConfig = false
+func (tApp TestAppBuilder) WithAppOptions(customFlags map[string]interface{}) TestAppBuilder {
+	tApp.customFlags = customFlags
 	return tApp
 }
 
@@ -335,6 +342,8 @@ func (tApp *TestApp) InitChain() sdk.Context {
 	return tApp.App.NewContext(true, tApp.header)
 }
 
+var globalCounter atomic.Uint32
+
 func (tApp *TestApp) initChainIfNeeded() {
 	if tApp.App != nil {
 		return
@@ -342,7 +351,110 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
-	tApp.App = tApp.builder.appCreatorFn()
+
+	parentCtx, cancelFn := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	tApp.builder.t.Cleanup(func() {
+		cancelFn()
+		err := <-done
+		if err != nil {
+			errCode, ok := err.(server.ErrorCode)
+			if !ok || errCode.Code != -1 {
+				tApp.builder.t.Fatal(err)
+			}
+		} else {
+			println("Server shut down.")
+		}
+	})
+
+	homeDir := tApp.builder.t.TempDir()
+	if err := os.MkdirAll(fmt.Sprintf("%s/config/", homeDir), 0755); err != nil {
+		tApp.builder.t.Fatal(err)
+	}
+
+	option := cmd.GetOptionWithCustomStartCmd()
+
+	originalServerStartTime := srvtypes.ServerStartTime
+	srvtypes.ServerStartTime = time.Millisecond * 10
+	tApp.builder.t.Cleanup(func() {
+		srvtypes.ServerStartTime = originalServerStartTime
+	})
+
+	c := make(chan *app.App, 1)
+	rootCmd := cmd.NewRootCmd(option,
+		func(serverCtxPtr *server.Context) {
+			for key, value := range tApp.builder.customFlags {
+				serverCtxPtr.Viper.Set(key, value)
+			}
+		},
+		func(s string, appConfig *cmd.DydxAppConfig) (string, *cmd.DydxAppConfig) {
+			number := time.Now().UnixNano()
+			grpcSocketPath := fmt.Sprintf("%sgrpc_socket%d", os.TempDir(), number)
+			grpcWebSocketPath := fmt.Sprintf("%sgrpc_web_socket%d", os.TempDir(), number)
+			appConfig.GRPC.Address = fmt.Sprintf("unix://%s", grpcSocketPath)
+			appConfig.GRPCWeb.Address = fmt.Sprintf("unix://%s", grpcWebSocketPath)
+			return s, appConfig
+		},
+		func(app *app.App) {
+			c <- app
+		},
+	)
+	rootCmd.Context()
+	ctx := svrcmd.CreateExecuteContext(parentCtx)
+	rootCmd.PersistentFlags().String(flags.FlagLogLevel, tmcfg.DefaultLogLevel, "The logging level (trace|debug|info|warn|error|fatal|panic)")
+	rootCmd.PersistentFlags().String(flags.FlagLogFormat, tmcfg.LogFormatPlain, "The logging format (json|plain)")
+	executor := tmcli.PrepareBaseCmd(rootCmd, app.AppDaemonName, app.DefaultNodeHome)
+	rootCmd.SetArgs([]string{
+		"start",
+		"--grpc-only",
+		"true",
+		"--home",
+		homeDir,
+		"--price-daemon-enabled",
+		"false",
+		"--bridge-daemon-enabled",
+		"false",
+		"--liquidation-daemon-enabled",
+		"false",
+	})
+	priv_validator_key_json := `{
+  "address": "124B880684400B4C0086BD4EE882DCC5B61CF7E3",
+  "pub_key": {
+    "type": "tendermint/PubKeyEd25519",
+    "value": "YiARx8259Z+fGFUxQLrz/5FU2RYRT6f5yzvt7D7CrQM="
+  },
+  "priv_key": {
+    "type": "tendermint/PrivKeyEd25519",
+    "value": "65frslxv5ig0KSNKlJOHT2FKTkOzkb/66eDPsiBaNUtiIBHHzbn1n58YVTFAuvP/kVTZFhFPp/nLO+3sPsKtAw=="
+  }
+}
+`
+
+	os.WriteFile(fmt.Sprintf("%s/config/priv_validator_key.json", homeDir), []byte(priv_validator_key_json), 0755)
+	node_key_json := `{
+  "priv_key": {
+    "type": "tendermint/PrivKeyEd25519",
+    "value": "8EGQBxfGMcRfH0C45UTedEG5Xi3XAcukuInLUqFPpskjp1Ny0c5XvwlKevAwtVvkwoeYYQSe0geQG/cF3GAcUA=="
+  }
+}
+`
+	os.WriteFile(fmt.Sprintf("%s/config/node_key.json", homeDir), []byte(node_key_json), 0755)
+	if err := tApp.genesis.SaveAs(fmt.Sprintf("%s/config/genesis.json", homeDir)); err != nil {
+		tApp.builder.t.Fatal(err)
+	}
+
+	go func() {
+		// ExecuteContext will block and will only return if interrupted.
+		done <- executor.ExecuteContext(ctx)
+	}()
+
+	select {
+	case tApp.App = <-c:
+	case err := <-done:
+		done <- err
+		tApp.builder.t.FailNow()
+	}
+
 	if tApp.builder.usesDefaultAppConfig {
 		tApp.App.Server.DisableUpdateMonitoringForTesting()
 	}
@@ -537,20 +649,6 @@ func (tApp *TestApp) AdvanceToBlock(
 	}
 
 	return tApp.App.NewContext(true, tApp.header)
-}
-
-// Reset resets the chain such that it can be initialized and executed again.
-func (tApp *TestApp) Reset() {
-	if tApp.App != nil {
-		if err := tApp.App.Close(); err != nil {
-			tApp.builder.t.Fatal(err)
-		}
-	}
-	tApp.App = nil
-	tApp.genesis = types.GenesisDoc{}
-	tApp.header = tmproto.Header{}
-	tApp.passingCheckTxs = nil
-	tApp.halted = false
 }
 
 // GetHeader fetches the current header of the test app.

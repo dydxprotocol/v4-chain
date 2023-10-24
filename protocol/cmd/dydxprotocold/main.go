@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cosmos/cosmos-sdk/server"
 	"os"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
@@ -13,7 +14,14 @@ func main() {
 	config.SetupConfig()
 
 	option := cmd.GetOptionWithCustomStartCmd()
-	rootCmd := cmd.NewRootCmd(option)
+	rootCmd := cmd.NewRootCmd(
+		option,
+		func(serverCtxPtr *server.Context) {},
+		func(s string, appConfig *cmd.DydxAppConfig) (string, *cmd.DydxAppConfig) {
+			return s, appConfig
+		},
+		func(app *app.App) {},
+	)
 
 	cmd.AddTendermintSubcommands(rootCmd)
 

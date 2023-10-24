@@ -31,7 +31,7 @@ type DydxAppConfig struct {
 
 // initAppConfig helps to override default appConfig template and configs.
 // return "", nil if no custom configuration is required for the application.
-func initAppConfig() (string, interface{}) {
+func initAppConfig() (string, *DydxAppConfig) {
 	// Optionally allow the chain developer to overwrite the SDK's default
 	// server config.
 	srvCfg := serverconfig.DefaultConfig()
@@ -55,20 +55,20 @@ func initAppConfig() (string, interface{}) {
 	}
 
 	// Enable telemetry.
-	appConfig.Telemetry.Enabled = true
+	appConfig.Telemetry.Enabled = false
 	appConfig.Telemetry.PrometheusRetentionTime = 60
 
 	// Enable API server (required for telemetry).
-	appConfig.API.Enable = true
+	appConfig.API.Enable = false
 	appConfig.API.Address = "tcp://0.0.0.0:1317"
 
 	// GRPC.
-	appConfig.GRPC.Address = "0.0.0.0:9090"
-	appConfig.GRPCWeb.Address = "0.0.0.0:9091"
+	appConfig.GRPC.Address = "tcp://0.0.0.0:9090"
+	appConfig.GRPCWeb.Address = "tcp://0.0.0.0:9091"
 
 	appTemplate := serverconfig.DefaultConfigTemplate
 
-	return appTemplate, appConfig
+	return appTemplate, &appConfig
 }
 
 // initTendermintConfig helps to override default Tendermint Config values.

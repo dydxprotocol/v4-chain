@@ -29,7 +29,7 @@ func TestPlaceOrder(t *testing.T) {
 	appOpts := map[string]interface{}{
 		indexer.MsgSenderInstanceForTest: msgSender,
 	}
-	tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 	ctx := tApp.InitChain()
 
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
@@ -568,8 +568,7 @@ func TestPlaceOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Reset for each iteration of the loop
-			tApp.Reset()
+			tApp = testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
 			ctx = tApp.InitChain()
 			// Clear any messages produced prior to these checkTx calls.

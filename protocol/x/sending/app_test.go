@@ -95,7 +95,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -120,6 +120,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgDepositToSubaccount),
 					Gas:                  100_000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgDepositToSubaccount,
 			)
@@ -143,7 +144,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 			// Check expected account balance.
 			accountBalanceAfterDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
-			require.Equal(t, accountBalanceAfterDeposit, accountBalanceBeforeDeposit.Sub(transferredCoin))
+			require.Equal(t, accountBalanceAfterDeposit, accountBalanceBeforeDeposit.Sub(transferredCoin).Sub(constants.TestFeeCoin_5Cents))
 			// Check expected subaccount asset position.
 			subaccountQuantumsAfterDeposit :=
 				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.subaccountId, tc.asset)
@@ -284,7 +285,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -308,7 +309,8 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgWithdrawFromSubaccount),
-					Gas:                  100_000,
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgWithdrawFromSubaccount,
 			)
@@ -332,6 +334,9 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 			// Check expected account balance.
 			accountBalanceAfterWithdraw := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
+			if tc.subaccountId.Owner == tc.accountAccAddress.String() {
+				accountBalanceAfterWithdraw = accountBalanceAfterWithdraw.Add(constants.TestFeeCoin_5Cents)
+			}
 			require.Equal(t, accountBalanceAfterWithdraw, accountBalanceBeforeWithdraw.Add(transferredCoin))
 			// Check expected subaccount asset position.
 			subaccountQuantumsAfterWithdraw :=
@@ -424,7 +429,7 @@ func testNonExistentSender(
 		rand.NewRand(),
 		tApp.App.TxConfig(),
 		[]sdk.Msg{message},
-		sdk.Coins{},
+		constants.TestFeeCoins_5Cents,
 		100_000, // gas
 		ctx.ChainID(),
 		[]uint64{0}, // dummy account number
