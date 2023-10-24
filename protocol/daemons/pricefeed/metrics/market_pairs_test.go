@@ -18,7 +18,7 @@ func TestGetMarketPairForTelemetry(t *testing.T) {
 		},
 		"absent id": {
 			marketId: 99,
-			expected: "INVALID",
+			expected: "invalid_id:99",
 		},
 	}
 	metrics.SetMarketPairForTelemetry(1, "BTC-USD")
