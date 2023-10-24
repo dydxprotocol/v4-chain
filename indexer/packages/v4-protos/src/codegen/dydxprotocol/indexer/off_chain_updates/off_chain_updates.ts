@@ -13,19 +13,19 @@ export enum OrderPlaceV1_OrderPlacementStatus {
 
   /**
    * ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED - A best effort opened order is one that has only been confirmed to be
-   * placed on the V4 node sending the off-chain update message.
+   * placed on the dYdX node sending the off-chain update message.
    * The cases where this happens includes:
-   * - The V4 node places an order in it's in-memory orderbook during the
+   * - The dYdX node places an order in it's in-memory orderbook during the
    *   CheckTx flow.
-   * A best effort placed order may not have been placed on other V4
-   * nodes including other V4 validator nodes and may still be excluded in
+   * A best effort placed order may not have been placed on other dYdX
+   * nodes including other dYdX validator nodes and may still be excluded in
    * future order matches.
    */
   ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED = 1,
 
   /**
-   * ORDER_PLACEMENT_STATUS_OPENED - An opened order is one that is confirmed to be placed on all V4 nodes
-   * (discounting dishonest V4 nodes) and will be included in any future
+   * ORDER_PLACEMENT_STATUS_OPENED - An opened order is one that is confirmed to be placed on all dYdX nodes
+   * (discounting dishonest dYdX nodes) and will be included in any future
    * order matches.
    * This status is used internally by the indexer and will not be sent
    * out by protocol.
@@ -44,19 +44,19 @@ export enum OrderPlaceV1_OrderPlacementStatusSDKType {
 
   /**
    * ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED - A best effort opened order is one that has only been confirmed to be
-   * placed on the V4 node sending the off-chain update message.
+   * placed on the dYdX node sending the off-chain update message.
    * The cases where this happens includes:
-   * - The V4 node places an order in it's in-memory orderbook during the
+   * - The dYdX node places an order in it's in-memory orderbook during the
    *   CheckTx flow.
-   * A best effort placed order may not have been placed on other V4
-   * nodes including other V4 validator nodes and may still be excluded in
+   * A best effort placed order may not have been placed on other dYdX
+   * nodes including other dYdX validator nodes and may still be excluded in
    * future order matches.
    */
   ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED = 1,
 
   /**
-   * ORDER_PLACEMENT_STATUS_OPENED - An opened order is one that is confirmed to be placed on all V4 nodes
-   * (discounting dishonest V4 nodes) and will be included in any future
+   * ORDER_PLACEMENT_STATUS_OPENED - An opened order is one that is confirmed to be placed on all dYdX nodes
+   * (discounting dishonest dYdX nodes) and will be included in any future
    * order matches.
    * This status is used internally by the indexer and will not be sent
    * out by protocol.
@@ -111,21 +111,21 @@ export enum OrderRemoveV1_OrderRemovalStatus {
 
   /**
    * ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED - A best effort canceled order is one that has only been confirmed to be
-   * removed on the V4 node sending the off-chain update message.
+   * removed on the dYdX node sending the off-chain update message.
    * The cases where this happens includes:
-   * - the order was removed due to the V4 node receiving a CancelOrder
+   * - the order was removed due to the dYdX node receiving a CancelOrder
    *   transaction for the order.
    * - the order was removed due to being undercollateralized during
    *   optimistic matching.
-   * A best effort canceled order may not have been removed on other V4
-   * nodes including other V4 validator nodes and may still be included in
+   * A best effort canceled order may not have been removed on other dYdX
+   * nodes including other dYdX validator nodes and may still be included in
    * future order matches.
    */
   ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED = 1,
 
   /**
-   * ORDER_REMOVAL_STATUS_CANCELED - A canceled order is one that is confirmed to be removed on all V4 nodes
-   * (discounting dishonest V4 nodes) and will not be included in any future
+   * ORDER_REMOVAL_STATUS_CANCELED - A canceled order is one that is confirmed to be removed on all dYdX nodes
+   * (discounting dishonest dYdX nodes) and will not be included in any future
    * order matches.
    * The cases where this happens includes:
    * - the order is expired.
@@ -147,21 +147,21 @@ export enum OrderRemoveV1_OrderRemovalStatusSDKType {
 
   /**
    * ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED - A best effort canceled order is one that has only been confirmed to be
-   * removed on the V4 node sending the off-chain update message.
+   * removed on the dYdX node sending the off-chain update message.
    * The cases where this happens includes:
-   * - the order was removed due to the V4 node receiving a CancelOrder
+   * - the order was removed due to the dYdX node receiving a CancelOrder
    *   transaction for the order.
    * - the order was removed due to being undercollateralized during
    *   optimistic matching.
-   * A best effort canceled order may not have been removed on other V4
-   * nodes including other V4 validator nodes and may still be included in
+   * A best effort canceled order may not have been removed on other dYdX
+   * nodes including other dYdX validator nodes and may still be included in
    * future order matches.
    */
   ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED = 1,
 
   /**
-   * ORDER_REMOVAL_STATUS_CANCELED - A canceled order is one that is confirmed to be removed on all V4 nodes
-   * (discounting dishonest V4 nodes) and will not be included in any future
+   * ORDER_REMOVAL_STATUS_CANCELED - A canceled order is one that is confirmed to be removed on all dYdX nodes
+   * (discounting dishonest dYdX nodes) and will not be included in any future
    * order matches.
    * The cases where this happens includes:
    * - the order is expired.

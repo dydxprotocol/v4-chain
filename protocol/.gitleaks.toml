@@ -1,5 +1,5 @@
 # Title for the gitleaks configuration file.
-title = "V4 Gitleaks Settings"
+title = "dYdX Chain Gitleaks Settings"
 
 [extend]
 # useDefault will extend the base configuration with the default gitleaks config:

@@ -11,4 +11,4 @@
   </a>
 </div>
 
-Generated Python package for v4 Chain protobufs.
+Generated Python package for dYdX Chain protobufs.
