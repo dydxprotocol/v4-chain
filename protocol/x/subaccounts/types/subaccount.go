@@ -1,12 +1,14 @@
 package types
 
 import (
+	fmt "fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -104,4 +106,27 @@ func (m *Subaccount) getUsdcAssetPosition() *AssetPosition {
 		return nil
 	}
 	return firstAsset
+}
+
+// StringWithHumanReadableQuantums returns a string representation of the Subaccount in which
+// the quantums of asset/perpetual positions are human readable.
+func (m *Subaccount) StringWithHumanReadableQuantums() string {
+	assetPositions := make([]string, len(m.AssetPositions))
+	for _, assetPosition := range m.AssetPositions {
+		assetPositions = append(assetPositions, lib.GetStructFieldsString(assetPosition))
+	}
+	perpetualPositions := make([]string, len(m.PerpetualPositions))
+	for _, perpetualPosition := range m.PerpetualPositions {
+		perpetualPositions = append(perpetualPositions, lib.GetStructFieldsString(perpetualPosition))
+	}
+	return fmt.Sprintf(
+		"Id: %+v, "+
+			"AssetPositions: %+v, "+
+			"PerpetualPositions: %+v, "+
+			"MarginEnabled: %+v",
+		m.Id,
+		assetPositions,
+		perpetualPositions,
+		m.MarginEnabled,
+	)
 }

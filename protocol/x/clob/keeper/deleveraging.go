@@ -58,7 +58,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		// This could happen if the subaccount's position was closed by other liquidation matches.
 		k.Logger(ctx).Debug(
 			"Subaccount does not have an open position for the perpetual that is being deleveraged",
-			"subaccount", subaccount,
+			"subaccount", log.NewLazySprintf("%+v", subaccount.StringWithHumanReadableQuantums()),
 			"perpetualId", perpetualId,
 		)
 		return new(big.Int), nil
@@ -270,8 +270,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
 					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", log.NewLazySprintf("%+v", liquidatedSubaccount),
-					"offsettingSubaccount", log.NewLazySprintf("%+v", offsettingSubaccount),
+					"liquidatedSubaccount", log.NewLazySprintf("%+v", liquidatedSubaccount.StringWithHumanReadableQuantums()),
+					"offsettingSubaccount", log.NewLazySprintf("%+v", offsettingSubaccount.StringWithHumanReadableQuantums()),
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
@@ -347,8 +347,8 @@ func (k Keeper) ProcessDeleveraging(
 		return errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
 			"ProcessDeleveraging: liquidated = (%+v), offsetting = (%+v), perpetual id = (%d), deltaQuantums = (%+v)",
-			liquidatedSubaccount,
-			offsettingSubaccount,
+			liquidatedSubaccount.StringWithHumanReadableQuantums(),
+			offsettingSubaccount.StringWithHumanReadableQuantums(),
 			perpetualId,
 			deltaQuantums,
 		)
