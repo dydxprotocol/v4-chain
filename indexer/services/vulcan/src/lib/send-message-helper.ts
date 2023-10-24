@@ -2,10 +2,11 @@ import {
   logger, stats, STATS_NO_SAMPLING, wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 
-const queuedMessages: {[topic: string]: Buffer[]} = {};
+const queuedMessages: {[topic: string]: Message[]} = {};
 const timeouts: {[topic: string]: NodeJS.Timeout } = {};
 export const sizeStat: string = `${config.SERVICE_NAME}.flush_websocket.size`;
 export const timingStat: string = `${config.SERVICE_NAME}.flush_websocket.timing`;
@@ -25,12 +26,12 @@ export async function flushAllQueues(): Promise<void> {
 }
 
 /**
- * Wrapper to send websocket messages to a Kafka topic. Mesages are batched and sent on an interval
+ * Wrapper to send messages to a Kafka topic. Mesages are batched and sent on an interval
  * or when the batch reaches a configurable maximum size.
  * @param message
  * @param topic
  */
-export function sendWebsocketWrapper(message: Buffer, topic: string): void {
+export function sendMessageWrapper(message: Message, topic: string): void {
   if (queuedMessages[topic] === undefined) {
     queuedMessages[topic] = [];
   }
@@ -47,7 +48,7 @@ export function sendWebsocketWrapper(message: Buffer, topic: string): void {
     timeouts[topic] = setTimeout(() => {
       wrapBackgroundTask(sendMessages(topic), true, sendMessagesTaskname);
     },
-    config.FLUSH_WEBSOCKET_MESSAGES_INTERVAL_MS,
+    config.FLUSH_KAFKA_MESSAGES_INTERVAL_MS,
     );
   }
 }
@@ -74,7 +75,7 @@ function shouldFlush(topic: string): boolean {
 async function sendMessages(topic: string): Promise<void> {
   delete timeouts[topic];
 
-  const messages: Buffer[] = queuedMessages[topic];
+  const messages: Message[] = queuedMessages[topic];
   if (messages === undefined || messages.length === 0) {
     stats.histogram(sizeStat, 0, STATS_NO_SAMPLING, { topic, success: 'true' });
     return;
@@ -88,7 +89,7 @@ async function sendMessages(topic: string): Promise<void> {
   try {
     await producer.send({
       topic,
-      messages: messages.map((message: Buffer) => { return { value: message }; }),
+      messages,
     });
     success = true;
   } catch (error) {
@@ -101,7 +102,7 @@ async function sendMessages(topic: string): Promise<void> {
     });
 
     // Re-enqueue all messages if they failed to be sent
-    messages.forEach((message: Buffer) => sendWebsocketWrapper(message, topic));
+    messages.forEach((message: Message) => sendMessageWrapper(message, topic));
   } finally {
     const tags: {[name: string]: string} = {
       topic,

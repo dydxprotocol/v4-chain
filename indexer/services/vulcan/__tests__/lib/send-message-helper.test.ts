@@ -4,8 +4,8 @@ import {
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import { producer, WebsocketTopics } from '@dydxprotocol-indexer/kafka';
 import {
-  flushAllQueues, sendWebsocketWrapper, sizeStat, timingStat,
-} from '../../src/lib/send-websocket-helper';
+  flushAllQueues, sendMessageWrapper, sizeStat, timingStat,
+} from '../../src/lib/send-message-helper';
 import config from '../../src/config';
 import { Message, ProducerRecord } from 'kafkajs';
 
@@ -14,7 +14,7 @@ jest.mock('@dydxprotocol-indexer/base', () => ({
   wrapBackgroundTask: jest.fn(),
 }));
 
-describe('send-websocket-helper', () => {
+describe('send-message-helper', () => {
   let producerSendSpy: jest.SpyInstance;
   let logErrorSpy: jest.SpyInstance;
   let statsTimingSpy: jest.SpyInstance;
@@ -44,15 +44,17 @@ describe('send-websocket-helper', () => {
     it('sends messages for all message queues', async () => {
       const expectedMessagesSent: {[topic: string]: ProducerRecord} = {};
       Object.values(WebsocketTopics).forEach((topic: string) => {
-        const messages: Buffer[] = [];
+        const messages: Message[] = [];
         for (let i: number = 0; i < config.MAX_WEBSOCKET_MESSAGES_TO_QUEUE_PER_TOPIC; i++) {
-          const message: Buffer = Buffer.from(i.toString());
-          sendWebsocketWrapper(message, topic);
+          const message: Message = {
+            value: Buffer.from(i.toString()),
+          };
+          sendMessageWrapper(message, topic);
           messages.push(message);
         }
         expectedMessagesSent[topic] = {
           topic,
-          messages: messages.map((message: Buffer): Message => { return { value: message }; }),
+          messages,
         };
       });
 
@@ -76,20 +78,24 @@ describe('send-websocket-helper', () => {
 
   describe('sendWebsocketWrapper', () => {
     it('sends messages for a topic on an interval in batches', async () => {
-      const messageVal1: Buffer = Buffer.from('some message');
-      const messageVal2: Buffer = Buffer.from('another message');
+      const messageVal1: Message = {
+        value: Buffer.from('some message'),
+      };
+      const messageVal2: Message = {
+        value: Buffer.from('another message'),
+      };
       const topic: string = 'some-topic';
       const expectedMessage: ProducerRecord = {
         topic,
-        messages: [{ value: messageVal1 }, { value: messageVal2 }],
+        messages: [messageVal1, messageVal2],
       };
 
-      sendWebsocketWrapper(messageVal1, topic);
+      sendMessageWrapper(messageVal1, topic);
 
       // No messages should be sent if no timers have been run
       expect(producerSendSpy).not.toHaveBeenCalled();
 
-      sendWebsocketWrapper(messageVal2, topic);
+      sendMessageWrapper(messageVal2, topic);
 
       // No messages should be sent if no timers have been run
       expect(producerSendSpy).not.toHaveBeenCalled();
@@ -187,9 +193,11 @@ describe('send-websocket-helper', () => {
 
     it('respects SEND_WEBSOCKET_MESSAGES flag', () => {
       config.SEND_WEBSOCKET_MESSAGES = false;
-      const messageVal1: Buffer = Buffer.from('some message');
+      const messageVal1: Message = {
+        value: Buffer.from('some message'),
+      };
       const topic: string = 'some-topic';
-      sendWebsocketWrapper(messageVal1, topic);
+      sendMessageWrapper(messageVal1, topic);
 
       jest.runOnlyPendingTimers();
       // Both messages should be sent in one batch
@@ -201,9 +209,11 @@ describe('send-websocket-helper', () => {
 function sendMessagesForTest(numMessages: number, topic: string): ProducerRecord {
   const expectedMessage: ProducerRecord = { topic, messages: [] };
   for (let i: number = 0; i < numMessages; i++) {
-    const messageVal: Buffer = Buffer.from(i.toString());
-    sendWebsocketWrapper(messageVal, topic);
-    expectedMessage.messages.push({ value: messageVal });
+    const messageVal: Message = {
+      value: Buffer.from(i.toString()),
+    };
+    sendMessageWrapper(messageVal, topic);
+    expectedMessage.messages.push(messageVal);
   }
   return expectedMessage;
 }

@@ -23,21 +23,24 @@ import {
   PlaceOrderResult,
   placeOrder,
   CanceledOrdersCache,
+  StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
   OrderPlaceV1,
   OrderPlaceV1_OrderPlacementStatus,
+  OrderUpdateV1,
   RedisOrder,
   SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
-import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
+import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 import { convertToRedisOrder, getTriggerPrice } from './helpers';
 
@@ -47,6 +50,8 @@ import { convertToRedisOrder, getTriggerPrice } from './helpers';
  * - Add the order to the OrdersCache, OrdersDataCache, and SubaccountOrderIdsCache
  *  - this is done using the `placeOrder` function from the `redis` package
  *  - Remove the order from the CanceledOrdersCache if it exists
+ * - If the order is a stateful order, attempt to remove any cached order update from the
+ *   StatefulOrderUpdatesCache, and then queue the order update to be re-sent and re-processed
  * - If the order doesn't already exist in the caches, return
  * - If the order exists in the caches, but was not replaced due to the expiry of the existing order
  *   being greater than or equal to the expiry of the order in the OrderPlace message, return
@@ -123,9 +128,10 @@ export class OrderPlaceHandler extends Handler {
     if (this.shouldSendSubaccountMessage(update.orderPlace!)) {
       // TODO(IND-171): Determine whether we should always be sending a message, even when the cache
       // isn't updated.
-      // for stateful and conditional orders, look the order up in the db for the createdAtHeight
+      // For stateful and conditional orders, look the order up in the db for the createdAtHeight
+      // and send any cached order updates for the stateful or conditional order
       let dbOrder: OrderFromDatabase | undefined;
-      if (redisOrder.order!.goodTilBlockTime !== undefined) {
+      if (isStatefulOrder(redisOrder.order!.orderId!.orderFlags)) {
         const orderUuid: string = OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
         dbOrder = await OrderTable.findById(orderUuid);
         if (dbOrder === undefined) {
@@ -135,25 +141,30 @@ export class OrderPlaceHandler extends Handler {
           });
           throw new Error(`Stateful order not found in database: ${orderUuid}`);
         }
+        await this.sendCachedOrderUpdate(orderUuid);
       }
-      const subaccountMessage: Buffer = this.createSubaccountWebsocketMessage(
-        redisOrder,
-        dbOrder,
-        perpetualMarket,
-        placementStatus,
-      );
-      sendWebsocketWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+      const subaccountMessage: Message = {
+        value: this.createSubaccountWebsocketMessage(
+          redisOrder,
+          dbOrder,
+          perpetualMarket,
+          placementStatus,
+        ),
+      };
+      sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
     // TODO(IND-68): Remove once order replacement flow in V4 protocol removes the old order and
     // places the updated order.
     if (updatedQuantums !== undefined) {
-      const orderbookMessage: Buffer = this.createOrderbookWebsocketMessage(
-        placeOrderResult.oldOrder!,
-        perpetualMarket,
-        updatedQuantums,
-      );
-      sendWebsocketWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+      const orderbookMessage: Message = {
+        value: this.createOrderbookWebsocketMessage(
+          placeOrderResult.oldOrder!,
+          perpetualMarket,
+          updatedQuantums,
+        ),
+      };
+      sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
   }
 
@@ -341,5 +352,34 @@ export class OrderPlaceHandler extends Handler {
       CanceledOrdersCache.removeOrderFromCache(orderId, redisClient),
       this.generateTimingStatsOptions('remove_order_from_cancel_cache'),
     );
+  }
+
+  /**
+   * Removes and sends the cached order update for the given order id if it exists.
+   *
+   * @param orderId
+   * @returns
+   */
+  protected async sendCachedOrderUpdate(
+    orderId: string,
+  ): Promise<void> {
+    const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
+      .removeStatefulOrderUpdate(
+        orderId,
+        Date.now(),
+        redisClient,
+      );
+
+    if (cachedOrderUpdate === undefined) {
+      return;
+    }
+
+    const orderUpdateMessage: Message = {
+      key: getOrderIdHash(cachedOrderUpdate.orderId!),
+      value: Buffer.from(
+        Uint8Array.from(OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish()),
+      ),
+    };
+    sendMessageWrapper(orderUpdateMessage, KafkaTopics.TO_VULCAN);
   }
 }
