@@ -63,8 +63,6 @@ export async function connect(height: number): Promise<void> {
 
   await consumer.subscribe({
     topic: TO_ENDER_TOPIC,
-    // Need to set fromBeginning to true, so when ender restarts, it will consume all messages
-    // rather than ignoring the messages in queue that were produced before ender was started.
     fromBeginning: true,
   });
 
@@ -163,7 +161,7 @@ const args = yargs.options({
   height: {
     type: 'number',
     alias: 'h',
-    description: 'Height to print message for',
+    description: 'Height to print block at',
     required: true,
   },
 }).argv;
