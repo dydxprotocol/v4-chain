@@ -1,4 +1,7 @@
-package clob
+package app
+
+// This file includes clob helpers used in the end-to-end test suites. Functions here cannot live in
+// protocol/testutil/clob because they depend on the TestApp struct, and would create an import cycle.
 
 import (
 	"fmt"
@@ -6,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -24,7 +28,7 @@ func MustMakeOrderFromHumanInput(
 	if !exists {
 		panic(fmt.Sprintf("clobPair does not exist: %v", order.OrderId.ClobPairId))
 	}
-	perp, err := app.PerpetualsKeeper.GetPerpetual(ctx, MustPerpetualId(clobPair))
+	perp, err := app.PerpetualsKeeper.GetPerpetual(ctx, clobtest.MustPerpetualId(clobPair))
 	if err != nil {
 		panic(err)
 	}

@@ -135,6 +135,8 @@ func (b BlockAdvancement) getProposedOperationsTxBytes(ctx sdktypes.Context, app
 	return testtx.MustGetTxBytes(msgProposedOperations)
 }
 
+// Given genesis time, target block time and block time duration, return the estimated height
+// at which the target block time is reached.
 func EstimatedHeightForBlockTime(
 	genesisTime time.Time,
 	targetBlockTime time.Time,

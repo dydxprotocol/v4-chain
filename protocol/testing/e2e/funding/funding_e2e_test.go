@@ -6,7 +6,6 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -137,6 +136,7 @@ func TestFunding(t *testing.T) {
 			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 483
 			expectedFundingIndex: 483,
 		},
+		// TODO(CORE-712): Add more test cases
 	}
 
 	for name, tc := range tests {
@@ -150,7 +150,7 @@ func TestFunding(t *testing.T) {
 
 			// Place orders on the book.
 			for _, testHumanOrder := range tc.testHumanOrders {
-				order := clobtest.MustMakeOrderFromHumanInput(
+				order := testapp.MustMakeOrderFromHumanInput(
 					ctx,
 					tApp.App,
 					testHumanOrder.Order,

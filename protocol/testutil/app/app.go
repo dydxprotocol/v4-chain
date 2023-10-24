@@ -83,7 +83,7 @@ type AdvanceToBlockOptions struct {
 	// The time associated with the block. If left at the default value then block time will be left unchanged.
 	BlockTime time.Time
 
-	// Whether to increment the block time using linear extrapolation among the blocks.
+	// Whether to increment the block time using linear interpolation among the blocks.
 	// TODO(DEC-2156): Instead of an option, pass in a `BlockTimeFunc` to map each block to a
 	// time giving user greater flexibility.
 	LinearBlockTimeInterpolation bool
