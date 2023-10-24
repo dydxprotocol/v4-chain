@@ -11,4 +11,4 @@
   </a>
 </div>
 
-Generated Javascript package for v4 Chain protobufs.
+Generated Javascript package for dYdX Chain protobufs.
