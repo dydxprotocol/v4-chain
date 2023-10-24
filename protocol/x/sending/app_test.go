@@ -95,7 +95,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -284,7 +284,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()

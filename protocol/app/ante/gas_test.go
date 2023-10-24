@@ -181,10 +181,10 @@ func TestSubmitTxnWithGas(t *testing.T) {
 			}
 
 			tApp := testapp.NewTestAppBuilder(t).
-				WithAppCreatorFn(
-					testapp.DefaultTestAppCreatorFn(map[string]interface{}{},
-						baseapp.SetMinGasPrices(cmd.MinGasPrice),
-					)).
+				WithAppOptions(
+					map[string]interface{}{},
+					baseapp.SetMinGasPrices(cmd.MinGasPrice),
+				).
 				Build()
 			ctx := tApp.InitChain()
 

@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"testing"
 
 	"golang.org/x/exp/slices"
@@ -9,7 +10,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
@@ -25,11 +25,7 @@ import (
 )
 
 func TestPlaceOrder(t *testing.T) {
-	msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
-	appOpts := map[string]interface{}{
-		indexer.MsgSenderInstanceForTest: msgSender,
-	}
-	tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
@@ -568,10 +564,13 @@ func TestPlaceOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Reset for each iteration of the loop
-			tApp.Reset()
-
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+			tApp = testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx = tApp.InitChain()
+
 			// Clear any messages produced prior to these checkTx calls.
 			msgSender.Clear()
 			for _, order := range tc.orders {
