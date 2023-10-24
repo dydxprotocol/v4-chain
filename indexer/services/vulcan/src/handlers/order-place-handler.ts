@@ -364,11 +364,11 @@ export class OrderPlaceHandler extends Handler {
     orderId: string,
   ): Promise<void> {
     const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
-    .removeStatefulOrderUpdate(
-      orderId,
-      Date.now(),
-      redisClient,
-    );
+      .removeStatefulOrderUpdate(
+        orderId,
+        Date.now(),
+        redisClient,
+      );
 
     if (cachedOrderUpdate === undefined) {
       return;
