@@ -20,7 +20,7 @@ import (
 //	  (10^quoteCurrencyAtomicResolution)
 //	=
 //	  baseQuantums * priceValue *
-//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expressoin 1]
+//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expression 1]
 //
 // The result is rounded down.
 func BaseToQuoteQuantums(
