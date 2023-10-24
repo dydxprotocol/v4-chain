@@ -651,7 +651,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					Coins: []sdk.Coin{{
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
-							big_testutil.Int64MulPow10(99999999, 7),
+							big_testutil.Int64MulPow10(99_999_999, 7),
 						), // 0.001 * 100_000_000 / 100_000_001 = 0.00099999999 full coin
 					}},
 				},
