@@ -72,7 +72,7 @@ func TestBridge_Success(t *testing.T) {
 			blockTime:              time.Now(),
 			expectNonEmptyBridgeTx: true,
 		},
-		"Success: 1 bridge event with 0 coin denom, delay 5 blocks": {
+		"Success: 1 bridge event with 0 coin amount, delay 5 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
 				constants.BridgeEvent_Id4_Height0_EmptyCoin,
 			},
