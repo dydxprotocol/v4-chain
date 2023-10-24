@@ -7,7 +7,7 @@
     <img src='https://img.shields.io/pypi/v/v4-proto.svg' alt='PyPI'/>
   </a>
   <a href='https://github.com/dydxprotocol/v4-chain/blob/main/v4-proto-py/LICENSE'>
-    <img src='https://img.shields.io/badge/License-BSL_1.1-blue' alt='License' />
+    <img src='https://img.shields.io/badge/License-AGPL_v3-blue.svg' alt='License' />
   </a>
 </div>
 

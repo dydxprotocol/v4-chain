@@ -35,7 +35,7 @@
     "url": "git+https://github.com/dydxprotocol/indexer.git"
   },
   "author": "",
-  "license": "BSL-1.1",
+  "license": "AGPL-3.0",
   "bugs": {
     "url": "https://github.com/dydxprotocol/indexer/issues"
   },
