@@ -8,7 +8,7 @@ import {
   connect as connectToRedis,
   redisClient,
 } from './helpers/redis/redis-controller';
-import { flushAllQueues } from './lib/send-websocket-helper';
+import { flushAllQueues } from './lib/send-message-helper';
 
 async function startService(): Promise<void> {
   logger.info({

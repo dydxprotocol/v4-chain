@@ -19,7 +19,6 @@ import {
   IndexerOrder,
   OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
-  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
@@ -46,10 +45,6 @@ import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import {
-  redis, redisTestConstants, StatefulOrderUpdateInfo, StatefulOrderUpdatesCache,
-} from '@dydxprotocol-indexer/redis';
-import { redisClient } from '../../../src/helpers/redis/redis-controller';
 
 describe('statefulOrderPlacementHandler', () => {
   beforeAll(async () => {
@@ -69,7 +64,6 @@ describe('statefulOrderPlacementHandler', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
-    await redis.deleteAllAsync(redisClient);
     jest.clearAllMocks();
   });
 
@@ -144,48 +138,15 @@ describe('statefulOrderPlacementHandler', () => {
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    [
-      'stateful order placement and no cached update',
-      defaultStatefulOrderEvent,
-      undefined,
-    ],
-    [
-      'stateful long term order placement and no cached update',
-      defaultStatefulOrderLongTermEvent,
-      undefined,
-    ],
-    [
-      'stateful order placement and cached update',
-      defaultStatefulOrderEvent,
-      {
-        ...redisTestConstants.orderUpdate.orderUpdate,
-        orderId: defaultOrder.orderId,
-      },
-    ],
-    [
-      'stateful long term order placement and cached update',
-      defaultStatefulOrderLongTermEvent,
-      {
-        ...redisTestConstants.orderUpdate.orderUpdate,
-        orderId: defaultOrder.orderId,
-      },
-    ],
+    ['stateful order placement', defaultStatefulOrderEvent],
+    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
   ])('successfully places order with %s', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
-    cachedOrderUpdate: OrderUpdateV1 | undefined,
   ) => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
     );
-    if (cachedOrderUpdate !== undefined) {
-      await StatefulOrderUpdatesCache.addStatefulOrderUpdate(
-        orderId,
-        cachedOrderUpdate,
-        Date.now(),
-        redisClient,
-      );
-    }
 
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
@@ -224,25 +185,6 @@ describe('statefulOrderPlacementHandler', () => {
       orderId: defaultOrder.orderId!,
       offchainUpdate: expectedOffchainUpdate,
     });
-
-    // If there was a cached order update, expect the cache to be empty and a corresponding
-    // off-chain update to have been sent to the Kafka producer
-    if (cachedOrderUpdate !== undefined) {
-      const orderUpdates: StatefulOrderUpdateInfo[] = await StatefulOrderUpdatesCache
-        .getOldOrderUpdates(
-          Date.now(),
-          redisClient,
-        );
-      expect(orderUpdates).toHaveLength(0);
-
-      expectVulcanKafkaMessage({
-        producerSendMock,
-        orderId: defaultOrder.orderId!,
-        offchainUpdate: {
-          orderUpdate: cachedOrderUpdate,
-        },
-      });
-    }
   });
 
   it.each([
