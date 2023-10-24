@@ -72,6 +72,23 @@ func TestBridge_Success(t *testing.T) {
 			blockTime:              time.Now(),
 			expectNonEmptyBridgeTx: true,
 		},
+		"Success: 1 bridge event with 0 coin denom, delay 5 blocks": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id4_Height0_EmptyCoin,
+			},
+			proposeParams: bridgetypes.ProposeParams{
+				MaxBridgesPerBlock:           2,
+				ProposeDelayDuration:         0,
+				SkipRatePpm:                  0, // do not skip proposing bridge events.
+				SkipIfBlockDelayedByDuration: time.Second * 10,
+			},
+			safetyParams: bridgetypes.SafetyParams{
+				IsDisabled:  false,
+				DelayBlocks: 5,
+			},
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: true,
+		},
 		"Success: 4 bridge events, delay 27 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
 				constants.BridgeEvent_Id0_Height0,
