@@ -110,8 +110,8 @@ export async function printMessageAtHeight(
   const currentBlockHeight: number = parseInt(indexerTendermintBlock.height.toString(), 10);
   console.log(`Current block height: ${currentBlockHeight}`);
   if (currentBlockHeight < targetHeight) {
-    const offsetToSeek = targetHeight - currentBlockHeight;
-    console.log(`Seeking ${offsetToSeek} blocks ahead`);
+    const offsetToSeek = BigInt(targetHeight - currentBlockHeight) + currentMessage.offset;
+    console.log(`Seeking to offset: ${offsetToSeek}`);
     const desiredMessage = await seek(BigInt(offsetToSeek));
     console.log(JSON.stringify(desiredMessage));
   } else if (currentBlockHeight === targetHeight) {
