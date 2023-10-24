@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
@@ -19,7 +20,7 @@ var (
 	// these market pairs are very unlikely to be updated, so this solution, while not perfect, is
 	// acceptable for the use case of logging/metrics in order to manage code complexity.
 	marketToPair = map[types.MarketId]string{}
-	// lock syncronizes access to the marketToPair map.
+	// lock synchronizes access to the marketToPair map.
 	lock sync.Mutex
 )
 
@@ -39,7 +40,7 @@ func GetMarketPairForTelemetry(marketId types.MarketId) string {
 
 	marketPair, exists := marketToPair[marketId]
 	if !exists {
-		return INVALID
+		return fmt.Sprintf("id:%v", marketId)
 	}
 
 	return marketPair
