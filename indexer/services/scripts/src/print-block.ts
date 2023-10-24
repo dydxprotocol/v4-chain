@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import {
   addOnMessageFunction,
   consumer,
@@ -165,6 +165,4 @@ const args = yargs.options({
   },
 }).argv;
 
-runAsyncScript(async () => {
-  await start(args.height);
-});
+wrapBackgroundTask(start(args.height), true, 'main');
