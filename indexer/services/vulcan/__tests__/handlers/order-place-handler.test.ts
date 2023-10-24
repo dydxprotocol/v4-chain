@@ -40,6 +40,7 @@ import {
   SubaccountOrderIdsCache,
   CanceledOrdersCache,
   updateOrder,
+  StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 
 import {
@@ -50,6 +51,7 @@ import {
   RedisOrder,
   SubaccountId,
   SubaccountMessage,
+  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
@@ -57,13 +59,19 @@ import { convertToRedisOrder, getTriggerPrice } from '../../src/handlers/helpers
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrdersCacheEmpty, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
-import { expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
+import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
+import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
+
+interface OffchainUpdateRecord {
+  key: Buffer,
+  offchainUpdate: OffChainUpdateV1
+};
 
 describe('order-place-handler', () => {
   beforeAll(() => {
@@ -640,18 +648,42 @@ describe('order-place-handler', () => {
 
     it.each([
       [
-        'good-til-block-time',
+        'good-til-block-time and no cached update',
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
+        undefined,
       ],
       [
-        'conditional',
+        'conditional and no cached update',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         redisTestConstants.defaultOrderUuidConditional,
         dbConditionalOrder,
+        undefined,
+      ],
+      [
+        'good-til-block-time and cached update',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+        {
+          ...redisTestConstants.orderUpdate.orderUpdate,
+          orderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        },
+      ],
+      [
+        'conditional and cached update',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        redisTestConstants.defaultOrderUuidConditional,
+        dbConditionalOrder,
+        {
+          ...redisTestConstants.orderUpdate.orderUpdate,
+          orderId: redisTestConstants.defaultOrderIdConditional,
+        },
       ],
     ])('handles order place with OPEN placement status, does not exist initially (with %s)', async (
       _name: string,
@@ -659,9 +691,27 @@ describe('order-place-handler', () => {
       expectedRedisOrder: RedisOrder,
       expectedOrderUuid: string,
       placedOrder: OrderFromDatabase,
+      cachedOrderUpdate: OrderUpdateV1 | undefined,
     ) => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+
+      let expectedOffchainUpdate: OffchainUpdateRecord | undefined;
+      if (cachedOrderUpdate !== undefined) {
+        await StatefulOrderUpdatesCache.addStatefulOrderUpdate(
+          expectedOrderUuid,
+          cachedOrderUpdate,
+          Date.now(),
+          redisClient,
+        );
+        expectedOffchainUpdate = {
+          key: getOrderIdHash(orderToPlace.orderId!),
+          offchainUpdate: {
+            orderUpdate: cachedOrderUpdate,
+          }
+        };
+      }
+
       await handleInitialOrderPlace({
         ...redisTestConstants.orderPlace,
         orderPlace: {
@@ -670,6 +720,7 @@ describe('order-place-handler', () => {
             OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
         },
       });
+
       expectWebsocketMessagesSent(
         producerSendSpy,
         expectedRedisOrder,
@@ -678,7 +729,10 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.OPEN,
         // Subaccount message should be sent for stateful order if status is OPEN
         true,
+        undefined,
+        expectedOffchainUpdate,
       );
+
       await checkOrderPlace(
         expectedOrderUuid,
         redisTestConstants.defaultSubaccountUuid,
@@ -962,6 +1016,7 @@ function expectWebsocketMessagesSent(
   placementStatus: APIOrderStatus,
   expectSubaccountMessage: boolean,
   expectedOrderbookMessage?: OrderbookMessage,
+  expectedOffchainUpdate?: OffchainUpdateRecord,
 ): void {
   jest.runOnlyPendingTimers();
   // expect one subaccount update message being sent
@@ -972,7 +1027,21 @@ function expectWebsocketMessagesSent(
   if (expectedOrderbookMessage !== undefined) {
     numMessages += 1;
   }
+  if (expectedOffchainUpdate !== undefined) {
+    numMessages += 1;
+  }
   expect(producerSendSpy).toHaveBeenCalledTimes(numMessages);
+
+  let callIndex: number = 0;
+
+  if (expectedOffchainUpdate) {
+    expectOffchainUpdateMessage(
+      producerSendSpy.mock.calls[callIndex][0],
+      expectedOffchainUpdate.key,
+      expectedOffchainUpdate.offchainUpdate,
+    );
+    callIndex += 1;
+  }
 
   if (expectSubaccountMessage) {
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
@@ -1016,12 +1085,11 @@ function expectWebsocketMessagesSent(
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    expectWebsocketSubaccountMessage(producerSendSpy.mock.calls[0][0], subaccountMessage);
+    expectWebsocketSubaccountMessage(producerSendSpy.mock.calls[callIndex][0], subaccountMessage);
+    callIndex += 1;
   }
 
   if (expectedOrderbookMessage !== undefined) {
-    // If there is no subaccount message, the orderbook message should be the first message
-    const callIndex: number = expectSubaccountMessage ? 1 : 0;
     expectWebsocketOrderbookMessage(
       producerSendSpy.mock.calls[callIndex][0],
       expectedOrderbookMessage,
