@@ -35,14 +35,18 @@ func (k Keeper) CompleteBridge(
 		return err
 	}
 
-	// Send coin from bridge module account to specified account.
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(
-		ctx,
-		types.ModuleName,
-		bridgeAccAddress,
-		sdk.Coins{bridge.Coin},
-	); err != nil {
-		return err
+	// If coin amount is positive, send coin from bridge module account to
+	// specified account.
+	if bridge.Coin.Amount.IsPositive() {
+		err = k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx,
+			types.ModuleName,
+			bridgeAccAddress,
+			sdk.Coins{bridge.Coin},
+		)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Emit metric on last completed bridge id.
