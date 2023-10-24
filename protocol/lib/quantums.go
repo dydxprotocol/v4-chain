@@ -20,7 +20,7 @@ import (
 //	  (10^quoteCurrencyAtomicResolution)
 //	=
 //	  baseQuantums * priceValue *
-//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
+//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [equation 1]
 //
 // The result is rounded down.
 func BaseToQuoteQuantums(
@@ -87,7 +87,12 @@ func QuoteToBaseQuantums(
 // multiplyByPrice multiples a value by price, factoring in exponents of base
 // and quote currencies.
 // Given `value`, returns result of the following:
-// `value * priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)`
+//
+// `value * priceValue * 10^(priceExponent + baseAtomicResolution - quoteAtomicResolution)` [expression 1]
+//
+// Note that both `BaseToQuoteQuantums` and `FundingRateToIndex` directly wrap around this function.
+// - For `BaseToQuoteQuantums`, substituing `value` with `baseQuantums` in expression 1 yields RHS of equation 1.
+// - For `FundingRateToIndex`, substituing `value` with `fundingRatePpm * time` in expression 1 yields expression 2.
 func multiplyByPrice(
 	value *big.Rat,
 	baseCurrencyAtomicResolution int32,
@@ -122,7 +127,7 @@ func multiplyByPrice(
 //   - right side:
 //     ```
 //     fundingRate * time * quoteQuantums / baseQuantums = fundingRatePpm / 1_000_000 *
-//     priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution)
+//     priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expression 2]
 //     ```
 //
 // Hence, further multiplying both sides by 1_000_000, we have:
@@ -134,7 +139,6 @@ func multiplyByPrice(
 // Arguments:
 //
 //	proratedFundingRate: prorated funding rate adjusted by time delta, in parts-per-million
-//	timeSinceLastFunding: time (in seconds) since last funding index update
 //	baseCurrencyAtomicResolution: atomic resolution of the base currency
 //	priceValue: index price of the perpetual market according to the pricesKeeper
 //	priceExponent: priceExponent of the market according to the pricesKeeper
