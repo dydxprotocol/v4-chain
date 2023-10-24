@@ -123,17 +123,6 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 	return dydxApp
 }
 
-// DefaultTestAppCreatorFn is a wrapper function around DefaultTestApp using the specified custom flags, and allowing
-// for optional base app options.
-func DefaultTestAppCreatorFn(
-	customFlags map[string]interface{},
-	baseAppOptions ...func(*baseapp.BaseApp),
-) AppCreatorFn {
-	return func() *app.App {
-		return DefaultTestApp(customFlags, baseAppOptions...)
-	}
-}
-
 // DefaultGenesis returns a genesis doc using configuration from the local net with a genesis time
 // equivalent to unix epoch + 1 nanosecond. We specifically use non-zero because stateful orders
 // validate that block time is non-zero (https://github.com/dydxprotocol/v4-chain/protocol/blob/
@@ -257,8 +246,8 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 	}
 	return TestAppBuilder{
 		genesisDocFn:         DefaultGenesis,
-		appCreatorFn:         DefaultTestAppCreatorFn(nil),
 		usesDefaultAppConfig: true,
+		appOptions:           make(map[string]interface{}),
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
@@ -272,8 +261,9 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 // immutable.
 type TestAppBuilder struct {
 	genesisDocFn         GenesisDocCreatorFn
-	appCreatorFn         func() *app.App
 	usesDefaultAppConfig bool
+	appOptions           map[string]interface{}
+	baseAppOptions       []func(*baseapp.BaseApp)
 	executeCheckTxs      ExecuteCheckTxs
 	t                    testing.TB
 }
@@ -285,10 +275,13 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 	return tApp
 }
 
-// WithAppCreatorFn returns a builder like this one with the specified function that will be used to create
-// the application.
-func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
-	tApp.appCreatorFn = fn
+// WithAppOptions returns a builder like this one with the specified app options.
+func (tApp TestAppBuilder) WithAppOptions(
+	appOptions map[string]interface{},
+	baseAppOptions ...func(*baseapp.BaseApp),
+) TestAppBuilder {
+	tApp.appOptions = appOptions
+	tApp.baseAppOptions = baseAppOptions
 	tApp.usesDefaultAppConfig = false
 	return tApp
 }
@@ -334,7 +327,7 @@ func (tApp *TestApp) Builder() TestAppBuilder {
 // InitChain initializes the chain. Will panic if initialized more than once.
 func (tApp *TestApp) InitChain() sdk.Context {
 	if tApp.App != nil {
-		panic(errors.New("Cannot initialize chain that has been initialized already. Missing a Reset()?"))
+		panic(errors.New("Cannot initialize chain that has been initialized already."))
 	}
 	tApp.initChainIfNeeded()
 	return tApp.App.NewContext(true, tApp.header)
@@ -347,7 +340,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
-	tApp.App = tApp.builder.appCreatorFn()
+	tApp.App = DefaultTestApp(tApp.builder.appOptions, tApp.builder.baseAppOptions...)
 	if tApp.builder.usesDefaultAppConfig {
 		tApp.App.Server.DisableUpdateMonitoringForTesting()
 	}
@@ -542,20 +535,6 @@ func (tApp *TestApp) AdvanceToBlock(
 	}
 
 	return tApp.App.NewContext(true, tApp.header)
-}
-
-// Reset resets the chain such that it can be initialized and executed again.
-func (tApp *TestApp) Reset() {
-	if tApp.App != nil {
-		if err := tApp.App.Close(); err != nil {
-			tApp.builder.t.Fatal(err)
-		}
-	}
-	tApp.App = nil
-	tApp.genesis = types.GenesisDoc{}
-	tApp.header = tmproto.Header{}
-	tApp.passingCheckTxs = nil
-	tApp.halted = false
 }
 
 // GetHeader fetches the current header of the test app.

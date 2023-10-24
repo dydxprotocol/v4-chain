@@ -80,8 +80,6 @@ func TestSetRewardShare_FailsWithNonpositiveWeight(t *testing.T) {
 }
 
 func TestAddRewardShareToAddress(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
-
 	tests := map[string]struct {
 		prevRewardShare     *types.RewardShare // nil if no previous share
 		newWeight           *big.Int
@@ -120,7 +118,7 @@ func TestAddRewardShareToAddress(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp.Reset()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.RewardsKeeper
 
@@ -143,7 +141,6 @@ func TestAddRewardShareToAddress(t *testing.T) {
 }
 
 func TestAddRewardSharesForFill(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder(t).Build()
 	makerAddress := TestAddress1
 	takerAdderss := TestAddress2
 
@@ -268,7 +265,7 @@ func TestAddRewardSharesForFill(t *testing.T) {
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp.Reset()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.RewardsKeeper
 
@@ -653,8 +650,6 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				)
 				return genesis
 			}).Build()
-
-			tApp.Reset()
 			ctx := tApp.InitChain()
 			k := tApp.App.RewardsKeeper
 
