@@ -20,8 +20,3 @@ const (
 	// NextDelayedMessageIdKey is the key to retrieve next delayed message id.
 	NextDelayedMessageIdKey = "NextDelayedMessageId"
 )
-
-// Log
-const (
-	IdLogKey = "id"
-)
