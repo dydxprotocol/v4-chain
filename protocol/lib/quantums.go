@@ -20,7 +20,7 @@ import (
 //	  (10^quoteCurrencyAtomicResolution)
 //	=
 //	  baseQuantums * priceValue *
-//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [equation 1]
+//	  10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expressoin 1]
 //
 // The result is rounded down.
 func BaseToQuoteQuantums(
@@ -88,11 +88,11 @@ func QuoteToBaseQuantums(
 // and quote currencies.
 // Given `value`, returns result of the following:
 //
-// `value * priceValue * 10^(priceExponent + baseAtomicResolution - quoteAtomicResolution)` [expression 1]
+// `value * priceValue * 10^(priceExponent + baseAtomicResolution - quoteAtomicResolution)` [expression 2]
 //
 // Note that both `BaseToQuoteQuantums` and `FundingRateToIndex` directly wrap around this function.
-// - For `BaseToQuoteQuantums`, substituing `value` with `baseQuantums` in expression 1 yields RHS of equation 1.
-// - For `FundingRateToIndex`, substituing `value` with `fundingRatePpm * time` in expression 1 yields expression 2.
+// - For `BaseToQuoteQuantums`, substituing `value` with `baseQuantums` in expression 2 yields expression 1.
+// - For `FundingRateToIndex`, substituing `value` with `fundingRatePpm * time` in expression 2 yields expression 3.
 func multiplyByPrice(
 	value *big.Rat,
 	baseCurrencyAtomicResolution int32,
@@ -127,7 +127,7 @@ func multiplyByPrice(
 //   - right side:
 //     ```
 //     fundingRate * time * quoteQuantums / baseQuantums = fundingRatePpm / 1_000_000 *
-//     priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expression 2]
+//     priceValue * 10^(priceExponent + baseCurrencyAtomicResolution - quoteCurrencyAtomicResolution) [expression 3]
 //     ```
 //
 // Hence, further multiplying both sides by 1_000_000, we have:
