@@ -271,6 +271,9 @@ func (k Keeper) PlacePerpetualLiquidation(
 			ctx,
 			liquidationOrder,
 		)
+	if err != nil {
+		return err
+	}
 
 	// TODO(DEC-1323): Potentially allow liquidating the same perpetual + subaccount
 	// multiple times in a block.
