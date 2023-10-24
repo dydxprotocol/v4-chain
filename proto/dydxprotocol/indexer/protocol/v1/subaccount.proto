@@ -8,7 +8,7 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/
 
 // Initial copy of protos from dYdX chain application state protos for the
 // subaccount module for use to send Indexer specific messages. Do not make any
-// breaking changes to these protos, a new version should be created if a 
+// breaking changes to these protos, a new version should be created if a
 // breaking change is needed.
 
 // IndexerSubaccountId defines a unique identifier for a Subaccount.

@@ -6,9 +6,9 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1";
 
-// Initial copy of protos from dYdX chain application state protos for the clob 
-// module for use to send Indexer specific messages. Do not make any breaking 
-// changes to these protos, a new version should be created if a breaking change 
+// Initial copy of protos from dYdX chain application state protos for the clob
+// module for use to send Indexer specific messages. Do not make any breaking
+// changes to these protos, a new version should be created if a breaking change
 // is needed.
 
 // IndexerOrderId refers to a single order belonging to a Subaccount.
