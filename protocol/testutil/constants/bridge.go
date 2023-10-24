@@ -33,6 +33,10 @@ func init() {
 
 var (
 	// Private
+	emptyCoin = sdk.Coin{
+		Denom:  "adv4tnt",
+		Amount: sdkmath.NewInt(0),
+	}
 	coin = sdk.Coin{
 		Denom:  "adv4tnt",
 		Amount: sdkmath.NewIntFromUint64(888),
@@ -65,6 +69,12 @@ var (
 		Address:        CarlAccAddress.String(),
 		Coin:           coin,
 		EthBlockHeight: 3,
+	}
+	BridgeEvent_Id4_Height0_EmptyCoin = types.BridgeEvent{
+		Id:             0,
+		Address:        AliceAccAddress.String(),
+		Coin:           emptyCoin,
+		EthBlockHeight: 0,
 	}
 	BridgeEvent_Id55_Height15 = types.BridgeEvent{
 		Id:             55,
