@@ -40,7 +40,7 @@ func GetMarketPairForTelemetry(marketId types.MarketId) string {
 
 	marketPair, exists := marketToPair[marketId]
 	if !exists {
-		return fmt.Sprintf("id:%v", marketId)
+		return fmt.Sprintf("invalid_id:%v", marketId)
 	}
 
 	return marketPair

@@ -28,7 +28,7 @@ func TestGetLabelForMarketIdSuccess(t *testing.T) {
 func TestGetLabelForMarketIdFailure(t *testing.T) {
 	require.Equal(
 		t,
-		metrics.GetLabelForStringValue(metrics.MarketId, fmt.Sprintf("id:%d", INVALID_ID)),
+		metrics.GetLabelForStringValue(metrics.MarketId, fmt.Sprintf("invalid_id:%d", INVALID_ID)),
 		pricefeedmetrics.GetLabelForMarketId(INVALID_ID),
 	)
 }
