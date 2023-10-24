@@ -63,7 +63,7 @@ message FundingEventV1 {
 }
 
 // MarketEvent message contains all the information about a market event on
-// the V4 chain.
+// the dYdX chain.
 message MarketEventV1 {
   // market id.
   uint32 market_id = 1;
@@ -77,7 +77,7 @@ message MarketEventV1 {
 }
 
 // MarketPriceUpdateEvent message contains all the information about a price
-// update on the V4 chain.
+// update on the dYdX chain.
 message MarketPriceUpdateEventV1 {
   // price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
   // price in dollars. For example if `Exponent == -5` then a `exponent_price`
@@ -95,7 +95,7 @@ message MarketBaseEventV1 {
 }
 
 // MarketCreateEvent message contains all the information about a new market on
-// the V4 chain.
+// the dYdX chain.
 message MarketCreateEventV1 {
   MarketBaseEventV1 base = 1;
   // Static value. The exponent of the price.
@@ -106,7 +106,7 @@ message MarketCreateEventV1 {
 }
 
 // MarketModifyEvent message contains all the information about a market update
-// on the V4 chain
+// on the dYdX chain
 message MarketModifyEventV1 { MarketBaseEventV1 base = 1; }
 
 // SourceOfFunds is the source of funds in a transfer event.
@@ -120,7 +120,7 @@ message SourceOfFunds {
   }
 }
 // TransferEvent message contains all the information about a transfer,
-// deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+// deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
 // When a subaccount is involved, a SubaccountUpdateEvent message will
 // be produced with the updated asset positions.
 message TransferEventV1 {
@@ -142,7 +142,7 @@ message TransferEventV1 {
 }
 
 // OrderFillEvent message contains all the information from an order match in
-// the V4 chain. This includes the maker/taker orders that matched and the
+// the dYdX chain. This includes the maker/taker orders that matched and the
 // amount filled.
 message OrderFillEventV1 {
   dydxprotocol.indexer.protocol.v1.IndexerOrder maker_order = 1
@@ -189,7 +189,7 @@ message LiquidationOrderV1 {
 }
 
 // SubaccountUpdateEvent message contains information about an update to a
-// subaccount in the V4 chain. This includes the list of updated perpetual
+// subaccount in the dYdX chain. This includes the list of updated perpetual
 // and asset positions for the subaccount.
 // Note: This event message will contain all the updates to a subaccount
 // at the end of a block which is why multiple asset/perpetual position
@@ -253,7 +253,7 @@ message StatefulOrderEventV1 {
 }
 
 // AssetCreateEventV1 message contains all the information about an new Asset on
-// the v4 chain.
+// the dYdX chain.
 message AssetCreateEventV1 {
   // Unique, sequentially-generated.
   uint32 id = 1;
@@ -279,7 +279,7 @@ message AssetCreateEventV1 {
 }
 
 // PerpetualMarketCreateEventV1 message contains all the information about a
-// new Perpetual Market on the v4 chain.
+// new Perpetual Market on the dYdX chain.
 message PerpetualMarketCreateEventV1 {
   // Unique Perpetual id.
   // Defined in perpetuals.perpetual
@@ -329,7 +329,7 @@ message PerpetualMarketCreateEventV1 {
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
-// create/update a Liquidity Tier on the v4 chain.
+// create/update a Liquidity Tier on the dYdX chain.
 message LiquidityTierUpsertEventV1 {
   // Unique id.
   uint32 id = 1;
@@ -352,7 +352,7 @@ message LiquidityTierUpsertEventV1 {
 }
 
 // UpdateClobPairEventV1 message contains all the information about an update to
-// a clob pair on the v4 chain.
+// a clob pair on the dYdX chain.
 message UpdateClobPairEventV1 {
   // Unique clob pair Id associated with this perpetual market
   // Defined in clob.clob_pair
@@ -379,7 +379,7 @@ message UpdateClobPairEventV1 {
 }
 
 // UpdatePerpetualEventV1 message contains all the information about an update
-// to a perpetual on the v4 chain.
+// to a perpetual on the dYdX chain.
 message UpdatePerpetualEventV1 {
   // Unique Perpetual id.
   // Defined in perpetuals.perpetual

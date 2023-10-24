@@ -14,7 +14,7 @@
     "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",
-  "license": "BSL-1.1",
+  "license": "AGPL-3.0",
   "dependencies": {
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
     "@dydxprotocol-indexer/kafka": "workspace:^0.0.1",

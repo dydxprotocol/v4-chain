@@ -67,6 +67,12 @@ function edit_genesis() {
 		INITIAL_CLOB_PAIR_STATUS='STATUS_ACTIVE'
 	fi
 
+	REWARDS_VESTER_ACCOUNT_BALANCE="$7"
+	if [ -z "$REWARDS_VESTER_ACCOUNT_BALANCE" ]; then
+		# Default to 200 million full coins.
+		REWARDS_VESTER_ACCOUNT_BALANCE="200000000$EIGHTEEN_ZEROS"
+	fi
+	
 	# Genesis time
 	dasel put -t string -f "$GENESIS" '.genesis_time' -v "$GENESIS_TIME"
 
@@ -984,6 +990,7 @@ function edit_genesis() {
 	dydx_exchange_config_json=$(cat "$EXCHANGE_CONFIG_JSON_DIR/dydx_exchange_config.json" | jq -c '.')
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].exchange_config_json' -v "$dydx_exchange_config_json"
 
+	# Initialize bridge module account balance as total native token supply.
 	bridge_module_account_balance=$TOTAL_NATIVE_TOKEN_SUPPLY
 	total_accounts_quote_balance=0
 	acct_idx=0
@@ -1014,13 +1021,17 @@ function edit_genesis() {
 		next_bank_idx=$(($next_bank_idx+1))
 	fi
 
-	# Initialize bank balance for reward vester account.
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "10000000$EIGHTEEN_ZEROS" # 10 million full coins
-	next_bank_idx=$(($next_bank_idx+1))
+	if [ $(echo "$REWARDS_VESTER_ACCOUNT_BALANCE > 0" | bc -l) -eq 1 ]; then
+		# Initialize bank balance of reward vester account.
+		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
+		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].address" -v "${REWARDS_VESTER_ACCOUNT_ADDR}"
+		dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${REWARD_TOKEN}"
+		dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "$REWARDS_VESTER_ACCOUNT_BALANCE"
+		next_bank_idx=$(($next_bank_idx+1))
+
+		bridge_module_account_balance=$(echo "$bridge_module_account_balance - $REWARDS_VESTER_ACCOUNT_BALANCE" | bc)
+	fi
 
 	# Initialize bank balance of bridge module account.
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
