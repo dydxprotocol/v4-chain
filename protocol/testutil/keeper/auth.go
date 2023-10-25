@@ -10,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -26,11 +25,6 @@ func createAccountKeeper(
 
 	storeKey := sdk.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-
-	paramKey := sdk.NewKVStoreKey(paramtypes.StoreKey)
-	stateStore.MountStoreWithDB(paramKey, storetypes.StoreTypeIAVL, db)
-	paramTKey := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
-	stateStore.MountStoreWithDB(paramTKey, storetypes.StoreTypeTransient, db)
 
 	// Create default module account permissions for test.
 	maccPerms := map[string][]string{

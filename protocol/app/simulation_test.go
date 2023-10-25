@@ -36,7 +36,6 @@ import (
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
 	feegranttypes "github.com/cosmos/cosmos-sdk/x/feegrant"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -110,7 +109,6 @@ var genesisModuleOrder = []string{
 	stakingtypes.ModuleName,
 	distributiontypes.ModuleName,
 	slashingtypes.ModuleName,
-	paramstypes.ModuleName,
 	exportedtypes.ModuleName,
 	evidencetypes.ModuleName,
 	ibctransfertypes.ModuleName,
@@ -134,12 +132,11 @@ func (app *SimApp) WithRandomlyGeneratedOperationsSimulationManager() {
 		if simAppModule, ok := app.ModuleManager.Modules[genesisModule].(module.AppModuleSimulation); ok {
 			// Replace the auth module so that it generates some random accounts.
 			if simAppModule.(module.AppModule).Name() == authtypes.ModuleName {
-				authSubspace, _ := app.ParamsKeeper.GetSubspace(authtypes.ModuleName)
 				simAppModules = append(simAppModules, auth.NewAppModule(
 					app.AppCodec(),
 					app.AccountKeeper,
 					authsims.RandomGenesisAccounts,
-					authSubspace,
+					nil,
 				))
 			} else {
 				simAppModules = append(simAppModules, simAppModule)
