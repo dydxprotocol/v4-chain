@@ -454,7 +454,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 
 		orderPlacement, exists := k.GetLongTermOrderPlacement(ctx, orderId)
 		if !exists {
-			// Error log if this is a conditional orders and it doesn't exist in state, since it
+			// Error log if this is a conditional orders and it doesn't exist in triggered state, since it
 			// can't have been canceled.
 			if orderId.IsConditionalOrder() {
 				k.Logger(ctx).Error(

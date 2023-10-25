@@ -2003,14 +2003,17 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	// Get current fill amount for this order.
 	exists, orderStateFillAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, orderId)
 
-	// If there is no fill amount for this order, error log and return early. Note this is an
-	// error since this function should only be called for orders that were partially or fully filled.
+	// If there is no fill amount for this order, return early. Note this is only valid if the
+	// order is a stateful order that was fully-filled or partially-filled and expired / canceled /
+	// removed in the last block.
 	if !exists {
-		m.clobKeeper.Logger(ctx).Error(
-			"RemoveOrderIfFilled: order ID that should be partially or fully filled has no fill amount",
-			"orderId",
-			orderId,
-		)
+		if orderId.IsShortTermOrder() {
+			m.clobKeeper.Logger(ctx).Error(
+				"RemoveOrderIfFilled: filled Short-Term order ID has no fill amount",
+				"orderId",
+				orderId,
+			)
+		}
 		return
 	}
 
