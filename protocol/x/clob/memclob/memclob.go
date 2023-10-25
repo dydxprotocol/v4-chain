@@ -308,7 +308,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 
 		// Update the total matched quantums for this matching loop stored in `subaccountTotalMatchedQuantums`.
 		for _, order := range []types.MatchableOrder{
-			matchedOrderHashToOrder[matchedMakerOrder.GetOrderHash()],
+			&matchedMakerOrder,
 			takerOrder,
 		} {
 			bigTotalMatchedQuantums, exists := subaccountTotalMatchedQuantums[order.GetSubaccountId()]
@@ -735,7 +735,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 ) {
 	offchainUpdates = types.NewOffchainUpdates()
 
-	// // Branch the state. State will be wrote to only if matching does not return an error.
+	// Branch the state. State will be wrote to only if matching does not return an error.
 	branchedContext, writeCache := ctx.CacheContext()
 
 	// Attempt to match the order against the orderbook.
@@ -1917,8 +1917,7 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
-// If the maker order is fully filled, it removes it from the orderbook. Else, it updates the total number of quantums
-// in the price level containing the maker order.
+// If the maker order is fully filled, it removes it from the orderbook.
 func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder(
 	ctx sdk.Context,
 	makerOrder types.Order,
