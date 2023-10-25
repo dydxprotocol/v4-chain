@@ -2,11 +2,10 @@ package keeper_test
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -40,7 +39,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdatePerpetualFeeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params:    types.DefaultGenesis().Params,
 			},
 			expErr: false,
@@ -57,7 +56,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: negative duration",
 			input: &types.MsgUpdatePerpetualFeeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.PerpetualFeeParams{
 					Tiers: []*types.PerpetualFeeTier{
 						{TotalVolumeShareRequirementPpm: 1},

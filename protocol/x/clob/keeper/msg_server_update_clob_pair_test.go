@@ -7,7 +7,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -33,7 +32,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 	}{
 		"Success": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -76,7 +75,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: unsupported status transition from active to initializing": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -104,7 +103,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Panic: clob pair not found": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -149,7 +148,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: cannot update metadata with new perpetual id": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -176,7 +175,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: cannot update step base quantums": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -203,7 +202,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: cannot update subticks per tick": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -230,7 +229,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: cannot update quantum conversion exponent": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{

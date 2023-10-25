@@ -6,7 +6,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -120,11 +119,7 @@ func TestCompleteBridge(t *testing.T) {
 				require.Equal(t, tc.bridgeEvent.Coin.Amount, balance.Amount)
 			}
 			// Assert that bridge module account's balance is as expected.
-			modAccBalance := bankKeeper.GetBalance(
-				ctx,
-				authtypes.NewModuleAddress(types.ModuleName),
-				tc.bridgeEvent.Coin.Denom,
-			)
+			modAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.bridgeEvent.Coin.Denom)
 			require.Equal(t, tc.expectedBalance.Denom, modAccBalance.Denom)
 			require.Equal(t, tc.expectedBalance.Amount, modAccBalance.Amount)
 		})

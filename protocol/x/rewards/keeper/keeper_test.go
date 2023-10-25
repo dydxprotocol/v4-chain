@@ -8,7 +8,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -28,7 +27,7 @@ const (
 
 var (
 	ZeroTreasuryAccountBalance = banktypes.Balance{
-		Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+		Address: types.TreasuryModuleAddress.String(),
 		Coins: []sdk.Coin{{
 			Denom:  TestRewardTokenDenom,
 			Amount: sdkmath.NewInt(0),
@@ -334,7 +333,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 			// 1$ / 2$ * 100% = 0.5 full coin, all paid to TestAddress1
 			expectedBalances: []banktypes.Balance{
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
@@ -366,7 +365,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
@@ -400,7 +399,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
@@ -506,7 +505,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom: TestRewardTokenDenom,
 						Amount: sdkmath.NewIntFromBigInt(
@@ -561,7 +560,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
 						Amount: sdkmath.NewInt(1), // 1e-18 full coins left due to rounding
@@ -618,7 +617,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
 						Amount: sdkmath.NewInt(2), // 2e-18 full coins left due to rounding
@@ -660,7 +659,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					}},
 				},
 				{
-					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Address: types.TreasuryModuleAddress.String(),
 					Coins: []sdk.Coin{{
 						Denom:  TestRewardTokenDenom,
 						Amount: sdkmath.NewInt(1), // 0.001 - 0.00099999999 + 9.9e-12 = 1e-18 full coin left due to rounding
@@ -680,7 +679,7 @@ func TestProcessRewardsForBlock(t *testing.T) {
 					&genesis,
 					func(genesisState *banktypes.GenesisState) {
 						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
-							Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+							Address: types.TreasuryModuleAddress.String(),
 							Coins: []sdk.Coin{
 								sdk.NewCoin(TestRewardTokenDenom, tc.treasuryAccountBalance),
 							},

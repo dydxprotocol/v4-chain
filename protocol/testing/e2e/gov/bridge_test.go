@@ -1,12 +1,11 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -24,7 +23,7 @@ func TestUpdateEventParams(t *testing.T) {
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateEventParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.EventParams{
 					Denom:      genesisEventParams.Denom + "updated",
 					EthChainId: genesisEventParams.EthChainId + 1,
@@ -89,7 +88,7 @@ func TestUpdateProposeParams(t *testing.T) {
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.ProposeParams{
 					MaxBridgesPerBlock:           genesisProposeParams.MaxBridgesPerBlock + 1,
 					ProposeDelayDuration:         genesisProposeParams.ProposeDelayDuration + 1,
@@ -156,7 +155,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.SafetyParams{
 					IsDisabled:  !genesisSafetyParams.IsDisabled,
 					DelayBlocks: genesisSafetyParams.DelayBlocks + 1,

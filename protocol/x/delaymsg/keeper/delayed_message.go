@@ -8,7 +8,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -179,8 +178,7 @@ func validateSigners(msg sdk.Msg) error {
 			"message must have exactly one signer",
 		)
 	}
-	moduleAddress := authtypes.NewModuleAddress(types.ModuleName)
-	if !bytes.Equal(signers[0], moduleAddress) {
+	if !bytes.Equal(signers[0], types.ModuleAddress) {
 		return errorsmod.Wrapf(
 			types.ErrInvalidSigner,
 			"message signer must be delaymsg module address",
