@@ -52,7 +52,7 @@ func TestGetBlockRateLimitConfiguration(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder(t).Build()
+			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
 			ctx := tApp.InitChain()
 			res, err := tApp.App.ClobKeeper.BlockRateLimitConfiguration(sdktypes.WrapSDKContext(ctx), tc.req)
 
