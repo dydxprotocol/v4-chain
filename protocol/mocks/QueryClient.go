@@ -146,6 +146,36 @@ func (_m *QueryClient) AreSubaccountsLiquidatable(ctx context.Context, in *clobt
 	return r0, r1
 }
 
+// BlockRateLimitConfiguration provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) BlockRateLimitConfiguration(ctx context.Context, in *clobtypes.QueryBlockRateLimitConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryBlockRateLimitConfigurationResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *clobtypes.QueryBlockRateLimitConfigurationResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryBlockRateLimitConfigurationRequest, ...grpc.CallOption) *clobtypes.QueryBlockRateLimitConfigurationResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.QueryBlockRateLimitConfigurationResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryBlockRateLimitConfigurationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ClobPair provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) ClobPair(ctx context.Context, in *clobtypes.QueryGetClobPairRequest, opts ...grpc.CallOption) (*clobtypes.QueryClobPairResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -258,6 +288,36 @@ func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *liquidation
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *liquidationapi.LiquidateSubaccountsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// LiquidationsConfiguration provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) LiquidationsConfiguration(ctx context.Context, in *clobtypes.QueryLiquidationsConfigurationRequest, opts ...grpc.CallOption) (*clobtypes.QueryLiquidationsConfigurationResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *clobtypes.QueryLiquidationsConfigurationResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.QueryLiquidationsConfigurationRequest, ...grpc.CallOption) *clobtypes.QueryLiquidationsConfigurationResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.QueryLiquidationsConfigurationResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.QueryLiquidationsConfigurationRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

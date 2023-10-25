@@ -23,6 +23,9 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdListClobPair())
 	cmd.AddCommand(CmdShowClobPair())
+	cmd.AddCommand(CmdGetBlockRateLimitConfiguration())
+	cmd.AddCommand(CmdGetEquityTierLimitConfig())
+	cmd.AddCommand(CmdGetLiquidationsConfiguration())
 
 	return cmd
 }
