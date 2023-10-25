@@ -273,9 +273,12 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
-	require.Equal(t, "list-clob-pair", cmd.Commands()[0].Name())
-	require.Equal(t, "show-clob-pair", cmd.Commands()[1].Name())
+	require.Equal(t, 5, len(cmd.Commands()))
+	require.Equal(t, "get-block-rate-limit-config", cmd.Commands()[0].Name())
+	require.Equal(t, "get-equity-tier-limit-config", cmd.Commands()[1].Name())
+	require.Equal(t, "get-liquidations-config", cmd.Commands()[2].Name())
+	require.Equal(t, "list-clob-pair", cmd.Commands()[3].Name())
+	require.Equal(t, "show-clob-pair", cmd.Commands()[4].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
