@@ -170,7 +170,9 @@ func TestFunding(t *testing.T) {
 				ctx,
 				tApp.App,
 				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[0], -5),
-				time.Now(),
+				// Only index price past a certain threshold is used for premium calculation.
+				// Use additional buffer here to ensure `test-race` passes.
+				time.Now().Add(1*time.Hour),
 			)
 
 			ctx = tApp.AdvanceToBlock(BlockHeightAtFirstFundingTick, testapp.AdvanceToBlockOptions{
@@ -190,7 +192,9 @@ func TestFunding(t *testing.T) {
 				ctx,
 				tApp.App,
 				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[0], -5),
-				time.Now(),
+				// Only index price past a certain threshold is used for premium calculation.
+				// Use additional buffer here to ensure `test-race` passes.
+				time.Now().Add(1*time.Hour),
 			)
 
 			// We just entered a new `funding-tick` epoch, there should be 0 funding premium samples.
@@ -222,7 +226,9 @@ func TestFunding(t *testing.T) {
 				ctx,
 				tApp.App,
 				pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5),
-				time.Now(),
+				// Only index price past a certain threshold is used for premium calculation.
+				// Use additional buffer here to ensure `test-race` passes.
+				time.Now().Add(1*time.Hour),
 			)
 			// Advance another 30 seconds to the end of the second funding-tick epoch. This will trigger processing
 			// of `funding-tick`, which calculates the final funding rate and updates the funding index.
