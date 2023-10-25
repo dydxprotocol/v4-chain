@@ -1,6 +1,7 @@
 package metrics_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
@@ -27,7 +28,7 @@ func TestGetLabelForMarketIdSuccess(t *testing.T) {
 func TestGetLabelForMarketIdFailure(t *testing.T) {
 	require.Equal(
 		t,
-		metrics.GetLabelForStringValue(metrics.MarketId, pricefeedmetrics.INVALID),
+		metrics.GetLabelForStringValue(metrics.MarketId, fmt.Sprintf("invalid_id:%d", INVALID_ID)),
 		pricefeedmetrics.GetLabelForMarketId(INVALID_ID),
 	)
 }

@@ -24,10 +24,11 @@ import {
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
-import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
+import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 
 /**
@@ -157,12 +158,14 @@ export class OrderUpdateHandler extends Handler {
       return;
     }
 
-    const orderbookMessage: Buffer = this.createOrderbookWebsocketMessage(
-      updateResult.order!,
-      perpetualMarket,
-      updatedQuantums,
-    );
-    sendWebsocketWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+    const orderbookMessage: Message = {
+      value: this.createOrderbookWebsocketMessage(
+        updateResult.order!,
+        perpetualMarket,
+        updatedQuantums,
+      ),
+    };
+    sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
 
   /**

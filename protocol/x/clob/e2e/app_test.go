@@ -401,7 +401,7 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -474,7 +474,7 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
 			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -506,7 +506,7 @@ func TestStats(t *testing.T) {
 	appOpts := map[string]interface{}{
 		indexer.MsgSenderInstanceForTest: msgSender,
 	}
-	tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
 	// Epochs start at block height 2.
 	startTime := time.Unix(10, 0).UTC()

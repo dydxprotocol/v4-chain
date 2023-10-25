@@ -184,7 +184,7 @@ export interface FundingEventV1SDKType {
 }
 /**
  * MarketEvent message contains all the information about a market event on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketEventV1 {
@@ -196,7 +196,7 @@ export interface MarketEventV1 {
 }
 /**
  * MarketEvent message contains all the information about a market event on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketEventV1SDKType {
@@ -208,7 +208,7 @@ export interface MarketEventV1SDKType {
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
- * update on the V4 chain.
+ * update on the dYdX chain.
  */
 
 export interface MarketPriceUpdateEventV1 {
@@ -221,7 +221,7 @@ export interface MarketPriceUpdateEventV1 {
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
- * update on the V4 chain.
+ * update on the dYdX chain.
  */
 
 export interface MarketPriceUpdateEventV1SDKType {
@@ -258,7 +258,7 @@ export interface MarketBaseEventV1SDKType {
 }
 /**
  * MarketCreateEvent message contains all the information about a new market on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketCreateEventV1 {
@@ -274,7 +274,7 @@ export interface MarketCreateEventV1 {
 }
 /**
  * MarketCreateEvent message contains all the information about a new market on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketCreateEventV1SDKType {
@@ -290,25 +290,25 @@ export interface MarketCreateEventV1SDKType {
 }
 /**
  * MarketModifyEvent message contains all the information about a market update
- * on the V4 chain
+ * on the dYdX chain
  */
 
 export interface MarketModifyEventV1 {
   /**
    * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
+   * on the dYdX chain
    */
   base?: MarketBaseEventV1;
 }
 /**
  * MarketModifyEvent message contains all the information about a market update
- * on the V4 chain
+ * on the dYdX chain
  */
 
 export interface MarketModifyEventV1SDKType {
   /**
    * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
+   * on the dYdX chain
    */
   base?: MarketBaseEventV1SDKType;
 }
@@ -326,7 +326,7 @@ export interface SourceOfFundsSDKType {
 }
 /**
  * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+ * deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
  * When a subaccount is involved, a SubaccountUpdateEvent message will
  * be produced with the updated asset positions.
  */
@@ -357,7 +357,7 @@ export interface TransferEventV1 {
 }
 /**
  * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+ * deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
  * When a subaccount is involved, a SubaccountUpdateEvent message will
  * be produced with the updated asset positions.
  */
@@ -388,7 +388,7 @@ export interface TransferEventV1SDKType {
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
- * the V4 chain. This includes the maker/taker orders that matched and the
+ * the dYdX chain. This includes the maker/taker orders that matched and the
  * amount filled.
  */
 
@@ -417,7 +417,7 @@ export interface OrderFillEventV1 {
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
- * the V4 chain. This includes the maker/taker orders that matched and the
+ * the dYdX chain. This includes the maker/taker orders that matched and the
  * amount filled.
  */
 
@@ -512,7 +512,7 @@ export interface LiquidationOrderV1SDKType {
 }
 /**
  * SubaccountUpdateEvent message contains information about an update to a
- * subaccount in the V4 chain. This includes the list of updated perpetual
+ * subaccount in the dYdX chain. This includes the list of updated perpetual
  * and asset positions for the subaccount.
  * Note: This event message will contain all the updates to a subaccount
  * at the end of a block which is why multiple asset/perpetual position
@@ -526,7 +526,7 @@ export interface SubaccountUpdateEventV1 {
 }
 /**
  * SubaccountUpdateEvent message contains information about an update to a
- * subaccount in the V4 chain. This includes the list of updated perpetual
+ * subaccount in the dYdX chain. This includes the list of updated perpetual
  * and asset positions for the subaccount.
  * Note: This event message will contain all the updates to a subaccount
  * at the end of a block which is why multiple asset/perpetual position
@@ -638,7 +638,7 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
 }
 /**
  * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
+ * the dYdX chain.
  */
 
 export interface AssetCreateEventV1 {
@@ -672,7 +672,7 @@ export interface AssetCreateEventV1 {
 }
 /**
  * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
+ * the dYdX chain.
  */
 
 export interface AssetCreateEventV1SDKType {
@@ -706,7 +706,7 @@ export interface AssetCreateEventV1SDKType {
 }
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the v4 chain.
+ * new Perpetual Market on the dYdX chain.
  */
 
 export interface PerpetualMarketCreateEventV1 {
@@ -776,7 +776,7 @@ export interface PerpetualMarketCreateEventV1 {
 }
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the v4 chain.
+ * new Perpetual Market on the dYdX chain.
  */
 
 export interface PerpetualMarketCreateEventV1SDKType {
@@ -846,7 +846,7 @@ export interface PerpetualMarketCreateEventV1SDKType {
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
- * create/update a Liquidity Tier on the v4 chain.
+ * create/update a Liquidity Tier on the dYdX chain.
  */
 
 export interface LiquidityTierUpsertEventV1 {
@@ -877,7 +877,7 @@ export interface LiquidityTierUpsertEventV1 {
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
- * create/update a Liquidity Tier on the v4 chain.
+ * create/update a Liquidity Tier on the dYdX chain.
  */
 
 export interface LiquidityTierUpsertEventV1SDKType {
@@ -908,7 +908,7 @@ export interface LiquidityTierUpsertEventV1SDKType {
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
- * a clob pair on the v4 chain.
+ * a clob pair on the dYdX chain.
  */
 
 export interface UpdateClobPairEventV1 {
@@ -945,7 +945,7 @@ export interface UpdateClobPairEventV1 {
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
- * a clob pair on the v4 chain.
+ * a clob pair on the dYdX chain.
  */
 
 export interface UpdateClobPairEventV1SDKType {
@@ -982,7 +982,7 @@ export interface UpdateClobPairEventV1SDKType {
 }
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
- * to a perpetual on the v4 chain.
+ * to a perpetual on the dYdX chain.
  */
 
 export interface UpdatePerpetualEventV1 {
@@ -1021,7 +1021,7 @@ export interface UpdatePerpetualEventV1 {
 }
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
- * to a perpetual on the v4 chain.
+ * to a perpetual on the dYdX chain.
  */
 
 export interface UpdatePerpetualEventV1SDKType {

@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -199,8 +198,8 @@ func createClobKeeper(
 		memKey,
 		transientStoreKey,
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		},
 		memClob,
 		saKeeper,

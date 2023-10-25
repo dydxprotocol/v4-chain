@@ -226,10 +226,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -462,10 +459,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance stays the same.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -774,10 +768,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 			)
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -954,10 +945,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -1115,11 +1103,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx,
-				authtypes.NewModuleAddress(types.ModuleName),
-				constants.Usdc.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, constants.Usdc.Denom)
 			require.Equal(
 				t,
 				sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedSubaccountsModuleAccBalance),

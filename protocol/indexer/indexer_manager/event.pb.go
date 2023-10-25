@@ -162,7 +162,7 @@ func (m *IndexerEventsStoreValue) GetEvents() []*IndexerTendermintEventWrapper {
 }
 
 // IndexerTendermintEvent contains the base64 encoded event proto emitted from
-// the V4 application as well as additional metadata to determine the ordering
+// the dYdX application as well as additional metadata to determine the ordering
 // of the event within the block and the subtype of the event.
 type IndexerTendermintEvent struct {
 	// Subtype of the event e.g. "order_fill", "subaccount_update", etc.

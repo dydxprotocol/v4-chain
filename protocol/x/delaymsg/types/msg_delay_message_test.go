@@ -4,7 +4,6 @@ import (
 	"fmt"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -13,7 +12,7 @@ import (
 )
 
 var (
-	AcceptedAuthority = authtypes.NewModuleAddress(types.ModuleName)
+	AcceptedAuthority = types.ModuleAddress
 )
 
 func TestMsgDelayMessage_GetSigners(t *testing.T) {

@@ -1,13 +1,13 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -25,7 +25,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	}{
 		"Success: send from module to user account": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
@@ -35,7 +35,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 		},
 		"Success: send from module to module account": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
@@ -45,7 +45,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 		},
 		"Failure: insufficient balance": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
 				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(124)),

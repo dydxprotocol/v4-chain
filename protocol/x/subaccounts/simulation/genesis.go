@@ -7,7 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
@@ -100,7 +99,7 @@ func updateBankModuleGenesisState(
 
 	// Define the balance of the `subaccounts` module.
 	subaccountsUsdcBalance := banktypes.Balance{
-		Address: authtypes.NewModuleAddress(types.ModuleName).String(),
+		Address: types.ModuleAddress.String(),
 		Coins: []sdk.Coin{{
 			Denom:  asstypes.AssetUsdc.Denom,
 			Amount: totalUsdcSupply,

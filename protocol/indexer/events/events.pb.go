@@ -191,7 +191,7 @@ func (m *FundingEventV1) GetType() FundingEventV1_Type {
 }
 
 // MarketEvent message contains all the information about a market event on
-// the V4 chain.
+// the dYdX chain.
 type MarketEventV1 struct {
 	// market id.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
@@ -302,7 +302,7 @@ func (*MarketEventV1) XXX_OneofWrappers() []interface{} {
 }
 
 // MarketPriceUpdateEvent message contains all the information about a price
-// update on the V4 chain.
+// update on the dYdX chain.
 type MarketPriceUpdateEventV1 struct {
 	// price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
 	// price in dollars. For example if `Exponent == -5` then a `exponent_price`
@@ -407,7 +407,7 @@ func (m *MarketBaseEventV1) GetMinPriceChangePpm() uint32 {
 }
 
 // MarketCreateEvent message contains all the information about a new market on
-// the V4 chain.
+// the dYdX chain.
 type MarketCreateEventV1 struct {
 	Base *MarketBaseEventV1 `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
 	// Static value. The exponent of the price.
@@ -465,7 +465,7 @@ func (m *MarketCreateEventV1) GetExponent() int32 {
 }
 
 // MarketModifyEvent message contains all the information about a market update
-// on the V4 chain
+// on the dYdX chain
 type MarketModifyEventV1 struct {
 	Base *MarketBaseEventV1 `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
 }
@@ -603,7 +603,7 @@ func (*SourceOfFunds) XXX_OneofWrappers() []interface{} {
 }
 
 // TransferEvent message contains all the information about a transfer,
-// deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+// deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
 // When a subaccount is involved, a SubaccountUpdateEvent message will
 // be produced with the updated asset positions.
 type TransferEventV1 struct {
@@ -699,7 +699,7 @@ func (m *TransferEventV1) GetRecipient() *SourceOfFunds {
 }
 
 // OrderFillEvent message contains all the information from an order match in
-// the V4 chain. This includes the maker/taker orders that matched and the
+// the dYdX chain. This includes the maker/taker orders that matched and the
 // amount filled.
 type OrderFillEventV1 struct {
 	MakerOrder v1.IndexerOrder `protobuf:"bytes,1,opt,name=maker_order,json=makerOrder,proto3" json:"maker_order"`
@@ -941,7 +941,7 @@ func (m *LiquidationOrderV1) GetSubticks() uint64 {
 }
 
 // SubaccountUpdateEvent message contains information about an update to a
-// subaccount in the V4 chain. This includes the list of updated perpetual
+// subaccount in the dYdX chain. This includes the list of updated perpetual
 // and asset positions for the subaccount.
 // Note: This event message will contain all the updates to a subaccount
 // at the end of a block which is why multiple asset/perpetual position
@@ -1396,7 +1396,7 @@ func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) GetOrder() *v1.IndexerOr
 }
 
 // AssetCreateEventV1 message contains all the information about an new Asset on
-// the v4 chain.
+// the dYdX chain.
 type AssetCreateEventV1 struct {
 	// Unique, sequentially-generated.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1486,7 +1486,7 @@ func (m *AssetCreateEventV1) GetAtomicResolution() int32 {
 }
 
 // PerpetualMarketCreateEventV1 message contains all the information about a
-// new Perpetual Market on the v4 chain.
+// new Perpetual Market on the dYdX chain.
 type PerpetualMarketCreateEventV1 struct {
 	// Unique Perpetual id.
 	// Defined in perpetuals.perpetual
@@ -1630,7 +1630,7 @@ func (m *PerpetualMarketCreateEventV1) GetLiquidityTier() uint32 {
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
-// create/update a Liquidity Tier on the v4 chain.
+// create/update a Liquidity Tier on the dYdX chain.
 type LiquidityTierUpsertEventV1 struct {
 	// Unique id.
 	Id uint32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1717,7 +1717,7 @@ func (m *LiquidityTierUpsertEventV1) GetBasePositionNotional() uint64 {
 }
 
 // UpdateClobPairEventV1 message contains all the information about an update to
-// a clob pair on the v4 chain.
+// a clob pair on the dYdX chain.
 type UpdateClobPairEventV1 struct {
 	// Unique clob pair Id associated with this perpetual market
 	// Defined in clob.clob_pair
@@ -1808,7 +1808,7 @@ func (m *UpdateClobPairEventV1) GetStepBaseQuantums() uint64 {
 }
 
 // UpdatePerpetualEventV1 message contains all the information about an update
-// to a perpetual on the v4 chain.
+// to a perpetual on the dYdX chain.
 type UpdatePerpetualEventV1 struct {
 	// Unique Perpetual id.
 	// Defined in perpetuals.perpetual

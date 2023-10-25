@@ -2,11 +2,10 @@ package keeper_test
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
@@ -41,7 +40,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params:    types.DefaultParams(),
 			},
 			expErr: false,
@@ -58,7 +57,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: invalid denom",
 			input: &types.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.Params{
 					TreasuryAccount: "rewards_treasury",
 					Denom:           "",

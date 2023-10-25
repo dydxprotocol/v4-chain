@@ -21,7 +21,7 @@ import (
 )
 
 var (
-	AcceptedAuthority = authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String()
+	AcceptedAuthority = bridgemoduletypes.ModuleAddress.String()
 	InvalidAuthority  = authtypes.NewModuleAddress("INVALID_AUTHORITY").String()
 	TestError         = fmt.Errorf("test error")
 	TestMsgId         = uint32(0)

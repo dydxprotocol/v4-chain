@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,6 +15,10 @@ import (
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+)
+
+var (
+	DelayMsgAuthority = delaymsgtypes.ModuleAddress.String()
 )
 
 func TestEventParams(t *testing.T) {
@@ -234,7 +237,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			_, err = delayMsgKeeper.DelayMessageByBlocks(
 				ctx,
 				sendingtypes.NewMsgSendFromModuleToAccount(
-					authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+					DelayMsgAuthority,
 					types.ModuleName,
 					constants.AliceAccAddress.String(),
 					sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
@@ -245,7 +248,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			_, err = delayMsgKeeper.DelayMessageByBlocks(
 				ctx,
 				&pricestypes.MsgUpdateMarketParam{
-					Authority:   authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+					Authority:   DelayMsgAuthority,
 					MarketParam: pricestest.GenerateMarketParamPrice().Param,
 				},
 				123,
@@ -253,7 +256,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			require.NoError(t, err)
 
 			// Construct expected responses.
-			delayMsgAuthority := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
+			delayMsgAuthority := DelayMsgAuthority
 			blockOfExecution := k.GetSafetyParams(ctx).DelayBlocks + uint32(ctx.BlockHeight())
 			expectedMsgs := make([]types.DelayedCompleteBridgeMessage, 0)
 			expectedMsgsByAddress := make(map[string][]types.DelayedCompleteBridgeMessage)

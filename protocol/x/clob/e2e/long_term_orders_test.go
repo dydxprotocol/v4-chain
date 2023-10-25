@@ -1221,7 +1221,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.InitChain()
 
 			for _, ordersAndExpectations := range tc.ordersAndExpectationsPerBlock {

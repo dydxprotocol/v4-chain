@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidations_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -88,7 +87,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	mockBankKeeper.On(
 		"GetBalance",
 		mock.Anything,
-		authtypes.NewModuleAddress(clob_types.InsuranceFundName),
+		clob_types.InsuranceFundModuleAddress,
 		constants.Usdc.Denom,
 	).Return(
 		sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),

@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"math/big"
 	"testing"
 
@@ -528,7 +529,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			err = sendingKeeper.SendFromModuleToAccount(
 				ctx,
 				&types.MsgSendFromModuleToAccount{
-					Authority:        constants.GovModuleAccAddressString,
+					Authority:        lib.GovModuleAddress.String(),
 					SenderModuleName: testModuleName,
 					Recipient:        tc.recipientAddress,
 					Coin:             sdk.NewCoin(testDenom, sdk.NewInt(int64(tc.balanceToSend))),
@@ -588,7 +589,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 
 func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
 	msgEmptySender := &types.MsgSendFromModuleToAccount{
-		Authority:        constants.GovModuleAccAddressString,
+		Authority:        lib.GovModuleAddress.String(),
 		SenderModuleName: "",
 		Recipient:        constants.AliceAccAddress.String(),
 		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
@@ -601,7 +602,7 @@ func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
 
 func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 	msgNonExistentSender := &types.MsgSendFromModuleToAccount{
-		Authority:        constants.GovModuleAccAddressString,
+		Authority:        lib.GovModuleAddress.String(),
 		SenderModuleName: "nonexistent",
 		Recipient:        constants.AliceAccAddress.String(),
 		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
@@ -623,7 +624,7 @@ func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
 	err := ks.SendingKeeper.SendFromModuleToAccount(
 		ks.Ctx,
 		&types.MsgSendFromModuleToAccount{
-			Authority:        constants.GovModuleAccAddressString,
+			Authority:        lib.GovModuleAddress.String(),
 			SenderModuleName: "bridge",
 			Recipient:        "dydx1abc", // invalid recipient address
 			Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),

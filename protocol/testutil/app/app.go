@@ -83,6 +83,11 @@ type AdvanceToBlockOptions struct {
 	// The time associated with the block. If left at the default value then block time will be left unchanged.
 	BlockTime time.Time
 
+	// Whether to increment the block time using linear interpolation among the blocks.
+	// TODO(DEC-2156): Instead of an option, pass in a `BlockTimeFunc` to map each block to a
+	// time giving user greater flexibility.
+	LinearBlockTimeInterpolation bool
+
 	// RequestPrepareProposalTxsOverride allows overriding the txs that gets passed into the
 	// PrepareProposalHandler. This is useful for testing scenarios where unintended msg txs
 	// end up in the mempool (i.e. CheckTx failed to filter bad msg txs out).
@@ -121,17 +126,6 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		baseAppOptions...,
 	)
 	return dydxApp
-}
-
-// DefaultTestAppCreatorFn is a wrapper function around DefaultTestApp using the specified custom flags, and allowing
-// for optional base app options.
-func DefaultTestAppCreatorFn(
-	customFlags map[string]interface{},
-	baseAppOptions ...func(*baseapp.BaseApp),
-) AppCreatorFn {
-	return func() *app.App {
-		return DefaultTestApp(customFlags, baseAppOptions...)
-	}
 }
 
 // DefaultGenesis returns a genesis doc using configuration from the local net with a genesis time
@@ -257,8 +251,8 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 	}
 	return TestAppBuilder{
 		genesisDocFn:         DefaultGenesis,
-		appCreatorFn:         DefaultTestAppCreatorFn(nil),
 		usesDefaultAppConfig: true,
+		appOptions:           make(map[string]interface{}),
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
@@ -272,8 +266,9 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 // immutable.
 type TestAppBuilder struct {
 	genesisDocFn         GenesisDocCreatorFn
-	appCreatorFn         func() *app.App
 	usesDefaultAppConfig bool
+	appOptions           map[string]interface{}
+	baseAppOptions       []func(*baseapp.BaseApp)
 	executeCheckTxs      ExecuteCheckTxs
 	t                    testing.TB
 }
@@ -285,10 +280,13 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 	return tApp
 }
 
-// WithAppCreatorFn returns a builder like this one with the specified function that will be used to create
-// the application.
-func (tApp TestAppBuilder) WithAppCreatorFn(fn AppCreatorFn) TestAppBuilder {
-	tApp.appCreatorFn = fn
+// WithAppOptions returns a builder like this one with the specified app options.
+func (tApp TestAppBuilder) WithAppOptions(
+	appOptions map[string]interface{},
+	baseAppOptions ...func(*baseapp.BaseApp),
+) TestAppBuilder {
+	tApp.appOptions = appOptions
+	tApp.baseAppOptions = baseAppOptions
 	tApp.usesDefaultAppConfig = false
 	return tApp
 }
@@ -334,7 +332,7 @@ func (tApp *TestApp) Builder() TestAppBuilder {
 // InitChain initializes the chain. Will panic if initialized more than once.
 func (tApp *TestApp) InitChain() sdk.Context {
 	if tApp.App != nil {
-		panic(errors.New("Cannot initialize chain that has been initialized already. Missing a Reset()?"))
+		panic(errors.New("Cannot initialize chain that has been initialized already."))
 	}
 	tApp.initChainIfNeeded()
 	return tApp.App.NewContext(true, tApp.header)
@@ -347,7 +345,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
-	tApp.App = tApp.builder.appCreatorFn()
+	tApp.App = DefaultTestApp(tApp.builder.appOptions, tApp.builder.baseAppOptions...)
 	if tApp.builder.usesDefaultAppConfig {
 		tApp.App.Server.DisableUpdateMonitoringForTesting()
 	}
@@ -412,9 +410,13 @@ func (tApp *TestApp) AdvanceToBlock(
 	for tApp.App.LastBlockHeight() < int64(block) {
 		tApp.panicIfChainIsHalted()
 		tApp.header.Height = tApp.App.LastBlockHeight() + 1
-		// By default, only update block time at the requested block.
 		if tApp.header.Height == int64(block) {
+			// By default, only update block time at the requested block.
 			tApp.header.Time = options.BlockTime
+		} else if options.LinearBlockTimeInterpolation {
+			remainingDuration := options.BlockTime.Sub(tApp.header.Time)
+			nextBlockDuration := remainingDuration / time.Duration(int64(block)-tApp.App.LastBlockHeight())
+			tApp.header.Time = tApp.header.Time.Add(nextBlockDuration)
 		}
 		tApp.header.LastCommitHash = tApp.App.LastCommitID().Hash
 		tApp.header.NextValidatorsHash = tApp.App.LastCommitID().Hash
@@ -542,20 +544,6 @@ func (tApp *TestApp) AdvanceToBlock(
 	}
 
 	return tApp.App.NewContext(true, tApp.header)
-}
-
-// Reset resets the chain such that it can be initialized and executed again.
-func (tApp *TestApp) Reset() {
-	if tApp.App != nil {
-		if err := tApp.App.Close(); err != nil {
-			tApp.builder.t.Fatal(err)
-		}
-	}
-	tApp.App = nil
-	tApp.genesis = types.GenesisDoc{}
-	tApp.header = tmproto.Header{}
-	tApp.passingCheckTxs = nil
-	tApp.halted = false
 }
 
 // GetHeader fetches the current header of the test app.
