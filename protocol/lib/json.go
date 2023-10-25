@@ -13,8 +13,5 @@ func MaybeGetJsonString(i interface{}) string {
 		return fmt.Sprintf("%+v", i)
 	}
 
-	if jsonData == nil {
-		return "nil"
-	}
 	return string(jsonData)
 }
