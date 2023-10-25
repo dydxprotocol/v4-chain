@@ -272,7 +272,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 			liquidationOrder,
 		)
 	if err != nil {
-		return err
+		return 0, 0, err
 	}
 
 	// TODO(DEC-1323): Potentially allow liquidating the same perpetual + subaccount
