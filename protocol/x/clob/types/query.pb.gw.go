@@ -530,7 +530,7 @@ var (
 
 	pattern_Query_BlockRateLimitConfiguration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "block_rate"}, "", runtime.AssumeColonVerbOpt(false)))
 
-	pattern_Query_LiquidationsConfiguration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "liquidations"}, "", runtime.AssumeColonVerbOpt(false)))
+	pattern_Query_LiquidationsConfiguration_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"dydxprotocol", "clob", "liquidations_config"}, "", runtime.AssumeColonVerbOpt(false)))
 )
 
 var (

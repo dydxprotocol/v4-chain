@@ -58,7 +58,7 @@ export class LCDQueryClient {
 
 
   async liquidationsConfiguration(_params: QueryLiquidationsConfigurationRequest = {}): Promise<QueryLiquidationsConfigurationResponseSDKType> {
-    const endpoint = `dydxprotocol/clob/liquidations`;
+    const endpoint = `dydxprotocol/clob/liquidations_config`;
     return await this.req.get<QueryLiquidationsConfigurationResponseSDKType>(endpoint);
   }
 
