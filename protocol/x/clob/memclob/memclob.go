@@ -2005,7 +2005,8 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 
 	// If there is no fill amount for this order, return early. Note this is only valid if the
 	// order is a stateful order that was fully-filled or partially-filled and expired / canceled /
-	// removed in the last block.
+	// removed in the last block. This is because Short-Term orders have their fill amounts
+	// stored past expiration, so the fill amount should exist in state immediately after being filled.
 	if !exists {
 		if orderId.IsShortTermOrder() {
 			m.clobKeeper.Logger(ctx).Error(
