@@ -150,18 +150,22 @@ func TestBridge_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *bridgetypes.GenesisState) {
-						genesisState.ProposeParams = tc.proposeParams
-						genesisState.SafetyParams = tc.safetyParams
-					},
-				)
-				genesis.GenesisTime = tc.blockTime
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				// These tests only contact the tApp.App.Server causing non-determinism in the
+				// other App instances in TestApp used for non-determinism checking.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *bridgetypes.GenesisState) {
+							genesisState.ProposeParams = tc.proposeParams
+							genesisState.SafetyParams = tc.safetyParams
+						},
+					)
+					genesis.GenesisTime = tc.blockTime
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 
 			// Get initial balances of addresses and their expected balances after bridging.

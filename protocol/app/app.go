@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"math"
 	"math/big"
@@ -212,6 +213,8 @@ type App struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
+	db                dbm.DB
+	snapshotDB        dbm.DB
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -298,6 +301,7 @@ func assertAppPreconditions() {
 func New(
 	logger log.Logger,
 	db dbm.DB,
+	snapshotDB dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -369,6 +373,8 @@ func New(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+		db:                db,
+		snapshotDB:        snapshotDB,
 	}
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -1424,7 +1430,11 @@ func (app *App) Close() error {
 	if app.Server != nil {
 		app.Server.Stop()
 	}
-	return nil
+	return errors.Join(
+		// TODO(CORE-538): Remove this if possible during upgrade to Cosmos 0.50.
+		app.db.Close(),
+		app.snapshotDB.Close(),
+	)
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

@@ -300,6 +300,7 @@ func (a appCreator) newApp(
 	return dydxapp.New(
 		logger,
 		db,
+		snapshotDB,
 		traceStore,
 		true,
 		appOpts,
@@ -339,6 +340,7 @@ func (a appCreator) appExport(
 	dydxApp := dydxapp.New(
 		logger,
 		db,
+		dbm.NewMemDB(),
 		traceStore,
 		height == -1, // -1: no height provided
 		appOpts,

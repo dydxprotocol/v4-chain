@@ -13,6 +13,7 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"math"
 	"math/rand"
 	"os"
@@ -149,9 +150,11 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		logger, _ = testlog.TestLogger()
 	}
 	db := dbm.NewMemDB()
+	snapshotsDB := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
 		db,
+		snapshotsDB,
 		nil,
 		true,
 		appOptions,
@@ -273,18 +276,44 @@ type ExecuteCheckTxs func(ctx sdk.Context, app *app.App) (stop bool)
 
 // NewTestAppBuilder returns a new builder for TestApp.
 //
-// The default instance will return a builder using:
+// The default instance will return a builder with:
 //   - DefaultGenesis
-//   - DefaultTestAppCreatorFn with no custom flags
+//   - no custom flags
 //   - an ExecuteCheckTxs function that will stop on after the first block
+//   - non-determinism checks enabled
+//
+// Note that the TestApp instance will have 3 non-determinism state checking apps:
+//   - `parallelApp` is responsible for seeing all CheckTx requests, block proposals, blocks, and RecheckTx requests.
+//     This allows it to detect state differences due to inconsistent in-memory structures (for example iteration order
+//     in maps).
+//   - `noCheckTxApp` is responsible for seeing all block proposals and blocks. This allows it to simulate a validator
+//     that never received any of the CheckTx requests and that it will still accept blocks and arrive at the same
+//     state hash.
+//   - `crashingApp` is responsible for restarting before processing a block and sees all CheckTx requests, block
+//     proposals, and blocks. This allows it to check that in memory state can be restored successfully on application
+//     and that it will accept a block after a crash and arrive at the same state hash.
+//
+// Tests that rely on mutating internal application state directly (for example via keepers) will want to disable
+// non-determinism checks via `WithNonDeterminismChecksEnabled(false)` otherwise the test will likely hit a
+// non-determinism check that fails causing the test to fail. If possible, update the test instead to use genesis state
+// to initialize state or `CheckTx` transactions to initialize the appropriate keeper state.
+//
+// Tests that rely on in-memory state to survive across block boundaries will want to disable crashing App CheckTx
+// non-determinism checks via `WithCrashingAppCheckTxNonDeterminismChecksEnabled(false)` otherwise the test will likely
+// hit a non-determinism check that fails causing the test to fail. For example unmatched short term
+// orders in the memclob and order rate limits are only stored in memory and lost on application restart, and it would
+// thus make sense to disable the crashing App CheckTx non-determinism check for tests that rely on this information
+// surviving across block boundaries.
 func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 	if t == nil {
 		panic("t must not be nil")
 	}
 	return TestAppBuilder{
-		genesisDocFn:         DefaultGenesis,
-		usesDefaultAppConfig: true,
-		appOptions:           make(map[string]interface{}),
+		genesisDocFn:               DefaultGenesis,
+		usesDefaultAppConfig:       true,
+		appOptions:                 make(map[string]interface{}),
+		enableNonDeterminismChecks: true,
+		enableCrashingAppCheckTxNonDeterminismChecks: true,
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
 		},
@@ -297,17 +326,46 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 // Note that we specifically use value receivers for the With... methods because we want to make the builder instances
 // immutable.
 type TestAppBuilder struct {
-	genesisDocFn         GenesisDocCreatorFn
-	usesDefaultAppConfig bool
-	appOptions           map[string]interface{}
-	executeCheckTxs      ExecuteCheckTxs
-	t                    testing.TB
+	genesisDocFn                                 GenesisDocCreatorFn
+	usesDefaultAppConfig                         bool
+	appOptions                                   map[string]interface{}
+	executeCheckTxs                              ExecuteCheckTxs
+	enableNonDeterminismChecks                   bool
+	enableCrashingAppCheckTxNonDeterminismChecks bool
+	t                                            testing.TB
 }
 
 // WithGenesisDocFn returns a builder like this one with specified function that will be used to create
 // the genesis doc.
 func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuilder {
 	tApp.genesisDocFn = fn
+	return tApp
+}
+
+// WithNonDeterminismChecksEnabled controls whether non-determinism checks via distinct application instances
+// state hash and CheckTx/ReCheckTx response comparisons.
+//
+// Tests that rely on mutating internal application state directly (for example via keepers) will want to disable
+// non-determinism checks via `WithNonDeterminismChecksEnabled(false)` otherwise the test will likely hit a
+// non-determinism check that fails causing the test to fail. If possible, update the test instead to use genesis state
+// to initialize state or `CheckTx` transactions to initialize the appropriate keeper state.
+func (tApp TestAppBuilder) WithNonDeterminismChecksEnabled(enableNonDeterminismChecks bool) TestAppBuilder {
+	tApp.enableNonDeterminismChecks = enableNonDeterminismChecks
+	return tApp
+}
+
+// WithCrashingAppCheckTxNonDeterminismChecksEnabled controls whether the crashing App instance will ensure that
+// the `CheckTx` result matches that of the main `App`.
+//
+// Tests that rely on in-memory state to survive across block boundaries will want to disable crashing App CheckTx
+// non-determinism checks via `WithCrashingAppCheckTxNonDeterminismChecksEnabled(false)` otherwise the test will likely
+// hit a non-determinism check that fails causing the test to fail. For example unmatched short term
+// orders in the memclob and order rate limits are only stored in memory and lost on application restart, and it would
+// thus make sense to disable the crashing App CheckTx non-determinism check for tests that rely on this information
+// surviving across block boundaries.
+func (tApp TestAppBuilder) WithCrashingAppCheckTxNonDeterminismChecksEnabled(
+	enableCrashingAppCheckTxNonDeterminismChecks bool) TestAppBuilder {
+	tApp.enableCrashingAppCheckTxNonDeterminismChecks = enableCrashingAppCheckTxNonDeterminismChecks
 	return tApp
 }
 
@@ -325,19 +383,23 @@ func (tApp TestAppBuilder) Build() *TestApp {
 	rval := TestApp{
 		builder: tApp,
 	}
-	tApp.t.Cleanup(func() {
-		if rval.App != nil {
-			if err := rval.App.Close(); err != nil {
-				tApp.t.Fatal(err)
-			}
-		}
-	})
 	return &rval
 }
 
 // A TestApp used to executed ABCI++ flows. Note that callers should invoke `TestApp.CheckTx` over `TestApp.App.CheckTx`
 // to ensure that the transaction is added to a "mempool" that will be considered during the Prepare/Process proposal
 // phase.
+//
+// Note that the TestApp instance has 3 non-determinism state checking apps:
+//   - `parallelApp` is responsible for seeing all CheckTx requests, block proposals, blocks, and RecheckTx requests.
+//     This allows it to detect state differences due to inconsistent in-memory structures (for example iteration order
+//     in maps).
+//   - `noCheckTxApp` is responsible for seeing all block proposals and blocks. This allows it to simulate a validator
+//     that never received any of the CheckTx requests and that it will still accept blocks and arrive at the same
+//     state hash.
+//   - `crashingApp` is responsible for restarting before processing a block and sees all CheckTx requests, block
+//     proposals, and blocks. This allows it to check that in memory state can be restored successfully on application
+//     and that it will accept a block after a crash and arrive at the same state hash.
 //
 // Note that TestApp.CheckTx is thread safe. All other methods are not thread safe.
 type TestApp struct {
@@ -346,6 +408,10 @@ type TestApp struct {
 	// TODO(CLOB-545): Hide App and copy the pointers to keepers to be prevent incorrect usage of App.CheckTx over
 	// TestApp.CheckTx.
 	App                *app.App
+	parallelApp        *app.App
+	noCheckTxApp       *app.App
+	crashingApp        *app.App
+	restartCrashingApp func()
 	builder            TestAppBuilder
 	genesis            types.GenesisDoc
 	header             tmproto.Header
@@ -374,6 +440,13 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
+	if tApp.genesis.GenesisTime.UnixNano() <= time.UnixMilli(0).UnixNano() {
+		tApp.builder.t.Fatal(fmt.Errorf(
+			"Unable to start chain at time %v, must be greater than unix epoch.",
+			tApp.genesis.GenesisTime,
+		))
+		return
+	}
 
 	// Prevent Cosmos SDK code from waiting for 5 seconds on each start-up.
 	// TODO(CORE-538): Remove this during the upgrade since 0.50 Cosmos SDK no longer relies on this.
@@ -382,49 +455,181 @@ func (tApp *TestApp) initChainIfNeeded() {
 	originalServerStartTime := srvtypes.ServerStartTime.Load()
 	srvtypes.ServerStartTime.Store(int64(time.Millisecond * 10))
 
-	validatorHomeDir, app, shutdownFn, err := launchValidator(tApp.genesis, tApp.builder.appOptions)
-	if err != nil {
-		tApp.builder.t.Fatal(err)
+	// Launch the main instance of the application
+	{
+		validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, tApp.builder.appOptions)
+		if err != nil {
+			tApp.builder.t.Fatal(err)
+			return
+		}
+		app, shutdownFn, err := launchValidatorInDir(validatorHomeDir, tApp.builder.appOptions)
+		if err != nil {
+			tApp.builder.t.Fatal(err)
+			return
+		}
+		tApp.App = app
+
+		tApp.builder.t.Cleanup(func() {
+			doneErr := shutdownFn()
+
+			// Clean-up the home directory.
+			if err := os.RemoveAll(validatorHomeDir); err != nil {
+				tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
+			}
+
+			// Restore the original server time.
+			srvtypes.ServerStartTime.Store(originalServerStartTime)
+
+			if doneErr != nil {
+				tApp.builder.t.Fatal(doneErr)
+			}
+		})
 	}
-	tApp.App = app
-
-	tApp.builder.t.Cleanup(func() {
-		doneErr := shutdownFn()
-
-		// Clean-up the home directory.
-		if err := os.RemoveAll(validatorHomeDir); err != nil {
-			tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
-		}
-
-		// Restore the original server time.
-		srvtypes.ServerStartTime.Store(originalServerStartTime)
-
-		if doneErr != nil {
-			tApp.builder.t.Fatal(doneErr)
-		}
-	})
 
 	if tApp.builder.usesDefaultAppConfig {
 		tApp.App.Server.DisableUpdateMonitoringForTesting()
 	}
 
-	if tApp.genesis.GenesisTime.UnixNano() <= time.UnixMilli(0).UnixNano() {
-		panic(fmt.Errorf(
-			"Unable to start chain at time %v, must be greater than unix epoch.",
-			tApp.genesis.GenesisTime,
-		))
+	if tApp.builder.enableNonDeterminismChecks {
+		// Filter out appOptions that shouldn't be shared to the App instances used for non-determinism checks.
+		// TODO(CORE-720): Improve integration of in memory objects for e2e test framework that shouldn't be shared
+		// across application instances.
+		filteredAppOptions := make(map[string]interface{})
+		for key, value := range tApp.builder.appOptions {
+			if key != testlog.LoggerInstanceForTest && key != indexer.MsgSenderInstanceForTest {
+				filteredAppOptions[key] = value
+			}
+		}
+
+		// Launch the `parallelApp` instance.
+		{
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			app, shutdownFn, err := launchValidatorInDir(validatorHomeDir, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			tApp.parallelApp = app
+
+			tApp.builder.t.Cleanup(func() {
+				doneErr := shutdownFn()
+
+				// Clean-up the home directory.
+				if err := os.RemoveAll(validatorHomeDir); err != nil {
+					tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
+				}
+
+				if doneErr != nil {
+					tApp.builder.t.Fatal(doneErr)
+				}
+			})
+		}
+
+		// Launch the `noCheckTx` instance.
+		{
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			app, shutdownFn, err := launchValidatorInDir(validatorHomeDir, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			tApp.noCheckTxApp = app
+
+			tApp.builder.t.Cleanup(func() {
+				doneErr := shutdownFn()
+
+				// Clean-up the home directory.
+				if err := os.RemoveAll(validatorHomeDir); err != nil {
+					tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
+				}
+
+				if doneErr != nil {
+					tApp.builder.t.Fatal(doneErr)
+				}
+			})
+		}
+
+		// Launch the `crashingApp` instance.
+		{
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			app, shutdownFn, err := launchValidatorInDir(validatorHomeDir, filteredAppOptions)
+			if err != nil {
+				tApp.builder.t.Fatal(err)
+				return
+			}
+			tApp.crashingApp = app
+
+			tApp.builder.t.Cleanup(func() {
+				doneErr := shutdownFn()
+
+				// Clean-up the home directory.
+				if err := os.RemoveAll(validatorHomeDir); err != nil {
+					tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
+				}
+
+				if doneErr != nil {
+					tApp.builder.t.Fatal(doneErr)
+				}
+			})
+
+			tApp.restartCrashingApp = func() {
+				// We shutdown the instance of the existing crashingApp.
+				doneOrRestartErr := shutdownFn()
+				tApp.crashingApp = nil
+
+				if err == nil {
+					app, shutdownFn, doneOrRestartErr = launchValidatorInDir(validatorHomeDir, filteredAppOptions)
+				}
+
+				// If we errored shutting down or relaunching then update the shutdownFn to return this error
+				// and fatal the test.
+				if err != nil {
+					shutdownFn = func() error {
+						return doneOrRestartErr
+					}
+					tApp.builder.t.Fatal(doneOrRestartErr)
+					return
+				}
+
+				// Update the crashingApp pointer to the new instance of the application.
+				tApp.crashingApp = app
+			}
+		}
 	}
 
 	consensusParamsProto := tApp.genesis.ConsensusParams.ToProto()
-
-	tApp.App.InitChain(abcitypes.RequestInitChain{
+	initChainRequest := abcitypes.RequestInitChain{
 		InitialHeight:   tApp.genesis.InitialHeight,
 		AppStateBytes:   tApp.genesis.AppState,
 		ChainId:         tApp.genesis.ChainID,
 		ConsensusParams: &consensusParamsProto,
 		Time:            tApp.genesis.GenesisTime,
-	})
+	}
+	tApp.App.InitChain(initChainRequest)
+	if tApp.builder.enableNonDeterminismChecks {
+		tApp.parallelApp.InitChain(initChainRequest)
+		tApp.noCheckTxApp.InitChain(initChainRequest)
+		tApp.crashingApp.InitChain(initChainRequest)
+	}
+
 	tApp.App.Commit()
+	if tApp.builder.enableNonDeterminismChecks {
+		tApp.parallelApp.Commit()
+		tApp.noCheckTxApp.Commit()
+		tApp.crashingApp.Commit()
+	}
 
 	tApp.header = tmproto.Header{
 		ChainID:            tApp.genesis.ChainID,
@@ -537,6 +742,35 @@ func (tApp *TestApp) AdvanceToBlock(
 				processRequest,
 				processResponse,
 			)
+
+			// Check that all instances of the application can process the proposoal and come to the same result.
+			if tApp.builder.enableNonDeterminismChecks {
+				parallelProcessResponse := tApp.parallelApp.ProcessProposal(processRequest)
+				require.Truef(
+					tApp.builder.t,
+					parallelProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					processRequest,
+					parallelProcessResponse,
+				)
+				noCheckTxProcessResponse := tApp.noCheckTxApp.ProcessProposal(processRequest)
+				require.Truef(
+					tApp.builder.t,
+					noCheckTxProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					processRequest,
+					noCheckTxProcessResponse,
+				)
+				crashingProcessResponse := tApp.crashingApp.ProcessProposal(processRequest)
+				require.Truef(
+					tApp.builder.t,
+					crashingProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					processRequest,
+					crashingProcessResponse,
+				)
+			}
+
 			deliverTxs = prepareResponse.Txs
 		}
 
@@ -550,10 +784,21 @@ func (tApp *TestApp) AdvanceToBlock(
 		}
 		tApp.passingCheckTxs = txsNotInLastProposal
 
+		// Restart the crashingApp instance before processing the block.
+		if tApp.builder.enableNonDeterminismChecks {
+			tApp.restartCrashingApp()
+		}
+
 		// Start the next block
-		tApp.App.BeginBlock(abcitypes.RequestBeginBlock{
+		beginBlockRequest := abcitypes.RequestBeginBlock{
 			Header: tApp.header,
-		})
+		}
+		tApp.App.BeginBlock(beginBlockRequest)
+		if tApp.builder.enableNonDeterminismChecks {
+			tApp.parallelApp.BeginBlock(beginBlockRequest)
+			tApp.noCheckTxApp.BeginBlock(beginBlockRequest)
+			tApp.crashingApp.BeginBlock(beginBlockRequest)
+		}
 
 		// Deliver the transaction from the previous block
 		for i, bz := range deliverTxs {
@@ -580,11 +825,44 @@ func (tApp *TestApp) AdvanceToBlock(
 					deliverTxResponse,
 				)
 			}
+
+			// Ensure that all instances of the application have the blocks delivered.
+			if tApp.builder.enableNonDeterminismChecks {
+				tApp.parallelApp.DeliverTx(deliverTxRequest)
+				tApp.noCheckTxApp.DeliverTx(deliverTxRequest)
+				tApp.crashingApp.DeliverTx(deliverTxRequest)
+			}
 		}
 
 		// End the block and commit it.
-		tApp.App.EndBlock(abcitypes.RequestEndBlock{Height: tApp.header.Height})
+		endBlockRequest := abcitypes.RequestEndBlock{Height: tApp.header.Height}
+		tApp.App.EndBlock(endBlockRequest)
 		tApp.App.Commit()
+		if tApp.builder.enableNonDeterminismChecks {
+			tApp.parallelApp.EndBlock(endBlockRequest)
+			tApp.noCheckTxApp.EndBlock(endBlockRequest)
+			tApp.crashingApp.EndBlock(endBlockRequest)
+			tApp.parallelApp.Commit()
+			tApp.noCheckTxApp.Commit()
+			tApp.crashingApp.Commit()
+
+			// Ensure that all instances after committing the block came to the same commit hash.
+			require.Equalf(tApp.builder.t,
+				tApp.App.LastCommitID(),
+				tApp.parallelApp.LastCommitID(),
+				"Non-determinism in state detected, expected LastCommitID to match.",
+			)
+			require.Equalf(tApp.builder.t,
+				tApp.App.LastCommitID(),
+				tApp.noCheckTxApp.LastCommitID(),
+				"Non-determinism in state detected, expected LastCommitID to match.",
+			)
+			require.Equalf(tApp.builder.t,
+				tApp.App.LastCommitID(),
+				tApp.crashingApp.LastCommitID(),
+				"Non-determinism in state detected, expected LastCommitID to match.",
+			)
+		}
 
 		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
 		passingRecheckTxs := make([][]byte, 0)
@@ -593,8 +871,25 @@ func (tApp *TestApp) AdvanceToBlock(
 				Tx:   passingCheckTx,
 				Type: abcitypes.CheckTxType_Recheck,
 			}
-			if recheckTxResponse := tApp.App.CheckTx(recheckTxRequest); recheckTxResponse.IsOK() {
+			recheckTxResponse := tApp.App.CheckTx(recheckTxRequest)
+			if recheckTxResponse.IsOK() {
 				passingRecheckTxs = append(passingRecheckTxs, passingCheckTx)
+			}
+
+			if tApp.builder.enableNonDeterminismChecks {
+				parallelRecheckTxResponse := tApp.parallelApp.CheckTx(recheckTxRequest)
+				require.Equalf(
+					tApp.builder.t,
+					recheckTxResponse.Code,
+					parallelRecheckTxResponse.Code,
+					"Non-determinism detected during RecheckTx, expected %+v, got %+v.",
+					recheckTxResponse,
+					parallelRecheckTxResponse,
+				)
+
+				// None of the transactions should be rechecked in `noCheckTxApp` since the transaction will only
+				// process block proposals and blocks. Also, none of the transactions should be rechecked for
+				// tApp.crashingApp since the mempool should be discarded on each crash.
 			}
 		}
 		tApp.passingCheckTxs = passingRecheckTxs
@@ -646,6 +941,34 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 		defer tApp.passingCheckTxsMtx.Unlock()
 		tApp.passingCheckTxs = append(tApp.passingCheckTxs, req.Tx)
 	}
+
+	if tApp.builder.enableNonDeterminismChecks {
+		// We expect the parallel app to always produce the same result since all in memory state should be
+		// consistent with tApp.App and produce the same result.
+		parallelRes := tApp.parallelApp.CheckTx(req)
+		require.Equalf(
+			tApp.builder.t,
+			res.Code,
+			parallelRes.Code,
+			"Non-determinism detected during CheckTx, expected %+v, got %+v.",
+			res,
+			parallelRes,
+		)
+
+		// The crashing app may or may not be able to get to a recoverable state that would produce equivalent
+		// results. For example short-term orders and cancellations will be lost from in-memory state.
+		crashingRes := tApp.crashingApp.CheckTx(req)
+		if tApp.builder.enableCrashingAppCheckTxNonDeterminismChecks {
+			require.Equalf(
+				tApp.builder.t,
+				res.Code,
+				crashingRes.Code,
+				"Non-determinism detected during CheckTx, expected %+v, got %+v.",
+				res,
+				crashingRes,
+			)
+		}
+	}
 	return res
 }
 
@@ -669,39 +992,45 @@ func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
 	})
 }
 
-// launchValidator launches a validator using the `start` command with the specified genesis doc and application
+// prepareValidatorHomeDir launches a validator using the `start` command with the specified genesis doc and application
 // options. `shutdownFn` must be invoked to cancel the execution of the app. It will block till the application
 // shuts down.
-func launchValidator(
+func prepareValidatorHomeDir(
 	genesis types.GenesisDoc,
 	appOptions map[string]interface{},
-) (homeDir string, a *app.App, shutdownFn func() error, err error) {
+) (validatorHomeDir string, err error) {
 	// Create the validators home directory as a temporary directory and fill it with:
 	//  - config/priv_validator_key.json
 	//  - config/node_key.json
 	//  - config/genesis.json
-	validatorHomeDir := filepath.Join(os.TempDir(), fmt.Sprint(time.Now().UnixNano()))
+	validatorHomeDir = filepath.Join(os.TempDir(), fmt.Sprint(time.Now().UnixNano()))
 	if err = os.MkdirAll(fmt.Sprintf("%s/config/", validatorHomeDir), 0755); err != nil {
-		return "", nil, nil, err
+		return "", err
 	}
 	if err = os.WriteFile(
 		filepath.Join(validatorHomeDir, "config", "priv_validator_key.json"),
 		[]byte(alicePrivValidatorKeyJson),
 		0755,
 	); err != nil {
-		return "", nil, nil, err
+		return "", err
 	}
 	if err = os.WriteFile(
 		filepath.Join(validatorHomeDir, "config", "node_key.json"),
 		[]byte(aliceNodeKeyJson),
 		0755,
 	); err != nil {
-		return "", nil, nil, err
+		return "", err
 	}
 	if err = genesis.SaveAs(filepath.Join(validatorHomeDir, "config", "genesis.json")); err != nil {
-		return "", nil, nil, err
+		return "", err
 	}
+	return validatorHomeDir, err
+}
 
+func launchValidatorInDir(
+	validatorHomeDir string,
+	appOptions map[string]interface{},
+) (a *app.App, shutdownFn func() error, err error) {
 	// Create a context that can be cancelled to stop the Cosmos App.
 	done := make(chan error, 1)
 	parentCtx, cancelFn := context.WithCancel(context.Background())
@@ -781,23 +1110,25 @@ func launchValidator(
 	// So we wait for either the app to be captured representing a successful start or capture an error.
 	go func() {
 		// ExecuteContext will block and will only return if interrupted.
-		done <- executor.ExecuteContext(ctx)
+		err := executor.ExecuteContext(ctx)
+		done <- err
 	}()
 	select {
 	case a = <-appCaptor:
+		shutdownFn = func() error {
+			cancelFn()
+			// TODO(CORE-538): Remove this explicit app.Close() invocation since wrapCPUProfile doesn't actually
+			// wait till the Cosmos app shuts down.
+			a.Close()
+			return <-done
+		}
+		return a, shutdownFn, nil
 	case err = <-done:
 		// Send the error to done channel so that `Cleanup` function will not block.
 		cancelFn()
 		done <- err
-		return "", nil, nil, err
+		return nil, nil, err
 	}
-
-	shutdownFn = func() error {
-		cancelFn()
-		return <-done
-	}
-
-	return validatorHomeDir, a, shutdownFn, nil
 }
 
 // MustMakeCheckTxsWithClobMsg creates one signed RequestCheckTx for each msg passed in.
