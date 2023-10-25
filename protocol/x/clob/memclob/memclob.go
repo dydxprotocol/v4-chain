@@ -1004,7 +1004,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			}
 
 			// Log an error if there are two Order Removals for the same OrderId
-			if _, found := placedPreexistingStatefulOrderIds[orderId]; found {
+			if _, found := placedOrderRemovalOrderIds[orderId]; found {
 				m.clobKeeper.Logger(ctx).Error(
 					"ReplayOperations: OrderRemoval operation for order which was already removed",
 					metrics.OrderId, orderId,
@@ -1132,12 +1132,12 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 			otpOrderHash := operation.GetShortTermOrderPlacement().Order.GetOrderHash()
 
 			// If the order exists in the book, remove it.
-			// Else if the order is a Short-Term order, since it's no longer on the book or operations
-			// queue we should remove the order hash from `ShortTermOrderTxBytes`.
+			// Else, since the Short-Term order is no longer on the book or operations queue we
+			// should remove the order hash from `ShortTermOrderTxBytes`.
 			existingOrder, found := m.openOrders.getOrder(ctx, otpOrderId)
 			if found && existingOrder.GetOrderHash() == otpOrderHash {
 				m.mustRemoveOrder(ctx, otpOrderId)
-			} else if otpOrderId.IsShortTermOrder() {
+			} else {
 				order := operation.GetShortTermOrderPlacement().Order
 				m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 			}
@@ -1165,7 +1165,7 @@ func (m *MemClobPriceTimePriority) RemoveAndClearOperationsQueue(
 // - Forcefully removed stateful orders.
 func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	ctx sdk.Context,
-	fullyFilledOrderIds []types.OrderId,
+	filledOrderIds []types.OrderId,
 	expiredStatefulOrderIds []types.OrderId,
 	canceledStatefulOrderIds []types.OrderId,
 	removedStatefulOrderIds []types.OrderId,
@@ -1183,7 +1183,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
 	// Remove all fully-filled order IDs from the memclob if they exist.
-	for _, orderId := range fullyFilledOrderIds {
+	for _, orderId := range filledOrderIds {
 		m.RemoveOrderIfFilled(ctx, orderId)
 	}
 
@@ -2003,8 +2003,18 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	// Get current fill amount for this order.
 	exists, orderStateFillAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, orderId)
 
-	// If there is no fill amount for this order, return early.
+	// If there is no fill amount for this order, return early. Note this is only valid if the
+	// order is a stateful order that was fully-filled or partially-filled and expired / canceled /
+	// removed in the last block. This is because Short-Term orders have their fill amounts
+	// stored past expiration, so the fill amount should exist in state immediately after being filled.
 	if !exists {
+		if orderId.IsShortTermOrder() {
+			m.clobKeeper.Logger(ctx).Error(
+				"RemoveOrderIfFilled: filled Short-Term order ID has no fill amount",
+				"orderId",
+				orderId,
+			)
+		}
 		return
 	}
 
