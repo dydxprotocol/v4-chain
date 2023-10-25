@@ -9,7 +9,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -269,8 +268,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
 					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", log.NewLazySprintf("%+v", liquidatedSubaccount),
-					"offsettingSubaccount", log.NewLazySprintf("%+v", offsettingSubaccount),
+					"liquidatedSubaccount", liquidatedSubaccount,
+					"offsettingSubaccount", offsettingSubaccount,
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
@@ -345,9 +344,9 @@ func (k Keeper) ProcessDeleveraging(
 		offsettingPositionQuantums.CmpAbs(deltaQuantums) == -1 {
 		return errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
-			"ProcessDeleveraging: liquidated = (%+v), offsetting = (%+v), perpetual id = (%d), deltaQuantums = (%+v)",
-			liquidatedSubaccount,
-			offsettingSubaccount,
+			"ProcessDeleveraging: liquidated = (%s), offsetting = (%s), perpetual id = (%d), deltaQuantums = (%+v)",
+			lib.MaybeGetJsonString(liquidatedSubaccount),
+			lib.MaybeGetJsonString(offsettingSubaccount),
 			perpetualId,
 			deltaQuantums,
 		)
