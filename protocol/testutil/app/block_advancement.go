@@ -2,6 +2,7 @@ package app
 
 import (
 	"testing"
+	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -132,4 +133,14 @@ func (b BlockAdvancement) getProposedOperationsTxBytes(ctx sdktypes.Context, app
 	}
 
 	return testtx.MustGetTxBytes(msgProposedOperations)
+}
+
+// Given genesis time, target block time and block time duration, return the estimated height
+// at which the target block time is reached.
+func EstimatedHeightForBlockTime(
+	genesisTime time.Time,
+	targetBlockTime time.Time,
+	blockTimeDuration time.Duration,
+) uint32 {
+	return uint32(targetBlockTime.Sub(genesisTime) / blockTimeDuration)
 }

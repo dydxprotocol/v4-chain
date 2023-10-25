@@ -1,6 +1,8 @@
 package prices
 
 import (
+	"math/big"
+
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -76,4 +78,34 @@ func GenerateMarketParamPrice(optionalModifications ...MarketParamPriceModifierO
 	}
 
 	return marketParamPrice
+}
+
+func MustHumanPriceToMarketPrice(
+	humanPrice string,
+	exponent int32,
+) (marketPrice uint64) {
+	// Ensure the exponent is negative
+	if exponent >= 0 {
+		panic("Only negative exponents are supported")
+	}
+
+	// Parse the humanPrice string to a big rational
+	ratValue, ok := new(big.Rat).SetString(humanPrice)
+	if !ok {
+		panic("Failed to parse humanPrice to big.Rat")
+	}
+
+	// Convert exponent to its absolute value for calculations
+	absResolution := int64(-exponent)
+
+	// Create a multiplier which is 10 raised to the power of the absolute exponent
+	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(absResolution), nil)
+
+	// Multiply the parsed humanPrice with the multiplier
+	ratValue.Mul(ratValue, new(big.Rat).SetInt(multiplier))
+
+	// Convert the result to an unsigned 64-bit integer
+	resultInt := ratValue.Num() // Get the numerator which now represents the whole value
+
+	return resultInt.Uint64()
 }
