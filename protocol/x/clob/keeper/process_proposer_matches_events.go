@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -36,10 +34,6 @@ func (k Keeper) MustSetProcessProposerMatchesEvents(
 	processProposerMatchesEvents types.ProcessProposerMatchesEvents,
 ) {
 	lib.AssertDeliverTxMode(ctx)
-	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
-		panic(fmt.Errorf("block height %d for ProcessProposerMatchesEvents does not equal current block height %d",
-			processProposerMatchesEvents.BlockHeight, ctx.BlockHeight()))
-	}
 
 	if err := processProposerMatchesEvents.ValidateProcessProposerMatchesEvents(); err != nil {
 		panic(err)

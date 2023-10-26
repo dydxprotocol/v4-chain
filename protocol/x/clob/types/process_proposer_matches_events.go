@@ -3,13 +3,26 @@ package types
 import (
 	"fmt"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // ValidateProcessProposerMatchesEvents performs basic stateless validation on ProcessProposerMatchesEvents.
 // It returns an error if:
-// - Any of the fields have duplicate OrderIds.
-func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents() error {
+//   - Block height does not equal current block height.
+//   - Any of the fields have duplicate OrderIds. Note that this is currently invalid since
+//     stateful order replacements are not enabled.
+func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents(
+	ctx sdk.Context,
+) error {
+	if ctx.BlockHeight() != int64(ppme.BlockHeight) {
+		return fmt.Errorf(
+			"block height %d for ProcessProposerMatchesEvents does not equal current block height %d",
+			ppme.BlockHeight,
+			ctx.BlockHeight(),
+		)
+	}
+
 	if lib.ContainsDuplicates(ppme.PlacedLongTermOrderIds) {
 		return fmt.Errorf(
 			"ProcessProposerMatchesEvents contains duplicate PlacedLongTermOrderIds: %+v",
