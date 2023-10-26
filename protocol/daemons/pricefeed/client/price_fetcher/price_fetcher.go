@@ -3,7 +3,9 @@ package price_fetcher
 import (
 	"context"
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -183,6 +185,27 @@ func (pf *PriceFetcher) RunTaskLoop(requestHandler daemontypes.RequestHandler) {
 	}
 }
 
+// emitMarketAvailabilityMetrics emits telemetry that tracks whether a market was available when queried on an exchange.
+// Success is tracked by (market, exchange) so that we can track the availability of each market on each exchange.
+func emitMarketAvailabilityMetrics(exchangeId types.ExchangeId, id types.MarketId, available bool) {
+	success := metrics.Success
+	if !available {
+		success = metrics.Error
+	}
+	telemetry.IncrCounterWithLabels(
+		[]string{
+			metrics.PricefeedDaemon,
+			metrics.PriceFetcherQueryForMarket,
+			success,
+		},
+		1,
+		[]gometrics.Label{
+			pricefeedmetrics.GetLabelForExchangeId(exchangeId),
+			pricefeedmetrics.GetLabelForMarketId(id),
+		},
+	)
+}
+
 // runSubTask makes a single query to an exchange for market prices. This query can be for 1 or
 // n markets.
 // For single market exchanges, a task loop execution will execute multiple runSubTask goroutines, where
@@ -237,9 +260,26 @@ func (pf *PriceFetcher) runSubTask(
 		taskLoopDefinition.marketExponents,
 	)
 
+	// Emit metrics at the `AvailableMarketsSampleRate`.
+	emitMetricsSample := rand.Float64() < metrics.AvailableMarketsSampleRate
+
 	if err != nil {
 		pf.writeToBufferedChannel(exchangeId, nil, err)
+
+		// Since the query failed, report all markets as unavailable, according to the sampling rate.
+		if emitMetricsSample {
+			for _, marketId := range marketIds {
+				emitMarketAvailabilityMetrics(exchangeId, marketId, false)
+			}
+		}
+
 		return
+	}
+
+	// Track which markets were available when queried, and which were not, for telemetry.
+	availableMarkets := make(map[types.MarketId]bool, len(marketIds))
+	for _, marketId := range marketIds {
+		availableMarkets[marketId] = false
 	}
 
 	for _, price := range prices {
@@ -269,7 +309,17 @@ func (pf *PriceFetcher) runSubTask(
 			price.LastUpdatedAt,
 		)
 
+		// Report market as available.
+		availableMarkets[price.MarketId] = true
+
 		pf.writeToBufferedChannel(exchangeId, price, err)
+	}
+
+	// Emit metrics on this exchange's market availability according to the sampling rate.
+	if emitMetricsSample {
+		for marketId, available := range availableMarkets {
+			emitMarketAvailabilityMetrics(exchangeId, marketId, available)
+		}
 	}
 }
 
