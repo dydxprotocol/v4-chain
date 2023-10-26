@@ -4,8 +4,10 @@ package dydxprotocol.clob;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "dydxprotocol/clob/block_rate_limit_config.proto";
 import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
+import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 
@@ -40,6 +42,18 @@ service Query {
   rpc EquityTierLimitConfiguration(QueryEquityTierLimitConfigurationRequest)
       returns (QueryEquityTierLimitConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/equity_tier";
+  }
+
+  // Queries BlockRateLimitConfiguration.
+  rpc BlockRateLimitConfiguration(QueryBlockRateLimitConfigurationRequest)
+      returns (QueryBlockRateLimitConfigurationResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/block_rate";
+  }
+
+  // Queries LiquidationsConfiguration.
+  rpc LiquidationsConfiguration(QueryLiquidationsConfigurationRequest)
+      returns (QueryLiquidationsConfigurationResponse) {
+    option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
 }
 
@@ -115,4 +129,25 @@ message QueryEquityTierLimitConfigurationRequest {}
 message QueryEquityTierLimitConfigurationResponse {
   EquityTierLimitConfiguration equity_tier_limit_config = 1
       [ (gogoproto.nullable) = false ];
+}
+
+// QueryBlockRateLimitConfigurationRequest is a request message for
+// BlockRateLimitConfiguration.
+message QueryBlockRateLimitConfigurationRequest {}
+
+// QueryBlockRateLimitConfigurationResponse is a response message that contains
+// the BlockRateLimitConfiguration.
+message QueryBlockRateLimitConfigurationResponse {
+  BlockRateLimitConfiguration block_rate_limit_config = 1
+      [ (gogoproto.nullable) = false ];
+}
+
+// QueryLiquidationsConfigurationRequest is a request message for
+// LiquidationsConfiguration.
+message QueryLiquidationsConfigurationRequest {}
+
+// QueryLiquidationsConfigurationResponse is a response message that contains
+// the LiquidationsConfiguration.
+message QueryLiquidationsConfigurationResponse {
+  LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
 }
