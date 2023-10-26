@@ -13,7 +13,7 @@ func (ppme *ProcessProposerMatchesEvents) ValidateProcessProposerMatchesEvents()
 	if lib.ContainsDuplicates(ppme.PlacedLongTermOrderIds) {
 		return fmt.Errorf(
 			"ProcessProposerMatchesEvents contains duplicate PlacedLongTermOrderIds: %+v",
-			ppme.PlacedConditionalOrderIds,
+			ppme.PlacedLongTermOrderIds,
 		)
 	}
 	if lib.ContainsDuplicates(ppme.ExpiredStatefulOrderIds) {
