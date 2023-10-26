@@ -124,19 +124,11 @@ func TestCompleteBridge(t *testing.T) {
 			// Assert that bridge module account's balance is as expected.
 			modAccBalance := bankKeeper.GetBalance(
 				ctx,
-<<<<<<< HEAD
 				authtypes.NewModuleAddress(types.ModuleName),
-				tc.bridgeEvent.Coin.Denom,
-			)
-			require.Equal(t, tc.expectedBalance.Denom, modAccBalance.Denom)
-			require.Equal(t, tc.expectedBalance.Amount, modAccBalance.Amount)
-=======
-				types.ModuleAddress,
 				tc.bridgeEvent.Coin.Denom,
 			)
 			require.Equal(t, tc.expectedModAccBalance.Denom, modAccBalance.Denom)
 			require.Equal(t, tc.expectedModAccBalance.Amount, modAccBalance.Amount)
->>>>>>> 525873de ([CORE-709] do not error when completing a bridge with non-positive amount (#691))
 		})
 	}
 }
