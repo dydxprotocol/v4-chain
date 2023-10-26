@@ -184,9 +184,9 @@ func (pf *PriceFetcher) RunTaskLoop(requestHandler daemontypes.RequestHandler) {
 	}
 }
 
-// logMarketAvailability emits telemetry that tracks whether a market was available when queried on an exchange.
+// emitMarketAvailabilityMetrics emits telemetry that tracks whether a market was available when queried on an exchange.
 // Success is tracked by (market, exchange) so that we can track the availability of each market on each exchange.
-func logMarketAvailability(exchangeId types.ExchangeId, id types.MarketId, available bool) {
+func emitMarketAvailabilityMetrics(exchangeId types.ExchangeId, id types.MarketId, available bool) {
 	success := metrics.Success
 	if !available {
 		success = metrics.Error
@@ -264,7 +264,7 @@ func (pf *PriceFetcher) runSubTask(
 
 		// Since the query failed, report all markets as unavailable.
 		for _, marketId := range marketIds {
-			logMarketAvailability(exchangeId, marketId, false)
+			emitMarketAvailabilityMetrics(exchangeId, marketId, false)
 		}
 
 		return
@@ -311,7 +311,7 @@ func (pf *PriceFetcher) runSubTask(
 
 	// Emit metrics on this exchange's market availability.
 	for marketId, available := range availableMarkets {
-		logMarketAvailability(exchangeId, marketId, available)
+		emitMarketAvailabilityMetrics(exchangeId, marketId, available)
 	}
 }
 
