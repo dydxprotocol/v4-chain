@@ -28,6 +28,7 @@ func (k Keeper) GetProcessProposerMatchesEvents(ctx sdk.Context) types.ProcessPr
 // This function panics if:
 //   - the current block height does not match the block height of the ProcessProposerMatchesEvents
 //   - called outside of deliver TX mode
+//   - Any of the ProcessProposerMatchesEvents fields have duplicates.
 //
 // TODO(DEC-1281): add parameter validation.
 func (k Keeper) MustSetProcessProposerMatchesEvents(
@@ -38,6 +39,10 @@ func (k Keeper) MustSetProcessProposerMatchesEvents(
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
 		panic(fmt.Errorf("block height %d for ProcessProposerMatchesEvents does not equal current block height %d",
 			processProposerMatchesEvents.BlockHeight, ctx.BlockHeight()))
+	}
+
+	if err := processProposerMatchesEvents.ValidateProcessProposerMatchesEvents(); err != nil {
+		panic(err)
 	}
 
 	// Retrieve an instance of the memory store.
