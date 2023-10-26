@@ -343,7 +343,7 @@ const (
 	MarketUpdaterUpdateMarkets              = "market_updater_update_markets"
 	PriceEncoderPriceConversion             = "price_encoder_price_conversion"
 	PriceFetcherQueryExchange               = "price_fetcher_query_exchange"
-	PriceFetcherQueryForMarket              = "price_fetcher_query_for_market"
+	PriceFetcherQueryForMarket              = "price_fetcher_query_for_market_sampled"
 	PriceFetcherSubtaskLoop                 = "price_fetcher_subtask_loop"
 	PriceFetcherSubtaskLoopAndSetCtxTimeout = "price_fetcher_subtask_loop_and_set_ctx_timeout"
 	PriceUpdateCount                        = "price_update_count"
