@@ -761,6 +761,8 @@ func launchValidator(
 		"false",
 		"--liquidation-daemon-enabled",
 		"false",
+		"--bridge-daemon-eth-rpc-endpoint",
+		"https://eth-sepolia.g.alchemy.com/v2/demo",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)
