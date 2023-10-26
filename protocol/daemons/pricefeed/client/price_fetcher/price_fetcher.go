@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -259,12 +260,17 @@ func (pf *PriceFetcher) runSubTask(
 		taskLoopDefinition.marketExponents,
 	)
 
+	// Emit metrics at the `AvailableMarketsSampleRate`.
+	emitMetricsSample := rand.Float64() < metrics.AvailableMarketsSampleRate
+
 	if err != nil {
 		pf.writeToBufferedChannel(exchangeId, nil, err)
 
-		// Since the query failed, report all markets as unavailable.
-		for _, marketId := range marketIds {
-			emitMarketAvailabilityMetrics(exchangeId, marketId, false)
+		// Since the query failed, report all markets as unavailable, according to the sampling rate.
+		if emitMetricsSample {
+			for _, marketId := range marketIds {
+				emitMarketAvailabilityMetrics(exchangeId, marketId, false)
+			}
 		}
 
 		return
@@ -309,9 +315,11 @@ func (pf *PriceFetcher) runSubTask(
 		pf.writeToBufferedChannel(exchangeId, price, err)
 	}
 
-	// Emit metrics on this exchange's market availability.
-	for marketId, available := range availableMarkets {
-		emitMarketAvailabilityMetrics(exchangeId, marketId, available)
+	// Emit metrics on this exchange's market availability according to the sampling rate.
+	if emitMetricsSample {
+		for marketId, available := range availableMarkets {
+			emitMarketAvailabilityMetrics(exchangeId, marketId, available)
+		}
 	}
 }
 

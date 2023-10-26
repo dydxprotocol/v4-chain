@@ -390,4 +390,7 @@ const (
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
 )
 
-const LatencyMetricSampleRate = 0.01
+const (
+	LatencyMetricSampleRate    = 0.01
+	AvailableMarketsSampleRate = .1
+)
