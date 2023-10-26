@@ -192,5 +192,9 @@ func (msgSender *IndexerMessageSenderKafka) handleErrors() {
 		)
 		msgSender.errors = msgSender.errors + 1
 		telemetry.IncrCounter(1, types.ModuleName, metrics.MessageSendError)
+		// Panic if kafka message to onchain topic fails to send
+		if err.Msg.Topic == ON_CHAIN_KAFKA_TOPIC {
+			panic("Failed to send onchain kafka message to Indexer")
+		}
 	}
 }
