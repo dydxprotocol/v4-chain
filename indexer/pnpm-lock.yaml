@@ -644,13 +644,17 @@ importers:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
+      '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
+      '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
       '@types/jest': ^28.1.4
       '@types/node': ^18.0.3
       '@types/yargs': ^16.0.0
       big.js: ^6.0.2
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
+      kafkajs: ^2.1.0
       lodash: ^4.17.21
       long: ^5.2.1
       ts-node: ^10.8.2
@@ -659,9 +663,13 @@ importers:
       yargs: ^13.3.0
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
+      '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
+      '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       big.js: 6.2.1
       dotenv-flow: 3.2.0
+      kafkajs: 2.2.3
       lodash: 4.17.21
       long: 5.2.1
       yargs: 13.3.2
