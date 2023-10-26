@@ -11,7 +11,7 @@ import (
 func CmdQueryPremiumSamples() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-premium-samples",
-		Short: "get the PremiumSamples",
+		Short: "Get PremiumSamples from the current funding-tick epoch",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
@@ -34,7 +34,7 @@ func CmdQueryPremiumSamples() *cobra.Command {
 func CmdQueryPremiumVotes() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get-premium-votes",
-		Short: "get the PremiumVotes",
+		Short: "Get PremiumVotes from the current funding-sample epoch",
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			clientCtx := client.GetClientContextFromCmd(cmd)
 			queryClient := types.NewQueryClient(clientCtx)
