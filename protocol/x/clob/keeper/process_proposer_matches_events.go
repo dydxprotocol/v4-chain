@@ -35,7 +35,7 @@ func (k Keeper) MustSetProcessProposerMatchesEvents(
 ) {
 	lib.AssertDeliverTxMode(ctx)
 
-	if err := processProposerMatchesEvents.ValidateProcessProposerMatchesEvents(); err != nil {
+	if err := processProposerMatchesEvents.ValidateProcessProposerMatchesEvents(ctx); err != nil {
 		panic(err)
 	}
 
