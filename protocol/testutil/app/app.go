@@ -454,10 +454,15 @@ func (tApp *TestApp) initChainIfNeeded() {
 	// value which will lead to possibly using the wrong server start time.
 	originalServerStartTime := srvtypes.ServerStartTime.Load()
 	srvtypes.ServerStartTime.Store(int64(time.Millisecond * 10))
+	tApp.builder.t.Cleanup(func() {
+		// Restore the original server time.
+		srvtypes.ServerStartTime.Store(originalServerStartTime)
+	})
 
 	// Launch the main instance of the application
+	// TODO(CORE-721): Consolidate launch of apps into an abstraction since the logic is mostly repeated 4 times.
 	{
-		validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, tApp.builder.appOptions)
+		validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis)
 		if err != nil {
 			tApp.builder.t.Fatal(err)
 			return
@@ -476,9 +481,6 @@ func (tApp *TestApp) initChainIfNeeded() {
 			if err := os.RemoveAll(validatorHomeDir); err != nil {
 				tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
 			}
-
-			// Restore the original server time.
-			srvtypes.ServerStartTime.Store(originalServerStartTime)
 
 			if doneErr != nil {
 				tApp.builder.t.Fatal(doneErr)
@@ -503,7 +505,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 		// Launch the `parallelApp` instance.
 		{
-			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis)
 			if err != nil {
 				tApp.builder.t.Fatal(err)
 				return
@@ -531,7 +533,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 		// Launch the `noCheckTx` instance.
 		{
-			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis)
 			if err != nil {
 				tApp.builder.t.Fatal(err)
 				return
@@ -559,7 +561,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 		// Launch the `crashingApp` instance.
 		{
-			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis, filteredAppOptions)
+			validatorHomeDir, err := prepareValidatorHomeDir(tApp.genesis)
 			if err != nil {
 				tApp.builder.t.Fatal(err)
 				return
@@ -997,7 +999,6 @@ func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
 // shuts down.
 func prepareValidatorHomeDir(
 	genesis types.GenesisDoc,
-	appOptions map[string]interface{},
 ) (validatorHomeDir string, err error) {
 	// Create the validators home directory as a temporary directory and fill it with:
 	//  - config/priv_validator_key.json

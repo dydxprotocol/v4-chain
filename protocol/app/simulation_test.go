@@ -191,10 +191,9 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.Skip("skipping benchmark application simulation")
 	}
 
-	defer func() {
-		require.NoError(b, db.Close())
+	b.Cleanup(func() {
 		require.NoError(b, os.RemoveAll(dir))
-	}()
+	})
 
 	appOptions := defaultAppOptionsForSimulation()
 
@@ -265,10 +264,9 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
-		require.NoError(t, db.Close())
+	t.Cleanup(func() {
 		require.NoError(t, os.RemoveAll(dir))
-	}()
+	})
 
 	appOptions := defaultAppOptionsForSimulation()
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"sync"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -215,6 +216,7 @@ type App struct {
 	interfaceRegistry types.InterfaceRegistry
 	db                dbm.DB
 	snapshotDB        dbm.DB
+	closeOnce         func() error
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -376,6 +378,21 @@ func New(
 		db:                db,
 		snapshotDB:        snapshotDB,
 	}
+	app.closeOnce = sync.OnceValue[error](
+		func() error {
+			if app.PriceFeedClient != nil {
+				app.PriceFeedClient.Stop()
+			}
+			if app.Server != nil {
+				app.Server.Stop()
+			}
+			return errors.Join(
+				// TODO(CORE-538): Remove this if possible during upgrade to Cosmos 0.50.
+				app.db.Close(),
+				app.snapshotDB.Close(),
+			)
+		},
+	)
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
@@ -1424,17 +1441,7 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 
 // Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
-	if app.PriceFeedClient != nil {
-		app.PriceFeedClient.Stop()
-	}
-	if app.Server != nil {
-		app.Server.Stop()
-	}
-	return errors.Join(
-		// TODO(CORE-538): Remove this if possible during upgrade to Cosmos 0.50.
-		app.db.Close(),
-		app.snapshotDB.Close(),
-	)
+	return app.closeOnce()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server
