@@ -150,6 +150,7 @@ func (c *Client) start(ctx context.Context,
 	grpcClient daemontypes.GrpcClient,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
+	subTaskRunner SubTaskRunner,
 ) (err error) {
 	// 1. Establish connections to gRPC servers.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
@@ -222,7 +223,7 @@ func (c *Client) start(ctx context.Context,
 		c.runningSubtasksWaitGroup.Add(1)
 		go func() {
 			defer c.runningSubtasksWaitGroup.Done()
-			c.StartPriceEncoder(
+			subTaskRunner.StartPriceEncoder(
 				exchangeId,
 				priceFeedMutableMarketConfigs,
 				exchangeToMarketPrices,
@@ -235,7 +236,7 @@ func (c *Client) start(ctx context.Context,
 		c.runningSubtasksWaitGroup.Add(1)
 		go func() {
 			defer c.runningSubtasksWaitGroup.Done()
-			c.StartPriceFetcher(
+			subTaskRunner.StartPriceFetcher(
 				ticker,
 				stop,
 				priceFeedMutableMarketConfigs,
@@ -253,7 +254,7 @@ func (c *Client) start(ctx context.Context,
 	c.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer c.runningSubtasksWaitGroup.Done()
-		c.StartMarketParamUpdater(
+		subTaskRunner.StartMarketParamUpdater(
 			ctx,
 			marketParamUpdaterTicker,
 			marketParamUpdaterStop,
@@ -277,7 +278,7 @@ func (c *Client) start(ctx context.Context,
 	c.completeStartup()
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
-	c.StartPriceUpdater(
+	subTaskRunner.StartPriceUpdater(
 		ctx,
 		priceUpdaterTicker,
 		priceUpdaterStop,
@@ -301,6 +302,7 @@ func StartNewClient(
 	grpcClient daemontypes.GrpcClient,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
+	subTaskRunner SubTaskRunner,
 ) (client *Client) {
 	// Log the daemon flags.
 	logger.Info(
@@ -320,6 +322,7 @@ func StartNewClient(
 			grpcClient,
 			exchangeIdToQueryConfig,
 			exchangeIdToExchangeDetails,
+			subTaskRunner,
 		)
 		if err != nil {
 			logger.Error("Error initializing pricefeed daemon: %w", err.Error())

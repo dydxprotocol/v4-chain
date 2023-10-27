@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/pkg/errors"
 	"net/http"
 	"time"
 
@@ -26,8 +27,11 @@ var (
 	}
 )
 
+// SubTaskRunnerImpl is the struct that implements the `SubTaskRunner` interface.
+type SubTaskRunnerImpl struct{}
+
 // Ensure the `SubTaskRunnerImpl` struct is implemented at compile time.
-var _ SubTaskRunner = (*Client)(nil)
+var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 
 // SubTaskRunner is the interface for running pricefeed client task functions.
 type SubTaskRunner interface {
@@ -72,7 +76,7 @@ type SubTaskRunner interface {
 // 2) Transform `MarketPriceTimestamps` and exchange ids into an `UpdateMarketPricesRequest` struct.
 // StartPriceUpdater runs in the daemon's main goroutine and does not need access to the daemon's wait group
 // to signal task completion.
-func (_ *Client) StartPriceUpdater(
+func (s *SubTaskRunnerImpl) StartPriceUpdater(
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -84,7 +88,7 @@ func (_ *Client) StartPriceUpdater(
 		select {
 		case <-ticker.C:
 			err := RunPriceUpdaterTaskLoop(ctx, exchangeToMarketPrices, priceFeedServiceClient, logger)
-			if err != nil && err != types.ErrEmptyMarketPriceUpdate {
+			if err != nil && !errors.Is(err, types.ErrEmptyMarketPriceUpdate) {
 				panic(err)
 			}
 
@@ -100,7 +104,7 @@ func (_ *Client) StartPriceUpdater(
 // StartPriceEncoder reads price fetcher responses from a shared channel, and does not need a ticker or stop
 // signal from the daemon to exit. It marks itself as done in the daemon's wait group when the price fetcher
 // closes the shared channel.
-func (_ *Client) StartPriceEncoder(
+func (s *SubTaskRunnerImpl) StartPriceEncoder(
 	exchangeId types.ExchangeId,
 	configs types.PricefeedMutableMarketConfigs,
 	exchangeToMarketPrices types.ExchangeToMarketPrices,
@@ -146,7 +150,7 @@ func (_ *Client) StartPriceEncoder(
 // NOTE: the subtask response shared channel has a buffer size and goroutines will block if the buffer is full.
 // NOTE: the price fetcher kicks off 1 to n go routines every time the subtask loop runs, but the subtask
 // loop blocks until all go routines are done. This means that these go routines are not tracked by the wait group.
-func (_ *Client) StartPriceFetcher(
+func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
@@ -209,7 +213,7 @@ func (_ *Client) StartPriceFetcher(
 
 // StartMarketParamUpdater periodically starts a goroutine to update the market parameters that control which
 // markets the daemon queries and how they are queried and computed from each exchange.
-func (_ *Client) StartMarketParamUpdater(
+func (s *SubTaskRunnerImpl) StartMarketParamUpdater(
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
