@@ -52,7 +52,8 @@ type Client struct {
 	stopDaemon sync.Once
 
 	// isHealthy indicates whether the daemon is healthy - i.e., it is actively running and calculating prices.
-	// The daemon is considered healthy after startup is complete and while it is producing non-empty price updates.
+	// The daemon is considered healthy when it is producing non-empty price updates. It will be considered unhealthy
+	// until it produces its first non-empty price update.
 	isHealthy atomic.Bool
 }
 
@@ -60,7 +61,8 @@ type Client struct {
 var _ daemontypes.DaemonClient = (*Client)(nil)
 
 // HealthCheck returns an error if the daemon is unhealthy.
-// The daemon is considered unhealthy if it either failed to initialize or is producing empty price updates.
+// The daemon is considered unhealthy if it is not producing non-empty price updates. We expect a short period of time
+// to pass on daemon startup where the daemon is unhealthy as the price cache warms up.
 // This method is synchronized by isHealthy, which is an atomic.Bool.
 func (c *Client) HealthCheck(_ context.Context) error {
 	if !c.isHealthy.Load() {
