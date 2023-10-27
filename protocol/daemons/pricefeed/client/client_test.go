@@ -768,7 +768,8 @@ func TestHealthCheck(t *testing.T) {
 	client := newClient()
 
 	// Act.
-	// Run the price updater for a single tick with a successful update. Expect the daemon to be healthy.
+	// Run the price updater for a single tick with a successful update. Expect the daemon to toggle to a
+	// healthy state
 	subTaskRunnerImpl.StartPriceUpdater(
 		client,
 		grpc_util.Ctx,
@@ -781,6 +782,9 @@ func TestHealthCheck(t *testing.T) {
 	// Assert.
 	require.NoError(t, client.HealthCheck(grpc_util.Ctx))
 
+	// Cleanup.
+	close(stop)
+
 	// Act.
 	// Mock a failed update. In this case, we expect to see the daemon toggle to unhealthy.
 	mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
@@ -788,7 +792,8 @@ func TestHealthCheck(t *testing.T) {
 
 	ticker, stop = singleTickTickerAndStop()
 
-	// Run the price updater for a single tick with a failed update. Expect the daemon to be unhealthy.
+	// Run the price updater for a single tick with a failed update. Expect the daemon to be toggled
+	// into an unhealthy state.
 	subTaskRunnerImpl.StartPriceUpdater(
 		client,
 		grpc_util.Ctx,
@@ -800,6 +805,9 @@ func TestHealthCheck(t *testing.T) {
 	)
 	// Assert.
 	require.Error(t, client.HealthCheck(grpc_util.Ctx))
+
+	// Cleanup.
+	close(stop)
 }
 
 // TestMarketUpdater_Mixed tests the `RunMarketParamUpdaterTaskLoop` function invokes the grpc
