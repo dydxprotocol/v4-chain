@@ -2,7 +2,7 @@ package clob
 
 import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type OrderModifierOption func(cp *clobtypes.Order)
@@ -27,7 +27,7 @@ func WithClobPairid(id uint32) OrderModifierOption {
 	}
 }
 
-func WithSubaccountId(subaccountId subaccounttypes.SubaccountId) OrderModifierOption {
+func WithSubaccountId(subaccountId satypes.SubaccountId) OrderModifierOption {
 	return func(o *clobtypes.Order) {
 		o.OrderId.SubaccountId = subaccountId
 	}
