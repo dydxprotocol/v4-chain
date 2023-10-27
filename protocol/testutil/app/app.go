@@ -2,12 +2,21 @@ package app
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
+	tmcfg "github.com/cometbft/cometbft/config"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 	"math"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -50,6 +59,29 @@ import (
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
+
+// localdydxprotocol Alice config/priv_validator_key.json.
+const alicePrivValidatorKeyJson = `{
+  "address": "124B880684400B4C0086BD4EE882DCC5B61CF7E3",
+  "pub_key": {
+    "type": "tendermint/PubKeyEd25519",
+    "value": "YiARx8259Z+fGFUxQLrz/5FU2RYRT6f5yzvt7D7CrQM="
+  },
+  "priv_key": {
+    "type": "tendermint/PrivKeyEd25519",
+    "value": "65frslxv5ig0KSNKlJOHT2FKTkOzkb/66eDPsiBaNUtiIBHHzbn1n58YVTFAuvP/kVTZFhFPp/nLO+3sPsKtAw=="
+  }
+}
+`
+
+// localdydxprotocol Alice config/node_key.json.
+const aliceNodeKeyJson = `{
+  "priv_key": {
+    "type": "tendermint/PrivKeyEd25519",
+    "value": "8EGQBxfGMcRfH0C45UTedEG5Xi3XAcukuInLUqFPpskjp1Ny0c5XvwlKevAwtVvkwoeYYQSe0geQG/cF3GAcUA=="
+  }
+}
+`
 
 // MustMakeCheckTxOptions is a struct containing options for MustMakeCheckTx.* functions.
 type MustMakeCheckTxOptions struct {
@@ -268,7 +300,6 @@ type TestAppBuilder struct {
 	genesisDocFn         GenesisDocCreatorFn
 	usesDefaultAppConfig bool
 	appOptions           map[string]interface{}
-	baseAppOptions       []func(*baseapp.BaseApp)
 	executeCheckTxs      ExecuteCheckTxs
 	t                    testing.TB
 }
@@ -283,10 +314,8 @@ func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuild
 // WithAppOptions returns a builder like this one with the specified app options.
 func (tApp TestAppBuilder) WithAppOptions(
 	appOptions map[string]interface{},
-	baseAppOptions ...func(*baseapp.BaseApp),
 ) TestAppBuilder {
 	tApp.appOptions = appOptions
-	tApp.baseAppOptions = baseAppOptions
 	tApp.usesDefaultAppConfig = false
 	return tApp
 }
@@ -345,12 +374,40 @@ func (tApp *TestApp) initChainIfNeeded() {
 
 	// Get the initial genesis state and initialize the chain and commit the results of the initialization.
 	tApp.genesis = tApp.builder.genesisDocFn()
-	tApp.App = DefaultTestApp(tApp.builder.appOptions, tApp.builder.baseAppOptions...)
+
+	// Prevent Cosmos SDK code from waiting for 5 seconds on each start-up.
+	// TODO(CORE-538): Remove this during the upgrade since 0.50 Cosmos SDK no longer relies on this.
+	// There is a benign race here where another instance of the app running at the same time might use the shared
+	// value which will lead to possibly using the wrong server start time.
+	originalServerStartTime := srvtypes.ServerStartTime.Load()
+	srvtypes.ServerStartTime.Store(int64(time.Millisecond * 10))
+
+	validatorHomeDir, app, shutdownFn, err := launchValidator(tApp.genesis, tApp.builder.appOptions)
+	if err != nil {
+		tApp.builder.t.Fatal(err)
+	}
+	tApp.App = app
+
+	tApp.builder.t.Cleanup(func() {
+		doneErr := shutdownFn()
+
+		// Clean-up the home directory.
+		if err := os.RemoveAll(validatorHomeDir); err != nil {
+			tApp.builder.t.Logf("Failed to clean-up temporary validator dir %s", validatorHomeDir)
+		}
+
+		// Restore the original server time.
+		srvtypes.ServerStartTime.Store(originalServerStartTime)
+
+		if doneErr != nil {
+			tApp.builder.t.Fatal(doneErr)
+		}
+	})
+
 	if tApp.builder.usesDefaultAppConfig {
 		tApp.App.Server.DisableUpdateMonitoringForTesting()
 	}
 
-	baseapp.SetChainID(tApp.genesis.ChainID)(tApp.App.GetBaseApp())
 	if tApp.genesis.GenesisTime.UnixNano() <= time.UnixMilli(0).UnixNano() {
 		panic(fmt.Errorf(
 			"Unable to start chain at time %v, must be greater than unix epoch.",
@@ -610,6 +667,137 @@ func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
 	})
+}
+
+// launchValidator launches a validator using the `start` command with the specified genesis doc and application
+// options. `shutdownFn` must be invoked to cancel the execution of the app. It will block till the application
+// shuts down.
+func launchValidator(
+	genesis types.GenesisDoc,
+	appOptions map[string]interface{},
+) (homeDir string, a *app.App, shutdownFn func() error, err error) {
+	// Create the validators home directory as a temporary directory and fill it with:
+	//  - config/priv_validator_key.json
+	//  - config/node_key.json
+	//  - config/genesis.json
+	validatorHomeDir := filepath.Join(os.TempDir(), fmt.Sprint(time.Now().UnixNano()))
+	if err = os.MkdirAll(fmt.Sprintf("%s/config/", validatorHomeDir), 0755); err != nil {
+		return "", nil, nil, err
+	}
+	if err = os.WriteFile(
+		filepath.Join(validatorHomeDir, "config", "priv_validator_key.json"),
+		[]byte(alicePrivValidatorKeyJson),
+		0755,
+	); err != nil {
+		return "", nil, nil, err
+	}
+	if err = os.WriteFile(
+		filepath.Join(validatorHomeDir, "config", "node_key.json"),
+		[]byte(aliceNodeKeyJson),
+		0755,
+	); err != nil {
+		return "", nil, nil, err
+	}
+	if err = genesis.SaveAs(filepath.Join(validatorHomeDir, "config", "genesis.json")); err != nil {
+		return "", nil, nil, err
+	}
+
+	// Create a context that can be cancelled to stop the Cosmos App.
+	done := make(chan error, 1)
+	parentCtx, cancelFn := context.WithCancel(context.Background())
+
+	appCaptor := make(chan *app.App, 1)
+	// Set up the root command using https://github.com/dydxprotocol/v4-chain/blob/
+	// 1fa21ed5d848ed7cc6a98053838cadb68422079f/protocol/cmd/dydxprotocold/main.go#L12 as a basis.
+	option := cmd.GetOptionWithCustomStartCmd()
+	rootCmd := cmd.NewRootCmdWithInterceptors(
+		option,
+		// Inject the app options and logger
+		func(serverCtxPtr *server.Context) {
+			for key, value := range appOptions {
+				serverCtxPtr.Viper.Set(key, value)
+			}
+
+			// Set the test logger instance based upon AppOptions.
+			if logger, ok := appOptions[testlog.LoggerInstanceForTest]; ok {
+				serverCtxPtr.Logger = logger.(log.Logger)
+			}
+		},
+		// Override the addresses to use domain sockets to avoid port conflicts.
+		func(s string, appConfig *cmd.DydxAppConfig) (string, *cmd.DydxAppConfig) {
+			// Note that the domain sockets need to typically be ~100 bytes or fewer otherwise they will fail to be
+			// created. The actual limit is OS specific.
+			apiSocketPath := filepath.Join(validatorHomeDir, "api_socket")
+			grpcSocketPath := filepath.Join(validatorHomeDir, "grpc_socket")
+			grpcWebSocketPath := filepath.Join(validatorHomeDir, "grpc_web_socket")
+			appConfig.API.Address = fmt.Sprintf("unix://%s", apiSocketPath)
+			appConfig.GRPC.Address = fmt.Sprintf("unix://%s", grpcSocketPath)
+			appConfig.GRPCWeb.Address = fmt.Sprintf("unix://%s", grpcWebSocketPath)
+
+			// TODO(CORE-29): This disables launching the daemons since not all daemons currently shutdown as needed.
+			appConfig.API.Enable = false
+			return s, appConfig
+		},
+		// Capture the application instance.
+		func(app *app.App) *app.App {
+			appCaptor <- app
+			return app
+		},
+	)
+
+	// Specify the start-up flags.
+	// TODO(CLOB-930): Allow for these flags to be overridden.
+	rootCmd.SetArgs([]string{
+		"start",
+		// Do not start tendermint.
+		"--grpc-only",
+		"true",
+		"--home",
+		validatorHomeDir,
+		// TODO(CORE-29): Allow the daemons to be launched and cleaned-up successfully by default.
+		"--price-daemon-enabled",
+		"false",
+		"--bridge-daemon-enabled",
+		"false",
+		"--liquidation-daemon-enabled",
+		"false",
+		"--bridge-daemon-eth-rpc-endpoint",
+		"https://eth-sepolia.g.alchemy.com/v2/demo",
+	})
+
+	ctx := svrcmd.CreateExecuteContext(parentCtx)
+	rootCmd.PersistentFlags().String(
+		flags.FlagLogLevel,
+		tmcfg.DefaultLogLevel,
+		"The logging level (trace|debug|info|warn|error|fatal|panic)",
+	)
+	rootCmd.PersistentFlags().String(
+		flags.FlagLogFormat,
+		tmcfg.LogFormatPlain,
+		"The logging format (json|plain)",
+	)
+	executor := tmcli.PrepareBaseCmd(rootCmd, app.AppDaemonName, app.DefaultNodeHome)
+	// We need to launch the root command in a separate go routine since it only returns once the app is shutdown.
+	// So we wait for either the app to be captured representing a successful start or capture an error.
+	go func() {
+		// ExecuteContext will block and will only return if interrupted.
+		done <- executor.ExecuteContext(ctx)
+	}()
+	select {
+	case a = <-appCaptor:
+	case err = <-done:
+		// Send the error to done channel so that `Cleanup` function will not block.
+		cancelFn()
+		done <- err
+		return "", nil, nil, err
+	}
+
+	shutdownFn = func() error {
+		cancelFn()
+		return <-done
+	}
+
+	return validatorHomeDir, a, shutdownFn, nil
 }
 
 // MustMakeCheckTxsWithClobMsg creates one signed RequestCheckTx for each msg passed in.

@@ -505,8 +505,8 @@ github.com/dvsekhvalnov/jose2go v1.5.0 h1:3j8ya4Z4kMCwT5nXIKFSV84YS+HdqSSO0VsTQx
 github.com/dvsekhvalnov/jose2go v1.5.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.37.3-0.20230908230338-65f7a2f25c18 h1:1RIco92QcPS24BeNCNWJC4zXza4GEHHuoviWIQEQ/NI=
 github.com/dydxprotocol/cometbft v0.37.3-0.20230908230338-65f7a2f25c18/go.mod h1:cpghf0+1GJpJvrqpTHE6UyTcD05m/xllo0xpufL3PgA=
-github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20231011192538-b95c66dedbd5 h1:9lSntpmEJcEhc3al6YmRh51ZHINjqJmzL5it9tMK5+0=
-github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20231011192538-b95c66dedbd5/go.mod h1:iaAXVu5Jcd//vREctLTuxLqj5ScUP4psgqW7M6XsaQ8=
+github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20231025201005-bef8a051e94f h1:q1WhMJ0EjcF2Tj7MBPd+nacxmj3juiRwz11MZ+m6WAE=
+github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20231025201005-bef8a051e94f/go.mod h1:iaAXVu5Jcd//vREctLTuxLqj5ScUP4psgqW7M6XsaQ8=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=

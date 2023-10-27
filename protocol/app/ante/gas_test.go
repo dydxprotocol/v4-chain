@@ -3,9 +3,7 @@ package ante_test
 import (
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/baseapp"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"reflect"
@@ -180,12 +178,7 @@ func TestSubmitTxnWithGas(t *testing.T) {
 				},
 			}
 
-			tApp := testapp.NewTestAppBuilder(t).
-				WithAppOptions(
-					map[string]interface{}{},
-					baseapp.SetMinGasPrices(cmd.MinGasPrice),
-				).
-				Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 
 			msgSendCheckTx := testapp.MustMakeCheckTxWithPrivKeySupplier(
