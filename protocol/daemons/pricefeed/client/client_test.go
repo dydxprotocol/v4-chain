@@ -51,6 +51,7 @@ type FakeSubTaskRunner struct {
 
 // StartPriceUpdater replaces `client.StartPriceUpdater` and advances `UpdaterCallCount` by one.
 func (f *FakeSubTaskRunner) StartPriceUpdater(
+	c *Client,
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -246,6 +247,10 @@ func TestStart_InvalidConfig(t *testing.T) {
 				tc.exchangeIdToExchangeDetails,
 				&faketaskRunner,
 			)
+
+			// Expect daemon is not healthy on startup. Daemon becomes healthy after the first successful market
+			// update.
+			require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), "pricefeed daemon is unhealthy")
 
 			if tc.expectedError == nil {
 				require.NoError(t, err)
@@ -619,6 +624,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 		},
 		"No exchange market prices, does not call `UpdateMarketPrices`": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{},
+			priceUpdateError:        types.ErrEmptyMarketPriceUpdate,
 		},
 		"One market for one exchange": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
@@ -719,6 +725,81 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 			}
 		})
 	}
+}
+
+// singleTickTickerAndStop creates a ticker that ticks once before the stop channel is signaled. In order for this
+// ticker to be effective, it needs to be consumed within 100ms.
+func singleTickTickerAndStop() (*time.Ticker, chan bool) {
+	// Create a ticker with a duration long enough that we do not expect to see a tick within the timeframe
+	// of a normal unit test.
+	ticker := time.NewTicker(10 * time.Minute)
+	// Override the ticker's channel with a new channel we can insert into directly, and add a single tick.
+	newChan := make(chan time.Time, 1)
+	newChan <- time.Now()
+	ticker.C = newChan
+
+	stop := make(chan bool, 1)
+
+	// After 100ms, stop the ticker and signal the stop channel.
+	go func() {
+		time.Sleep(100 * time.Millisecond)
+		ticker.Stop()
+		stop <- true
+	}()
+
+	return ticker, stop
+}
+
+func TestHealthCheck(t *testing.T) {
+	// Setup.
+	// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
+	etmp, err := types.NewExchangeToMarketPrices([]types.ExchangeId{constants.ExchangeId1})
+	require.NoError(t, err)
+	etmp.UpdatePrice(constants.ExchangeId1, constants.Market9_TimeT_Price1)
+
+	// Create a mock `PriceFeedServiceClient`.
+	mockPriceFeedClient := generateMockQueryClient()
+
+	// Mock a successful update. Since the daemon starts unhealthy, this should toggle the daemon to healthy.
+	mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
+		Return(nil, nil).Once()
+
+	ticker, stop := singleTickTickerAndStop()
+	client := newClient()
+
+	// Act.
+	// Run the price updater for a single tick with a successful update. Expect the daemon to be healthy.
+	subTaskRunnerImpl.StartPriceUpdater(
+		client,
+		grpc_util.Ctx,
+		ticker,
+		stop,
+		etmp,
+		mockPriceFeedClient,
+		log.NewNopLogger(),
+	)
+	// Assert.
+	require.NoError(t, client.HealthCheck(grpc_util.Ctx))
+
+	// Act.
+	// Mock a failed update. In this case, we expect to see the daemon toggle to unhealthy.
+	mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
+		Return(nil, fmt.Errorf("failed to update market prices")).Once()
+
+	ticker, stop = singleTickTickerAndStop()
+
+	// Run the price updater for a single tick with a failed update. Expect the daemon to be unhealthy.
+	subTaskRunnerImpl.StartPriceUpdater(
+		client,
+		grpc_util.Ctx,
+		ticker,
+		stop,
+		etmp,
+		mockPriceFeedClient,
+		log.NewNopLogger(),
+	)
+	// Assert.
+	require.Error(t, client.HealthCheck(grpc_util.Ctx))
 }
 
 // TestMarketUpdater_Mixed tests the `RunMarketParamUpdaterTaskLoop` function invokes the grpc

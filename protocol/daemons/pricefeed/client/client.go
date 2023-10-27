@@ -72,6 +72,11 @@ func (c *Client) HealthCheck(_ context.Context) error {
 	return nil
 }
 
+// setHealth sets the health of the daemon. This method is synchronized by isHealthy, which is an atomic.Bool.
+func (c *Client) setHealth(isHealthy bool) {
+	c.isHealthy.Store(isHealthy)
+}
+
 func newClient() *Client {
 	client := &Client{
 		tickers: []*time.Ticker{},
@@ -120,8 +125,6 @@ func (c *Client) Stop() {
 // WaitGroup. Modifications to isHealthy are thread-safe.
 func (c *Client) completeStartup() {
 	c.daemonStartup.Done()
-	// Set isHealthy to true after startup is complete.
-	c.isHealthy.Store(true)
 }
 
 // start begins a job that:
@@ -279,6 +282,7 @@ func (c *Client) start(ctx context.Context,
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
+		c,
 		ctx,
 		priceUpdaterTicker,
 		priceUpdaterStop,
