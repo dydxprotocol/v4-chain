@@ -92,7 +92,7 @@ func newClient() *Client {
 // for any subtask kicked off by the client. The ticker and channel are tracked in order to properly clean up and send
 // all needed stop signals when the daemon is stopped.
 // Note: this method is not synchronized. It is expected to be called from the client's `StartNewClient` method before
-// `client.CompleteStartup`.
+// the daemonStartup waitgroup signals.
 func (c *Client) newTickerWithStop(intervalMs int) (*time.Ticker, <-chan bool) {
 	ticker := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
 	c.tickers = append(c.tickers, ticker)
@@ -119,12 +119,6 @@ func (c *Client) Stop() {
 		c.runningSubtasksWaitGroup.Wait()
 		c.isHealthy.Store(false)
 	})
-}
-
-// completeStartup signals that the daemon has finished startup. This method is synchronized by the daemonStartup
-// WaitGroup. Modifications to isHealthy are thread-safe.
-func (c *Client) completeStartup() {
-	c.daemonStartup.Done()
 }
 
 // start begins a job that:
@@ -278,7 +272,7 @@ func (c *Client) start(ctx context.Context,
 	// Now that all persistent subtasks have been started and all tickers and stop channels are created,
 	// signal that the startup process is complete. This needs to be called before entering the
 	// price updater loop, which loops indefinitely until the daemon is stopped.
-	c.completeStartup()
+	c.daemonStartup.Done()
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
