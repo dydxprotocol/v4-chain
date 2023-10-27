@@ -748,21 +748,18 @@ describe('order-place-handler', () => {
         'good-til-block-time',
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
-        redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
-        redisTestConstants.defaultOrderUuidConditional,
         dbConditionalOrder,
       ],
     ])('handles order place with OPEN placement status, exists initially (with %s)', async (
       _name: string,
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
-      expectedOrderUuid: string,
       placedOrder: OrderFromDatabase,
     ) => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
@@ -806,6 +803,39 @@ describe('order-place-handler', () => {
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
         true,
+      );
+
+      expect(logger.error).not.toHaveBeenCalled();
+      expectStats();
+    });
+
+    it('handles unplaced and unreplaced order place with BEST_EFFORT_OPENED placement status', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+      // Handle the order place event for the initial order with BEST_EFFORT_OPENED
+      await handleInitialOrderPlace(redisTestConstants.orderPlace);
+      expectWebsocketMessagesSent(
+        producerSendSpy,
+        redisTestConstants.defaultRedisOrder,
+        dbDefaultOrder,
+        testConstants.defaultPerpetualMarket,
+        APIOrderStatusEnum.BEST_EFFORT_OPENED,
+        true,
+      );
+      expectStats();
+      // clear mocks
+      jest.clearAllMocks();
+
+      // Handle the order place with OPEN placement status
+      await handleInitialOrderPlace(redisTestConstants.orderPlace);
+      expectWebsocketMessagesSent(
+        producerSendSpy,
+        redisTestConstants.defaultRedisOrder,
+        dbDefaultOrder,
+        testConstants.defaultPerpetualMarket,
+        APIOrderStatusEnum.BEST_EFFORT_OPENED,
+        // Subaccount messages should be sent for stateful order with OPEN status
+        false,
       );
 
       expect(logger.error).not.toHaveBeenCalled();
