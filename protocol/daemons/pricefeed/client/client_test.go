@@ -769,7 +769,7 @@ func TestHealthCheck(t *testing.T) {
 
 	// Act.
 	// Run the price updater for a single tick with a successful update. Expect the daemon to toggle to a
-	// healthy state
+	// healthy state.
 	subTaskRunnerImpl.StartPriceUpdater(
 		client,
 		grpc_util.Ctx,
