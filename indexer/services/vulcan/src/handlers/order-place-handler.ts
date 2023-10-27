@@ -64,9 +64,10 @@ export class OrderPlaceHandler extends Handler {
       update,
       txHash: this.txHash,
     });
+    const orderPlace: OrderPlaceV1 = update.orderPlace!;
     this.validateOrderPlace(update.orderPlace!);
-    const order: IndexerOrder = update.orderPlace!.order!;
-    const placementStatus: OrderPlaceV1_OrderPlacementStatus = update.orderPlace!.placementStatus;
+    const order: IndexerOrder = orderPlace.order!;
+    const placementStatus: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
 
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString());
@@ -125,7 +126,7 @@ export class OrderPlaceHandler extends Handler {
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
     // stateful orders in the protocol
-    if (this.shouldSendSubaccountMessage(update.orderPlace!)) {
+    if (this.shouldSendSubaccountMessage(orderPlace, placeOrderResult, placementStatus)) {
       // TODO(IND-171): Determine whether we should always be sending a message, even when the cache
       // isn't updated.
       // For stateful and conditional orders, look the order up in the db for the createdAtHeight
@@ -325,7 +326,11 @@ export class OrderPlaceHandler extends Handler {
    * @returns TODO(CLOB-597): Remove once best-effort-opened messages are not sent for stateful
    * orders.
    */
-  protected shouldSendSubaccountMessage(orderPlace: OrderPlaceV1): boolean {
+  protected shouldSendSubaccountMessage(
+    orderPlace: OrderPlaceV1,
+    placeOrderResult: PlaceOrderResult,
+    placementStatus: OrderPlaceV1_OrderPlacementStatus,
+  ): boolean {
     const orderFlags: number = orderPlace.order!.orderId!.orderFlags;
     const status: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
     // Best-effort-opened status should only be sent for short-term orders
@@ -333,6 +338,16 @@ export class OrderPlaceHandler extends Handler {
       orderFlags !== ORDER_FLAG_SHORT_TERM &&
       status === OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED
     ) {
+      return false;
+    }
+
+    // In the case where a stateful orderPlace is opened with a more recent expiry than an
+    // existing order on the indexer, then the order will not have been placed or replaced and
+    // no subaccount message should be sent.
+    if (placeOrderResult.placed === false &&
+      placeOrderResult.replaced === false &&
+      placementStatus ===
+        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED) {
       return false;
     }
     return true;
