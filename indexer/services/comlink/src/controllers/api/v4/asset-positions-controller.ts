@@ -174,6 +174,7 @@ router.get(
         'AssetPositionsController GET /',
         'Asset positions error',
         error,
+        req,
         res,
       );
     } finally {
