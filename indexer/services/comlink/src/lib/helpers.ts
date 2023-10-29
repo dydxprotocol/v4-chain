@@ -344,6 +344,10 @@ export function filterAssetPositions(assetPositions: AssetPositionFromDatabase[]
 export async function filterPositionsByLatestEventIdPerPerpetual(
   positions: PerpetualPositionWithFunding[],
 ): Promise<PerpetualPositionWithFunding[]> {
+  if (positions.length === 0) {
+    return [];
+  }
+
   const events: TendermintEventFromDatabase[] = await TendermintEventTable.findAll(
     {
       id: positions.map((position: PerpetualPositionWithFunding) => position.lastEventId),
