@@ -103,7 +103,7 @@ func TestTradingRewards(t *testing.T) {
 				2: {
 					// Bob BTC maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Bob_Num0),
@@ -114,7 +114,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Alice BTC taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Alice_Num0),
@@ -126,7 +126,7 @@ func TestTradingRewards(t *testing.T) {
 				13: {
 					// Alice BTC maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Alice_Num0),
@@ -137,7 +137,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Bob BTC taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Bob_Num0),
@@ -310,7 +310,7 @@ func TestTradingRewards(t *testing.T) {
 				10: {
 					// Bob BTC maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Bob_Num0),
@@ -321,7 +321,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Alice BTC taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Alice_Num0),
@@ -331,7 +331,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Alice BTC maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Alice_Num0),
@@ -342,7 +342,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Bob BTC taker order
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Bob_Num0),
@@ -354,7 +354,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Carl ETH maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Carl_Num0),
@@ -366,7 +366,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Dave ETH taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Dave_Num0),
@@ -378,7 +378,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Dave ETH maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Dave_Num0),
@@ -391,7 +391,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Carl ETH taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Carl_Num0),
@@ -521,7 +521,7 @@ func TestTradingRewards(t *testing.T) {
 				10: {
 					// Bob BTC maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Bob_Num0),
@@ -532,7 +532,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Alice BTC taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Alice_Num0),
@@ -542,7 +542,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Carl ETH maker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_BUY),
 							clobtest.WithSubaccountId(constants.Carl_Num0),
@@ -554,7 +554,7 @@ func TestTradingRewards(t *testing.T) {
 					},
 					// Dave ETH taker order.
 					{
-						Order: clobtest.GenarateOrderWithTemplate(
+						Order: clobtest.GenerateOrderUsingTemplate(
 							OrderTemplate_ShortTerm_Btc,
 							clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 							clobtest.WithSubaccountId(constants.Dave_Num0),

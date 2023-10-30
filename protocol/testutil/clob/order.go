@@ -39,18 +39,18 @@ func WithClientId(clientId uint32) OrderModifierOption {
 	}
 }
 
-// GenarateOrderWithTemplate is a helper function to generate an test order with a template and
+// GenerateOrderUsingTemplate is a helper function to generate an test order with a template and
 // opitonal modifier options.
 // Example usage:
 //
-//	  clobtest.GenarateOrderWithTemplate(
+//	  clobtest.GenerateOrderUsingTemplate(
 //	    OrderTemplate_ShortTerm_Btc,
 //	    clobtest.WithSide(clobtypes.Order_SIDE_SELL),
 //		clobtest.WithSubaccountId(Alice_Num0),
 //		clobtest.WithClobPairid(TestEthMarketId),
 //		clobtest.WithGTB(TestGTB),
 //	  )
-func GenarateOrderWithTemplate(order clobtypes.Order, optionalModifications ...OrderModifierOption) clobtypes.Order {
+func GenerateOrderUsingTemplate(order clobtypes.Order, optionalModifications ...OrderModifierOption) clobtypes.Order {
 	for _, opt := range optionalModifications {
 		opt(&order)
 	}
