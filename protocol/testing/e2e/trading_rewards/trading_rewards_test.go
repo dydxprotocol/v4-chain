@@ -651,43 +651,47 @@ func TestTradingRewards(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				genesis.GenesisTime = GenesisTime
-				// Initialize sender module with its initial balance.
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *banktypes.GenesisState) {
-						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
-							Address: RewardsTreasuryAccAddress.String(),
-							Coins: sdk.Coins{
-								sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewInt(0)),
-							},
-						})
-						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
-							Address: RewardsVesterAccAddress.String(),
-							Coins: sdk.Coins{
-								sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewIntFromBigInt(
-									tc.initRewardsVesterBalance,
-								)),
-							},
-						})
-					},
-				)
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *vesttypes.GenesisState) {
-						genesisState.VestEntries = tc.vestEntries
-					},
-				)
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *rewardstypes.GenesisState) {
-						genesisState.Params = tc.rewardsParams
-					},
-				)
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
+				// other App instances in TestApp used for non-determinism checking.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					genesis.GenesisTime = GenesisTime
+					// Initialize sender module with its initial balance.
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *banktypes.GenesisState) {
+							genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
+								Address: RewardsTreasuryAccAddress.String(),
+								Coins: sdk.Coins{
+									sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewInt(0)),
+								},
+							})
+							genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
+								Address: RewardsVesterAccAddress.String(),
+								Coins: sdk.Coins{
+									sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewIntFromBigInt(
+										tc.initRewardsVesterBalance,
+									)),
+								},
+							})
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *vesttypes.GenesisState) {
+							genesisState.VestEntries = tc.vestEntries
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *rewardstypes.GenesisState) {
+							genesisState.Params = tc.rewardsParams
+						},
+					)
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 
 			for _, humanOraclePrice := range tc.humanOraclePrices {
