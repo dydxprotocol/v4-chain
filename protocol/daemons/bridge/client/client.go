@@ -12,7 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -26,7 +26,7 @@ import (
 // Start begins a job that periodically runs the RunBridgeDaemonTaskLoop function.
 func Start(
 	ctx context.Context,
-	flags flags.DaemonFlags,
+	flags daemonflags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
@@ -36,6 +36,10 @@ func Start(
 		"Starting bridge daemon with flags",
 		"BridgeFlags", flags.Bridge,
 	)
+	// Panic if EthRpcEndpoint is empty.
+	if flags.Bridge.EthRpcEndpoint == "" {
+		return fmt.Errorf("flag %s is not set", daemonflags.FlagBridgeDaemonEthRpcEndpoint)
+	}
 
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)

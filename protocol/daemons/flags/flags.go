@@ -129,10 +129,6 @@ func AddDaemonFlagsToCmd(
 		df.Bridge.EthRpcEndpoint,
 		"Ethereum Node Rpc Endpoint",
 	)
-	// Require bridge daemon eth RPC endpoint flag.
-	if err := cmd.MarkFlagRequired(FlagBridgeDaemonEthRpcEndpoint); err != nil {
-		panic(err)
-	}
 
 	// Liquidation Daemon.
 	cmd.Flags().Bool(
