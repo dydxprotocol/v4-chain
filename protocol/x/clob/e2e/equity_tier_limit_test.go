@@ -17,12 +17,13 @@ import (
 
 func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 	tests := map[string]struct {
-		allowedOrders                []clobtypes.Order
-		limitedOrder                 clobtypes.Order
-		equityTierLimitConfiguration clobtypes.EquityTierLimitConfiguration
-		cancellation                 *clobtypes.MsgCancelOrder
-		advanceBlock                 bool
-		expectError                  bool
+		allowedOrders                                 []clobtypes.Order
+		limitedOrder                                  clobtypes.Order
+		equityTierLimitConfiguration                  clobtypes.EquityTierLimitConfiguration
+		cancellation                                  *clobtypes.MsgCancelOrder
+		advanceBlock                                  bool
+		expectError                                   bool
+		crashingAppCheckTxNonDeterminsmChecksDisabled bool
 	}{
 		"Short-term order would exceed max open short-term orders in same block": {
 			allowedOrders: []clobtypes.Order{
@@ -239,6 +240,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 			},
 			advanceBlock: true,
 			expectError:  true,
+			// The short-term order will be forgotten when restarting the app.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
 		},
 		"Long-term order would exceed max open stateful orders across blocks": {
 			allowedOrders: []clobtypes.Order{
@@ -551,6 +554,8 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 				},
 			},
 			advanceBlock: true,
+			// The short-term order & cancel will be forgotten when restarting the app.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
 		},
 		"Order cancellation prevents exceeding max open stateful orders for long-term order across blocks": {
 			allowedOrders: []clobtypes.Order{
@@ -656,20 +661,22 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
-				genesis := testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
-					state.Subaccounts = []satypes.Subaccount{
-						constants.Alice_Num0_10_000USD,
-					}
-				})
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
-					state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
-					// Don't enforce the block rate limit.
-					state.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{}
-				})
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminsmChecksDisabled).
+				WithGenesisDocFn(func() types.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
+						state.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num0_10_000USD,
+						}
+					})
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
+						state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
+						// Don't enforce the block rate limit.
+						state.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{}
+					})
+					return genesis
+				}).Build()
 
 			ctx := tApp.InitChain()
 
@@ -723,11 +730,12 @@ func TestPlaceOrder_EquityTierLimit(t *testing.T) {
 
 func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 	tests := map[string]struct {
-		firstOrder                   clobtypes.Order
-		secondOrder                  clobtypes.Order
-		equityTierLimitConfiguration clobtypes.EquityTierLimitConfiguration
-		advanceToBlockAndTime        uint32
-		expectError                  bool
+		firstOrder                                    clobtypes.Order
+		secondOrder                                   clobtypes.Order
+		equityTierLimitConfiguration                  clobtypes.EquityTierLimitConfiguration
+		advanceToBlockAndTime                         uint32
+		expectError                                   bool
+		crashingAppCheckTxNonDeterminsmChecksDisabled bool
 	}{
 		"Short-term order has not expired": {
 			firstOrder: MustScaleOrder(
@@ -756,6 +764,8 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 			},
 			advanceToBlockAndTime: 14,
 			expectError:           true,
+			// Short term order will be forgotten on app restart.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
 		},
 		"Short-term order has expired": {
 			firstOrder: MustScaleOrder(
@@ -783,6 +793,8 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 				},
 			},
 			advanceToBlockAndTime: 15,
+			// Short term order will be forgotten on app restart.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
 		},
 		"Stateful order has not expired": {
 			firstOrder: MustScaleOrder(
@@ -843,18 +855,20 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
-				genesis := testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
-					state.Subaccounts = []satypes.Subaccount{
-						constants.Alice_Num0_10_000USD,
-					}
-				})
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
-					state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
-				})
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminsmChecksDisabled).
+				WithGenesisDocFn(func() types.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
+						state.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num0_10_000USD,
+						}
+					})
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
+						state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
+					})
+					return genesis
+				}).Build()
 
 			ctx := tApp.InitChain()
 
@@ -888,13 +902,14 @@ func TestPlaceOrder_EquityTierLimit_OrderExpiry(t *testing.T) {
 
 func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 	tests := map[string]struct {
-		makerOrder                   clobtypes.Order
-		takerOrder                   clobtypes.Order
-		extraOrder                   clobtypes.Order
-		equityTierLimitConfiguration clobtypes.EquityTierLimitConfiguration
-		cancellation                 *clobtypes.MsgCancelOrder
-		advanceBlock                 bool
-		expectError                  bool
+		makerOrder                                    clobtypes.Order
+		takerOrder                                    clobtypes.Order
+		extraOrder                                    clobtypes.Order
+		equityTierLimitConfiguration                  clobtypes.EquityTierLimitConfiguration
+		cancellation                                  *clobtypes.MsgCancelOrder
+		advanceBlock                                  bool
+		expectError                                   bool
+		crashingAppCheckTxNonDeterminsmChecksDisabled bool
 	}{
 		"Fully filled order prevents exceeding max open short-term orders for short-term order in same block": {
 			makerOrder: MustScaleOrder(
@@ -1019,6 +1034,8 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 			},
 			advanceBlock: true,
 			expectError:  true,
+			// The short-term order will be forgotten when restarting the app.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
 		},
 		"Order fully filled prevents exceeding max open stateful orders for conditional order across blocks": {
 			makerOrder: MustScaleOrder(
@@ -1150,19 +1167,21 @@ func TestPlaceOrder_EquityTierLimit_OrderFill(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() types.GenesisDoc {
-				genesis := testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
-					state.Subaccounts = []satypes.Subaccount{
-						constants.Alice_Num0_10_000USD,
-						constants.Bob_Num0_100_000USD,
-					}
-				})
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
-					state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
-				})
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminsmChecksDisabled).
+				WithGenesisDocFn(func() types.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *satypes.GenesisState) {
+						state.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num0_10_000USD,
+							constants.Bob_Num0_100_000USD,
+						}
+					})
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *clobtypes.GenesisState) {
+						state.EquityTierLimitConfig = tc.equityTierLimitConfiguration
+					})
+					return genesis
+				}).Build()
 
 			ctx := tApp.InitChain()
 
