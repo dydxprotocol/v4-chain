@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,7 +31,10 @@ var rootCmd = &cobra.Command{
 }
 
 func main() {
-	rootCmd.Execute()
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintf(os.Stderr, "iaviewer got error: '%s'", err)
+		os.Exit(1)
+	}
 }
 
 func init() {
@@ -42,12 +46,16 @@ func init() {
 
 func AddPathFlag(cmd *cobra.Command) {
 	cmd.Flags().String("path", "", "path to leveldb dir")
-	cmd.MarkFlagRequired("path")
+	if err := cmd.MarkFlagRequired("path"); err != nil {
+		panic(err)
+	}
 }
 
 func AddPrefixFlag(cmd *cobra.Command) {
 	cmd.Flags().String("prefix", "", "prefix of the db e.g. \"s/k:gov/\"")
-	cmd.MarkFlagRequired("prefix")
+	if err := cmd.MarkFlagRequired("prefix"); err != nil {
+		panic(err)
+	}
 }
 
 func AddVersionFlag(cmd *cobra.Command) {
