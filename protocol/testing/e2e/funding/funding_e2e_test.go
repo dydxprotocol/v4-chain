@@ -9,9 +9,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -25,6 +29,7 @@ const (
 	BlockTimeDuration             = 2 * time.Second
 	NumBlocksPerMinute            = int64(time.Minute / BlockTimeDuration) // 30
 	BlockHeightAtFirstFundingTick = 1000
+	TestTransferUsdcForSettlement = 10_000_000_000_000
 )
 
 var (
@@ -76,6 +81,18 @@ var (
 			GoodTilBlockTime: uint32(GenesisTime.Add(24 * time.Hour).Unix()),
 		},
 	}
+	OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Carl_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side: clobtypes.Order_SIDE_BUY,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(GenesisTime.Add(24 * time.Hour).Unix()),
+		},
+	}
 	// Genesis time of the chain
 	GenesisTime                               = time.Unix(1690000000, 0)
 	FirstFundingSampleTick                    = time.Unix(1690000050, 0)
@@ -85,7 +102,43 @@ var (
 		1690002000+int64(epochstypes.FundingTickEpochDuration),
 		0,
 	)
+	// Test transfers to settle Alice and Bob's subaccount.
+	TestTranfers = []sendingtypes.MsgCreateTransfer{
+		{
+			Transfer: &sendingtypes.Transfer{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.Alice_Num0,
+				AssetId:   assettypes.AssetUsdc.Id,
+				Amount:    TestTransferUsdcForSettlement,
+			},
+		},
+		{
+			Transfer: &sendingtypes.Transfer{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.Bob_Num0,
+				AssetId:   assettypes.AssetUsdc.Id,
+				Amount:    TestTransferUsdcForSettlement,
+			},
+		},
+		{
+			Transfer: &sendingtypes.Transfer{
+				Sender:    constants.Dave_Num0,
+				Recipient: constants.Carl_Num0,
+				AssetId:   assettypes.AssetUsdc.Id,
+				Amount:    TestTransferUsdcForSettlement,
+			},
+		},
+	}
 )
+
+type expectedSettlements struct {
+	SubaccountId satypes.SubaccountId
+	Settlement   int64
+}
+
+func getSubaccountUsdcBalance(subaccount satypes.Subaccount) int64 {
+	return subaccount.AssetPositions[0].Quantums.BigInt().Int64()
+}
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
@@ -95,8 +148,10 @@ func TestFunding(t *testing.T) {
 		indexPriceForPremium map[uint32]string
 		// oracle price for funding index calculation
 		oracelPriceForFundingIndex map[uint32]string
-		expectedFundingPremium     int32
-		expectedFundingIndex       int64
+		// address -> funding
+		expectedSubaccountSettlements []expectedSettlements
+		expectedFundingPremium        int32
+		expectedFundingIndex          int64
 	}{
 		"Test funding": {
 			testHumanOrders: []TestHumanOrder{
@@ -111,7 +166,7 @@ func TestFunding(t *testing.T) {
 					HumanPrice: "28000",
 					HumanSize:  "2",
 				},
-				// Matched orders to set up Alice and Bob's positions.
+				// Matched orders to set up positions for Alice, Bob and Carl
 				{
 					Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
 					HumanPrice: "28003",
@@ -120,7 +175,12 @@ func TestFunding(t *testing.T) {
 				{
 					Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
 					HumanPrice: "28003",
-					HumanSize:  "1",
+					HumanSize:  "0.8",
+				},
+				{
+					Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.2",
 				},
 			},
 			initialIndexPrice: map[uint32]string{
@@ -135,6 +195,26 @@ func TestFunding(t *testing.T) {
 			expectedFundingPremium: 1430, // 28_000 / 27_960 - 1 ~= 0.001430
 			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 483
 			expectedFundingIndex: 483,
+			expectedSubaccountSettlements: []expectedSettlements{
+				{
+					SubaccountId: constants.Alice_Num0,
+					// Alice is long 0.8 BTC, pays funding
+					// 0.00143 / 8 * 27_000 * 0.8 ~= $3.864
+					Settlement: -3_864_000,
+				},
+				{
+					SubaccountId: constants.Bob_Num0,
+					// Bob is short 1 BTC, receives funding
+					// 0.00143 / 8 * 27_000 * 1 ~= $4.83
+					Settlement: 4_830_000,
+				},
+				{
+					SubaccountId: constants.Carl_Num0,
+					// Carl is long 0.2 BTC, pays funding
+					// 0.00143 / 8 * 27_000 * 0.2 ~= $0.966
+					Settlement: -966_000,
+				},
+			},
 		},
 		// TODO(CORE-712): Add more test cases
 	}
@@ -247,7 +327,65 @@ func TestFunding(t *testing.T) {
 			btcPerp, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, 0)
 			require.NoError(t, err)
 			require.Equal(t, tc.expectedFundingIndex, btcPerp.FundingIndex.BigInt().Int64())
-			// TODO(CORE-703): Settle Alice and Bob's positions, so we can measure that the funding payment as processed.
+
+			subaccsBeforeSettlement := []satypes.Subaccount{}
+			totalUsdcBalanceBeforeSettlement := int64(0)
+			for _, expectedSettlements := range tc.expectedSubaccountSettlements {
+				subaccBeforeSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, expectedSettlements.SubaccountId)
+				// Before settlement, each perpetual position should have zero funding index, since these positions
+				// were opened when BTC perpetual has zero funding idnex.
+				require.Equal(t, int64(0), subaccBeforeSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64())
+				subaccsBeforeSettlement = append(subaccsBeforeSettlement, subaccBeforeSettlement)
+				totalUsdcBalanceBeforeSettlement += getSubaccountUsdcBalance(subaccBeforeSettlement)
+			}
+
+			// Send transfers from Dave to subaccounts that has positions, so that funding is settled for these accounts.
+			for _, transfer := range TestTranfers {
+				// Invoke CheckTx.
+				CheckTx_MsgDepositToSubaccount := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(&transfer),
+						Gas:                  100_000,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					&transfer,
+				)
+				resp := tApp.CheckTx(CheckTx_MsgDepositToSubaccount)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight()+1), testapp.AdvanceToBlockOptions{})
+
+			subaccsAfterSettlement := []satypes.Subaccount{}
+			totalUsdcBalanceAfterSettlement := int64(0)
+			for i, expectedSettlements := range tc.expectedSubaccountSettlements {
+				subaccAfterSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, expectedSettlements.SubaccountId)
+
+				// Before settlement, each perpetual position should have zero funding index, since these positions
+				// were opened when BTC perpetual has zero funding idnex.
+				// TODO(CORE-723): Start with non-zero funding index on the perpetual.
+				require.Equal(t, tc.expectedFundingIndex, subaccAfterSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64())
+				subaccsAfterSettlement = append(subaccsAfterSettlement, subaccAfterSettlement)
+				totalUsdcBalanceAfterSettlement += getSubaccountUsdcBalance(subaccAfterSettlement)
+
+				require.Equal(t,
+					getSubaccountUsdcBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
+					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+					"subaccount id: %v, expected settlement: %v, balance before settlement: %v, balance after (minus test transfer): %v",
+					expectedSettlements.SubaccountId,
+					expectedSettlements.Settlement,
+					getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
+					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
+				)
+			}
+
+			// Check that the invovled subaccounts has the same total balance before and after the transfer (besides transfers from Dave).
+			require.Equal(t,
+				totalUsdcBalanceBeforeSettlement,
+				totalUsdcBalanceAfterSettlement-TestTransferUsdcForSettlement*3,
+			)
 		})
 	}
 }
