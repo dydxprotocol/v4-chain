@@ -10,7 +10,7 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -28,7 +28,7 @@ func TestStart_EthRpcEndpointNotSet(t *testing.T) {
 		t,
 		client.Start(
 			grpc.Ctx,
-			flags.GetDefaultDaemonFlags(),
+			daemonflags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 			log.NewNopLogger(),
 			&mocks.GrpcClient{},
