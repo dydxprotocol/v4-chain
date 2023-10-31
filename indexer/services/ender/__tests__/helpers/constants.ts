@@ -26,7 +26,11 @@ import {
   OrderRemovalReason,
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
-  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1, UpdateClobPairEventV1,
+  ClobPairStatus,
+  LiquidityTierUpsertEventV1,
+  UpdatePerpetualEventV1,
+  UpdateClobPairEventV1,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -275,6 +279,14 @@ export const defaultTransferEvent: TransferEventV1 = {
   recipient: {
     subaccountId: defaultRecipientSubaccountId,
   },
+};
+export const defaultDeleveragingEvent: DeleveragingEventV1 = {
+  liquidated: defaultSenderSubaccountId,
+  offsetting: defaultRecipientSubaccountId,
+  clobPairId: 0,
+  fillAmount: Long.fromValue(10_000, true),
+  subticks: Long.fromValue(1_000_000_000, true),
+  isBuy: true,
 };
 export const defaultDepositEvent: TransferEventV1 = {
   assetId: 0,
