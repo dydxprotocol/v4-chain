@@ -445,6 +445,62 @@ export interface OrderFillEventV1SDKType {
   total_filled_taker: Long;
 }
 /**
+ * DeleveragingEvent message contains all the information for a deleveraging
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and the
+ * amount filled.
+ */
+
+export interface DeleveragingEventV1 {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountId;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountId;
+  /** The ID of the clob pair that was liquidated. */
+
+  clobPairId: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fillAmount: Long;
+  /** The closing price in subticks. */
+
+  subticks: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  isBuy: boolean;
+}
+/**
+ * DeleveragingEvent message contains all the information for a deleveraging
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and the
+ * amount filled.
+ */
+
+export interface DeleveragingEventV1SDKType {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountIdSDKType;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountIdSDKType;
+  /** The ID of the clob pair that was liquidated. */
+
+  clob_pair_id: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fill_amount: Long;
+  /** The closing price in subticks. */
+
+  subticks: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  is_buy: boolean;
+}
+/**
  * LiquidationOrder represents the liquidation taker order to be included in a
  * liquidation order fill event.
  */
@@ -1714,6 +1770,101 @@ export const OrderFillEventV1 = {
     message.takerFee = object.takerFee !== undefined && object.takerFee !== null ? Long.fromValue(object.takerFee) : Long.ZERO;
     message.totalFilledMaker = object.totalFilledMaker !== undefined && object.totalFilledMaker !== null ? Long.fromValue(object.totalFilledMaker) : Long.UZERO;
     message.totalFilledTaker = object.totalFilledTaker !== undefined && object.totalFilledTaker !== null ? Long.fromValue(object.totalFilledTaker) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
+  return {
+    liquidated: undefined,
+    offsetting: undefined,
+    clobPairId: 0,
+    fillAmount: Long.UZERO,
+    subticks: Long.UZERO,
+    isBuy: false
+  };
+}
+
+export const DeleveragingEventV1 = {
+  encode(message: DeleveragingEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.liquidated !== undefined) {
+      IndexerSubaccountId.encode(message.liquidated, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.offsetting !== undefined) {
+      IndexerSubaccountId.encode(message.offsetting, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.clobPairId !== 0) {
+      writer.uint32(24).uint32(message.clobPairId);
+    }
+
+    if (!message.fillAmount.isZero()) {
+      writer.uint32(32).uint64(message.fillAmount);
+    }
+
+    if (!message.subticks.isZero()) {
+      writer.uint32(40).uint64(message.subticks);
+    }
+
+    if (message.isBuy === true) {
+      writer.uint32(48).bool(message.isBuy);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DeleveragingEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleveragingEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidated = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.offsetting = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 4:
+          message.fillAmount = (reader.uint64() as Long);
+          break;
+
+        case 5:
+          message.subticks = (reader.uint64() as Long);
+          break;
+
+        case 6:
+          message.isBuy = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<DeleveragingEventV1>): DeleveragingEventV1 {
+    const message = createBaseDeleveragingEventV1();
+    message.liquidated = object.liquidated !== undefined && object.liquidated !== null ? IndexerSubaccountId.fromPartial(object.liquidated) : undefined;
+    message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
+    message.clobPairId = object.clobPairId ?? 0;
+    message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
+    message.subticks = object.subticks !== undefined && object.subticks !== null ? Long.fromValue(object.subticks) : Long.UZERO;
+    message.isBuy = object.isBuy ?? false;
     return message;
   }
 
