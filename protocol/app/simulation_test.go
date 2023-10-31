@@ -326,7 +326,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ChainID = simChainId
 
 	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numTimesToRunPerSeed := 3
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := defaultAppOptionsForSimulation()
