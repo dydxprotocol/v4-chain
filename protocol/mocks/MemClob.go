@@ -63,26 +63,35 @@ func (_m *MemClob) CreateOrderbook(ctx types.Context, clobPair clobtypes.ClobPai
 }
 
 // DeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId, deltaQuantums
-func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) (*big.Int, error) {
+func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32, deltaQuantums *big.Int) ([]clobtypes.MatchPerpetualDeleveraging_Fill, *big.Int, error) {
 	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums)
 
-	var r0 *big.Int
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
+	var r0 []clobtypes.MatchPerpetualDeleveraging_Fill
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) []clobtypes.MatchPerpetualDeleveraging_Fill); ok {
 		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).([]clobtypes.MatchPerpetualDeleveraging_Fill)
 		}
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+	var r1 *big.Int
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) *big.Int); ok {
 		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*big.Int)
+		}
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r2 = rf(ctx, subaccountId, perpetualId, deltaQuantums)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetCancelOrder provides a mock function with given fields: ctx, orderId

@@ -91,6 +91,7 @@ type MemClob interface {
 		perpetualId uint32,
 		deltaQuantums *big.Int,
 	) (
+		fills []MatchPerpetualDeleveraging_Fill,
 		quantumsDeleveraged *big.Int,
 		err error,
 	)

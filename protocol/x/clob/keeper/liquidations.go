@@ -3,6 +3,8 @@ package keeper
 import (
 	"bytes"
 	"errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math"
 	"math/big"
 	"sort"
@@ -142,7 +144,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		subaccountId := liquidationOrder.GetSubaccountId()
 		perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
 
-		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
+		fills, _, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
+		clobPairId := k.mustGetClobPairForPerpetualId(ctx, perpetualId).Id
+		subticks := liquidationOrder.GetOrderSubticks()
+		isBuy := liquidationOrder.IsBuy()
+
 		if err != nil {
 			k.Logger(ctx).Error(
 				"Failed to deleverage subaccount.",
@@ -152,6 +158,25 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			)
 			return err
 		}
+		// Send on-chain deleveraging event for each fill.
+		for _, fill := range fills {
+			k.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeDeleveraging,
+				indexerevents.DeleveragingEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewDeleveragingEvent(
+						subaccountId,
+						fill.OffsettingSubaccountId,
+						clobPairId,
+						satypes.BaseQuantums(fill.FillAmount),
+						uint64(subticks),
+						isBuy,
+					),
+				),
+			)
+		}
+
 	}
 	telemetry.MeasureSince(
 		startDeleverageSubaccounts,

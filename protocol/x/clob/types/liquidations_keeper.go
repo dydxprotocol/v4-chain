@@ -23,6 +23,7 @@ type LiquidationsKeeper interface {
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	) (
+		fills []MatchPerpetualDeleveraging_Fill,
 		quantumsDeleveraged *big.Int,
 		err error,
 	)
