@@ -358,22 +358,27 @@ func TestFunding(t *testing.T) {
 
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight()+1), testapp.AdvanceToBlockOptions{})
 
-			subaccsAfterSettlement := []satypes.Subaccount{}
 			totalUsdcBalanceAfterSettlement := int64(0)
 			for i, expectedSettlements := range tc.expectedSubaccountSettlements {
-				subaccAfterSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, expectedSettlements.SubaccountId)
+				subaccAfterSettlement := tApp.App.SubaccountsKeeper.GetSubaccount(
+					ctx,
+					expectedSettlements.SubaccountId,
+				)
 
 				// Before settlement, each perpetual position should have zero funding index, since these positions
 				// were opened when BTC perpetual has zero funding idnex.
 				// TODO(CORE-723): Start with non-zero funding index on the perpetual.
-				require.Equal(t, tc.expectedFundingIndex, subaccAfterSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64())
-				subaccsAfterSettlement = append(subaccsAfterSettlement, subaccAfterSettlement)
+				require.Equal(t,
+					tc.expectedFundingIndex,
+					subaccAfterSettlement.PerpetualPositions[0].FundingIndex.BigInt().Int64(),
+				)
 				totalUsdcBalanceAfterSettlement += getSubaccountUsdcBalance(subaccAfterSettlement)
 
 				require.Equal(t,
 					getSubaccountUsdcBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
 					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
-					"subaccount id: %v, expected settlement: %v, balance before settlement: %v, balance after (minus test transfer): %v",
+					"subaccount id: %v, expected settlement: %v, balance before settlement: %v, "+
+						"balance after (minus test transfer): %v",
 					expectedSettlements.SubaccountId,
 					expectedSettlements.Settlement,
 					getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
@@ -381,7 +386,8 @@ func TestFunding(t *testing.T) {
 				)
 			}
 
-			// Check that the invovled subaccounts has the same total balance before and after the transfer (besides transfers from Dave).
+			// Check that the involved subaccounts has the same total balance before and after the transfer
+			// (besides transfers from Dave).
 			require.Equal(t,
 				totalUsdcBalanceBeforeSettlement,
 				totalUsdcBalanceAfterSettlement-TestTransferUsdcForSettlement*3,
