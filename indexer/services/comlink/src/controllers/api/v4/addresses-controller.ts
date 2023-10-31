@@ -269,6 +269,7 @@ router.get(
         'AddressesController GET /:address',
         'Addresses error',
         error,
+        req,
         res,
       );
     }
@@ -308,6 +309,7 @@ router.get(
         'AddressesController GET /:address/subaccountNumber/:subaccountNumber',
         'Addresses subaccount error',
         error,
+        req,
         res,
       );
     } finally {

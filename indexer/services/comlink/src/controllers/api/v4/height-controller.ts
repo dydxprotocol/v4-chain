@@ -37,7 +37,7 @@ router.get(
   rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
-  async (_req: express.Request, res: express.Response) => {
+  async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
     try {
       const controller: HeightController = new HeightController();
@@ -49,6 +49,7 @@ router.get(
         'HeightController GET /',
         'Height error',
         error,
+        req,
         res,
       );
     } finally {
