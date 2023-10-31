@@ -446,8 +446,8 @@ export interface OrderFillEventV1SDKType {
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
- * on the dYdX chain. This includes the liquidated/offsetting subaccounts and the
- * amount filled.
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+ * the amount filled.
  */
 
 export interface DeleveragingEventV1 {
@@ -477,8 +477,8 @@ export interface DeleveragingEventV1 {
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
- * on the dYdX chain. This includes the liquidated/offsetting subaccounts and the
- * amount filled.
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+ * the amount filled.
  */
 
 export interface DeleveragingEventV1SDKType {

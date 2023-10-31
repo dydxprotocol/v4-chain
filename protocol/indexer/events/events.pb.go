@@ -844,8 +844,8 @@ func (*OrderFillEventV1) XXX_OneofWrappers() []interface{} {
 }
 
 // DeleveragingEvent message contains all the information for a deleveraging
-// on the dYdX chain. This includes the liquidated/offsetting subaccounts and the
-// amount filled.
+// on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+// the amount filled.
 type DeleveragingEventV1 struct {
 	// ID of the subaccount that was liquidated.
 	Liquidated v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=liquidated,proto3" json:"liquidated"`
