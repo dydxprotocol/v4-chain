@@ -116,6 +116,7 @@ router.get(
         'TradesController GET /perpetualMarket/:ticker',
         'Trades error',
         error,
+        req,
         res,
       );
     } finally {

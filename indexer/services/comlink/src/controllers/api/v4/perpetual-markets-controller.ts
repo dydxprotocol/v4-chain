@@ -142,6 +142,7 @@ router.get(
         'PerpetualMarketController GET /',
         'PerpetualMarket error',
         error,
+        req,
         res,
       );
     } finally {
