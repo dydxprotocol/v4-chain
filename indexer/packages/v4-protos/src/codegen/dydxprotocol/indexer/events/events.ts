@@ -465,7 +465,10 @@ export interface DeleveragingEventV1 {
    */
 
   fillAmount: Long;
-  /** The closing price in subticks. */
+  /**
+   * The closing price in subticks. Bankruptcy price of liquidated subaccount
+   * is not guaranteed to be a multiple of subticks_per_tick.
+   */
 
   subticks: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
@@ -493,7 +496,10 @@ export interface DeleveragingEventV1SDKType {
    */
 
   fill_amount: Long;
-  /** The closing price in subticks. */
+  /**
+   * The closing price in subticks. Bankruptcy price of liquidated subaccount
+   * is not guaranteed to be a multiple of subticks_per_tick.
+   */
 
   subticks: Long;
   /** `true` if liquidating a short position, `false` otherwise. */

@@ -145,9 +145,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
 
 		fills, _, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
-		clobPairId := k.mustGetClobPairForPerpetualId(ctx, perpetualId).Id
-		subticks := liquidationOrder.GetOrderSubticks()
-		isBuy := liquidationOrder.IsBuy()
 
 		if err != nil {
 			k.Logger(ctx).Error(
@@ -158,6 +155,9 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			)
 			return err
 		}
+		clobPairId := k.mustGetClobPairForPerpetualId(ctx, perpetualId).Id
+		subticks := liquidationOrder.GetOrderSubticks()
+		isBuy := liquidationOrder.IsBuy()
 		// Send on-chain deleveraging event for each fill.
 		for _, fill := range fills {
 			k.GetIndexerEventManager().AddTxnEvent(

@@ -856,7 +856,8 @@ type DeleveragingEventV1 struct {
 	// The amount filled between the liquidated and offsetting position, in
 	// base quantums.
 	FillAmount uint64 `protobuf:"varint,4,opt,name=fill_amount,json=fillAmount,proto3" json:"fill_amount,omitempty"`
-	// The closing price in subticks.
+	// The closing price in subticks. Bankruptcy price of liquidated subaccount
+	// is not guaranteed to be a multiple of subticks_per_tick.
 	Subticks uint64 `protobuf:"varint,5,opt,name=subticks,proto3" json:"subticks,omitempty"`
 	// `true` if liquidating a short position, `false` otherwise.
 	IsBuy bool `protobuf:"varint,6,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`

@@ -171,16 +171,17 @@ message OrderFillEventV1 {
 message DeleveragingEventV1 {
   // ID of the subaccount that was liquidated.
   dydxprotocol.indexer.protocol.v1.IndexerSubaccountId liquidated = 1
-  [ (gogoproto.nullable) = false ];
+      [ (gogoproto.nullable) = false ];
   // ID of the subaccount that was used to offset the position.
   dydxprotocol.indexer.protocol.v1.IndexerSubaccountId offsetting = 2
-  [ (gogoproto.nullable) = false ];
+      [ (gogoproto.nullable) = false ];
   // The ID of the clob pair that was liquidated.
   uint32 clob_pair_id = 3;
   // The amount filled between the liquidated and offsetting position, in
   // base quantums.
   uint64 fill_amount = 4;
-  // The closing price in subticks.
+  // The closing price in subticks. Bankruptcy price of liquidated subaccount
+  // is not guaranteed to be a multiple of subticks_per_tick.
   uint64 subticks = 5;
   // `true` if liquidating a short position, `false` otherwise.
   bool is_buy = 6;
