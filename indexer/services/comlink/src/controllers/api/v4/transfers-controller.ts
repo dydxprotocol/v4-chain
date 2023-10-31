@@ -163,6 +163,7 @@ router.get(
         'TransfersController GET /',
         'Transfers error',
         error,
+        req,
         res,
       );
     } finally {

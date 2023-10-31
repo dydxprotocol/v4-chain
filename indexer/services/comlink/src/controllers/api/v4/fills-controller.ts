@@ -161,6 +161,7 @@ router.get(
         'FillsController GET /',
         'Fills error',
         error,
+        req,
         res,
       );
     } finally {
