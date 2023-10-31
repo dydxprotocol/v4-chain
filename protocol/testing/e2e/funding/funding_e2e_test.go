@@ -180,13 +180,13 @@ func TestFunding(t *testing.T) {
 				},
 			},
 			initialIndexPrice: map[uint32]string{
-				0: "28002",
+				TestMarketId: "28002",
 			},
 			indexPriceForPremium: map[uint32]string{
-				0: "27960",
+				TestMarketId: "27960",
 			},
 			oracelPriceForFundingIndex: map[uint32]string{
-				0: "27000",
+				TestMarketId: "27000",
 			},
 			expectedFundingPremium: 1430, // 28_000 / 27_960 - 1 ~= 0.001430
 			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 483
@@ -273,7 +273,7 @@ func TestFunding(t *testing.T) {
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
+				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[TestMarketId], -5),
 				// Only index price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
@@ -308,7 +308,7 @@ func TestFunding(t *testing.T) {
 				ctx,
 				tApp.App,
 				TestMarketId,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
+				pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[TestMarketId], -5),
 				// Only index price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
