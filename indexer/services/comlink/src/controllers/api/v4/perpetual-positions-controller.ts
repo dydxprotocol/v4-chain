@@ -198,6 +198,7 @@ router.get(
         'PerpetualPositionsController GET /',
         'Perpetual positions error',
         error,
+        req,
         res,
       );
     } finally {
