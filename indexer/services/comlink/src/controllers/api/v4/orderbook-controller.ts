@@ -79,6 +79,7 @@ router.get(
         'OrderbooksController GET /perpetualMarket/:ticker',
         'Orderbooks error',
         error,
+        req,
         res,
       );
     } finally {

@@ -101,6 +101,7 @@ router.get(
         'CandlesController GET /perpetualMarkets/:ticker',
         'Candles error',
         error,
+        req,
         res,
       );
     } finally {
