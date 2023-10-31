@@ -10,7 +10,7 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -21,6 +21,22 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestStart_EthRpcEndpointNotSet(t *testing.T) {
+	errorMsg := "flag bridge-daemon-eth-rpc-endpoint is not set"
+
+	require.EqualError(
+		t,
+		client.Start(
+			grpc.Ctx,
+			daemonflags.GetDefaultDaemonFlags(),
+			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
+			log.NewNopLogger(),
+			&mocks.GrpcClient{},
+		),
+		errorMsg,
+	)
+}
+
 func TestStart_TcpConnectionFails(t *testing.T) {
 	errorMsg := "Failed to create connection"
 
@@ -28,11 +44,15 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
 
+	// Override default daemon flags with a non-empty EthRpcEndpoint.
+	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
+	daemonFlagsWithEthRpcEndpoint.Bridge.EthRpcEndpoint = "http://localhost:8545"
+
 	require.EqualError(
 		t,
 		client.Start(
 			grpc.Ctx,
-			flags.GetDefaultDaemonFlags(),
+			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 			log.NewNopLogger(),
 			mockGrpcClient,
@@ -56,11 +76,15 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
+	// Override default daemon flags with a non-empty EthRpcEndpoint.
+	daemonFlagsWithEthRpcEndpoint := daemonflags.GetDefaultDaemonFlags()
+	daemonFlagsWithEthRpcEndpoint.Bridge.EthRpcEndpoint = "http://localhost:8545"
+
 	require.EqualError(
 		t,
 		client.Start(
 			grpc.Ctx,
-			flags.GetDefaultDaemonFlags(),
+			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 			log.NewNopLogger(),
 			mockGrpcClient,
