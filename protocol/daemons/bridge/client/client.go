@@ -36,6 +36,7 @@ func Start(
 		"Starting bridge daemon with flags",
 		"BridgeFlags", flags.Bridge,
 	)
+
 	// Panic if EthRpcEndpoint is empty.
 	if flags.Bridge.EthRpcEndpoint == "" {
 		return fmt.Errorf("flag %s is not set", daemonflags.FlagBridgeDaemonEthRpcEndpoint)
