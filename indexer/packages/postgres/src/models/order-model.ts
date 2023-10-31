@@ -92,7 +92,7 @@ export default class OrderModel extends BaseModel {
         goodTilBlock: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
         goodTilBlockTime: { type: ['string', 'null'], default: null, format: 'date-time' },
         createdAtHeight: { type: ['string', 'null'], default: null, pattern: IntegerPattern },
-        clientMetadata: { type: 'string', pattern: IntegerPattern },
+        clientMetadata: { type: ['string', 'null'], pattern: IntegerPattern },
         triggerPrice: { type: ['string', 'null'], default: null, pattern: NonNegativeNumericPattern },
         updatedAt: { type: 'string', format: 'date-time' },
         updatedAtHeight: { type: 'string', pattern: IntegerPattern },
