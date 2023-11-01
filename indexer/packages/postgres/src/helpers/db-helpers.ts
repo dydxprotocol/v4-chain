@@ -70,7 +70,7 @@ $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;`;
       return rawQuery(sqlFn, {}).catch((error) => {
         logger.error({
           at: 'dbHelpers#createModelToJsonFunctions',
-          message: `Failed to create or replace function dydx_to_json for model ${model.tableName}.`,
+          message: `Failed to create or replace function dydx_to_jsonb for model ${model.tableName}.`,
           error,
         });
         throw error;
