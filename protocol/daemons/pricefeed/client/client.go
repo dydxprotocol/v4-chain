@@ -2,10 +2,10 @@ package client
 
 import (
 	"context"
+	sdkerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -51,38 +51,45 @@ type Client struct {
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
 
-	// isHealthy indicates whether the daemon is healthy - i.e., it is actively running and calculating prices.
-	// The daemon is considered healthy when it is producing non-empty price updates. It will be considered unhealthy
-	// until it produces its first non-empty price update.
-	isHealthy atomic.Bool
+	// healthLock is used to synchronize access to the healthError field.
+	healthLock sync.Mutex
+
+	// healthError is used to track daemon health. For a healthy daemon, this field is nil. For an unhealthy daemon,
+	// this field is set to the error that caused the daemon to become unhealthy.
+	healthError error
 }
 
-// Ensure Client implements the DaemonClient interface.
-var _ daemontypes.DaemonClient = (*Client)(nil)
+// Ensure Client implements the HealthCheckable interface.
+var _ daemontypes.HealthCheckable = (*Client)(nil)
 
 // HealthCheck returns an error if the daemon is unhealthy.
 // The daemon is considered unhealthy if it is not producing non-empty price updates. We expect a short period of time
 // to pass on daemon startup where the daemon is unhealthy as the price cache warms up.
 // This method is synchronized by isHealthy, which is an atomic.Bool.
 func (c *Client) HealthCheck(_ context.Context) error {
-	if !c.isHealthy.Load() {
-		return errors.New(
-			"pricefeed daemon is unhealthy - it either failed to initialize or is producing empty price updates",
-		)
-	}
+	c.healthLock.Lock()
+	defer c.healthLock.Unlock()
 
-	return nil
+	if c.healthError == nil {
+		return nil
+	}
+	return sdkerrors.Wrap(c.healthError, "price deamon unhealthy")
 }
 
-// setHealth sets the health of the daemon. This method is synchronized by isHealthy, which is an atomic.Bool.
-func (c *Client) setHealth(isHealthy bool) {
-	c.isHealthy.Store(isHealthy)
+// setHealth sets the health of the daemon. Setting the health with a nil err indicates the daemon is healthy. If the
+// daemon is unhealthy, the err parameter will be used to track the reason. This method is synchronized by healthLock.
+func (c *Client) setHealth(err error) {
+	c.healthLock.Lock()
+	defer c.healthLock.Unlock()
+
+	c.healthError = err
 }
 
 func newClient() *Client {
 	client := &Client{
-		tickers: []*time.Ticker{},
-		stops:   []chan bool{},
+		tickers:     []*time.Ticker{},
+		stops:       []chan bool{},
+		healthError: errors.New("daemon uninitialized"),
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -119,7 +126,7 @@ func (c *Client) Stop() {
 		}
 
 		c.runningSubtasksWaitGroup.Wait()
-		c.isHealthy.Store(false)
+		c.setHealth(errors.New("daemon stopped"))
 	})
 }
 

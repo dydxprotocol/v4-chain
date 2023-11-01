@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
@@ -92,7 +93,8 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 			if err != nil {
 				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
 			}
-			c.setHealth(err == nil)
+
+			c.setHealth(errors.Wrap(err, "failed to run price updater task loop for price daemon"))
 
 		case <-stop:
 			return

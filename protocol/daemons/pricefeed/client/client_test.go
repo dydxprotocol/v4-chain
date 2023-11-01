@@ -250,7 +250,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 
 			// Expect daemon is not healthy on startup. Daemon becomes healthy after the first successful market
 			// update.
-			require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), "pricefeed daemon is unhealthy")
+			require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), "daemon uninitialized")
 
 			if tc.expectedError == nil {
 				require.NoError(t, err)
@@ -750,64 +750,64 @@ func singleTickTickerAndStop() (*time.Ticker, chan bool) {
 	return ticker, stop
 }
 
-func TestHealthCheck(t *testing.T) {
-	// Setup.
-	// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
-	etmp, err := types.NewExchangeToMarketPrices([]types.ExchangeId{constants.ExchangeId1})
-	require.NoError(t, err)
-	etmp.UpdatePrice(constants.ExchangeId1, constants.Market9_TimeT_Price1)
+func TestHealthCheck_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		updateMarketPricesError error
+		expectedError           error
+	}{
+		"No error - daemon healthy": {
+			updateMarketPricesError: nil,
+			expectedError:           nil,
+		},
+		"Error - daemon unhealthy": {
+			updateMarketPricesError: fmt.Errorf("failed to update market prices"),
+			expectedError: fmt.Errorf(
+				"price deamon unhealthy: failed to run price updater task loop for price daemon: " +
+					"failed to update market prices",
+			),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup.
+			// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
+			etmp, err := types.NewExchangeToMarketPrices([]types.ExchangeId{constants.ExchangeId1})
+			require.NoError(t, err)
+			etmp.UpdatePrice(constants.ExchangeId1, constants.Market9_TimeT_Price1)
 
-	// Create a mock `PriceFeedServiceClient`.
-	mockPriceFeedClient := generateMockQueryClient()
+			// Create a mock `PriceFeedServiceClient`.
+			mockPriceFeedClient := generateMockQueryClient()
 
-	// Mock a successful update. Since the daemon starts unhealthy, this should toggle the daemon to healthy.
-	mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
-		Return(nil, nil).Once()
+			// Mock the `UpdateMarketPrices` call to return an error if specified.
+			mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
+				Return(nil, tc.updateMarketPricesError).Once()
 
-	ticker, stop := singleTickTickerAndStop()
-	client := newClient()
+			ticker, stop := singleTickTickerAndStop()
+			client := newClient()
 
-	// Act.
-	// Run the price updater for a single tick with a successful update. Expect the daemon to toggle to a
-	// healthy state.
-	subTaskRunnerImpl.StartPriceUpdater(
-		client,
-		grpc_util.Ctx,
-		ticker,
-		stop,
-		etmp,
-		mockPriceFeedClient,
-		log.NewNopLogger(),
-	)
-	// Assert.
-	require.NoError(t, client.HealthCheck(grpc_util.Ctx))
+			// Act.
+			// Run the price updater for a single tick with a successful update. Expect the daemon to toggle to a
+			// healthy state.
+			subTaskRunnerImpl.StartPriceUpdater(
+				client,
+				grpc_util.Ctx,
+				ticker,
+				stop,
+				etmp,
+				mockPriceFeedClient,
+				log.NewNopLogger(),
+			)
+			// Assert.
+			if tc.expectedError == nil {
+				require.NoError(t, client.HealthCheck(grpc_util.Ctx))
+			} else {
+				require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), tc.expectedError.Error())
+			}
 
-	// Cleanup.
-	close(stop)
-
-	// Act.
-	// Mock a failed update. In this case, we expect to see the daemon toggle to unhealthy.
-	mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
-		Return(nil, fmt.Errorf("failed to update market prices")).Once()
-
-	ticker, stop = singleTickTickerAndStop()
-
-	// Run the price updater for a single tick with a failed update. Expect the daemon to be toggled
-	// into an unhealthy state.
-	subTaskRunnerImpl.StartPriceUpdater(
-		client,
-		grpc_util.Ctx,
-		ticker,
-		stop,
-		etmp,
-		mockPriceFeedClient,
-		log.NewNopLogger(),
-	)
-	// Assert.
-	require.Error(t, client.HealthCheck(grpc_util.Ctx))
-
-	// Cleanup.
-	close(stop)
+			// Cleanup.
+			close(stop)
+		})
+	}
 }
 
 // TestMarketUpdater_Mixed tests the `RunMarketParamUpdaterTaskLoop` function invokes the grpc
