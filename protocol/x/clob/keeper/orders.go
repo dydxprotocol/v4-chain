@@ -135,7 +135,7 @@ func (k Keeper) CancelStatefulOrder(
 		metrics.IncrSuccessOrErrorCounter(
 			err,
 			types.ModuleName,
-			metrics.CancelOrder,
+			metrics.CancelStatefulOrder,
 			metrics.GetCallbackMetricFromCtx(ctx),
 			msg.OrderId.GetOrderIdLabels()...,
 		)
@@ -193,7 +193,7 @@ func (k Keeper) PlaceStatefulOrder(
 		metrics.IncrSuccessOrErrorCounter(
 			err,
 			types.ModuleName,
-			metrics.PlaceOrder,
+			metrics.PlaceStatefulOrder,
 			metrics.GetCallbackMetricFromCtx(ctx),
 			msg.Order.OrderId.GetOrderIdLabels()...,
 		)
