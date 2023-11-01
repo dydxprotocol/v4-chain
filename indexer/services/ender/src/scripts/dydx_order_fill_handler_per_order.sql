@@ -11,11 +11,13 @@
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
+    - usdc_asset_id: The USDC asset id.
     - is_cancelled: Whether the order is cancelled.
   Returns: JSON object containing fields:
     - order: The updated order in order-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/order-model.ts).
     - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
     - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
+    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
 */
 CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
@@ -34,6 +36,7 @@ DECLARE
     order_side text;
     order_size numeric;
     order_price numeric;
+    order_client_metadata bigint;
     fee numeric;
     fill_amount numeric;
     total_filled numeric;
@@ -77,14 +80,15 @@ BEGIN
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                                      asset_record."atomicResolution" -
                                                      perpetual_market_record."atomicResolution")::numeric);
-    total_filled = dydx_trim_scale(get_total_filled(fill_liquidity, event_data) *
+    total_filled = dydx_trim_scale(dydx_get_total_filled(fill_liquidity, event_data) *
                                    power(10, perpetual_market_record."atomicResolution")::numeric);
-    fee = dydx_trim_scale(get_fee(fill_liquidity, event_data) *
+    fee = dydx_trim_scale(dydx_get_fee(fill_liquidity, event_data) *
                           power(10, asset_record."atomicResolution")::numeric);
 
     order_uuid = dydx_uuid_from_order_id(order_->'orderId');
     subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
     order_side = dydx_from_protocol_order_side(order_->'side');
+    order_client_metadata = (order_->'clientMetadata')::bigint;
 
     /** Upsert the order, populating the order_record fields with what will be in the database. */
     SELECT * INTO order_record FROM orders WHERE "id" = order_uuid;
@@ -95,11 +99,13 @@ BEGIN
     order_record."orderFlags" = jsonb_extract_path(order_, 'orderId', 'orderFlags')::bigint;
     order_record."goodTilBlock" = (order_->'goodTilBlock')::bigint;
     order_record."goodTilBlockTime" = to_timestamp((order_->'goodTilBlockTime')::double precision);
-    order_record."clientMetadata" = (order_->'clientMetadata')::bigint;
+    order_record."clientMetadata" = order_client_metadata;
+    order_record."updatedAt" = block_time;
+    order_record."updatedAtHeight" = block_height;
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
-        order_record."status" = get_order_status(total_filled, order_record.size, is_cancelled);
+        order_record."status" = dydx_get_order_status(total_filled, order_record.size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
 
         UPDATE orders
         SET
@@ -113,8 +119,8 @@ BEGIN
             "timeInForce" = order_record."timeInForce",
             "reduceOnly" = order_record."reduceOnly",
             "clientMetadata" = order_record."clientMetadata",
-            "updatedAt" = block_time,
-            "updatedAtHeight" = block_height
+            "updatedAt" = order_record."updatedAt",
+            "updatedAtHeight" = order_record."updatedAtHeight"
         WHERE id = order_uuid;
     ELSE
         order_record."id" = order_uuid;
@@ -125,10 +131,8 @@ BEGIN
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
-        order_record."status" = get_order_status(fill_amount, order_size, is_cancelled);
+        order_record."status" = dydx_get_order_status(fill_amount, order_size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
         order_record."createdAtHeight" = block_height;
-        order_record."updatedAt" = block_time;
-        order_record."updatedAtHeight" = block_height;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
             "status", "timeInForce", "reduceOnly", "orderFlags", "goodTilBlock", "goodTilBlockTime", "createdAtHeight",
@@ -156,7 +160,7 @@ BEGIN
             transaction_hash,
             block_time,
             block_height,
-            order_record."clientMetadata",
+            order_client_metadata,
             fee)
     RETURNING * INTO fill_record;
 

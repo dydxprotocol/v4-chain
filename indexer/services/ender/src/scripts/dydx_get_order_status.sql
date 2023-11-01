@@ -1,7 +1,7 @@
 /**
   Returns the order status given the total filled amount, the order size and whether the order was cancelled.
 */
-CREATE OR REPLACE FUNCTION get_order_status(total_filled numeric, size numeric, is_cancelled boolean)
+CREATE OR REPLACE FUNCTION dydx_get_order_status(total_filled numeric, size numeric, is_cancelled boolean, order_flags bigint, time_in_force text)
 RETURNS text AS $$
 DECLARE
     order_status text;
