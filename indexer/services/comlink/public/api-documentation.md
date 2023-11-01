@@ -2287,6 +2287,8 @@ This operation does not require authentication
 |*anonymous*|LIMIT|
 |*anonymous*|LIQUIDATED|
 |*anonymous*|LIQUIDATION|
+|*anonymous*|DELEVERAGED|
+|*anonymous*|OFFSETTING|
 
 ## MarketType
 
