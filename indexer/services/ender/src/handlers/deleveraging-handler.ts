@@ -21,6 +21,11 @@ import {
 import { DeleveragingEventV1, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 
+import {
+  DELEVERAGING_EVENT_TYPE,
+  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
+  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
+} from '../constants';
 import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
 import {
   getWeightedAverage,
@@ -34,7 +39,22 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
   eventType: string = 'DeleveragingEvent';
 
   public getParallelizationIds(): string[] {
-    return [];
+    const offsettingSubaccountUuid: string = SubaccountTable
+      .uuid(this.event.offsetting!.owner, this.event.offsetting!.number);
+    const deleveragedSubaccountUuid: string = SubaccountTable
+      .uuid(this.event.liquidated!.owner, this.event.liquidated!.number);
+    return [
+      `${this.eventType}_${offsettingSubaccountUuid}_${this.event.clobPairId}`,
+      `${this.eventType}_${deleveragedSubaccountUuid}_${this.event.clobPairId}`,
+      // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
+      // processed in parallel
+      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
+      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
+      // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
+      // processed in parallel
+      `${DELEVERAGING_EVENT_TYPE}_${offsettingSubaccountUuid}`,
+      `${DELEVERAGING_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
+    ];
   }
 
   protected createFillsFromEvent(

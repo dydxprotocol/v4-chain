@@ -16,7 +16,11 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import {
+  DELEVERAGING_EVENT_TYPE,
+  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
+  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
+} from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { orderFillWithLiquidityToOrderFillEventWithLiquidation } from '../../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
@@ -50,6 +54,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
         // processed in parallel
         `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
+        // To ensure that DeleveragingEvents for the same subaccount are not
+        // processed in parallel
+        `${DELEVERAGING_EVENT_TYPE}_${subaccountUuid}`,
       ];
     } else {
       const liquidationOrder: LiquidationOrderV1 = liquidatedOrderFill.liquidationOrder!;
@@ -61,6 +68,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
         // processed in parallel
         `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${subaccountUuid}`,
+        // To ensure that DeleveragingEvents for the same subaccount are not
+        // processed in parallel
+        `${DELEVERAGING_EVENT_TYPE}_${subaccountUuid}`,
         // We do not need to add the StatefulOrderEvent parallelizationId here, because liquidation
         // fills have no order in postgres
       ];
