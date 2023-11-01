@@ -283,7 +283,7 @@ export const defaultTransferEvent: TransferEventV1 = {
 export const defaultDeleveragingEvent: DeleveragingEventV1 = {
   liquidated: defaultSenderSubaccountId,
   offsetting: defaultRecipientSubaccountId,
-  clobPairId: 0,
+  clobPairId: 1,
   fillAmount: Long.fromValue(10_000, true),
   subticks: Long.fromValue(1_000_000_000, true),
   isBuy: true,

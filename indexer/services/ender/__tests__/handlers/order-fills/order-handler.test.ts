@@ -42,6 +42,7 @@ import {
 import { KafkaMessage } from 'kafkajs';
 import { DateTime } from 'luxon';
 import {
+  DELEVERAGING_EVENT_TYPE,
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
@@ -196,6 +197,7 @@ describe('OrderHandler', () => {
         `${handler.eventType}_${SubaccountTable.subaccountIdToUuid(subaccountId)}_${defaultOrderEvent.makerOrder!.orderId!.clobPairId}`,
         `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(subaccountId)}`,
         `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
+        `${DELEVERAGING_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(subaccountId)}`,
       ]);
     });
   });

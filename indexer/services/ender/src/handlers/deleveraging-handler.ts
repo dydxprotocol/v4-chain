@@ -21,11 +21,7 @@ import {
 import { DeleveragingEventV1, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 
-import {
-  DELEVERAGING_EVENT_TYPE,
-  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
-} from '../constants';
+import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
 import {
   getWeightedAverage,
@@ -95,6 +91,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
     };
     const offsettingSubaccountFill: FillCreateObject = {
       ...liquidatedSubaccountFill,
+      subaccountId: SubaccountTable.uuid(event.offsetting!.owner, event.offsetting!.number),
       side: event.isBuy ? OrderSide.SELL : OrderSide.BUY,
       liquidity: Liquidity.MAKER,
       type: FillType.OFFSETTING,
@@ -249,6 +246,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
           price: fill.price,
           side: fill.side.toString(),
           createdAt: fill.createdAt,
+          liquidation: false,
           deleveraging: true,
         },
       ],
@@ -278,7 +276,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       Promise.all(
         this.createFillsFromEvent(perpetualMarket, this.event),
       ),
-      this.generateTimingStatsOptions('create_fill'),
+      this.generateTimingStatsOptions('create_fills'),
     );
 
     const positions: PerpetualPositionFromDatabase[] = await
@@ -287,7 +285,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
         this.updatePerpetualPosition(perpetualMarket, this.event, true),
         this.updatePerpetualPosition(perpetualMarket, this.event, false),
       ]),
-      this.generateTimingStatsOptions('update_perpetual_position'),
+      this.generateTimingStatsOptions('update_perpetual_positions'),
     );
     const kafkaEvents: ConsolidatedKafkaEvent[] = [
       this.generateConsolidatedKafkaEvent(
