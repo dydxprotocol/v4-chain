@@ -790,8 +790,8 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			client := newClient()
 
 			// Act.
-			// Run the price updater for a single tick with a successful update. Expect the daemon to toggle to a
-			// healthy state.
+			// Run the price updater for a single tick. Expect the daemon to toggle health state based on
+			// `UpdateMarketPrices` error response.
 			subTaskRunnerImpl.StartPriceUpdater(
 				client,
 				grpc_util.Ctx,
@@ -801,6 +801,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				mockPriceFeedClient,
 				log.NewNopLogger(),
 			)
+
 			// Assert.
 			timeProvider := &libtime.TimeProviderImpl{}
 			if tc.expectedError == nil {
