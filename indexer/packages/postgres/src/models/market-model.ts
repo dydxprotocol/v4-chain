@@ -51,6 +51,22 @@ export default class MarketModel extends Model {
     };
   }
 
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      id: 'integer',
+      pair: 'string',
+      exponent: 'integer',
+      minPriceChangePpm: 'integer',
+      oraclePrice: 'string',
+    };
+  }
+
   id!: number;
 
   pair!: string;

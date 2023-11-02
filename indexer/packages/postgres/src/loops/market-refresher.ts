@@ -41,6 +41,13 @@ export async function updateMarkets(options?: Options): Promise<void> {
 }
 
 /**
+ * Updates the markets map with the specified market.
+ */
+export function updateMarket(market: MarketFromDatabase): void {
+  idToMarket[market.id] = market;
+}
+
+/**
  * Gets the market for a given id.
  */
 export function getMarketFromId(id: number): MarketFromDatabase {

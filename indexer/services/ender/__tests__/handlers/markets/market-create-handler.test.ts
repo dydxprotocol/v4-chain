@@ -23,6 +23,7 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('marketCreateHandler', () => {
   beforeAll(async () => {
@@ -86,67 +87,97 @@ describe('marketCreateHandler', () => {
     });
   });
 
-  it('creates new market', async () => {
-    const transactionIndex: number = 0;
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'creates new market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_MARKET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
 
-    const marketCreate: MarketEventV1 = {
-      marketId: 3,
-      marketCreate: {
-        base: {
-          pair: 'DYDX-USD',
-          minPriceChangePpm: 500,
+      const marketCreate: MarketEventV1 = {
+        marketId: 3,
+        marketCreate: {
+          base: {
+            pair: 'DYDX-USD',
+            minPriceChangePpm: 500,
+          },
+          exponent: -5,
         },
-        exponent: -5,
-      },
-    };
+      };
 
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvents: [marketCreate],
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+        marketEvents: [marketCreate],
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+
+      await onMessage(kafkaMessage);
+
+      const market: MarketFromDatabase = await MarketTable.findById(
+        marketCreate.marketId,
+      ) as MarketFromDatabase;
+
+      expectMarketMatchesEvent(marketCreate as MarketCreateEventMessage, market);
     });
 
-    await onMessage(kafkaMessage);
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'errors when attempting to create an existing market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_MARKET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
 
-    const market: MarketFromDatabase = await MarketTable.findById(
-      marketCreate.marketId,
-    ) as MarketFromDatabase;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+        marketEvents: [defaultMarketCreate],
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+        new ParseMessageError('Market in MarketCreate already exists'),
+      );
 
-    expectMarketMatchesEvent(marketCreate as MarketCreateEventMessage, market);
-  });
+      // Check that market in database is the old market.
+      const market: MarketFromDatabase = await MarketTable.findById(
+        defaultMarketCreate.marketId,
+      ) as MarketFromDatabase;
+      expect(market.minPriceChangePpm).toEqual(50);
 
-  it('errors when attempting to create an existing market', async () => {
-    const transactionIndex: number = 0;
-
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvents: [defaultMarketCreate],
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'MarketCreateHandler#logAndThrowParseMessageError',
+        message: 'Market in MarketCreate already exists',
+      }));
+      expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'onMessage#onMessage',
+        message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+      }));
+      expect(producerSendMock.mock.calls.length).toEqual(0);
     });
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new ParseMessageError('Market in MarketCreate already exists'),
-    );
-
-    // Check that market in database is the old market.
-    const market: MarketFromDatabase = await MarketTable.findById(
-      defaultMarketCreate.marketId,
-    ) as MarketFromDatabase;
-    expect(market.minPriceChangePpm).toEqual(50);
-
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'MarketCreateHandler#logAndThrowParseMessageError',
-      message: 'Market in MarketCreate already exists',
-    }));
-    expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'onMessage#onMessage',
-      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
-    }));
-    expect(producerSendMock.mock.calls.length).toEqual(0);
-  });
 });
 
 function expectMarketMatchesEvent(
