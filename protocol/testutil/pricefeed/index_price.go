@@ -32,6 +32,7 @@ func UpdateIndexPrice(
 	t *testing.T,
 	ctx sdk.Context,
 	tApp *app.App,
+	marketId uint32,
 	price uint64,
 	lastUpdatedTime time.Time,
 ) {
@@ -40,7 +41,7 @@ func UpdateIndexPrice(
 		&pricefeedapi.UpdateMarketPricesRequest{
 			MarketPriceUpdates: []*pricefeedapi.MarketPriceUpdate{
 				{
-					MarketId: 0,
+					MarketId: marketId,
 					ExchangePrices: []*pricefeedapi.ExchangePrice{
 						{
 							ExchangeId:     "exchange-a",

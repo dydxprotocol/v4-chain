@@ -6,6 +6,7 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -19,17 +20,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type TestHumanOrder struct {
-	Order      clobtypes.Order
-	HumanPrice string
-	HumanSize  string
-}
-
 const (
 	BlockTimeDuration             = 2 * time.Second
 	NumBlocksPerMinute            = int64(time.Minute / BlockTimeDuration) // 30
 	BlockHeightAtFirstFundingTick = 1000
 	TestTransferUsdcForSettlement = 10_000_000_000_000
+	TestMarketId                  = 0
 )
 
 var (
@@ -142,7 +138,7 @@ func getSubaccountUsdcBalance(subaccount satypes.Subaccount) int64 {
 
 func TestFunding(t *testing.T) {
 	tests := map[string]struct {
-		testHumanOrders   []TestHumanOrder
+		testHumanOrders   []clobtest.TestHumanOrder
 		initialIndexPrice map[uint32]string
 		// index price to be used in premium calculation
 		indexPriceForPremium map[uint32]string
@@ -154,7 +150,7 @@ func TestFunding(t *testing.T) {
 		expectedFundingIndex          int64
 	}{
 		"Test funding": {
-			testHumanOrders: []TestHumanOrder{
+			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
 					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
@@ -253,7 +249,8 @@ func TestFunding(t *testing.T) {
 				t,
 				ctx,
 				tApp.App,
-				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[0], -5),
+				TestMarketId,
+				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
 				// Only index price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
@@ -275,7 +272,8 @@ func TestFunding(t *testing.T) {
 				t,
 				ctx,
 				tApp.App,
-				pricestest.MustHumanPriceToMarketPrice(tc.indexPriceForPremium[0], -5),
+				TestMarketId,
+				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
 				// Only index price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
@@ -309,7 +307,8 @@ func TestFunding(t *testing.T) {
 				t,
 				ctx,
 				tApp.App,
-				pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5),
+				TestMarketId,
+				pricestest.MustHumanPriceToMarketPrice(tc.initialIndexPrice[TestMarketId], -5),
 				// Only index price past a certain threshold is used for premium calculation.
 				// Use additional buffer here to ensure `test-race` passes.
 				time.Now().Add(1*time.Hour),
