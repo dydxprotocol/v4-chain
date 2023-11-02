@@ -116,6 +116,7 @@ router.get(
         'HistoricalFundingController GET /',
         'HistoricalFunding error',
         error,
+        req,
         res,
       );
     } finally {

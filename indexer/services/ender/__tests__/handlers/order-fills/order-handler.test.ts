@@ -611,8 +611,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: defaultDateTime.toISO(),
-          updatedAtHeight: defaultHeight.toString(),
+          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAtHeight: '0',
         }),
         // taker order
         OrderTable.create({
@@ -631,8 +631,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: defaultDateTime.toISO(),
-          updatedAtHeight: defaultHeight.toString(),
+          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAtHeight: '0',
         }),
       ]);
 

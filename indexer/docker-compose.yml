@@ -17,6 +17,7 @@ services:
         to-websockets-candles:1:1"
   postgres-test:
     build:
+      context: .
       dockerfile: Dockerfile.postgres.local
     ports:
       - 5436:5432
@@ -26,6 +27,7 @@ services:
       DATADOG_POSTGRES_PASSWORD: dydxserver123
   postgres:
     build:
+      context: .
       dockerfile: Dockerfile.postgres.local
     ports:
       - 5435:5432
