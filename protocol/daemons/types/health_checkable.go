@@ -88,13 +88,24 @@ func (h *HealthCheckableImpl) HealthCheck(timeProvider libtime.TimeProvider) err
 		panic("HealthCheckableImpl has not been initialized")
 	}
 
-	if h.lastSuccessfulUpdate.IsZero() ||
-		h.lastFailedUpdate.After(h.lastSuccessfulUpdate) ||
-		timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaximumAcceptableUpdateDelay {
+	if h.lastSuccessfulUpdate.IsZero() {
+		return fmt.Errorf("no successful update has occurred")
+	}
+
+	if h.lastFailedUpdate.After(h.lastSuccessfulUpdate) {
 		return fmt.Errorf(
 			"last update failed at %v with error: %w",
-			h.lastFailedUpdate.String(),
+			h.lastFailedUpdate,
 			h.lastUpdateError,
+		)
+	}
+
+	// If the last successful update was more than 5 minutes ago, report the specific error.
+	if timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaximumAcceptableUpdateDelay {
+		return fmt.Errorf(
+			"last successful update occurred at %v, which is more than %v ago",
+			h.lastSuccessfulUpdate,
+			MaximumAcceptableUpdateDelay,
 		)
 	}
 
