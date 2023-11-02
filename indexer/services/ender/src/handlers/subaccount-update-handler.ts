@@ -75,7 +75,7 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
       ${this.indexerTendermintEvent.eventIndex}, 
       ${transactionIndex}) AS result;`,
     { txId: this.txId },
-    ).catch((error) => {
+    ).catch((error: Error) => {
       logger.error({
         at: 'subaccountUpdateHandler#handleViaSqlFunction',
         message: 'Failed to handle SubaccountUpdateEventV1',
