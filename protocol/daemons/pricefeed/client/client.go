@@ -98,12 +98,6 @@ func (c *Client) Stop() {
 		}
 
 		c.runningSubtasksWaitGroup.Wait()
-
-		// When the daemon stops, toggle it into an unhealthy state.
-		c.RecordUpdateFailure(
-			&libtime.TimeProviderImpl{},
-			fmt.Errorf("%v stopped", constants.PricefeedDaemonModuleName),
-		)
 	})
 }
 
