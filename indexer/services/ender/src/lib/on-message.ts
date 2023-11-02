@@ -277,7 +277,7 @@ async function createInitialRowsViaSqlFunction(
   await storeHelpers.rawQuery(
     queryString,
     { txId },
-  ).catch((error) => {
+  ).catch((error: Error) => {
     logger.error({
       at: 'on-message#createInitialRowsViaSqlFunction',
       message: 'Failed to create initial rows',
