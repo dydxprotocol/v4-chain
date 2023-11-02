@@ -8,70 +8,81 @@ import (
 )
 
 const (
-	MaximumAcceptableUpdateDelay = 5 * time.Minute
+	MaxAcceptableUpdateDelay = 5 * time.Minute
 )
 
 // HealthCheckable is a common interface for services that can be health checked.
 type HealthCheckable interface {
 	// HealthCheck returns an error if a service is unhealthy. If the service is healthy, this method returns nil.
-	HealthCheck(provider libtime.TimeProvider) (err error)
+	HealthCheck() (err error)
+	// ReportFailure records a failed update.
+	ReportFailure(timestamp time.Time, err error)
+	// ReportSuccess records a successful update.
+	ReportSuccess(timestamp time.Time)
 }
 
-// HealthCheckableImpl implements the HealthCheckable interface by tracking the timestamps of the last successful and
-// failed updates. If:
+// timestampWithError couples a timestamp and error to make it easier to update them in tandem.
+type timestampWithError struct {
+	timestamp time.Time
+	err       error
+}
+
+func (u *timestampWithError) Update(timestamp time.Time, err error) {
+	u.timestamp = timestamp
+	u.err = err
+}
+
+func (u *timestampWithError) Timestamp() time.Time {
+	return u.timestamp
+}
+
+func (u *timestampWithError) Error() error {
+	return u.err
+}
+
+// timeBoundedHealthCheckable implements the HealthCheckable interface by tracking the timestamps of the last successful
+// failed updates.
+// If any of the following occurs, then the service should be considered unhealthy:
 // - no update has occurred
 // - the most recent update failed, or
-// - the daemon has not seen a successful update in at least 5 minutes,
-// the service is considered unhealthy.
-type HealthCheckableImpl struct {
+// - the daemon has not seen a successful update within `MaxAcceptableUpdateDelay`.
+type timeBoundedHealthCheckable struct {
 	sync.Mutex
 
 	// lastSuccessfulUpdate is the timestamp of the last successful update.
 	lastSuccessfulUpdate time.Time
-	// lastFailedUpdate is the timestamp of the last failed update. After the HealthCheckableImpl is initialized,
-	// this should never be a zero value.
-	lastFailedUpdate time.Time
-	// lastUpdateError is the error describing the failure reason for the last failed update.
-	lastUpdateError error
+	// lastFailedUpdate is the timestamp, error pair of the last failed update. After the HealthCheckableImpl is
+	// initialized, this should never be a zero value.
+	lastFailedUpdate timestampWithError
 
-	// initialized is true if the HealthCheckableImpl has been initialized. If false, the service will panic
-	// when the HealthCheck method is called. This error should occur during or soon after app initialization.
-	initialized bool
+	// timeProvider is the time provider used to determine the current time. This is used for timestamping
+	// creation and checking for update staleness during HealthCheck.
+	timeProvider libtime.TimeProvider
 }
 
-// NewHealthCheckableImpl creates a new HealthCheckableImpl instance.
-func NewHealthCheckableImpl(daemon string, timeProvider libtime.TimeProvider) *HealthCheckableImpl {
-	hc := &HealthCheckableImpl{}
-	hc.InitializeHealthStatus(daemon, timeProvider)
+// NewTimeBoundedHealthCheckable creates a new HealthCheckable instance.
+func NewTimeBoundedHealthCheckable(serviceName string, timeProvider libtime.TimeProvider) HealthCheckable {
+	hc := &timeBoundedHealthCheckable{
+		timeProvider: timeProvider,
+	}
+	// Initialize the timeBoudnedHealthCheckable to an unhealthy state by reporting an error.
+	hc.ReportFailure(timeProvider.Now(), fmt.Errorf("%v is initializing", serviceName))
 	return hc
 }
 
-// InitializeHealthStatus initializes the health status of a service as unhealthy. The service will become healthy
-// as soon as it reports it's first successful update. This method must be called, or the service will panic when
-// the HealthCheck method is called. This method is synchronized.
-func (h *HealthCheckableImpl) InitializeHealthStatus(serviceName string, timeProvider libtime.TimeProvider) {
-	h.RecordUpdateFailure(timeProvider, fmt.Errorf("%v is initializing", serviceName))
-
+// ReportSuccess records a successful update. This method is synchronized.
+func (h *timeBoundedHealthCheckable) ReportSuccess(timestamp time.Time) {
 	h.Lock()
 	defer h.Unlock()
-	h.initialized = true
+
+	h.lastSuccessfulUpdate = timestamp
 }
 
-// RecordUpdateSuccess records a successful update. This method is synchronized.
-func (h *HealthCheckableImpl) RecordUpdateSuccess(timeProvider libtime.TimeProvider) {
+// ReportFailure records a failed update. This method is synchronized.
+func (h *timeBoundedHealthCheckable) ReportFailure(timestamp time.Time, err error) {
 	h.Lock()
 	defer h.Unlock()
-
-	h.lastSuccessfulUpdate = timeProvider.Now()
-}
-
-// RecordUpdateFailure records a failed update. This method is synchronized.
-func (h *HealthCheckableImpl) RecordUpdateFailure(timeProvider libtime.TimeProvider, err error) {
-	h.Lock()
-	defer h.Unlock()
-
-	h.lastFailedUpdate = timeProvider.Now()
-	h.lastUpdateError = err
+	h.lastFailedUpdate.Update(timestamp, err)
 }
 
 // HealthCheck returns an error if a service is unhealthy.
@@ -79,33 +90,38 @@ func (h *HealthCheckableImpl) RecordUpdateFailure(timeProvider libtime.TimeProvi
 // - no successful update has occurred
 // - the most recent update failed, or
 // - the daemon has not seen a successful update in at least 5 minutes,
+// Note: since the timeBoundedHealthCheckable is not exposed and can only be created via
+// NewTimeBoundedHealthCheckable, we expect that the lastFailedUpdate is never a zero value.
 // This method is synchronized.
-func (h *HealthCheckableImpl) HealthCheck(timeProvider libtime.TimeProvider) error {
+func (h *timeBoundedHealthCheckable) HealthCheck() error {
 	h.Lock()
 	defer h.Unlock()
 
-	if !h.initialized {
-		panic("HealthCheckableImpl has not been initialized")
-	}
-
 	if h.lastSuccessfulUpdate.IsZero() {
-		return fmt.Errorf("no successful update has occurred")
+		return fmt.Errorf(
+			"no successful update has occurred; last failed update occurred at %v with error '%w'",
+			h.lastFailedUpdate.Timestamp(),
+			h.lastFailedUpdate.Error(),
+		)
 	}
 
-	if h.lastFailedUpdate.After(h.lastSuccessfulUpdate) {
+	if h.lastFailedUpdate.Timestamp().After(h.lastSuccessfulUpdate) {
 		return fmt.Errorf(
-			"last update failed at %v with error: %w",
-			h.lastFailedUpdate,
-			h.lastUpdateError,
+			"last update failed at %v with error: '%w', most recent successful update occurred at %v",
+			h.lastFailedUpdate.Timestamp(),
+			h.lastFailedUpdate.Error(),
+			h.lastSuccessfulUpdate,
 		)
 	}
 
 	// If the last successful update was more than 5 minutes ago, report the specific error.
-	if timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaximumAcceptableUpdateDelay {
+	if h.timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaxAcceptableUpdateDelay {
 		return fmt.Errorf(
-			"last successful update occurred at %v, which is more than %v ago",
+			"last successful update occurred at %v, which is more than %v ago. Last failure occurred at %v with error '%w'",
 			h.lastSuccessfulUpdate,
-			MaximumAcceptableUpdateDelay,
+			MaxAcceptableUpdateDelay,
+			h.lastFailedUpdate.Timestamp(),
+			h.lastFailedUpdate.Error(),
 		)
 	}
 

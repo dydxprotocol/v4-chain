@@ -18,24 +18,16 @@ var (
 	Time4                      = Time0.Add(4 * time.Second)
 	Time_5Minutes_And_2Seconds = Time0.Add(5*time.Minute + 2*time.Second)
 
-	TestError = fmt.Errorf("test error")
+	TestError          = fmt.Errorf("test error")
+	InitializingStatus = fmt.Errorf("test is initializing")
 )
 
-func TestHealthCheckableImpl_PanicsWithoutInitilization(t *testing.T) {
-	hc := types.HealthCheckableImpl{}
-	require.Panics(
-		t,
-		func() {
-			hc.HealthCheck(&libtime.TimeProviderImpl{}) // nolint:errcheck
-		},
-		"HealthCheckableImpl.HealthCheck should panic if not initialized",
-	)
-}
-
-// singleUseTimeProvider returns a TimeProvider that returns the given time on the first call to Now.
-func singleUseTimeProvider(time time.Time) libtime.TimeProvider {
+// mockTimeProviderWithTimestamps returns a TimeProvider that returns the given timestamps in order.
+func mockTimeProviderWithTimestamps(times []time.Time) libtime.TimeProvider {
 	m := mocks.TimeProvider{}
-	m.On("Now").Return(time).Once()
+	for _, timestamp := range times {
+		m.On("Now").Return(timestamp).Once()
+	}
 	return &m
 }
 
@@ -50,8 +42,12 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 		expectedHealthStatus error
 	}{
 		"unhealthy: no updates": {
-			healthCheckTime:      Time1,
-			expectedHealthStatus: fmt.Errorf("no successful update has occurred"),
+			healthCheckTime: Time1,
+			expectedHealthStatus: fmt.Errorf(
+				"no successful update has occurred; last failed update occurred at %v with error '%w'",
+				Time0,
+				InitializingStatus,
+			),
 		},
 		"unhealthy: no successful updates": {
 			updates: []struct {
@@ -60,8 +56,12 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			}{
 				{Time1, TestError}, // failed update
 			},
-			healthCheckTime:      Time2,
-			expectedHealthStatus: fmt.Errorf("no successful update has occurred"),
+			healthCheckTime: Time2,
+			expectedHealthStatus: fmt.Errorf(
+				"no successful update has occurred; last failed update occurred at %v with error '%w'",
+				Time1,
+				TestError,
+			),
 		},
 		"healthy: one recent successful update": {
 			updates: []struct {
@@ -83,9 +83,10 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			},
 			healthCheckTime: Time3,
 			expectedHealthStatus: fmt.Errorf(
-				"last update failed at %v with error: %w",
+				"last update failed at %v with error: '%w', most recent successful update occurred at %v",
 				Time2,
 				TestError,
+				Time1,
 			),
 		},
 		"healthy: one recent failed update followed by a successful update": {
@@ -108,25 +109,33 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			},
 			healthCheckTime: Time_5Minutes_And_2Seconds,
 			expectedHealthStatus: fmt.Errorf(
-				"last successful update occurred at %v, which is more than %v ago",
+				"last successful update occurred at %v, which is more than %v ago. "+
+					"Last failure occurred at %v with error '%w'",
 				Time1,
-				types.MaximumAcceptableUpdateDelay,
+				types.MaxAcceptableUpdateDelay,
+				Time0,
+				InitializingStatus,
 			),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			hci := types.NewHealthCheckableImpl("test", singleUseTimeProvider(Time0))
+			hci := types.NewTimeBoundedHealthCheckable(
+				"test",
+				mockTimeProviderWithTimestamps([]time.Time{
+					Time0,
+					tc.healthCheckTime,
+				}),
+			)
 			for _, update := range tc.updates {
-				timeProvider := singleUseTimeProvider(update.timestamp)
 				if update.err == nil {
-					hci.RecordUpdateSuccess(timeProvider)
+					hci.ReportSuccess(update.timestamp)
 				} else {
-					hci.RecordUpdateFailure(timeProvider, update.err)
+					hci.ReportFailure(update.timestamp, update.err)
 				}
 			}
 
-			err := hci.HealthCheck(singleUseTimeProvider(tc.healthCheckTime))
+			err := hci.HealthCheck()
 			if tc.expectedHealthStatus == nil {
 				require.NoError(t, err)
 			} else {

@@ -31,6 +31,9 @@ import (
 // Note: price fetchers manage their own subtasks by blocking on their completion on every subtask run.
 // When the price fetcher is stopped, it will wait for all of its own subtasks to complete before returning.
 type Client struct {
+	// include HealthCheckable to track the health of the daemon.
+	daemontypes.HealthCheckable
+
 	// daemonStartup tracks whether the daemon has finished startup. The daemon
 	// cannot be stopped until all persistent daemon subtasks have been launched within `Start`.
 	daemonStartup sync.WaitGroup
@@ -49,9 +52,6 @@ type Client struct {
 
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
-
-	// include HealthCheckableImpl to track the health of the daemon.
-	daemontypes.HealthCheckableImpl
 }
 
 // Ensure Client implements the HealthCheckable interface.
@@ -61,11 +61,14 @@ func newClient() *Client {
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
+		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
+			constants.PricefeedDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+		),
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
 	client.daemonStartup.Add(1)
-	client.InitializeHealthStatus(constants.PricefeedDaemonModuleName, &libtime.TimeProviderImpl{})
 	return client
 }
 

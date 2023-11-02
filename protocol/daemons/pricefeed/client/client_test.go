@@ -11,7 +11,6 @@ import (
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -253,8 +252,8 @@ func TestStart_InvalidConfig(t *testing.T) {
 			// update.
 			require.ErrorContains(
 				t,
-				client.HealthCheck(&libtime.TimeProviderImpl{}),
-				"pricefeed-daemon is initializing",
+				client.HealthCheck(),
+				"no successful update has occurred",
 			)
 
 			if tc.expectedError == nil {
@@ -803,11 +802,10 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			)
 
 			// Assert.
-			timeProvider := &libtime.TimeProviderImpl{}
 			if tc.expectedError == nil {
-				require.NoError(t, client.HealthCheck(timeProvider))
+				require.NoError(t, client.HealthCheck())
 			} else {
-				require.ErrorContains(t, client.HealthCheck(timeProvider), tc.expectedError.Error())
+				require.ErrorContains(t, client.HealthCheck(), tc.expectedError.Error())
 			}
 
 			// Cleanup.
