@@ -304,9 +304,7 @@
           "MARKET",
           "LIMIT",
           "LIQUIDATED",
-          "LIQUIDATION",
-          "DELEVERAGED",
-          "OFFSETTING"
+          "LIQUIDATION"
         ],
         "type": "string"
       },

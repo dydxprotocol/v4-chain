@@ -23,12 +23,6 @@ export enum FillType {
   LIQUIDATED = 'LIQUIDATED',
   // LIQUIDATION is for the maker side of the fill, never used for orders
   LIQUIDATION = 'LIQUIDATION',
-  // DELEVERAGED is for the subaccount that was deleveraged in a deleveraging event.
-  // The fill type will be set to taker.
-  DELEVERAGED = 'DELEVERAGED',
-  // OFFSETTING is for the offsetting subaccount in a deleveraging event.
-  // The fill type will be set to maker.
-  OFFSETTING = 'OFFSETTING',
 }
 
 export interface FillCreateObject {

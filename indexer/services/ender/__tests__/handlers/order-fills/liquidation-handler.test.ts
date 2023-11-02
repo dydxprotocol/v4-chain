@@ -40,7 +40,6 @@ import {
 import { KafkaMessage } from 'kafkajs';
 import { DateTime } from 'luxon';
 import {
-  DELEVERAGING_EVENT_TYPE,
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
@@ -198,9 +197,6 @@ describe('LiquidationHandler', () => {
       if (orderId !== undefined) {
         parallelizationIds.push(`${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderId}`);
       }
-      parallelizationIds.push(
-        `${DELEVERAGING_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(subaccountId)}`,
-      );
       expect(handler.getParallelizationIds()).toEqual(parallelizationIds);
     });
   });

@@ -278,10 +278,6 @@ export function isLiquidation(fill: FillFromDatabase): boolean {
   return fill.type === FillType.LIQUIDATION || fill.type === FillType.LIQUIDATED;
 }
 
-export function isDeleveraging(fill: FillFromDatabase): boolean {
-  return fill.type === FillType.DELEVERAGED || fill.type === FillType.OFFSETTING;
-}
-
 export function generateFillSubaccountMessage(
   fill: FillFromDatabase,
   ticker: string,
