@@ -58,7 +58,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
     const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
     const result: pg.QueryResult = await storeHelpers.rawQuery(
       `SELECT dydx_market_create_handler(
-        '${JSON.stringify(MarketEventV1.decode(eventDataBinary))}' 
+        '${JSON.stringify(MarketEventV1.decode(eventDataBinary))}'
       ) AS result;`,
       { txId: this.txId },
     ).catch((error: Error) => {
