@@ -19,7 +19,7 @@ export class MarketModifyHandler extends Handler<MarketEventV1> {
 
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     logger.info({
-      at: 'MarketCreateHandler#handle',
+      at: 'MarketModifyHandler#handle',
       message: 'Received MarketEvent with MarketCreate.',
       event: this.event,
     });
