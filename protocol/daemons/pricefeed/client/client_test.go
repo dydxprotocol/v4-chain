@@ -731,8 +731,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 	}
 }
 
-// singleTickTickerAndStop creates a ticker that ticks once before the stop channel is signaled. In order for this
-// ticker to be effective, it needs to be consumed within 100ms.
+// singleTickTickerAndStop creates a ticker that ticks once before the stop channel is signaled.
 func singleTickTickerAndStop() (*time.Ticker, chan bool) {
 	// Create a ticker with a duration long enough that we do not expect to see a tick within the timeframe
 	// of a normal unit test.
@@ -744,11 +743,17 @@ func singleTickTickerAndStop() (*time.Ticker, chan bool) {
 
 	stop := make(chan bool, 1)
 
-	// After 100ms, stop the ticker and signal the stop channel.
+	// Start a go-routine that will signal the stop channel once the single tick is consumed.
 	go func() {
-		time.Sleep(100 * time.Millisecond)
-		ticker.Stop()
-		stop <- true
+		for {
+			// Once the single tick is consumed, stop the ticker and signal the stop channel.
+			if len(ticker.C) == 0 {
+				stop <- true
+				ticker.Stop()
+				return
+			}
+			time.Sleep(10 * time.Millisecond)
+		}
 	}()
 
 	return ticker, stop
