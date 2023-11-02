@@ -1,3 +1,10 @@
+/**
+  Parameters:
+    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-proto/blob/8d35c86/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+        converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
+  Returns: JSON object containing fields:
+    - market: The created market in market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/market-model.ts).
+*/
 CREATE OR REPLACE FUNCTION dydx_market_create_handler(event_data jsonb) RETURNS jsonb AS $$
 DECLARE
     market_record_id integer;
