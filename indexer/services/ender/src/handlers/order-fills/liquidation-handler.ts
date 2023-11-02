@@ -113,9 +113,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         '${USDC_ASSET_ID}'
       ) AS result;`,
       { txId: this.txId },
-    ).catch((error) => {
+    ).catch((error: Error) => {
       logger.error({
-        at: 'orderHandler#handleViaSqlFunction',
+        at: 'liquidationHandler#handleViaSqlFunction',
         message: 'Failed to handle OrderFillEventV1',
         error,
       });
