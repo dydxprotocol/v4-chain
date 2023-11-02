@@ -29,6 +29,7 @@ function newScript(name: string, scriptPath: string): PostgresFunction {
 const scripts: string[] = [
   'create_extension_pg_stat_statements.sql',
   'create_extension_uuid_ossp.sql',
+  'dydx_market_create_handler.sql',
   'dydx_event_id_from_parts.sql',
   'dydx_event_to_transaction_index.sql',
   'dydx_from_jsonlib_long.sql',
@@ -63,7 +64,7 @@ export async function createPostgresFunctions(): Promise<void> {
   await Promise.all([
     dbHelpers.createModelToJsonFunctions(),
     ...scripts.map((script: string) => storeHelpers.rawQuery(newScript(script, `../../scripts/${script}`).script, {})
-      .catch((error) => {
+      .catch((error: Error) => {
         logger.error({
           at: 'dbHelpers#createModelToJsonFunctions',
           message: `Failed to create or replace function contained in ${script}`,

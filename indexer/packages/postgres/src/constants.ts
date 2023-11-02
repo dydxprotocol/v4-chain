@@ -3,6 +3,7 @@ import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/
 import config from './config';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
+import MarketModel from './models/market-model';
 import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
@@ -83,6 +84,7 @@ export const TIME_IN_FORCE_TO_API_TIME_IN_FORCE: Record<TimeInForce, APITimeInFo
 export const SQL_TO_JSON_DEFINED_MODELS = [
   AssetPositionModel,
   FillModel,
+  MarketModel,
   OrderModel,
   PerpetualMarketModel,
   PerpetualPositionModel,

@@ -478,7 +478,7 @@ describe('SQL Function Tests', () => {
 });
 
 async function getSingleRawQueryResultRow(query: string): Promise<object> {
-  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error) => {
+  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error: Error) => {
     throw error;
   });
   return queryResult.rows[0].result;
