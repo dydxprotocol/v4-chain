@@ -5,13 +5,16 @@ import {
   MarketTable,
   OraclePriceCreateObject,
   OraclePriceFromDatabase,
+  OraclePriceModel,
   OraclePriceTable,
   protocolTranslations,
-  MarketMessageContents,
+  MarketMessageContents, storeHelpers, MarketModel, marketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
 import { updatePriceCacheWithPrice } from '../../caches/price-cache';
+import config from '../../config';
 import { generateOraclePriceContents } from '../../helpers/kafka-helper';
 import {
   ConsolidatedKafkaEvent,
@@ -38,6 +41,13 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       message: 'Received MarketEvent with MarketPriceUpdate.',
       event: this.event,
     });
+    if (config.USE_MARKET_MODIFY_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnexQueries();
+  }
+
+  private async handleViaKnexQueries(): Promise<ConsolidatedKafkaEvent[]> {
     // MarketHandler already makes sure the event has 'priceUpdate' as the oneofKind.
     const castedMarketPriceUpdateMessage:
     MarketPriceUpdateEventMessage = this.event as MarketPriceUpdateEventMessage;
@@ -50,6 +60,49 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
     return [
       this.generateKafkaEvent(
         oraclePrice, pair,
+      ),
+    ];
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const result: pg.QueryResult = await storeHelpers.rawQuery(
+      `SELECT dydx_market_price_update_handler(
+        ${this.block.height}, 
+        '${this.block.time?.toISOString()}', 
+        '${JSON.stringify(MarketEventV1.decode(eventDataBinary))}' 
+      ) AS result;`,
+      { txId: this.txId },
+    ).catch((error: Error) => {
+      logger.error({
+        at: 'MarketPriceUpdateHandler#handleViaSqlFunction',
+        message: 'Failed to handle MarketEventV1',
+        error,
+      });
+
+      if (error.message.includes('MarketPriceUpdateEvent contains a non-existent market id')) {
+        const castedMarketPriceUpdateMessage:
+        MarketPriceUpdateEventMessage = this.event as MarketPriceUpdateEventMessage;
+        this.logAndThrowParseMessageError(
+          'MarketPriceUpdateEvent contains a non-existent market id',
+          { castedMarketPriceUpdateMessage },
+        );
+      }
+
+      throw error;
+    });
+
+    const market: MarketFromDatabase = MarketModel.fromJson(
+      result.rows[0].result.market) as MarketFromDatabase;
+    const oraclePrice: OraclePriceFromDatabase = OraclePriceModel.fromJson(
+      result.rows[0].result.oracle_price) as OraclePriceFromDatabase;
+
+    marketRefresher.updateMarket(market);
+    updatePriceCacheWithPrice(oraclePrice);
+
+    return [
+      this.generateKafkaEvent(
+        oraclePrice, market.pair,
       ),
     ];
   }
