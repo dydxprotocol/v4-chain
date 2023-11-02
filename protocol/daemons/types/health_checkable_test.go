@@ -26,7 +26,7 @@ func TestHealthCheckableImpl_PanicsWithoutInitilization(t *testing.T) {
 	require.Panics(
 		t,
 		func() {
-			hc.HealthCheck(&libtime.TimeProviderImpl{})
+			hc.HealthCheck(&libtime.TimeProviderImpl{}) // nolint:errcheck
 		},
 		"HealthCheckableImpl.HealthCheck should panic if not initialized",
 	)

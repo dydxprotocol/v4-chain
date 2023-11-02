@@ -11,6 +11,7 @@ import (
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -250,7 +251,11 @@ func TestStart_InvalidConfig(t *testing.T) {
 
 			// Expect daemon is not healthy on startup. Daemon becomes healthy after the first successful market
 			// update.
-			require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), "daemon uninitialized")
+			require.ErrorContains(
+				t,
+				client.HealthCheck(&libtime.TimeProviderImpl{}),
+				"pricefeed-daemon is initializing",
+			)
 
 			if tc.expectedError == nil {
 				require.NoError(t, err)
@@ -762,8 +767,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 		"Error - daemon unhealthy": {
 			updateMarketPricesError: fmt.Errorf("failed to update market prices"),
 			expectedError: fmt.Errorf(
-				"price deamon unhealthy: failed to run price updater task loop for price daemon: " +
-					"failed to update market prices",
+				"failed to run price updater task loop for price daemon: failed to update market prices",
 			),
 		},
 	}
@@ -798,10 +802,11 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				log.NewNopLogger(),
 			)
 			// Assert.
+			timeProvider := &libtime.TimeProviderImpl{}
 			if tc.expectedError == nil {
-				require.NoError(t, client.HealthCheck(grpc_util.Ctx))
+				require.NoError(t, client.HealthCheck(timeProvider))
 			} else {
-				require.ErrorContains(t, client.HealthCheck(grpc_util.Ctx), tc.expectedError.Error())
+				require.ErrorContains(t, client.HealthCheck(timeProvider), tc.expectedError.Error())
 			}
 
 			// Cleanup.

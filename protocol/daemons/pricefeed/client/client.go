@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	sdkerrors "cosmossdk.io/errors"
 	"errors"
 	"fmt"
 	"sync"
@@ -51,49 +50,22 @@ type Client struct {
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
 
-	// healthLock is used to synchronize access to the healthError field.
-	healthLock sync.Mutex
-
-	// healthError is used to track daemon health. For a healthy daemon, this field is nil. For an unhealthy daemon,
-	// this field is set to the error that caused the daemon to become unhealthy.
-	healthError error
+	// include HealthCheckableImpl to track the health of the daemon.
+	daemontypes.HealthCheckableImpl
 }
 
 // Ensure Client implements the HealthCheckable interface.
 var _ daemontypes.HealthCheckable = (*Client)(nil)
 
-// HealthCheck returns an error if the daemon is unhealthy.
-// The daemon is considered unhealthy if it is not producing non-empty price updates. We expect a short period of time
-// to pass on daemon startup where the daemon is unhealthy as the price cache warms up.
-// This method is synchronized by isHealthy, which is an atomic.Bool.
-func (c *Client) HealthCheck(_ context.Context) error {
-	c.healthLock.Lock()
-	defer c.healthLock.Unlock()
-
-	if c.healthError == nil {
-		return nil
-	}
-	return sdkerrors.Wrap(c.healthError, "price deamon unhealthy")
-}
-
-// setHealth sets the health of the daemon. Setting the health with a nil err indicates the daemon is healthy. If the
-// daemon is unhealthy, the err parameter will be used to track the reason. This method is synchronized by healthLock.
-func (c *Client) setHealth(err error) {
-	c.healthLock.Lock()
-	defer c.healthLock.Unlock()
-
-	c.healthError = err
-}
-
 func newClient() *Client {
 	client := &Client{
-		tickers:     []*time.Ticker{},
-		stops:       []chan bool{},
-		healthError: errors.New("daemon uninitialized"),
+		tickers: []*time.Ticker{},
+		stops:   []chan bool{},
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
 	client.daemonStartup.Add(1)
+	client.InitializeHealthStatus(constants.PricefeedDaemonModuleName, &libtime.TimeProviderImpl{})
 	return client
 }
 
@@ -126,7 +98,12 @@ func (c *Client) Stop() {
 		}
 
 		c.runningSubtasksWaitGroup.Wait()
-		c.setHealth(errors.New("daemon stopped"))
+
+		// When the daemon stops, toggle it into an unhealthy state.
+		c.RecordUpdateFailure(
+			&libtime.TimeProviderImpl{},
+			fmt.Errorf("%v stopped", constants.PricefeedDaemonModuleName),
+		)
 	})
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"net/http"
 	"time"
@@ -90,11 +91,18 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 		select {
 		case <-ticker.C:
 			err := RunPriceUpdaterTaskLoop(ctx, exchangeToMarketPrices, priceFeedServiceClient, logger)
-			if err != nil {
-				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
-			}
 
-			c.setHealth(errors.Wrap(err, "failed to run price updater task loop for price daemon"))
+			if err == nil {
+				// Record update success for the daemon health check.
+				c.RecordUpdateSuccess(&libtime.TimeProviderImpl{})
+			} else {
+				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
+				// Record update failure for the daemon health check.
+				c.RecordUpdateFailure(
+					&libtime.TimeProviderImpl{},
+					errors.Wrap(err, "failed to run price updater task loop for price daemon"),
+				)
+			}
 
 		case <-stop:
 			return
