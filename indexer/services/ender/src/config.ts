@@ -26,6 +26,9 @@ export const configSchema = {
   USE_ORDER_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_LIQUIDATION_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
