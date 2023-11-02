@@ -16,6 +16,7 @@ import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../.
 import { MarketModifyHandler } from '../../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('marketModifyHandler', () => {
 
@@ -80,54 +81,84 @@ describe('marketModifyHandler', () => {
     });
   });
 
-  it('modifies existing market', async () => {
-    const transactionIndex: number = 0;
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'modifies existing market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_MARKET_MODIFY_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
 
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvents: [defaultMarketModify],
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+        marketEvents: [defaultMarketModify],
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+
+      await onMessage(kafkaMessage);
+
+      const market: MarketFromDatabase = await MarketTable.findById(
+        defaultMarketModify.marketId,
+      ) as MarketFromDatabase;
+
+      expectMarketMatchesEvent(defaultMarketModify as MarketModifyEventMessage, market);
     });
 
-    await onMessage(kafkaMessage);
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'modifies non-existent market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_MARKET_MODIFY_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
 
-    const market: MarketFromDatabase = await MarketTable.findById(
-      defaultMarketModify.marketId,
-    ) as MarketFromDatabase;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
+        marketEvents: [{
+          ...defaultMarketModify,
+          marketId: 5,
+        }],
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
 
-    expectMarketMatchesEvent(defaultMarketModify as MarketModifyEventMessage, market);
-  });
+      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+        new ParseMessageError('Market in MarketModify doesn\'t exist'),
+      );
 
-  it('modifies non-existent market', async () => {
-    const transactionIndex: number = 0;
-
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromMarketEvent({
-      marketEvents: [{
-        ...defaultMarketModify,
-        marketId: 5,
-      }],
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
+      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'MarketModifyHandler#logAndThrowParseMessageError',
+        message: 'Market in MarketModify doesn\'t exist',
+      }));
+      expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'onMessage#onMessage',
+        message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+      }));
+      expect(producerSendMock.mock.calls.length).toEqual(0);
     });
-
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new ParseMessageError('Market in MarketModify doesn\'t exist'),
-    );
-
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'MarketModifyHandler#logAndThrowParseMessageError',
-      message: 'Market in MarketModify doesn\'t exist',
-    }));
-    expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'onMessage#onMessage',
-      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
-    }));
-    expect(producerSendMock.mock.calls.length).toEqual(0);
-  });
 });
 
 function expectMarketMatchesEvent(
