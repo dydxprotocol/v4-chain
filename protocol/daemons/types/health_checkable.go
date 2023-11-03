@@ -82,7 +82,7 @@ func (h *timeBoundedHealthCheckable) ReportSuccess(timestamp time.Time) {
 	h.lastSuccessfulUpdate = timestamp
 }
 
-// ReportFailure records a failed update. This method is synchronized.
+// ReportFailure records a failed update. This method is thread-safe.
 func (h *timeBoundedHealthCheckable) ReportFailure(timestamp time.Time, err error) {
 	h.Lock()
 	defer h.Unlock()
