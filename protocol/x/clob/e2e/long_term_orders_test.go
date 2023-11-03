@@ -131,7 +131,10 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 		},
 	})
 
-	_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId)
+	_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(
+		ctx,
+		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+	)
 	require.False(t, exists)
 	exists, _, _ = tApp.App.ClobKeeper.GetOrderFillAmount(
 		ctx,
