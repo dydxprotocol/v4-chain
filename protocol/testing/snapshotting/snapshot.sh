@@ -87,6 +87,9 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
+# Set pruning to prune all but the last two states. Prevents snapshots from getting too big.
+sed -i 's/pruning = "default"/pruning = "nothing"/' /dydxprotocol/chain/local_node/config/app.toml
+
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
@@ -99,7 +102,7 @@ while true; do
   kill -TERM $(pidof cosmovisor)
 
   log_this "Creating new snapshot"
-  SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%M-%H').tar.gz")
+  SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
   tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
   aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}
