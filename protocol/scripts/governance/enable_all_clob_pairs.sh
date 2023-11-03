@@ -3,8 +3,13 @@
 # This script takes in the result of a `/dydxprotocol/clob/clob_pair` query, and generates 
 # a sample governance proposal to enable trading on all CLOB pairs. 
 # Example usage:
-# % curl -X GET "https://dydx-testnet-archive.allthatnode.com:1317/dydxprotocol/clob/clob_pair" -H "accept: application/json" > /tmp/clob_pairs.json
-# % ./scripts/governance/enable_all_clob_pairs.sh /tmp/clob_pairs.json > /tmp/proposal_enable_trading_all_markets.json
+# 1. Get all clob pairs from a REST endpoint:
+#   % curl -X GET "https://dydx-testnet-archive.allthatnode.com:1317/dydxprotocol/clob/clob_pair" -H "accept: application/json" > /tmp/clob_pairs.json
+# 2. Generate proposal JSON file:
+#   % ./scripts/governance/enable_all_clob_pairs.sh /tmp/clob_pairs.json > /tmp/proposal_enable_trading_all_markets.json
+# 3. Submit proposal:
+#   % dydxprotocold tx gov submit-proposal /tmp/proposal_enable_trading_all_markets.json --from alice --gas auto --fees 400000000000000000adv4tnt
+
 NINE_ZEROS="000000000"
 NATIVE_TOKEN_DENOM="adv4tnt"
 AUTHORITY="dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
