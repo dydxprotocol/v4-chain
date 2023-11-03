@@ -4,6 +4,7 @@ import config from './config';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
 import MarketModel from './models/market-model';
+import OraclePriceModel from './models/oracle-price-model';
 import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
@@ -85,6 +86,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   AssetPositionModel,
   FillModel,
   MarketModel,
+  OraclePriceModel,
   OrderModel,
   PerpetualMarketModel,
   PerpetualPositionModel,
