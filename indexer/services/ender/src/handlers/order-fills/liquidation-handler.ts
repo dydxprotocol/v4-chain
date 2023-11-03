@@ -36,6 +36,8 @@ import {
   OrderFillEventWithLiquidation,
 } from '../../lib/types';
 import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
+import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
+import { redisClient } from '../../helpers/redis/redis-controller';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
@@ -135,6 +137,13 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       const makerOrder: OrderFromDatabase = OrderModel.fromJson(
         result.rows[0].result.order) as OrderFromDatabase;
 
+      // Update the cache tracking the state-filled amount per order for use in vulcan
+      await StateFilledQuantumsCache.updateStateFilledQuantums(
+        makerOrder!.id,
+        this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
+        redisClient,
+      );
+
       const kafkaEvents: ConsolidatedKafkaEvent[] = [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
@@ -224,6 +233,13 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
     );
 
     if (this.event.liquidity === Liquidity.MAKER) {
+      // Update the cache tracking the state-filled amount per order for use in vulcan
+      await StateFilledQuantumsCache.updateStateFilledQuantums(
+        makerOrder!.id,
+        this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
+        redisClient,
+      );
+
       const kafkaEvents: ConsolidatedKafkaEvent[] = [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,

@@ -4,6 +4,7 @@ import {
   protocolTranslations,
 } from '@dydxprotocol-indexer/postgres';
 import { subticksToPrice } from '@dydxprotocol-indexer/postgres/build/src/lib/protocol-translations';
+import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import {
   IndexerOrder,
   IndexerOrder_ConditionType,
@@ -11,7 +12,9 @@ import {
   RedisOrder,
   RedisOrder_TickerType,
 } from '@dydxprotocol-indexer/v4-protos';
+import Big from 'big.js';
 
+import { redisClient } from '../helpers/redis/redis-controller';
 import { OrderbookSide } from '../lib/types';
 
 /**
@@ -64,4 +67,22 @@ export function orderSideToOrderbookSide(
   orderSide: IndexerOrder_Side,
 ): OrderbookSide {
   return orderSide === IndexerOrder_Side.SIDE_BUY ? OrderbookSide.BIDS : OrderbookSide.ASKS;
+}
+
+export async function getStateRemainingQuantums(
+  order: RedisOrder,
+): Promise<Big> {
+  const orderQuantums: Big = Big(order.order!.quantums.toString());
+  const stateFilledQuantums: Big = convertToBig(
+    await StateFilledQuantumsCache.getStateFilledQuantums(order.id, redisClient),
+  );
+  return orderQuantums.minus(stateFilledQuantums);
+}
+
+function convertToBig(value: string | undefined) {
+  if (value === undefined) {
+    return Big(0);
+  } else {
+    return Big(value);
+  }
 }

@@ -75,6 +75,7 @@ import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -479,6 +480,14 @@ describe('OrderHandler', () => {
           },
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -833,6 +842,14 @@ describe('OrderHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -1042,6 +1059,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1253,6 +1278,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 

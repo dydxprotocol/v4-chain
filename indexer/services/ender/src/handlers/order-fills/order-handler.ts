@@ -16,7 +16,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
-import { CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
+import { CanceledOrdersCache, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OrderFillEventV1, IndexerOrderId, IndexerSubaccountId, IndexerOrder,
@@ -134,6 +134,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       ),
     );
 
+    // Update the cache tracking the state-filled amount per order for use in vulcan
+    await StateFilledQuantumsCache.updateStateFilledQuantums(
+      order.id,
+      this.getTotalFilled(castedOrderFillEventMessage).toString(),
+      redisClient,
+    );
+
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
     // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
     // block.
@@ -221,6 +228,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         orderProto.orderId!,
         this.getTotalFilled(castedOrderFillEventMessage),
       ),
+    );
+
+    // Update the cache tracking the state-filled amount per order for use in vulcan
+    await StateFilledQuantumsCache.updateStateFilledQuantums(
+      order.id,
+      this.getTotalFilled(castedOrderFillEventMessage).toString(),
+      redisClient,
     );
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
