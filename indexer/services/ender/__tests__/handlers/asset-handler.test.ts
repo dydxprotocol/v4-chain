@@ -36,6 +36,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import config from '../../src/config';
 
 describe('assetHandler', () => {
   beforeAll(async () => {
@@ -61,6 +62,7 @@ describe('assetHandler', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    assetRefresher.clear();
     jest.clearAllMocks();
   });
 
@@ -98,51 +100,82 @@ describe('assetHandler', () => {
     });
   });
 
-  it('fails when market doesnt exist for asset', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
-      assetEvent: defaultAssetCreateEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    const message: string = 'Unable to find market with id: 0';
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(message),
-    );
-  });
-
-  it('creates new asset', async () => {
-    await MarketTable.create(testConstants.defaultMarket);
-    await marketRefresher.updateMarkets();
-    const transactionIndex: number = 0;
-
-    const assetEvent: AssetCreateEventV1 = defaultAssetCreateEvent;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
-      assetEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-    // Confirm there is no existing asset to or from the sender subaccount
-    await expectNoExistingAssets();
-
-    await onMessage(kafkaMessage);
-
-    const newAssets: AssetFromDatabase[] = await AssetTable.findAll(
-      {},
-      [], {
-        orderBy: [[AssetColumns.id, Ordering.ASC]],
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'fails when market doesnt exist for asset (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_ASSET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
+        assetEvent: defaultAssetCreateEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
       });
-    expect(newAssets.length).toEqual(1);
-    expectAssetMatchesEvent(assetEvent, newAssets[0]);
-    expectTimingStats();
-    const asset: AssetFromDatabase = assetRefresher.getAssetFromId('0');
-    expect(asset).toBeDefined();
-  });
+
+      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+        'Unable to find market with id: 0',
+      );
+    });
+
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'creates new asset (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_ASSET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
+      await MarketTable.create(testConstants.defaultMarket);
+      await marketRefresher.updateMarkets();
+      const transactionIndex: number = 0;
+
+      const assetEvent: AssetCreateEventV1 = defaultAssetCreateEvent;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
+        assetEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      // Confirm there is no existing asset to or from the sender subaccount
+      await expectNoExistingAssets();
+
+      await onMessage(kafkaMessage);
+
+      const newAssets: AssetFromDatabase[] = await AssetTable.findAll(
+        {},
+        [], {
+          orderBy: [[AssetColumns.id, Ordering.ASC]],
+        });
+      expect(newAssets.length).toEqual(1);
+      expectAssetMatchesEvent(assetEvent, newAssets[0]);
+      if (!useSqlFunction) {
+        expectTimingStats();
+      }
+      const asset: AssetFromDatabase = assetRefresher.getAssetFromId('0');
+      expect(asset).toBeDefined();
+    });
 });
 
 function expectTimingStats() {
