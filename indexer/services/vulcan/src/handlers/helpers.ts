@@ -69,6 +69,11 @@ export function orderSideToOrderbookSide(
   return orderSide === IndexerOrder_Side.SIDE_BUY ? OrderbookSide.BIDS : OrderbookSide.ASKS;
 }
 
+/**
+ * Gets the remaining quantums for an order based on the filled amount of the order in state
+ * @param order 
+ * @returns 
+ */
 export async function getStateRemainingQuantums(
   order: RedisOrder,
 ): Promise<Big> {
