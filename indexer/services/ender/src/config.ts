@@ -35,6 +35,9 @@ export const configSchema = {
   USE_MARKET_MODIFY_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_MARKET_PRICE_UPDATE_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
