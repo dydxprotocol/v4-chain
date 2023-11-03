@@ -55,8 +55,7 @@ type timeBoundedHealthCheckable struct {
 
 	// lastSuccessfulUpdate is the timestamp of the last successful update.
 	lastSuccessfulUpdate time.Time
-	// lastFailedUpdate is the timestamp, error pair of the last failed update. After the HealthCheckableImpl is
-	// initialized, this should never be a zero value.
+	// lastFailedUpdate is the timestamp, error pair of the last failed update.
 	lastFailedUpdate timestampWithError
 
 	// timeProvider is the time provider used to determine the current time. This is used for timestamping
