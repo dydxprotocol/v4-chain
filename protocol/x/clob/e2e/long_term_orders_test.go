@@ -7,6 +7,8 @@ import (
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -69,11 +71,85 @@ func TestPlaceOrder_StatefulCancelFollowedByPlaceInSameBlockErrorsInCheckTx(t *t
 	require.NotContains(t, orders, LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId)
 }
 
+// TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled tests the scenario where an honest block proposer
+// may propose a stateful cancellation which fails because the order was fully filled in the same block.
+func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+
+	// Place order
+	result := tApp.CheckTx(testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
+	))
+	require.True(t, result.IsOK(), "Expected CheckTx to succeed. Response: %+v", result)
+	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+	// Place order which fully matches the first order
+	result = tApp.CheckTx(testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+		},
+		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+	))
+	require.True(t, result.IsOK(), "Expected CheckTx to succeed. Response: %+v", result)
+
+	// Place cancellation
+	cancellationTx := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15),
+		},
+		&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15,
+	)
+	result = tApp.CheckTx(cancellationTx)
+	require.True(t, result.IsOK(), "Expected CheckTx to succeed. Response: %+v", result)
+
+	// DeliverTx should fail for cancellation tx
+	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+		ValidateDeliverTxs: func(
+			ctx sdktypes.Context,
+			request abcitypes.RequestDeliverTx,
+			response abcitypes.ResponseDeliverTx,
+			txIndex int,
+		) (haltChain bool) {
+			if lib.SlicesAreEqual(request.Tx, cancellationTx.Tx) {
+				require.True(t, response.IsErr())
+				require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), response.Code)
+			} else {
+				require.True(t, response.IsOK(), "Expected DeliverTx to succeed. Response log: %+v", response.Log)
+			}
+
+			return false
+		},
+	})
+
+	_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId)
+	require.False(t, exists)
+	exists, _, _ = tApp.App.ClobKeeper.GetOrderFillAmount(
+		ctx,
+		LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+	)
+	require.False(t, exists)
+}
+
 func TestCancelStatefulOrder(t *testing.T) {
+	type checkResults struct {
+		orderId       clobtypes.OrderId
+		existsInState bool
+		fillAmount    uint64
+	}
+
 	tests := map[string]struct {
-		blockWithMessages        []testmsgs.TestBlockWithMsgs
-		checkCancelledPlaceOrder clobtypes.MsgPlaceOrder
-		checkResultsBlock        uint32
+		blockWithMessages []testmsgs.TestBlockWithMsgs
+		expectations      checkResults
 	}{
 		"Test stateful order is cancelled when placed and cancelled in the same block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
@@ -92,8 +168,10 @@ func TestCancelStatefulOrder(t *testing.T) {
 				},
 			},
 
-			checkCancelledPlaceOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-			checkResultsBlock:        4,
+			expectations: checkResults{
+				orderId:       LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+				existsInState: false,
+			},
 		},
 		"Test stateful order is cancelled when placed then cancelled in a future block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
@@ -113,10 +191,12 @@ func TestCancelStatefulOrder(t *testing.T) {
 				},
 			},
 
-			checkCancelledPlaceOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-			checkResultsBlock:        4,
+			expectations: checkResults{
+				orderId:       LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+				existsInState: false,
+			},
 		},
-		"Test stateful order is cancelled when placed, matched, and cancelled in the same block": {
+		"Test stateful order is cancelled when placed and then partially matched and cancelled in next block": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
 					Block: 2,
@@ -125,8 +205,13 @@ func TestCancelStatefulOrder(t *testing.T) {
 							Msg:          &LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 							ExpectedIsOk: true,
 						},
+					},
+				},
+				{
+					Block: 3,
+					Msgs: []testmsgs.TestSdkMsg{
 						{
-							Msg:          &PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20,
+							Msg:          &PlaceOrder_Bob_Num0_Id0_Clob0_Sell4_Price10_GTB20,
 							ExpectedIsOk: true,
 						},
 						{
@@ -136,11 +221,12 @@ func TestCancelStatefulOrder(t *testing.T) {
 					},
 				},
 			},
-
-			checkCancelledPlaceOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-			checkResultsBlock:        4,
+			expectations: checkResults{
+				orderId:       LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+				existsInState: false,
+			},
 		},
-		"Test stateful order is cancelled when placed, cancelled, then re-placed with the same order id": {
+		"Test stateful order is placed when placed, cancelled, then re-placed with the same order id": {
 			blockWithMessages: []testmsgs.TestBlockWithMsgs{
 				{
 					Block: 2,
@@ -164,17 +250,36 @@ func TestCancelStatefulOrder(t *testing.T) {
 				},
 			},
 
-			checkCancelledPlaceOrder: LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
-			checkResultsBlock:        4,
+			expectations: checkResults{
+				orderId:       LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5.Order.OrderId,
+				existsInState: true,
+			},
+		},
+		"Test stateful order cancel for non existent order fails": {
+			blockWithMessages: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg:          &constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15,
+							ExpectedIsOk: false,
+						},
+					},
+				},
+			},
+
+			expectations: checkResults{
+				orderId:       constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15.OrderId,
+				existsInState: false,
+			},
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
 
 			for _, blockWithMessages := range tc.blockWithMessages {
-				ctx := tApp.AdvanceToBlock(blockWithMessages.Block, testapp.AdvanceToBlockOptions{})
-
 				for _, testSdkMsg := range blockWithMessages.Msgs {
 					result := tApp.CheckTx(testapp.MustMakeCheckTx(
 						ctx,
@@ -188,14 +293,17 @@ func TestCancelStatefulOrder(t *testing.T) {
 						return result.IsOK() == testSdkMsg.ExpectedIsOk
 					}, "Expected CheckTx to succeed. Response: %+v", result)
 				}
+
+				ctx = tApp.AdvanceToBlock(blockWithMessages.Block, testapp.AdvanceToBlockOptions{})
 			}
 
-			ctx := tApp.AdvanceToBlock(tc.checkResultsBlock, testapp.AdvanceToBlockOptions{})
+			_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, tc.expectations.orderId)
+			require.Equal(t, exists, tc.expectations.existsInState)
 			exists, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(
 				ctx,
-				tc.checkCancelledPlaceOrder.Order.OrderId,
+				tc.expectations.orderId,
 			)
-			require.False(t, exists)
+			require.Equal(t, false, exists)
 			require.Equal(t, uint64(0), fillAmount.ToUint64())
 		})
 	}
