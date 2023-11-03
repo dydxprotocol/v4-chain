@@ -1,16 +1,28 @@
 package price_encoder
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pft "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"syscall"
 	"testing"
 	"time"
+)
+
+const (
+	FailedToUpdateExchangePriceMsg = "Failed to update exchange price in price daemon priceEncoder"
+	GenericExchangeErrorMsg        = "http2: client connection force closed via ClientConn.Close"
 )
 
 func generateBufferedChannelAndExchangeToMarketPrices(
@@ -269,6 +281,139 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 				require.Equal(t, constants.MarketId1, convertedPriceTimestamp.MarketId)
 				require.Equal(t, tc.expectedPrice, convertedPriceTimestamp.Price)
 			}
+		})
+	}
+}
+
+func TestUpdatePrice_Failure(t *testing.T) {
+	tests := map[string]struct {
+		isPastGracePeriod bool
+	}{
+		"Failed - past grace period": {
+			isPastGracePeriod: true,
+		},
+		"Failed - not past grace period": {},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			logger := &mocks.Logger{}
+			etmp := &mocks.ExchangeToMarketPrices{}
+			price_encoder := PriceEncoderImpl{
+				isPastGracePeriod: tc.isPastGracePeriod,
+				logger:            logger,
+				mutableState: &mutableState{
+					mutableExchangeConfig: &types.MutableExchangeMarketConfig{
+						Id: "Binance",
+					},
+				},
+				exchangeId:             "Binance",
+				exchangeToMarketPrices: etmp,
+			}
+
+			// We expect failures to be logged. If the daemon is past the grace period, the failure will be logged as
+			// an error. Otherwise, the failure will be logged as info.
+			logMethod := "Info"
+			if tc.isPastGracePeriod {
+				logMethod = "Error"
+			}
+			logger.On(
+				logMethod,
+				"Failed to get price conversion details for market",
+				"error",
+				errors.New("market config for market 0 not found on exchange 'Binance'"),
+				"marketId",
+				types.MarketId(0),
+				"exchangeId",
+				"Binance",
+			).Return()
+
+			// Intentionally send an invalid price update to trigger error cascade.
+			price_encoder.UpdatePrice(&types.MarketPriceTimestamp{})
+
+			// Validate that expected log method is called, and exchangeToMarketPrices.UpdatePrices is never called.
+			mock.AssertExpectationsForObjects(t, logger, etmp)
+		})
+	}
+}
+
+func TestProcessPriceFetcherResponse_Error(t *testing.T) {
+	tests := map[string]struct {
+		err                 error
+		isUnidentifiedError bool
+		logAsError          bool
+		expectedReason      string
+	}{
+		"Deadline exceeded error": {
+			err:            context.DeadlineExceeded,
+			expectedReason: metrics.HttpGetTimeout,
+		},
+		"Rate limit error": {
+			err:            pf_constants.RateLimitingError,
+			logAsError:     true,
+			expectedReason: metrics.RateLimit,
+		},
+		"Exchange-specific error": {
+			err:            price_function.NewExchangeError("Binance", "exchange-specific error"),
+			expectedReason: metrics.ExchangeSpecificError,
+		},
+		"Generic exchange error": {
+			err:            errors.New(GenericExchangeErrorMsg),
+			expectedReason: metrics.HttpGet5xx,
+		},
+		"Connection reset error": {
+			err:            syscall.ECONNRESET,
+			expectedReason: metrics.HttpGetHangup,
+		},
+		"Unidentified error": {
+			err:                 errors.New("unidentified error"),
+			isUnidentifiedError: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			logger := &mocks.Logger{}
+			etmp := &mocks.ExchangeToMarketPrices{}
+			price_encoder := PriceEncoderImpl{
+				logger:                 logger,
+				exchangeId:             "Binance",
+				exchangeToMarketPrices: etmp,
+			}
+
+			// Unidentified errors are logged without reason key-value pairs in the log message.
+			if tc.isUnidentifiedError {
+				logger.On(
+					"Error",
+					FailedToUpdateExchangePriceMsg,
+					"error",
+					tc.err,
+					"exchangeId",
+					"Binance",
+				).Return().Once()
+			} else {
+				logMethod := "Info"
+				if tc.logAsError {
+					logMethod = "Error"
+				}
+				logger.On(
+					logMethod,
+					FailedToUpdateExchangePriceMsg,
+					"reason",
+					tc.expectedReason,
+					"exchangeId",
+					"Binance",
+					"error",
+					tc.err,
+				).Return().Once()
+			}
+
+			price_encoder.ProcessPriceFetcherResponse(
+				&price_fetcher.PriceFetcherSubtaskResponse{
+					Err: tc.err,
+				},
+			)
+
+			// Validate correct log method is called. Validate exchangeToMarketPrices is never updated.
+			mock.AssertExpectationsForObjects(t, logger, etmp)
 		})
 	}
 }

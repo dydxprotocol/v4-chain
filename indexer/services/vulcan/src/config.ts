@@ -20,7 +20,7 @@ export const configSchema = {
   ...kafkaConfigSchema,
   ...redisConfigSchema,
 
-  FLUSH_WEBSOCKET_MESSAGES_INTERVAL_MS: parseNumber({
+  FLUSH_KAFKA_MESSAGES_INTERVAL_MS: parseNumber({
     default: 10,
   }),
   MAX_WEBSOCKET_MESSAGES_TO_QUEUE_PER_TOPIC: parseNumber({

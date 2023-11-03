@@ -23,6 +23,21 @@ export const configSchema = {
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
     default: true,
   }),
+  USE_ASSET_CREATE_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_LIQUIDATION_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_MARKET_CREATE_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_MARKET_MODIFY_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_MARKET_PRICE_UPDATE_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_ORDER_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),

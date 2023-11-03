@@ -1,10 +1,9 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -199,8 +198,8 @@ func createClobKeeper(
 		memKey,
 		transientStoreKey,
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		},
 		memClob,
 		saKeeper,
@@ -270,20 +269,6 @@ func CreateNClobPair(
 		mockIndexerEventManager.On("AddTxnEvent",
 			ctx,
 			indexerevents.SubtypePerpetualMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewPerpetualMarketCreateEvent(
-					clobtest.MustPerpetualId(items[i]),
-					items[i].Id,
-					perps[i].Params.Ticker,
-					perps[i].Params.MarketId,
-					items[i].Status,
-					items[i].QuantumConversionExponent,
-					perps[i].Params.AtomicResolution,
-					items[i].SubticksPerTick,
-					items[i].StepBaseQuantums,
-					perps[i].Params.LiquidityTier,
-				),
-			),
 			indexerevents.PerpetualMarketEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewPerpetualMarketCreateEvent(

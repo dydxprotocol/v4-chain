@@ -3,9 +3,8 @@
 package mocks
 
 import (
-	grpc "google.golang.org/grpc"
-
 	mock "github.com/stretchr/testify/mock"
+	grpc "google.golang.org/grpc"
 
 	net "net"
 )

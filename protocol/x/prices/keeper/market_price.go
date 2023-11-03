@@ -21,8 +21,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// newMarketPriceStore creates a new prefix store for MarketPrices.
-func (k Keeper) newMarketPriceStore(ctx sdk.Context) prefix.Store {
+// getMarketPriceStore returns a prefix store for MarketPrices.
+func (k Keeper) getMarketPriceStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.MarketPriceKeyPrefix))
 }
 
@@ -39,7 +39,7 @@ func (k Keeper) UpdateMarketPrices(
 	)
 
 	// Get necessary store.
-	marketPriceStore := k.newMarketPriceStore(ctx)
+	marketPriceStore := k.getMarketPriceStore(ctx)
 	updatedMarketPrices := make([]types.MarketPrice, 0, len(updates))
 
 	for _, update := range updates {
@@ -82,7 +82,7 @@ func (k Keeper) UpdateMarketPrices(
 	for _, marketPrice := range updatedMarketPrices {
 		// Store the modified market price.
 		b := k.cdc.MustMarshal(&marketPrice)
-		marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), b)
+		marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), b)
 
 		// Monitor the last block a market price is updated.
 		telemetry.SetGaugeWithLabels(
@@ -94,14 +94,12 @@ func (k Keeper) UpdateMarketPrices(
 		)
 	}
 
-	marketPriceUpdates := GenerateMarketPriceUpdateEvents(updatedMarketPrices)
-	for _, update := range marketPriceUpdates {
+	// Generate indexer events.
+	priceUpdateIndexerEvents := GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
+	for _, update := range priceUpdateIndexerEvents {
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeMarket,
-			indexer_manager.GetB64EncodedEventMessage(
-				update,
-			),
 			indexerevents.MarketEventVersion,
 			indexer_manager.GetBytes(
 				update,
@@ -117,10 +115,10 @@ func (k Keeper) GetMarketPrice(
 	ctx sdk.Context,
 	id uint32,
 ) (types.MarketPrice, error) {
-	store := k.newMarketPriceStore(ctx)
-	b := store.Get(lib.Uint32ToBytes(id))
+	store := k.getMarketPriceStore(ctx)
+	b := store.Get(lib.Uint32ToKey(id))
 	if b == nil {
-		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.Uint32ToString(id))
+		return types.MarketPrice{}, errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.UintToString(id))
 	}
 
 	var marketPrice = types.MarketPrice{}
@@ -130,7 +128,7 @@ func (k Keeper) GetMarketPrice(
 
 // GetAllMarketPrices returns all market prices.
 func (k Keeper) GetAllMarketPrices(ctx sdk.Context) []types.MarketPrice {
-	marketPriceStore := k.newMarketPriceStore(ctx)
+	marketPriceStore := k.getMarketPriceStore(ctx)
 
 	marketPrices := make([]types.MarketPrice, 0)
 
@@ -163,12 +161,12 @@ func (k Keeper) GetMarketIdToValidIndexPrice(
 	ctx sdk.Context,
 ) map[uint32]types.MarketPrice {
 	allMarketParams := k.GetAllMarketParams(ctx)
-	ret := make(map[uint32]types.MarketPrice)
 	marketIdToValidIndexPrice := k.indexPriceCache.GetValidMedianPrices(
 		allMarketParams,
 		k.timeProvider.Now(),
 	)
 
+	ret := make(map[uint32]types.MarketPrice)
 	for _, marketParam := range allMarketParams {
 		if indexPrice, exists := marketIdToValidIndexPrice[marketParam.Id]; exists {
 			ret[marketParam.Id] = types.MarketPrice{

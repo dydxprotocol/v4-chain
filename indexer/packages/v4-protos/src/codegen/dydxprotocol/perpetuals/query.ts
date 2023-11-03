@@ -1,5 +1,6 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
-import { Perpetual, PerpetualSDKType } from "./perpetual";
+import { Perpetual, PerpetualSDKType, PremiumStore, PremiumStoreSDKType } from "./perpetual";
+import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** Queries a Perpetual by id. */
@@ -45,6 +46,72 @@ export interface QueryAllPerpetualsResponse {
 export interface QueryAllPerpetualsResponseSDKType {
   perpetual: PerpetualSDKType[];
   pagination?: PageResponseSDKType;
+}
+/** QueryPremiumVotesRequest is the request type for the PremiumVotes RPC method. */
+
+export interface QueryPremiumVotesRequest {}
+/** QueryPremiumVotesRequest is the request type for the PremiumVotes RPC method. */
+
+export interface QueryPremiumVotesRequestSDKType {}
+/**
+ * QueryPremiumVotesResponse is the response type for the PremiumVotes RPC
+ * method.
+ */
+
+export interface QueryPremiumVotesResponse {
+  premiumVotes?: PremiumStore;
+}
+/**
+ * QueryPremiumVotesResponse is the response type for the PremiumVotes RPC
+ * method.
+ */
+
+export interface QueryPremiumVotesResponseSDKType {
+  premium_votes?: PremiumStoreSDKType;
+}
+/**
+ * QueryPremiumSamplesRequest is the request type for the PremiumSamples RPC
+ * method.
+ */
+
+export interface QueryPremiumSamplesRequest {}
+/**
+ * QueryPremiumSamplesRequest is the request type for the PremiumSamples RPC
+ * method.
+ */
+
+export interface QueryPremiumSamplesRequestSDKType {}
+/**
+ * QueryPremiumSamplesResponse is the response type for the PremiumSamples RPC
+ * method.
+ */
+
+export interface QueryPremiumSamplesResponse {
+  premiumSamples?: PremiumStore;
+}
+/**
+ * QueryPremiumSamplesResponse is the response type for the PremiumSamples RPC
+ * method.
+ */
+
+export interface QueryPremiumSamplesResponseSDKType {
+  premium_samples?: PremiumStoreSDKType;
+}
+/** QueryParamsResponse is the response type for the Params RPC method. */
+
+export interface QueryParamsRequest {}
+/** QueryParamsResponse is the response type for the Params RPC method. */
+
+export interface QueryParamsRequestSDKType {}
+/** QueryParamsResponse is the response type for the Params RPC method. */
+
+export interface QueryParamsResponse {
+  params?: Params;
+}
+/** QueryParamsResponse is the response type for the Params RPC method. */
+
+export interface QueryParamsResponseSDKType {
+  params?: ParamsSDKType;
 }
 
 function createBaseQueryPerpetualRequest(): QueryPerpetualRequest {
@@ -232,6 +299,243 @@ export const QueryAllPerpetualsResponse = {
     const message = createBaseQueryAllPerpetualsResponse();
     message.perpetual = object.perpetual?.map(e => Perpetual.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryPremiumVotesRequest(): QueryPremiumVotesRequest {
+  return {};
+}
+
+export const QueryPremiumVotesRequest = {
+  encode(_: QueryPremiumVotesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPremiumVotesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryPremiumVotesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryPremiumVotesRequest>): QueryPremiumVotesRequest {
+    const message = createBaseQueryPremiumVotesRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryPremiumVotesResponse(): QueryPremiumVotesResponse {
+  return {
+    premiumVotes: undefined
+  };
+}
+
+export const QueryPremiumVotesResponse = {
+  encode(message: QueryPremiumVotesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.premiumVotes !== undefined) {
+      PremiumStore.encode(message.premiumVotes, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPremiumVotesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryPremiumVotesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.premiumVotes = PremiumStore.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryPremiumVotesResponse>): QueryPremiumVotesResponse {
+    const message = createBaseQueryPremiumVotesResponse();
+    message.premiumVotes = object.premiumVotes !== undefined && object.premiumVotes !== null ? PremiumStore.fromPartial(object.premiumVotes) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryPremiumSamplesRequest(): QueryPremiumSamplesRequest {
+  return {};
+}
+
+export const QueryPremiumSamplesRequest = {
+  encode(_: QueryPremiumSamplesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPremiumSamplesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryPremiumSamplesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryPremiumSamplesRequest>): QueryPremiumSamplesRequest {
+    const message = createBaseQueryPremiumSamplesRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryPremiumSamplesResponse(): QueryPremiumSamplesResponse {
+  return {
+    premiumSamples: undefined
+  };
+}
+
+export const QueryPremiumSamplesResponse = {
+  encode(message: QueryPremiumSamplesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.premiumSamples !== undefined) {
+      PremiumStore.encode(message.premiumSamples, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryPremiumSamplesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryPremiumSamplesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.premiumSamples = PremiumStore.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryPremiumSamplesResponse>): QueryPremiumSamplesResponse {
+    const message = createBaseQueryPremiumSamplesResponse();
+    message.premiumSamples = object.premiumSamples !== undefined && object.premiumSamples !== null ? PremiumStore.fromPartial(object.premiumSamples) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryParamsRequest(): QueryParamsRequest {
+  return {};
+}
+
+export const QueryParamsRequest = {
+  encode(_: QueryParamsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryParamsRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryParamsRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryParamsRequest>): QueryParamsRequest {
+    const message = createBaseQueryParamsRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryParamsResponse(): QueryParamsResponse {
+  return {
+    params: undefined
+  };
+}
+
+export const QueryParamsResponse = {
+  encode(message: QueryParamsResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.params !== undefined) {
+      Params.encode(message.params, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryParamsResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryParamsResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.params = Params.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryParamsResponse>): QueryParamsResponse {
+    const message = createBaseQueryParamsResponse();
+    message.params = object.params !== undefined && object.params !== null ? Params.fromPartial(object.params) : undefined;
     return message;
   }
 

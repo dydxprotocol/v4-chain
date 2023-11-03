@@ -14,7 +14,7 @@ import (
 func TestIsDisallowExternalSubmitMsg(t *testing.T) {
 	// All disallow msgs should return true.
 	disallowSampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.DisallowMsgs)
-	// +1 for "/cosmos.auth.v1beta1.MsgUpdateParams" not having a corresponding Repsonse msg type.
+	// +1 for "/cosmos.auth.v1beta1.MsgUpdateParams" not having a corresponding Response msg type.
 	require.Len(t, disallowSampleMsgs, len(appmsgs.DisallowMsgs)/2+1)
 	for _, sampleMsg := range disallowSampleMsgs {
 		result := ante.IsDisallowExternalSubmitMsg(sampleMsg.Msg)

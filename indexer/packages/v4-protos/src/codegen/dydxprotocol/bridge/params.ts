@@ -41,7 +41,7 @@ export interface ProposeParams {
    */
   maxBridgesPerBlock: number;
   /**
-   * The minimum amount of nanoseconds to wait between a finalized bridge and
+   * The minimum duration to wait between a finalized bridge and
    * proposing it. This allows other validators to have enough time to
    * also recognize its occurence. Therefore the bridge daemon should
    * pool for new finalized events at least as often as this parameter.
@@ -72,7 +72,7 @@ export interface ProposeParamsSDKType {
    */
   max_bridges_per_block: number;
   /**
-   * The minimum amount of nanoseconds to wait between a finalized bridge and
+   * The minimum duration to wait between a finalized bridge and
    * proposing it. This allows other validators to have enough time to
    * also recognize its occurence. Therefore the bridge daemon should
    * pool for new finalized events at least as often as this parameter.

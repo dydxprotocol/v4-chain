@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -268,10 +269,10 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgSendFromModuleToAccount{
-				Authority:        constants.GovModuleAccAddressString,
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
 			},
 			expectedResp: &types.MsgSendFromModuleToAccountResponse{},
 		},
@@ -280,7 +281,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 				Authority:        "12345",
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
 			},
 			expectedErr: fmt.Sprintf(
 				"invalid authority %s",
@@ -289,10 +290,10 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 		},
 		"Failure: keeper method returns error": {
 			testMsg: types.MsgSendFromModuleToAccount{
-				Authority:        constants.GovModuleAccAddressString,
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.CarlAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
 			},
 			keeperResp:  fmt.Errorf("keeper error"),
 			expectedErr: "keeper error",

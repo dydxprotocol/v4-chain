@@ -1,15 +1,16 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 )
 
 // DefaultGenesis returns the default genesis state
 func DefaultGenesis() *GenesisState {
 	return &GenesisState{
-		NumMessages:     0,
-		DelayedMessages: []*DelayedMessage{},
+		DelayedMessages:      []*DelayedMessage{},
+		NextDelayedMessageId: 0,
 	}
 }
 
@@ -26,10 +27,10 @@ func (gs GenesisState) Validate() error {
 			)
 		}
 
-		if msg.Id >= gs.NumMessages {
+		if msg.Id >= gs.NextDelayedMessageId {
 			return errorsmod.Wrap(
 				ErrInvalidGenesisState,
-				"delayed message id exceeds total number of messages",
+				"delayed message id cannot be greater than or equal to next id",
 			)
 		}
 		if _, ok := ids[msg.Id]; ok {

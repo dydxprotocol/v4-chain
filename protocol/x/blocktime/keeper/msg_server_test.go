@@ -2,12 +2,11 @@ package keeper_test
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -15,7 +14,7 @@ import (
 )
 
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 
@@ -41,7 +40,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params:    types.DefaultGenesis().Params,
 			},
 			expErr: false,
@@ -56,18 +55,18 @@ func TestMsgUpdateParams(t *testing.T) {
 			expErrMsg: "invalid authority",
 		},
 		{
-			name: "invalid params: negative duration",
+			name: "invalid params: unordered durations",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.DowntimeParams{
 					Durations: []time.Duration{
-						1,
+						5 * time.Second,
+						1 * time.Second,
 					},
-					ClockDriftGracePeriodDuration: -1,
 				},
 			},
 			expErr:    true,
-			expErrMsg: "Durations must be positive",
+			expErrMsg: "Durations must be in ascending order by length",
 		},
 	}
 

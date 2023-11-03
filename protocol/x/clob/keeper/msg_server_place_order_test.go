@@ -2,9 +2,11 @@ package keeper_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -85,6 +87,29 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, indexerEventManager)
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
+			mockLogger := &mocks.Logger{}
+			mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
+			if errors.Is(tc.ExpectedError, types.ErrStatefulOrderCollateralizationCheckFailed) {
+				mockLogger.On("Info",
+					errorsmod.Wrapf(
+						types.ErrStatefulOrderCollateralizationCheckFailed,
+						"PlaceStatefulOrder: order (%+v), result (%s)",
+						tc.StatefulOrderPlacement,
+						satypes.NewlyUndercollateralized.String(),
+					).Error(),
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				).Return()
+			} else {
+				mockLogger.On("Error",
+					mock.Anything,
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				).Return()
+			}
+			ks.Ctx = ks.Ctx.WithLogger(mockLogger)
+
 			require.NoError(t, keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper))
 			// Create test markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -114,20 +139,6 @@ func TestPlaceOrder_Error(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						clobtest.MustPerpetualId(clobPair),
-						clobPair.Id,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -184,6 +195,8 @@ func TestPlaceOrder_Error(t *testing.T) {
 			// Run MsgHandler for placement.
 			_, err = msgServer.PlaceOrder(ctx, &types.MsgPlaceOrder{Order: tc.StatefulOrderPlacement})
 			require.ErrorIs(t, err, tc.ExpectedError)
+
+			mockLogger.AssertExpectations(t)
 		})
 	}
 }
@@ -269,20 +282,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						perpetual.Params.Ticker,
-						perpetual.Params.MarketId,
-						clobPair.Status,
-						clobPair.QuantumConversionExponent,
-						perpetual.Params.AtomicResolution,
-						clobPair.SubticksPerTick,
-						clobPair.StepBaseQuantums,
-						perpetual.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -316,11 +315,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewConditionalOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderPlacementEvent(
@@ -333,11 +327,6 @@ func TestPlaceOrder_Success(t *testing.T) {
 					"AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewLongTermOrderPlacementEvent(
-							tc.StatefulOrderPlacement,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewLongTermOrderPlacementEvent(

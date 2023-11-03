@@ -222,7 +222,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -247,7 +247,7 @@ func TestDeliverTxMatchValidation(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for i, blockAdvancement := range tc.blockAdvancements {
-				ctx = blockAdvancement.AdvanceToBlock(ctx, uint32(i+2), &tApp, t)
+				ctx = blockAdvancement.AdvanceToBlock(ctx, uint32(i+2), tApp, t)
 			}
 		})
 	}

@@ -16,8 +16,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -91,8 +89,8 @@ func createPricesKeeper(
 		mockTimeProvider,
 		mockIndexerEventsManager,
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		},
 	)
 
@@ -158,7 +156,7 @@ func AssertPriceUpdateEventsInIndexerBlock(
 	updatedMarketPrices []types.MarketPrice,
 ) {
 	marketEvents := getMarketEventsFromIndexerBlock(ctx, k)
-	expectedEvents := keeper.GenerateMarketPriceUpdateEvents(updatedMarketPrices)
+	expectedEvents := keeper.GenerateMarketPriceUpdateIndexerEvents(updatedMarketPrices)
 	for _, expectedEvent := range expectedEvents {
 		require.Contains(t, marketEvents, expectedEvent)
 	}
@@ -185,10 +183,9 @@ func getMarketEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeMarket {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var marketEvent indexerevents.MarketEventV1
-		err := unmarshaler.Unmarshal(bytes, &marketEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &marketEvent)
 		if err != nil {
 			panic(err)
 		}

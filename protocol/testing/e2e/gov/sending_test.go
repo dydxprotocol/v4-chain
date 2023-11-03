@@ -1,13 +1,13 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -26,30 +26,30 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	}{
 		"Success: send from module to user account": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
 			},
 			initialModuleBalance:   200,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
 		"Success: send from module to module account": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
 			},
 			initialModuleBalance:   123,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
 		"Failure: insufficient balance": {
 			msg: &sendingtypes.MsgSendFromModuleToAccount{
-				Authority:        authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(124)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(124)),
 			},
 			initialModuleBalance:   123,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
@@ -59,7 +59,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				Authority:        authtypes.NewModuleAddress(sendingtypes.ModuleName).String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
 			},
 			initialModuleBalance:     123,
 			expectSubmitProposalFail: true,
@@ -69,7 +69,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			senderModuleAddress := authtypes.NewModuleAddress(tc.msg.SenderModuleName)
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -90,7 +90,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialModuleBalance := tApp.App.BankKeeper.GetBalance(ctx, senderModuleAddress, tc.msg.Coin.Denom)
 			initialRecipientBalance := tApp.App.BankKeeper.GetBalance(
@@ -103,7 +103,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,

@@ -1,9 +1,11 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"fmt"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -21,17 +23,17 @@ func TestMsgServerCompleteBridge(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: constants.DelayMsgModuleAccAddressString,
+				Authority: delaymsgtypes.ModuleAddress.String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedResp: &types.MsgCompleteBridgeResponse{},
 		},
 		"Failure: invalid address": {
 			testMsg: types.MsgCompleteBridge{
-				Authority: constants.DelayMsgModuleAccAddressString,
+				Authority: delaymsgtypes.ModuleAddress.String(),
 				Event: types.BridgeEvent{
 					Id:             0,
-					Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1)),
+					Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 					Address:        "invalid",
 					EthBlockHeight: 1,
 				},

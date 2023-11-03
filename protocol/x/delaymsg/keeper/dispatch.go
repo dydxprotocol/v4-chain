@@ -2,6 +2,8 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
@@ -10,7 +12,7 @@ import (
 // the messages. If there are no delayed messages scheduled for this block, this function does nothing. It is
 // expected that this function is called at the end of every block.
 func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
-	blockMessageIds, found := k.GetBlockMessageIds(ctx, ctx.BlockHeight())
+	blockMessageIds, found := k.GetBlockMessageIds(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 
 	// If there are no delayed messages scheduled for this block, return.
 	if !found {
@@ -24,20 +26,21 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	// `/block_results` endpoint.
 	var events sdk.Events
 
-	// Execute all delayed messages scheduled for this block and delete them from the store.
+	// Execute all delayed messages scheduled for this block.
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
-			k.Logger(ctx).Error("delayed message %v not found", id)
+			k.Logger(ctx).Error("delayed message not found", types.IdLogKey, id)
 			continue
 		}
 
 		msg, err := delayedMsg.GetMessage()
 		if err != nil {
-			k.Logger(ctx).Error("failed to decode delayed message with id %v: %v", id, err)
+			k.Logger(ctx).Error("failed to decode delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
 			continue
 		}
 
+		// Execute the message in a cached context.
 		if err = abci.RunCached(ctx, func(ctx sdk.Context) error {
 			handler := k.Router().Handler(msg)
 			res, err := handler(ctx, msg)
@@ -48,16 +51,27 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			events = append(events, res.GetEvents()...)
 			return nil
 		}); err != nil {
-			k.Logger(ctx).Error("failed to execute delayed message with id %v: %v", id, err)
+			k.Logger(ctx).Error(
+				"failed to execute delayed message",
+				types.IdLogKey,
+				id,
+				constants.ErrorLogKey,
+				err,
+				types.MessageContentLogKey,
+				msg.String(),
+				types.MessageTypeUrlLogKey,
+				delayedMsg.Msg.TypeUrl,
+			)
 		}
 	}
 
 	// Propagate events emitted in message handlers to current context.
 	ctx.EventManager().EmitEvents(events)
 
+	// Delete executed messages.
 	for _, id := range blockMessageIds.Ids {
 		if err := k.DeleteMessage(ctx, id); err != nil {
-			k.Logger(ctx).Error("failed to delete delayed message: %w", err)
+			k.Logger(ctx).Error("failed to delete delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
 		}
 	}
 }

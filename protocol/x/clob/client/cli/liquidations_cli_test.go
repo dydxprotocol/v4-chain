@@ -4,9 +4,8 @@ package cli_test
 
 import (
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math/big"
 	"testing"
 
@@ -16,6 +15,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/testutil"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -79,10 +79,6 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 
 			// Enable the liquidations daemon in the integration tests.
 			appOptions.Set(daemonflags.FlagUnixSocketAddress, liqTestUnixSocketAddress)
-			// Make sure all daemon-related services are properly stopped.
-			t.Cleanup(func() {
-				stoppable.StopServices(t, testval.AppConfig.GRPC.Address)
-			})
 		},
 	})
 
@@ -143,7 +139,7 @@ func (s *LiquidationsIntegrationTestSuite) SetupSuite() {
 			Id: &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: liqTestSubaccountNumberOne},
 			AssetPositions: []*satypes.AssetPosition{
 				{
-					AssetId:  lib.UsdcAssetId,
+					AssetId:  assettypes.AssetUsdc.Id,
 					Quantums: dtypes.NewInt(-45_001_000_000), // -$45,001
 				},
 			},

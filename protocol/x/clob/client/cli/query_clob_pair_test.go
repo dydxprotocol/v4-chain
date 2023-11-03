@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"strconv"
 	"testing"
 
@@ -81,10 +80,6 @@ func networkWithClobPairObjects(t *testing.T, n int) (*network.Network, []types.
 	require.NoError(t, err)
 	cfg.GenesisState[types.ModuleName] = buf
 
-	t.Cleanup(func() {
-		stoppable.StopServices(t, cfg.GRPCAddress)
-	})
-
 	return network.New(t, cfg), state.ClobPairs
 }
 
@@ -121,7 +116,7 @@ func TestShowClobPair(t *testing.T) {
 		tc := tc
 		t.Run(tc.desc, func(t *testing.T) {
 			args := []string{
-				lib.Uint32ToString(tc.id),
+				lib.UintToString(tc.id),
 			}
 			args = append(args, tc.args...)
 			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdShowClobPair(), args)

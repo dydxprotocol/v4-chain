@@ -130,7 +130,7 @@ func TestCancelOrder_KeeperForwardsErrorsFromMemclob(t *testing.T) {
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
 	ctx := ks.Ctx.WithIsCheckTx(true)
 	ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-		Height:    1,
+		Height:    14,
 		Timestamp: time.Unix(int64(50), 0),
 	})
 
@@ -405,24 +405,27 @@ func TestPerformOrderCancellationStatefulValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
-				genesis := testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
-					state.ClobPairs = []types.ClobPair{
-						{
-							Metadata: &types.ClobPair_PerpetualClobMetadata{
-								PerpetualClobMetadata: &types.PerpetualClobMetadata{
-									PerpetualId: 0,
+			tApp := testapp.NewTestAppBuilder(t).
+				// Disable non-determinism checks since we mutate keeper state directly.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() cmt.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
+						state.ClobPairs = []types.ClobPair{
+							{
+								Metadata: &types.ClobPair_PerpetualClobMetadata{
+									PerpetualClobMetadata: &types.PerpetualClobMetadata{
+										PerpetualId: 0,
+									},
 								},
+								Status:           types.ClobPair_STATUS_ACTIVE,
+								StepBaseQuantums: 12,
+								SubticksPerTick:  39,
 							},
-							Status:           types.ClobPair_STATUS_ACTIVE,
-							StepBaseQuantums: 12,
-							SubticksPerTick:  39,
-						},
-					}
-				})
-				return genesis
-			}).Build()
+						}
+					})
+					return genesis
+				}).Build()
 
 			ctx := tApp.AdvanceToBlock(
 				// Stateful validation happens at blockHeight+1 for short term order cancelations.

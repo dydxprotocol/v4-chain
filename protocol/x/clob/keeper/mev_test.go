@@ -1,12 +1,12 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -837,7 +837,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
@@ -975,7 +975,8 @@ func TestRecordMevMetrics(t *testing.T) {
 			}
 
 			mockLogger := &mocks.Logger{}
-			mockLogger.On("With", mock.Anything, mock.Anything).Return(mockLogger)
+			mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
 			mockLogger.On(
 				"Info",
 				"Measuring MEV for proposed matches",

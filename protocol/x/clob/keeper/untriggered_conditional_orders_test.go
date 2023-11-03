@@ -88,8 +88,8 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
-			ctx := tApp.InitChain()
+			tApp := testApp.NewTestAppBuilder(t).Build()
+			tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
@@ -107,16 +107,6 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
-
-			// There should be exacly one match for all these cases.
-			orderIdToMatch := tc.conditionalOrdersToAdd[0].OrderId
-			require.Equal(t, tc.expectedNumberOfMatches, tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
-				ctx,
-				orderIdToMatch.SubaccountId,
-				func(id types.OrderId) bool {
-					return orderIdToMatch == id
-				},
-			))
 		})
 	}
 }
@@ -204,8 +194,8 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
-			ctx := tApp.InitChain()
+			tApp := testApp.NewTestAppBuilder(t).Build()
+			tApp.InitChain()
 			untriggeredConditionalOrders := tApp.App.ClobKeeper.NewUntriggeredConditionalOrders()
 			tApp.App.ClobKeeper.UntriggeredConditionalOrders[0] = untriggeredConditionalOrders
 
@@ -225,16 +215,6 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 			)
-
-			// There should be exacly zero matches for all these cases since the order should have been removed.
-			orderIdToMatch := tc.conditionalOrderIdsToExpire[0]
-			require.Equal(t, uint32(0), tApp.App.ClobKeeper.CountUntriggeredSubaccountOrders(
-				ctx,
-				orderIdToMatch.SubaccountId,
-				func(id types.OrderId) bool {
-					return orderIdToMatch == id
-				},
-			))
 		})
 	}
 }

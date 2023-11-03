@@ -14,6 +14,7 @@ import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
+import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
 import trackLag from './tasks/track-lag';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
@@ -109,6 +110,14 @@ async function start(): Promise<void> {
       trackLag,
       'track_lag',
       config.LOOPS_INTERVAL_MS_TRACK_LAG,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_REMOVE_OLD_ORDER_UPDATES) {
+    startLoop(
+      removeOldOrderUpdatesTask,
+      'remove_old_order_updates',
+      config.LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES,
     );
   }
 

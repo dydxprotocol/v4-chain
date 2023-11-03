@@ -1,15 +1,16 @@
 package rate_limit_test
 
 import (
+	"testing"
+
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestMultiBlockRateLimiter_SingleRateLimit(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewMultiBlockRateLimiter[string]("test", []types.MaxPerNBlocksRateLimit{
 		{
@@ -46,7 +47,7 @@ func TestMultiBlockRateLimiter_SingleRateLimit(t *testing.T) {
 }
 
 func TestMultiBlockRateLimiter_MultipleRateLimits(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewMultiBlockRateLimiter[string]("test", []types.MaxPerNBlocksRateLimit{
 		{

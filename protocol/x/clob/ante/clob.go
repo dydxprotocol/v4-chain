@@ -107,7 +107,7 @@ func (cd ClobDecorator) AnteHandle(
 				lib.TxMode(ctx),
 			)
 		} else {
-			// No need to process short term order cancelations on `ReCheckTx`.
+			// No need to process short term orders on `ReCheckTx`.
 			if ctx.IsReCheckTx() {
 				return next(ctx, tx, simulate)
 			}

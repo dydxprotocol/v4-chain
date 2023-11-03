@@ -5,6 +5,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"net/http"
 	"time"
@@ -16,7 +17,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -53,7 +53,7 @@ type SubTaskRunner interface {
 		ticker *time.Ticker,
 		stop <-chan bool,
 		configs types.PricefeedMutableMarketConfigs,
-		exchangeStartupConfig types.ExchangeStartupConfig,
+		exchangeQueryConfig types.ExchangeQueryConfig,
 		exchangeDetails types.ExchangeQueryDetails,
 		queryHandler handler.ExchangeQueryHandler,
 		logger log.Logger,
@@ -153,13 +153,13 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
 	bCh chan<- *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
-	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeStartupConfig.ExchangeId)
+	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeQueryConfig.ExchangeId)
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +171,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 
 	// Create PriceFetcher to begin querying with.
 	priceFetcher, err := price_fetcher.NewPriceFetcher(
-		exchangeStartupConfig,
+		exchangeQueryConfig,
 		exchangeDetails,
 		exchangeMarketConfig,
 		marketConfigs,
@@ -190,7 +190,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	// itself to the config's list of exchange config updaters here.
 	configs.AddPriceFetcher(priceFetcher)
 
-	requestHandler := lib.NewRequestHandlerImpl(
+	requestHandler := daemontypes.NewRequestHandlerImpl(
 		&HttpClient,
 	)
 	// Begin loop to periodically start goroutines to query market prices.

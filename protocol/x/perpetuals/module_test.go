@@ -244,9 +244,12 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "perpetuals", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
-	require.Equal(t, "list-perpetual", cmd.Commands()[0].Name())
-	require.Equal(t, "show-perpetual", cmd.Commands()[1].Name())
+	require.Equal(t, 5, len(cmd.Commands()))
+	require.Equal(t, "get-params", cmd.Commands()[0].Name())
+	require.Equal(t, "get-premium-samples", cmd.Commands()[1].Name())
+	require.Equal(t, "get-premium-votes", cmd.Commands()[2].Name())
+	require.Equal(t, "list-perpetual", cmd.Commands()[3].Name())
+	require.Equal(t, "show-perpetual", cmd.Commands()[4].Name())
 }
 
 func TestAppModule_Name(t *testing.T) {
@@ -350,8 +353,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "default_funding_ppm":0,
 				 "liquidity_tier":0
 			  },
-			  "funding_index":"0",
-			  "open_interest":"0"
+			  "funding_index":"0"
 		   }
 		],
 		"liquidity_tiers":[

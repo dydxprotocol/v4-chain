@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "LTC/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "LTCUSDT",
       "adjustByMarket": "USDT-USD"
@@ -17,10 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "LTC-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "LTC_USD"
     },
     {
       "exchangeName": "Huobi",

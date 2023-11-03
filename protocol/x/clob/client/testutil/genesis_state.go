@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
@@ -23,7 +22,7 @@ func CreateBankGenesisState(
 	bankGenState := banktypes.GenesisState{
 		Balances: []banktypes.Balance{
 			{
-				Address: authtypes.NewModuleAddress(satypes.ModuleName).String(),
+				Address: satypes.ModuleAddress.String(),
 				Coins: []sdk.Coin{
 					sdk.NewInt64Coin(
 						constants.Usdc.Denom,

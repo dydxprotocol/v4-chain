@@ -1,12 +1,13 @@
 package delaymsg_test
 
 import (
+	"testing"
+
 	testutildelaymsg "github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestInitGenesis(t *testing.T) {
@@ -18,7 +19,6 @@ func TestInitGenesis(t *testing.T) {
 		},
 		"non-default genesis (e.g. network restart)": {
 			genesisState: &types.GenesisState{
-				NumMessages: 20,
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          3,
@@ -36,6 +36,7 @@ func TestInitGenesis(t *testing.T) {
 						BlockHeight: 10,
 					},
 				},
+				NextDelayedMessageId: 20,
 			},
 		},
 	}

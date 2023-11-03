@@ -17,12 +17,12 @@ type VolatileExchangeParams struct {
 var (
 	TestVolatileExchangeParams = VolatileExchangeParams{
 		AveragePrice: 100,
-		Amplitude:    0.5,
-		Frequency:    2,
+		Amplitude:    0.95,
+		Frequency:    1,
 	}
 	TestVolatileExchangeDetails = types.ExchangeQueryDetails{
 		Exchange:      exchange_common.EXCHANGE_ID_TEST_VOLATILE_EXCHANGE,
-		Url:           "https://www.google.com/",
+		Url:           "https://jsonplaceholder.typicode.com/users",
 		PriceFunction: VolatileExchangePriceFunction,
 		IsMultiMarket: false,
 	}

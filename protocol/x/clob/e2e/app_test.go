@@ -32,10 +32,40 @@ import (
 )
 
 var (
-	Clob_0                                             = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	Clob_0                                            = MustGetClobPairsFromGenesis(testapp.DefaultGenesis())[0]
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+		},
+		testapp.DefaultGenesis(),
+	))
 	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB27 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 27},
+		},
+		testapp.DefaultGenesis(),
+	))
+	PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num1, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_BUY,
 			Quantums:     5,
 			Subticks:     10,
@@ -50,6 +80,39 @@ var (
 			Quantums:     6,
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
+	// replacement of above order with smaller quantums
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     5,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21},
+		},
+		testapp.DefaultGenesis(),
+	))
+	// replacement of order with larger quantums
+	PlaceOrder_Alice_Num0_Id0_Clob0_Buy7_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     7,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21},
+		},
+		testapp.DefaultGenesis(),
+	))
+	// replacement of order on opposite side
+	PlaceOrder_Alice_Num0_Id0_Clob0_Sell6_Price10_GTB21 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_SELL,
+			Quantums:     6,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 21},
 		},
 		testapp.DefaultGenesis(),
 	))
@@ -82,6 +145,22 @@ var (
 	CancelOrder_Alice_Num0_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
 			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		20,
+	)
+	CancelOrder_Alice_Num0_Id0_Clob0_GTB27 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   0,
+		},
+		27,
+	)
+	CancelOrder_Alice_Num1_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num1,
 			ClientId:     0,
 			ClobPairId:   0,
 		},
@@ -122,12 +201,16 @@ var (
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,
 		testapp.DefaultGenesis(),
 	))
-	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
-		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
+	LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.LongTermOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
 		testapp.DefaultGenesis(),
 	))
 	ConditionalPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
 		constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15_StopLoss20,
+		testapp.DefaultGenesis(),
+	))
+	ConditionalPlaceOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 		testapp.DefaultGenesis(),
 	))
 )
@@ -138,7 +221,7 @@ var (
 func TestConcurrentMatchesAndCancels(t *testing.T) {
 	r := rand.NewRand()
 	simAccounts := simtypes.RandomAccounts(r, 1000)
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -347,23 +430,11 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					require.ErrorContains(
-						t,
-						r.(error),
-						"invalid pubkey: MsgProposedOperations is invalid",
-					)
-				} else {
-					t.Error("Expected panic")
-				}
-			}()
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-			tApp := tAppBuilder.Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
@@ -396,7 +467,21 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				},
 			)
 
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{RequestProcessProposalTxsOverride: proposal.Txs})
+			tApp.AdvanceToBlock(3,
+				testapp.AdvanceToBlockOptions{
+					RequestProcessProposalTxsOverride: proposal.Txs,
+					ValidateDeliverTxs: func(
+						ctx sdktypes.Context,
+						request abcitypes.RequestDeliverTx,
+						response abcitypes.ResponseDeliverTx,
+						txIndex int,
+					) (haltchain bool) {
+						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, response.Log, "invalid pubkey: MsgProposedOperations is invalid")
+						return true
+					},
+				},
+			)
 		})
 	}
 }
@@ -418,31 +503,33 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					require.ErrorContains(
-						t,
-						r.(error),
-						"Error: no signatures supplied: MsgProposedOperations is invalid",
-					)
-				} else {
-					t.Error("Expected panic")
-				}
-			}()
-
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-			tApp := tAppBuilder.Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			tApp.InitChain()
 			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			proposal := tApp.PrepareProposal()
 			proposal.Txs[0] = tc.proposedOperationsTx
 
-			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{RequestProcessProposalTxsOverride: proposal.Txs})
+			tApp.AdvanceToBlock(
+				3,
+				testapp.AdvanceToBlockOptions{
+					RequestProcessProposalTxsOverride: proposal.Txs,
+					ValidateDeliverTxs: func(
+						ctx sdktypes.Context,
+						request abcitypes.RequestDeliverTx,
+						response abcitypes.ResponseDeliverTx,
+						txIndex int,
+					) (haltchain bool) {
+						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, response.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
+						return true
+					},
+				},
+			)
 		})
 	}
 }
@@ -452,8 +539,7 @@ func TestStats(t *testing.T) {
 	appOpts := map[string]interface{}{
 		indexer.MsgSenderInstanceForTest: msgSender,
 	}
-	tAppBuilder := testapp.NewTestAppBuilder().WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts))
-	tApp := tAppBuilder.Build()
+	tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 
 	// Epochs start at block height 2.
 	startTime := time.Unix(10, 0).UTC()

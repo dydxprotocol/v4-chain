@@ -5,8 +5,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -54,7 +54,7 @@ func CmdShowSubaccount() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			argOwner := args[0]
-			argNumber, err := lib.StringToUint32(args[1])
+			argNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}

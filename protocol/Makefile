@@ -401,3 +401,21 @@ update-swagger-docs: statik
 	fi
 
 .PHONY: update-swagger-docs
+
+###############################################################################
+###                           Sample Prengenesis                            ###
+###############################################################################
+
+# Run at `./protocol` directory.
+update-sample-pregenesis:
+	make build
+	./scripts/genesis/prod_pregenesis.sh build/dydxprotocold
+	cp /tmp/prod-chain/.dydxprotocol/config/sorted_genesis.json ./scripts/genesis/sample_pregenesis.json
+	@echo "Updated ./scripts/genesis/sample_pregenesis.json"
+
+check-sample-pregenesis-up-to-date:
+	$(MAKE) localnet-build
+	@docker build . -t check-sample-pregenesis  -f scripts/genesis/Dockerfile --no-cache
+	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
+
+.PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date

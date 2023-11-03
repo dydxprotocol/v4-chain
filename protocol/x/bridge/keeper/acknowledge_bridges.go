@@ -1,13 +1,11 @@
 package keeper
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -20,6 +18,13 @@ func (k Keeper) GetAcknowledgeBridges(
 	ctx sdk.Context,
 	blockTimestamp time.Time,
 ) (msg *types.MsgAcknowledgeBridges) {
+	// Do not propose bridge events if bridging is disabled.
+	if k.GetSafetyParams(ctx).IsDisabled {
+		return &types.MsgAcknowledgeBridges{
+			Events: []types.BridgeEvent{},
+		}
+	}
+
 	wallClock := k.bridgeEventManager.GetNow()
 	proposeParams := k.GetProposeParams(ctx)
 
@@ -69,11 +74,24 @@ func (k Keeper) GetAcknowledgeBridges(
 	}
 }
 
-// AcknowledgeBridges acknowledges a list of bridge events.
+// AcknowledgeBridges acknowledges a list of bridge events and returns an error if any of following
+// - bridging is disabled.
+// - fails to delay a `MsgCompleteBridge` for any bridge event.
+// - fails to update `AcknowledgedEventInfo` in state.
 func (k Keeper) AcknowledgeBridges(
 	ctx sdk.Context,
 	bridgeEvents []types.BridgeEvent,
 ) (err error) {
+	if len(bridgeEvents) == 0 {
+		return nil
+	}
+	safetyParams := k.GetSafetyParams(ctx)
+	if safetyParams.IsDisabled {
+		// Do not acknowledge bridges if bridging is disabled.
+		return types.ErrBridgingDisabled
+	}
+
+	// Measure latency if there are bridge events to acknowledge.
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
 		time.Now(),
@@ -81,14 +99,9 @@ func (k Keeper) AcknowledgeBridges(
 		metrics.Latency,
 	)
 
-	if len(bridgeEvents) == 0 {
-		return nil
-	}
-
 	// For each bridge event, delay a `MsgCompleteBridge` to be executed `safetyParams.DelayBlocks`
-	// blocks in the future. Panic if fails to delay any of the messages.
-	safetyParams := k.GetSafetyParams(ctx)
-	delayMsgModuleAccAddrString := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
+	// blocks in the future. Returns error if fails to delay any of the messages.
+	delayMsgModuleAccAddrString := delaymsgtypes.ModuleAddress.String()
 	for _, bridgeEvent := range bridgeEvents {
 		// delaymsg module should be the authority for completing bridges.
 		msgCompleteBridge := types.MsgCompleteBridge{
@@ -101,16 +114,13 @@ func (k Keeper) AcknowledgeBridges(
 			safetyParams.DelayBlocks,
 		)
 		if err != nil {
-			panic(
-				fmt.Sprintf(
-					"failed to delay completing bridge: %s",
-					err.Error(),
-				),
-			)
+			return err
 		}
 	}
 
 	// Update `AcknowledgedEventInfo` in state.
+	// - `NextId` is set to ID of last acknowledged bridge event + 1
+	// - `EthBlockHeight`is set to block height of last acknowledged bridge event
 	lastBridgeEvent := bridgeEvents[len(bridgeEvents)-1]
 	if err = k.SetAcknowledgedEventInfo(ctx, types.BridgeEventInfo{
 		NextId:         lastBridgeEvent.GetId() + 1,

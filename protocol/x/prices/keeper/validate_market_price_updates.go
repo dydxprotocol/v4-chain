@@ -285,9 +285,9 @@ func (k Keeper) GetMarketsMissingFromPriceUpdates(
 	marketPriceUpdates []*types.MsgUpdateMarketPrices_MarketPrice,
 ) []uint32 {
 	// Gather all markets that are part of the proposed updates.
-	proposedUpdatesMap := make(map[uint32]bool, len(marketPriceUpdates))
+	proposedUpdatesMap := make(map[uint32]struct{}, len(marketPriceUpdates))
 	for _, proposedUpdate := range marketPriceUpdates {
-		proposedUpdatesMap[proposedUpdate.MarketId] = true
+		proposedUpdatesMap[proposedUpdate.MarketId] = struct{}{}
 	}
 
 	// Gather all markets that we think should be updated.

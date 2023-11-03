@@ -5,7 +5,7 @@ package mocks
 import (
 	context "context"
 
-	lib "github.com/dydxprotocol/v4-chain/protocol/lib"
+	daemonstypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -34,11 +34,11 @@ func (_m *ExchangeQueryHandler) Now() time.Time {
 }
 
 // Query provides a mock function with given fields: ctx, exchangeQueryDetails, exchangeConfig, marketIds, requestHandler, marketPriceExponent
-func (_m *ExchangeQueryHandler) Query(ctx context.Context, exchangeQueryDetails *types.ExchangeQueryDetails, exchangeConfig *types.MutableExchangeMarketConfig, marketIds []uint32, requestHandler lib.RequestHandler, marketPriceExponent map[uint32]int32) ([]*types.MarketPriceTimestamp, map[uint32]error, error) {
+func (_m *ExchangeQueryHandler) Query(ctx context.Context, exchangeQueryDetails *types.ExchangeQueryDetails, exchangeConfig *types.MutableExchangeMarketConfig, marketIds []uint32, requestHandler daemonstypes.RequestHandler, marketPriceExponent map[uint32]int32) ([]*types.MarketPriceTimestamp, map[uint32]error, error) {
 	ret := _m.Called(ctx, exchangeQueryDetails, exchangeConfig, marketIds, requestHandler, marketPriceExponent)
 
 	var r0 []*types.MarketPriceTimestamp
-	if rf, ok := ret.Get(0).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, lib.RequestHandler, map[uint32]int32) []*types.MarketPriceTimestamp); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, daemonstypes.RequestHandler, map[uint32]int32) []*types.MarketPriceTimestamp); ok {
 		r0 = rf(ctx, exchangeQueryDetails, exchangeConfig, marketIds, requestHandler, marketPriceExponent)
 	} else {
 		if ret.Get(0) != nil {
@@ -47,7 +47,7 @@ func (_m *ExchangeQueryHandler) Query(ctx context.Context, exchangeQueryDetails 
 	}
 
 	var r1 map[uint32]error
-	if rf, ok := ret.Get(1).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, lib.RequestHandler, map[uint32]int32) map[uint32]error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, daemonstypes.RequestHandler, map[uint32]int32) map[uint32]error); ok {
 		r1 = rf(ctx, exchangeQueryDetails, exchangeConfig, marketIds, requestHandler, marketPriceExponent)
 	} else {
 		if ret.Get(1) != nil {
@@ -56,7 +56,7 @@ func (_m *ExchangeQueryHandler) Query(ctx context.Context, exchangeQueryDetails 
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, lib.RequestHandler, map[uint32]int32) error); ok {
+	if rf, ok := ret.Get(2).(func(context.Context, *types.ExchangeQueryDetails, *types.MutableExchangeMarketConfig, []uint32, daemonstypes.RequestHandler, map[uint32]int32) error); ok {
 		r2 = rf(ctx, exchangeQueryDetails, exchangeConfig, marketIds, requestHandler, marketPriceExponent)
 	} else {
 		r2 = ret.Error(2)

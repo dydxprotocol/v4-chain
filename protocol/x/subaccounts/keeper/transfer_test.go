@@ -62,20 +62,20 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				Id:               0,
 				Symbol:           "USDC",
 				Denom:            asstypes.AssetUsdc.Denom,
-				DenomExponent:    int32(-3), // $1 = 1_000 coin unit.
+				DenomExponent:    int32(-6), // $1 = 1_000_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),
-				AtomicResolution: int32(-4), // $1 = 10_000 quantums
+				AtomicResolution: int32(-7), // $1 = 10_000_000 quantums
 			},
-			accAddressBalance:          big.NewInt(2_500),  // $2.5
-			subaccountModuleAccBalance: big.NewInt(10_000), // $10
-			quantums:                   big.NewInt(20_001), // $2.0001, only $2 transfered.
+			accAddressBalance:          big.NewInt(2_500_000),  // $2.5
+			subaccountModuleAccBalance: big.NewInt(10_000_000), // $10
+			quantums:                   big.NewInt(20_000_001), // $2.0000001, only $2 transferred.
 			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(30_001),
+				big.NewInt(30_000_001),
 			), // $3.0001
-			expectedQuoteBalance:                big.NewInt(10_001), // $1.0001, untransfered $0.0001 remains.
-			expectedSubaccountsModuleAccBalance: big.NewInt(8_000),  // $8
-			expectedAccAddressBalance:           big.NewInt(4_500),  // $2.5 + $2
+			expectedQuoteBalance:                big.NewInt(10_000_001), // $1.0001, untransfered $0.0001 remains.
+			expectedSubaccountsModuleAccBalance: big.NewInt(8_000_000),  // $8
+			expectedAccAddressBalance:           big.NewInt(4_500_000),  // $2.5 + $2
 		},
 		"DepositFundsFromAccountToSubaccount: send from account to subaccount": {
 			testTransferFundToAccount:           false,
@@ -94,18 +94,18 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				Id:               0,
 				Symbol:           "USDC",
 				Denom:            asstypes.AssetUsdc.Denom,
-				DenomExponent:    int32(-4), // $1 = 10_000 coin unit.
+				DenomExponent:    int32(-6), // $1 = 1000_000 coin unit.
 				HasMarket:        false,
 				MarketId:         uint32(0),
-				AtomicResolution: int32(-3), // $1 = 1_000 quantums
+				AtomicResolution: int32(-5), // $1 = 100_000 quantums
 			},
-			subaccountModuleAccBalance:          big.NewInt(20_000),                                    // $2
-			accAddressBalance:                   big.NewInt(90_000),                                    // $9
-			quantums:                            big.NewInt(5_021),                                     // $5.021
-			assetPositions:                      keepertest.CreateUsdcAssetPosition(big.NewInt(1_050)), // $1.05
-			expectedQuoteBalance:                big.NewInt(6_071),                                     // $1.05 + $5.021
-			expectedSubaccountsModuleAccBalance: big.NewInt(70_210),                                    // $2 + $5.021
-			expectedAccAddressBalance:           big.NewInt(39_790),                                    // $9 - $5.021
+			subaccountModuleAccBalance:          big.NewInt(2_000_000),                                   // $2
+			accAddressBalance:                   big.NewInt(9_000_000),                                   // $9
+			quantums:                            big.NewInt(502_100),                                     // $5.021
+			assetPositions:                      keepertest.CreateUsdcAssetPosition(big.NewInt(105_000)), // $1.05
+			expectedQuoteBalance:                big.NewInt(607_100),                                     // $1.05 + $5.021
+			expectedSubaccountsModuleAccBalance: big.NewInt(7_021_000),                                   // $2 + $5.021
+			expectedAccAddressBalance:           big.NewInt(3_979_000),                                   // $9 - $5.021
 		},
 		"DepositFundsFromAccountToSubaccount: new balance reaches max int64": {
 			testTransferFundToAccount:  false,
@@ -226,10 +226,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -462,10 +459,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance stays the same.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -774,10 +768,7 @@ func TestTransferFundsFromSubaccountToModule_TransferFundsFromModuleToSubaccount
 			)
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -954,10 +945,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(types.ModuleName),
-				tc.asset.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -1035,7 +1023,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
 			quantums:                            big.NewInt(500),
-			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.Uint32ToString(0)),
+			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.UintToString(uint32(0))),
 			expectedSubaccountsModuleAccBalance: 500,
 			expectedInsuranceFundBalance:        1500,
 			panics:                              true,
@@ -1115,11 +1103,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(
-				ctx,
-				authtypes.NewModuleAddress(types.ModuleName),
-				constants.Usdc.Denom,
-			)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, constants.Usdc.Denom)
 			require.Equal(
 				t,
 				sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedSubaccountsModuleAccBalance),

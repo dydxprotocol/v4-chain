@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 
@@ -11,12 +12,12 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-// NumMessages processes a query request/response for the NumMessages from state.
-func (k Keeper) NumMessages(
+// NextDelayedMessageId processes a query request/response for the NextDelayedMessageId from state.
+func (k Keeper) NextDelayedMessageId(
 	c context.Context,
-	req *types.QueryNumMessagesRequest,
+	req *types.QueryNextDelayedMessageIdRequest,
 ) (
-	*types.QueryNumMessagesResponse,
+	*types.QueryNextDelayedMessageIdResponse,
 	error,
 ) {
 	if req == nil {
@@ -24,10 +25,10 @@ func (k Keeper) NumMessages(
 	}
 	ctx := sdk.UnwrapSDKContext(c)
 
-	numMessages := k.GetNumMessages(ctx)
+	nextDelayedMessageId := k.GetNextDelayedMessageId(ctx)
 
-	return &types.QueryNumMessagesResponse{
-		NumMessages: numMessages,
+	return &types.QueryNextDelayedMessageIdResponse{
+		NextDelayedMessageId: nextDelayedMessageId,
 	}, nil
 }
 
@@ -64,10 +65,6 @@ func (k Keeper) BlockMessageIds(
 ) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
-	}
-
-	if req.BlockHeight < 0 {
-		return nil, status.Error(codes.InvalidArgument, "invalid block height")
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)

@@ -1,41 +1,33 @@
 import { DelayedMessage, DelayedMessageSDKType } from "./delayed_message";
 import * as _m0 from "protobufjs/minimal";
-import { DeepPartial, Long } from "../../helpers";
+import { DeepPartial } from "../../helpers";
 /**
- * QueryNumMessagesRequest is the request type for the NumMessages RPC
- * method.
+ * QueryNextDelayedMessageIdRequest is the request type for the
+ * NextDelayedMessageId RPC method.
  */
 
-export interface QueryNumMessagesRequest {}
+export interface QueryNextDelayedMessageIdRequest {}
 /**
- * QueryNumMessagesRequest is the request type for the NumMessages RPC
- * method.
+ * QueryNextDelayedMessageIdRequest is the request type for the
+ * NextDelayedMessageId RPC method.
  */
 
-export interface QueryNumMessagesRequestSDKType {}
+export interface QueryNextDelayedMessageIdRequestSDKType {}
 /**
- * QueryGetNumMessagesResponse is the response type for the NumMessages RPC
- * method.
+ * QueryNextDelayedMessageIdResponse is the response type for the
+ * NextDelayedMessageId RPC method.
  */
 
-export interface QueryNumMessagesResponse {
-  /**
-   * QueryGetNumMessagesResponse is the response type for the NumMessages RPC
-   * method.
-   */
-  numMessages: number;
+export interface QueryNextDelayedMessageIdResponse {
+  nextDelayedMessageId: number;
 }
 /**
- * QueryGetNumMessagesResponse is the response type for the NumMessages RPC
- * method.
+ * QueryNextDelayedMessageIdResponse is the response type for the
+ * NextDelayedMessageId RPC method.
  */
 
-export interface QueryNumMessagesResponseSDKType {
-  /**
-   * QueryGetNumMessagesResponse is the response type for the NumMessages RPC
-   * method.
-   */
-  num_messages: number;
+export interface QueryNextDelayedMessageIdResponseSDKType {
+  next_delayed_message_id: number;
 }
 /** QueryMessageRequest is the request type for the Message RPC method. */
 
@@ -71,7 +63,7 @@ export interface QueryBlockMessageIdsRequest {
    * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
    * RPC method.
    */
-  blockHeight: Long;
+  blockHeight: number;
 }
 /**
  * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
@@ -83,7 +75,7 @@ export interface QueryBlockMessageIdsRequestSDKType {
    * QueryBlockMessageIdsRequest is the request type for the BlockMessageIds
    * RPC method.
    */
-  block_height: Long;
+  block_height: number;
 }
 /**
  * QueryGetBlockMessageIdsResponse is the response type for the BlockMessageIds
@@ -110,19 +102,19 @@ export interface QueryBlockMessageIdsResponseSDKType {
   message_ids: number[];
 }
 
-function createBaseQueryNumMessagesRequest(): QueryNumMessagesRequest {
+function createBaseQueryNextDelayedMessageIdRequest(): QueryNextDelayedMessageIdRequest {
   return {};
 }
 
-export const QueryNumMessagesRequest = {
-  encode(_: QueryNumMessagesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+export const QueryNextDelayedMessageIdRequest = {
+  encode(_: QueryNextDelayedMessageIdRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNumMessagesRequest {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextDelayedMessageIdRequest {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryNumMessagesRequest();
+    const message = createBaseQueryNextDelayedMessageIdRequest();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
@@ -137,39 +129,39 @@ export const QueryNumMessagesRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryNumMessagesRequest>): QueryNumMessagesRequest {
-    const message = createBaseQueryNumMessagesRequest();
+  fromPartial(_: DeepPartial<QueryNextDelayedMessageIdRequest>): QueryNextDelayedMessageIdRequest {
+    const message = createBaseQueryNextDelayedMessageIdRequest();
     return message;
   }
 
 };
 
-function createBaseQueryNumMessagesResponse(): QueryNumMessagesResponse {
+function createBaseQueryNextDelayedMessageIdResponse(): QueryNextDelayedMessageIdResponse {
   return {
-    numMessages: 0
+    nextDelayedMessageId: 0
   };
 }
 
-export const QueryNumMessagesResponse = {
-  encode(message: QueryNumMessagesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.numMessages !== 0) {
-      writer.uint32(8).uint32(message.numMessages);
+export const QueryNextDelayedMessageIdResponse = {
+  encode(message: QueryNextDelayedMessageIdResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.nextDelayedMessageId !== 0) {
+      writer.uint32(8).uint32(message.nextDelayedMessageId);
     }
 
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNumMessagesResponse {
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryNextDelayedMessageIdResponse {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseQueryNumMessagesResponse();
+    const message = createBaseQueryNextDelayedMessageIdResponse();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.numMessages = reader.uint32();
+          message.nextDelayedMessageId = reader.uint32();
           break;
 
         default:
@@ -181,9 +173,9 @@ export const QueryNumMessagesResponse = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<QueryNumMessagesResponse>): QueryNumMessagesResponse {
-    const message = createBaseQueryNumMessagesResponse();
-    message.numMessages = object.numMessages ?? 0;
+  fromPartial(object: DeepPartial<QueryNextDelayedMessageIdResponse>): QueryNextDelayedMessageIdResponse {
+    const message = createBaseQueryNextDelayedMessageIdResponse();
+    message.nextDelayedMessageId = object.nextDelayedMessageId ?? 0;
     return message;
   }
 
@@ -281,14 +273,14 @@ export const QueryMessageResponse = {
 
 function createBaseQueryBlockMessageIdsRequest(): QueryBlockMessageIdsRequest {
   return {
-    blockHeight: Long.ZERO
+    blockHeight: 0
   };
 }
 
 export const QueryBlockMessageIdsRequest = {
   encode(message: QueryBlockMessageIdsRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (!message.blockHeight.isZero()) {
-      writer.uint32(8).sint64(message.blockHeight);
+    if (message.blockHeight !== 0) {
+      writer.uint32(8).uint32(message.blockHeight);
     }
 
     return writer;
@@ -304,7 +296,7 @@ export const QueryBlockMessageIdsRequest = {
 
       switch (tag >>> 3) {
         case 1:
-          message.blockHeight = (reader.sint64() as Long);
+          message.blockHeight = reader.uint32();
           break;
 
         default:
@@ -318,7 +310,7 @@ export const QueryBlockMessageIdsRequest = {
 
   fromPartial(object: DeepPartial<QueryBlockMessageIdsRequest>): QueryBlockMessageIdsRequest {
     const message = createBaseQueryBlockMessageIdsRequest();
-    message.blockHeight = object.blockHeight !== undefined && object.blockHeight !== null ? Long.fromValue(object.blockHeight) : Long.ZERO;
+    message.blockHeight = object.blockHeight ?? 0;
     return message;
   }
 

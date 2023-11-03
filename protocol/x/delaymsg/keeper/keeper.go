@@ -33,7 +33,7 @@ func NewKeeper(
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		authorities: lib.SliceToSet(authorities),
+		authorities: lib.UniqueSliceToSet(authorities),
 		router:      router,
 	}
 }
@@ -50,7 +50,7 @@ func (k Keeper) Router() lib.MsgRouter {
 
 // InitializeForGenesis initializes the x/delaymsg keeper for genesis.
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-	k.SetNumMessages(ctx, 0)
+	k.SetNextDelayedMessageId(ctx, 0)
 }
 
 // Logger returns a module-specific logger for x/delaymsg.

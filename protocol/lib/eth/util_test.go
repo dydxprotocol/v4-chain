@@ -1,16 +1,112 @@
 package eth_test
 
 import (
-	sdkmath "cosmossdk.io/math"
+	"sync"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetBridgeEventAbi(t *testing.T) {
+	results := make([]*abi.ABI, 0)
+	mu := sync.Mutex{}
+	var wg sync.WaitGroup
+
+	// Get the ABI 200 times.
+	for i := 0; i < 200; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			r := libeth.GetBridgeEventAbi()
+
+			mu.Lock()
+			defer mu.Unlock()
+			results = append(results, r)
+		}()
+	}
+	wg.Wait()
+
+	// Call the function one more time.
+	// Ensure that all the pointers are equal.
+	expected := libeth.GetBridgeEventAbi()
+	require.NotNil(t, expected)
+	for _, r := range results {
+		require.Same(t, expected, r)
+	}
+}
+
+func TestPadOrTruncateAddress(t *testing.T) {
+	tests := map[string]struct {
+		address  []byte
+		expected []byte
+	}{
+		"nil": {
+			address:  nil,
+			expected: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		"length 0": {
+			address:  []byte{},
+			expected: []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		"length < min": {
+			address:  []byte{1, 2, 3, 4},
+			expected: []byte{1, 2, 3, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
+		"length = min": {
+			address:  []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+			expected: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+		},
+		"length between min and max": {
+			address:  []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22},
+			expected: []byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22},
+		},
+		"length = max": {
+			address: []byte{
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+				11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+				21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+				31, 32,
+			},
+			expected: []byte{
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+				11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+				21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+				31, 32,
+			},
+		},
+		"length > max": {
+			address: []byte{
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+				11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+				21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+				31, 32, 33, 34,
+			},
+			expected: []byte{
+				1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+				11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+				21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+				31, 32,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			actual := libeth.PadOrTruncateAddress(tc.address)
+			require.Equal(t, tc.expected, actual)
+			require.GreaterOrEqual(t, len(actual), libeth.MinAddrLen)
+			require.LessOrEqual(t, len(actual), libeth.MaxAddrLen)
+		})
+	}
+}
 
 func TestBridgeLogToEvent(t *testing.T) {
 	tests := map[string]struct {
@@ -21,11 +117,11 @@ func TestBridgeLogToEvent(t *testing.T) {
 	}{
 		"Success: event ID 0": {
 			inputLog:   constants.EthLog_Event0,
-			inputDenom: "dv4tnt",
+			inputDenom: "adv4tnt",
 			expectedEvent: bridgetypes.BridgeEvent{
 				Id: 0,
 				Coin: sdk.NewCoin(
-					"dv4tnt",
+					"adv4tnt",
 					sdkmath.NewInt(12345),
 				),
 				Address:        "dydx1qqgzqvzq2ps8pqys5zcvp58q7rluextx92xhln",
@@ -77,11 +173,11 @@ func TestBridgeLogToEvent(t *testing.T) {
 		},
 		"Success: event ID 4": {
 			inputLog:   constants.EthLog_Event4,
-			inputDenom: "dv4tnt",
+			inputDenom: "adv4tnt",
 			expectedEvent: bridgetypes.BridgeEvent{
 				Id: 4,
 				Coin: sdk.NewCoin(
-					"dv4tnt",
+					"adv4tnt",
 					sdkmath.NewInt(1234123443214321),
 				),
 				// address shorter than 20 bytes is padded with zeros.

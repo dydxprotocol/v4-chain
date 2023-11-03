@@ -13,7 +13,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 
 	logger := tApp.App.StatsKeeper.Logger(ctx)
@@ -75,7 +75,7 @@ func TestRecordFill(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.StatsKeeper
 
@@ -88,7 +88,7 @@ func TestRecordFill(t *testing.T) {
 }
 
 func TestProcessBlockStats(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 
 	// Epochs initialize at block height 2
 	tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
@@ -189,7 +189,7 @@ func TestProcessBlockStats(t *testing.T) {
 }
 
 func TestExpireOldStats(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 
 	// Epochs start at block height 2
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
@@ -197,12 +197,13 @@ func TestExpireOldStats(t *testing.T) {
 	})
 	windowDuration := tApp.App.StatsKeeper.GetWindowDuration(ctx)
 	// 5 epochs are out of the window
-	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{
+	tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 		BlockTime: time.Unix(0, 0).
 			Add(windowDuration).
 			Add((time.Duration(5*epochstypes.StatsEpochDuration) + 1) * time.Second).
 			UTC(),
 	})
+	ctx = tApp.AdvanceToBlock(100, testapp.AdvanceToBlockOptions{})
 	k := tApp.App.StatsKeeper
 
 	// Create a bunch of EpochStats.

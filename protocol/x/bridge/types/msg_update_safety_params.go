@@ -1,8 +1,9 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -22,5 +23,5 @@ func (msg *MsgUpdateSafetyParams) ValidateBasic() error {
 			),
 		)
 	}
-	return nil
+	return msg.Params.Validate()
 }

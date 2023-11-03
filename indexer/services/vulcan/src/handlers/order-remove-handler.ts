@@ -33,10 +33,11 @@ import {
   SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { Big } from 'big.js';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
-import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
+import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
 import { getTriggerPrice } from './helpers';
 
@@ -218,12 +219,14 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    const subaccountMessage: Buffer = this.createSubaccountWebsocketMessageFromPostgresOrder(
-      order,
-      orderRemove,
-      perpetualMarket.ticker,
-    );
-    sendWebsocketWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+    const subaccountMessage: Message = {
+      value: this.createSubaccountWebsocketMessageFromPostgresOrder(
+        order,
+        orderRemove,
+        perpetualMarket.ticker,
+      ),
+    };
+    sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
 
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
@@ -273,15 +276,17 @@ export class OrderRemoveHandler extends Handler {
       this.generateTimingStatsOptions('cancel_order_in_postgres'),
     );
 
-    const subaccountMessage: Buffer = this.createSubaccountWebsocketMessageFromRemoveOrderResult(
-      removeOrderResult,
-      orderRemove,
-      perpetualMarket,
-    );
+    const subaccountMessage: Message = {
+      value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
+        removeOrderResult,
+        orderRemove,
+        perpetualMarket,
+      ),
+    };
 
     // TODO(IND-147): Remove this check once fully-filled orders are removed by ender
     if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult)) {
-      sendWebsocketWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+      sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
     const remainingQuantums: Big = Big(this.getSizeDeltaInQuantums(
@@ -315,12 +320,14 @@ export class OrderRemoveHandler extends Handler {
       ),
       this.generateTimingStatsOptions('update_price_level_cache'),
     );
-    const orderbookMessage: Buffer = this.createOrderbookWebsocketMessage(
-      removeOrderResult.removedOrder!,
-      perpetualMarket,
-      updatedQuantums,
-    );
-    sendWebsocketWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+    const orderbookMessage: Message = {
+      value: this.createOrderbookWebsocketMessage(
+        removeOrderResult.removedOrder!,
+        perpetualMarket,
+        updatedQuantums,
+      ),
+    };
+    sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
 
   /**

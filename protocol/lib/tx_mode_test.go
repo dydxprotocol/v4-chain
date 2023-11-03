@@ -8,7 +8,7 @@ import (
 )
 
 func TestAssertDeliverTxMode(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	// Initializing the chain returns a checkTx context so swap to a deliverTx context
 	ctx := tApp.InitChain().WithIsCheckTx(false)
 
@@ -24,7 +24,7 @@ func TestAssertDeliverTxMode(t *testing.T) {
 }
 
 func TestIsDeliverTxMode(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	// Initializing the chain returns a checkTx context so swap to a deliverTx context
 	ctx := tApp.InitChain().WithIsCheckTx(false)
 
@@ -34,7 +34,7 @@ func TestIsDeliverTxMode(t *testing.T) {
 }
 
 func TestAssertCheckTxMode(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	// Initializing the chain returns a checkTx context so swap to a deliverTx context
 	ctx := tApp.InitChain().WithIsCheckTx(false)
 
@@ -50,7 +50,7 @@ func TestAssertCheckTxMode(t *testing.T) {
 }
 
 func TestTxMode(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testApp.NewTestAppBuilder(t).Build()
 	// Initializing the chain returns a checkTx context so swap to a deliverTx context
 	ctx := tApp.InitChain().WithIsCheckTx(false)
 

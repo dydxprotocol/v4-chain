@@ -8,6 +8,9 @@ func (params Params) Validate() error {
 	if params.PremiumVoteClampFactorPpm == 0 {
 		return ErrPremiumVoteClampFactorPpmIsZero
 	}
+	if params.MinNumVotesPerSample == 0 {
+		return ErrMinNumVotesPerSampleIsZero
+	}
 
 	return nil
 }

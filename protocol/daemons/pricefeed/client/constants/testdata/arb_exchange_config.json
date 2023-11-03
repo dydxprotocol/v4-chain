@@ -25,10 +25,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Kraken",
-      "ticker": "ARBUSD"
-    },
-    {
       "exchangeName": "Kucoin",
       "ticker": "ARB-USDT",
       "adjustByMarket": "USDT-USD"

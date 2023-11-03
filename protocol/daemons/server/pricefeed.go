@@ -77,6 +77,7 @@ func (s *Server) UpdateMarketPrices(
 	return &api.UpdateMarketPricesResponse{}, nil
 }
 
+// validateMarketPricesUpdatesMessage validates a `UpdateMarketPricesRequest`.
 func validateMarketPricesUpdatesMessage(req *api.UpdateMarketPricesRequest) error {
 	if len(req.MarketPriceUpdates) == 0 {
 		return types.ErrPriceFeedMarketPriceUpdateEmpty
@@ -104,6 +105,7 @@ func validateMarketPricesUpdatesMessage(req *api.UpdateMarketPricesRequest) erro
 	return nil
 }
 
+// validateMarketPriceUpdate validates a single `MarketPriceUpdate`.
 func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 	for _, ep := range mpu.ExchangePrices {
 		if ep.Price == constants.DefaultPrice {

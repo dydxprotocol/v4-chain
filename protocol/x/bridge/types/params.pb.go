@@ -98,7 +98,7 @@ type ProposeParams struct {
 	// Limits the number of events to propose in a single block
 	// in-order to smooth out the flow of events.
 	MaxBridgesPerBlock uint32 `protobuf:"varint,1,opt,name=max_bridges_per_block,json=maxBridgesPerBlock,proto3" json:"max_bridges_per_block,omitempty"`
-	// The minimum amount of nanoseconds to wait between a finalized bridge and
+	// The minimum duration to wait between a finalized bridge and
 	// proposing it. This allows other validators to have enough time to
 	// also recognize its occurence. Therefore the bridge daemon should
 	// pool for new finalized events at least as often as this parameter.

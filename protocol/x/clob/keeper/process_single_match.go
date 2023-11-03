@@ -8,9 +8,12 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -242,6 +245,29 @@ func (k Keeper) ProcessSingleMatch(
 			notionalLiquidatedQuoteQuantums,
 			takerInsuranceFundDelta,
 		)
+
+		labels := []gometrics.Label{
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
+		}
+		if matchWithOrders.TakerOrder.IsBuy() {
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Buy))
+		} else {
+			labels = append(labels, metrics.GetLabelForStringValue(metrics.OrderSide, metrics.Sell))
+		}
+
+		// Stat quote quantums liquidated.
+		gometrics.AddSampleWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.QuoteQuantums},
+			metrics.GetMetricValueFromBigInt(notionalLiquidatedQuoteQuantums),
+			labels,
+		)
+		// Stat insurance fund delta.
+		gometrics.AddSampleWithLabels(
+			[]string{metrics.Liquidations, metrics.InsuranceFundDelta},
+			metrics.GetMetricValueFromBigInt(new(big.Int).Abs(takerInsuranceFundDelta)),
+			append(labels, metrics.GetLabelForBoolValue(metrics.Positive, takerInsuranceFundDelta.Sign() == 1)),
+		)
 	}
 
 	// Liquidation orders can only be placed when a subaccount is liquidatable
@@ -340,7 +366,7 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          lib.UsdcAssetId,
+					AssetId:          assettypes.AssetUsdc.Id,
 					BigQuantumsDelta: bigTakerQuoteBalanceDelta,
 				},
 			},
@@ -356,7 +382,7 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          lib.UsdcAssetId,
+					AssetId:          assettypes.AssetUsdc.Id,
 					BigQuantumsDelta: bigMakerQuoteBalanceDelta,
 				},
 			},
@@ -411,7 +437,7 @@ func (k Keeper) persistMatchedOrders(
 	bigTotalFeeQuoteQuantums := new(big.Int).Add(bigTakerFeeQuoteQuantums, bigMakerFeeQuoteQuantums)
 	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
 		ctx,
-		lib.UsdcAssetId,
+		assettypes.AssetUsdc.Id,
 		bigTotalFeeQuoteQuantums,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
@@ -469,7 +495,7 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 	newTotalFillAmount satypes.BaseQuantums,
 	curPruneableBlockHeight uint32,
 ) *types.OffchainUpdates {
-	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `MaxUInt32` here.
+	// Note that stateful orders are never pruned by `BlockHeight`, so we set the value to `math.MaxUint32` here.
 	pruneableBlockHeight := uint32(math.MaxUint32)
 	offchainUpdates := types.NewOffchainUpdates()
 

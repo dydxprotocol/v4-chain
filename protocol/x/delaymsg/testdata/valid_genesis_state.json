@@ -15,8 +15,8 @@
           "eth_block_height": "0"
         }
       },
-      "block_height": "100"
+      "block_height": 100
     }
   ],
-  "num_messages": 2
+  "next_delayed_message_id": 2
 }

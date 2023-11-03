@@ -11,22 +11,18 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	_ "github.com/cosmos/gogoproto/types"
-	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	time "time"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
-var _ = time.Kitchen
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the proto package it is being compiled against.
@@ -126,129 +122,36 @@ func (m *MsgUpdateDowntimeParamsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateDowntimeParamsResponse proto.InternalMessageInfo
 
-// MsgIsDelayedBlock is the Msg/IsDelayedBlock request type.
-type MsgIsDelayedBlock struct {
-	// The duration that the block is delayed by.
-	// This value could possibly be negative in rare cases.
-	DelayDuration time.Duration `protobuf:"bytes,1,opt,name=delay_duration,json=delayDuration,proto3,stdduration" json:"delay_duration"`
-}
-
-func (m *MsgIsDelayedBlock) Reset()         { *m = MsgIsDelayedBlock{} }
-func (m *MsgIsDelayedBlock) String() string { return proto.CompactTextString(m) }
-func (*MsgIsDelayedBlock) ProtoMessage()    {}
-func (*MsgIsDelayedBlock) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b4afda7c355c8b6, []int{2}
-}
-func (m *MsgIsDelayedBlock) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgIsDelayedBlock) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgIsDelayedBlock.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgIsDelayedBlock) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgIsDelayedBlock.Merge(m, src)
-}
-func (m *MsgIsDelayedBlock) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgIsDelayedBlock) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgIsDelayedBlock.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgIsDelayedBlock proto.InternalMessageInfo
-
-func (m *MsgIsDelayedBlock) GetDelayDuration() time.Duration {
-	if m != nil {
-		return m.DelayDuration
-	}
-	return 0
-}
-
-// MsgIsDelayedBlock is the Msg/IsDelayedBlock response type.
-type MsgIsDelayedBlockResponse struct {
-}
-
-func (m *MsgIsDelayedBlockResponse) Reset()         { *m = MsgIsDelayedBlockResponse{} }
-func (m *MsgIsDelayedBlockResponse) String() string { return proto.CompactTextString(m) }
-func (*MsgIsDelayedBlockResponse) ProtoMessage()    {}
-func (*MsgIsDelayedBlockResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_4b4afda7c355c8b6, []int{3}
-}
-func (m *MsgIsDelayedBlockResponse) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *MsgIsDelayedBlockResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_MsgIsDelayedBlockResponse.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *MsgIsDelayedBlockResponse) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_MsgIsDelayedBlockResponse.Merge(m, src)
-}
-func (m *MsgIsDelayedBlockResponse) XXX_Size() int {
-	return m.Size()
-}
-func (m *MsgIsDelayedBlockResponse) XXX_DiscardUnknown() {
-	xxx_messageInfo_MsgIsDelayedBlockResponse.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_MsgIsDelayedBlockResponse proto.InternalMessageInfo
-
 func init() {
 	proto.RegisterType((*MsgUpdateDowntimeParams)(nil), "dydxprotocol.blocktime.MsgUpdateDowntimeParams")
 	proto.RegisterType((*MsgUpdateDowntimeParamsResponse)(nil), "dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse")
-	proto.RegisterType((*MsgIsDelayedBlock)(nil), "dydxprotocol.blocktime.MsgIsDelayedBlock")
-	proto.RegisterType((*MsgIsDelayedBlockResponse)(nil), "dydxprotocol.blocktime.MsgIsDelayedBlockResponse")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/blocktime/tx.proto", fileDescriptor_4b4afda7c355c8b6) }
 
 var fileDescriptor_4b4afda7c355c8b6 = []byte{
-	// 437 bytes of a gzipped FileDescriptorProto
+	// 326 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4f, 0xa9, 0x4c, 0xa9,
 	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0xca, 0xc9, 0x4f, 0xce, 0x2e, 0xc9,
 	0xcc, 0x4d, 0xd5, 0x2f, 0xa9, 0xd0, 0x03, 0x8b, 0x0a, 0x89, 0x21, 0x2b, 0xd0, 0x83, 0x2b, 0x90,
 	0x92, 0x4c, 0xce, 0x2f, 0xce, 0xcd, 0x2f, 0x8e, 0x07, 0x4b, 0xe9, 0x43, 0x38, 0x10, 0x2d, 0x52,
-	0xe2, 0x10, 0x9e, 0x7e, 0x6e, 0x71, 0xba, 0x7e, 0x99, 0x21, 0x88, 0x82, 0x4a, 0xc8, 0xa5, 0xe7,
-	0xe7, 0xa7, 0xe7, 0xa4, 0xea, 0x83, 0x79, 0x49, 0xa5, 0x69, 0xfa, 0x29, 0xa5, 0x45, 0x89, 0x25,
-	0x99, 0xf9, 0x79, 0x50, 0x79, 0x65, 0x1c, 0x8e, 0x29, 0x48, 0x2c, 0x4a, 0xcc, 0x85, 0x99, 0x2e,
-	0x92, 0x9e, 0x9f, 0x9e, 0x0f, 0xb1, 0x15, 0xc4, 0x82, 0x88, 0x2a, 0x2d, 0x67, 0xe4, 0x12, 0xf7,
-	0x2d, 0x4e, 0x0f, 0x2d, 0x48, 0x49, 0x2c, 0x49, 0x75, 0xc9, 0x2f, 0xcf, 0x03, 0x69, 0x0c, 0x00,
-	0xeb, 0x13, 0x32, 0xe3, 0xe2, 0x4c, 0x2c, 0x2d, 0xc9, 0xc8, 0x2f, 0xca, 0x2c, 0xa9, 0x94, 0x60,
-	0x54, 0x60, 0xd4, 0xe0, 0x74, 0x92, 0xb8, 0xb4, 0x45, 0x57, 0x04, 0xea, 0x68, 0xc7, 0x94, 0x94,
-	0xa2, 0xd4, 0xe2, 0xe2, 0xe0, 0x92, 0xa2, 0xcc, 0xbc, 0xf4, 0x20, 0x84, 0x52, 0x21, 0x17, 0x2e,
-	0x36, 0x88, 0xcd, 0x12, 0x4c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x6a, 0x7a, 0xd8, 0xc3, 0x42, 0x0f,
-	0xd5, 0x3e, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19, 0x82, 0xa0, 0x7a, 0xad, 0xf8, 0x9a, 0x9e, 0x6f,
-	0xd0, 0x42, 0x98, 0xaa, 0xa4, 0xc8, 0x25, 0x8f, 0xc3, 0xa1, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79,
-	0xc5, 0xa9, 0x4a, 0xf1, 0x5c, 0x82, 0xbe, 0xc5, 0xe9, 0x9e, 0xc5, 0x2e, 0xa9, 0x39, 0x89, 0x95,
-	0xa9, 0x29, 0x4e, 0x20, 0x8b, 0x84, 0xbc, 0xb8, 0xf8, 0x52, 0x40, 0xfc, 0x78, 0x58, 0xa0, 0x81,
-	0xbd, 0xc2, 0x6d, 0x24, 0xa9, 0x07, 0x09, 0x55, 0x3d, 0x58, 0xa8, 0xea, 0xb9, 0x40, 0x15, 0x38,
-	0x71, 0x80, 0x1c, 0x32, 0xe3, 0xbe, 0x3c, 0x63, 0x10, 0x2f, 0x58, 0x2b, 0x4c, 0x42, 0x49, 0x9a,
-	0x4b, 0x12, 0xc3, 0x02, 0x98, 0xed, 0x46, 0x3f, 0x18, 0xb9, 0x98, 0x7d, 0x8b, 0xd3, 0x85, 0x1a,
-	0x18, 0xb9, 0x44, 0xb0, 0x86, 0xa7, 0x3e, 0xae, 0x70, 0xc0, 0xe1, 0x2f, 0x29, 0x73, 0x12, 0x35,
-	0xc0, 0x9c, 0x22, 0x94, 0xc7, 0xc5, 0x87, 0x16, 0x0a, 0x9a, 0x78, 0x8c, 0x42, 0x55, 0x2a, 0x65,
-	0x48, 0xb4, 0x52, 0x98, 0x7d, 0x4e, 0xa1, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7, 0xf8,
-	0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c, 0xc7,
-	0x10, 0x65, 0x9d, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x8f, 0x92, 0x4a,
-	0xcb, 0x4c, 0x74, 0x93, 0x33, 0x12, 0x33, 0xf3, 0xf4, 0xe1, 0x22, 0x15, 0xc8, 0xd9, 0xa8, 0xb2,
-	0x20, 0xb5, 0x38, 0x89, 0x0d, 0x2c, 0x67, 0x0c, 0x08, 0x00, 0x00, 0xff, 0xff, 0x92, 0x82, 0xff,
-	0x1b, 0x6d, 0x03, 0x00, 0x00,
+	0xe2, 0x10, 0x9e, 0x7e, 0x6e, 0x71, 0xba, 0x7e, 0x99, 0x21, 0x88, 0x82, 0x4a, 0x28, 0xe3, 0xb0,
+	0xac, 0x20, 0xb1, 0x28, 0x31, 0x17, 0xa6, 0x5b, 0x24, 0x3d, 0x3f, 0x3d, 0x1f, 0x62, 0x2a, 0x88,
+	0x05, 0x11, 0x55, 0x5a, 0xce, 0xc8, 0x25, 0xee, 0x5b, 0x9c, 0x1e, 0x5a, 0x90, 0x92, 0x58, 0x92,
+	0xea, 0x92, 0x5f, 0x9e, 0x07, 0xd2, 0x18, 0x00, 0xd6, 0x27, 0x64, 0xc6, 0xc5, 0x99, 0x58, 0x5a,
+	0x92, 0x91, 0x5f, 0x94, 0x59, 0x52, 0x29, 0xc1, 0xa8, 0xc0, 0xa8, 0xc1, 0xe9, 0x24, 0x71, 0x69,
+	0x8b, 0xae, 0x08, 0xd4, 0x51, 0x8e, 0x29, 0x29, 0x45, 0xa9, 0xc5, 0xc5, 0xc1, 0x25, 0x45, 0x99,
+	0x79, 0xe9, 0x41, 0x08, 0xa5, 0x42, 0x2e, 0x5c, 0x6c, 0x10, 0x9b, 0x25, 0x98, 0x14, 0x18, 0x35,
+	0xb8, 0x8d, 0xd4, 0xf4, 0xb0, 0xfb, 0x55, 0x0f, 0xd5, 0x3e, 0x27, 0x96, 0x13, 0xf7, 0xe4, 0x19,
+	0x82, 0xa0, 0x7a, 0xad, 0xf8, 0x9a, 0x9e, 0x6f, 0xd0, 0x42, 0x98, 0xaa, 0xa4, 0xc8, 0x25, 0x8f,
+	0xc3, 0xa1, 0x41, 0xa9, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x46, 0x1d, 0x8c, 0x5c, 0xcc, 0xbe,
+	0xc5, 0xe9, 0x42, 0x0d, 0x8c, 0x5c, 0x22, 0x58, 0x7d, 0xa4, 0x8f, 0xcb, 0x25, 0x38, 0x4c, 0x96,
+	0x32, 0x27, 0x51, 0x03, 0xcc, 0x29, 0x4e, 0xa1, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7,
+	0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c,
+	0xc7, 0x10, 0x65, 0x9d, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0xab, 0x8f, 0x12,
+	0x6f, 0x65, 0x26, 0xba, 0xc9, 0x19, 0x89, 0x99, 0x79, 0xfa, 0x70, 0x91, 0x0a, 0xe4, 0x84, 0x53,
+	0x59, 0x90, 0x5a, 0x9c, 0xc4, 0x06, 0x96, 0x33, 0x06, 0x04, 0x00, 0x00, 0xff, 0xff, 0x67, 0x88,
+	0x2a, 0x78, 0x5f, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -265,9 +168,6 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// UpdateDowntimeParams updates the DowntimeParams in state.
 	UpdateDowntimeParams(ctx context.Context, in *MsgUpdateDowntimeParams, opts ...grpc.CallOption) (*MsgUpdateDowntimeParamsResponse, error)
-	// IsDelayedBlock indicates a significant difference between wall time and the
-	// time of the proposed block.
-	IsDelayedBlock(ctx context.Context, in *MsgIsDelayedBlock, opts ...grpc.CallOption) (*MsgIsDelayedBlockResponse, error)
 }
 
 type msgClient struct {
@@ -287,22 +187,10 @@ func (c *msgClient) UpdateDowntimeParams(ctx context.Context, in *MsgUpdateDownt
 	return out, nil
 }
 
-func (c *msgClient) IsDelayedBlock(ctx context.Context, in *MsgIsDelayedBlock, opts ...grpc.CallOption) (*MsgIsDelayedBlockResponse, error) {
-	out := new(MsgIsDelayedBlockResponse)
-	err := c.cc.Invoke(ctx, "/dydxprotocol.blocktime.Msg/IsDelayedBlock", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // MsgServer is the server API for Msg service.
 type MsgServer interface {
 	// UpdateDowntimeParams updates the DowntimeParams in state.
 	UpdateDowntimeParams(context.Context, *MsgUpdateDowntimeParams) (*MsgUpdateDowntimeParamsResponse, error)
-	// IsDelayedBlock indicates a significant difference between wall time and the
-	// time of the proposed block.
-	IsDelayedBlock(context.Context, *MsgIsDelayedBlock) (*MsgIsDelayedBlockResponse, error)
 }
 
 // UnimplementedMsgServer can be embedded to have forward compatible implementations.
@@ -311,9 +199,6 @@ type UnimplementedMsgServer struct {
 
 func (*UnimplementedMsgServer) UpdateDowntimeParams(ctx context.Context, req *MsgUpdateDowntimeParams) (*MsgUpdateDowntimeParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateDowntimeParams not implemented")
-}
-func (*UnimplementedMsgServer) IsDelayedBlock(ctx context.Context, req *MsgIsDelayedBlock) (*MsgIsDelayedBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsDelayedBlock not implemented")
 }
 
 func RegisterMsgServer(s grpc1.Server, srv MsgServer) {
@@ -338,24 +223,6 @@ func _Msg_UpdateDowntimeParams_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Msg_IsDelayedBlock_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MsgIsDelayedBlock)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(MsgServer).IsDelayedBlock(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/dydxprotocol.blocktime.Msg/IsDelayedBlock",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MsgServer).IsDelayedBlock(ctx, req.(*MsgIsDelayedBlock))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 var _Msg_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.blocktime.Msg",
 	HandlerType: (*MsgServer)(nil),
@@ -363,10 +230,6 @@ var _Msg_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateDowntimeParams",
 			Handler:    _Msg_UpdateDowntimeParams_Handler,
-		},
-		{
-			MethodName: "IsDelayedBlock",
-			Handler:    _Msg_IsDelayedBlock_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -436,60 +299,6 @@ func (m *MsgUpdateDowntimeParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int
 	return len(dAtA) - i, nil
 }
 
-func (m *MsgIsDelayedBlock) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgIsDelayedBlock) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgIsDelayedBlock) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	n2, err2 := github_com_cosmos_gogoproto_types.StdDurationMarshalTo(m.DelayDuration, dAtA[i-github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.DelayDuration):])
-	if err2 != nil {
-		return 0, err2
-	}
-	i -= n2
-	i = encodeVarintTx(dAtA, i, uint64(n2))
-	i--
-	dAtA[i] = 0xa
-	return len(dAtA) - i, nil
-}
-
-func (m *MsgIsDelayedBlockResponse) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *MsgIsDelayedBlockResponse) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *MsgIsDelayedBlockResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	return len(dAtA) - i, nil
-}
-
 func encodeVarintTx(dAtA []byte, offset int, v uint64) int {
 	offset -= sovTx(v)
 	base := offset
@@ -517,26 +326,6 @@ func (m *MsgUpdateDowntimeParams) Size() (n int) {
 }
 
 func (m *MsgUpdateDowntimeParamsResponse) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	return n
-}
-
-func (m *MsgIsDelayedBlock) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	l = github_com_cosmos_gogoproto_types.SizeOfStdDuration(m.DelayDuration)
-	n += 1 + l + sovTx(uint64(l))
-	return n
-}
-
-func (m *MsgIsDelayedBlockResponse) Size() (n int) {
 	if m == nil {
 		return 0
 	}
@@ -693,139 +482,6 @@ func (m *MsgUpdateDowntimeParamsResponse) Unmarshal(dAtA []byte) error {
 		}
 		if fieldNum <= 0 {
 			return fmt.Errorf("proto: MsgUpdateDowntimeParamsResponse: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgIsDelayedBlock) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgIsDelayedBlock: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgIsDelayedBlock: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		case 1:
-			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field DelayDuration", wireType)
-			}
-			var msglen int
-			for shift := uint(0); ; shift += 7 {
-				if shift >= 64 {
-					return ErrIntOverflowTx
-				}
-				if iNdEx >= l {
-					return io.ErrUnexpectedEOF
-				}
-				b := dAtA[iNdEx]
-				iNdEx++
-				msglen |= int(b&0x7F) << shift
-				if b < 0x80 {
-					break
-				}
-			}
-			if msglen < 0 {
-				return ErrInvalidLengthTx
-			}
-			postIndex := iNdEx + msglen
-			if postIndex < 0 {
-				return ErrInvalidLengthTx
-			}
-			if postIndex > l {
-				return io.ErrUnexpectedEOF
-			}
-			if err := github_com_cosmos_gogoproto_types.StdDurationUnmarshal(&m.DelayDuration, dAtA[iNdEx:postIndex]); err != nil {
-				return err
-			}
-			iNdEx = postIndex
-		default:
-			iNdEx = preIndex
-			skippy, err := skipTx(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if (skippy < 0) || (iNdEx+skippy) < 0 {
-				return ErrInvalidLengthTx
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
-}
-func (m *MsgIsDelayedBlockResponse) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowTx
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: MsgIsDelayedBlockResponse: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: MsgIsDelayedBlockResponse: illegal tag %d (wire type %d)", fieldNum, wire)
 		}
 		switch fieldNum {
 		default:

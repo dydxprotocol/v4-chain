@@ -83,6 +83,18 @@ func New(t *testing.T, configs ...network.Config) *network.Network {
 		cfg = configs[0]
 	}
 
+	// TODO(CORE-682): Remove shutdown override hook once Cosmos SDK invokes it as part of network#Cleanup.
+	appConstructor := cfg.AppConstructor
+	cfg.AppConstructor = func(val network.ValidatorI) servertypes.Application {
+		app := appConstructor(val)
+		t.Cleanup(func() {
+			if err := app.Close(); err != nil {
+				panic(err)
+			}
+		})
+		return app
+	}
+
 	net, err := network.New(t, t.TempDir(), cfg)
 	if err != nil {
 		panic(err)
@@ -135,6 +147,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 			return app.New(
 				val.GetCtx().Logger,
 				tmdb.NewMemDB(),
+				tmdb.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -162,11 +175,19 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", nil)
-	dydxApp := app.New(log.NewNopLogger(), tmdb.NewMemDB(), nil, true, appOptions)
+	dydxApp := app.New(
+		log.NewNopLogger(),
+		tmdb.NewMemDB(),
+		tmdb.NewMemDB(),
+		nil,
+		true,
+		appOptions,
+	)
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return app.New(
 			val.GetCtx().Logger,
+			tmdb.NewMemDB(),
 			tmdb.NewMemDB(),
 			nil,
 			true,

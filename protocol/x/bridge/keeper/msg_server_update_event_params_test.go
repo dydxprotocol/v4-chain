@@ -2,9 +2,9 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateEventParams{
-				Authority: constants.GovModuleAccAddressString,
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.EventParams{
 					Denom:      "denom",
 					EthChainId: 1,
@@ -30,7 +30,7 @@ func TestMsgServerUpdateEventParams(t *testing.T) {
 		},
 		"Failure: invalid params": {
 			testMsg: types.MsgUpdateEventParams{
-				Authority: constants.GovModuleAccAddressString,
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.EventParams{
 					Denom:      "7coin",
 					EthChainId: 1,
