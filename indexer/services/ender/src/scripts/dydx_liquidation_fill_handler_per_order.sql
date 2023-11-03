@@ -119,7 +119,7 @@ BEGIN
 
         IF FOUND THEN
             order_record."totalFilled" = total_filled;
-            order_record."status" = dydx_get_order_status(total_filled, order_record.size, false, order_record."orderFlags", order_record."timeInForce");
+            order_record."status" = dydx_get_order_status(total_filled, order_record.size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
 
             UPDATE orders
             SET
@@ -145,7 +145,7 @@ BEGIN
             order_record."type" = 'LIMIT';
 
             order_record."totalFilled" = fill_amount;
-            order_record."status" = dydx_get_order_status(fill_amount, order_size, false, order_record."orderFlags", order_record."timeInForce");
+            order_record."status" = dydx_get_order_status(fill_amount, order_size, 'NOT_CANCELED', order_record."orderFlags", order_record."timeInForce");
             order_record."createdAtHeight" = block_height;
             INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",
