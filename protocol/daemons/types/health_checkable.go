@@ -48,6 +48,8 @@ func (u *timestampWithError) Error() error {
 // - no update has occurred
 // - the most recent update failed, or
 // - the daemon has not seen a successful update within `MaxAcceptableUpdateDelay`.
+//
+// This object is thread-safe.
 type timeBoundedHealthCheckable struct {
 	sync.Mutex
 
