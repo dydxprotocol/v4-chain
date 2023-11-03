@@ -29,6 +29,7 @@ function newScript(name: string, scriptPath: string): PostgresFunction {
 const scripts: string[] = [
   'create_extension_pg_stat_statements.sql',
   'create_extension_uuid_ossp.sql',
+  'dydx_asset_create_handler.sql',
   'dydx_market_create_handler.sql',
   'dydx_market_modify_handler.sql',
   'dydx_market_price_update_handler.sql',
