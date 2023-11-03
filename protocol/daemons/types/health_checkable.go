@@ -95,7 +95,7 @@ func (h *timeBoundedHealthCheckable) ReportFailure(err error) {
 // - the daemon has not seen a successful update in at least 5 minutes,
 // Note: since the timeBoundedHealthCheckable is not exposed and can only be created via
 // NewTimeBoundedHealthCheckable, we expect that the lastFailedUpdate is never a zero value.
-// This method is synchronized.
+// This method is thread-safe.
 func (h *timeBoundedHealthCheckable) HealthCheck() error {
 	h.Lock()
 	defer h.Unlock()
