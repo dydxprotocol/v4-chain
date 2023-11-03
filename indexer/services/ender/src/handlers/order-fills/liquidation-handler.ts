@@ -16,6 +16,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus, FillType,
 } from '@dydxprotocol-indexer/postgres';
+import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
@@ -26,6 +27,7 @@ import * as pg from 'pg';
 import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { redisClient } from '../../helpers/redis/redis-controller';
 import {
   orderFillWithLiquidityToOrderFillEventWithLiquidation,
 } from '../../helpers/translation-helper';
@@ -36,8 +38,6 @@ import {
   OrderFillEventWithLiquidation,
 } from '../../lib/types';
 import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
-import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
-import { redisClient } from '../../helpers/redis/redis-controller';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';

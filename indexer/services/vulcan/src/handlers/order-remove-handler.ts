@@ -274,8 +274,8 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    // If the remaining amount of the order in state is <= 0, the order is filled and 
-    // does not need to have it's status updated 
+    // If the remaining amount of the order in state is <= 0, the order is filled and
+    // does not need to have it's status updated
     if (stateRemainingQuantums.gt(0)) {
       await runFuncWithTimingStat(
         this.cancelOrderInPostgres(orderRemove),
