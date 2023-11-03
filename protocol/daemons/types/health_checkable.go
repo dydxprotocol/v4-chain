@@ -74,7 +74,7 @@ func NewTimeBoundedHealthCheckable(serviceName string, timeProvider libtime.Time
 	return hc
 }
 
-// ReportSuccess records a successful update. This method is synchronized.
+// ReportSuccess records a successful update. This method is thread-safe.
 func (h *timeBoundedHealthCheckable) ReportSuccess(timestamp time.Time) {
 	h.Lock()
 	defer h.Unlock()
