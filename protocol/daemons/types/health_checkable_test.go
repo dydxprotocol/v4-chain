@@ -120,21 +120,38 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			// Setup.
+
+			// Construct list of timestamps to provide for the timeProvider stored within the health checkable instance.
+			timestamps := make([]time.Time, 0, len(tc.updates)+2)
+
+			// The first timestamp is used during HealthCheckable initialization.
+			timestamps = append(timestamps, Time0)
+			// One timestamp used for each update.
+			for _, update := range tc.updates {
+				timestamps = append(timestamps, update.timestamp)
+			}
+			// A final timestamp is consumed by the HealthCheck call.
+			timestamps = append(timestamps, tc.healthCheckTime)
+
+			// Create a new time-bounded health checkable instance.
 			hci := types.NewTimeBoundedHealthCheckable(
 				"test",
-				mockTimeProviderWithTimestamps([]time.Time{
-					Time0,
-					tc.healthCheckTime,
-				}),
+				mockTimeProviderWithTimestamps(timestamps),
 			)
+
+			// Act.
+			// Report the test sequence of successful / failed updates.
 			for _, update := range tc.updates {
 				if update.err == nil {
-					hci.ReportSuccess(update.timestamp)
+					hci.ReportSuccess()
 				} else {
-					hci.ReportFailure(update.timestamp, update.err)
+					hci.ReportFailure(update.err)
 				}
 			}
 
+			// Assert.
+			// Check the health status after all updates have been reported.
 			err := hci.HealthCheck()
 			if tc.expectedHealthStatus == nil {
 				require.NoError(t, err)

@@ -18,9 +18,9 @@ type HealthCheckable interface {
 	// HealthCheck returns an error if a service is unhealthy. If the service is healthy, this method returns nil.
 	HealthCheck() (err error)
 	// ReportFailure records a failed update.
-	ReportFailure(timestamp time.Time, err error)
+	ReportFailure(err error)
 	// ReportSuccess records a successful update.
-	ReportSuccess(timestamp time.Time)
+	ReportSuccess()
 }
 
 // timestampWithError couples a timestamp and error to make it easier to update them in tandem.
@@ -69,23 +69,23 @@ func NewTimeBoundedHealthCheckable(serviceName string, timeProvider libtime.Time
 		timeProvider: timeProvider,
 	}
 	// Initialize the timeBoudnedHealthCheckable to an unhealthy state by reporting an error.
-	hc.ReportFailure(timeProvider.Now(), fmt.Errorf("%v is initializing", serviceName))
+	hc.ReportFailure(fmt.Errorf("%v is initializing", serviceName))
 	return hc
 }
 
 // ReportSuccess records a successful update. This method is thread-safe.
-func (h *timeBoundedHealthCheckable) ReportSuccess(timestamp time.Time) {
+func (h *timeBoundedHealthCheckable) ReportSuccess() {
 	h.Lock()
 	defer h.Unlock()
 
-	h.lastSuccessfulUpdate = timestamp
+	h.lastSuccessfulUpdate = h.timeProvider.Now()
 }
 
 // ReportFailure records a failed update. This method is thread-safe.
-func (h *timeBoundedHealthCheckable) ReportFailure(timestamp time.Time, err error) {
+func (h *timeBoundedHealthCheckable) ReportFailure(err error) {
 	h.Lock()
 	defer h.Unlock()
-	h.lastFailedUpdate.Update(timestamp, err)
+	h.lastFailedUpdate.Update(h.timeProvider.Now(), err)
 }
 
 // HealthCheck returns an error if a service is unhealthy.
