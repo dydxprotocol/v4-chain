@@ -3,18 +3,17 @@ package clob_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer"
-
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 
-	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -22,7 +21,6 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	"github.com/stretchr/testify/require"
 )
 
 func TestPlaceOrder(t *testing.T) {
