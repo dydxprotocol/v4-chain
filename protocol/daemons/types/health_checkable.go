@@ -12,6 +12,8 @@ const (
 )
 
 // HealthCheckable is a common interface for services that can be health checked.
+//
+// Instances of this type are thread-safe.
 type HealthCheckable interface {
 	// HealthCheck returns an error if a service is unhealthy. If the service is healthy, this method returns nil.
 	HealthCheck() (err error)
