@@ -71,8 +71,8 @@ export function orderSideToOrderbookSide(
 
 /**
  * Gets the remaining quantums for an order based on the filled amount of the order in state
- * @param order 
- * @returns 
+ * @param order
+ * @returns
  */
 export async function getStateRemainingQuantums(
   order: RedisOrder,
