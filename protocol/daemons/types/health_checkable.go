@@ -43,7 +43,7 @@ func (u *timestampWithError) Error() error {
 }
 
 // timeBoundedHealthCheckable implements the HealthCheckable interface by tracking the timestamps of the last successful
-// failed updates.
+// and failed updates.
 // If any of the following occurs, then the service should be considered unhealthy:
 // - no update has occurred
 // - the most recent update failed, or
