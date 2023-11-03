@@ -120,7 +120,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 			response abcitypes.ResponseDeliverTx,
 			txIndex int,
 		) (haltChain bool) {
-			if lib.SlicesAreEqual(request.Tx, cancellationTx.Tx) {
+			if txIndex == 5 {
 				require.True(t, response.IsErr())
 				require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), response.Code)
 			} else {
@@ -144,7 +144,6 @@ func TestCancelStatefulOrder(t *testing.T) {
 	type checkResults struct {
 		orderId       clobtypes.OrderId
 		existsInState bool
-		fillAmount    uint64
 	}
 
 	tests := map[string]struct {
@@ -303,7 +302,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 				ctx,
 				tc.expectations.orderId,
 			)
-			require.Equal(t, false, exists)
+			require.False(t, exists)
 			require.Equal(t, uint64(0), fillAmount.ToUint64())
 		})
 	}
