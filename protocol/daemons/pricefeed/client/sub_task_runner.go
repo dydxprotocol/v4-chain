@@ -93,14 +93,11 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 
 			if err == nil {
 				// Record update success for the daemon health check.
-				c.ReportSuccess(time.Now())
+				c.ReportSuccess()
 			} else {
 				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
 				// Record update failure for the daemon health check.
-				c.ReportFailure(
-					time.Now(),
-					errors.Wrap(err, "failed to run price updater task loop for price daemon"),
-				)
+				c.ReportFailure(errors.Wrap(err, "failed to run price updater task loop for price daemon"))
 			}
 
 		case <-stop:
