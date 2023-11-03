@@ -10,19 +10,19 @@ import (
 func NewDeleveragingEvent(
 	liquidatedSubaccountId satypes.SubaccountId,
 	offsettingSubaccountId satypes.SubaccountId,
-	clobPairId uint32,
+	perpetualId uint32,
 	fillAmount satypes.BaseQuantums,
-	subticks uint64,
+	price satypes.BaseQuantums,
 	isBuy bool,
 ) *DeleveragingEventV1 {
 	indexerLiquidatedSubaccountId := v1.SubaccountIdToIndexerSubaccountId(liquidatedSubaccountId)
 	indexerOffsettingSubaccountId := v1.SubaccountIdToIndexerSubaccountId(offsettingSubaccountId)
 	return &DeleveragingEventV1{
-		Liquidated: indexerLiquidatedSubaccountId,
-		Offsetting: indexerOffsettingSubaccountId,
-		ClobPairId: clobPairId,
-		FillAmount: fillAmount.ToUint64(),
-		Subticks:   subticks,
-		IsBuy:      isBuy,
+		Liquidated:  indexerLiquidatedSubaccountId,
+		Offsetting:  indexerOffsettingSubaccountId,
+		PerpetualId: perpetualId,
+		FillAmount:  fillAmount.ToUint64(),
+		Price:       price.ToUint64(),
+		IsBuy:       isBuy,
 	}
 }

@@ -2018,7 +2018,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			if tc.expectedFilledSize == 0 {
-				_, _, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
+				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
 					ctx,
 					tc.order.GetSubaccountId(),
 					tc.order.MustGetLiquidatedPerpetualId(),

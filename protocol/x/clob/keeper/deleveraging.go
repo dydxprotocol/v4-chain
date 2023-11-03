@@ -3,6 +3,8 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"time"
 
@@ -27,7 +29,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (
-	fills []types.MatchPerpetualDeleveraging_Fill,
 	quantumsDeleveraged *big.Int,
 	err error,
 ) {
@@ -35,7 +36,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 
 	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
 	if err != nil {
-		return nil, new(big.Int), err
+		return new(big.Int), err
 	}
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
@@ -46,7 +47,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 			metrics.PrepareCheckState,
 			metrics.CannotDeleverageSubaccount,
 		)
-		return nil, new(big.Int), nil
+		return new(big.Int), nil
 	}
 
 	// Deleverage the entire position for the given perpetual id.
@@ -60,11 +61,11 @@ func (k Keeper) MaybeDeleverageSubaccount(
 			"subaccount", subaccount,
 			"perpetualId", perpetualId,
 		)
-		return nil, new(big.Int), nil
+		return new(big.Int), nil
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	fills, quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -108,7 +109,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		labels,
 	)
 
-	return fills, quantumsDeleveraged, err
+	return quantumsDeleveraged, err
 }
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
@@ -449,6 +450,24 @@ func (k Keeper) ProcessDeleveraging(
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
+		),
+	)
+
+	// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+	// if the branched state is discarded, so batching is not necessary.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeDeleveraging,
+		indexerevents.DeleveragingEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewDeleveragingEvent(
+				liquidatedSubaccountId,
+				offsettingSubaccountId,
+				perpetualId,
+				satypes.BaseQuantums(new(big.Int).Abs(deltaQuantums).Uint64()),
+				satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+				deltaQuantums.Sign() > 0,
+			),
 		),
 	)
 

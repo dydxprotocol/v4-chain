@@ -1,6 +1,7 @@
 package events_test
 
 import (
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -12,8 +13,8 @@ import (
 var (
 	liquidatedSubaccountId = constants.Alice_Num0
 	offsettingSubaccountId = constants.Bob_Num0
-	clobPairId             = uint32(1)
-	subticks               = uint64(1000)
+	perpetualId            = uint32(1)
+	price                  = satypes.BaseQuantums(1000)
 	isBuy                  = true
 )
 
@@ -21,20 +22,20 @@ func TestNewDeleveragingEvent_Success(t *testing.T) {
 	deleveragingEvent := events.NewDeleveragingEvent(
 		liquidatedSubaccountId,
 		offsettingSubaccountId,
-		clobPairId,
+		perpetualId,
 		fillAmount,
-		subticks,
+		price,
 		isBuy,
 	)
 	indexerLiquidatedSubaccountId := v1.SubaccountIdToIndexerSubaccountId(liquidatedSubaccountId)
 	indexerOffsettingSubaccountId := v1.SubaccountIdToIndexerSubaccountId(offsettingSubaccountId)
 	expectedDeleveragingEventProto := &events.DeleveragingEventV1{
-		Liquidated: indexerLiquidatedSubaccountId,
-		Offsetting: indexerOffsettingSubaccountId,
-		ClobPairId: clobPairId,
-		FillAmount: fillAmount.ToUint64(),
-		Subticks:   subticks,
-		IsBuy:      isBuy,
+		Liquidated:  indexerLiquidatedSubaccountId,
+		Offsetting:  indexerOffsettingSubaccountId,
+		PerpetualId: perpetualId,
+		FillAmount:  fillAmount.ToUint64(),
+		Price:       price.ToUint64(),
+		IsBuy:       isBuy,
 	}
 	require.Equal(t, expectedDeleveragingEventProto, deleveragingEvent)
 }
