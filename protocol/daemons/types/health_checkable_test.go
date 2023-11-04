@@ -41,7 +41,7 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 		healthCheckTime      time.Time
 		expectedHealthStatus error
 	}{
-		"unhealthy: no updates": {
+		"unhealthy: no updates, returns initializing error": {
 			healthCheckTime: Time1,
 			expectedHealthStatus: fmt.Errorf(
 				"no successful update has occurred; last failed update occurred at %v with error '%w'",
