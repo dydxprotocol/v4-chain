@@ -40,8 +40,8 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'UpdateClobPairHandler#handleViaSqlFunction',
-        message: 'Failed to handle UpdateClobPairEventV1',
+        at: 'UpdatePerpetualHandler#handleViaSqlFunction',
+        message: 'Failed to handle UpdatePerpetualEventV1',
         error,
       });
 
