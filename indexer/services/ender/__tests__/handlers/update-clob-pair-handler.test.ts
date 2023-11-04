@@ -5,7 +5,6 @@ import {
   dbHelpers,
   liquidityTierRefresher,
   perpetualMarketRefresher,
-  protocolTranslations,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { updateBlockCache } from '../../src/caches/block-cache';
@@ -126,13 +125,10 @@ describe('update-clob-pair-handler', () => {
       PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
         perpetualMarketId,
       );
-      expect(perpetualMarket).toEqual(expect.objectContaining({
-        clobPairId: defaultUpdateClobPairEvent.clobPairId.toString(),
-        status: protocolTranslations.clobStatusToMarketStatus(defaultUpdateClobPairEvent.status),
-        quantumConversionExponent: defaultUpdateClobPairEvent.quantumConversionExponent,
-        subticksPerTick: defaultUpdateClobPairEvent.subticksPerTick,
-        stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
-      }));
+
+      expect(perpetualMarket).toEqual(
+        perpetualMarketRefresher.getPerpetualMarketFromId(perpetualMarketId));
+
       if (!useSqlFunction) {
         expectTimingStats();
       }

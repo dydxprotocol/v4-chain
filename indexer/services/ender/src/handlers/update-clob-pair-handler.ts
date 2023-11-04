@@ -52,6 +52,8 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
       result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
 
+    perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
+
     return [
       this.generateConsolidatedMarketKafkaEvent(
         JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
