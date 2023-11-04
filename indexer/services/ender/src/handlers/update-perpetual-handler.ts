@@ -23,6 +23,7 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
     return [];
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     if (config.USE_UPDATE_PERPETUAL_HANDLER_SQL_FUNCTION) {
       return this.handleViaSqlFunction();
@@ -59,7 +60,6 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
     ];
   }
 
-  // eslint-disable-next-line @typescript-eslint/require-await
   private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket:
     PerpetualMarketFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
