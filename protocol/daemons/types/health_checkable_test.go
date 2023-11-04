@@ -100,7 +100,7 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			healthCheckTime:      Time3,
 			expectedHealthStatus: nil, // expect healthy
 		},
-		"unhealthy: last successful update was more than 5 minutes ago": {
+		"unhealthy: last successful update was more than max delay": {
 			updates: []struct {
 				timestamp time.Time
 				err       error
