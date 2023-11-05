@@ -1912,7 +1912,28 @@ func setupNewMockEventManager(
 				),
 			).Once().Return()
 		}
+		if isClobMatchPerpetualDeleveraging(operation) {
+			mockIndexerEventManager.On("AddTxnEvent",
+				mock.Anything,
+				indexerevents.SubtypeDeleveraging,
+				indexerevents.DeleveragingEventVersion,
+				mock.Anything,
+			).Return()
+		}
 	}
+}
+
+// isClobMatchPerpetualDeleveraging checks if the Operation field is a ClobMatch with a MatchPerpetualDeleveraging.
+// It returns true if it is, otherwise false.
+func isClobMatchPerpetualDeleveraging(
+	operationRaw types.OperationRaw,
+) bool {
+	matchOperation, ok := operationRaw.Operation.(*types.OperationRaw_Match)
+	if !ok {
+		return false
+	}
+	_, ok = matchOperation.Match.Match.(*types.ClobMatch_MatchPerpetualDeleveraging)
+	return ok
 }
 
 func assertSubaccountState(

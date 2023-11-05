@@ -2018,6 +2018,9 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			if tc.expectedFilledSize == 0 {
+				mockIndexerEventManager.On("AddTxnEvent",
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				).Return()
 				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
 					ctx,
 					tc.order.GetSubaccountId(),

@@ -52,13 +52,13 @@ func (i *indexerEventManagerImpl) GetIndexerEventsTransientStoreKey() storetypes
 }
 
 func (i *indexerEventManagerImpl) SendOffchainData(message msgsender.Message) {
-	if i.indexerMessageSender.Enabled() && i.sendOffchainData {
+	if i.Enabled() && i.sendOffchainData {
 		i.indexerMessageSender.SendOffchainData(message)
 	}
 }
 
 func (i *indexerEventManagerImpl) SendOnchainData(block *IndexerTendermintBlock) {
-	if i.indexerMessageSender.Enabled() {
+	if i.Enabled() {
 		message := CreateIndexerBlockEventMessage(block)
 		i.indexerMessageSender.SendOnchainData(message)
 	}
@@ -71,7 +71,7 @@ func (i *indexerEventManagerImpl) AddTxnEvent(
 	version uint32,
 	dataBytes []byte,
 ) {
-	if i.indexerMessageSender.Enabled() {
+	if i.Enabled() {
 		addTxnEvent(ctx, subType, version, i.indexerEventsTransientStoreKey, dataBytes)
 	}
 }
@@ -80,7 +80,7 @@ func (i *indexerEventManagerImpl) AddTxnEvent(
 func (i *indexerEventManagerImpl) ClearEvents(
 	ctx sdk.Context,
 ) {
-	if i.indexerMessageSender.Enabled() {
+	if i.Enabled() {
 		clearEvents(ctx, i.indexerEventsTransientStoreKey)
 	}
 }
@@ -93,7 +93,7 @@ func (i *indexerEventManagerImpl) AddBlockEvent(
 	version uint32,
 	dataBytes []byte,
 ) {
-	if i.indexerMessageSender.Enabled() {
+	if i.Enabled() {
 		addBlockEvent(ctx, subType, i.indexerEventsTransientStoreKey, blockEvent, version, dataBytes)
 	}
 }
@@ -104,7 +104,7 @@ func (i *indexerEventManagerImpl) AddBlockEvent(
 func (i *indexerEventManagerImpl) ProduceBlock(
 	ctx sdk.Context,
 ) *IndexerTendermintBlock {
-	if i.indexerMessageSender.Enabled() {
+	if i.Enabled() {
 		return produceBlock(ctx, i.indexerEventsTransientStoreKey)
 	}
 	return nil
