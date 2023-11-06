@@ -2018,6 +2018,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			if tc.expectedFilledSize == 0 {
+				// Bankruptcy price in DeleveragingEvent is not exposed by API. It is also
+				// being tested in other e2e tests. So we don't test it here.
 				mockIndexerEventManager.On("AddTxnEvent",
 					mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 				).Return()

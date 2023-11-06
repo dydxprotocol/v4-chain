@@ -1913,6 +1913,8 @@ func setupNewMockEventManager(
 			).Once().Return()
 		}
 		if isClobMatchPerpetualDeleveraging(operation) {
+			// Bankruptcy price in DeleveragingEvent is not exposed by API. It is also
+			// being tested in other e2e tests. So we don't test it here.
 			mockIndexerEventManager.On("AddTxnEvent",
 				mock.Anything,
 				indexerevents.SubtypeDeleveraging,
