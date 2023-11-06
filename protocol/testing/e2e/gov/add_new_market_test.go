@@ -291,21 +291,17 @@ func TestAddNewMarketProposal(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).
-				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
-				// other App instances in TestApp used for non-determinism checking.
-				WithNonDeterminismChecksEnabled(false).
-				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-					genesis = testapp.DefaultGenesis()
-					testapp.UpdateGenesisDocWithAppStateForModule(
-						&genesis,
-						func(genesisState *govtypesv1.GenesisState) {
-							genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
-						},
-					)
-					genesis.GenesisTime = GenesisTime
-					return genesis
-				}).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *govtypesv1.GenesisState) {
+						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
+					},
+				)
+				genesis.GenesisTime = GenesisTime
+				return genesis
+			}).Build()
 			ctx := tApp.InitChain()
 
 			initMarketParams := tApp.App.PricesKeeper.GetAllMarketParams(ctx)
