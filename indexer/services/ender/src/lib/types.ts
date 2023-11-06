@@ -30,6 +30,7 @@ import {
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -47,6 +48,7 @@ export enum DydxIndexerSubtypes {
   LIQUIDITY_TIER = 'liquidity_tier',
   UPDATE_PERPETUAL = 'update_perpetual',
   UPDATE_CLOB_PAIR = 'update_clob_pair',
+  DELEVERAGING = 'deleveraging',
 }
 
 // Generic interface used for creating the Handler objects
@@ -111,6 +113,11 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+} | {
+  type: DydxIndexerSubtypes.DELEVERAGING,
+  eventProto: DeleveragingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
 });
