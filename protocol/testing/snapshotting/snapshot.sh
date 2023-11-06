@@ -88,7 +88,7 @@ dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node 
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
 # Set pruning to prune all but the last two states. Prevents snapshots from getting too big.
-sed -i 's/pruning = "default"/pruning = "nothing"/' /dydxprotocol/chain/local_node/config/app.toml
+sed -i 's/pruning = "default"/pruning = "everything"/' /dydxprotocol/chain/local_node/config/app.toml
 
 setup_cosmovisor
 
