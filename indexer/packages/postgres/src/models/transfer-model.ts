@@ -104,6 +104,28 @@ export default class TransferModel extends Model {
     };
   }
 
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      id: 'string',
+      senderSubaccountId: 'string',
+      recipientSubaccountId: 'string',
+      senderWalletAddress: 'string',
+      recipientWalletAddress: 'string',
+      assetId: 'string',
+      size: 'string',
+      eventId: 'hex-string',
+      transactionHash: 'string',
+      createdAt: 'date-time',
+      createdAtHeight: 'string',
+    };
+  }
+
   id!: string;
 
   senderSubaccountId?: string;

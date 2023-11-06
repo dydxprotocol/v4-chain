@@ -20,6 +20,7 @@ import {
 } from '../types';
 
 export function uuid(subaccountId: string, assetId: string): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${subaccountId}-${assetId}`, BUFFER_ENCODING_UTF_8));
 }
 
