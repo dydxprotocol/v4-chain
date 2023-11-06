@@ -1511,7 +1511,7 @@ describe('OrderHandler', () => {
     useSqlFunction: boolean,
     timeInForce: IndexerOrder_TimeInForce,
     // either BEST_EFFORT_CANCELED or CANCELED
-    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED, 
+    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
   ) => {
     config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
