@@ -16,6 +16,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus, FillType,
 } from '@dydxprotocol-indexer/postgres';
+import { CanceledOrderStatus } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
@@ -113,9 +114,9 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         '${USDC_ASSET_ID}'
       ) AS result;`,
       { txId: this.txId },
-    ).catch((error) => {
+    ).catch((error: Error) => {
       logger.error({
-        at: 'orderHandler#handleViaSqlFunction',
+        at: 'liquidationHandler#handleViaSqlFunction',
         message: 'Failed to handle OrderFillEventV1',
         error,
       });
@@ -209,7 +210,7 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
           perpetualMarket,
           castedLiquidationFillEventMessage.makerOrder,
           this.getTotalFilled(castedLiquidationFillEventMessage),
-          false,
+          CanceledOrderStatus.NOT_CANCELED,
         ), this.generateTimingStatsOptions('upsert_maker_order'));
     }
 
