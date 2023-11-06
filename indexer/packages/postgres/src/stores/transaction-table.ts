@@ -20,6 +20,7 @@ import {
 } from '../types';
 
 export function uuid(blockHeight: string, transactionIndex: number): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${blockHeight}-${transactionIndex}`, BUFFER_ENCODING_UTF_8));
 }
 
