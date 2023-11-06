@@ -44,6 +44,9 @@ export const configSchema = {
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_UPDATE_CLOB_PAIR_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
