@@ -7,7 +7,6 @@
 */
 CREATE OR REPLACE FUNCTION dydx_update_clob_pair_handler(event_data jsonb) RETURNS jsonb AS $$
 DECLARE
-    row_count integer;
     clob_pair_id bigint;
     perpetual_market_record perpetual_markets%ROWTYPE;
 BEGIN
