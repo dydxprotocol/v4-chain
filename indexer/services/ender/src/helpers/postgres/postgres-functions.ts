@@ -45,6 +45,7 @@ const scripts: string[] = [
   'dydx_get_total_filled_from_liquidity.sql',
   'dydx_get_weighted_average.sql',
   'dydx_liquidation_fill_handler_per_order.sql',
+  'dydx_liquidity_tier_handler.sql',
   'dydx_order_fill_handler_per_order.sql',
   'dydx_perpetual_market_handler.sql',
   'dydx_perpetual_position_and_order_side_matching.sql',
