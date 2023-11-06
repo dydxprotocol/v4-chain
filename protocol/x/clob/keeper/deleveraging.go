@@ -29,7 +29,6 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 ) (
-	fills []types.MatchPerpetualDeleveraging_Fill,
 	quantumsDeleveraged *big.Int,
 	err error,
 ) {
@@ -37,7 +36,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 
 	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
 	if err != nil {
-		return nil, new(big.Int), err
+		return new(big.Int), err
 	}
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
@@ -48,7 +47,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 			metrics.PrepareCheckState,
 			metrics.CannotDeleverageSubaccount,
 		)
-		return nil, new(big.Int), nil
+		return new(big.Int), nil
 	}
 
 	// Deleverage the entire position for the given perpetual id.
@@ -62,11 +61,11 @@ func (k Keeper) MaybeDeleverageSubaccount(
 			"subaccount", subaccount,
 			"perpetualId", perpetualId,
 		)
-		return nil, new(big.Int), nil
+		return new(big.Int), nil
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	fills, quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -110,7 +109,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		labels,
 	)
 
-	return fills, quantumsDeleveraged, err
+	return quantumsDeleveraged, err
 }
 
 // GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).

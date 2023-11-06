@@ -695,7 +695,6 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 	perpetualId uint32,
 	deltaQuantums *big.Int,
 ) (
-	fills []types.MatchPerpetualDeleveraging_Fill,
 	quantumsDeleveraged *big.Int,
 	err error,
 ) {
@@ -717,7 +716,7 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 	}
 
 	quantumsDeleveraged = new(big.Int).Abs(new(big.Int).Sub(deltaQuantums, deltaQuantumsRemaining))
-	return fills, quantumsDeleveraged, nil
+	return quantumsDeleveraged, nil
 }
 
 // matchOrder will match the provided `MatchableOrder` as a taker order against the respective orderbook.
