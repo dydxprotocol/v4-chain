@@ -11,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
+  CLOB_STATUS_TO_MARKET_STATUS,
   dbHelpers,
   AssetPositionTable,
   PerpetualPositionTable,
@@ -375,6 +376,14 @@ describe('SQL Function Tests', () => {
     expect(result).toEqual(
       OraclePriceTable.uuid(marketId, blockHeight),
     );
+  });
+
+  it('dydx_clob_pair_status_to_market_status should convert all statuses', async () => {
+    for (const [key, value] of Object.entries(CLOB_STATUS_TO_MARKET_STATUS)) {
+      const result = await getSingleRawQueryResultRow(
+        `SELECT dydx_clob_pair_status_to_market_status('${key}') AS result`);
+      expect(result).toEqual(value);
+    }
   });
 
   it('dydx_create_transaction.sql should insert a transaction and return correct jsonb', async () => {

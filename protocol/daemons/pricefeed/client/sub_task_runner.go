@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
@@ -35,6 +36,7 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // SubTaskRunner is the interface for running pricefeed client task functions.
 type SubTaskRunner interface {
 	StartPriceUpdater(
+		c *Client,
 		ctx context.Context,
 		ticker *time.Ticker,
 		stop <-chan bool,
@@ -76,6 +78,7 @@ type SubTaskRunner interface {
 // StartPriceUpdater runs in the daemon's main goroutine and does not need access to the daemon's wait group
 // to signal task completion.
 func (s *SubTaskRunnerImpl) StartPriceUpdater(
+	c *Client,
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -87,8 +90,14 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 		select {
 		case <-ticker.C:
 			err := RunPriceUpdaterTaskLoop(ctx, exchangeToMarketPrices, priceFeedServiceClient, logger)
-			if err != nil {
-				panic(err)
+
+			if err == nil {
+				// Record update success for the daemon health check.
+				c.ReportSuccess()
+			} else {
+				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
+				// Record update failure for the daemon health check.
+				c.ReportFailure(errors.Wrap(err, "failed to run price updater task loop for price daemon"))
 			}
 
 		case <-stop:
@@ -265,8 +274,10 @@ func RunPriceUpdaterTaskLoop(
 		metrics.Latency,
 	)
 
-	// On startup the length of request will likely be 0. However, sending a request of length 0
-	// is a fatal error.
+	// On startup the length of request will likely be 0. Even so, we return an error here because this
+	// is unexpected behavior once the daemon reaches a steady state. The daemon health check process should
+	// be robust enough to ignore temporarily unhealthy daemons.
+	// Sending a request of length 0, however, causes a panic.
 	// panic: rpc error: code = Unknown desc = Market price update has length of 0.
 	if len(request.MarketPriceUpdates) > 0 {
 		_, err := priceFeedServiceClient.UpdateMarketPrices(ctx, request)
@@ -291,6 +302,7 @@ func RunPriceUpdaterTaskLoop(
 			metrics.PriceUpdaterZeroPrices,
 			metrics.Count,
 		)
+		return types.ErrEmptyMarketPriceUpdate
 	}
 
 	return nil

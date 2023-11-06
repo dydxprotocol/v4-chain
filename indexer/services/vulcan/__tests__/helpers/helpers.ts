@@ -5,6 +5,7 @@ import {
   redisTestConstants,
   OrderbookLevelsCache,
   CanceledOrdersCache,
+  CanceledOrderStatus,
 } from '@dydxprotocol-indexer/redis';
 import { OffChainUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
@@ -80,16 +81,11 @@ export function setTransactionHash(
   return messageWithTxhash;
 }
 
-export async function expectCanceledOrdersCacheFound(
+export async function expectCanceledOrderStatus(
   orderId: string,
-): Promise<void> {
-  const orderExists: boolean = await CanceledOrdersCache.isOrderCanceled(orderId, redisClient);
-  expect(orderExists).toEqual(true);
-}
-
-export async function expectCanceledOrdersCacheEmpty(
-  orderId: string,
-): Promise<void> {
-  const orderExists: boolean = await CanceledOrdersCache.isOrderCanceled(orderId, redisClient);
-  expect(orderExists).toEqual(false);
+  canceledOrderStatus: CanceledOrderStatus,
+) {
+  expect(await CanceledOrdersCache.getOrderCanceledStatus(orderId, redisClient)).toEqual(
+    canceledOrderStatus,
+  );
 }

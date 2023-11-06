@@ -3,8 +3,10 @@ export * from './constants';
 
 export { default as Transaction } from './helpers/transaction';
 export { postgresConfigSchema } from './config';
+export { default as AssetModel } from './models/asset-model';
 export { default as AssetPositionModel } from './models/asset-position-model';
 export { default as FillModel } from './models/fill-model';
+export { default as LiquidityTiersModel } from './models/liquidity-tiers-model';
 export { default as MarketModel } from './models/market-model';
 export { default as OraclePriceModel } from './models/oracle-price-model';
 export { default as OrderModel } from './models/order-model';

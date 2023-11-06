@@ -3,6 +3,8 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"time"
 
@@ -448,6 +450,24 @@ func (k Keeper) ProcessDeleveraging(
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
+		),
+	)
+
+	// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+	// if the branched state is discarded, so batching is not necessary.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeDeleveraging,
+		indexerevents.DeleveragingEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewDeleveragingEvent(
+				liquidatedSubaccountId,
+				offsettingSubaccountId,
+				perpetualId,
+				satypes.BaseQuantums(new(big.Int).Abs(deltaQuantums).Uint64()),
+				satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+				deltaQuantums.Sign() > 0,
+			),
 		),
 	)
 
