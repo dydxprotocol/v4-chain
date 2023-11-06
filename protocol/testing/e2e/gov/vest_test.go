@@ -15,98 +15,130 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSetVestEntry(t *testing.T) {
+var (
+	TEST_START_TIME         = time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC)
+	TEST_END_TIME           = time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+	TEST_GENESIS_VEST_ENTRY = vesttypes.VestEntry{
+		VesterAccount:   "genesis_vester",
+		TreasuryAccount: "genesis_treasury",
+		Denom:           "genesis_denom",
+		StartTime:       TEST_START_TIME.AddDate(-2022, -1, -1),
+		EndTime:         TEST_END_TIME.AddDate(-2022, -1, -1),
+	}
+)
+
+func TestSetVestEntry_Success(t *testing.T) {
 	tests := map[string]struct {
-		msg                      *vesttypes.MsgSetVestEntry
-		updateExistingVestEntry  bool // whether above msg should update an existing vest entry.
-		expectCheckTxFails       bool
-		expectSubmitProposalFail bool
-		expectedProposalStatus   govtypesv1.ProposalStatus
+		msgs                 []sdk.Msg
+		genesisVestEntryKeys []string // keys of vest entries in genesis state.
 	}{
 		"Success: create a new vest entry": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   "random_vester",
-					TreasuryAccount: "random_treasury",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
 		"Success: update an existing vest entry": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   "random_vester",
-					TreasuryAccount: "random_treasury",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
 				},
 			},
-			updateExistingVestEntry: true,
-			expectedProposalStatus:  govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+			genesisVestEntryKeys: []string{"random_vester"},
 		},
-		"Failure: vester account is empty": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   "",
-					TreasuryAccount: "random_treasury",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+		"Success: create two new vest entries": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester_2",
+						TreasuryAccount: "random_treasury_2",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME.Add(time.Hour),
+						EndTime:         TEST_END_TIME.Add(time.Hour),
+					},
 				},
 			},
-			expectCheckTxFails: true,
 		},
-		"Failure: treasury account is empty": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   "random_vester",
-					TreasuryAccount: "",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
+		"Success: create and then update a vest entry": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury_2",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME.Add(time.Hour),
+						EndTime:         TEST_END_TIME.Add(time.Hour),
+					},
 				},
 			},
-			expectCheckTxFails: true,
 		},
-		"Failure: start time after end time": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   "random_vester",
-					TreasuryAccount: "",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 1, 0, 0, 0, 1, time.UTC),
-					EndTime:         time.Date(2023, 10, 1, 0, 0, 0, 0, time.UTC),
+		"Success: update a vest entry twice": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury_2",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME.Add(time.Hour),
+						EndTime:         TEST_END_TIME.Add(time.Hour),
+					},
 				},
 			},
-			expectCheckTxFails: true,
-		},
-		"Failure: invalid authority": {
-			msg: &vesttypes.MsgSetVestEntry{
-				Authority: constants.BobAccAddress.String(),
-				Entry: vesttypes.VestEntry{
-					VesterAccount:   vesttypes.ModuleName,
-					TreasuryAccount: "random_treasury",
-					Denom:           "dv4tnt",
-					StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-					EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
-				},
-			},
-			expectSubmitProposalFail: true,
+			genesisVestEntryKeys: []string{"random_vester"},
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -114,90 +146,149 @@ func TestSetVestEntry(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				// If updating an existing vest entry, initialize vest module with a vest entry that has the
-				// same key. Otherwise, initialize vest module with no vest entry.
-				genesisVestEntries := []vesttypes.VestEntry{}
-				if tc.updateExistingVestEntry {
-					genesisVestEntries = append(genesisVestEntries, vesttypes.VestEntry{
-						VesterAccount:   tc.msg.Entry.VesterAccount,
-						TreasuryAccount: tc.msg.Entry.TreasuryAccount + "_initial",
-						Denom:           tc.msg.Entry.Denom + "_initial",
-						StartTime:       tc.msg.Entry.StartTime.AddDate(0, 0, 1),
-						EndTime:         tc.msg.Entry.EndTime.AddDate(0, 0, 1),
-					})
-				}
+				// Set vest module genesis state with vest entries.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *vesttypes.GenesisState) {
-						genesisState.VestEntries = genesisVestEntries
+						genesisState.VestEntries = make([]vesttypes.VestEntry, len(tc.genesisVestEntryKeys))
+						for i, key := range tc.genesisVestEntryKeys {
+							genesisState.VestEntries[i] = vesttypes.VestEntry{
+								VesterAccount:   key,
+								TreasuryAccount: TEST_GENESIS_VEST_ENTRY.TreasuryAccount,
+								Denom:           TEST_GENESIS_VEST_ENTRY.Denom,
+								StartTime:       TEST_GENESIS_VEST_ENTRY.StartTime,
+								EndTime:         TEST_GENESIS_VEST_ENTRY.EndTime,
+							}
+						}
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
-			initialVestEntries := tApp.App.VestKeeper.GetAllVestEntries(ctx)
 
-			// Submit and tally governance proposal that includes `MsgSetVestEntry`.
+			// Submit and tally governance proposal that includes `MsgSetVestEntry`s.
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
-				[]sdk.Msg{tc.msg},
-				tc.expectCheckTxFails,
-				tc.expectSubmitProposalFail,
-				tc.expectedProposalStatus,
+				tApp,
+				tc.msgs,
+				false, // checkTx should not fail.
+				false, // submitProposal should not fail.
+				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 			)
 
-			if tc.expectCheckTxFails || tc.expectSubmitProposalFail ||
-				tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
-				// If governance proposal is not supposed to pass, verify that vest entries in state match
-				// vest entries before proposal submission.
-				require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
-			} else {
-				// If proposal is supposed to pass, verify that expected vest entry is set in state.
-				vestEntry, err := tApp.App.VestKeeper.GetVestEntry(ctx, tc.msg.Entry.VesterAccount)
+			// Verify that expected vest entries are set in state.
+			finalVestEntries := make(map[string]vesttypes.VestEntry)
+			for _, msg := range tc.msgs {
+				msgSetVestEntry, ok := msg.(*vesttypes.MsgSetVestEntry)
+				require.True(t, ok)
+				finalVestEntries[msgSetVestEntry.Entry.VesterAccount] = msgSetVestEntry.Entry
+			}
+			for vesterAccount, expectedVestEntry := range finalVestEntries {
+				vestEntryInState, err := tApp.App.VestKeeper.GetVestEntry(ctx, vesterAccount)
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.Entry, vestEntry)
+				require.Equal(t, expectedVestEntry, vestEntryInState)
 			}
 		})
 	}
 }
 
-func TestDeleteVestEntry(t *testing.T) {
+func TestSetVestEntry_Failure(t *testing.T) {
 	tests := map[string]struct {
-		msg                      *vesttypes.MsgDeleteVestEntry
-		vestEntryExists          bool // whether vest entry in above msg exists.
+		msgs                     []sdk.Msg
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
-		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
-		"Success": {
-			msg: &vesttypes.MsgDeleteVestEntry{
-				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				VesterAccount: "random_vester",
+		"Failure: vester account is empty": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
 			},
-			vestEntryExists:        true,
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+			expectCheckTxFails: true,
 		},
-		"Failure: vest entry does not exist": {
-			msg: &vesttypes.MsgDeleteVestEntry{
-				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-				VesterAccount: "random_vester",
+		"Failure: treasury account is empty": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			expectCheckTxFails: true,
+		},
+		"Failure: start time after end time": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_END_TIME,
+						EndTime:         TEST_START_TIME,
+					},
+				},
+			},
+			expectCheckTxFails: true,
 		},
 		"Failure: invalid authority": {
-			msg: &vesttypes.MsgDeleteVestEntry{
-				Authority:     constants.BobAccAddress.String(),
-				VesterAccount: "random_vester",
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{
+					Authority: constants.BobAccAddress.String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
 			},
-			vestEntryExists:          true,
+			expectSubmitProposalFail: true,
+		},
+		"Failure: failure of one message causes rollback of others": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgSetVestEntry{ // Valid message.
+					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
+				&vesttypes.MsgSetVestEntry{ // Invalid message (due to invalid authority).
+					Authority: constants.BobAccAddress.String(),
+					Entry: vesttypes.VestEntry{
+						VesterAccount:   "random_vester",
+						TreasuryAccount: "random_treasury",
+						Denom:           "adv4tnt",
+						StartTime:       TEST_START_TIME,
+						EndTime:         TEST_END_TIME,
+					},
+				},
+			},
 			expectSubmitProposalFail: true,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -205,50 +296,204 @@ func TestDeleteVestEntry(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				// If vest entry should exist in state, initialize vest module with a vest entry that
-				// has the same key as the one to be deleted.
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *vesttypes.GenesisState) {
-						vestEntries := []vesttypes.VestEntry{}
-						if tc.vestEntryExists {
-							vestEntries = append(vestEntries, vesttypes.VestEntry{
-								VesterAccount:   tc.msg.VesterAccount,
-								TreasuryAccount: "random_treasury",
-								Denom:           "dv4tnt",
-								StartTime:       time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC),
-								EndTime:         time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC),
-							})
-						}
-						genesisState.VestEntries = vestEntries
-					},
-				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialVestEntries := tApp.App.VestKeeper.GetAllVestEntries(ctx)
 
-			// Submit and tally governance proposal that includes `MsgDeleteVestEntry`.
+			// Submit and tally governance proposal that includes `MsgSetVestEntry`s.
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
-				[]sdk.Msg{tc.msg},
-				false,
+				tApp,
+				tc.msgs,
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
-				tc.expectedProposalStatus,
+				govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 			)
 
-			if tc.expectSubmitProposalFail || tc.expectedProposalStatus != govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
-				// If governance proposal is supposed to fail submission or execution, verify that vest
-				// entries in state match vest entries before proposal submission.
-				require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
-			} else {
-				// If proposal is supposed to pass, verify that the vest entry has been deleted.
-				vestEntry, err := tApp.App.VestKeeper.GetVestEntry(ctx, tc.msg.VesterAccount)
+			// Verify that vest entries in state match the ones before proposal submission.
+			require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
+		})
+	}
+}
+
+func TestDeleteVestEntry_Success(t *testing.T) {
+	tests := map[string]struct {
+		msgs                 []sdk.Msg
+		genesisVestEntryKeys []string // keys of vest entries in genesis state.
+	}{
+		"Success: delete one vest entry": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+			},
+			genesisVestEntryKeys: []string{"random_vester"},
+		},
+		"Success: delete two vest entries": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester_2",
+				},
+			},
+			genesisVestEntryKeys: []string{"random_vester", "random_vester_2"},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *govtypesv1.GenesisState) {
+						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
+					},
+				)
+				// Set vest module genesis state with vest entries.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vesttypes.GenesisState) {
+						genesisState.VestEntries = make([]vesttypes.VestEntry, len(tc.genesisVestEntryKeys))
+						for i, key := range tc.genesisVestEntryKeys {
+							genesisState.VestEntries[i] = vesttypes.VestEntry{
+								VesterAccount:   key,
+								TreasuryAccount: TEST_GENESIS_VEST_ENTRY.TreasuryAccount,
+								Denom:           TEST_GENESIS_VEST_ENTRY.Denom,
+								StartTime:       TEST_GENESIS_VEST_ENTRY.StartTime,
+								EndTime:         TEST_GENESIS_VEST_ENTRY.EndTime,
+							}
+						}
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain()
+
+			// Submit and tally governance proposal that includes `MsgDeleteVestEntry`s.
+			ctx = testapp.SubmitAndTallyProposal(
+				t,
+				ctx,
+				tApp,
+				tc.msgs,
+				false, // checkTx should not fail.
+				false, // submitProposal should not fail.
+				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+			)
+
+			// Verify that vest entries have been deleted.
+			for _, msg := range tc.msgs {
+				vestEntry, err := tApp.App.VestKeeper.GetVestEntry(ctx, msg.(*vesttypes.MsgDeleteVestEntry).VesterAccount)
 				require.Equal(t, vesttypes.VestEntry{}, vestEntry)
 				require.Error(t, err)
 			}
+		})
+	}
+}
+
+func TestDeleteVestEntry_Failure(t *testing.T) {
+	tests := map[string]struct {
+		msgs                     []sdk.Msg
+		genesisVestEntryKeys     []string // key of vest entries in genesis state.
+		expectSubmitProposalFail bool
+	}{
+		"Failure: vest entry does not exist": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+			},
+		},
+		"Failure: delete the same vest entry twice": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+			},
+			genesisVestEntryKeys: []string{"random_vester"},
+		},
+		"Failure: second vest entry to delete does not exist": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester",
+				},
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+					VesterAccount: "random_vester_2",
+				},
+			},
+			genesisVestEntryKeys: []string{"random_vester"},
+		},
+		"Failure: invalid authority": {
+			msgs: []sdk.Msg{
+				&vesttypes.MsgDeleteVestEntry{
+					Authority:     constants.BobAccAddress.String(),
+					VesterAccount: "random_vester",
+				},
+			},
+			genesisVestEntryKeys:     []string{"random_vester"},
+			expectSubmitProposalFail: true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *govtypesv1.GenesisState) {
+						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
+					},
+				)
+				// Set vest module genesis state with vest entries.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vesttypes.GenesisState) {
+						genesisState.VestEntries = make([]vesttypes.VestEntry, len(tc.genesisVestEntryKeys))
+						for i, key := range tc.genesisVestEntryKeys {
+							genesisState.VestEntries[i] = vesttypes.VestEntry{
+								VesterAccount:   key,
+								TreasuryAccount: TEST_GENESIS_VEST_ENTRY.TreasuryAccount,
+								Denom:           TEST_GENESIS_VEST_ENTRY.Denom,
+								StartTime:       TEST_GENESIS_VEST_ENTRY.StartTime,
+								EndTime:         TEST_GENESIS_VEST_ENTRY.EndTime,
+							}
+						}
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain()
+			initialVestEntries := tApp.App.VestKeeper.GetAllVestEntries(ctx)
+
+			// Submit and tally governance proposal that includes `MsgDeleteVestEntry`s.
+			ctx = testapp.SubmitAndTallyProposal(
+				t,
+				ctx,
+				tApp,
+				tc.msgs,
+				false, // checkTx should not fail.
+				tc.expectSubmitProposalFail,
+				govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			)
+
+			// Verify that vest entries in state match vest entries before proposal submission.
+			require.Equal(t, initialVestEntries, tApp.App.VestKeeper.GetAllVestEntries(ctx))
 		})
 	}
 }
