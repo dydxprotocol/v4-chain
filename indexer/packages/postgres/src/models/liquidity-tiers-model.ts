@@ -33,6 +33,22 @@ export default class LiquidityTiersModel extends BaseModel {
     };
   }
 
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      id: 'integer',
+      name: 'string',
+      initialMarginPpm: 'string',
+      maintenanceFractionPpm: 'string',
+      basePositionNotional: 'string',
+    };
+  }
+
   id!: number;
 
   QueryBuilderType!: UpsertQueryBuilder<this>;
