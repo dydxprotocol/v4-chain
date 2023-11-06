@@ -260,7 +260,7 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(
@@ -2018,6 +2018,11 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			if tc.expectedFilledSize == 0 {
+				// Bankruptcy price in DeleveragingEvent is not exposed by API. It is also
+				// being tested in other e2e tests. So we don't test it here.
+				mockIndexerEventManager.On("AddTxnEvent",
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				).Return()
 				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
 					ctx,
 					tc.order.GetSubaccountId(),
@@ -4513,7 +4518,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(

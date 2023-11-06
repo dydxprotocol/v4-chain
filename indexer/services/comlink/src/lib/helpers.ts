@@ -48,6 +48,7 @@ export function handleControllerError(
   at: string,
   message: string,
   error: Error,
+  req: express.Request,
   res: express.Response,
 ): express.Response {
   if (error instanceof NotFoundError) {
@@ -57,6 +58,7 @@ export function handleControllerError(
     at,
     message,
     error,
+    req,
     res,
   );
 }
@@ -65,6 +67,7 @@ function handleInternalServerError(
   at: string,
   message: string,
   error: Error,
+  req: express.Request,
   res: express.Response,
 ): express.Response {
   if (config.isDevelopment()) {
@@ -76,6 +79,8 @@ function handleInternalServerError(
     at,
     message,
     error,
+    params: JSON.stringify(req.params),
+    query: JSON.stringify(req.query),
   });
   return createInternalServerErrorResponse(res);
 }

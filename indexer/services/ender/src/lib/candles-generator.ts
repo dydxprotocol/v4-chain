@@ -1,23 +1,23 @@
 import { stats } from '@dydxprotocol-indexer/base';
 import { CANDLES_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
+  CANDLE_RESOLUTION_TO_PROTO,
+  CandleColumns,
   CandleCreateObject,
   CandleFromDatabase,
+  CandleMessageContents,
   CandleResolution,
   CandleTable,
   CandleUpdateObject,
-  CANDLE_RESOLUTION_TO_PROTO,
+  MarketOpenInterest,
+  NUM_SECONDS_IN_CANDLE_RESOLUTIONS,
+  Options,
+  PerpetualMarketColumns,
+  PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
+  PerpetualPositionTable,
   TradeContent,
   TradeMessageContents,
-  CandleMessageContents,
-  CandleColumns,
-  PerpetualPositionTable,
-  PerpetualMarketFromDatabase,
-  MarketOpenInterest,
-  PerpetualMarketColumns,
-  Options,
-  NUM_SECONDS_IN_CANDLE_RESOLUTIONS,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -69,7 +69,7 @@ export class CandlesGenerator {
   public async updateCandles(): Promise<CandleFromDatabase[]> {
     const start: number = Date.now();
     // 1. Sort trade messages by order in the block
-    this.kafkaPublisher.sortTradeEvents();
+    this.kafkaPublisher.sortEvents(this.kafkaPublisher.tradeMessages);
 
     // 2. Generate BlockCandleUpdatesMap
     const blockCandleUpdatesMap: BlockCandleUpdatesMap = this.generateBlockCandleUpdatesMap();

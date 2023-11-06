@@ -11,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
+  CLOB_STATUS_TO_MARKET_STATUS,
   dbHelpers,
   AssetPositionTable,
   PerpetualPositionTable,
@@ -19,6 +20,7 @@ import {
   PositionSide,
   TendermintEventTable,
   FillTable,
+  OraclePriceTable,
   OrderTable,
   protocolTranslations,
   SubaccountTable,
@@ -350,16 +352,38 @@ describe('SQL Function Tests', () => {
     }
   });
 
-  it('dydx_uuid_from_transaction_parts (%s)', async () => {
-    const transactionParts = {
-      blockHeight: '123456',
-      transactionIndex: 123,
-    };
+  it.each([
+    [
+      '123456',
+      123,
+    ],
+  ])('dydx_uuid_from_transaction_parts (%s, %s)', async (blockHeight: string, transactionIndex: number) => {
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_transaction_parts('${transactionParts.blockHeight}', '${transactionParts.transactionIndex}') AS result`);
+      `SELECT dydx_uuid_from_transaction_parts('${blockHeight}', '${transactionIndex}') AS result`);
     expect(result).toEqual(
-      TransactionTable.uuid(transactionParts.blockHeight, transactionParts.transactionIndex),
+      TransactionTable.uuid(blockHeight, transactionIndex),
     );
+  });
+
+  it.each([
+    [
+      123,
+      '123456',
+    ],
+  ])('dydx_uuid_from_oracle_price_parts (%s, %s)', async (marketId: number, blockHeight: string) => {
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_oracle_price_parts('${marketId}', '${blockHeight}') AS result`);
+    expect(result).toEqual(
+      OraclePriceTable.uuid(marketId, blockHeight),
+    );
+  });
+
+  it('dydx_clob_pair_status_to_market_status should convert all statuses', async () => {
+    for (const [key, value] of Object.entries(CLOB_STATUS_TO_MARKET_STATUS)) {
+      const result = await getSingleRawQueryResultRow(
+        `SELECT dydx_clob_pair_status_to_market_status('${key}') AS result`);
+      expect(result).toEqual(value);
+    }
   });
 
   it('dydx_create_transaction.sql should insert a transaction and return correct jsonb', async () => {
@@ -478,7 +502,7 @@ describe('SQL Function Tests', () => {
 });
 
 async function getSingleRawQueryResultRow(query: string): Promise<object> {
-  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error) => {
+  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error: Error) => {
     throw error;
   });
   return queryResult.rows[0].result;

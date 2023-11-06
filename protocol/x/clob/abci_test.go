@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -659,7 +658,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
@@ -1144,7 +1143,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedLongTermOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
@@ -1164,7 +1163,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedLongTermOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
@@ -1337,7 +1336,7 @@ func TestPrepareCheckState(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(

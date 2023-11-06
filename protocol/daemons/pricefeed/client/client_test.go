@@ -12,6 +12,7 @@ import (
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
+	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc"
@@ -51,6 +52,7 @@ type FakeSubTaskRunner struct {
 
 // StartPriceUpdater replaces `client.StartPriceUpdater` and advances `UpdaterCallCount` by one.
 func (f *FakeSubTaskRunner) StartPriceUpdater(
+	c *Client,
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -247,6 +249,14 @@ func TestStart_InvalidConfig(t *testing.T) {
 				&faketaskRunner,
 			)
 
+			// Expect daemon is not healthy on startup. Daemon becomes healthy after the first successful market
+			// update.
+			require.ErrorContains(
+				t,
+				client.HealthCheck(),
+				"no successful update has occurred",
+			)
+
 			if tc.expectedError == nil {
 				require.NoError(t, err)
 			} else {
@@ -299,7 +309,6 @@ func TestStop(t *testing.T) {
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
-		"test",
 	)
 	daemonServer.WithPriceFeedMarketToExchangePrices(
 		pricefeed_types.NewMarketToExchangePrices(5 * time.Second),
@@ -620,6 +629,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 		},
 		"No exchange market prices, does not call `UpdateMarketPrices`": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{},
+			priceUpdateError:        types.ErrEmptyMarketPriceUpdate,
 		},
 		"One market for one exchange": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
@@ -718,6 +728,66 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 			} else {
 				mockPriceFeedClient.AssertNotCalled(t, "UpdateMarketPrices")
 			}
+		})
+	}
+}
+
+func TestHealthCheck_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		updateMarketPricesError error
+		expectedError           error
+	}{
+		"No error - daemon healthy": {
+			updateMarketPricesError: nil,
+			expectedError:           nil,
+		},
+		"Error - daemon unhealthy": {
+			updateMarketPricesError: fmt.Errorf("failed to update market prices"),
+			expectedError: fmt.Errorf(
+				"failed to run price updater task loop for price daemon: failed to update market prices",
+			),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup.
+			// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
+			etmp, err := types.NewExchangeToMarketPrices([]types.ExchangeId{constants.ExchangeId1})
+			require.NoError(t, err)
+			etmp.UpdatePrice(constants.ExchangeId1, constants.Market9_TimeT_Price1)
+
+			// Create a mock `PriceFeedServiceClient`.
+			mockPriceFeedClient := generateMockQueryClient()
+
+			// Mock the `UpdateMarketPrices` call to return an error if specified.
+			mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
+				Return(nil, tc.updateMarketPricesError).Once()
+
+			ticker, stop := daemontestutils.SingleTickTickerAndStop()
+			client := newClient()
+
+			// Act.
+			// Run the price updater for a single tick. Expect the daemon to toggle health state based on
+			// `UpdateMarketPrices` error response.
+			subTaskRunnerImpl.StartPriceUpdater(
+				client,
+				grpc_util.Ctx,
+				ticker,
+				stop,
+				etmp,
+				mockPriceFeedClient,
+				log.NewNopLogger(),
+			)
+
+			// Assert.
+			if tc.expectedError == nil {
+				require.NoError(t, client.HealthCheck())
+			} else {
+				require.ErrorContains(t, client.HealthCheck(), tc.expectedError.Error())
+			}
+
+			// Cleanup.
+			close(stop)
 		})
 	}
 }

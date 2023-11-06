@@ -98,24 +98,27 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *clobtypes.GenesisState) {
-						genesisState.BlockRateLimitConfig = tc.blockRateLimitConifg
-					},
-				)
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *satypes.GenesisState) {
-						genesisState.Subaccounts = []satypes.Subaccount{
-							constants.Alice_Num0_10_000USD,
-							constants.Alice_Num1_10_000USD,
-						}
-					})
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				// Disable non-determinism checks since we mutate keeper state directly.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *clobtypes.GenesisState) {
+							genesisState.BlockRateLimitConfig = tc.blockRateLimitConifg
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = []satypes.Subaccount{
+								constants.Alice_Num0_10_000USD,
+								constants.Alice_Num1_10_000USD,
+							}
+						})
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 
 			firstCheckTx := testapp.MustMakeCheckTx(
@@ -375,18 +378,22 @@ func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					// Disable the default rate limit of 2 stateful orders per block so we can test with
-					// more than 2 orders.
-					func(genesisState *clobtypes.GenesisState) {
-						genesisState.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{}
-					},
-				)
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				// On block advancement we will lose the mempool causing stateful orders in the mempool
+				// to be dropped and thus they won't be rechecked.
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.advanceBlock).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						// Disable the default rate limit of 2 stateful orders per block so we can test with
+						// more than 2 orders.
+						func(genesisState *clobtypes.GenesisState) {
+							genesisState.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{}
+						},
+					)
+					return genesis
+				}).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 			// First placement should pass since the order is unknown.

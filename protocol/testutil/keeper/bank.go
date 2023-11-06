@@ -6,10 +6,9 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 func createBankKeeper(
@@ -26,7 +25,7 @@ func createBankKeeper(
 		storeKey,
 		accountKeeper,
 		map[string]bool{},
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	return &k, storeKey

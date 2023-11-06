@@ -1,15 +1,14 @@
 package keeper
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -31,8 +30,8 @@ func createStatsKeeper(
 	mockMsgSender.On("Enabled").Return(true)
 
 	authorities := []string{
-		authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		delaymsgtypes.ModuleAddress.String(),
+		lib.GovModuleAddress.String(),
 	}
 	k := keeper.NewKeeper(
 		cdc,

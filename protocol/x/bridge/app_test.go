@@ -72,6 +72,23 @@ func TestBridge_Success(t *testing.T) {
 			blockTime:              time.Now(),
 			expectNonEmptyBridgeTx: true,
 		},
+		"Success: 1 bridge event with 0 coin amount, delay 5 blocks": {
+			bridgeEvents: []bridgetypes.BridgeEvent{
+				constants.BridgeEvent_Id4_Height0_EmptyCoin,
+			},
+			proposeParams: bridgetypes.ProposeParams{
+				MaxBridgesPerBlock:           2,
+				ProposeDelayDuration:         0,
+				SkipRatePpm:                  0, // do not skip proposing bridge events.
+				SkipIfBlockDelayedByDuration: time.Second * 10,
+			},
+			safetyParams: bridgetypes.SafetyParams{
+				IsDisabled:  false,
+				DelayBlocks: 5,
+			},
+			blockTime:              time.Now(),
+			expectNonEmptyBridgeTx: true,
+		},
 		"Success: 4 bridge events, delay 27 blocks": {
 			bridgeEvents: []bridgetypes.BridgeEvent{
 				constants.BridgeEvent_Id0_Height0,
@@ -133,18 +150,22 @@ func TestBridge_Success(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *bridgetypes.GenesisState) {
-						genesisState.ProposeParams = tc.proposeParams
-						genesisState.SafetyParams = tc.safetyParams
-					},
-				)
-				genesis.GenesisTime = tc.blockTime
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				// These tests only contact the tApp.App.Server causing non-determinism in the
+				// other App instances in TestApp used for non-determinism checking.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *bridgetypes.GenesisState) {
+							genesisState.ProposeParams = tc.proposeParams
+							genesisState.SafetyParams = tc.safetyParams
+						},
+					)
+					genesis.GenesisTime = tc.blockTime
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 
 			// Get initial balances of addresses and their expected balances after bridging.

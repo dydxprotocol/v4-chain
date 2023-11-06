@@ -4,6 +4,7 @@ import {
   OrdersDataCache,
   redis,
   redisTestConstants,
+  StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 import {
   expectOpenOrderIds,
@@ -33,6 +34,7 @@ import {
   IndexerOrderId,
   OrderPlaceV1_OrderPlacementStatus,
   RedisOrder,
+  OrderUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import * as redisPackage from '@dydxprotocol-indexer/redis';
 import {
@@ -464,7 +466,7 @@ describe('OrderUpdateHandler', () => {
       }));
     });
 
-    it('logs error and does not update OrderbookLevels if order not found', async () => {
+    it('logs error and does not update OrderbookLevels if short-term order not found', async () => {
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       await handleOrderUpdate(redisTestConstants.orderUpdate);
@@ -478,6 +480,45 @@ describe('OrderUpdateHandler', () => {
       expect(stats.increment).toHaveBeenCalledWith(
         'vulcan.order_update_order_does_not_exist',
         1,
+        {
+          orderFlags: String(redisTestConstants.orderUpdate.orderUpdate.orderId!.orderFlags),
+        },
+      );
+    });
+
+    it('adds order update to stateful order update cache if stateful order not found', async () => {
+      synchronizeWrapBackgroundTask(wrapBackgroundTask);
+      const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+      const statefulOrderUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
+        ...redisTestConstants.orderUpdate,
+        orderUpdate: {
+          ...redisTestConstants.orderUpdate.orderUpdate,
+          orderId: redisTestConstants.defaultOrderIdGoodTilBlockTime,
+        },
+      };
+      await handleOrderUpdate(statefulOrderUpdate);
+
+      const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
+        .removeStatefulOrderUpdate(
+          redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+          Date.now(),
+          client,
+        );
+      expect(cachedOrderUpdate).toBeDefined();
+      expect(cachedOrderUpdate).toEqual(statefulOrderUpdate.orderUpdate);
+
+      expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
+      expect(logger.info).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'OrderUpdateHandler#handle',
+        message: expect.stringMatching('Received order update for order that does not exist, order id '),
+      }));
+      expectWebsocketMessagesNotSent(producerSendSpy);
+      expect(stats.increment).toHaveBeenCalledWith(
+        'vulcan.order_update_order_does_not_exist',
+        1,
+        {
+          orderFlags: String(statefulOrderUpdate.orderUpdate.orderId!.orderFlags),
+        },
       );
     });
   });

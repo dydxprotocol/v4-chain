@@ -2,9 +2,8 @@ package keeper_test
 
 import (
 	"github.com/cometbft/cometbft/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -87,7 +86,7 @@ func TestUpdateEquityTierLimitConfig(t *testing.T) {
 	require.Equal(t, originalConfig, tApp.App.ClobKeeper.GetEquityTierLimitConfiguration(ctx))
 
 	requestWithAuthority := clobtypes.MsgUpdateEquityTierLimitConfiguration{
-		Authority:             authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		Authority:             lib.GovModuleAddress.String(),
 		EquityTierLimitConfig: expectedConfig,
 	}
 	_, err = handler(ctx, &requestWithAuthority)

@@ -1,17 +1,17 @@
 name: Protocol Lint
 # Lint runs all linting jobs.
 
-on:  # yamllint disable-line rule:truthy
+on: # yamllint disable-line rule:truthy
   pull_request:
     paths:
-      - 'protocol/**'
+      - "protocol/**"
   push:
     branches:
       - main
-      - 'release/protocol/v0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
-      - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+      - "release/protocol/v0.[0-9]+.x" # e.g. release/protocol/v0.1.x
+      - "release/protocol/v[0-9]+.x" # e.g. release/protocol/v1.x
     paths:
-      - 'protocol/**'
+      - "protocol/**"
 
 # Ensure only a single instance of this workflow is running, and cancel any that are in-progress
 # before this workflow instance starts
@@ -20,7 +20,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Validates that the YAML files in the V4 repository are formatted properly.
+  # Validates that the YAML files in the repository are formatted properly.
   # The `validate-yaml` job will pass without running if no YAML files have been modified.
   validate-yaml:
     runs-on: ubuntu-latest

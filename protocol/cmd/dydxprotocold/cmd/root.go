@@ -50,7 +50,29 @@ const (
 
 // TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
-func NewRootCmd(option *RootCmdOption) *cobra.Command {
+func NewRootCmd(
+	option *RootCmdOption,
+) *cobra.Command {
+	return NewRootCmdWithInterceptors(
+		option,
+		func(serverCtxPtr *server.Context) {
+
+		},
+		func(s string, appConfig *DydxAppConfig) (string, *DydxAppConfig) {
+			return s, appConfig
+		},
+		func(app *dydxapp.App) *dydxapp.App {
+			return app
+		},
+	)
+}
+
+func NewRootCmdWithInterceptors(
+	option *RootCmdOption,
+	serverCtxInterceptor func(serverCtxPtr *server.Context),
+	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
+	appInterceptor func(app *dydxapp.App) *dydxapp.App,
+) *cobra.Command {
 	encodingConfig := dydxapp.GetEncodingConfig()
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
@@ -85,7 +107,7 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 				return err
 			}
 
-			customAppTemplate, customAppConfig := initAppConfig()
+			customAppTemplate, customAppConfig := appConfigInterceptor(initAppConfig())
 			customTMConfig := initTendermintConfig()
 
 			if err := server.InterceptConfigsPreRunHandler(
@@ -97,18 +119,25 @@ func NewRootCmd(option *RootCmdOption) *cobra.Command {
 				return err
 			}
 
+			serverCtxInterceptor(server.GetServerContextFromCmd(cmd))
+
 			return nil
 		},
 		SilenceUsage: true,
 	}
 
-	initRootCmd(rootCmd, option, encodingConfig)
+	initRootCmd(rootCmd, option, encodingConfig, appInterceptor)
 
 	return rootCmd
 }
 
 // initRootCmd initializes the app's root command with useful commands.
-func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig dydxapp.EncodingConfig) {
+func initRootCmd(
+	rootCmd *cobra.Command,
+	option *RootCmdOption,
+	encodingConfig dydxapp.EncodingConfig,
+	appInterceptor func(app *dydxapp.App) *dydxapp.App,
+) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
@@ -131,7 +160,9 @@ func initRootCmd(rootCmd *cobra.Command, option *RootCmdOption, encodingConfig d
 	server.AddCommands(
 		rootCmd,
 		dydxapp.DefaultNodeHome,
-		a.newApp,
+		func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
+			return appInterceptor(a.newApp(logger, db, writer, options))
+		},
 		a.appExport,
 		func(cmd *cobra.Command) {
 			addModuleInitFlags(cmd)
@@ -222,7 +253,7 @@ func (a appCreator) newApp(
 	db dbm.DB,
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
-) servertypes.Application {
+) *dydxapp.App {
 	var cache sdk.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
@@ -269,6 +300,7 @@ func (a appCreator) newApp(
 	return dydxapp.New(
 		logger,
 		db,
+		snapshotDB,
 		traceStore,
 		true,
 		appOpts,
@@ -308,6 +340,7 @@ func (a appCreator) appExport(
 	dydxApp := dydxapp.New(
 		logger,
 		db,
+		dbm.NewMemDB(),
 		traceStore,
 		height == -1, // -1: no height provided
 		appOpts,

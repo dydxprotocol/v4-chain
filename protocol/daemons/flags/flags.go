@@ -79,7 +79,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Bridge: BridgeFlags{
 				Enabled:        true,
 				LoopDelayMs:    30_000,
-				EthRpcEndpoint: "https://eth-sepolia.g.alchemy.com/v2/demo",
+				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:             true,

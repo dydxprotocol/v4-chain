@@ -16,19 +16,22 @@ import (
 // TestFullNodePrepareProposalHandler test that the full-node PrepareProposal handler always returns
 // an empty result.
 func TestFullNodePrepareProposalHandler(t *testing.T) {
-	t.Cleanup(gometrics.Shutdown)
-
-	conf := gometrics.DefaultConfig("service")
-	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
-	_, err := gometrics.NewGlobal(conf, sink)
-	require.NoError(t, err)
-
 	logger, logBuffer := testlog.TestLogger()
 	appOpts := map[string]interface{}{
 		flags.NonValidatingFullNodeFlag: true,
 		testlog.LoggerInstanceForTest:   logger,
 	}
-	tApp := testApp.NewTestAppBuilder(t).WithAppCreatorFn(testApp.DefaultTestAppCreatorFn(appOpts)).Build()
+	tApp := testApp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+	tApp.InitChain()
+
+	// Set up metrics after test app initialization to override the telemetry that it sets up.
+	// TODO(CLOB-930): Expose test app telemetry directly instead of requiring tests to do this setup and clean-up
+	// themselves.
+	t.Cleanup(gometrics.Shutdown)
+	conf := gometrics.DefaultConfig("service")
+	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
+	_, err := gometrics.NewGlobal(conf, sink)
+	require.NoError(t, err)
 
 	found := false
 	tApp.AdvanceToBlock(2, testApp.AdvanceToBlockOptions{

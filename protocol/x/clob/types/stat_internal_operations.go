@@ -2,7 +2,6 @@ package types
 
 import (
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -160,16 +159,17 @@ func (stats *OperationsStats) EmitStats(abciCallback string) {
 		},
 	}
 
+	labels := []gometrics.Label{
+		metrics.GetLabelForStringValue(
+			metrics.Callback,
+			abciCallback,
+		),
+	}
 	for _, stat := range statsList {
-		telemetry.SetGaugeWithLabels(
+		gometrics.AddSampleWithLabels(
 			stat.keys,
 			stat.value,
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(
-					metrics.Callback,
-					abciCallback,
-				),
-			},
+			labels,
 		)
 	}
 }

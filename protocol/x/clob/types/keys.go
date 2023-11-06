@@ -74,6 +74,10 @@ const (
 	// ProcessProposerMatchesEventsKey is the key to retrieve information about how to update
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
+
+	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
+	// represents the number of stateful orders stored in state.
+	StatefulOrderCountPrefix = "NumSO:"
 )
 
 // Transient Store
@@ -87,24 +91,20 @@ const (
 	NextStatefulOrderBlockTransactionIndexKey = "NextTxIdx"
 
 	// UncommittedStatefulOrderPlacementKeyPrefix is the key to retrieve an uncommitted stateful order and information
-	// about when it was placed. uncommitted orders are orders that this validator is aware of that have yet to be
+	// about when it was placed. Uncommitted orders are orders that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtLT:"
+	UncommittedStatefulOrderPlacementKeyPrefix = "UncmtSO:"
 
 	// UncommittedStatefulOrderCancellationKeyPrefix is the key to retrieve an uncommitted stateful order cancellation.
-	// uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
+	// Uncommitted cancelleations are cancellations that this validator is aware of that have yet to be
 	// committed to a block and are stored in a transient store.
-	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtLTCxl:"
+	UncommittedStatefulOrderCancellationKeyPrefix = "UncmtSOCxl:"
 
 	// UncommittedStatefulOrderCountPrefix is the key to retrieve an uncommitted stateful order count.
-	// uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
+	// Uncommitted orders are orders that this validator is aware of that have yet to be committed to a block and
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
-	UncommittedStatefulOrderCountPrefix = "NumUncmtLT:"
-
-	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
-	// represents the number of long term order placements and triggered conditional orders stored in state.
-	StatefulOrderCountPrefix = "NumLT:"
+	UncommittedStatefulOrderCountPrefix = "NumUncmtSO:"
 )
 
 // Module Accounts

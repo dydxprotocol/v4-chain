@@ -2,6 +2,8 @@ package keeper_test
 
 import (
 	"errors"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math"
 	"math/big"
 	"testing"
@@ -10,7 +12,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -94,7 +95,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 				bankMock.On(
 					"GetBalance",
 					mock.Anything,
-					authtypes.NewModuleAddress(types.InsuranceFundName),
+					types.InsuranceFundModuleAddress,
 					constants.Usdc.Denom,
 				).Return(
 					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -192,7 +193,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -269,7 +270,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -611,7 +612,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -645,6 +647,35 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
 				Timestamp: time.Unix(5, 0),
 			})
+			// check that an event is emitted per fill
+			for _, fill := range tc.expectedFills {
+				fillAmount := new(big.Int).SetUint64(fill.FillAmount)
+				if tc.deltaQuantums.Sign() < 0 {
+					fillAmount = new(big.Int).Neg(fillAmount)
+				}
+				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+					ks.Ctx,
+					tc.liquidatedSubaccountId,
+					tc.perpetualId,
+					fillAmount,
+				)
+				require.NoError(t, err)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							tc.liquidatedSubaccountId,
+							fill.OffsettingSubaccountId,
+							tc.perpetualId,
+							satypes.BaseQuantums(fill.FillAmount),
+							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+							tc.deltaQuantums.Sign() > 0,
+						),
+					),
+				).Return()
+			}
 
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
@@ -1003,7 +1034,8 @@ func TestProcessDeleveraging(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1033,6 +1065,30 @@ func TestProcessDeleveraging(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
+			if tc.expectedErr == nil {
+				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+					ks.Ctx,
+					*tc.liquidatedSubaccount.GetId(),
+					uint32(0),
+					tc.deltaQuantums,
+				)
+				require.NoError(t, err)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							*tc.liquidatedSubaccount.GetId(),
+							*tc.offsettingSubaccount.GetId(),
+							uint32(0),
+							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
+							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+							tc.deltaQuantums.Sign() > 0,
+						),
+					),
+				).Return()
+			}
 			err = ks.ClobKeeper.ProcessDeleveraging(
 				ks.Ctx,
 				*tc.liquidatedSubaccount.GetId(),
@@ -1127,7 +1183,8 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
 
 			// Create the default markets.
 			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
@@ -1165,7 +1222,30 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
-
+			if tc.expectedErr == nil {
+				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+					ks.Ctx,
+					*tc.liquidatedSubaccount.GetId(),
+					uint32(0),
+					tc.deltaQuantums,
+				)
+				require.NoError(t, err)
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							*tc.liquidatedSubaccount.GetId(),
+							*tc.offsettingSubaccount.GetId(),
+							uint32(0),
+							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
+							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+							tc.deltaQuantums.Sign() > 0,
+						),
+					),
+				).Return()
+			}
 			err = ks.ClobKeeper.ProcessDeleveraging(
 				ks.Ctx,
 				*tc.liquidatedSubaccount.GetId(),

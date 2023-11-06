@@ -7,6 +7,8 @@ import (
 	"sort"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -87,6 +89,9 @@ func (k Keeper) HasAuthority(authority string) bool {
 	return ok
 }
 
+// ModifyPerpetual modifies an existing perpetual in the store.
+// The new perpetual object must pass stateful and stateless validations.
+// Upon successful modification, send an indexer event.
 func (k Keeper) ModifyPerpetual(
 	ctx sdk.Context,
 	id uint32,
@@ -267,7 +272,10 @@ func (k Keeper) processPremiumVotesIntoSamples(
 		newFundingSampleEpoch,
 		types.PremiumVotesKey,
 		k.GetParams(ctx).MinNumVotesPerSample,
-		lib.MustGetMedian[int32], // combineFunc
+		// `MustGetMedian` panics when the padded list is empty, which breaks the invariant that
+		// Max(premiumStore.NumPremiums, minNumPremiumsRequired) > 0.
+		// See details in implementation of `processStoredPremiums`.
+		lib.MustGetMedian[int32],                     // combineFunc
 		func(input []int32) []int32 { return input }, // filterFunc
 	)
 
@@ -339,6 +347,7 @@ func (k Keeper) MaybeProcessNewFundingSampleEpoch(
 		ctx,
 		epochstypes.FundingSampleEpochInfoName,
 	)
+	// Invariant broken: `FundingSample` epoch must exist in epochs store.
 	if err != nil {
 		panic(err)
 	}
@@ -379,6 +388,7 @@ func (k Keeper) getFundingIndexDelta(
 
 	proratedFundingRate.Quo(
 		proratedFundingRate,
+		// TODO(DEC-1536): Make the 8-hour funding rate period configurable.
 		new(big.Rat).SetUint64(3600*8),
 	)
 
@@ -449,10 +459,10 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
 				k.Logger(ctx).Error(
-					fmt.Sprintf(
-						"Perpetual (%d) does not have valid index price. Skipping premium",
-						perp.Params.Id,
-					))
+					"Perpetual does not have valid index price. Skipping premium",
+					constants.MarketIdLogKey,
+					perp.Params.MarketId,
+				)
 				telemetry.IncrCounterWithLabels(
 					[]string{
 						types.ModuleName,

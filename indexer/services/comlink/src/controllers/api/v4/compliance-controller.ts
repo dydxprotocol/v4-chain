@@ -144,6 +144,7 @@ router.get(
         'ComplianceController GET /',
         'Compliance error',
         error,
+        req,
         res,
       );
     } finally {

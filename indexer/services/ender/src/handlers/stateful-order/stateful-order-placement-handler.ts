@@ -60,18 +60,19 @@ export class StatefulOrderPlacementHandler extends
       this.generateTimingStatsOptions('upsert_order'),
     );
 
+    const kafakEvents: ConsolidatedKafkaEvent[] = [];
+
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderPlace: {
         order,
         placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     });
+    kafakEvents.push(this.generateConsolidatedVulcanKafkaEvent(
+      getOrderIdHash(order.orderId!),
+      offChainUpdate,
+    ));
 
-    return [
-      this.generateConsolidatedVulcanKafkaEvent(
-        getOrderIdHash(order.orderId!),
-        offChainUpdate,
-      ),
-    ];
+    return kafakEvents;
   }
 }

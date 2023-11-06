@@ -107,6 +107,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.veto_threshold' -v '0.33400' # 33.4%
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_proposal_deposit_prevote' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_quorum' -v 'false' 
 	dasel put -t bool -f "$GENESIS" '.app_state.gov.params.burn_vote_veto' -v 'true'
@@ -166,7 +167,7 @@ create_pregenesis_file() {
 	echo "Copying exchange config jsons to $TMP_EXCHANGE_CONFIG_JSON_DIR"
 	cp -R ./daemons/pricefeed/client/constants/testdata $TMP_EXCHANGE_CONFIG_JSON_DIR
 
-	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" "STATUS_INITIALIZING"
+	edit_genesis "$VAL_CONFIG_DIR" "" "" "$TMP_EXCHANGE_CONFIG_JSON_DIR" "./testing/delaymsg_config" "STATUS_INITIALIZING" ""
 	overwrite_genesis_production
 }
 

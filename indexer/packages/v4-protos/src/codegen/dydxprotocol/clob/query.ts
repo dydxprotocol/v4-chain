@@ -3,6 +3,8 @@ import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { ValidatorMevMatches, ValidatorMevMatchesSDKType, MevNodeToNodeMetrics, MevNodeToNodeMetricsSDKType } from "./mev";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
+import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
+import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
@@ -186,6 +188,62 @@ export interface QueryEquityTierLimitConfigurationResponse {
 
 export interface QueryEquityTierLimitConfigurationResponseSDKType {
   equity_tier_limit_config?: EquityTierLimitConfigurationSDKType;
+}
+/**
+ * QueryBlockRateLimitConfigurationRequest is a request message for
+ * BlockRateLimitConfiguration.
+ */
+
+export interface QueryBlockRateLimitConfigurationRequest {}
+/**
+ * QueryBlockRateLimitConfigurationRequest is a request message for
+ * BlockRateLimitConfiguration.
+ */
+
+export interface QueryBlockRateLimitConfigurationRequestSDKType {}
+/**
+ * QueryBlockRateLimitConfigurationResponse is a response message that contains
+ * the BlockRateLimitConfiguration.
+ */
+
+export interface QueryBlockRateLimitConfigurationResponse {
+  blockRateLimitConfig?: BlockRateLimitConfiguration;
+}
+/**
+ * QueryBlockRateLimitConfigurationResponse is a response message that contains
+ * the BlockRateLimitConfiguration.
+ */
+
+export interface QueryBlockRateLimitConfigurationResponseSDKType {
+  block_rate_limit_config?: BlockRateLimitConfigurationSDKType;
+}
+/**
+ * QueryLiquidationsConfigurationRequest is a request message for
+ * LiquidationsConfiguration.
+ */
+
+export interface QueryLiquidationsConfigurationRequest {}
+/**
+ * QueryLiquidationsConfigurationRequest is a request message for
+ * LiquidationsConfiguration.
+ */
+
+export interface QueryLiquidationsConfigurationRequestSDKType {}
+/**
+ * QueryLiquidationsConfigurationResponse is a response message that contains
+ * the LiquidationsConfiguration.
+ */
+
+export interface QueryLiquidationsConfigurationResponse {
+  liquidationsConfig?: LiquidationsConfig;
+}
+/**
+ * QueryLiquidationsConfigurationResponse is a response message that contains
+ * the LiquidationsConfiguration.
+ */
+
+export interface QueryLiquidationsConfigurationResponseSDKType {
+  liquidations_config?: LiquidationsConfigSDKType;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -762,6 +820,164 @@ export const QueryEquityTierLimitConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryEquityTierLimitConfigurationResponse>): QueryEquityTierLimitConfigurationResponse {
     const message = createBaseQueryEquityTierLimitConfigurationResponse();
     message.equityTierLimitConfig = object.equityTierLimitConfig !== undefined && object.equityTierLimitConfig !== null ? EquityTierLimitConfiguration.fromPartial(object.equityTierLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryBlockRateLimitConfigurationRequest(): QueryBlockRateLimitConfigurationRequest {
+  return {};
+}
+
+export const QueryBlockRateLimitConfigurationRequest = {
+  encode(_: QueryBlockRateLimitConfigurationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryBlockRateLimitConfigurationRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryBlockRateLimitConfigurationRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryBlockRateLimitConfigurationRequest>): QueryBlockRateLimitConfigurationRequest {
+    const message = createBaseQueryBlockRateLimitConfigurationRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryBlockRateLimitConfigurationResponse(): QueryBlockRateLimitConfigurationResponse {
+  return {
+    blockRateLimitConfig: undefined
+  };
+}
+
+export const QueryBlockRateLimitConfigurationResponse = {
+  encode(message: QueryBlockRateLimitConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.blockRateLimitConfig !== undefined) {
+      BlockRateLimitConfiguration.encode(message.blockRateLimitConfig, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryBlockRateLimitConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryBlockRateLimitConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.blockRateLimitConfig = BlockRateLimitConfiguration.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryBlockRateLimitConfigurationResponse>): QueryBlockRateLimitConfigurationResponse {
+    const message = createBaseQueryBlockRateLimitConfigurationResponse();
+    message.blockRateLimitConfig = object.blockRateLimitConfig !== undefined && object.blockRateLimitConfig !== null ? BlockRateLimitConfiguration.fromPartial(object.blockRateLimitConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryLiquidationsConfigurationRequest(): QueryLiquidationsConfigurationRequest {
+  return {};
+}
+
+export const QueryLiquidationsConfigurationRequest = {
+  encode(_: QueryLiquidationsConfigurationRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLiquidationsConfigurationRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLiquidationsConfigurationRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryLiquidationsConfigurationRequest>): QueryLiquidationsConfigurationRequest {
+    const message = createBaseQueryLiquidationsConfigurationRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryLiquidationsConfigurationResponse(): QueryLiquidationsConfigurationResponse {
+  return {
+    liquidationsConfig: undefined
+  };
+}
+
+export const QueryLiquidationsConfigurationResponse = {
+  encode(message: QueryLiquidationsConfigurationResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.liquidationsConfig !== undefined) {
+      LiquidationsConfig.encode(message.liquidationsConfig, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryLiquidationsConfigurationResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryLiquidationsConfigurationResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidationsConfig = LiquidationsConfig.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryLiquidationsConfigurationResponse>): QueryLiquidationsConfigurationResponse {
+    const message = createBaseQueryLiquidationsConfigurationResponse();
+    message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
     return message;
   }
 

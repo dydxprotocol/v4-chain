@@ -90,6 +90,7 @@ router.get(
         'SparklinesController GET /',
         'Sparklines error',
         error,
+        req,
         res,
       );
     } finally {

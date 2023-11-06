@@ -144,6 +144,20 @@ func TestQuoteToBaseQuantums(t *testing.T) {
 			priceExponent:                0,
 			bigExpectedBaseQuantums:      big.NewInt(5_000_000),
 		},
+		"realistic values: 1 BTC at $29001": {
+			bigQuoteQuantums:             big.NewInt(29_001_000_000), // $29_001
+			baseCurrencyAtomicResolution: -10,
+			priceValue:                   2_900_100_000,
+			priceExponent:                -5,
+			bigExpectedBaseQuantums:      big.NewInt(10_000_000_000),
+		},
+		"realistic values: 25.123 BTC at $29001": {
+			bigQuoteQuantums:             big.NewInt(728_592_123_000), // $728_592.123
+			baseCurrencyAtomicResolution: -10,
+			priceValue:                   2_900_100_000,
+			priceExponent:                -5,
+			bigExpectedBaseQuantums:      big.NewInt(251_230_000_000),
+		},
 		"baseCurrencyAtomicResolution is greater than 10^6": {
 			bigQuoteQuantums:             big.NewInt(350_000),
 			baseCurrencyAtomicResolution: -8,

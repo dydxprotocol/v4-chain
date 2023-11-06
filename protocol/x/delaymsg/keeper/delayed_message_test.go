@@ -8,7 +8,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -53,7 +52,7 @@ func routableInvalidSdkMsg() sdk.Msg {
 func unencodableSdkMsg() sdk.Msg {
 	msg := &FakeRoutableMsg{}
 	msg.On("ValidateBasic").Return(nil)
-	msg.On("GetSigners").Return([]sdk.AccAddress{authtypes.NewModuleAddress(types.ModuleName)})
+	msg.On("GetSigners").Return([]sdk.AccAddress{types.ModuleAddress})
 	return msg
 }
 
@@ -177,7 +176,7 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 		},
 		"Message fails validation": {
 			msg: &bridgetypes.MsgCompleteBridge{
-				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+				Authority: bridgetypes.ModuleAddress.String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
@@ -358,7 +357,7 @@ func TestValidateMsg(t *testing.T) {
 		},
 		"Message fails validateSigners": {
 			msg: &bridgetypes.MsgCompleteBridge{
-				Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+				Authority: bridgetypes.ModuleAddress.String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
@@ -402,7 +401,7 @@ func TestSetDelayedMessage(t *testing.T) {
 				Msg: encoding.EncodeMessageToAny(
 					t,
 					&bridgetypes.MsgCompleteBridge{
-						Authority: authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
+						Authority: bridgetypes.ModuleAddress.String(),
 						Event:     constants.BridgeEvent_Id0_Height0,
 					},
 				),

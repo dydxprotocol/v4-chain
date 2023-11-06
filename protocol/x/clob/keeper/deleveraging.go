@@ -3,16 +3,16 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -125,7 +125,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		authtypes.NewModuleAddress(types.InsuranceFundName),
+		types.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 
@@ -270,8 +270,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
 					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", log.NewLazySprintf("%+v", liquidatedSubaccount),
-					"offsettingSubaccount", log.NewLazySprintf("%+v", offsettingSubaccount),
+					"liquidatedSubaccount", liquidatedSubaccount,
+					"offsettingSubaccount", offsettingSubaccount,
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
@@ -283,21 +283,21 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
 		},
 		float32(numSubaccountsIterated),
 		labels,
 	)
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
 		},
 		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
 		labels,
 	)
-	telemetry.SetGaugeWithLabels(
+	gometrics.AddSampleWithLabels(
 		[]string{
 			types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
 		},
@@ -346,9 +346,9 @@ func (k Keeper) ProcessDeleveraging(
 		offsettingPositionQuantums.CmpAbs(deltaQuantums) == -1 {
 		return errorsmod.Wrapf(
 			types.ErrInvalidPerpetualPositionSizeDelta,
-			"ProcessDeleveraging: liquidated = (%+v), offsetting = (%+v), perpetual id = (%d), deltaQuantums = (%+v)",
-			liquidatedSubaccount,
-			offsettingSubaccount,
+			"ProcessDeleveraging: liquidated = (%s), offsetting = (%s), perpetual id = (%d), deltaQuantums = (%+v)",
+			lib.MaybeGetJsonString(liquidatedSubaccount),
+			lib.MaybeGetJsonString(offsettingSubaccount),
 			perpetualId,
 			deltaQuantums,
 		)
@@ -428,7 +428,7 @@ func (k Keeper) ProcessDeleveraging(
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
 			metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
 		}
-		telemetry.IncrCounterWithLabels(
+		gometrics.AddSampleWithLabels(
 			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
 			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
 			labels,
@@ -450,6 +450,24 @@ func (k Keeper) ProcessDeleveraging(
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
+		),
+	)
+
+	// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+	// if the branched state is discarded, so batching is not necessary.
+	k.GetIndexerEventManager().AddTxnEvent(
+		ctx,
+		indexerevents.SubtypeDeleveraging,
+		indexerevents.DeleveragingEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewDeleveragingEvent(
+				liquidatedSubaccountId,
+				offsettingSubaccountId,
+				perpetualId,
+				satypes.BaseQuantums(new(big.Int).Abs(deltaQuantums).Uint64()),
+				satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+				deltaQuantums.Sign() > 0,
+			),
 		),
 	)
 

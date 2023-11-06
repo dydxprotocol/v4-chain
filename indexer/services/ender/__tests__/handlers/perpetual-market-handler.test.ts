@@ -40,6 +40,7 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import config from '../../src/config';
 
 describe('perpetualMarketHandler', () => {
   beforeAll(async () => {
@@ -65,6 +66,7 @@ describe('perpetualMarketHandler', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
+    perpetualMarketRefresher.clear();
     jest.clearAllMocks();
     liquidityTierRefresher.clear();
   });
@@ -103,71 +105,118 @@ describe('perpetualMarketHandler', () => {
     });
   });
 
-  it('fails when market doesnt exist for perpetual market', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError();
-  });
-
-  it('fails when liquidity tier doesnt exist for perpetual market', async () => {
-    await MarketTable.create(testConstants.defaultMarket);
-    await marketRefresher.updateMarkets();
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-
-    await expect(onMessage(kafkaMessage)).rejects.toThrowError();
-  });
-
-  it('creates new perpetual market', async () => {
-    await Promise.all([
-      MarketTable.create(testConstants.defaultMarket),
-      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
-    ]);
-    await liquidityTierRefresher.updateLiquidityTiers();
-    await marketRefresher.updateMarkets();
-
-    const transactionIndex: number = 0;
-
-    const perpetualMarketEvent: PerpetualMarketCreateEventV1 = defaultPerpetualMarketCreateEvent;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
-      perpetualMarketEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-    // Confirm there is no existing perpetualMarket.
-    await expectNoExistingPerpetualMarkets();
-
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
-      {},
-      [], {
-        orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'fails when market doesnt exist for perpetual market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
+        perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
       });
-    expect(newPerpetualMarkets.length).toEqual(1);
-    expectPerpetualMarketMatchesEvent(perpetualMarketEvent, newPerpetualMarkets[0]);
-    expectTimingStats();
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
-    expect(perpetualMarket).toBeDefined();
-    expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
-    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
-  });
+
+      await expect(onMessage(kafkaMessage)).rejects.toThrowError();
+    });
+
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'fails when liquidity tier doesnt exist for perpetual market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION = useSqlFunction;
+      await MarketTable.create(testConstants.defaultMarket);
+      await marketRefresher.updateMarkets();
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
+        perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+
+      await expect(onMessage(kafkaMessage)).rejects.toThrowError();
+    });
+
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'creates new perpetual market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION = useSqlFunction;
+      await Promise.all([
+        MarketTable.create(testConstants.defaultMarket),
+        LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      ]);
+      await liquidityTierRefresher.updateLiquidityTiers();
+      await marketRefresher.updateMarkets();
+
+      const transactionIndex: number = 0;
+
+      const perpetualMarketEvent: PerpetualMarketCreateEventV1 = defaultPerpetualMarketCreateEvent;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
+        perpetualMarketEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      // Confirm there is no existing perpetualMarket.
+      await expectNoExistingPerpetualMarkets();
+
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+
+      const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+        {},
+        [], {
+          orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
+        });
+      expect(newPerpetualMarkets.length).toEqual(1);
+      expectPerpetualMarketMatchesEvent(perpetualMarketEvent, newPerpetualMarkets[0]);
+      if (!useSqlFunction) {
+        expectTimingStats();
+      }
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher.getPerpetualMarketFromId('0');
+      expect(perpetualMarket).toBeDefined();
+      expectPerpetualMarket(perpetualMarket!, perpetualMarketEvent);
+      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+    });
 });
 
 function expectTimingStats() {

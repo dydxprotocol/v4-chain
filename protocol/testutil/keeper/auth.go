@@ -8,9 +8,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -47,7 +47,7 @@ func createAccountKeeper(
 		types.ProtoBaseAccount,
 		maccPerms,
 		sdk.Bech32MainPrefix,
-		types.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	return &k, storeKey

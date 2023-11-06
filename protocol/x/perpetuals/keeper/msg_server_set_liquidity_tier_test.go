@@ -1,11 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
@@ -30,7 +29,7 @@ func TestSetLiquidityTier(t *testing.T) {
 	}{
 		"Success: update name and initial margin ppm": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "large-cap",
@@ -43,7 +42,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Success: update all parameters": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",
@@ -56,7 +55,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Success: create a new liquidity tier": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id + 1,
 					Name:                   "medium-cap",
@@ -69,7 +68,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Failure: initial margin ppm exceeds max": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",
@@ -83,7 +82,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
 			msg: &types.MsgSetLiquidityTier{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				LiquidityTier: types.LiquidityTier{
 					Id:                     testLt.Id,
 					Name:                   "medium-cap",

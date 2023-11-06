@@ -2,12 +2,11 @@ package keeper_test
 
 import (
 	"context"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -41,7 +40,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params:    types.DefaultGenesis().Params,
 			},
 			expErr: false,
@@ -58,7 +57,7 @@ func TestMsgUpdateParams(t *testing.T) {
 		{
 			name: "invalid params: unordered durations",
 			input: &types.MsgUpdateDowntimeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.DowntimeParams{
 					Durations: []time.Duration{
 						5 * time.Second,

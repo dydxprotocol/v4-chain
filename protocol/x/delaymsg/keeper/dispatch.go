@@ -51,7 +51,17 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			events = append(events, res.GetEvents()...)
 			return nil
 		}); err != nil {
-			k.Logger(ctx).Error("failed to execute delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
+			k.Logger(ctx).Error(
+				"failed to execute delayed message",
+				types.IdLogKey,
+				id,
+				constants.ErrorLogKey,
+				err,
+				types.MessageContentLogKey,
+				msg.String(),
+				types.MessageTypeUrlLogKey,
+				delayedMsg.Msg.TypeUrl,
+			)
 		}
 	}
 

@@ -147,6 +147,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 			return app.New(
 				val.GetCtx().Logger,
 				tmdb.NewMemDB(),
+				tmdb.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -174,11 +175,19 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 // NewTestNetworkFixture returns a new simapp AppConstructor for network simulation tests
 func NewTestNetworkFixture() network.TestFixture {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", nil)
-	dydxApp := app.New(log.NewNopLogger(), tmdb.NewMemDB(), nil, true, appOptions)
+	dydxApp := app.New(
+		log.NewNopLogger(),
+		tmdb.NewMemDB(),
+		tmdb.NewMemDB(),
+		nil,
+		true,
+		appOptions,
+	)
 
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return app.New(
 			val.GetCtx().Logger,
+			tmdb.NewMemDB(),
 			tmdb.NewMemDB(),
 			nil,
 			true,

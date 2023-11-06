@@ -9,7 +9,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -258,13 +257,13 @@ func (k Keeper) ProcessSingleMatch(
 		}
 
 		// Stat quote quantums liquidated.
-		telemetry.IncrCounterWithLabels(
+		gometrics.AddSampleWithLabels(
 			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.Filled, metrics.QuoteQuantums},
 			metrics.GetMetricValueFromBigInt(notionalLiquidatedQuoteQuantums),
 			labels,
 		)
 		// Stat insurance fund delta.
-		telemetry.IncrCounterWithLabels(
+		gometrics.AddSampleWithLabels(
 			[]string{metrics.Liquidations, metrics.InsuranceFundDelta},
 			metrics.GetMetricValueFromBigInt(new(big.Int).Abs(takerInsuranceFundDelta)),
 			append(labels, metrics.GetLabelForBoolValue(metrics.Positive, takerInsuranceFundDelta.Sign() == 1)),

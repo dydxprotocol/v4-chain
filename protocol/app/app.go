@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"math"
 	"math/big"
@@ -10,11 +11,11 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"sync"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	sdklog "cosmossdk.io/log"
-
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -95,8 +96,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	// Lib
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
@@ -214,6 +214,9 @@ type App struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
+	db                dbm.DB
+	snapshotDB        dbm.DB
+	closeOnce         func() error
 
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
@@ -284,6 +287,8 @@ type App struct {
 	// delayed until after the gRPC service is initialized so that the gRPC service will be available and the daemons
 	// can correctly operate.
 	startDaemons func()
+
+	PriceFeedClient *pricefeedclient.Client
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -298,6 +303,7 @@ func assertAppPreconditions() {
 func New(
 	logger log.Logger,
 	db dbm.DB,
+	snapshotDB dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -369,13 +375,30 @@ func New(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
+		db:                db,
+		snapshotDB:        snapshotDB,
 	}
+	app.closeOnce = sync.OnceValue[error](
+		func() error {
+			if app.PriceFeedClient != nil {
+				app.PriceFeedClient.Stop()
+			}
+			if app.Server != nil {
+				app.Server.Stop()
+			}
+			return errors.Join(
+				// TODO(CORE-538): Remove this if possible during upgrade to Cosmos 0.50.
+				app.db.Close(),
+				app.snapshotDB.Close(),
+			)
+		},
+	)
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
-		appCodec, keys[upgradetypes.StoreKey], authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		appCodec, keys[upgradetypes.StoreKey], lib.GovModuleAddress.String())
 	bApp.SetParamStore(&app.ConsensusParamsKeeper)
 
 	// add capability keeper and ScopeToModule for ibc module
@@ -396,21 +419,21 @@ func New(
 		authtypes.ProtoBaseAccount,
 		maccPerms,
 		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
 		appCodec,
 		keys[banktypes.StoreKey],
 		app.AccountKeeper,
 		BlockedAddresses(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 	app.StakingKeeper = stakingkeeper.NewKeeper(
 		appCodec,
 		keys[stakingtypes.StoreKey],
 		app.AccountKeeper,
 		app.BankKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	app.DistrKeeper = distrkeeper.NewKeeper(
@@ -420,7 +443,7 @@ func New(
 		app.BankKeeper,
 		app.StakingKeeper,
 		authtypes.FeeCollectorName,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
@@ -428,12 +451,12 @@ func New(
 		legacyAmino,
 		keys[slashingtypes.StoreKey],
 		app.StakingKeeper,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	invCheckPeriod := cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod))
 	app.CrisisKeeper = crisiskeeper.NewKeeper(appCodec, keys[crisistypes.StoreKey], invCheckPeriod,
-		app.BankKeeper, authtypes.FeeCollectorName, authtypes.NewModuleAddress(govtypes.ModuleName).String())
+		app.BankKeeper, authtypes.FeeCollectorName, lib.GovModuleAddress.String())
 
 	app.FeeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
 
@@ -456,7 +479,7 @@ func New(
 		appCodec,
 		homePath,
 		app.BaseApp,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	// ... other modules keepers
@@ -476,7 +499,7 @@ func New(
 	*/
 	govKeeper := govkeeper.NewKeeper(
 		appCodec, keys[govtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
-		app.StakingKeeper, app.MsgServiceRouter(), govConfig, authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		app.StakingKeeper, app.MsgServiceRouter(), govConfig, lib.GovModuleAddress.String(),
 	)
 
 	app.GovKeeper = govKeeper.SetHooks(
@@ -546,7 +569,6 @@ func New(
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
-		appFlags.GrpcAddress,
 	)
 	// Setup server for pricefeed messages. The server will wait for gRPC messages containing price
 	// updates and then encode them into an in-memory cache shared by the prices module.
@@ -602,7 +624,7 @@ func New(
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
-			client := pricefeedclient.StartNewClient(
+			app.PriceFeedClient = pricefeedclient.StartNewClient(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
 				context.Background(),
@@ -614,7 +636,6 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			stoppable.RegisterServiceForTestCleanup(appFlags.GrpcAddress, client)
 		}
 
 		// Start Bridge Daemon.
@@ -675,8 +696,8 @@ func New(
 		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	pricesModule := pricesmodule.NewAppModule(appCodec, app.PricesKeeper, app.AccountKeeper, app.BankKeeper)
@@ -694,8 +715,8 @@ func New(
 		keys[blocktimemoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
@@ -706,7 +727,7 @@ func New(
 		bApp.MsgServiceRouter(),
 		// Permit delayed messages to be signed by the following modules.
 		[]string{
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
 		},
 	)
 	delayMsgModule := delaymsgmodule.NewAppModule(appCodec, app.DelayMsgKeeper)
@@ -719,8 +740,8 @@ func New(
 		app.DelayMsgKeeper,
 		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
 		[]string{
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	bridgeModule := bridgemodule.NewAppModule(appCodec, app.BridgeKeeper)
@@ -733,8 +754,8 @@ func New(
 		app.IndexerEventManager,
 		// gov module and delayMsg module accounts are allowed to send messages to the bridge module.
 		[]string{
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	perpetualsModule := perpetualsmodule.NewAppModule(appCodec, app.PerpetualsKeeper, app.AccountKeeper, app.BankKeeper)
@@ -746,8 +767,8 @@ func New(
 		tkeys[statsmoduletypes.TransientStoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	statsModule := statsmodule.NewAppModule(appCodec, app.StatsKeeper)
@@ -758,8 +779,8 @@ func New(
 		keys[feetiersmoduletypes.StoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	feeTiersModule := feetiersmodule.NewAppModule(appCodec, app.FeeTiersKeeper)
@@ -771,8 +792,8 @@ func New(
 		app.BlockTimeKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	vestModule := vestmodule.NewAppModule(appCodec, app.VestKeeper)
@@ -787,8 +808,8 @@ func New(
 		app.PricesKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	rewardsModule := rewardsmodule.NewAppModule(appCodec, app.RewardsKeeper)
@@ -818,8 +839,8 @@ func New(
 		tkeys[clobmoduletypes.TransientStoreKey],
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 		memClob,
 		app.SubaccountsKeeper,
@@ -855,8 +876,8 @@ func New(
 		app.IndexerEventManager,
 		// gov module and delayMsg module accounts are allowed to send messages to the sending module.
 		[]string{
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 	sendingModule := sendingmodule.NewAppModule(
@@ -1418,8 +1439,9 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 	app.SetAnteHandler(anteHandler)
 }
 
+// Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
-	return app.BaseApp.Close()
+	return app.closeOnce()
 }
 
 // RegisterSwaggerAPI registers swagger route with API Server

@@ -6,9 +6,8 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
@@ -35,8 +34,8 @@ func VestKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		authorities = []string{
-			authtypes.NewModuleAddress(bridgetypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			bridgetypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		}
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)

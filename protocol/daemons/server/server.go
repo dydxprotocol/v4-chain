@@ -4,7 +4,6 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
@@ -42,17 +41,14 @@ func NewServer(
 	grpcServer daemontypes.GrpcServer,
 	fileHandler daemontypes.FileHandler,
 	socketAddress string,
-	uniqueTestIdentifier string,
 ) *Server {
-	srv := &Server{
+	return &Server{
 		logger:        logger,
 		gsrv:          grpcServer,
 		fileHandler:   fileHandler,
 		socketAddress: socketAddress,
 		updateMonitor: types.NewUpdateFrequencyMonitor(types.DaemonStartupGracePeriod, logger),
 	}
-	stoppable.RegisterServiceForTestCleanup(uniqueTestIdentifier, srv)
-	return srv
 }
 
 // Stop stops the daemon server's gRPC service.
