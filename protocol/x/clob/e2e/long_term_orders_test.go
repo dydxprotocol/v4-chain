@@ -120,7 +120,8 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 			response abcitypes.ResponseDeliverTx,
 			txIndex int,
 		) (haltChain bool) {
-			if txIndex == 5 {
+			// "Other" msgs come directly after ProposedOperations which is first.
+			if txIndex == 1 {
 				require.True(t, response.IsErr())
 				require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), response.Code)
 			} else {
