@@ -100,7 +100,7 @@ export async function addCanceledOrderId(
 }
 
 /**
- * addCanceledOrderId adds the order id to the canceled orders cache.
+ * addCanceledOrderId adds the order id to the cacheKey's cache.
  *
  * @param orderId
  * @param timestamp

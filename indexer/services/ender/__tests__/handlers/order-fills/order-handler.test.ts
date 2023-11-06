@@ -1472,35 +1472,30 @@ describe('OrderHandler', () => {
       'via knex',
       false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-      true,
     ],
     [
       'limit',
       'via SQL function',
       true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-      true,
     ],
     [
       'post-only best effort canceled',
       'via knex',
       false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-      true,
     ],
     [
       'post-only best effort canceled',
       'via SQL function',
       true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-      true,
     ],
     [
       'post-only canceled',
       'via knex',
       false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-      false,
       OrderStatus.CANCELED,
     ],
     [
@@ -1508,7 +1503,6 @@ describe('OrderHandler', () => {
       'via SQL function',
       true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-      false,
       OrderStatus.CANCELED,
     ],
   ])('correctly sets status for short term %s orders (%s)', async (
@@ -1516,8 +1510,8 @@ describe('OrderHandler', () => {
     _name: string,
     useSqlFunction: boolean,
     timeInForce: IndexerOrder_TimeInForce,
-    isBestEffortCanceled: boolean, // either best effort canceled or canceled
-    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
+    // either BEST_EFFORT_CANCELED or CANCELED
+    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED, 
   ) => {
     config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
@@ -1560,9 +1554,9 @@ describe('OrderHandler', () => {
     });
 
     const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
-    if (isBestEffortCanceled === true) {
+    if (status === OrderStatus.BEST_EFFORT_CANCELED) {
       await CanceledOrdersCache.addBestEffortCanceledOrderId(makerOrderId, Date.now(), redisClient);
-    } else {
+    } else { // Status is only over CANCELED or BEST_EFFORT_CANCELED
       await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
     }
 
