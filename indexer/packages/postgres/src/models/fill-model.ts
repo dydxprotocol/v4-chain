@@ -84,7 +84,7 @@ export default class FillModel extends Model {
         transactionHash: { type: 'string' },
         createdAt: { type: 'string', format: 'date-time' },
         createdAtHeight: { type: 'string', pattern: IntegerPattern },
-        clientMetadata: { type: 'string', pattern: IntegerPattern },
+        clientMetadata: { type: ['string', 'null'], pattern: IntegerPattern },
         fee: { type: 'string', pattern: NumericPattern },
       },
     };
