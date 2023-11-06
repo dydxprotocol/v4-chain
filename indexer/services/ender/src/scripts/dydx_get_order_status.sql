@@ -14,7 +14,7 @@
   * 4. Short-term Limit & Post-only - If the order is in the CanceledOrdersCache, then it should be
   *    set to `BEST_EFFORT_CANCELED`, otherwise `OPEN`.
 */
-CREATE OR REPLACE FUNCTION get_order_status(total_filled numeric, size numeric, is_cancelled boolean, order_flags bigint, time_in_force text)
+CREATE OR REPLACE FUNCTION dydx_get_order_status(total_filled numeric, size numeric, is_cancelled boolean, order_flags bigint, time_in_force text)
 RETURNS text AS $$
 BEGIN
     IF total_filled >= size THEN

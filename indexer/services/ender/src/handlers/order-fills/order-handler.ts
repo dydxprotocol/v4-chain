@@ -100,7 +100,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         '${isOrderCanceled}'
       ) AS result;`,
       { txId: this.txId },
-    ).catch((error) => {
+    ).catch((error: Error) => {
       logger.error({
         at: 'orderHandler#handleViaSqlFunction',
         message: 'Failed to handle OrderFillEventV1',

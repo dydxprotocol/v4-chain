@@ -128,6 +128,7 @@ router.get(
         'HistoricalPnlController GET /',
         'Historical Pnl error',
         error,
+        req,
         res,
       );
     } finally {

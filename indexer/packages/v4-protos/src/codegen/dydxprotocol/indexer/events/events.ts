@@ -456,21 +456,18 @@ export interface DeleveragingEventV1 {
   /** ID of the subaccount that was used to offset the position. */
 
   offsetting?: IndexerSubaccountId;
-  /** The ID of the clob pair that was liquidated. */
+  /** The ID of the perpetual that was liquidated. */
 
-  clobPairId: number;
+  perpetualId: number;
   /**
    * The amount filled between the liquidated and offsetting position, in
    * base quantums.
    */
 
   fillAmount: Long;
-  /**
-   * The closing price in subticks. Bankruptcy price of liquidated subaccount
-   * is not guaranteed to be a multiple of subticks_per_tick.
-   */
+  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
 
-  subticks: Long;
+  price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   isBuy: boolean;
@@ -487,21 +484,18 @@ export interface DeleveragingEventV1SDKType {
   /** ID of the subaccount that was used to offset the position. */
 
   offsetting?: IndexerSubaccountIdSDKType;
-  /** The ID of the clob pair that was liquidated. */
+  /** The ID of the perpetual that was liquidated. */
 
-  clob_pair_id: number;
+  perpetual_id: number;
   /**
    * The amount filled between the liquidated and offsetting position, in
    * base quantums.
    */
 
   fill_amount: Long;
-  /**
-   * The closing price in subticks. Bankruptcy price of liquidated subaccount
-   * is not guaranteed to be a multiple of subticks_per_tick.
-   */
+  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
 
-  subticks: Long;
+  price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   is_buy: boolean;
@@ -1785,9 +1779,9 @@ function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
   return {
     liquidated: undefined,
     offsetting: undefined,
-    clobPairId: 0,
+    perpetualId: 0,
     fillAmount: Long.UZERO,
-    subticks: Long.UZERO,
+    price: Long.UZERO,
     isBuy: false
   };
 }
@@ -1802,16 +1796,16 @@ export const DeleveragingEventV1 = {
       IndexerSubaccountId.encode(message.offsetting, writer.uint32(18).fork()).ldelim();
     }
 
-    if (message.clobPairId !== 0) {
-      writer.uint32(24).uint32(message.clobPairId);
+    if (message.perpetualId !== 0) {
+      writer.uint32(24).uint32(message.perpetualId);
     }
 
     if (!message.fillAmount.isZero()) {
       writer.uint32(32).uint64(message.fillAmount);
     }
 
-    if (!message.subticks.isZero()) {
-      writer.uint32(40).uint64(message.subticks);
+    if (!message.price.isZero()) {
+      writer.uint32(40).uint64(message.price);
     }
 
     if (message.isBuy === true) {
@@ -1839,7 +1833,7 @@ export const DeleveragingEventV1 = {
           break;
 
         case 3:
-          message.clobPairId = reader.uint32();
+          message.perpetualId = reader.uint32();
           break;
 
         case 4:
@@ -1847,7 +1841,7 @@ export const DeleveragingEventV1 = {
           break;
 
         case 5:
-          message.subticks = (reader.uint64() as Long);
+          message.price = (reader.uint64() as Long);
           break;
 
         case 6:
@@ -1867,9 +1861,9 @@ export const DeleveragingEventV1 = {
     const message = createBaseDeleveragingEventV1();
     message.liquidated = object.liquidated !== undefined && object.liquidated !== null ? IndexerSubaccountId.fromPartial(object.liquidated) : undefined;
     message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
-    message.clobPairId = object.clobPairId ?? 0;
+    message.perpetualId = object.perpetualId ?? 0;
     message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
-    message.subticks = object.subticks !== undefined && object.subticks !== null ? Long.fromValue(object.subticks) : Long.UZERO;
+    message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
     message.isBuy = object.isBuy ?? false;
     return message;
   }
