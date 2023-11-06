@@ -1027,9 +1027,9 @@ func TestCancelShortTermOrder(t *testing.T) {
 		secondBlockOrders  []clobtypes.MsgPlaceOrder
 		secondBlockCancels []clobtypes.MsgCancelOrder
 
-		expectedOrderIdsInMemclob map[clobtypes.OrderId]bool
-		expectedCancelsInMemclob  map[clobtypes.OrderId]bool
-		expectedOrderFillAmounts  map[clobtypes.OrderId]uint64
+		expectedOrderIdsInMemclob          map[clobtypes.OrderId]bool
+		expectedCancelExpirationsInMemclob map[clobtypes.OrderId]uint32
+		expectedOrderFillAmounts           map[clobtypes.OrderId]uint64
 	}{
 		"Cancel unfilled short term order": {
 			firstBlockOrders: []clobtypes.MsgPlaceOrder{
@@ -1042,8 +1042,8 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: false,
 			},
-			expectedCancelsInMemclob: map[clobtypes.OrderId]bool{
-				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: true,
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 0,
@@ -1070,8 +1070,8 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: false,
 			},
-			expectedCancelsInMemclob: map[clobtypes.OrderId]bool{
-				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: true,
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 40,
@@ -1098,8 +1098,8 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: false,
 			},
-			expectedCancelsInMemclob: map[clobtypes.OrderId]bool{
-				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: true,
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 40,
@@ -1117,8 +1117,8 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: false,
 			},
-			expectedCancelsInMemclob: map[clobtypes.OrderId]bool{
-				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: true,
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
 			},
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5.Order.OrderId: 50,
@@ -1135,8 +1135,42 @@ func TestCancelShortTermOrder(t *testing.T) {
 			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId: true,
 			},
-			expectedCancelsInMemclob: map[clobtypes.OrderId]bool{
-				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: true,
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
+			},
+		},
+		"Cancel with GTB < existing cancel GTB is not placed on memclob": {
+			firstBlockCancels: []clobtypes.MsgCancelOrder{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5,
+				*clobtypes.NewMsgCancelOrderShortTerm(
+					clobtypes.OrderId{
+						SubaccountId: constants.Alice_Num0,
+						ClientId:     0,
+						ClobPairId:   0,
+					},
+					4,
+				),
+			},
+
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 5,
+			},
+		},
+		"Cancel with GTB > existing cancel GTB is placed on memclob": {
+			firstBlockCancels: []clobtypes.MsgCancelOrder{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5,
+				*clobtypes.NewMsgCancelOrderShortTerm(
+					clobtypes.OrderId{
+						SubaccountId: constants.Alice_Num0,
+						ClientId:     0,
+						ClobPairId:   0,
+					},
+					6,
+				),
+			},
+
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				CancelOrder_Alice_Num0_Id0_Clob0_GTB5.OrderId: 6,
 			},
 		},
 	}
@@ -1155,8 +1189,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 			}
 			for _, cancel := range tc.firstBlockCancels {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, cancel) {
-					resp := tApp.CheckTx(checkTx)
-					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+					tApp.CheckTx(checkTx)
 				}
 			}
 
@@ -1182,9 +1215,10 @@ func TestCancelShortTermOrder(t *testing.T) {
 				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
 				require.Equal(t, shouldHaveOrder, exists)
 			}
-			for orderId, shouldHaveCancel := range tc.expectedCancelsInMemclob {
-				_, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(ctx, orderId)
-				require.Equal(t, shouldHaveCancel, exists)
+			for orderId, expectedCancelExpirationBlock := range tc.expectedCancelExpirationsInMemclob {
+				cancelExpirationBlock, exists := tApp.App.ClobKeeper.MemClob.GetCancelOrder(ctx, orderId)
+				require.True(t, exists)
+				require.Equal(t, expectedCancelExpirationBlock, cancelExpirationBlock)
 			}
 			for orderId, expectedFillAmount := range tc.expectedOrderFillAmounts {
 				_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
