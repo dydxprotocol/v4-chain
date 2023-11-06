@@ -707,7 +707,7 @@ describe('OrderHandler', () => {
         totalFilled: totalMakerOrderFilled,
         price,
         status: isOrderCanceled
-          ? OrderStatus.BEST_EFFORT_CANCELED
+          ? OrderStatus.CANCELED
           : OrderStatus.OPEN, // orderSize > totalFilled so status is open
         clobPairId: defaultClobPairId,
         side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
@@ -1359,6 +1359,261 @@ describe('OrderHandler', () => {
     await expectNoCandles();
   });
 
+<<<<<<< HEAD
+=======
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])('correctly sets status for short term IOC orders (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const makerQuantums: number = 100;
+    const makerSubticks: number = 1_000_000;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: makerQuantums,
+      subticks: makerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerSubticks: number = 150_000;
+    const takerQuantums: number = 10;
+    const takerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: takerQuantums,
+      subticks: takerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+      reduceOnly: true,
+      clientMetadata: 0,
+    });
+
+    const fillAmount: number = takerQuantums;
+    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
+      makerOrderProto,
+      takerOrderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await Promise.all([
+      // initial position for subaccount 1
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+      // initial position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+    ]);
+
+    await onMessage(kafkaMessage);
+
+    const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
+    const takerOrderId: string = OrderTable.orderIdToUuid(takerOrderProto.orderId!);
+
+    const [makerOrder, takerOrder]: [
+      OrderFromDatabase | undefined,
+      OrderFromDatabase | undefined
+    ] = await Promise.all([
+      OrderTable.findById(makerOrderId),
+      OrderTable.findById(takerOrderId),
+    ]);
+
+    expect(makerOrder).toBeDefined();
+    expect(takerOrder).toBeDefined();
+
+    // maker order is partially filled
+    expect(makerOrder!.status).toEqual(OrderStatus.CANCELED);
+    // taker order is fully filled
+    expect(takerOrder!.status).toEqual(OrderStatus.FILLED);
+  });
+
+  it.each([
+    [
+      'limit',
+      'via knex',
+      false,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+    ],
+    [
+      'limit',
+      'via SQL function',
+      true,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+    ],
+    [
+      'post-only best effort canceled',
+      'via knex',
+      false,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+    ],
+    [
+      'post-only best effort canceled',
+      'via SQL function',
+      true,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+    ],
+    [
+      'post-only canceled',
+      'via knex',
+      false,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
+    ],
+    [
+      'post-only canceled',
+      'via SQL function',
+      true,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
+    ],
+  ])('correctly sets status for short term %s orders (%s)', async (
+    _orderType: string,
+    _name: string,
+    useSqlFunction: boolean,
+    timeInForce: IndexerOrder_TimeInForce,
+    // either BEST_EFFORT_CANCELED or CANCELED
+    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
+  ) => {
+    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const makerQuantums: number = 100;
+    const makerSubticks: number = 1_000_000;
+
+    const makerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_BUY,
+      quantums: makerQuantums,
+      subticks: makerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce,
+      reduceOnly: false,
+      clientMetadata: 0,
+    });
+
+    const takerSubticks: number = 150_000;
+    const takerQuantums: number = 100;
+    const takerOrderProto: IndexerOrder = createOrder({
+      subaccountId: defaultSubaccountId2,
+      clientId: 0,
+      side: IndexerOrder_Side.SIDE_SELL,
+      quantums: takerQuantums,
+      subticks: takerSubticks,
+      goodTilOneof: {
+        goodTilBlock: 10,
+      },
+      clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
+      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      timeInForce,
+      reduceOnly: true,
+      clientMetadata: 0,
+    });
+
+    const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
+    if (status === OrderStatus.BEST_EFFORT_CANCELED) {
+      await CanceledOrdersCache.addBestEffortCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    } else { // Status is only over CANCELED or BEST_EFFORT_CANCELED
+      await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    }
+
+    const fillAmount: number = 10;
+    const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
+      makerOrderProto,
+      takerOrderProto,
+      fillAmount,
+      fillAmount,
+      fillAmount,
+    );
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+      orderFillEvent,
+      transactionIndex,
+      eventIndex,
+      height: parseInt(defaultHeight, 10),
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await Promise.all([
+      // initial position for subaccount 1
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+      // initial position for subaccount 2
+      PerpetualPositionTable.create({
+        ...defaultPerpetualPosition,
+        subaccountId: testConstants.defaultSubaccountId2,
+        perpetualId: testConstants.defaultPerpetualMarket3.id,
+      }),
+    ]);
+
+    await onMessage(kafkaMessage);
+
+    const takerOrderId: string = OrderTable.orderIdToUuid(takerOrderProto.orderId!);
+
+    const [makerOrder, takerOrder]: [
+      OrderFromDatabase | undefined,
+      OrderFromDatabase | undefined
+    ] = await Promise.all([
+      OrderTable.findById(makerOrderId),
+      OrderTable.findById(takerOrderId),
+    ]);
+
+    expect(makerOrder).toBeDefined();
+    expect(takerOrder).toBeDefined();
+
+    // maker order is partially filled, and in CanceledOrdersCache
+    expect(makerOrder!.status).toEqual(status);
+    // taker order is partially filled, and not in CanceledOrdersCache
+    expect(takerOrder!.status).toEqual(OrderStatus.OPEN);
+  });
+
+>>>>>>> 32f713f2 ([IND-450]: Prevent orders transitioning from canceled to best effort canceled (#753))
   async function expectDefaultOrderAndFillSubaccountKafkaMessages(
     producerSendMock: jest.SpyInstance,
     eventId: Buffer,
