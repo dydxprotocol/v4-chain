@@ -35,13 +35,24 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
   eventType: string = 'DeleveragingEvent';
 
   public getParallelizationIds(): string[] {
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromId(this.event.perpetualId.toString());
+    if (perpetualMarket === undefined) {
+      logger.error({
+        at: 'DeleveragingHandler#internalHandle',
+        message: 'Unable to find perpetual market',
+        perpetualId: this.event.perpetualId,
+        event: this.event,
+      });
+      throw new Error(`Unable to find perpetual market with perpetualId: ${this.event.perpetualId}`);
+    }
     const offsettingSubaccountUuid: string = SubaccountTable
       .uuid(this.event.offsetting!.owner, this.event.offsetting!.number);
     const deleveragedSubaccountUuid: string = SubaccountTable
       .uuid(this.event.liquidated!.owner, this.event.liquidated!.number);
     return [
-      `${this.eventType}_${offsettingSubaccountUuid}_${this.event.clobPairId}`,
-      `${this.eventType}_${deleveragedSubaccountUuid}_${this.event.clobPairId}`,
+      `${this.eventType}_${offsettingSubaccountUuid}_${perpetualMarket.clobPairId}`,
+      `${this.eventType}_${deleveragedSubaccountUuid}_${perpetualMarket.clobPairId}`,
       // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
       // processed in parallel
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
@@ -67,7 +78,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       perpetualMarket.atomicResolution,
     );
     const price: string = protocolTranslations.subticksToPrice(
-      event.subticks.toString(10),
+      event.price.toString(10),
       perpetualMarket,
     );
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
@@ -79,7 +90,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       side: event.isBuy ? OrderSide.BUY : OrderSide.SELL,
       liquidity: Liquidity.TAKER,
       type: FillType.DELEVERAGED,
-      clobPairId: event.clobPairId.toString(),
+      clobPairId: perpetualMarket.clobPairId,
       size,
       price,
       quoteAmount: Big(size).times(price).toFixed(),
@@ -128,7 +139,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
         at: 'deleveragingHandler#getLatestPerpetualPosition',
         message: 'Unable to find existing perpetual position.',
         blockHeight: this.block.height,
-        clobPairId: event.clobPairId,
+        perpetualId: event.perpetualId,
         subaccountId: deleveraged
           ? SubaccountTable.uuid(event.liquidated!.owner, event.liquidated!.number)
           : SubaccountTable.uuid(event.offsetting!.owner, event.offsetting!.number),
@@ -180,7 +191,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       perpetualMarket.atomicResolution,
     );
     const price: string = protocolTranslations.subticksToPrice(
-      event.subticks.toString(10),
+      event.price.toString(10),
       perpetualMarket,
     );
 
@@ -259,18 +270,18 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const clobPairId:
-    string = this.event.clobPairId.toString();
+    const perpetualId:
+    string = this.event.perpetualId.toString();
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(clobPairId);
+      .getPerpetualMarketFromId(perpetualId);
     if (perpetualMarket === undefined) {
       logger.error({
         at: 'DeleveragingHandler#internalHandle',
         message: 'Unable to find perpetual market',
-        clobPairId,
+        perpetualId,
         event: this.event,
       });
-      throw new Error(`Unable to find perpetual market with clobPairId: ${clobPairId}`);
+      throw new Error(`Unable to find perpetual market with perpetualId: ${perpetualId}`);
     }
     const fills: FillFromDatabase[] = await this.runFuncWithTimingStatAndErrorLogging(
       Promise.all(

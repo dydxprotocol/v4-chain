@@ -7,6 +7,7 @@ import {
   FillType,
   Liquidity,
   OrderSide,
+  PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualPositionCreateObject,
   PerpetualPositionStatus,
@@ -105,7 +106,7 @@ describe('DeleveragingHandler', () => {
 
   const offsettingPerpetualPosition: PerpetualPositionCreateObject = {
     subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.offsetting!),
-    perpetualId: testConstants.defaultPerpetualMarket.id,
+    perpetualId: testConstants.defaultPerpetualMarket2.id,
     side: PositionSide.LONG,
     status: PerpetualPositionStatus.OPEN,
     size: '10',
@@ -152,9 +153,15 @@ describe('DeleveragingHandler', () => {
       deleveragedSubaccountId,
     );
 
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromId(
+        defaultDeleveragingEvent.perpetualId.toString(),
+      );
+    expect(perpetualMarket).toBeDefined();
+
     expect(handler.getParallelizationIds()).toEqual([
-      `${handler.eventType}_${offsettingSubaccountUuid}_${defaultDeleveragingEvent.clobPairId}`,
-      `${handler.eventType}_${deleveragedSubaccountUuid}_${defaultDeleveragingEvent.clobPairId}`,
+      `${handler.eventType}_${offsettingSubaccountUuid}_${perpetualMarket!.clobPairId}`,
+      `${handler.eventType}_${deleveragedSubaccountUuid}_${perpetualMarket!.clobPairId}`,
       // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
       // processed in parallel
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
@@ -230,6 +237,10 @@ describe('DeleveragingHandler', () => {
     const quoteAmount: string = '0.1'; // quote amount is price * fillAmount = 1e5 * 1e-6 = 1e-1
     const totalFilled: string = '0.000001'; // fillAmount in human = 1e4 * 1e-10 = 1e-6
     const price: string = '100000'; // 10^9*10^-8*10^-6/10^-10=10^5
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+      .getPerpetualMarketFromId(
+        defaultDeleveragingEvent.perpetualId.toString(),
+      );
 
     await expectFillInDatabase({
       subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.offsetting!),
@@ -243,7 +254,7 @@ describe('DeleveragingHandler', () => {
       createdAt: defaultDateTime.toISO(),
       createdAtHeight: defaultHeight,
       type: FillType.OFFSETTING,
-      clobPairId: defaultDeleveragingEvent.clobPairId.toString(),
+      clobPairId: perpetualMarket!.clobPairId,
       side: OrderSide.SELL,
       orderFlags: '0',
       clientMetadata: null,
@@ -262,7 +273,7 @@ describe('DeleveragingHandler', () => {
       createdAt: defaultDateTime.toISO(),
       createdAtHeight: defaultHeight,
       type: FillType.DELEVERAGED,
-      clobPairId: defaultDeleveragingEvent.clobPairId.toString(),
+      clobPairId: perpetualMarket!.clobPairId,
       side: OrderSide.BUY,
       orderFlags: '0',
       clientMetadata: null,
