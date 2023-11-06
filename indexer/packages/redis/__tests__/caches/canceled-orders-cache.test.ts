@@ -4,8 +4,11 @@ import {
   CANCELED_ORDER_WINDOW_SIZE,
   isOrderCanceled,
   addCanceledOrderId,
-  removeOrderFromCache,
+  removeOrderFromCaches,
+  getOrderCanceledStatus,
+  addBestEffortCanceledOrderId,
 } from '../../src/caches/canceled-orders-cache';
+import { CanceledOrderStatus } from '../../src';
 
 describe('cancelledOrdersCache', () => {
   const openOrderId1: string = 'order1';
@@ -40,13 +43,13 @@ describe('cancelledOrdersCache', () => {
     expect(isCanceled1).toEqual(true);
     expect(isCanceled2).toEqual(true);
 
-    let numRemoved: number = await removeOrderFromCache(openOrderId1, client);
-    expect(numRemoved).toEqual(1);
+    await removeOrderFromCaches(openOrderId1, client);
     isCanceled1 = await isOrderCanceled(openOrderId1, client);
     expect(isCanceled1).toEqual(false);
 
-    numRemoved = await removeOrderFromCache(openOrderId3, client);
-    expect(numRemoved).toEqual(0);
+    await removeOrderFromCaches(openOrderId3, client);
+    const isCanceled3: boolean = await isOrderCanceled(openOrderId1, client);
+    expect(isCanceled3).toEqual(false);
   });
 
   it('removes cancelled orders outside of window size', async () => {
@@ -61,4 +64,22 @@ describe('cancelledOrdersCache', () => {
     expect(isCanceled3).toEqual(true);
   });
 
+  describe('getOrderCanceledStatus', () => {
+    it('correctly returns CANCELED', async () => {
+      await addCanceledOrderId(openOrderId1, 10, client);
+      const status: CanceledOrderStatus = await getOrderCanceledStatus(openOrderId1, client);
+      expect(status).toEqual(CanceledOrderStatus.CANCELED);
+    });
+
+    it('correctly returns BEST_EFFORT_CANCELED', async () => {
+      await addBestEffortCanceledOrderId(openOrderId1, 10, client);
+      const status: CanceledOrderStatus = await getOrderCanceledStatus(openOrderId1, client);
+      expect(status).toEqual(CanceledOrderStatus.BEST_EFFORT_CANCELED);
+    });
+
+    it('correctly returns NOT_CANCELED', async () => {
+      const status: CanceledOrderStatus = await getOrderCanceledStatus(openOrderId1, client);
+      expect(status).toEqual(CanceledOrderStatus.NOT_CANCELED);
+    });
+  });
 });
