@@ -29,6 +29,7 @@ import {
   uuid,
   TransactionTable,
   TransactionFromDatabase,
+  TransferTable,
   BlockTable,
   TendermintEventFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
@@ -292,7 +293,7 @@ describe('SQL Function Tests', () => {
       5,
       6,
     ],
-  ])('dydx_uuid_from_perpetual_position_parts (%s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
+  ])('dydx_uuid_from_perpetual_position_parts (%s, %s, %s, %s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
     const subaccountUuid = SubaccountTable.subaccountIdToUuid(subaccountId);
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
@@ -311,6 +312,66 @@ describe('SQL Function Tests', () => {
 
     result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_subaccount_id_parts('${subaccountId.owner}', '${subaccountId.number}') AS result`);
     expect(result).toEqual(SubaccountTable.subaccountIdToUuid(subaccountId));
+  });
+
+  it.each([
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      'senderWallet',
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      undefined,
+      undefined,
+      'recipientWallet',
+    ],
+    [
+      undefined,
+      undefined,
+      'senderWallet',
+      'recipientWallet',
+    ],
+  ])('dydx_uuid_from_transfer_parts (%s, %s, %s, %s)', async (
+    senderSubaccountId: IndexerSubaccountId | undefined,
+    recipientSubaccountId: IndexerSubaccountId | undefined,
+    senderWalletAddress: string | undefined,
+    recipientWalletAddress: string | undefined) => {
+    const eventId: Buffer = TendermintEventTable.createEventId('1', 2, 3);
+    const assetId: string = '0';
+    const senderSubaccountUuid: string | undefined = senderSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(senderSubaccountId) : undefined;
+    const recipientSubaccountUuid: string | undefined = recipientSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(recipientSubaccountId) : undefined;
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_transfer_parts('\\x${eventId.toString('hex')}'::bytea, '${assetId}', ${senderSubaccountUuid ? `'${senderSubaccountUuid}'` : 'NULL'}, ${recipientSubaccountUuid ? `'${recipientSubaccountUuid}'` : 'NULL'}, ${senderWalletAddress ? `'${senderWalletAddress}'` : 'NULL'}, ${recipientWalletAddress ? `'${recipientWalletAddress}'` : 'NULL'}) AS result`);
+    expect(result).toEqual(TransferTable.uuid(
+      eventId,
+      assetId,
+      senderSubaccountUuid,
+      recipientSubaccountUuid,
+      senderWalletAddress,
+      recipientWalletAddress,
+    ));
   });
 
   it.each([

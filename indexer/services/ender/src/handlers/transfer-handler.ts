@@ -1,17 +1,23 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   AssetFromDatabase,
+  AssetModel,
   assetRefresher,
   protocolTranslations,
+  storeHelpers,
   SubaccountMessageContents,
   SubaccountTable,
   TendermintEventTable,
   TransferCreateObject,
   TransferFromDatabase,
+  TransferModel,
   TransferTable,
   WalletTable,
 } from '@dydxprotocol-indexer/postgres';
 import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
+import config from '../config';
 import { generateTransferContents } from '../helpers/kafka-helper';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent, TransferEventType } from '../lib/types';
@@ -25,8 +31,50 @@ export class TransferHandler extends Handler<TransferEventV1> {
     return [];
   }
 
-  public async internalHandle(
-  ): Promise<ConsolidatedKafkaEvent[]> {
+  // eslint-disable-next-line @typescript-eslint/require-await
+  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+    if (config.USE_TRANSFER_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnex();
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
+      this.indexerTendermintEvent,
+    );
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const result: pg.QueryResult = await storeHelpers.rawQuery(
+      `SELECT dydx_transfer_handler(
+        ${this.block.height},
+        '${this.block.time?.toISOString()}',
+        '${JSON.stringify(TransferEventV1.decode(eventDataBinary))}',
+        ${this.indexerTendermintEvent.eventIndex},
+        ${transactionIndex},
+        '${this.block.txHashes[transactionIndex]}'
+      ) AS result;`,
+      { txId: this.txId },
+    ).catch((error: Error) => {
+      logger.error({
+        at: 'TransferHandler#handleViaSqlFunction',
+        message: 'Failed to handle TransferEventV1',
+        error,
+      });
+
+      throw error;
+    });
+
+    const asset: AssetFromDatabase = AssetModel.fromJson(
+      result.rows[0].result.asset) as AssetFromDatabase;
+    const transfer: TransferFromDatabase = TransferModel.fromJson(
+      result.rows[0].result.transfer) as TransferFromDatabase;
+    return this.generateKafkaEvents(
+      transfer,
+      asset,
+    );
+  }
+
+  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     await this.runFuncWithTimingStatAndErrorLogging(
       Promise.all([
         this.upsertRecipientSubaccount(),

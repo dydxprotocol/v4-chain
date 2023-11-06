@@ -11,6 +11,7 @@ import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
+import TransferModel from './models/transfer-model';
 import {
   APITimeInForce,
   CandleResolution,
@@ -95,6 +96,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   PerpetualMarketModel,
   PerpetualPositionModel,
   SubaccountModel,
+  TransferModel,
 ];
 
 export type SpecifiedClobPairStatus =

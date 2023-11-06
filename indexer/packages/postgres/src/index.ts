@@ -12,6 +12,7 @@ export { default as OraclePriceModel } from './models/oracle-price-model';
 export { default as OrderModel } from './models/order-model';
 export { default as PerpetualMarketModel } from './models/perpetual-market-model';
 export { default as PerpetualPositionModel } from './models/perpetual-position-model';
+export { default as TransferModel } from './models/transfer-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';
