@@ -39,6 +39,7 @@ import {
   redisTestConstants,
   SubaccountOrderIdsCache,
   updateOrder,
+  CanceledOrderStatus,
 } from '@dydxprotocol-indexer/redis';
 import {
   OffChainUpdateV1,
@@ -58,8 +59,7 @@ import { OrderRemoveHandler } from '../../src/handlers/order-remove-handler';
 import { OrderbookSide } from '../../src/lib/types';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import {
-  expectCanceledOrdersCacheEmpty,
-  expectCanceledOrdersCacheFound,
+  expectCanceledOrderStatus,
   expectOpenOrderIds,
   expectOrderbookLevelCache,
   handleOrderUpdate,
@@ -308,7 +308,7 @@ describe('OrderRemoveHandler', () => {
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
         // Check order is removed from open orders cache
         expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []),
-        expectCanceledOrdersCacheFound(expectedOrderUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -442,6 +442,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.BEST_EFFORT_CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -577,6 +578,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheEmpty(expectedOrderUuid),
           expectOrdersDataCacheEmpty(removedOrderId),
           expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
         ]);
 
         // Subaccounts message is sent first followed by orderbooks message
@@ -711,6 +713,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheEmpty(expectedOrderUuid),
           expectOrdersDataCacheEmpty(removedOrderId),
           expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
         ]);
 
         // Subaccounts message is sent first followed by orderbooks message
@@ -846,6 +849,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheEmpty(expectedOrderUuid),
           expectOrdersDataCacheEmpty(removedOrderId),
           expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.BEST_EFFORT_CANCELED),
         ]);
 
         // no orderbook message because no change in orderbook levels
@@ -928,6 +932,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheEmpty(expectedOrderUuid),
           expectOrdersDataCacheEmpty(removedOrderId),
           expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
         ]);
 
         // no orderbook message because no change in orderbook levels
@@ -1107,7 +1112,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
-        expectCanceledOrdersCacheEmpty(expectedOrderUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -1226,6 +1231,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -1360,6 +1366,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -1485,6 +1492,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
       ]);
 
       // Subaccounts message is sent first followed by orderbooks message
@@ -1602,6 +1610,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
         expectSubaccountsOrderIdsCacheEmpty(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
       ]);
       expectNoWebsocketMessagesSent(producerSendSpy);
       expectTimingStats(true, true);
@@ -1663,6 +1672,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheFound(expectedOrderUuid),
           expectOrdersDataCacheFound(removedOrderId),
           expectSubaccountsOrderIdsCacheFound(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
         ]);
 
         expectTimingStats(false, false, false, false, true);
@@ -1725,6 +1735,7 @@ describe('OrderRemoveHandler', () => {
           expectOrdersCacheFound(expectedOrderUuid),
           expectOrdersDataCacheFound(removedOrderId),
           expectSubaccountsOrderIdsCacheFound(redisTestConstants.defaultSubaccountUuid),
+          expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
         ]);
 
         expectTimingStats(false, false, false, false, true, true);
@@ -1804,6 +1815,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheFound(expectedOrderUuid),
         expectOrdersDataCacheFound(removedOrderId),
         expectSubaccountsOrderIdsCacheFound(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
       ]);
 
       expectTimingStats(false, false, false, false, true, true);
@@ -1860,6 +1872,7 @@ describe('OrderRemoveHandler', () => {
         expectOrdersCacheFound(expectedOrderUuid),
         expectOrdersDataCacheFound(removedOrderId),
         expectSubaccountsOrderIdsCacheFound(redisTestConstants.defaultSubaccountUuid),
+        expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED),
       ]);
 
       expectTimingStats(false, false, false, false, true, true);
