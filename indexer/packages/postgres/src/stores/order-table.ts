@@ -26,6 +26,7 @@ export function uuid(
   clobPairId: string,
   orderFlags: string,
 ): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(
     Buffer.from(
       `${subaccountId}-${clientId}-${clobPairId}-${orderFlags}`,
