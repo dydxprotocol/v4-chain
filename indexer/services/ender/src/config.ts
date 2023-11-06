@@ -29,6 +29,9 @@ export const configSchema = {
   USE_LIQUIDATION_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_LIQUIDITY_TIER_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_MARKET_CREATE_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),

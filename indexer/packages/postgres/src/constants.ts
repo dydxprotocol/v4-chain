@@ -4,6 +4,7 @@ import config from './config';
 import AssetModel from './models/asset-model';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
+import LiquidityTiersModel from './models/liquidity-tiers-model';
 import MarketModel from './models/market-model';
 import OraclePriceModel from './models/oracle-price-model';
 import OrderModel from './models/order-model';
@@ -87,6 +88,7 @@ export const SQL_TO_JSON_DEFINED_MODELS = [
   AssetModel,
   AssetPositionModel,
   FillModel,
+  LiquidityTiersModel,
   MarketModel,
   OraclePriceModel,
   OrderModel,
