@@ -1,10 +1,10 @@
 CREATE OR REPLACE FUNCTION dydx_update_perpetual_position(
     subaccount_uuid uuid,
-    perpetual_id uuid,
+    perpetual_id bigint,
     side text,
     size numeric,
     price numeric
-) RETURNS jsonb AS $$
+) RETURNS perpetual_positions AS $$
 DECLARE
     perpetual_position_record RECORD;
 BEGIN
@@ -44,6 +44,6 @@ BEGIN
     WHERE "id" = perpetual_position_record.id;
 
     -- Return the updated perpetual position record as jsonb
-    RETURN dydx_to_jsonb(perpetual_position_record);
+    RETURN perpetual_position_record;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$ LANGUAGE plpgsql;

@@ -11,7 +11,7 @@
   Returns: JSON object containing fields:
     - liquidated_fill: The updated liquidated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
     - offsetting_fill: The updated liquidated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
-    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
+    - perpetual_market: The perpetual market for the deleveraging in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
     - liquidated_perpetual_position: The updated liquidated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
     - offsetting_perpetual_position: The updated offsetting perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
 */
@@ -33,7 +33,6 @@ DECLARE
     liquidated_side text;
     offsetting_side text;
     size numeric;
-    fee numeric;
     price numeric;
     event_id bytea;
 BEGIN
@@ -59,9 +58,9 @@ BEGIN
 
     liquidated_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'liquidated');
     offsetting_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'offsetting');
-    liquidated_side = dydx_from_protocol_is_buy(event_data->'isBuy');
+    liquidated_side = dydx_from_protocol_is_buy((event_data->'isBuy')::bool);
     offsetting_side = CASE WHEN liquidated_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
-    clob_pair_id = perpetual_market_record."clobPairId"
+    clob_pair_id = perpetual_market_record."clobPairId";
 
     /* Insert the associated fill records for this deleveraging event. */
     event_id = dydx_event_id_from_parts(
@@ -110,13 +109,13 @@ BEGIN
         perpetual_id,
         liquidated_side,
         size,
-        price)
+        price);
     offsetting_perpetual_position_record = dydx_update_perpetual_position(
         offsetting_subaccount_uuid,
             perpetual_id,
             offsetting_side,
             size,
-            price)
+            price);
 
 
     RETURN jsonb_build_object(

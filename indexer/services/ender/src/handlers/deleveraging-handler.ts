@@ -177,12 +177,12 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
         '${JSON.stringify(DeleveragingEventV1.decode(eventDataBinary))}', 
         ${this.indexerTendermintEvent.eventIndex}, 
         ${transactionIndex}, 
-        '${this.block.txHashes[transactionIndex]}', 
+        '${this.block.txHashes[transactionIndex]}' 
       ) AS result;`,
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'orderHandler#handleViaSqlFunction',
+        at: 'deleveragingHandler#handleViaSqlFunction',
         message: 'Failed to handle DeleveragingEventV1',
         error,
       });
