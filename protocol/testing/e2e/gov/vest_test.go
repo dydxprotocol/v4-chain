@@ -18,6 +18,8 @@ import (
 var (
 	TEST_START_TIME         = time.Date(2023, 10, 2, 0, 0, 0, 0, time.UTC)
 	TEST_END_TIME           = time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+	TEST_VESTER_ACCOUNT_1   = "random_vester"
+	TEST_VESTER_ACCOUNT_2   = "random_vester_2"
 	TEST_GENESIS_VEST_ENTRY = vesttypes.VestEntry{
 		VesterAccount:   "genesis_vester",
 		TreasuryAccount: "genesis_treasury",
@@ -37,7 +39,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -51,7 +53,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -59,14 +61,14 @@ func TestSetVestEntry_Success(t *testing.T) {
 					},
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1},
 		},
 		"Success: create two new vest entries": {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -76,7 +78,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester_2",
+						VesterAccount:   TEST_VESTER_ACCOUNT_2,
 						TreasuryAccount: "random_treasury_2",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME.Add(time.Hour),
@@ -90,7 +92,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -100,7 +102,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury_2",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME.Add(time.Hour),
@@ -114,7 +116,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -124,7 +126,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury_2",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME.Add(time.Hour),
@@ -132,7 +134,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 					},
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1},
 		},
 	}
 
@@ -219,7 +221,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -234,7 +236,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_END_TIME,
@@ -249,7 +251,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{
 					Authority: constants.BobAccAddress.String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -264,7 +266,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{ // Valid message.
 					Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -274,7 +276,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				&vesttypes.MsgSetVestEntry{ // Invalid message (due to invalid authority).
 					Authority: constants.BobAccAddress.String(),
 					Entry: vesttypes.VestEntry{
-						VesterAccount:   "random_vester",
+						VesterAccount:   TEST_VESTER_ACCOUNT_1,
 						TreasuryAccount: "random_treasury",
 						Denom:           "adv4tnt",
 						StartTime:       TEST_START_TIME,
@@ -327,23 +329,23 @@ func TestDeleteVestEntry_Success(t *testing.T) {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1},
 		},
 		"Success: delete two vest entries": {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester_2",
+					VesterAccount: TEST_VESTER_ACCOUNT_2,
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester", "random_vester_2"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1, TEST_VESTER_ACCOUNT_2},
 		},
 	}
 
@@ -408,7 +410,7 @@ func TestDeleteVestEntry_Failure(t *testing.T) {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 			},
 		},
@@ -416,36 +418,36 @@ func TestDeleteVestEntry_Failure(t *testing.T) {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1},
 		},
 		"Failure: second vest entry to delete does not exist": {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-					VesterAccount: "random_vester_2",
+					VesterAccount: TEST_VESTER_ACCOUNT_2,
 				},
 			},
-			genesisVestEntryKeys: []string{"random_vester"},
+			genesisVestEntryKeys: []string{TEST_VESTER_ACCOUNT_1},
 		},
 		"Failure: invalid authority": {
 			msgs: []sdk.Msg{
 				&vesttypes.MsgDeleteVestEntry{
 					Authority:     constants.BobAccAddress.String(),
-					VesterAccount: "random_vester",
+					VesterAccount: TEST_VESTER_ACCOUNT_1,
 				},
 			},
-			genesisVestEntryKeys:     []string{"random_vester"},
+			genesisVestEntryKeys:     []string{TEST_VESTER_ACCOUNT_1},
 			expectSubmitProposalFail: true,
 		},
 	}
