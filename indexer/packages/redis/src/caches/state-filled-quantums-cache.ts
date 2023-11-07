@@ -8,9 +8,9 @@ export const STATE_FILLED_QUANTUMS_TTL_SECONDS: number = 300; // 5 minutes
 /**
  * Updates the state-filled quantums for an order id. This is the total filled quantums of the order
  * in the state of the network.
- * @param orderId 
- * @param filledQuantums 
- * @param client 
+ * @param orderId
+ * @param filledQuantums
+ * @param client
  */
 export async function updateStateFilledQuantums(
   orderId: string,
@@ -27,9 +27,9 @@ export async function updateStateFilledQuantums(
 /**
  * Gets the state-filled quantums for an order id. This is the total filled quantums of the order
  * in the state of the network.
- * @param orderId 
- * @param client 
- * @returns 
+ * @param orderId
+ * @param client
+ * @returns
  */
 export async function getStateFilledQuantums(
   orderId: string,
