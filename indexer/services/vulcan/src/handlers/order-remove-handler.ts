@@ -39,7 +39,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { getTriggerPrice } from './helpers';
+import { getStateRemainingQuantums, getTriggerPrice } from './helpers';
 
 /**
  * Handler for OrderRemove messages.
@@ -260,6 +260,9 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
+    const stateRemainingQuantums: Big = await getStateRemainingQuantums(
+      removeOrderResult.removedOrder!,
+    );
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromTicker(removeOrderResult.removedOrder!.ticker);
     if (perpetualMarket === undefined) {
@@ -271,10 +274,14 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    await runFuncWithTimingStat(
-      this.cancelOrderInPostgres(orderRemove),
-      this.generateTimingStatsOptions('cancel_order_in_postgres'),
-    );
+    // If the remaining amount of the order in state is <= 0, the order is filled and
+    // does not need to have it's status updated
+    if (stateRemainingQuantums.gt(0)) {
+      await runFuncWithTimingStat(
+        this.cancelOrderInPostgres(orderRemove),
+        this.generateTimingStatsOptions('cancel_order_in_postgres'),
+      );
+    }
 
     const subaccountMessage: Message = {
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
@@ -284,8 +291,7 @@ export class OrderRemoveHandler extends Handler {
       ),
     };
 
-    // TODO(IND-147): Remove this check once fully-filled orders are removed by ender
-    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult)) {
+    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
@@ -616,21 +622,26 @@ export class OrderRemoveHandler extends Handler {
   protected shouldSendSubaccountMessage(
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
+    stateRemainingQuantums: Big,
   ): boolean {
-    const remainingQuantums: Big = Big(this.getSizeDeltaInQuantums(
-      removeOrderResult,
-      removeOrderResult.removedOrder!,
-    ));
     const status: OrderRemoveV1_OrderRemovalStatus = orderRemove.removalStatus;
     const reason: OrderRemovalReason = orderRemove.reason;
+
+    logger.info({
+      at: 'orderRemoveHandler#shouldSendSubaccountMessage',
+      message: 'Compared state filled quantums and size',
+      stateRemainingQuantums: stateRemainingQuantums.toFixed(),
+      removeOrderResult,
+    });
+
     if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED
     ) {
       return false;
     } else if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED
     ) {
