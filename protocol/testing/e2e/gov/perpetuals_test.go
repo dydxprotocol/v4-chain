@@ -9,9 +9,31 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
+	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
+)
+
+var (
+	TEST_PERPETUAL_PARAMS = perptypes.PerpetualParams{
+		Id:                765,
+		Ticker:            "BTC-ADV4TNT",
+		MarketId:          123,
+		AtomicResolution:  -8,
+		DefaultFundingPpm: 545,
+		LiquidityTier:     1,
+	}
+	TEST_LIQUIDITY_TIER = perptypes.LiquidityTier{
+		Id:                     1,
+		Name:                   "Test Tier",
+		InitialMarginPpm:       765_432,
+		MaintenanceFractionPpm: 345_678,
+		BasePositionNotional:   123_456,
+		ImpactNotional:         654_321,
+	}
 )
 
 // This tests `MsgUpdateParams` in `x/perpetuals`.
@@ -19,6 +41,7 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *perptypes.MsgUpdateParams
 		expectedProposalStatus   govtypesv1.ProposalStatus
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 	}{
 		"Success": {
@@ -32,7 +55,40 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: zero funding rate clamp factor": {
+			msg: &perptypes.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				Params: perptypes.Params{
+					FundingRateClampFactorPpm: 0,
+					PremiumVoteClampFactorPpm: 100,
+					MinNumVotesPerSample:      15,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: zero premium vote clamp factor": {
+			msg: &perptypes.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				Params: perptypes.Params{
+					FundingRateClampFactorPpm: 100,
+					PremiumVoteClampFactorPpm: 0,
+					MinNumVotesPerSample:      15,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: zero min number of votes per sample": {
+			msg: &perptypes.MsgUpdateParams{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				Params: perptypes.Params{
+					FundingRateClampFactorPpm: 100,
+					PremiumVoteClampFactorPpm: 100,
+					MinNumVotesPerSample:      0,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: invalid authority": {
 			msg: &perptypes.MsgUpdateParams{
 				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
 				Params: perptypes.Params{
@@ -77,20 +133,17 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
-				false,
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission, verify that perpetuals module
-			// params match the ones before proposal submission.
-			if tc.expectSubmitProposalFail {
-				require.Equal(t, initialParams, tApp.App.PerpetualsKeeper.GetParams(ctx))
-			}
-
-			// If proposal is supposed to pass, verify that perpetuals params have been updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that perpetuals params have been updated.
 				require.Equal(t, tc.msg.Params, tApp.App.PerpetualsKeeper.GetParams(ctx))
+			} else {
+				// Otherwise, verify that perpetuals module params match the ones before proposal submission.
+				require.Equal(t, initialParams, tApp.App.PerpetualsKeeper.GetParams(ctx))
 			}
 		})
 	}
@@ -99,37 +152,107 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 // This tests `MsgUpdatePerpetualParams` in `x/perpetuals`.
 func TestUpdatePerpetualsParams(t *testing.T) {
 	tests := map[string]struct {
-		msg                      *perptypes.MsgUpdatePerpetualParams
-		expectedProposalStatus   govtypesv1.ProposalStatus
-		expectSubmitProposalFail bool
+		msg                       *perptypes.MsgUpdatePerpetualParams
+		genesisLiquidityTierIds   []uint32
+		genesisMarketIds          []uint32
+		expectedProposalStatus    govtypesv1.ProposalStatus
+		expectCheckTxFails        bool
+		expectSubmitProposalFails bool
 	}{
 		"Success": {
 			msg: &perptypes.MsgUpdatePerpetualParams{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				PerpetualParams: perptypes.PerpetualParams{
-					Id:                5000,
+					Id:                TEST_PERPETUAL_PARAMS.Id,
 					Ticker:            "BTC-DV4TNT",
 					MarketId:          4,
-					AtomicResolution:  -7,
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
 					DefaultFundingPpm: 500,
-					LiquidityTier:     0,
+					LiquidityTier:     123,
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+			genesisLiquidityTierIds: []uint32{123},
+			genesisMarketIds:        []uint32{4},
+			expectedProposalStatus:  govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: empty ticker": {
+			msg: &perptypes.MsgUpdatePerpetualParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				PerpetualParams: perptypes.PerpetualParams{
+					Id:                TEST_PERPETUAL_PARAMS.Id,
+					Ticker:            "",
+					MarketId:          4,
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
+					DefaultFundingPpm: 500,
+					LiquidityTier:     123,
+				},
+			},
+			genesisLiquidityTierIds: []uint32{123},
+			genesisMarketIds:        []uint32{4},
+			expectCheckTxFails:      true,
+		},
+		"Failure: default funding ppm exists maximum": {
+			msg: &perptypes.MsgUpdatePerpetualParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				PerpetualParams: perptypes.PerpetualParams{
+					Id:                TEST_PERPETUAL_PARAMS.Id,
+					Ticker:            "BTC-DV4TNT",
+					MarketId:          4,
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
+					DefaultFundingPpm: 1_000_001,
+					LiquidityTier:     123,
+				},
+			},
+			genesisLiquidityTierIds: []uint32{123},
+			genesisMarketIds:        []uint32{4},
+			expectCheckTxFails:      true,
+		},
+		"Failure: invalid authority": {
 			msg: &perptypes.MsgUpdatePerpetualParams{
 				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
 				PerpetualParams: perptypes.PerpetualParams{
-					Id:                5000,
+					Id:                TEST_PERPETUAL_PARAMS.Id,
 					Ticker:            "BTC-DV4TNT",
 					MarketId:          4,
-					AtomicResolution:  -7,
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
+					DefaultFundingPpm: 500,
+					LiquidityTier:     123,
+				},
+			},
+			genesisLiquidityTierIds:   []uint32{123},
+			genesisMarketIds:          []uint32{4},
+			expectSubmitProposalFails: true,
+		},
+		"Failure: liquidity tier does not exist": {
+			msg: &perptypes.MsgUpdatePerpetualParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				PerpetualParams: perptypes.PerpetualParams{
+					Id:                TEST_PERPETUAL_PARAMS.Id,
+					Ticker:            "BTC-DV4TNT",
+					MarketId:          4,
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
+					DefaultFundingPpm: 500,
+					LiquidityTier:     124, // liquidity tier 124 does not exist.
+				},
+			},
+			genesisLiquidityTierIds: []uint32{123},
+			genesisMarketIds:        []uint32{4},
+			expectedProposalStatus:  govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+		},
+		"Failure: market id does not exist": {
+			msg: &perptypes.MsgUpdatePerpetualParams{
+				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				PerpetualParams: perptypes.PerpetualParams{
+					Id:                TEST_PERPETUAL_PARAMS.Id,
+					Ticker:            "BTC-DV4TNT",
+					MarketId:          5, // market id 5 does not exist.
+					AtomicResolution:  TEST_PERPETUAL_PARAMS.AtomicResolution,
 					DefaultFundingPpm: 500,
 					LiquidityTier:     0,
 				},
 			},
-			expectSubmitProposalFail: true,
+			genesisMarketIds:       []uint32{4},
+			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
 		},
 	}
 
@@ -143,23 +266,44 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				// Initialize perpetuals module with
-				// - a perpetual whose params are different from the proposal.
-				// - liquidity tiers.
+				// Initialize prices module with genesis markets.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *pricestypes.GenesisState) {
+						marketParams := make([]pricestypes.MarketParam, len(tc.genesisMarketIds)+1)
+						marketPrices := make([]pricestypes.MarketPrice, len(tc.genesisMarketIds)+1)
+						for i, marketId := range append(tc.genesisMarketIds, TEST_PERPETUAL_PARAMS.MarketId) {
+							marketParamPrice := pricestest.GenerateMarketParamPrice(
+								pricestest.WithId(marketId),
+							)
+							marketParams[i] = marketParamPrice.Param
+							marketPrices[i] = marketParamPrice.Price
+						}
+						genesisState.MarketParams = marketParams
+						genesisState.MarketPrices = marketPrices
+					},
+				)
+				// Initialize perpetuals module with genesis perpetual and liquidity tiers.
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *perptypes.GenesisState) {
-						genesisState.Perpetuals = append(genesisState.Perpetuals, perptypes.Perpetual{
-							Params: perptypes.PerpetualParams{
-								Id:                tc.msg.PerpetualParams.Id, // same ID as the proposal.
-								Ticker:            tc.msg.PerpetualParams.Ticker + "_initial",
-								MarketId:          tc.msg.PerpetualParams.MarketId + 1,
-								AtomicResolution:  tc.msg.PerpetualParams.AtomicResolution,
-								DefaultFundingPpm: tc.msg.PerpetualParams.DefaultFundingPpm + 234,
-								LiquidityTier:     tc.msg.PerpetualParams.LiquidityTier + 2,
+						genesisState.Perpetuals = []perptypes.Perpetual{
+							{
+								Params: TEST_PERPETUAL_PARAMS,
 							},
-						})
-						genesisState.LiquidityTiers = constants.LiquidityTiers
+						}
+						liquidityTiers := make([]perptypes.LiquidityTier, len(tc.genesisLiquidityTierIds)+1)
+						for i, ltId := range append(tc.genesisLiquidityTierIds, TEST_PERPETUAL_PARAMS.LiquidityTier) {
+							liquidityTiers[i] = *lttest.GenerateLiquidityTier(lttest.WithId(ltId))
+						}
+						genesisState.LiquidityTiers = liquidityTiers
+					},
+				)
+				// Initialize clob module with no clob pairs.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *clobtypes.GenesisState) {
+						genesisState.ClobPairs = []clobtypes.ClobPair{}
 					},
 				)
 				return genesis
@@ -174,23 +318,21 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
-				false,
-				tc.expectSubmitProposalFail,
+				tc.expectCheckTxFails,
+				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,
 			)
 
 			updatedPerpetual, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualParams.Id)
 			require.NoError(t, err)
 
-			// If governance proposal is supposed to fail submission, verify that the perpetual's
-			// params match the ones before proposal submission.
-			if tc.expectSubmitProposalFail {
-				require.Equal(t, initialPerpetual.Params, updatedPerpetual.Params)
-			}
-
-			// If proposal is supposed to pass, verify that the perpetual's params have been updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that the perpetual's params have been updated.
 				require.Equal(t, tc.msg.PerpetualParams, updatedPerpetual.Params)
+			} else {
+				// If proposal is not supposed to succeed, verify that the perpetual's
+				// params match the ones before proposal submission.
+				require.Equal(t, initialPerpetual.Params, updatedPerpetual.Params)
 			}
 		})
 	}
@@ -199,21 +341,22 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 // This tests `MsgSetLiquidityTier` in `x/perpetuals`.
 func TestSetLiquidityTier(t *testing.T) {
 	tests := map[string]struct {
-		msg                      *perptypes.MsgSetLiquidityTier
-		updateExistingLt         bool // whether above msg updates an existing liquidity tier.
-		expectedProposalStatus   govtypesv1.ProposalStatus
-		expectSubmitProposalFail bool
+		msg                       *perptypes.MsgSetLiquidityTier
+		genesisLiquidityTierIds   []uint32
+		expectedProposalStatus    govtypesv1.ProposalStatus
+		expectCheckTxFails        bool
+		expectSubmitProposalFails bool
 	}{
 		"Success: create a new liquidity tier": {
 			msg: &perptypes.MsgSetLiquidityTier{
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				LiquidityTier: perptypes.LiquidityTier{
 					Id:                     5678,
-					Name:                   "Test Tier",
-					InitialMarginPpm:       765_432,
-					MaintenanceFractionPpm: 345_678,
-					BasePositionNotional:   123_456,
-					ImpactNotional:         654_321,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					BasePositionNotional:   TEST_LIQUIDITY_TIER.BasePositionNotional,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
 				},
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -223,17 +366,73 @@ func TestSetLiquidityTier(t *testing.T) {
 				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 				LiquidityTier: perptypes.LiquidityTier{
 					Id:                     5678,
-					Name:                   "Test Tier",
-					InitialMarginPpm:       765_432,
-					MaintenanceFractionPpm: 345_678,
-					BasePositionNotional:   123_456,
-					ImpactNotional:         654_321,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					BasePositionNotional:   TEST_LIQUIDITY_TIER.BasePositionNotional,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
 				},
 			},
-			updateExistingLt:       true,
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
+			genesisLiquidityTierIds: []uint32{5678},
+			expectedProposalStatus:  govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
-		"Fail: invalid authority": {
+		"Failure: initial margin ppm exceeds maximum": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       1_000_001,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					BasePositionNotional:   TEST_LIQUIDITY_TIER.BasePositionNotional,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: maintenance fraction ppm exceeds maximum": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: 1_000_001,
+					BasePositionNotional:   TEST_LIQUIDITY_TIER.BasePositionNotional,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: base position notional is 0": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					BasePositionNotional:   0,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: impact notional is 0": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					BasePositionNotional:   TEST_LIQUIDITY_TIER.BasePositionNotional,
+					ImpactNotional:         0,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: invalid authority": {
 			msg: &perptypes.MsgSetLiquidityTier{
 				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
 				LiquidityTier: perptypes.LiquidityTier{
@@ -245,7 +444,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					ImpactNotional:         654_321,
 				},
 			},
-			expectSubmitProposalFail: true,
+			expectSubmitProposalFails: true,
 		},
 	}
 
@@ -259,22 +458,25 @@ func TestSetLiquidityTier(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
-				if tc.updateExistingLt {
-					// Initialize perpetuals module with a liquidity tier with different params from the proposal.
-					testapp.UpdateGenesisDocWithAppStateForModule(
-						&genesis,
-						func(genesisState *perptypes.GenesisState) {
-							genesisState.LiquidityTiers = append(genesisState.LiquidityTiers, perptypes.LiquidityTier{
-								Id:                     tc.msg.LiquidityTier.Id,
-								Name:                   tc.msg.LiquidityTier.Name + "_initial",
-								InitialMarginPpm:       tc.msg.LiquidityTier.InitialMarginPpm + 1,
-								MaintenanceFractionPpm: tc.msg.LiquidityTier.MaintenanceFractionPpm + 2,
-								BasePositionNotional:   tc.msg.LiquidityTier.BasePositionNotional + 3,
-								ImpactNotional:         tc.msg.LiquidityTier.ImpactNotional + 4,
-							})
-						},
-					)
-				}
+				// Initialize perpetuals module with genesis liquidity tiers and no perpetuals.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *perptypes.GenesisState) {
+						liquidityTiers := make([]perptypes.LiquidityTier, len(tc.genesisLiquidityTierIds))
+						for i, ltId := range tc.genesisLiquidityTierIds {
+							liquidityTiers[i] = *lttest.GenerateLiquidityTier(lttest.WithId(ltId))
+						}
+						genesisState.LiquidityTiers = liquidityTiers
+						genesisState.Perpetuals = []perptypes.Perpetual{}
+					},
+				)
+				// Initialize clob module with no clob pairs.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *clobtypes.GenesisState) {
+						genesisState.ClobPairs = []clobtypes.ClobPair{}
+					},
+				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
@@ -286,22 +488,19 @@ func TestSetLiquidityTier(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
-				false,
-				tc.expectSubmitProposalFail,
+				tc.expectCheckTxFails,
+				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission, verify that liquidity tiers
-			// match the ones before proposal submission.
-			if tc.expectSubmitProposalFail {
-				require.Equal(t, initialLts, tApp.App.PerpetualsKeeper.GetAllLiquidityTiers(ctx))
-			}
-
-			// If proposal is supposed to pass, verify that the liquidity tier has been createupdated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that the liquidity tier has been createupdated.
 				updatedLt, err := tApp.App.PerpetualsKeeper.GetLiquidityTier(ctx, tc.msg.LiquidityTier.Id)
 				require.NoError(t, err)
 				require.Equal(t, tc.msg.LiquidityTier, updatedLt)
+			} else {
+				// Otherwise, verify that liquidity tiers match the ones before proposal submission.
+				require.Equal(t, initialLts, tApp.App.PerpetualsKeeper.GetAllLiquidityTiers(ctx))
 			}
 		})
 	}
