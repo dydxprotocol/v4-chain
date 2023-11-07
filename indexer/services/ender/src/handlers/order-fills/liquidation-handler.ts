@@ -15,8 +15,7 @@ import {
   SubaccountTable,
   USDC_ASSET_ID,
   OrderStatus, FillType,
-} from '@dydxprotocol-indexer/postgres';
-import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
+import { CanceledOrderStatus, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
@@ -218,7 +217,7 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
           perpetualMarket,
           castedLiquidationFillEventMessage.makerOrder,
           this.getTotalFilled(castedLiquidationFillEventMessage),
-          false,
+          CanceledOrderStatus.NOT_CANCELED,
         ), this.generateTimingStatsOptions('upsert_maker_order'));
     }
 

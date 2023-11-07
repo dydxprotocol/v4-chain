@@ -27,6 +27,7 @@ import {
   UpdatedPerpetualPositionSubaccountKafkaObject,
   USDC_ASSET_ID,
 } from '@dydxprotocol-indexer/postgres';
+import { CanceledOrderStatus } from '@dydxprotocol-indexer/redis';
 import { getOrderIdHash, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
@@ -292,14 +293,14 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
 
   /**
    * Upsert the an order based on the event processed by the handler
-   * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
-   * orders
+   * @param canceledOrderStatus - Status of the order in the CanceledOrderCache, always
+   * NOT_CANCELED for liquidation orders
    */
   protected upsertOrderFromEvent(
     perpetualMarket: PerpetualMarketFromDatabase,
     order: IndexerOrder,
     totalFilledFromProto: Long,
-    isCanceled: boolean,
+    canceledOrderStatus: CanceledOrderStatus,
   ): Promise<OrderFromDatabase> {
     const size: string = getSize(order, perpetualMarket);
     const price: string = getPrice(order, perpetualMarket);
@@ -309,7 +310,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     );
     const timeInForce: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(order.timeInForce);
     const status: OrderStatus = this.getOrderStatus(
-      isCanceled,
+      canceledOrderStatus,
       size,
       totalFilled,
       order.orderId!.orderFlags,
@@ -343,20 +344,21 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
    * The obvious case is if totalFilled >= size, then the order status should always be `FILLED`.
    * The difficult case is if totalFilled < size after a fill, then we need to keep the following
    * cases in mind:
-   * 1. Stateful Orders - All cancelations are on-chain events, so the order can be `OPEN` or
-   *    `BEST_EFFORT_CANCELED` if the order is in the CanceledOrdersCache.
+   * 1. Stateful Orders - All cancelations are on-chain events, so the will be `OPEN`. The
+   *     CanceledOrdersCache does not store any stateful orders and we never send
+   *     BEST_EFFORT_CANCELED notifications for stateful orders.
    * 2. Short-term FOK - FOK orders can never be `OPEN`, since they don't rest on the orderbook, so
     *    totalFilled cannot be < size. By the end of the block, the order will be filled, so we mark
     *    it as `FILLED`.
    * 3. Short-term IOC - Protocol guarantees that an IOC order will only ever be filled in a single
    *    block, so status should be `CANCELED`.
    * 4. Short-term Limit & Post-only - If the order is in the CanceledOrdersCache, then it should be
-   *    set to `BEST_EFFORT_CANCELED`, otherwise `OPEN`.
+   *    set to the corresponding CanceledOrderStatus, otherwise `OPEN`.
    * @param isCanceled - if the order is in the CanceledOrderCache, always false for liquidiation
    * orders
    */
   protected getOrderStatus(
-    isCanceled: boolean,
+    canceledOrderStatus: CanceledOrderStatus,
     size: string,
     totalFilled: string,
     orderFlags: number,
@@ -365,16 +367,17 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
     if (Big(totalFilled).gte(size)) {
       return OrderStatus.FILLED;
     } else if (orderFlags === ORDER_FLAG_LONG_TERM) { // 1. Stateful Order
-      if (isCanceled) {
-        return OrderStatus.BEST_EFFORT_CANCELED;
-      }
       return OrderStatus.OPEN;
     } else if (timeInForce === TimeInForce.FOK) { // 2. Short-term FOK
       return OrderStatus.FILLED;
     } else if (timeInForce === TimeInForce.IOC) { // 3. Short-term IOC
       return OrderStatus.CANCELED;
-    } else if (isCanceled) { // 4. Short-term Limit & Post-only
+    }
+    // 4. Short-term Limit & Post-only
+    if (canceledOrderStatus === CanceledOrderStatus.BEST_EFFORT_CANCELED) {
       return OrderStatus.BEST_EFFORT_CANCELED;
+    } else if (canceledOrderStatus === CanceledOrderStatus.CANCELED) {
+      return OrderStatus.CANCELED;
     }
     return OrderStatus.OPEN;
   }

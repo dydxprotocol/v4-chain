@@ -165,6 +165,27 @@ message OrderFillEventV1 {
   uint64 total_filled_taker = 8;
 }
 
+// DeleveragingEvent message contains all the information for a deleveraging
+// on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+// the amount filled.
+message DeleveragingEventV1 {
+  // ID of the subaccount that was liquidated.
+  dydxprotocol.indexer.protocol.v1.IndexerSubaccountId liquidated = 1
+      [ (gogoproto.nullable) = false ];
+  // ID of the subaccount that was used to offset the position.
+  dydxprotocol.indexer.protocol.v1.IndexerSubaccountId offsetting = 2
+      [ (gogoproto.nullable) = false ];
+  // The ID of the perpetual that was liquidated.
+  uint32 perpetual_id = 3;
+  // The amount filled between the liquidated and offsetting position, in
+  // base quantums.
+  uint64 fill_amount = 4;
+  // Bankruptcy price of liquidated subaccount, in USDC quote quantums.
+  uint64 price = 5;
+  // `true` if liquidating a short position, `false` otherwise.
+  bool is_buy = 6;
+}
+
 // LiquidationOrder represents the liquidation taker order to be included in a
 // liquidation order fill event.
 message LiquidationOrderV1 {

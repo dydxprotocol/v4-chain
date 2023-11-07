@@ -28,6 +28,7 @@ import {
 } from '../types';
 
 export function uuid(eventId: Buffer, liquidity: Liquidity): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${eventId.toString('hex')}-${liquidity}`, BUFFER_ENCODING_UTF_8));
 }
 

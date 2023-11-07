@@ -29,6 +29,9 @@ export const configSchema = {
   USE_LIQUIDATION_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_LIQUIDITY_TIER_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_MARKET_CREATE_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
@@ -41,7 +44,19 @@ export const configSchema = {
   USE_ORDER_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_TRANSFER_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_UPDATE_CLOB_PAIR_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_UPDATE_PERPETUAL_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
   USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS: parseBoolean({

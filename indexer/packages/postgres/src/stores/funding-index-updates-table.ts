@@ -26,6 +26,7 @@ export function uuid(
   eventId: Buffer,
   perpetualId: string,
 ): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${blockHeight}-${eventId.toString('hex')}-${perpetualId}`, BUFFER_ENCODING_UTF_8));
 }
 
