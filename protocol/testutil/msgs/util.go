@@ -13,8 +13,9 @@ type TestBlockWithMsgs struct {
 }
 
 type TestSdkMsg struct {
-	Msg          sdk.Msg
-	ExpectedIsOk bool
+	Msg              sdk.Msg
+	ExpectedIsOk     bool
+	ExpectedRespCode uint32
 }
 
 // SampleMsg is a struct containing a sample msg and its name.

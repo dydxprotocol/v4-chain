@@ -17,6 +17,7 @@ import (
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -1220,6 +1221,365 @@ func TestCancelShortTermOrder(t *testing.T) {
 				require.True(t, exists)
 				require.Equal(t, expectedCancelExpirationBlock, cancelExpirationBlock)
 			}
+			for orderId, expectedFillAmount := range tc.expectedOrderFillAmounts {
+				_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+				require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
+			}
+		})
+	}
+}
+
+func TestShortTermAdvancedOrders(t *testing.T) {
+	tests := map[string]struct {
+		blocks []testmsgs.TestBlockWithMsgs
+
+		expectedOrderIdsInMemclob map[clobtypes.OrderId]bool
+		expectedOrderFillAmounts  map[clobtypes.OrderId]uint64
+	}{
+		"IOC fully matches": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:       false,
+				constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:       5000, // full size of scaled orders
+				constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC.OrderId: 5000,
+			},
+		},
+		"IOC partially matches and is not placed on the book": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        false,
+				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        5000, // full size of scaled orders
+				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: 5000,
+			},
+		},
+		"IOC fails CheckTx if previously filled": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+				{
+					Block: 3,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk:     false,
+							ExpectedRespCode: clobtypes.ErrImmediateExecutionOrderAlreadyFilled.ABCICode(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        false,
+				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        5000, // full size of scaled orders
+				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: 5000,
+			},
+		},
+		"FOK fully matches": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22.OrderId:      true,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22.OrderId:      10_000,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: 10_000,
+			},
+		},
+		"FOK partially matches, fails, and is not placed on the book": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk:     false,
+							ExpectedRespCode: clobtypes.ErrFokOrderCouldNotBeFullyFilled.ABCICode(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22.OrderId:       true,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22.OrderId:       0,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: 0,
+			},
+		},
+		"FOK fails CheckTx if previously filled": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+				{
+					Block: 3,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id0_Clob1_Buy20_Price15_GTB20_FOK,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk:     false,
+							ExpectedRespCode: clobtypes.ErrImmediateExecutionOrderAlreadyFilled.ABCICode(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22.OrderId:       true,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22.OrderId:       10_000,
+				constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK.OrderId: 10_000,
+			},
+		},
+		"Post-only does not cross and is placed on the book": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price15_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price15_GTB20.OrderId:    true,
+				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId: true,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price15_GTB20.OrderId:    0,
+				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId: 0,
+			},
+		},
+		"Post-only crosses and is not placed on the book": {
+			blocks: []testmsgs.TestBlockWithMsgs{
+				{
+					Block: 2,
+					Msgs: []testmsgs.TestSdkMsg{
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price5_GTB20,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk: true,
+						},
+						{
+							Msg: clobtypes.NewMsgPlaceOrder(
+								MustScaleOrder(
+									constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO,
+									testapp.DefaultGenesis(),
+								),
+							),
+							ExpectedIsOk:     false,
+							ExpectedRespCode: clobtypes.ErrPostOnlyWouldCrossMakerOrder.ABCICode(),
+						},
+					},
+				},
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price5_GTB20.OrderId:      true,
+				constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC.OrderId: false,
+			},
+			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
+				constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price5_GTB20.OrderId:     0,
+				constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO.OrderId: 0,
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
+
+			for _, block := range tc.blocks {
+				for _, order := range block.Msgs {
+					msgPlaceOrder, ok := order.Msg.(*clobtypes.MsgPlaceOrder)
+					if !ok {
+						t.Error("Expected MsgPlaceOrder")
+					}
+					for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *msgPlaceOrder) {
+						resp := tApp.CheckTx(checkTx)
+						require.Equal(t, order.ExpectedIsOk, resp.IsOK(), "Response was not as expected: %+v", resp.Log)
+						require.Equal(
+							t,
+							order.ExpectedRespCode,
+							resp.Code,
+							"Response code was not as expected",
+						)
+					}
+				}
+				ctx = tApp.AdvanceToBlock(block.Block, testapp.AdvanceToBlockOptions{})
+			}
+
+			for orderId, shouldHaveOrder := range tc.expectedOrderIdsInMemclob {
+				_, exists := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, orderId)
+				require.Equal(t, shouldHaveOrder, exists)
+			}
+
 			for orderId, expectedFillAmount := range tc.expectedOrderFillAmounts {
 				_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
 				require.Equal(t, expectedFillAmount, fillAmount.ToUint64())
