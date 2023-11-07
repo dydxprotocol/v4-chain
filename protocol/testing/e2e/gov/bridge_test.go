@@ -1,12 +1,14 @@
 package gov_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -17,10 +19,10 @@ func TestUpdateEventParams(t *testing.T) {
 	genesisEventParams := bridgetypes.DefaultGenesis().EventParams
 
 	tests := map[string]struct {
-		msg                      *bridgetypes.MsgUpdateEventParams
-		expectCheckTxFails       bool
-		expectSubmitProposalFail bool
-		expectedProposalStatus   govtypesv1.ProposalStatus
+		msg                       *bridgetypes.MsgUpdateEventParams
+		expectCheckTxFails        bool
+		expectSubmitProposalFails bool
+		expectedProposalStatus    govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateEventParams{
@@ -42,7 +44,7 @@ func TestUpdateEventParams(t *testing.T) {
 					EthAddress: "",
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			expectCheckTxFails: true,
 		},
 		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateEventParams{
@@ -53,7 +55,7 @@ func TestUpdateEventParams(t *testing.T) {
 					EthAddress: genesisEventParams.EthAddress,
 				},
 			},
-			expectSubmitProposalFail: true,
+			expectSubmitProposalFails: true,
 		},
 	}
 
@@ -79,20 +81,17 @@ func TestUpdateEventParams(t *testing.T) {
 				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectCheckTxFails,
-				tc.expectSubmitProposalFail,
+				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission or execution, verify that
-			// event params are unchanged
-			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
-				require.Equal(t, initialEventParams, tApp.App.BridgeKeeper.GetEventParams(ctx))
-			}
-
-			// If proposal is supposed to pass, verify that event params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that event params are updated.
 				updatedEventParams := tApp.App.BridgeKeeper.GetEventParams(ctx)
 				require.Equal(t, tc.msg.Params, updatedEventParams)
+			} else {
+				// Otherwise, verify that event params are unchanged.
+				require.Equal(t, initialEventParams, tApp.App.BridgeKeeper.GetEventParams(ctx))
 			}
 		})
 	}
@@ -102,10 +101,10 @@ func TestUpdateProposeParams(t *testing.T) {
 	genesisProposeParams := bridgetypes.DefaultGenesis().ProposeParams
 
 	tests := map[string]struct {
-		msg                      *bridgetypes.MsgUpdateProposeParams
-		expectCheckTxFails       bool
-		expectSubmitProposalFail bool
-		expectedProposalStatus   govtypesv1.ProposalStatus
+		msg                       *bridgetypes.MsgUpdateProposeParams
+		expectCheckTxFails        bool
+		expectSubmitProposalFails bool
+		expectedProposalStatus    govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
@@ -129,7 +128,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					SkipIfBlockDelayedByDuration: genesisProposeParams.SkipIfBlockDelayedByDuration,
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			expectCheckTxFails: true,
 		},
 		"Failure: negative skip if block delayed by duration": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
@@ -141,7 +140,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					SkipIfBlockDelayedByDuration: -genesisProposeParams.SkipIfBlockDelayedByDuration,
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			expectCheckTxFails: true,
 		},
 		"Failure: skip rate ppm out of bounds": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
@@ -153,7 +152,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					SkipIfBlockDelayedByDuration: genesisProposeParams.SkipIfBlockDelayedByDuration,
 				},
 			},
-			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
+			expectCheckTxFails: true,
 		},
 		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
@@ -165,7 +164,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					SkipIfBlockDelayedByDuration: genesisProposeParams.SkipIfBlockDelayedByDuration + 1,
 				},
 			},
-			expectSubmitProposalFail: true,
+			expectSubmitProposalFails: true,
 		},
 	}
 
@@ -191,20 +190,17 @@ func TestUpdateProposeParams(t *testing.T) {
 				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectCheckTxFails,
-				tc.expectSubmitProposalFail,
+				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission or execution, verify that
-			// propose params are unchanged
-			if tc.expectSubmitProposalFail || tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED {
-				require.Equal(t, initialProposeParams, tApp.App.BridgeKeeper.GetProposeParams(ctx))
-			}
-
-			// If proposal is supposed to pass, verify that propose params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that propose params are updated.
 				updatedProposeParams := tApp.App.BridgeKeeper.GetProposeParams(ctx)
 				require.Equal(t, tc.msg.Params, updatedProposeParams)
+			} else {
+				// Otherwise, verify that propose params are unchanged.
+				require.Equal(t, initialProposeParams, tApp.App.BridgeKeeper.GetProposeParams(ctx))
 			}
 		})
 	}
@@ -214,10 +210,9 @@ func TestUpdateSafetyParams(t *testing.T) {
 	genesisSafetyParams := bridgetypes.DefaultGenesis().SafetyParams
 
 	tests := map[string]struct {
-		msg                      *bridgetypes.MsgUpdateSafetyParams
-		expectCheckTxFails       bool
-		expectSubmitProposalFail bool
-		expectedProposalStatus   govtypesv1.ProposalStatus
+		msg                       *bridgetypes.MsgUpdateSafetyParams
+		expectSubmitProposalFails bool
+		expectedProposalStatus    govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
@@ -237,7 +232,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 					DelayBlocks: genesisSafetyParams.DelayBlocks + 1,
 				},
 			},
-			expectSubmitProposalFail: true,
+			expectSubmitProposalFails: true,
 		},
 	}
 
@@ -262,21 +257,18 @@ func TestUpdateSafetyParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
-				tc.expectCheckTxFails,
-				tc.expectSubmitProposalFail,
+				false,
+				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,
 			)
 
-			// If governance proposal is supposed to fail submission or execution, verify that
-			// safety params are unchanged
-			if tc.expectSubmitProposalFail {
-				require.Equal(t, initialSafetyParams, tApp.App.BridgeKeeper.GetSafetyParams(ctx))
-			}
-
-			// If proposal is supposed to pass, verify that safety params are updated.
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
+				// If proposal is supposed to pass, verify that safety params are updated.
 				updatedSafetyParams := tApp.App.BridgeKeeper.GetSafetyParams(ctx)
 				require.Equal(t, tc.msg.Params, updatedSafetyParams)
+			} else {
+				// Otherwise, verify that safety params are unchanged.
+				require.Equal(t, initialSafetyParams, tApp.App.BridgeKeeper.GetSafetyParams(ctx))
 			}
 		})
 	}
