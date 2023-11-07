@@ -71,7 +71,7 @@ func (k Keeper) CancelShortTermOrder(
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.CancelShortTermOrder, metrics.Latency)
 	telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.Count)
 
-	// Perform all stateful validation on the short term.
+	// Perform all stateful validation on the short term order.
 	if err := k.PerformOrderCancellationStatefulValidation(ctx, msgCancelOrder, nextBlockHeight); err != nil {
 		return err
 	}
