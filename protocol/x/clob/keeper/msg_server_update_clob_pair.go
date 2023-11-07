@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,9 @@ import (
 func (k msgServer) UpdateClobPair(
 	goCtx context.Context,
 	msg *types.MsgUpdateClobPair,
-) (*types.MsgUpdateClobPairResponse, error) {
+) (resp *types.MsgUpdateClobPairResponse, err error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
 	if !k.Keeper.HasAuthority(msg.Authority) {
 		return nil, errorsmod.Wrapf(
 			govtypes.ErrInvalidSigner,
@@ -21,7 +24,6 @@ func (k msgServer) UpdateClobPair(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
 	if err := k.Keeper.UpdateClobPair(
 		ctx,
 		msg.GetClobPair(),

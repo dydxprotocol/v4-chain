@@ -1,6 +1,8 @@
 package perpetuals
 
 import (
+	"math/big"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
@@ -65,4 +67,42 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 	}
 
 	return perpetual
+}
+
+func MustHumanSizeToBaseQuantums(
+	humanSize string,
+	atomicResolution int32,
+) (baseQuantums uint64) {
+	// Parse the humanSize string to a big rational
+	ratValue, ok := new(big.Rat).SetString(humanSize)
+	if !ok {
+		panic("Failed to parse humanSize to big.Rat")
+	}
+
+	// Convert atomicResolution to int64 for calculations
+	resolution := int64(atomicResolution)
+
+	// Create a multiplier which is 10 raised to the power of the absolute atomicResolution
+	multiplier := new(big.Int).Exp(big.NewInt(10), big.NewInt(abs(resolution)), nil)
+
+	// Depending on the sign of atomicResolution, multiply or divide
+	if atomicResolution > 0 {
+		ratValue.Mul(ratValue, new(big.Rat).SetInt(multiplier))
+	} else if atomicResolution < 0 {
+		divisor := new(big.Rat).SetInt(multiplier)
+		ratValue.Mul(ratValue, divisor)
+	}
+
+	// Convert the result to an unsigned 64-bit integer
+	resultInt := ratValue.Num() // Get the numerator which now represents the whole value
+
+	return resultInt.Uint64()
+}
+
+// Helper function to get the absolute value of an int64
+func abs(n int64) int64 {
+	if n < 0 {
+		return -n
+	}
+	return n
 }

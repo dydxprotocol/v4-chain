@@ -95,7 +95,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -120,6 +120,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgDepositToSubaccount),
 					Gas:                  100_000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgDepositToSubaccount,
 			)
@@ -143,7 +144,11 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 			// Check expected account balance.
 			accountBalanceAfterDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
-			require.Equal(t, accountBalanceAfterDeposit, accountBalanceBeforeDeposit.Sub(transferredCoin))
+			require.Equal(
+				t,
+				accountBalanceAfterDeposit,
+				accountBalanceBeforeDeposit.Sub(transferredCoin).Sub(constants.TestFeeCoins_5Cents[0]),
+			)
 			// Check expected subaccount asset position.
 			subaccountQuantumsAfterDeposit :=
 				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.subaccountId, tc.asset)
@@ -160,20 +165,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
@@ -183,7 +175,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterDeposit),
 										},
 									},
@@ -192,15 +184,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 							),
 						},
 						{
-							Subtype: indexerevents.SubtypeTransfer,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewDepositEvent(
-									tc.accountAccAddress.String(),
-									tc.subaccountId,
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
+							Subtype:             indexerevents.SubtypeTransfer,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
@@ -224,7 +208,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 
 func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 	// Setup tApp.
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 	// Generate a random account.
 	randomAccount := simtypes.RandomAccounts(rand.NewRand(), 1)[0]
@@ -233,11 +217,11 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 	msgDepositToSubaccount := sendingtypes.MsgDepositToSubaccount{
 		Sender:    randomAccount.Address.String(),
 		Recipient: constants.Alice_Num1,
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgDepositToSubaccount, randomAccount.PrivKey)
 }
 
 func TestMsgWithdrawFromSubaccount(t *testing.T) {
@@ -305,7 +289,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithAppCreatorFn(testapp.DefaultTestAppCreatorFn(appOpts)).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -329,7 +313,8 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
 					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgWithdrawFromSubaccount),
-					Gas:                  100_000,
+					Gas:                  constants.TestGasLimit,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgWithdrawFromSubaccount,
 			)
@@ -353,6 +338,9 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 			// Check expected account balance.
 			accountBalanceAfterWithdraw := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
+			if tc.subaccountId.Owner == tc.accountAccAddress.String() {
+				accountBalanceAfterWithdraw = accountBalanceAfterWithdraw.Add(constants.TestFeeCoins_5Cents[0])
+			}
 			require.Equal(t, accountBalanceAfterWithdraw, accountBalanceBeforeWithdraw.Add(transferredCoin))
 			// Check expected subaccount asset position.
 			subaccountQuantumsAfterWithdraw :=
@@ -370,20 +358,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 					Time:   ctx.BlockTime(),
 					Events: []*indexer_manager.IndexerTendermintEvent{
 						{
-							Subtype: indexerevents.SubtypeSubaccountUpdate,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewSubaccountUpdateEvent(
-									&tc.subaccountId,
-									[]*satypes.PerpetualPosition{},
-									[]*satypes.AssetPosition{
-										{
-											AssetId:  lib.UsdcAssetId,
-											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
-										},
-									},
-									nil, // no funding payment should have occurred
-								),
-							),
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          0,
 							Version:             indexerevents.SubaccountUpdateEventVersion,
@@ -393,7 +368,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 									[]*satypes.PerpetualPosition{},
 									[]*satypes.AssetPosition{
 										{
-											AssetId:  lib.UsdcAssetId,
+											AssetId:  assetstypes.AssetUsdc.Id,
 											Quantums: dtypes.NewIntFromBigInt(subaccountQuantumsAfterWithdraw),
 										},
 									},
@@ -402,15 +377,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 							),
 						},
 						{
-							Subtype: indexerevents.SubtypeTransfer,
-							Data: indexer_manager.GetB64EncodedEventMessage(
-								indexerevents.NewWithdrawEvent(
-									tc.subaccountId,
-									tc.accountAccAddress.String(),
-									tc.asset.Id,
-									satypes.BaseQuantums(tc.quantums.Uint64()),
-								),
-							),
+							Subtype:             indexerevents.SubtypeTransfer,
 							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
 							EventIndex:          1,
 							Version:             indexerevents.TransferEventVersion,
@@ -434,7 +401,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 
 func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 	// Setup tApp.
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 	// Generate a random account.
 	randomAccount := simtypes.RandomAccounts(rand.NewRand(), 1)[0]
@@ -446,11 +413,11 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 			Number: 0,
 		},
 		Recipient: constants.AliceAccAddress.String(),
-		AssetId:   lib.UsdcAssetId,
+		AssetId:   assetstypes.AssetUsdc.Id,
 		Quantums:  uint64(1_000_000),
 	}
 
-	testNonExistentSender(t, &tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
+	testNonExistentSender(t, tApp, ctx, &msgWithdrawFromSubaccount, randomAccount.PrivKey)
 }
 
 // testNonExistentSender is a helper function that tests sending transfer messages with non-existent sender.
@@ -466,7 +433,7 @@ func testNonExistentSender(
 		rand.NewRand(),
 		tApp.App.TxConfig(),
 		[]sdk.Msg{message},
-		sdk.Coins{},
+		constants.TestFeeCoins_5Cents,
 		100_000, // gas
 		ctx.ChainID(),
 		[]uint64{0}, // dummy account number

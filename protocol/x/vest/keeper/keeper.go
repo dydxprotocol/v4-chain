@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdklog "cosmossdk.io/log"
@@ -45,7 +47,7 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
-		authorities:     lib.SliceToSet(authorities),
+		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -120,21 +122,41 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				entry.TreasuryAccount,
 				sdk.NewCoins(sdk.NewCoin(entry.Denom, vestAmount)),
 			); err != nil {
-				panic(err)
+				// This should never happen. However, if it does, we should not panic.
+				// ProcessVesting is called in BeginBlocker, and panicking in BeginBlocker could cause liveness issues.
+				// Instead, we generate an informative error log, emit an error metric, and continue.
+				k.Logger(ctx).Error(
+					"unexpected internal error: failed to transfer vest amount to treasury account",
+					constants.ErrorLogKey,
+					err,
+					"vester_account",
+					entry.VesterAccount,
+					"treasury_account",
+					entry.TreasuryAccount,
+					"denom",
+					entry.Denom,
+					"vest_amount",
+					vestAmount,
+					"vest_account_balance",
+					vesterBalance,
+				)
+				// Increment error counter.
+				telemetry.IncrCounter(1, metrics.ProcessVesting, metrics.AccountTransfer, metrics.Error)
+				continue
 			}
 		}
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.VestAmount},
-			float32(vestAmount.Int64()),
+			metrics.GetMetricValueFromBigInt(vestAmount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 		// Report vester account balance after vest event.
 		balanceAfterVest := k.bankKeeper.GetBalance(ctx, authtypes.NewModuleAddress(entry.VesterAccount), entry.Denom)
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.BalanceAfterVestEvent},
-			float32(balanceAfterVest.Amount.Int64()),
+			metrics.GetMetricValueFromBigInt(balanceAfterVest.Amount.BigInt()),
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.VesterAccount, entry.VesterAccount)},
 		)
 	}

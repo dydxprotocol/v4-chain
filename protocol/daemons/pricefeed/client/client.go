@@ -4,9 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"sync"
 	"time"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	sdklog "cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -15,7 +17,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -30,6 +31,9 @@ import (
 // Note: price fetchers manage their own subtasks by blocking on their completion on every subtask run.
 // When the price fetcher is stopped, it will wait for all of its own subtasks to complete before returning.
 type Client struct {
+	// include HealthCheckable to track the health of the daemon.
+	daemontypes.HealthCheckable
+
 	// daemonStartup tracks whether the daemon has finished startup. The daemon
 	// cannot be stopped until all persistent daemon subtasks have been launched within `Start`.
 	daemonStartup sync.WaitGroup
@@ -50,10 +54,17 @@ type Client struct {
 	stopDaemon sync.Once
 }
 
+// Ensure Client implements the HealthCheckable interface.
+var _ daemontypes.HealthCheckable = (*Client)(nil)
+
 func newClient() *Client {
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
+		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
+			constants.PricefeedDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+		),
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -65,7 +76,7 @@ func newClient() *Client {
 // for any subtask kicked off by the client. The ticker and channel are tracked in order to properly clean up and send
 // all needed stop signals when the daemon is stopped.
 // Note: this method is not synchronized. It is expected to be called from the client's `StartNewClient` method before
-// `client.CompleteStartup`.
+// the daemonStartup waitgroup signals.
 func (c *Client) newTickerWithStop(intervalMs int) (*time.Ticker, <-chan bool) {
 	ticker := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
 	c.tickers = append(c.tickers, ticker)
@@ -99,7 +110,7 @@ func (c *Client) Stop() {
 // B) periodically sends the most recent prices to a gRPC server
 // C) periodically queries the prices module for the latest market/exchange configuration and then updates
 // the shared, in-memory datastore with the latest configuration.
-// The exchangeIdToStartupConfig map dictates which exchanges the pricefeed client queries against.
+// The exchangeIdToQueryConfig map dictates which exchanges the pricefeed client queries against.
 // For all exchanges included in this map, the pricefeed client expects an exchangeQueryDetails and an
 // initialExchangeMarketConfig object to be defined in the parameter maps. To initialize an exchange with
 // zero markets, pass in an initialExchangeMarketConfig object with an empty map of market tickers for that
@@ -116,8 +127,8 @@ func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	grpcClient daemontypes.GrpcClient,
+	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
 ) (err error) {
@@ -150,15 +161,15 @@ func (c *Client) start(ctx context.Context,
 
 	// 2. Validate daemon configuration.
 	if err := validateDaemonConfiguration(
-		exchangeIdToStartupConfig,
+		exchangeIdToQueryConfig,
 		exchangeIdToExchangeDetails,
 	); err != nil {
 		return err
 	}
 
 	// Let the canonical list of exchange feeds be the keys of the map of exchange feed ids to startup configs.
-	canonicalExchangeIds := make([]types.ExchangeId, 0, len(exchangeIdToStartupConfig))
-	for exchangeId := range exchangeIdToStartupConfig {
+	canonicalExchangeIds := make([]types.ExchangeId, 0, len(exchangeIdToQueryConfig))
+	for exchangeId := range exchangeIdToQueryConfig {
 		canonicalExchangeIds = append(canonicalExchangeIds, exchangeId)
 	}
 
@@ -174,10 +185,10 @@ func (c *Client) start(ctx context.Context,
 
 	// 4. Start PriceEncoder and PriceFetcher per exchange.
 	timeProvider := &libtime.TimeProviderImpl{}
-	for _exchangeId := range exchangeIdToStartupConfig {
+	for _exchangeId := range exchangeIdToQueryConfig {
 		// Assign these within the loop to avoid unexpected values being passed to the goroutines.
 		exchangeId := _exchangeId
-		exchangeConfig := exchangeIdToStartupConfig[exchangeId]
+		exchangeConfig := exchangeIdToQueryConfig[exchangeId]
 
 		// Expect an ExchangeQueryDetails to exist for each supported exchange feed id.
 		exchangeDetails, exists := exchangeIdToExchangeDetails[exchangeId]
@@ -248,6 +259,7 @@ func (c *Client) start(ctx context.Context,
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
+		c,
 		ctx,
 		priceUpdaterTicker,
 		priceUpdaterStop,
@@ -268,11 +280,17 @@ func StartNewClient(
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
 	logger log.Logger,
-	grpcClient lib.GrpcClient,
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	grpcClient daemontypes.GrpcClient,
+	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 	subTaskRunner SubTaskRunner,
 ) (client *Client) {
+	// Log the daemon flags.
+	logger.Info(
+		"Starting pricefeed daemon with flags",
+		"PriceFlags", daemonFlags.Price,
+	)
+
 	client = newClient()
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
@@ -283,7 +301,7 @@ func StartNewClient(
 			appFlags,
 			logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName),
 			grpcClient,
-			exchangeIdToStartupConfig,
+			exchangeIdToQueryConfig,
 			exchangeIdToExchangeDetails,
 			subTaskRunner,
 		)
@@ -296,21 +314,21 @@ func StartNewClient(
 }
 
 // validateDaemonConfiguration validates the daemon configuration.
-// The list of exchanges used as keys for the exchangeIdToStartupConfig defines the exchanges used
+// The list of exchanges used as keys for the exchangeIdToQueryConfig defines the exchanges used
 // by the daemon.
 // The daemon configuration is valid iff:
 // 1) The exchangeIdToExchangeDetails map has an entry for each exchange.
 // 2) The static exchange names map has an entry for each exchange, and each name is unique.
 func validateDaemonConfiguration(
-	exchangeIdToStartupConfig map[types.ExchangeId]*types.ExchangeStartupConfig,
+	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
 ) (
 	err error,
 ) {
-	// Loop through all exchanges, which are defined by the exchangeIdToStartupConfig map,
+	// Loop through all exchanges, which are defined by the exchangeIdToQueryConfig map,
 	// and validate all ids are unique and have a corresponding ExchangeQueryDetails.
-	exchangeIds := make(map[string]struct{}, len(exchangeIdToStartupConfig))
-	for exchangeId := range exchangeIdToStartupConfig {
+	exchangeIds := make(map[string]struct{}, len(exchangeIdToQueryConfig))
+	for exchangeId := range exchangeIdToQueryConfig {
 		if _, exists := exchangeIds[exchangeId]; exists {
 			return fmt.Errorf("duplicate exchange id '%v' found for exchangeIds", exchangeId)
 		}

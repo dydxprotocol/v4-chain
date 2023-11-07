@@ -243,9 +243,13 @@ describe('Compliance data store', () => {
     );
     expect(complianceData.length).toEqual(1);
 
-    const updatedTime: string = DateTime.fromISO(
+    const updatedTime1: string = DateTime.fromISO(
       nonBlockedComplianceData.updatedAt!,
     ).plus(10).toUTC().toISO();
+    const updatedTime2: string = DateTime.fromISO(
+      nonBlockedComplianceData.updatedAt!,
+    ).plus(20).toUTC().toISO();
+    const otherAddress: string = 'dydx1scu097p2sstqzupe6t687kpc2w4sv665fedctf';
 
     await ComplianceDataTable.bulkUpsert(
       [
@@ -254,7 +258,14 @@ describe('Compliance data store', () => {
           ...nonBlockedComplianceData,
           riskScore: '30.00',
           blocked: true,
-          updatedAt: updatedTime,
+          updatedAt: updatedTime1,
+        },
+        {
+          ...nonBlockedComplianceData,
+          address: otherAddress,
+          riskScore: undefined,
+          blocked: false,
+          updatedAt: updatedTime2,
         },
       ],
     );
@@ -264,13 +275,20 @@ describe('Compliance data store', () => {
       [],
       { readReplica: true },
     );
-    expect(complianceData.length).toEqual(2);
+    expect(complianceData.length).toEqual(3);
     expect(complianceData[0]).toEqual(blockedComplianceData);
     expect(complianceData[1]).toEqual({
       ...nonBlockedComplianceData,
       riskScore: '30.00',
       blocked: true,
-      updatedAt: updatedTime,
+      updatedAt: updatedTime1,
+    });
+    expect(complianceData[2]).toEqual({
+      ...nonBlockedComplianceData,
+      address: otherAddress,
+      riskScore: null,
+      blocked: false,
+      updatedAt: updatedTime2,
     });
   });
 });

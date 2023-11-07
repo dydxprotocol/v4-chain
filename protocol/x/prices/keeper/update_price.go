@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"sort"
 	"time"
 
@@ -69,7 +70,11 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			if k.IsRecentlyAvailable(ctx, marketId) {
 				logMethod = k.Logger(ctx).Info
 			}
-			logMethod(fmt.Sprintf("Index price for market (%v) does not exist", marketId))
+			logMethod(
+				"Index price for market does not exist",
+				constants.MarketIdLogKey,
+				marketId,
+			)
 			continue
 		}
 
@@ -77,7 +82,11 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		// error.
 		if indexPrice == 0 {
 			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceIsZero, marketMetricsLabel)
-			k.Logger(ctx).Error(fmt.Sprintf("Unexpected error: index price for market (%v) is zero", marketId))
+			k.Logger(ctx).Error(
+				"Unexpected error: index price for market is zero",
+				constants.MarketIdLogKey,
+				marketId,
+			)
 			continue
 		}
 
@@ -158,7 +167,7 @@ func logPriceUpdateBehavior(
 		labels = append(labels, marketMetricsLabel)
 
 		for _, reason := range reasons {
-			labels = append(labels, metrics.NewBinaryStringLabel(reason.Reason, reason.Value))
+			labels = append(labels, metrics.GetLabelForBoolValue(reason.Reason, reason.Value))
 		}
 
 		metrics.IncrCountMetricWithLabels(

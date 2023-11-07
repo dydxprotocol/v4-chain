@@ -25,7 +25,8 @@
     },
     {
       "exchangeName": "Okx",
-      "ticker": "LDO-USDT"
+      "ticker": "LDO-USDT",
+      "adjustByMarket": "USDT-USD"
     }
   ]
 }

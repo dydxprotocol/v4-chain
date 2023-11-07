@@ -22,6 +22,7 @@ import {
 } from '../types';
 
 export function uuid(startedAt: IsoString, ticker: string, resolution: CandleResolution): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${startedAt}-${ticker}-${resolution}`, BUFFER_ENCODING_UTF_8));
 }
 

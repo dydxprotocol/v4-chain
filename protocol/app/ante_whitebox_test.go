@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"reflect"
 	"testing"
 
@@ -14,7 +15,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -35,7 +35,7 @@ func newTestHandlerOptions() HandlerOptions {
 		authtypes.ProtoBaseAccount,
 		nil,
 		sdk.Bech32MainPrefix,
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	bankKeeper := bankkeeper.NewBaseKeeper(
@@ -43,7 +43,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		accountKeeper,
 		BlockedAddresses(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		lib.GovModuleAddress.String(),
 	)
 
 	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)
@@ -55,8 +55,8 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		[]string{
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+			lib.GovModuleAddress.String(),
 		},
 		memClob,
 		nil,

@@ -40,23 +40,16 @@ func (k Keeper) CreateMarket(
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)
 
-	marketParamStore := k.newMarketParamStore(ctx)
-	marketParamStore.Set(lib.Uint32ToBytes(marketParam.Id), paramBytes)
+	marketParamStore := k.getMarketParamStore(ctx)
+	marketParamStore.Set(lib.Uint32ToKey(marketParam.Id), paramBytes)
 
-	marketPriceStore := k.newMarketPriceStore(ctx)
-	marketPriceStore.Set(lib.Uint32ToBytes(marketPrice.Id), priceBytes)
+	marketPriceStore := k.getMarketPriceStore(ctx)
+	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
 
+	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewMarketCreateEvent(
-				marketParam.Id,
-				marketParam.Pair,
-				marketParam.MinPriceChangePpm,
-				marketParam.Exponent,
-			),
-		),
 		indexerevents.MarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewMarketCreateEvent(
@@ -69,7 +62,7 @@ func (k Keeper) CreateMarket(
 	)
 
 	k.marketToCreatedAt[marketParam.Id] = k.timeProvider.Now()
-	metrics.AddMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
+	metrics.SetMarketPairForTelemetry(marketParam.Id, marketParam.Pair)
 
 	return marketParam, nil
 }

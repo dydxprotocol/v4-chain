@@ -7,10 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
 	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -55,7 +53,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				quantums := r.Uint64()
 				subacct.AssetPositions = []*types.AssetPosition{
 					{
-						AssetId:  lib.UsdcAssetId,
+						AssetId:  asstypes.AssetUsdc.Id,
 						Quantums: dtypes.NewIntFromUint64(quantums),
 					},
 				}
@@ -88,7 +86,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 // assigning the total supply of USDC to the balance of the `subaccounts` module.
 // This is necessary as the protocol assumes that that the sum of quantums in all USDC
 // AssetPositions is <= the total USDC balance of the subaccounts module, and `panic`s
-// will occur when transfering fees to the `fee-collector` module during order processing
+// will occur when transferring fees to the `fee-collector` module during order processing
 // if this is not true.
 // This method assumes that USDC as a `Coin` in the bank module does not yet exist.
 func updateBankModuleGenesisState(
@@ -101,7 +99,7 @@ func updateBankModuleGenesisState(
 
 	// Define the balance of the `subaccounts` module.
 	subaccountsUsdcBalance := banktypes.Balance{
-		Address: authtypes.NewModuleAddress(types.ModuleName).String(),
+		Address: types.ModuleAddress.String(),
 		Coins: []sdk.Coin{{
 			Denom:  asstypes.AssetUsdc.Denom,
 			Amount: totalUsdcSupply,

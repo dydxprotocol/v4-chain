@@ -1,0 +1,31 @@
+name: Protocol Pregenesis
+
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - protocol/**
+  push:
+    branches:
+      - main
+      - 'release/protocol/v0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
+      - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+    paths:
+      - protocol/**
+
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  check-sample-pregenesis-up-to-date:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./protocol
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check Sample Pregenesis Up-to-date
+        run: >
+          make check-sample-pregenesis-up-to-date

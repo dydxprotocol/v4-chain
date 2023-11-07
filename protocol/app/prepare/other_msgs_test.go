@@ -1,12 +1,12 @@
 package prepare_test
 
 import (
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
 )
 
@@ -29,7 +29,7 @@ var (
 func TestGetGroupMsgOther(t *testing.T) {
 	tests := map[string]struct {
 		txs      [][]byte
-		maxBytes int64
+		maxBytes uint64
 
 		expectedTxsInclude   [][]byte
 		expectedTxsRemainder [][]byte
@@ -162,7 +162,8 @@ func TestRemoveDisallowMsgs(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
+			tApp := testApp.NewTestAppBuilder(t).Build()
+			ctx := tApp.InitChain()
 			txs := prepare.RemoveDisallowMsgs(ctx, encodingCfg.TxConfig.TxDecoder(), tc.txs)
 			require.Equal(t, tc.expectedTxs, txs)
 		})

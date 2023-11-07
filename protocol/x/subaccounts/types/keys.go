@@ -12,5 +12,5 @@ const (
 // State
 const (
 	// SubaccountKeyPrefix is the prefix to retrieve all Subaccount
-	SubaccountKeyPrefix = "subaccount/"
+	SubaccountKeyPrefix = "SA:"
 )

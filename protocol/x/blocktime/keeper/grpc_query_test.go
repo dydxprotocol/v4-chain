@@ -13,7 +13,7 @@ import (
 )
 
 func TestDowntimeParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 
@@ -48,7 +48,7 @@ func TestDowntimeParams(t *testing.T) {
 }
 
 func TestAllDowntimeInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 	info := &types.AllDowntimeInfo{
@@ -95,7 +95,7 @@ func TestAllDowntimeInfo(t *testing.T) {
 }
 
 func TestPreviousBlockInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 	info := &types.BlockInfo{

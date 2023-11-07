@@ -28,6 +28,7 @@ import {
   PerpetualMarketStatus,
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
+  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -88,7 +89,6 @@ export function createIndexerTendermintEvent(
     // blockEvent
     return {
       subtype,
-      data: '',
       dataBytes,
       blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
       eventIndex,
@@ -98,7 +98,6 @@ export function createIndexerTendermintEvent(
   // transactionIndex
   return {
     subtype,
-    data: '',
     dataBytes,
     transactionIndex,
     eventIndex,
@@ -565,6 +564,8 @@ export async function expectOrderInDatabase({
   goodTilBlock,
   goodTilBlockTime,
   clientMetadata,
+  updatedAt,
+  updatedAtHeight,
 }: {
   subaccountId: string,
   clientId: string,
@@ -580,6 +581,8 @@ export async function expectOrderInDatabase({
   goodTilBlock?: string,
   goodTilBlockTime?: string,
   clientMetadata: string,
+  updatedAt: IsoString,
+  updatedAtHeight: string,
 }): Promise<void> {
   const orderId: string = OrderTable.uuid(subaccountId, clientId, clobPairId, orderFlags);
   const orderFromDatabase: OrderFromDatabase | undefined = await
@@ -602,6 +605,8 @@ export async function expectOrderInDatabase({
     goodTilBlock: goodTilBlock ?? null,
     goodTilBlockTime: goodTilBlockTime ?? null,
     clientMetadata,
+    updatedAt,
+    updatedAtHeight,
   }));
 }
 

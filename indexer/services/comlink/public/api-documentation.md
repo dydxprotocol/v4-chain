@@ -531,7 +531,8 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/screen?address=string',
 
 ```json
 {
-  "restricted": true
+  "restricted": true,
+  "reason": "string"
 }
 ```
 
@@ -1044,7 +1045,9 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/orders?address=string&subaccou
     "timeInForce": "GTT",
     "status": "OPEN",
     "postOnly": true,
-    "ticker": "string"
+    "ticker": "string",
+    "updatedAt": "string",
+    "updatedAtHeight": "string"
   }
 ]
 ```
@@ -1099,6 +1102,8 @@ Status Code **200**
 |---|---|---|---|---|
 |» postOnly|boolean|true|none|none|
 |» ticker|string|true|none|none|
+|» updatedAt|[IsoString](#schemaisostring)|false|none|none|
+|» updatedAtHeight|string|false|none|none|
 
 #### Enumerated Values
 
@@ -1201,7 +1206,9 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/orders/{orderId}',
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
-  "ticker": "string"
+  "ticker": "string",
+  "updatedAt": "string",
+  "updatedAtHeight": "string"
 }
 ```
 
@@ -2191,7 +2198,8 @@ This operation does not require authentication
 
 ```json
 {
-  "restricted": true
+  "restricted": true,
+  "reason": "string"
 }
 
 ```
@@ -2201,6 +2209,7 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |restricted|boolean|true|none|none|
+|reason|string|false|none|none|
 
 ## OrderSide
 
@@ -2746,7 +2755,9 @@ or
   "timeInForce": "GTT",
   "status": "OPEN",
   "postOnly": true,
-  "ticker": "string"
+  "ticker": "string",
+  "updatedAt": "string",
+  "updatedAtHeight": "string"
 }
 
 ```
@@ -2775,6 +2786,8 @@ or
 |status|[APIOrderStatus](#schemaapiorderstatus)|true|none|none|
 |postOnly|boolean|true|none|none|
 |ticker|string|true|none|none|
+|updatedAt|[IsoString](#schemaisostring)|false|none|none|
+|updatedAtHeight|string|false|none|none|
 
 ## PerpetualMarketStatus
 

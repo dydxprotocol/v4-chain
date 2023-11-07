@@ -15,8 +15,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var (
+	GovAuthority = authtypes.NewModuleAddress(govtypes.ModuleName).String()
+)
+
 func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Context) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.VestKeeper
 
@@ -41,7 +45,7 @@ func TestMsgSetVestEntry(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Entry:     TestValidEntry,
 			},
 			expectedErr: "",
@@ -57,7 +61,7 @@ func TestMsgSetVestEntry(t *testing.T) {
 		{
 			name: "invalid params: invalid denom",
 			input: &types.MsgSetVestEntry{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: GovAuthority,
 				Entry: types.VestEntry{
 					VesterAccount:   TestVesterAccount,
 					TreasuryAccount: TestTreasuryAccount,
@@ -90,7 +94,7 @@ func TestMsgDeleteVestEntry(t *testing.T) {
 		{
 			name: "valid params",
 			input: &types.MsgDeleteVestEntry{
-				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:     GovAuthority,
 				VesterAccount: TestVesterAccount,
 			},
 			expectedErr: "",
@@ -106,7 +110,7 @@ func TestMsgDeleteVestEntry(t *testing.T) {
 		{
 			name: "delete non-existent entry",
 			input: &types.MsgDeleteVestEntry{
-				Authority:     authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority:     GovAuthority,
 				VesterAccount: "non_existent_vester",
 			},
 			expectedErr: "account is not associated with a vest entry",

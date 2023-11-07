@@ -2,10 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
@@ -20,7 +20,7 @@ func TestMsgServerUpdateProposeParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateProposeParams{
-				Authority: constants.GovModuleAccAddressString,
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.ProposeParams{
 					MaxBridgesPerBlock:           3,
 					ProposeDelayDuration:         time.Second,
@@ -32,7 +32,7 @@ func TestMsgServerUpdateProposeParams(t *testing.T) {
 		},
 		"Failure: invalid params": {
 			testMsg: types.MsgUpdateProposeParams{
-				Authority: constants.GovModuleAccAddressString,
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.ProposeParams{
 					MaxBridgesPerBlock:           3,
 					ProposeDelayDuration:         -time.Second, // invalid

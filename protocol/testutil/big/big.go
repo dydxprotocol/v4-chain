@@ -3,6 +3,8 @@ package big
 
 import (
 	"math/big"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
 // MustFirst is used for returning the first value of the SetString
@@ -12,4 +14,17 @@ func MustFirst[T *big.Int | *big.Rat](n T, success bool) T {
 		panic("Conversion failed")
 	}
 	return n
+}
+
+// Int64MulPow10 returns the result of `val * 10^exponent`, in *big.Int.
+func Int64MulPow10(
+	val int64,
+	exponent uint64,
+) (
+	result *big.Int,
+) {
+	return new(big.Int).Mul(
+		big.NewInt(val),
+		lib.BigPow10(exponent),
+	)
 }

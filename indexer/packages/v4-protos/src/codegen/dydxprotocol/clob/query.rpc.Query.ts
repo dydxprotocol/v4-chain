@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse } from "./query";
+import { QueryGetClobPairRequest, QueryClobPairResponse, QueryAllClobPairRequest, QueryClobPairAllResponse, AreSubaccountsLiquidatableRequest, AreSubaccountsLiquidatableResponse, MevNodeToNodeCalculationRequest, MevNodeToNodeCalculationResponse, QueryEquityTierLimitConfigurationRequest, QueryEquityTierLimitConfigurationResponse, QueryBlockRateLimitConfigurationRequest, QueryBlockRateLimitConfigurationResponse, QueryLiquidationsConfigurationRequest, QueryLiquidationsConfigurationResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -19,6 +19,12 @@ export interface Query {
   /** Queries EquityTierLimitConfiguration. */
 
   equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse>;
+  /** Queries BlockRateLimitConfiguration. */
+
+  blockRateLimitConfiguration(request?: QueryBlockRateLimitConfigurationRequest): Promise<QueryBlockRateLimitConfigurationResponse>;
+  /** Queries LiquidationsConfiguration. */
+
+  liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -30,6 +36,8 @@ export class QueryClientImpl implements Query {
     this.areSubaccountsLiquidatable = this.areSubaccountsLiquidatable.bind(this);
     this.mevNodeToNodeCalculation = this.mevNodeToNodeCalculation.bind(this);
     this.equityTierLimitConfiguration = this.equityTierLimitConfiguration.bind(this);
+    this.blockRateLimitConfiguration = this.blockRateLimitConfiguration.bind(this);
+    this.liquidationsConfiguration = this.liquidationsConfiguration.bind(this);
   }
 
   clobPair(request: QueryGetClobPairRequest): Promise<QueryClobPairResponse> {
@@ -64,6 +72,18 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QueryEquityTierLimitConfigurationResponse.decode(new _m0.Reader(data)));
   }
 
+  blockRateLimitConfiguration(request: QueryBlockRateLimitConfigurationRequest = {}): Promise<QueryBlockRateLimitConfigurationResponse> {
+    const data = QueryBlockRateLimitConfigurationRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "BlockRateLimitConfiguration", data);
+    return promise.then(data => QueryBlockRateLimitConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
+  liquidationsConfiguration(request: QueryLiquidationsConfigurationRequest = {}): Promise<QueryLiquidationsConfigurationResponse> {
+    const data = QueryLiquidationsConfigurationRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Query", "LiquidationsConfiguration", data);
+    return promise.then(data => QueryLiquidationsConfigurationResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -87,6 +107,14 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     equityTierLimitConfiguration(request?: QueryEquityTierLimitConfigurationRequest): Promise<QueryEquityTierLimitConfigurationResponse> {
       return queryService.equityTierLimitConfiguration(request);
+    },
+
+    blockRateLimitConfiguration(request?: QueryBlockRateLimitConfigurationRequest): Promise<QueryBlockRateLimitConfigurationResponse> {
+      return queryService.blockRateLimitConfiguration(request);
+    },
+
+    liquidationsConfiguration(request?: QueryLiquidationsConfigurationRequest): Promise<QueryLiquidationsConfigurationResponse> {
+      return queryService.liquidationsConfiguration(request);
     }
 
   };

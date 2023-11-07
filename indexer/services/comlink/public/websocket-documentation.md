@@ -181,6 +181,8 @@ export interface OrderSubaccountMessageContents {
   createdAtHeight?: string;
   clientMetadata: string;
   triggerPrice?: string;
+  updatedAt?: IsoString;
+  updatedAtHeight?: string;
 }
 
 export enum OrderSide {

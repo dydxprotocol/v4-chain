@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -77,7 +76,7 @@ func assertFillAmountAndPruneState(
 		)
 
 		potentiallyPrunableOrdersBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-			lib.Uint32ToBytes(blockHeight),
+			lib.Uint32ToKey(blockHeight),
 		)
 
 		var potentiallyPrunableOrders = &types.PotentiallyPrunableOrders{}
@@ -147,12 +146,6 @@ func TestEndBlocker_Failure(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewStatefulOrderRemovalEvent(
-							orderId,
-							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -661,7 +654,17 @@ func TestEndBlocker_Success(t *testing.T) {
 
 			mockIndexerEventManager := &mocks.IndexerEventManager{}
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				types.InsuranceFundModuleAddress,
+				constants.Usdc.Denom,
+			).Return(
+				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
+			)
+
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, mockIndexerEventManager)
 			ctx := ks.Ctx.WithBlockHeight(int64(blockHeight)).WithBlockTime(tc.blockTime)
 
 			// Set up prices keeper markets with default prices.
@@ -686,6 +689,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
 			memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
@@ -693,20 +699,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -723,7 +715,7 @@ func TestEndBlocker_Success(t *testing.T) {
 					),
 				),
 			).Once().Return()
-			_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
 				ctx,
 				constants.ClobPair_Btc.Id,
 				clobtest.MustPerpetualId(constants.ClobPair_Btc),
@@ -739,20 +731,6 @@ func TestEndBlocker_Success(t *testing.T) {
 			mockIndexerEventManager.On("AddTxnEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						1,
-						1,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Ticker,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.MarketId,
-						constants.ClobPair_Eth.Status,
-						constants.ClobPair_Eth.QuantumConversionExponent,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.AtomicResolution,
-						constants.ClobPair_Eth.SubticksPerTick,
-						constants.ClobPair_Eth.StepBaseQuantums,
-						constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -789,12 +767,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewStatefulOrderRemovalEvent(
-							orderId,
-							indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewStatefulOrderRemovalEvent(
@@ -810,11 +782,6 @@ func TestEndBlocker_Success(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ctx,
 					indexerevents.SubtypeStatefulOrder,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewConditionalOrderTriggeredEvent(
-							orderId,
-						),
-					),
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewConditionalOrderTriggeredEvent(
@@ -867,9 +834,9 @@ func TestEndBlocker_Success(t *testing.T) {
 				// TODO(CLOB-746) Once R/W methods are created, substitute those methods here.
 				triggeredConditionalOrderMemstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 				untriggeredConditionalOrderMemstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
-				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
+				exists := triggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.True(t, exists)
-				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.MustMarshal())
+				exists = untriggeredConditionalOrderMemstore.Has(triggeredConditionalOrderId.ToStateKey())
 				require.False(t, exists)
 			}
 
@@ -1051,7 +1018,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis tmtypes.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -1081,7 +1048,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Create all existing orders.
@@ -1176,7 +1143,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedLongTermOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
@@ -1196,7 +1163,7 @@ func TestBeginBlocker_Success(t *testing.T) {
 					types.ProcessProposerMatchesEvents{
 						PlacedLongTermOrderIds: []types.OrderId{
 							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
-							constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20.OrderId,
+							constants.LongTermOrder_Carl_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId,
 							constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 						},
 						ExpiredStatefulOrderIds: []types.OrderId{
@@ -1369,7 +1336,7 @@ func TestPrepareCheckState(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				authtypes.NewModuleAddress(types.InsuranceFundName),
+				types.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
 			mockBankKeeper.On(

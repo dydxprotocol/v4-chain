@@ -286,7 +286,7 @@ importers:
       bech32: ^2.0.0
       dotenv-flow: ^3.2.0
       long: ^5.2.1
-      protobufjs: ^7.2.3
+      protobufjs: ^7.2.4
       typescript: ^4.7.4
     dependencies:
       '@bufbuild/buf': 1.19.0-1
@@ -298,7 +298,7 @@ importers:
       bech32: 2.0.0
       dotenv-flow: 3.2.0
       long: 5.2.1
-      protobufjs: 7.2.3
+      protobufjs: 7.2.4
     devDependencies:
       '@dydxprotocol-indexer/dev': link:../dev
       '@osmonauts/telescope': 0.80.0
@@ -644,13 +644,17 @@ importers:
     specifiers:
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
+      '@dydxprotocol-indexer/kafka': workspace:^0.0.1
       '@dydxprotocol-indexer/postgres': workspace:^0.0.1
+      '@dydxprotocol-indexer/v4-proto-parser': workspace:^0.0.1
+      '@dydxprotocol-indexer/v4-protos': workspace:^0.0.1
       '@types/jest': ^28.1.4
       '@types/node': ^18.0.3
       '@types/yargs': ^16.0.0
       big.js: ^6.0.2
       dotenv-flow: ^3.2.0
       jest: ^28.1.2
+      kafkajs: ^2.1.0
       lodash: ^4.17.21
       long: ^5.2.1
       ts-node: ^10.8.2
@@ -659,9 +663,13 @@ importers:
       yargs: ^13.3.0
     dependencies:
       '@dydxprotocol-indexer/base': link:../../packages/base
+      '@dydxprotocol-indexer/kafka': link:../../packages/kafka
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
+      '@dydxprotocol-indexer/v4-proto-parser': link:../../packages/v4-proto-parser
+      '@dydxprotocol-indexer/v4-protos': link:../../packages/v4-protos
       big.js: 6.2.1
       dotenv-flow: 3.2.0
+      kafkajs: 2.2.3
       lodash: 4.17.21
       long: 5.2.1
       yargs: 13.3.2
@@ -11698,25 +11706,6 @@ packages:
       '@types/long': 4.0.2
       '@types/node': 18.0.3
       long: 4.0.0
-    dev: false
-
-  /protobufjs/7.2.3:
-    resolution: {integrity: sha512-TtpvOqwB5Gdz/PQmOjgsrGH1nHjAQVCN7JG4A6r1sXRWESL5rNMAiRcBQlCAdKxZcAbstExQePYG8xof/JVRgg==}
-    engines: {node: '>=12.0.0'}
-    requiresBuild: true
-    dependencies:
-      '@protobufjs/aspromise': 1.1.2
-      '@protobufjs/base64': 1.1.2
-      '@protobufjs/codegen': 2.0.4
-      '@protobufjs/eventemitter': 1.1.0
-      '@protobufjs/fetch': 1.1.0
-      '@protobufjs/float': 1.0.2
-      '@protobufjs/inquire': 1.1.0
-      '@protobufjs/path': 1.1.2
-      '@protobufjs/pool': 1.1.0
-      '@protobufjs/utf8': 1.1.0
-      '@types/node': 18.0.3
-      long: 5.2.1
     dev: false
 
   /protobufjs/7.2.4:

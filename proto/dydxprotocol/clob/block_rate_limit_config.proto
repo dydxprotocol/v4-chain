@@ -8,7 +8,7 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 // Defines the block rate limits for CLOB specific operations.
 message BlockRateLimitConfiguration {
   // How many short term order attempts (successful and failed) are allowed for
-  // a subaccount per N blocks. Note that the rate limits are applied
+  // an account per N blocks. Note that the rate limits are applied
   // in an AND fashion such that an order placement must pass all rate limit
   // configurations.
   //
@@ -16,8 +16,8 @@ message BlockRateLimitConfiguration {
   repeated MaxPerNBlocksRateLimit max_short_term_orders_per_n_blocks = 1
       [ (gogoproto.nullable) = false ];
 
-  // How many stateful order attempts (successful and failed) are allowed for a
-  // subaccount per N blocks. Note that the rate limits are applied
+  // How many stateful order attempts (successful and failed) are allowed for
+  // an account per N blocks. Note that the rate limits are applied
   // in an AND fashion such that an order placement must pass all rate limit
   // configurations.
   //
@@ -26,7 +26,7 @@ message BlockRateLimitConfiguration {
       [ (gogoproto.nullable) = false ];
 
   // How many short term order cancellation attempts (successful and failed) are
-  // allowed for a subaccount per N blocks. Note that the rate limits are
+  // allowed for an account per N blocks. Note that the rate limits are
   // applied in an AND fashion such that an order cancellation must pass all
   // rate limit configurations.
   //

@@ -2,11 +2,16 @@ name: Protocol Sims
 # Sims workflow runs multiple types of simulations (nondeterminism, import-export, after-import, multi-seed-short)
 # This workflow will run on all pushes to main, if a .go, .mod or .sum file have been changed
 on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'protocol/**'
   push:
     branches:
       - main
-      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/ibctestnet/v1.0.x
-      - 'release/v[0-9]+.[0-9]+.x'  # e.g. release/v0.0.x
+      - 'release/protocol/v0.[0-9]+.x'  # e.g. release/protocol/v0.1.x
+      - 'release/protocol/v[0-9]+.x'  # e.g. release/protocol/v1.x
+    paths:
+      - 'protocol/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
@@ -23,7 +28,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - run: make build
@@ -34,7 +39,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - name: Install runsim
@@ -54,7 +59,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - uses: actions/cache@v2.1.3
@@ -104,7 +109,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - uses: actions/cache@v2.1.3
@@ -154,7 +159,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - uses: actions/cache@v2.1.3
@@ -204,7 +209,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
         with:
-          go-version: 1.19
+          go-version: 1.21
       - name: Display go version
         run: go version
       - uses: actions/cache@v2.1.3

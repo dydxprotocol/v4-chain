@@ -8,16 +8,14 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	"github.com/cosmos/cosmos-sdk/telemetry"
-
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -26,7 +24,7 @@ import (
 // Note that empty subaccounts are removed from state.
 func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	key := subaccount.Id.MustMarshal()
+	key := subaccount.Id.ToStateKey()
 
 	if len(subaccount.PerpetualPositions) == 0 && len(subaccount.AssetPositions) == 0 {
 		if store.Has(key) {
@@ -39,20 +37,30 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 }
 
 // GetSubaccount returns a subaccount from its index.
+//
+// Note that this function is getting called very frequently; metrics in this function
+// should be sampled to reduce CPU time.
 func (k Keeper) GetSubaccount(
 	ctx sdk.Context,
 	id types.SubaccountId,
 ) (val types.Subaccount) {
-	defer telemetry.ModuleMeasureSince(
-		types.ModuleName,
-		time.Now(),
-		metrics.GetSubaccount,
-		metrics.Latency,
-	)
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetSubaccount, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
 
 	// Check state for the subaccount.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	b := store.Get(id.MustMarshal())
+	b := store.Get(id.ToStateKey())
 
 	// If subaccount does not exist in state, return a default value.
 	if b == nil {
@@ -275,19 +283,13 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	// Apply the updates to perpetual positions.
-	success, err = UpdatePerpetualPositions(
+	UpdatePerpetualPositions(
 		settledUpdates,
 		perpIdToFundingIndex,
 	)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
 
 	// Apply the updates to asset positions.
-	success, err = UpdateAssetPositions(settledUpdates)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
+	UpdateAssetPositions(settledUpdates)
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
@@ -299,17 +301,6 @@ func (k Keeper) UpdateSubaccounts(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeSubaccountUpdate,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewSubaccountUpdateEvent(
-					u.SettledSubaccount.Id,
-					getUpdatedPerpetualPositions(
-						u,
-						fundingPayments,
-					),
-					getUpdatedAssetPositions(u),
-					fundingPayments,
-				),
-			),
 			indexerevents.SubaccountUpdateEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewSubaccountUpdateEvent(
@@ -436,10 +427,8 @@ func (k Keeper) getSettledSubaccount(
 		// division result always rounds towards negative infinity.
 		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
 	)
-	err = newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	if err != nil {
-		return types.Subaccount{}, nil, err
-	}
+	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
+	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
 	return newSubaccount, fundingPayments, nil
 }
 

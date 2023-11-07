@@ -2,6 +2,7 @@ package flags
 
 import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 )
 
@@ -23,27 +24,42 @@ const (
 	FlagLiquidationDaemonRequestChunkSize    = "liquidation-daemon-request-chunk-size"
 )
 
+// Shared flags contains configuration flags shared by all daemons.
 type SharedFlags struct {
+	// SocketAddress is the location of the unix socket to communicate with the daemon gRPC service.
 	SocketAddress string
 }
 
+// BridgeFlags contains configuration flags for the Bridge Daemon.
 type BridgeFlags struct {
-	Enabled        bool
-	LoopDelayMs    uint32
+	// Enabled toggles the bridge daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the bridge daemon.
+	LoopDelayMs uint32
+	// EthRpcEndpoint is the endpoint for the Ethereum node where bridge data is queried.
 	EthRpcEndpoint string
 }
 
+// LiquidationFlags contains configuration flags for the Liquidation Daemon.
 type LiquidationFlags struct {
-	Enabled             bool
-	LoopDelayMs         uint32
+	// Enabled toggles the liquidation daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the liquidation daemon.
+	LoopDelayMs uint32
+	// SubaccountPageLimit configures the pagination limit for fetching subaccounts.
 	SubaccountPageLimit uint64
 	RequestChunkSize    uint64
 }
 
+// PriceFlags contains configuration flags for the Price Daemon.
 type PriceFlags struct {
-	Enabled     bool
+	// Enabled toggles the price daemon on or off.
+	Enabled bool
+	// LoopDelayMs configures the update frequency of the price daemon.
 	LoopDelayMs uint32
 }
+
+// DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
 	Bridge      BridgeFlags
@@ -53,7 +69,7 @@ type DaemonFlags struct {
 
 var defaultDaemonFlags *DaemonFlags
 
-// Returns the default values for the Daemon Flags using a singleton pattern.
+// GetDefaultDaemonFlags returns the default values for the Daemon Flags using a singleton pattern.
 func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
@@ -63,7 +79,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Bridge: BridgeFlags{
 				Enabled:        true,
 				LoopDelayMs:    30_000,
-				EthRpcEndpoint: "https://eth-sepolia.g.alchemy.com/v2/demo",
+				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:             true,
@@ -80,7 +96,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	return *defaultDaemonFlags
 }
 
-// AddSharedPriceFeedFlagsToCmd adds the required flags to instantiate a server and client for
+// AddDaemonFlagsToCmd adds the required flags to instantiate a server and client for
 // price updates. These flags should be applied to the `start` command V4 Cosmos application.
 // E.g. `dydxprotocold start --price-daemon-enabled=true --unix-socket-address $(unix_socket_address)`
 func AddDaemonFlagsToCmd(
@@ -157,41 +173,61 @@ func GetDaemonFlagValuesFromOptions(
 	result := GetDefaultDaemonFlags()
 
 	// Shared Flags
-	if v, ok := appOpts.Get(FlagUnixSocketAddress).(string); ok {
-		result.Shared.SocketAddress = v
+	if option := appOpts.Get(FlagUnixSocketAddress); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.Shared.SocketAddress = v
+		}
 	}
 
 	// Bridge Daemon.
-	if v, ok := appOpts.Get(FlagBridgeDaemonEnabled).(bool); ok {
-		result.Bridge.Enabled = v
+	if option := appOpts.Get(FlagBridgeDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Bridge.Enabled = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagBridgeDaemonLoopDelayMs).(uint32); ok {
-		result.Bridge.LoopDelayMs = v
+	if option := appOpts.Get(FlagBridgeDaemonLoopDelayMs); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.Bridge.LoopDelayMs = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagBridgeDaemonEthRpcEndpoint).(string); ok {
-		result.Bridge.EthRpcEndpoint = v
+	if option := appOpts.Get(FlagBridgeDaemonEthRpcEndpoint); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.Bridge.EthRpcEndpoint = v
+		}
 	}
 
 	// Liquidation Daemon.
-	if v, ok := appOpts.Get(FlagLiquidationDaemonEnabled).(bool); ok {
-		result.Liquidation.Enabled = v
+	if option := appOpts.Get(FlagLiquidationDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Liquidation.Enabled = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagLiquidationDaemonLoopDelayMs).(uint32); ok {
-		result.Liquidation.LoopDelayMs = v
+	if option := appOpts.Get(FlagLiquidationDaemonLoopDelayMs); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.Liquidation.LoopDelayMs = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagLiquidationDaemonSubaccountPageLimit).(uint64); ok {
-		result.Liquidation.SubaccountPageLimit = v
+	if option := appOpts.Get(FlagLiquidationDaemonSubaccountPageLimit); option != nil {
+		if v, err := cast.ToUint64E(option); err == nil {
+			result.Liquidation.SubaccountPageLimit = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagLiquidationDaemonRequestChunkSize).(uint64); ok {
-		result.Liquidation.RequestChunkSize = v
+	if option := appOpts.Get(FlagLiquidationDaemonRequestChunkSize); option != nil {
+		if v, err := cast.ToUint64E(option); err == nil {
+			result.Liquidation.RequestChunkSize = v
+		}
 	}
 
 	// Price Daemon.
-	if v, ok := appOpts.Get(FlagPriceDaemonEnabled).(bool); ok {
-		result.Price.Enabled = v
+	if option := appOpts.Get(FlagPriceDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Price.Enabled = v
+		}
 	}
-	if v, ok := appOpts.Get(FlagPriceDaemonLoopDelayMs).(uint32); ok {
-		result.Price.LoopDelayMs = v
+	if option := appOpts.Get(FlagPriceDaemonLoopDelayMs); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.Price.LoopDelayMs = v
+		}
 	}
 
 	return result

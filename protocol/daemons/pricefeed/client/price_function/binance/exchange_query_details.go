@@ -8,7 +8,7 @@ import (
 var (
 	BinanceDetails = types.ExchangeQueryDetails{
 		Exchange:      exchange_common.EXCHANGE_ID_BINANCE,
-		Url:           "https://data.binance.com/api/v3/ticker/24hr",
+		Url:           "https://data-api.binance.vision/api/v3/ticker/24hr",
 		PriceFunction: BinancePriceFunction,
 		IsMultiMarket: true,
 	}

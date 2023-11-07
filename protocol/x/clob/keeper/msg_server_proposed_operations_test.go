@@ -29,6 +29,16 @@ func TestProposedOperations(t *testing.T) {
 		"Propagate Process Error": {
 			setupMocks: func(ctx sdk.Context, mck *mocks.ClobKeeper) {
 				mck.On("ProcessProposerOperations", ctx, operationsQueue).Return(testError)
+				mockLogger := &mocks.Logger{}
+				mockLogger.On(
+					"Error",
+					[]interface{}{
+						testError.Error(),
+						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+					}...,
+				).Return()
+				mck.On("Logger", ctx).Return(mockLogger)
 			},
 			expectedErr: testError,
 		},

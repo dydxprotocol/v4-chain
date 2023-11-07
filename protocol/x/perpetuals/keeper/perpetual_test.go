@@ -123,10 +123,9 @@ func getUpdatePerpetualEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			bytes := indexer_manager.GetBytesFromEventData(event.Data)
 			unmarshaler := common.UnmarshalerImpl{}
 			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
-			err := unmarshaler.Unmarshal(bytes, &updatePerpetualEvent)
+			err := unmarshaler.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -255,6 +254,14 @@ func TestModifyPerpetual_Failure(t *testing.T) {
 			defaultFundingPpm: 0,
 			liquidityTier:     0,
 			expectedError:     types.ErrTickerEmptyString,
+		},
+		"Modified to empty liquidity tier": {
+			id:                0,
+			ticker:            "ticker",
+			marketId:          0,
+			defaultFundingPpm: 0,
+			liquidityTier:     999,
+			expectedError:     errorsmod.Wrap(types.ErrLiquidityTierDoesNotExist, fmt.Sprint(999)),
 		},
 	}
 
@@ -766,9 +773,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
@@ -800,9 +805,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad LiquidityTier should return an error.
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
@@ -965,9 +968,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNetNotional(
@@ -1129,9 +1130,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
@@ -1294,9 +1293,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	cdc := codec.NewProtoCodec(registry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
-	perpetualStore.Set(lib.Uint32ToBytes(
-		perpetual.Params.Id,
-	), b)
+	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
 
 	// Getting margin requirements for perpetual with bad MarketId should return an error.
 	_, err := pc.PerpetualsKeeper.GetNetCollateral(
@@ -2027,10 +2024,9 @@ func getFundingBlockEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_BlockEvent_); ok {
-			bytes := indexer_manager.GetBytesFromEventData(event.Data)
 			unmarshaler := common.UnmarshalerImpl{}
 			var fundingEvent indexerevents.FundingEventV1
-			err := unmarshaler.Unmarshal(bytes, &fundingEvent)
+			err := unmarshaler.Unmarshal(event.DataBytes, &fundingEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -2529,17 +2525,6 @@ func TestAddPremiums_NonExistingPerpetuals(t *testing.T) {
 	}
 }
 
-func TestModifyOpenInterest_NotImplemented(t *testing.T) {
-	pc := keepertest.PerpetualsKeepers(t)
-	_, err := pc.PerpetualsKeeper.ModifyOpenInterest(
-		pc.Ctx,
-		0,
-		true,
-		0,
-	)
-	require.ErrorIs(t, err, types.ErrNotImplementedOpenInterest)
-}
-
 func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 	testDuration := uint32(60)
 	testCurrentEpoch := uint32(5)
@@ -2558,6 +2543,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"Not new epoch": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     25,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				AllMarketPremiums: []types.MarketPremiums{
 					{
@@ -2580,6 +2566,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"New epoch, empty premium samples storage": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 4,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2612,6 +2599,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"New epoch, add new sample to existing samples, skip zero samples": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 6,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2631,6 +2619,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 			},
 			prevPremiumSamples: types.PremiumStore{
 				NumPremiums: 2,
+
 				AllMarketPremiums: []types.MarketPremiums{
 					{
 						PerpetualId: 0,
@@ -2746,6 +2735,7 @@ func TestMaybeProcessNewFundingSampleEpoch(t *testing.T) {
 		"Panic: `NumPremiums` < premium entries length": {
 			currentEpochStartBlock: 23,
 			currentBlockHeight:     23,
+			minNumVotesPerSample:   1,
 			premiumVotes: types.PremiumStore{
 				NumPremiums: 1,
 				AllMarketPremiums: []types.MarketPremiums{
@@ -2974,7 +2964,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -2983,7 +2973,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
 
@@ -3114,7 +3104,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(0),
 			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          errorsmod.Wrap(types.ErrBasePositionNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
@@ -3123,7 +3113,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			maintenanceFractionPpm: lib.OneMillion,
 			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
-			expectedError:          errorsmod.Wrap(types.ErrImpactNotionalIsZero, fmt.Sprint(0)),
+			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
 

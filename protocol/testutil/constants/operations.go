@@ -8,35 +8,27 @@ func init() {
 	_ = TestTxBuilder.SetMsgs(ValidEmptyMsgProposedOperations)
 	ValidEmptyMsgProposedOperationsTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
-	_ = TestTxBuilder.SetMsgs(InvalidProposedOperations)
-	InvalidProposedOperationsTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
+	_ = TestTxBuilder.SetMsgs(InvalidProposedOperationsUnspecifiedOrderRemovalReason)
+	InvalidProposedOperationsUnspecifiedOrderRemovalReasonTxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(
+		TestTxBuilder.GetTx())
 }
 
 var (
 	ValidEmptyMsgProposedOperations        = &types.MsgProposedOperations{}
 	ValidEmptyMsgProposedOperationsTxBytes []byte
-	// InvalidProposedOperations is invalid because the maker order for the match operation
-	// does not have a corresponding order placement operation before it in the operations queue.
-	InvalidProposedOperations = &types.MsgProposedOperations{
+	// InvalidProposedOperationsUnspecifiedOrderRemovalReason is invalid because the order removal reason is
+	// unspecified.
+	InvalidProposedOperationsUnspecifiedOrderRemovalReason = &types.MsgProposedOperations{
 		OperationsQueue: []types.OperationRaw{
 			{
-				Operation: &types.OperationRaw_Match{
-					Match: &types.ClobMatch{
-						Match: &types.ClobMatch_MatchOrders{
-							MatchOrders: &types.MatchOrders{
-								TakerOrderId: Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10.OrderId,
-								Fills: []types.MakerFill{
-									{
-										MakerOrderId: OrderId_Alice_Num0_ClientId0_Clob0,
-										FillAmount:   100_000_000,
-									},
-								},
-							},
-						},
+				Operation: &types.OperationRaw_OrderRemoval{
+					OrderRemoval: &types.OrderRemoval{
+						OrderId:       LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+						RemovalReason: types.OrderRemoval_REMOVAL_REASON_UNSPECIFIED,
 					},
 				},
 			},
 		},
 	}
-	InvalidProposedOperationsTxBytes []byte
+	InvalidProposedOperationsUnspecifiedOrderRemovalReasonTxBytes []byte
 )

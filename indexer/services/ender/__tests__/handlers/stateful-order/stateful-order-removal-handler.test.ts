@@ -19,6 +19,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultOrderId, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
@@ -114,7 +116,11 @@ describe('statefulOrderRemovalHandler', () => {
     await onMessage(kafkaMessage);
     const order: OrderFromDatabase | undefined = await OrderTable.findById(orderId);
     expect(order).toBeDefined();
-    expect(order!.status).toEqual(OrderStatus.CANCELED);
+    expect(order).toEqual(expect.objectContaining({
+      status: OrderStatus.CANCELED,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
+    }));
     expectTimingStats();
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {

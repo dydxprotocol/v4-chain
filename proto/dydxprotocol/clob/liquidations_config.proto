@@ -7,29 +7,23 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // LiquidationsConfig stores all configurable fields related to liquidations.
 message LiquidationsConfig {
-  // The maximum number of quote quantums (inclusive) that the insurance fund
-  // can have for deleverages to be enabled. This is typically some non-zero
-  // value since it is difficult to fully-drain the insurance fund (to
-  // zero without rounding error).
-  uint64 max_insurance_fund_quantums_for_deleveraging = 1;
-
   // The maximum liquidation fee (in parts-per-million). This fee goes
   // 100% to the insurance fund.
-  uint32 max_liquidation_fee_ppm = 2;
+  uint32 max_liquidation_fee_ppm = 1;
 
   // Limits around how much of a single position can be liquidated
   // within a single block.
-  PositionBlockLimits position_block_limits = 3
+  PositionBlockLimits position_block_limits = 2
       [ (gogoproto.nullable) = false ];
 
   // Limits around how many quote quantums from a single subaccount can
   // be liquidated within a single block.
-  SubaccountBlockLimits subaccount_block_limits = 4
+  SubaccountBlockLimits subaccount_block_limits = 3
       [ (gogoproto.nullable) = false ];
 
   // Config about how the fillable-price spread from the oracle price
   // increases based on the adjusted bankruptcy rating of the subaccount.
-  FillablePriceConfig fillable_price_config = 5
+  FillablePriceConfig fillable_price_config = 4
       [ (gogoproto.nullable) = false ];
 }
 

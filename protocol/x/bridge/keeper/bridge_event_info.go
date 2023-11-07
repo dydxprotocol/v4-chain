@@ -50,7 +50,7 @@ func (k Keeper) SetAcknowledgedEventInfo(
 
 // GetRecognizedEventInfo returns `RecognizedEventInfo` from `BridgeEventManager`.
 // This has the next event id that has not yet been recognized by this node’s daemon.
-// This also has the height of the highest Ethereum block from which a bridge event
+// This also has the height of the highest Ethereum block at which a bridge event
 // was recognized. These values are not in-consensus.
 func (k Keeper) GetRecognizedEventInfo(
 	ctx sdk.Context,

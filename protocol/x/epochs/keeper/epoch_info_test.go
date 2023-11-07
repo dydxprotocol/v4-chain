@@ -1,11 +1,12 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"sort"
 	"strconv"
 	"testing"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"

@@ -6,10 +6,6 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "Bitstamp",
-      "ticker": "LINK/USD"
-    },
-    {
       "exchangeName": "Bybit",
       "ticker": "LINKUSDT",
       "adjustByMarket": "USDT-USD"
@@ -17,10 +13,6 @@
     {
       "exchangeName": "CoinbasePro",
       "ticker": "LINK-USD"
-    },
-    {
-      "exchangeName": "CryptoCom",
-      "ticker": "LINK_USD"
     },
     {
       "exchangeName": "Kraken",

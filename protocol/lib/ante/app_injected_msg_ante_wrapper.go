@@ -27,9 +27,10 @@ func (imaw AppInjectedMsgAnteWrapper) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	// "App-injected message" tx is skipped, because such tx is not signed on purpose.
-	// If a tx is not signed, signature related functions like `GetSigners` will fail
-	// with "empty address string is not allowed" error.
+	// "App-injected message" tx must skip certain AnteHandlers.
+	// For example, "App-injected message" tx is not signed on purpose and if a tx is not signed,
+	// signature related functions like `GetSigners` will fail due to signer field being empty.
+	// Therefore, we skip the AnteHandlers that require the tx to be signed.
 	if IsSingleAppInjectedMsg(tx.GetMsgs()) {
 		return next(ctx, tx, simulate)
 	}

@@ -2,7 +2,7 @@ import { TRADES_WEBSOCKET_MESSAGE_VERSION, KafkaTopics } from '@dydxprotocol-ind
 import { testConstants, TradeContent, TradeMessageContents } from '@dydxprotocol-indexer/postgres';
 import { TradeMessage } from '@dydxprotocol-indexer/v4-protos';
 
-import { ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types';
+import { AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types';
 
 export function contentToTradeMessage(
   tradeContent: TradeContent,
@@ -38,5 +38,14 @@ export function createConsolidatedKafkaEventFromTrade(
   return {
     topic: KafkaTopics.TO_WEBSOCKETS_TRADES,
     message: trade,
+  };
+}
+
+export function createConsolidatedKafkaEventFromSubaccount(
+  subaccount: AnnotatedSubaccountMessage,
+): ConsolidatedKafkaEvent {
+  return {
+    topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
+    message: subaccount,
   };
 }

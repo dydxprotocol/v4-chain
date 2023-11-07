@@ -1,6 +1,0 @@
-[[exchanges]]
-ExchangeId = "BinanceUS"
-IntervalMs = "a"
-TimeoutMs = 3_000
-MaxQueries = 1
-MaxBufferSize = 10

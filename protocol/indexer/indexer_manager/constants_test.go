@@ -25,29 +25,29 @@ var BlockTime = time.Unix(1650000000, 0).UTC()
 
 var OrderFillTendermintEvent = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeOrderFill,
-	Data:    Data3,
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 0,
 	},
 	EventIndex: 0,
+	DataBytes:  []byte(Data3),
 }
 
 var TransferTendermintEvent = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeTransfer,
-	Data:    Data,
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 0,
 	},
 	EventIndex: 1,
+	DataBytes:  []byte(Data),
 }
 
 var SubaccountTendermintEvent = indexer_manager.IndexerTendermintEvent{
 	Subtype: indexerevents.SubtypeSubaccountUpdate,
-	Data:    Data2,
 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{
 		TransactionIndex: 1,
 	},
 	EventIndex: 0,
+	DataBytes:  []byte(Data2),
 }
 
 var makerOrder = v1.OrderToIndexerOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15)

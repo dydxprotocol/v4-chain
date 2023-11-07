@@ -35,6 +35,7 @@ func SubmitAndTallyProposal(
 	ctx sdk.Context,
 	tApp *TestApp,
 	messages []sdk.Msg,
+	expectCheckTxFails bool,
 	expectSubmitProposalFails bool,
 	expectedProposalStatus govtypesv1.ProposalStatus,
 ) sdk.Context {
@@ -61,7 +62,13 @@ func SubmitAndTallyProposal(
 		constants.GetPrivateKeyFromAddress,
 		msgSubmitProposal,
 	)
-	require.True(t, tApp.CheckTx(submitProposalCheckTx).IsOK())
+	if expectCheckTxFails {
+		require.False(t, tApp.CheckTx(submitProposalCheckTx).IsOK())
+		// CheckTx failed. Return early.
+		return ctx
+	} else {
+		require.True(t, tApp.CheckTx(submitProposalCheckTx).IsOK())
+	}
 
 	if expectSubmitProposalFails {
 		ctx = tApp.AdvanceToBlock(TestSubmitProposalTxHeight, AdvanceToBlockOptions{
@@ -100,7 +107,7 @@ func SubmitAndTallyProposal(
 			validator,
 			1, // proposal ID
 			govtypesv1.VoteOption_VOTE_OPTION_YES,
-			"", // metdata
+			"", // metadata
 		)
 		voteCheckTx := MustMakeCheckTxWithPrivKeySupplier(
 			ctx,

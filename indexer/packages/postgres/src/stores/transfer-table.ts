@@ -31,6 +31,7 @@ export function uuid(
   senderWalletAddress?: string,
   recipientWalletAddress?: string,
 ): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(
     Buffer.from(
       `${senderSubaccountId}-${recipientSubaccountId}-${senderWalletAddress}-${recipientWalletAddress}-${eventId.toString('hex')}-${assetId}`,

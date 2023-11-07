@@ -1,10 +1,11 @@
 package keeper_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 const (
@@ -25,9 +26,9 @@ var (
 	expectedBlock2MessageIds = []uint32{2, 4, 5}
 )
 
-func TestGetBlockMessageIds_NegativeBlockHeight(t *testing.T) {
+func TestGetBlockMessageIds_ZeroBlockHeight(t *testing.T) {
 	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
-	_, found := delaymsg.GetBlockMessageIds(ctx, -1)
+	_, found := delaymsg.GetBlockMessageIds(ctx, 0)
 	require.False(t, found)
 }
 
@@ -88,7 +89,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 			err := delaymsg.DeleteMessage(ctx, tc.idToDelete)
 			require.NoError(t, err)
 
-			// Assert - message is gone, removed from block message ids, and num messages is unchanged.
+			// Assert - message is gone, removed from block message ids, and next id is unchanged.
 			_, found := delaymsg.GetMessage(ctx, tc.idToDelete)
 			require.False(t, found)
 
@@ -96,7 +97,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 			require.True(t, found)
 			require.Equal(t, tc.expectedRemainingIds, blockMessageIds.Ids)
 
-			require.Equal(t, uint32(len(constants.AllMsgs)), delaymsg.GetNumMessages(ctx))
+			require.Equal(t, uint32(len(constants.AllMsgs)), delaymsg.GetNextDelayedMessageId(ctx))
 		})
 	}
 }

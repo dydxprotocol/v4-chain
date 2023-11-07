@@ -23,22 +23,24 @@ interface ParsedResponse {
 
 export const HOLISTIC: string = 'holistic';
 export const API_PATH: string = '/v2/wallet/synchronous';
-export const API_URI: string = `https://amk-api.elliptic.co${API_PATH}`;
+export const API_URI: string = `https://aml-api.elliptic.co${API_PATH}`;
 export const RISK_SCORE_KEY: string = 'risk_score';
 export const NO_RULES_TRIGGERED_RISK_SCORE: number = -1;
 
 export class EllipticProviderClient extends ComplianceClient {
   private apiKey: string;
+  private apiSecret: string;
 
   public constructor() {
     super();
     this.apiKey = config.ELLIPTIC_API_KEY;
+    this.apiSecret = config.ELLIPTIC_API_SECRET;
   }
 
   public async getComplianceResponse(address: string): Promise<ComplianceClientResponse> {
     const riskScore: number | null = await this.getRiskScore(address);
 
-    if (riskScore !== null && riskScore > config.ELLIPTIC_RISK_SCORE_THRESHOLD) {
+    if (riskScore !== null && riskScore >= config.ELLIPTIC_RISK_SCORE_THRESHOLD) {
       return {
         address,
         blocked: true,
@@ -147,7 +149,7 @@ export class EllipticProviderClient extends ComplianceClient {
   */
   getApiSignature(timeOfRequest: number, payload: string): string {
     // create a SHA256 HMAC using the supplied secret, decoded from base64
-    const secret: string = this.apiKey;
+    const secret: string = this.apiSecret;
     const hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'));
 
     // concatenate the request text to be signed

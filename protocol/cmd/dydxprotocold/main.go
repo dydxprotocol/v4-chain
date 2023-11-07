@@ -16,7 +16,6 @@ func main() {
 	rootCmd := cmd.NewRootCmd(option)
 
 	cmd.AddTendermintSubcommands(rootCmd)
-	cmd.AddInitCmdPostRunE(rootCmd)
 
 	if err := svrcmd.Execute(rootCmd, app.AppDaemonName, app.DefaultNodeHome); err != nil {
 		os.Exit(1)

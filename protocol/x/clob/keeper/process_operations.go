@@ -7,7 +7,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -410,14 +409,6 @@ func (k Keeper) PersistOrderRemovalToState(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewStatefulOrderRemovalEvent(
-				orderIdToRemove,
-				indexershared.ConvertOrderRemovalReasonToIndexerOrderRemovalReason(
-					orderRemoval.RemovalReason,
-				),
-			),
-		),
 		indexerevents.StatefulOrderEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewStatefulOrderRemovalEvent(
@@ -515,17 +506,6 @@ func (k Keeper) PersistMatchOrdersToState(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder.MustGetOrder(),
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-					totalFilledTaker,
-				),
-			),
 			indexerevents.OrderFillEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewOrderFillEvent(
@@ -551,7 +531,16 @@ func (k Keeper) PersistMatchLiquidationToState(
 	matchLiquidation *types.MatchPerpetualLiquidation,
 	ordersMap map[types.OrderId]types.Order,
 ) error {
-	takerOrder, err := k.MaybeGetLiquidationOrder(ctx, matchLiquidation.Liquidated)
+	// If the subaccount is not liquidatable, do nothing.
+	if err := k.EnsureIsLiquidatable(ctx, matchLiquidation.Liquidated); err != nil {
+		return err
+	}
+
+	takerOrder, err := k.GetLiquidationOrderForPerpetual(
+		ctx,
+		matchLiquidation.Liquidated,
+		matchLiquidation.PerpetualId,
+	)
 	if err != nil {
 		return err
 	}
@@ -560,22 +549,6 @@ func (k Keeper) PersistMatchLiquidationToState(
 	if err := k.ValidateLiquidationOrderAgainstProposedLiquidation(ctx, takerOrder, matchLiquidation); err != nil {
 		return err
 	}
-
-	notionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
-		ctx,
-		matchLiquidation.PerpetualId,
-		new(big.Int).SetUint64(matchLiquidation.TotalSize),
-	)
-	if err != nil {
-		return err
-	}
-	absNotionalQuoteQuantums := new(big.Int).Abs(notionalQuoteQuantums)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.DeliverTx},
-		float32(absNotionalQuoteQuantums.Uint64()),
-		matchLiquidation.GetMetricLabels(),
-	)
 
 	for _, fill := range matchLiquidation.GetFills() {
 		// Fetch the maker order from either short term orders or state.
@@ -609,39 +582,11 @@ func (k Keeper) PersistMatchLiquidationToState(
 			)
 		}
 
-		// Stat fill amount in quote quantums as ratio of notional quote quantums
-		fillAmountToTotalSizeRat := new(big.Rat).Quo(
-			new(big.Rat).SetUint64(matchWithOrders.FillAmount.ToUint64()),
-			new(big.Rat).SetUint64(matchLiquidation.TotalSize),
-		)
-		filledQuoteQuantums := lib.BigRatRound(
-			new(big.Rat).Mul(
-				fillAmountToTotalSizeRat,
-				new(big.Rat).SetInt(absNotionalQuoteQuantums),
-			),
-			true,
-		)
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.LiquidationOrderNotionalQuoteQuantums, metrics.Filled, metrics.DeliverTx},
-			float32(filledQuoteQuantums.Uint64()),
-			matchLiquidation.GetMetricLabels(),
-		)
-
 		// Send on-chain update for the liquidation. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeOrderFill,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewLiquidationOrderFillEvent(
-					matchWithOrders.MakerOrder.MustGetOrder(),
-					matchWithOrders.TakerOrder,
-					matchWithOrders.FillAmount,
-					matchWithOrders.MakerFee,
-					matchWithOrders.TakerFee,
-					totalFilledMaker,
-				),
-			),
 			indexerevents.OrderFillEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewLiquidationOrderFillEvent(
@@ -709,14 +654,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		)
 	}
 	deltaQuantumsIsNegative := position.GetIsLong()
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.Deleveraging, metrics.DeltaQuoteQuantums},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForBoolValue(metrics.Positive, !deltaQuantumsIsNegative),
-		},
-	)
 
 	for _, fill := range matchDeleveraging.GetFills() {
 		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)

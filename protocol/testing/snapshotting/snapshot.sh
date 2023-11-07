@@ -87,18 +87,28 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
+# Prune snapshots to prevent them from getting too big. We make 3 changes:
+# Prune all app state except last 2 blocks
+sed -i 's/pruning = "default"/pruning = "everything"/' /dydxprotocol/chain/local_node/config/app.toml
+# Tendermint pruning is decided by picking the most restrictive of multiple factors.
+# Make the custom config setting as permissive as possible.
+sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/local_node/config/app.toml
+# Do not index tx_index.db
+sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
+
 setup_cosmovisor
 
 # TODO: add metrics around snapshot upload latency/frequency/success rate
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
-  cosmovisor run start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" --non-validating-full-node=true &
+  cosmovisor run start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" \
+    --bridge-daemon-eth-rpc-endpoint "https://eth-sepolia.g.alchemy.com/v2/demo" --non-validating-full-node=true &
 
   sleep ${upload_period}
   kill -TERM $(pidof cosmovisor)
 
   log_this "Creating new snapshot"
-  SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%M-%H').tar.gz")
+  SNAP_NAME=$(echo "${CHAIN_ID}_$(date '+%Y-%m-%d-%H-%M').tar.gz")
   tar cvzf ${SNAP_PATH}/${SNAP_NAME} ${DATA_PATH}
   aws s3 cp ${SNAP_PATH}/${SNAP_NAME} s3://${s3_snapshot_bucket}/ --region ap-northeast-1 --debug || true
   rm -rf ${SNAP_PATH}/${SNAP_NAME}

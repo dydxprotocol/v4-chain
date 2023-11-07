@@ -2,9 +2,11 @@ package client
 
 import (
 	"context"
+	"cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_encoder"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"net/http"
 	"time"
@@ -16,7 +18,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -35,6 +36,7 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // SubTaskRunner is the interface for running pricefeed client task functions.
 type SubTaskRunner interface {
 	StartPriceUpdater(
+		c *Client,
 		ctx context.Context,
 		ticker *time.Ticker,
 		stop <-chan bool,
@@ -53,7 +55,7 @@ type SubTaskRunner interface {
 		ticker *time.Ticker,
 		stop <-chan bool,
 		configs types.PricefeedMutableMarketConfigs,
-		exchangeStartupConfig types.ExchangeStartupConfig,
+		exchangeQueryConfig types.ExchangeQueryConfig,
 		exchangeDetails types.ExchangeQueryDetails,
 		queryHandler handler.ExchangeQueryHandler,
 		logger log.Logger,
@@ -76,6 +78,7 @@ type SubTaskRunner interface {
 // StartPriceUpdater runs in the daemon's main goroutine and does not need access to the daemon's wait group
 // to signal task completion.
 func (s *SubTaskRunnerImpl) StartPriceUpdater(
+	c *Client,
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -87,8 +90,14 @@ func (s *SubTaskRunnerImpl) StartPriceUpdater(
 		select {
 		case <-ticker.C:
 			err := RunPriceUpdaterTaskLoop(ctx, exchangeToMarketPrices, priceFeedServiceClient, logger)
-			if err != nil {
-				panic(err)
+
+			if err == nil {
+				// Record update success for the daemon health check.
+				c.ReportSuccess()
+			} else {
+				logger.Error("Failed to run price updater task loop for price daemon", constants.ErrorLogKey, err)
+				// Record update failure for the daemon health check.
+				c.ReportFailure(errors.Wrap(err, "failed to run price updater task loop for price daemon"))
 			}
 
 		case <-stop:
@@ -153,13 +162,13 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
 	bCh chan<- *price_fetcher.PriceFetcherSubtaskResponse,
 ) {
-	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeStartupConfig.ExchangeId)
+	exchangeMarketConfig, err := configs.GetExchangeMarketConfigCopy(exchangeQueryConfig.ExchangeId)
 	if err != nil {
 		panic(err)
 	}
@@ -171,7 +180,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 
 	// Create PriceFetcher to begin querying with.
 	priceFetcher, err := price_fetcher.NewPriceFetcher(
-		exchangeStartupConfig,
+		exchangeQueryConfig,
 		exchangeDetails,
 		exchangeMarketConfig,
 		marketConfigs,
@@ -190,7 +199,7 @@ func (s *SubTaskRunnerImpl) StartPriceFetcher(
 	// itself to the config's list of exchange config updaters here.
 	configs.AddPriceFetcher(priceFetcher)
 
-	requestHandler := lib.NewRequestHandlerImpl(
+	requestHandler := daemontypes.NewRequestHandlerImpl(
 		&HttpClient,
 	)
 	// Begin loop to periodically start goroutines to query market prices.
@@ -265,8 +274,10 @@ func RunPriceUpdaterTaskLoop(
 		metrics.Latency,
 	)
 
-	// On startup the length of request will likely be 0. However, sending a request of length 0
-	// is a fatal error.
+	// On startup the length of request will likely be 0. Even so, we return an error here because this
+	// is unexpected behavior once the daemon reaches a steady state. The daemon health check process should
+	// be robust enough to ignore temporarily unhealthy daemons.
+	// Sending a request of length 0, however, causes a panic.
 	// panic: rpc error: code = Unknown desc = Market price update has length of 0.
 	if len(request.MarketPriceUpdates) > 0 {
 		_, err := priceFeedServiceClient.UpdateMarketPrices(ctx, request)
@@ -291,6 +302,7 @@ func RunPriceUpdaterTaskLoop(
 			metrics.PriceUpdaterZeroPrices,
 			metrics.Count,
 		)
+		return types.ErrEmptyMarketPriceUpdate
 	}
 
 	return nil

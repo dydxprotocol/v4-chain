@@ -1,4 +1,4 @@
 {
   "delayed_messages" : [],
-  "num_messages" : 0
+  "next_delayed_message_id" : 0
 }

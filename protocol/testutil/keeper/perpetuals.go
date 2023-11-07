@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
@@ -17,8 +18,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
@@ -117,8 +116,8 @@ func createPerpetualsKeeperWithClobHelpers(
 		ek,
 		mockIndexerEventsManager,
 		[]string{
-			authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-			authtypes.NewModuleAddress(delaymsgmoduletypes.ModuleName).String(),
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
 
@@ -199,10 +198,9 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeLiquidityTier {
 			continue
 		}
-		bytes := indexer_manager.GetBytesFromEventData(event.Data)
 		unmarshaler := common.UnmarshalerImpl{}
 		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
-		err := unmarshaler.Unmarshal(bytes, &liquidityTierEvent)
+		err := unmarshaler.Unmarshal(event.DataBytes, &liquidityTierEvent)
 		if err != nil {
 			panic(err)
 		}

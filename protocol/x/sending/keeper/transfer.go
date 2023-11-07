@@ -53,9 +53,6 @@ func (k Keeper) ProcessTransfer(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeTransfer,
-		indexer_manager.GetB64EncodedEventMessage(
-			k.GenerateTransferEvent(pendingTransfer),
-		),
 		indexerevents.TransferEventVersion,
 		indexer_manager.GetBytes(
 			k.GenerateTransferEvent(pendingTransfer),
@@ -122,9 +119,6 @@ func (k Keeper) ProcessDepositToSubaccount(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeTransfer,
-			indexer_manager.GetB64EncodedEventMessage(
-				k.GenerateDepositEvent(msgDepositToSubaccount),
-			),
 			indexerevents.TransferEventVersion,
 			indexer_manager.GetBytes(
 				k.GenerateDepositEvent(msgDepositToSubaccount),
@@ -189,9 +183,6 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeTransfer,
-			indexer_manager.GetB64EncodedEventMessage(
-				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
-			),
 			indexerevents.TransferEventVersion,
 			indexer_manager.GetBytes(
 				k.GenerateWithdrawEvent(msgWithdrawFromSubaccount),
@@ -215,6 +206,7 @@ func (k Keeper) GenerateWithdrawEvent(withdraw *types.MsgWithdrawFromSubaccount)
 	)
 }
 
+// SendFromModuleToAccount sends coins from a module account to an `x/bank` recipient.
 func (k Keeper) SendFromModuleToAccount(
 	ctx sdk.Context,
 	msg *types.MsgSendFromModuleToAccount,

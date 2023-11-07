@@ -10,11 +10,6 @@
       "ticker": "NEAR-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "NEAR_USDT",
-      "adjustByMarket": "USDT-USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "NEAR_USDT",
       "adjustByMarket": "USDT-USD"
@@ -32,6 +27,11 @@
     {
       "exchangeName": "Mexc",
       "ticker": "NEAR_USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Okx",
+      "ticker": "NEAR-USDT",
       "adjustByMarket": "USDT-USD"
     }
   ]

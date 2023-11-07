@@ -1,12 +1,11 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -19,12 +18,13 @@ func TestUpdateEventParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateEventParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateEventParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.EventParams{
 					Denom:      genesisEventParams.Denom + "updated",
 					EthChainId: genesisEventParams.EthChainId + 1,
@@ -59,7 +59,7 @@ func TestUpdateEventParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -68,7 +68,7 @@ func TestUpdateEventParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialEventParams := tApp.App.BridgeKeeper.GetEventParams(ctx)
 
@@ -76,8 +76,9 @@ func TestUpdateEventParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -102,12 +103,13 @@ func TestUpdateProposeParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateProposeParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.ProposeParams{
 					MaxBridgesPerBlock:           genesisProposeParams.MaxBridgesPerBlock + 1,
 					ProposeDelayDuration:         genesisProposeParams.ProposeDelayDuration + 1,
@@ -169,7 +171,7 @@ func TestUpdateProposeParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -178,7 +180,7 @@ func TestUpdateProposeParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialProposeParams := tApp.App.BridgeKeeper.GetProposeParams(ctx)
 
@@ -186,8 +188,9 @@ func TestUpdateProposeParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -212,12 +215,13 @@ func TestUpdateSafetyParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateSafetyParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
 		"Success": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.SafetyParams{
 					IsDisabled:  !genesisSafetyParams.IsDisabled,
 					DelayBlocks: genesisSafetyParams.DelayBlocks + 1,
@@ -239,7 +243,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -248,7 +252,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialSafetyParams := tApp.App.BridgeKeeper.GetSafetyParams(ctx)
 
@@ -256,8 +260,9 @@ func TestUpdateSafetyParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)

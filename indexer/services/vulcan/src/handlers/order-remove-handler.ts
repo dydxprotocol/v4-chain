@@ -33,12 +33,13 @@ import {
   SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import { Big } from 'big.js';
+import { Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
-import { sendWebsocketWrapper } from '../lib/send-websocket-helper';
+import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { getTriggerPrice } from './helpers';
+import { getStateRemainingQuantums, getTriggerPrice } from './helpers';
 
 /**
  * Handler for OrderRemove messages.
@@ -218,12 +219,14 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    const subaccountMessage: Buffer = this.createSubaccountWebsocketMessageFromPostgresOrder(
-      order,
-      orderRemove,
-      perpetualMarket.ticker,
-    );
-    sendWebsocketWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+    const subaccountMessage: Message = {
+      value: this.createSubaccountWebsocketMessageFromPostgresOrder(
+        order,
+        orderRemove,
+        perpetualMarket.ticker,
+      ),
+    };
+    sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
 
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
@@ -257,6 +260,9 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
+    const stateRemainingQuantums: Big = await getStateRemainingQuantums(
+      removeOrderResult.removedOrder!,
+    );
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromTicker(removeOrderResult.removedOrder!.ticker);
     if (perpetualMarket === undefined) {
@@ -268,20 +274,25 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    await runFuncWithTimingStat(
-      this.cancelOrderInPostgres(orderRemove),
-      this.generateTimingStatsOptions('cancel_order_in_postgres'),
-    );
+    // If the remaining amount of the order in state is <= 0, the order is filled and
+    // does not need to have it's status updated
+    if (stateRemainingQuantums.gt(0)) {
+      await runFuncWithTimingStat(
+        this.cancelOrderInPostgres(orderRemove),
+        this.generateTimingStatsOptions('cancel_order_in_postgres'),
+      );
+    }
 
-    const subaccountMessage: Buffer = this.createSubaccountWebsocketMessageFromRemoveOrderResult(
-      removeOrderResult,
-      orderRemove,
-      perpetualMarket,
-    );
+    const subaccountMessage: Message = {
+      value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
+        removeOrderResult,
+        orderRemove,
+        perpetualMarket,
+      ),
+    };
 
-    // TODO(IND-147): Remove this check once fully-filled orders are removed by ender
-    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult)) {
-      sendWebsocketWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
+    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
+      sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
     const remainingQuantums: Big = Big(this.getSizeDeltaInQuantums(
@@ -295,7 +306,7 @@ export class OrderRemoveHandler extends Handler {
     }
     // TODO: consolidate remove handler logic into a single lua script.
     await this.addOrderToCanceledOrdersCache(
-      OrderTable.orderIdToUuid(orderRemove.removedOrderId!),
+      orderRemove,
       Date.now(),
     );
   }
@@ -315,12 +326,14 @@ export class OrderRemoveHandler extends Handler {
       ),
       this.generateTimingStatsOptions('update_price_level_cache'),
     );
-    const orderbookMessage: Buffer = this.createOrderbookWebsocketMessage(
-      removeOrderResult.removedOrder!,
-      perpetualMarket,
-      updatedQuantums,
-    );
-    sendWebsocketWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
+    const orderbookMessage: Message = {
+      value: this.createOrderbookWebsocketMessage(
+        removeOrderResult.removedOrder!,
+        perpetualMarket,
+        updatedQuantums,
+      ),
+    };
+    sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
 
   /**
@@ -331,13 +344,28 @@ export class OrderRemoveHandler extends Handler {
    * @protected
    */
   protected async addOrderToCanceledOrdersCache(
-    orderId: string,
+    orderRemove: OrderRemoveV1,
     timestampMs: number,
   ): Promise<void> {
-    await runFuncWithTimingStat(
-      CanceledOrdersCache.addCanceledOrderId(orderId, timestampMs, redisClient),
-      this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
-    );
+    const orderId: string = OrderTable.orderIdToUuid(orderRemove.removedOrderId!);
+
+    if (
+      orderRemove.removalStatus ===
+      OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
+    ) {
+      await runFuncWithTimingStat(
+        CanceledOrdersCache.addBestEffortCanceledOrderId(orderId, timestampMs, redisClient),
+        this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
+      );
+    } else if (
+      orderRemove.removalStatus ===
+      OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED
+    ) {
+      await runFuncWithTimingStat(
+        CanceledOrdersCache.addCanceledOrderId(orderId, timestampMs, redisClient),
+        this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
+      );
+    }
   }
 
   /**
@@ -594,21 +622,26 @@ export class OrderRemoveHandler extends Handler {
   protected shouldSendSubaccountMessage(
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
+    stateRemainingQuantums: Big,
   ): boolean {
-    const remainingQuantums: Big = Big(this.getSizeDeltaInQuantums(
-      removeOrderResult,
-      removeOrderResult.removedOrder!,
-    ));
     const status: OrderRemoveV1_OrderRemovalStatus = orderRemove.removalStatus;
     const reason: OrderRemovalReason = orderRemove.reason;
+
+    logger.info({
+      at: 'orderRemoveHandler#shouldSendSubaccountMessage',
+      message: 'Compared state filled quantums and size',
+      stateRemainingQuantums: stateRemainingQuantums.toFixed(),
+      removeOrderResult,
+    });
+
     if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED
     ) {
       return false;
     } else if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED
     ) {

@@ -139,7 +139,6 @@ func TestAddPremiumVotesTx_GetMsg(t *testing.T) {
 				msg = afst.GetMsg()
 			} else {
 				msg = tc.txWrapper.GetMsg()
-				require.Equal(t, tc.expectedMsg, msg)
 			}
 			require.Equal(t, tc.expectedMsg, msg)
 		})

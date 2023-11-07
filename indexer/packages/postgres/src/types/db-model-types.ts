@@ -62,6 +62,8 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   timeInForce: TimeInForce;
   reduceOnly: boolean;
   orderFlags: string;
+  updatedAt: IsoString;
+  updatedAtHeight: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
   createdAtHeight?: string;

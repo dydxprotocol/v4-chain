@@ -26,7 +26,7 @@ func (k Keeper) getClobPairStore(
 func clobPairKey(
 	id types.ClobPairId,
 ) []byte {
-	return lib.Uint32ToBytes(id.ToUint32())
+	return lib.Uint32ToKey(id.ToUint32())
 }
 
 // CreatePerpetualClobPair creates a new perpetual CLOB pair in the store.
@@ -90,20 +90,6 @@ func (k Keeper) CreatePerpetualClobPair(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				perpetualId,
-				clobPairId,
-				perpetual.Params.Ticker,
-				perpetual.Params.MarketId,
-				status,
-				quantumConversionExponent,
-				perpetual.Params.AtomicResolution,
-				subticksPerTick,
-				stepSizeBaseQuantums.ToUint64(),
-				perpetual.Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -430,11 +416,32 @@ func (k Keeper) UpdateClobPair(
 	ctx sdk.Context,
 	clobPair types.ClobPair,
 ) error {
-	oldClobPair := k.mustGetClobPair(ctx, types.ClobPairId(clobPair.Id))
+	oldClobPair, found := k.GetClobPair(ctx, types.ClobPairId(clobPair.Id))
+	if !found {
+		return errorsmod.Wrapf(
+			types.ErrInvalidClobPairUpdate,
+			"UpdateClobPair: ClobPair with id %d not found in state",
+			clobPair.Id,
+		)
+	}
 
 	// Note, only perpetual clob pairs are currently supported. Neither the old nor the
 	// new clob pair should be spot.
-	if clobPair.MustGetPerpetualId() != oldClobPair.MustGetPerpetualId() {
+	perpetualId, err := clobPair.GetPerpetualId()
+	if err != nil {
+		return errorsmod.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			err.Error(),
+		)
+	}
+	oldPerpetualId, err := oldClobPair.GetPerpetualId()
+	if err != nil {
+		return errorsmod.Wrap(
+			types.ErrInvalidClobPairUpdate,
+			err.Error(),
+		)
+	}
+	if perpetualId != oldPerpetualId {
 		return errorsmod.Wrap(
 			types.ErrInvalidClobPairUpdate,
 			"UpdateClobPair: cannot update ClobPair perpetual id",
@@ -480,15 +487,6 @@ func (k Keeper) UpdateClobPair(
 	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeUpdateClobPair,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewUpdateClobPairEvent(
-				clobPair.GetClobPairId(),
-				clobPair.Status,
-				clobPair.QuantumConversionExponent,
-				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-			),
-		),
 		indexerevents.UpdateClobPairEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewUpdateClobPairEvent(

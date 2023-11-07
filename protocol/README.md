@@ -1,6 +1,6 @@
 <p align="center"><img src="https://dydx.exchange/icon.svg?" width="256" /></p>
 
-<h1 align="center">v4 Protocol</h1>
+<h1 align="center">dYdX Chain Protocol</h1>
 
 <div align="center">
   <a href="https://github.com/dydxprotocol/v4-chain/actions/workflows/protocol-test.yml?query=branch%3Amain" style="text-decoration:none;">
@@ -8,15 +8,15 @@
   </a>
 </div>
 
-Sovereign Blockchain built using Cosmos SDK & CometBFT for v4 of the dYdX Protocol.
+Sovereign Blockchain built using Cosmos SDK & CometBFT for dYdX Chain.
 
-TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
+TODO(CORE-512): add info/resources around dYdX Chain. [Doc](https://www.notion.so/dydx/V4-36a9f30eee1d478cb88e0c50860fdbee)
 
 ## Get started
 
 ### Installation
 
-1. Install Go `1.19` [here](https://go.dev/dl/).
+1. Install Go `1.21` [here](https://go.dev/dl/).
 2. Install Docker Desktop [here](https://www.docker.com/products/docker-desktop/)
 3. Run `make install` to install project dependencies.
 
@@ -24,7 +24,6 @@ TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V
 
 * `make test` runs unit tests.
 * `make lint` lints source code (`make lint-fix` to also fix).
-* `make proto-all` formats, lints, and generates Go from proto files.
 * `make build` builds source.
 * `make mock-gen` generates mocks for files listed in [mocks/Makefile](https://github.com/dydxprotocol/v4/tree/main/mocks/Makefile). More info about mocking [here](https://github.com/dydxprotocol/v4/tree/main/mocks/README.md).
 
@@ -33,9 +32,9 @@ TODO(CORE-512): add info/resources around V4. [Doc](https://www.notion.so/dydx/V
 
 Requirements: Ensure you are running docker-compose version `1.30.x` or newer, and Docker engine version `20.10.x` or newer.
 
-You can quickly test your changes to DYDX with just a few commands:
+You can quickly test your changes to dYdX Chain with just a few commands:
 
-1. Make any change to the DYDX code that you want to test
+1. Make any change to the dYdX Chain code that you want to test
 
 2. Once ready to test, run `make localnet-start` (or `make localnet-startd` to run the network headlessly)
     - This first compiles all your changes to docker image called `dydxprotocol-base` (~90 seconds)
@@ -76,7 +75,7 @@ We currently lint the following YAML files in the [`Lint` CI job](https://github
 
 #### Protos
 
-Protos can be found in `proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
+Protos can be found in `../proto/` [here](https://github.com/dydxprotocol/v4-chain/tree/main/proto).
 
 #### Genesis
 
@@ -152,7 +151,7 @@ git clone git@github.com:cosmos/cosmos-sdk.git
 git checkout v0.47.0-alpha2
 ```
 
-After you've cloned the repo, you can modify the `go.mod` file in `v4` locally to include a [_replace directive_](https://go.dev/ref/mod#go-mod-file-replace) which locally points `cosmos-sdk` to your local version of `cosmos-sdk`. Example:
+After you've cloned the repo, you can modify the `go.mod` file in `v4-chain` locally to include a [_replace directive_](https://go.dev/ref/mod#go-mod-file-replace) which locally points `cosmos-sdk` to your local version of `cosmos-sdk`. Example:
 
 ```diff
 replace (
@@ -179,23 +178,6 @@ dasel put string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_propose' '6
 dasel put string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' '60s'
 ```
 
-## Bootstrapping a new module
-Though we do not use `ignite` to run our chain locally, you can still use [ignite's](https://docs.ignite.com) scaffolding tools to bootstrap a new module. You will need to install `ignite` first. This is good as a starting point, but will require you to make some manual changes. Example:
-
-```sh
-ignite scaffold module prices --require-registration
-ignite scaffold message UpdatePrices prices --module prices
-ignite scaffold map price name:string exponent:int min_exchanges:uint min_price_change:uint value:uint  --no-message --module prices
-```
-
-* You will likely need to manually modify protos as the `ignite scaffold` command doesn't allow complex types such as repeated fields or references to other structs.
-* Do not check the openapi, or vue-generated code.
-* The `ignite` tool may place your generated protos in the wrong directory. Ensure they are in the `proto/dydxprotocol/yourmodule` directory, and the package in the proto is `dydxprotocol.yourmodule`;
-* The `ignite` tool will generate your protos with linting errors, so you will need to run `make proto-lint` and fix any errors.
-* The `ignite` tool will generate your code with linting errors, so you will need to run `make lint` and fix any errors.
-
-See [this](https://github.com/dydxprotocol/v4/pull/30) PR for a commit-by-commit example of bootstrapping a new module.
-
 ## CometBFT fork
 
 Our current implementation contains a light fork of CometBFT. The fork can be found [here](https://github.com/dydxprotocol/cometbft). Instructions to update the fork are included there.
@@ -208,14 +190,23 @@ Our current implementation contains a light fork of CosmosSDK. The fork can be f
 
 Daemons are background processes that run in go-routines to do asyncronous work. Daemons can be configured with their respective flags, e.g. `price-daemon-enabled` or `price-daemon-delay-loop-ms`.
 
+TODO(CORE-512): update daemon flags
+
+### Bridge Daemon
+
+TODO(CORE-512): add details
+
+### Liquidation Daemon
+
+TODO(CORE-512): add details
+
 ### Pricefeed Daemon
 
 The Pricefeed Daemon is responsible for ingesting prices from 3rd party exchanges like Binance and sending these prices to the application where they are then used by the Prices module. The Pricefeed daemon is started by default when the application starts.
 
-The path to the configuration file used for querying exchanges is dictated by the flag `pricefeed-exchange-config-file`. The default configuration file is located within `v4` at the path `daemons/configs/default_pricefeed_exchange_config.go`. The file utilizes a template that is populated from `daemons/pricefeed/client/constants/static_exchange_startup_config.go`. The first exchange within the default configuration file additionally has inline comments explaining what each field is for.
+TODO(CORE-469): update doc with new ways to override the params
 
 ## Learn more
 
-- [Tutorials](https://docs.ignite.com/guide)
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [Developer Chat](https://discord.gg/H6wGTY8sxw)

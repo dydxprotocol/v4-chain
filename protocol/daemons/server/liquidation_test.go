@@ -18,6 +18,7 @@ func TestLiquidateSubaccounts_Empty_Update(t *testing.T) {
 	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	).WithLiquidatableSubaccountIds(
@@ -36,6 +37,7 @@ func TestLiquidateSubaccounts_Multiple_Subaccount_Ids(t *testing.T) {
 	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	).WithLiquidatableSubaccountIds(

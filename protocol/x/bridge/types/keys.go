@@ -12,14 +12,14 @@ const (
 // State
 const (
 	// AcknowledgedEventInfoKey defines the key for the AcknowledgedEventInfo
-	AcknowledgedEventInfoKey = "acknowledged_event_info"
+	AcknowledgedEventInfoKey = "AckEventInfo"
 
 	// EventParamsKey defines the key for the EventParams
-	EventParamsKey = "event_params"
+	EventParamsKey = "EventParams"
 
 	// ProposeParamsKey defines the key for the ProposeParams
-	ProposeParamsKey = "propose_params"
+	ProposeParamsKey = "ProposeParams"
 
 	// SafetyParamsKey defines the key for the SafetyParams
-	SafetyParamsKey = "safety_params"
+	SafetyParamsKey = "SafetyParams"
 )

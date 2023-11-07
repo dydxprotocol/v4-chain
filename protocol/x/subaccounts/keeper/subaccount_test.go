@@ -10,7 +10,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -866,7 +865,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				{
 					AssetUpdates: []types.AssetUpdate{
 						{
-							AssetId:          lib.UsdcAssetId,
+							AssetId:          asstypes.AssetUsdc.Id,
 							BigQuantumsDelta: big.NewInt(100_000_000_000),
 						},
 						{

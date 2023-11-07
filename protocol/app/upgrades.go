@@ -2,9 +2,17 @@ package app
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+)
+
+var (
+	// `Upgrades` defines the upgrade handlers and store loaders for the application.
+	// New upgrades should be added to this slice after they are implemented.
+	Upgrades = []upgrades.Upgrade{}
+	Forks    = []upgrades.Fork{}
 )
 
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade

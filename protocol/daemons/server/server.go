@@ -4,13 +4,12 @@ import (
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"net"
 	"syscall"
@@ -23,8 +22,8 @@ import (
 // needed for various services.
 type Server struct {
 	logger        log.Logger
-	gsrv          lib.GrpcServer
-	fileHandler   lib.FileHandler
+	gsrv          daemontypes.GrpcServer
+	fileHandler   daemontypes.FileHandler
 	socketAddress string
 
 	updateMonitor *types.UpdateMonitor
@@ -39,20 +38,17 @@ type Server struct {
 // so that they can be cleaned up after the test case is complete.
 func NewServer(
 	logger log.Logger,
-	grpcServer lib.GrpcServer,
-	fileHandler lib.FileHandler,
+	grpcServer daemontypes.GrpcServer,
+	fileHandler daemontypes.FileHandler,
 	socketAddress string,
-	uniqueTestIdentifier string,
 ) *Server {
-	srv := &Server{
+	return &Server{
 		logger:        logger,
 		gsrv:          grpcServer,
 		fileHandler:   fileHandler,
 		socketAddress: socketAddress,
-		updateMonitor: types.NewUpdateFrequencyMonitor(),
+		updateMonitor: types.NewUpdateFrequencyMonitor(types.DaemonStartupGracePeriod, logger),
 	}
-	stoppable.RegisterServiceForTestCleanup(uniqueTestIdentifier, srv)
-	return srv
 }
 
 // Stop stops the daemon server's gRPC service.

@@ -201,8 +201,6 @@ func (validator *operationsQueueValidator) validateShortTermOrderPlacementOperat
 			)
 		}
 		// Replacement Orders have a higher priority than the previously placed order that it replaces.
-		// All short term replacement orders should be checked here. Note that for long term orders,
-		// this check only takes effect if the order being replaced is in the same block.
 		if prevOrder.MustCmpReplacementOrder(&order) != -1 {
 			return errorsmod.Wrapf(
 				ErrInvalidReplacement,
