@@ -146,6 +146,12 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 			}
 		}
 
+		k.Logger(ctx).Info(
+			fmt.Sprintf("Vested tokens: %v", vestAmount),
+			metrics.BlockHeight,
+			ctx.BlockHeight(),
+		)
+
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
 			[]string{types.ModuleName, metrics.VestAmount},

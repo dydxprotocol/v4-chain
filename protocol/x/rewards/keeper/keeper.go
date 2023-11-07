@@ -294,6 +294,13 @@ func (k Keeper) ProcessRewardsForBlock(
 	// Get tokenToDistribute as the min(F, T).
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.
+
+	k.Logger(ctx).Info(fmt.Sprintf(
+		"Tokens to distribute: %v", tokensToDistribute),
+		metrics.BlockHeight,
+		ctx.BlockHeight(),
+	)
+
 	telemetry.SetGauge(
 		metrics.GetMetricValueFromBigInt(tokensToDistribute),
 		types.ModuleName,
