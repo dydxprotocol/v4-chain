@@ -1,32 +1,34 @@
 package client_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
-	"math/big"
-	"testing"
-
 	"github.com/cometbft/cometbft/libs/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"testing"
+)
+
+var (
+	TestError = fmt.Errorf("test error")
 )
 
 func TestStart_EthRpcEndpointNotSet(t *testing.T) {
 	errorMsg := "flag bridge-daemon-eth-rpc-endpoint is not set"
-
 	require.EqualError(
 		t,
-		client.Start(
+		client.NewClient().Start(
 			grpc.Ctx,
 			daemonflags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
@@ -50,7 +52,7 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 
 	require.EqualError(
 		t,
-		client.Start(
+		client.NewClient().Start(
 			grpc.Ctx,
 			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
@@ -82,7 +84,7 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 
 	require.EqualError(
 		t,
-		client.Start(
+		client.NewClient().Start(
 			grpc.Ctx,
 			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
@@ -99,138 +101,86 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.AssertCalled(t, "CloseConnection", grpc.GrpcConn)
 }
 
-func TestRunBridgeDaemonTaskLoop(t *testing.T) {
-	errParams := errors.New("error getting event params")
-	errPropose := errors.New("error getting propose params")
-	errRecognizedEventInfo := errors.New("error getting recognized event info")
-	errChainId := errors.New("error getting chain id")
-	errEthereumLogs := errors.New("error getting Ethereum logs")
-	errAddBridgeEvents := errors.New("error adding bridge events")
+// FakeSubTaskRunner is a mock implementation of SubTaskRunner that returns the specified results in order.
+type FakeSubTaskRunner struct {
+	results   []error
+	callIndex int
+}
 
+func NewFakeSubTaskRunnerWithResults(results []error) *FakeSubTaskRunner {
+	return &FakeSubTaskRunner{
+		results:   results,
+		callIndex: -1,
+	}
+}
+
+func (f *FakeSubTaskRunner) RunBridgeDaemonTaskLoop(
+	_ context.Context,
+	_ log.Logger,
+	_ types.EthClient,
+	_ bridgetypes.QueryClient,
+	_ api.BridgeServiceClient,
+) error {
+	f.callIndex += 1
+	return f.results[f.callIndex]
+}
+
+func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
-		eventParams            bridgetypes.EventParams
-		eventParamsErr         error
-		proposeParams          bridgetypes.ProposeParams
-		proposeParamsErr       error
-		recognizedEventInfo    bridgetypes.BridgeEventInfo
-		recognizedEventInfoErr error
-		chainId                int
-		chainIdError           error
-		filterLogs             []ethcoretypes.Log
-		filterLogsErr          error
-		addBridgeEventsErr     error
-
-		expectedErrorString string
-		expectedError       error
+		// updateResult represents the list of responses for individual daemon task loops. Add a nil value to represent
+		// a successful update.
+		updateResults        []error
+		expectedHealthStatus error
 	}{
-		"Success": {
-			eventParams:         constants.EventParams,
-			proposeParams:       constants.ProposeParams,
-			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainId:             constants.EthChainId,
-			filterLogs: []ethcoretypes.Log{
-				constants.EthLog_Event0,
-				constants.EthLog_Event1,
+		"unhealthy: no updates": {
+			updateResults:        []error{},
+			expectedHealthStatus: fmt.Errorf("no successful update has occurred"),
+		},
+		"unhealthy: no successful updates": {
+			updateResults: []error{
+				TestError, // failed update
 			},
+			expectedHealthStatus: fmt.Errorf("abc"),
 		},
-		"Error getting event params": {
-			eventParamsErr: errParams,
-			expectedError:  errParams,
-		},
-		"Error getting propose params": {
-			eventParams:      constants.EventParams,
-			proposeParamsErr: errPropose,
-			expectedError:    errPropose,
-		},
-		"Error getting recognized event info": {
-			eventParams:            constants.EventParams,
-			proposeParams:          constants.ProposeParams,
-			recognizedEventInfoErr: errRecognizedEventInfo,
-			expectedError:          errRecognizedEventInfo,
-		},
-		"Error getting chain id": {
-			eventParams:         constants.EventParams,
-			proposeParams:       constants.ProposeParams,
-			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainIdError:        errChainId,
-			expectedError:       errChainId,
-		},
-		"Error chain ID not as expected": {
-			eventParams:         constants.EventParams,
-			proposeParams:       constants.ProposeParams,
-			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainId:             constants.EthChainId + 1,
-			expectedErrorString: fmt.Sprintf(
-				"expected chain ID %d but node has chain ID %d",
-				constants.EthChainId,
-				constants.EthChainId+1,
-			),
-		},
-		"Error getting Ethereum logs": {
-			eventParams:         constants.EventParams,
-			proposeParams:       constants.ProposeParams,
-			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainId:             constants.EthChainId,
-			filterLogsErr:       errEthereumLogs,
-			expectedError:       errEthereumLogs,
-		},
-		"Error adding bridge events": {
-			eventParams:         constants.EventParams,
-			proposeParams:       constants.ProposeParams,
-			recognizedEventInfo: constants.RecognizedEventInfo_Id2_Height0,
-			chainId:             constants.EthChainId,
-			filterLogs: []ethcoretypes.Log{
-				constants.EthLog_Event0,
+		"healthy: one recent successful update": {
+			updateResults: []error{
+				nil, // successful update
 			},
-			addBridgeEventsErr: errAddBridgeEvents,
-			expectedError:      errAddBridgeEvents,
+			expectedHealthStatus: nil,
+		},
+		"unhealthy: one recent successful update, followed by a failed update": {
+			updateResults: []error{
+				nil,       // successful update
+				TestError, // failed update
+			},
+			expectedHealthStatus: fmt.Errorf("abc"),
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx := grpc.Ctx
-			mockLogger := mocks.Logger{}
-			mockEthClient := mocks.EthClient{}
-			mockQueryClient := mocks.BridgeQueryClient{}
-			mockServiceClient := mocks.BridgeServiceClient{}
+			c := client.NewClient()
 
-			mockQueryClient.On("EventParams", ctx, mock.Anything).Return(
-				&bridgetypes.QueryEventParamsResponse{
-					Params: tc.eventParams,
-				},
-				tc.eventParamsErr,
-			)
-			mockQueryClient.On("ProposeParams", ctx, mock.Anything).Return(
-				&bridgetypes.QueryProposeParamsResponse{
-					Params: tc.proposeParams,
-				},
-				tc.proposeParamsErr,
-			)
-			mockQueryClient.On("RecognizedEventInfo", ctx, mock.Anything).Return(
-				&bridgetypes.QueryRecognizedEventInfoResponse{
-					Info: tc.recognizedEventInfo,
-				},
-				tc.recognizedEventInfoErr,
-			)
-			mockEthClient.On("ChainID", ctx).Return(big.NewInt(int64(tc.chainId)), tc.chainIdError)
-			mockEthClient.On("FilterLogs", ctx, mock.Anything).Return(tc.filterLogs, tc.filterLogsErr)
-			mockServiceClient.On("AddBridgeEvents", ctx, mock.Anything).Return(nil, tc.addBridgeEventsErr)
+			fakeSubTaskRunner := NewFakeSubTaskRunnerWithResults(tc.updateResults)
 
-			err := client.RunBridgeDaemonTaskLoop(
-				grpc.Ctx,
-				&mockLogger,
-				&mockEthClient,
-				&mockQueryClient,
-				&mockServiceClient,
-			)
-			if tc.expectedErrorString != "" {
-				require.Error(t, err)
-				require.ErrorContains(t, err, tc.expectedErrorString)
+			for i := 0; i < len(tc.updateResults); i++ {
+				ticker, stop := daemons.SingleTickTickerAndStop()
+				client.StartBridgeDaemonTaskLoop(
+					grpc.Ctx,
+					c,
+					ticker,
+					stop,
+					fakeSubTaskRunner,
+					nil,
+					nil,
+					nil,
+					nil,
+				)
 			}
-			if tc.expectedError != nil {
-				require.Error(t, err)
-				require.ErrorIs(t, err, tc.expectedError)
+
+			if tc.expectedHealthStatus == nil {
+				require.NoError(t, c.HealthCheck())
+			} else {
+				require.ErrorContains(t, c.HealthCheck(), tc.expectedHealthStatus.Error())
 			}
 		})
 	}

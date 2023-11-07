@@ -290,6 +290,7 @@ type App struct {
 
 	PriceFeedClient    *pricefeedclient.Client
 	LiquidationsClient *liquidationclient.Client
+	BridgeClient       *bridgeclient.Client
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -646,7 +647,8 @@ func New(
 			// environments.
 			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 			go func() {
-				if err := bridgeclient.Start(
+				app.BridgeClient = bridgeclient.NewClient()
+				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
 					context.Background(),
