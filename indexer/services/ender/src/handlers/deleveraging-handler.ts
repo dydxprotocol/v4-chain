@@ -2,16 +2,18 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   FillCreateObject,
   FillFromDatabase,
+  FillModel,
   FillTable,
   FillType,
   Liquidity,
   OrderSide,
   PerpetualMarketFromDatabase,
+  PerpetualMarketModel,
   perpetualMarketRefresher,
-  PerpetualPositionColumns,
   PerpetualPositionFromDatabase,
-  PerpetualPositionTable,
+  PerpetualPositionModel,
   protocolTranslations,
+  storeHelpers,
   SubaccountMessageContents,
   SubaccountTable,
   TendermintEventTable,
@@ -20,15 +22,16 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { DeleveragingEventV1, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import * as pg from 'pg';
 
-import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
-import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
 import {
-  getWeightedAverage,
-  indexerTendermintEventToTransactionIndex,
-  perpetualPositionAndOrderSideMatching,
-} from '../lib/helper';
-import { ConsolidatedKafkaEvent, PriceFields, SumFields } from '../lib/types';
+  DELEVERAGING_EVENT_TYPE,
+  QUOTE_CURRENCY_ATOMIC_RESOLUTION,
+  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
+} from '../constants';
+import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
+import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
+import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
 export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
@@ -77,10 +80,10 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       event.fillAmount.toString(),
       perpetualMarket.atomicResolution,
     );
-    const price: string = protocolTranslations.subticksToPrice(
+    const price: string = protocolTranslations.quantumsToHuman(
       event.price.toString(10),
-      perpetualMarket,
-    );
+      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
+    ).toFixed();
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
     );
@@ -112,113 +115,6 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       FillTable.create(liquidatedSubaccountFill, { txId: this.txId }),
       FillTable.create(offsettingSubaccountFill, { txId: this.txId }),
     ];
-  }
-
-  protected async getLatestPerpetualPosition(
-    perpetualMarket: PerpetualMarketFromDatabase,
-    event: DeleveragingEventV1,
-    deleveraged: boolean,
-  ): Promise<PerpetualPositionFromDatabase> {
-    const latestPerpetualPositions:
-    PerpetualPositionFromDatabase[] = await PerpetualPositionTable.findAll(
-      {
-        subaccountId: deleveraged ? [
-          SubaccountTable.uuid(event.liquidated!.owner, event.liquidated!.number),
-        ] : [
-          SubaccountTable.uuid(event.offsetting!.owner, event.offsetting!.number),
-        ],
-        perpetualId: [perpetualMarket.id],
-        limit: 1,
-      },
-      [],
-      { txId: this.txId },
-    );
-
-    if (latestPerpetualPositions.length === 0) {
-      logger.error({
-        at: 'deleveragingHandler#getLatestPerpetualPosition',
-        message: 'Unable to find existing perpetual position.',
-        blockHeight: this.block.height,
-        perpetualId: event.perpetualId,
-        subaccountId: deleveraged
-          ? SubaccountTable.uuid(event.liquidated!.owner, event.liquidated!.number)
-          : SubaccountTable.uuid(event.offsetting!.owner, event.offsetting!.number),
-      });
-      throw new Error('Unable to find existing perpetual position');
-    }
-
-    return latestPerpetualPositions[0];
-  }
-
-  protected getOrderSide(
-    event: DeleveragingEventV1,
-    deleveraged: boolean,
-  ): OrderSide {
-    if (deleveraged) {
-      return event.isBuy ? OrderSide.BUY : OrderSide.SELL;
-    }
-    return event.isBuy ? OrderSide.SELL : OrderSide.BUY;
-  }
-
-  protected async updatePerpetualPosition(
-    perpetualMarket: PerpetualMarketFromDatabase,
-    event: DeleveragingEventV1,
-    deleveraged: boolean,
-  ): Promise<PerpetualPositionFromDatabase> {
-    const latestPerpetualPosition:
-    PerpetualPositionFromDatabase = await this.getLatestPerpetualPosition(
-      perpetualMarket,
-      event,
-      deleveraged,
-    );
-
-    // update (sumOpen and entryPrice) or (sumClose and exitPrice)
-    let sumField: SumFields;
-    let priceField: PriceFields;
-    if (perpetualPositionAndOrderSideMatching(
-      latestPerpetualPosition.side,
-      this.getOrderSide(event, deleveraged),
-    )) {
-      sumField = PerpetualPositionColumns.sumOpen;
-      priceField = PerpetualPositionColumns.entryPrice;
-    } else {
-      sumField = PerpetualPositionColumns.sumClose;
-      priceField = PerpetualPositionColumns.exitPrice;
-    }
-
-    const size: string = protocolTranslations.quantumsToHumanFixedString(
-      event.fillAmount.toString(),
-      perpetualMarket.atomicResolution,
-    );
-    const price: string = protocolTranslations.subticksToPrice(
-      event.price.toString(10),
-      perpetualMarket,
-    );
-
-    const updatedPerpetualPosition: PerpetualPositionFromDatabase | undefined = await
-    PerpetualPositionTable.update(
-      {
-        id: latestPerpetualPosition.id,
-        [sumField]: Big(latestPerpetualPosition[sumField]).plus(size).toFixed(),
-        [priceField]: getWeightedAverage(
-          latestPerpetualPosition[priceField] ?? '0',
-          latestPerpetualPosition[sumField],
-          price,
-          size,
-        ),
-      },
-      { txId: this.txId },
-    );
-    if (updatedPerpetualPosition === undefined) {
-      logger.error({
-        at: 'deleveragingHandler#handle',
-        message: 'Unable to update perpetual position',
-        latestPerpetualPositionId: latestPerpetualPosition.id,
-        event,
-      });
-      throw new Error(`Unable to update perpetual position with id: ${latestPerpetualPosition.id}`);
-    }
-    return updatedPerpetualPosition;
   }
 
   protected generateConsolidatedKafkaEvent(
@@ -270,49 +166,55 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const perpetualId:
-    string = this.event.perpetualId.toString();
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromId(perpetualId);
-    if (perpetualMarket === undefined) {
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
+      this.indexerTendermintEvent,
+    );
+    const result: pg.QueryResult = await storeHelpers.rawQuery(
+      `SELECT dydx_deleveraging_handler(
+        ${this.block.height}, 
+        '${this.block.time?.toISOString()}', 
+        '${JSON.stringify(DeleveragingEventV1.decode(eventDataBinary))}', 
+        ${this.indexerTendermintEvent.eventIndex}, 
+        ${transactionIndex}, 
+        '${this.block.txHashes[transactionIndex]}', 
+      ) AS result;`,
+      { txId: this.txId },
+    ).catch((error: Error) => {
       logger.error({
-        at: 'DeleveragingHandler#internalHandle',
-        message: 'Unable to find perpetual market',
-        perpetualId,
-        event: this.event,
+        at: 'orderHandler#handleViaSqlFunction',
+        message: 'Failed to handle DeleveragingEventV1',
+        error,
       });
-      throw new Error(`Unable to find perpetual market with perpetualId: ${perpetualId}`);
-    }
-    const fills: FillFromDatabase[] = await this.runFuncWithTimingStatAndErrorLogging(
-      Promise.all(
-        this.createFillsFromEvent(perpetualMarket, this.event),
-      ),
-      this.generateTimingStatsOptions('create_fills'),
-    );
-
-    const positions: PerpetualPositionFromDatabase[] = await
-    this.runFuncWithTimingStatAndErrorLogging(
-      Promise.all([
-        this.updatePerpetualPosition(perpetualMarket, this.event, true),
-        this.updatePerpetualPosition(perpetualMarket, this.event, false),
-      ]),
-      this.generateTimingStatsOptions('update_perpetual_positions'),
-    );
+      throw error;
+    });
+    const liquidatedFill: FillFromDatabase = FillModel.fromJson(
+      result.rows[0].result.liquidated_fill) as FillFromDatabase;
+    const offsettingFill: FillFromDatabase = FillModel.fromJson(
+      result.rows[0].result.offsetting_fill) as FillFromDatabase;
+    const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
+      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+    const liquidatedPerpetualPosition:
+    PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
+      result.rows[0].result.liquidated_perpetual_position) as PerpetualPositionFromDatabase;
+    const offsettingPerpetualPosition:
+    PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
+      result.rows[0].result.offsetting_perpetual_position) as PerpetualPositionFromDatabase;
     const kafkaEvents: ConsolidatedKafkaEvent[] = [
       this.generateConsolidatedKafkaEvent(
         this.event.liquidated!,
-        positions[0],
-        fills[0],
+        liquidatedPerpetualPosition,
+        liquidatedFill,
         perpetualMarket,
       ),
       this.generateConsolidatedKafkaEvent(
         this.event.offsetting!,
-        positions[1],
-        fills[1],
+        offsettingPerpetualPosition,
+        offsettingFill,
         perpetualMarket,
       ),
       this.generateTradeKafkaEventFromDeleveraging(
-        fills[0],
+        liquidatedFill,
       ),
     ];
     return kafkaEvents;

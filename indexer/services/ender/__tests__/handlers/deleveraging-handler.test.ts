@@ -234,9 +234,9 @@ describe('DeleveragingHandler', () => {
     );
 
     // This size should be in fixed-point notation rather than exponential notation.
-    const quoteAmount: string = '0.1'; // quote amount is price * fillAmount = 1e5 * 1e-6 = 1e-1
-    const totalFilled: string = '0.000001'; // fillAmount in human = 1e4 * 1e-10 = 1e-6
-    const price: string = '100000'; // 10^9*10^-8*10^-6/10^-10=10^5
+    const quoteAmount: string = '0.00000000001'; // quote amount is price * fillAmount = 1e3 * 1e-14 = 1e-11
+    const totalFilled: string = '0.00000000000001'; // fillAmount in human = 10^4*10^-18=10^-14
+    const price: string = '1000'; // 10^9*10^-6=10^3
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromId(
         defaultDeleveragingEvent.perpetualId.toString(),
@@ -311,7 +311,7 @@ describe('DeleveragingHandler', () => {
     const positionId: string = (
       await PerpetualPositionTable.findOpenPositionForSubaccountPerpetual(
         SubaccountTable.subaccountIdToUuid(subaccountId),
-        testConstants.defaultPerpetualMarket.id,
+        testConstants.defaultPerpetualMarket2.id,
       )
     )!.id;
 
