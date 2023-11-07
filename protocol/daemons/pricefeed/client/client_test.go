@@ -237,12 +237,11 @@ func TestStart_InvalidConfig(t *testing.T) {
 			faketaskRunner.WaitGroup.Add(tc.expectedNumExchangeTasks * 2)
 
 			// Run Start.
-			client := newClient()
+			client := newClient(log.NewNopLogger())
 			err := client.start(
 				grpc_util.Ctx,
 				daemonflags.GetDefaultDaemonFlags(),
 				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-				log.NewNopLogger(),
 				tc.mockGrpcClient,
 				tc.exchangeIdToQueryConfig,
 				tc.exchangeIdToExchangeDetails,
@@ -764,7 +763,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				Return(nil, tc.updateMarketPricesError).Once()
 
 			ticker, stop := daemontestutils.SingleTickTickerAndStop()
-			client := newClient()
+			client := newClient(log.NewNopLogger())
 
 			// Act.
 			// Run the price updater for a single tick. Expect the daemon to toggle health state based on

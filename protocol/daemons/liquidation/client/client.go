@@ -20,16 +20,20 @@ import (
 type Client struct {
 	// include HealthCheckable to track the health of the daemon.
 	daemontypes.HealthCheckable
+
+	// logger is the logger for the daemon.
+	logger log.Logger
 }
 
 // Ensure Client implements the HealthCheckable interface.
 var _ daemontypes.HealthCheckable = (*Client)(nil)
 
-func NewClient() *Client {
+func NewClient(logger log.Logger) *Client {
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			types.LiquidationsDaemonServiceName,
 			&timelib.TimeProviderImpl{},
+			logger,
 		),
 	}
 }
@@ -42,11 +46,10 @@ func (c *Client) Start(
 	ctx context.Context,
 	flags flags.DaemonFlags,
 	appFlags appflags.Flags,
-	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 ) error {
 	// Log the daemon flags.
-	logger.Info(
+	c.logger.Info(
 		"Starting liquidations daemon with flags",
 		"LiquidationFlags", flags.Liquidation,
 	)
@@ -54,7 +57,7 @@ func (c *Client) Start(
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
 	}
 	defer func() {
@@ -66,7 +69,7 @@ func (c *Client) Start(
 	// Make a connection to the private daemon gRPC server.
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
 	}
 	defer func() {
@@ -93,7 +96,6 @@ func (c *Client) Start(
 		subaccountQueryClient,
 		clobQueryClient,
 		liquidationServiceClient,
-		logger,
 	)
 
 	return nil
@@ -110,7 +112,6 @@ func StartLiquidationsDaemonTaskLoop(
 	subaccountQueryClient satypes.QueryClient,
 	clobQueryClient clobtypes.QueryClient,
 	liquidationServiceClient api.LiquidationServiceClient,
-	logger log.Logger,
 ) {
 	for {
 		select {
@@ -123,7 +124,7 @@ func StartLiquidationsDaemonTaskLoop(
 				liquidationServiceClient,
 			); err != nil {
 				// TODO(DEC-947): Move daemon shutdown to application.
-				logger.Error("Liquidations daemon returned error", "error", err)
+				client.logger.Error("Liquidations daemon returned error", "error", err)
 				client.ReportFailure(err)
 			} else {
 				client.ReportSuccess()

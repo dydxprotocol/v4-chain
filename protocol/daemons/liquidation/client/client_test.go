@@ -29,14 +29,13 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
 
-	liquidationsClient := client.NewClient()
+	liquidationsClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
 		liquidationsClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -54,14 +53,13 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
-	liquidationsClient := client.NewClient()
+	liquidationsClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
 		liquidationsClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -300,7 +298,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			c := client.NewClient()
+			c := client.NewClient(log.NewNopLogger())
 
 			// Sanity check - the client should be unhealthy before the first successful update.
 			require.ErrorContains(
@@ -324,7 +322,6 @@ func TestHealthCheck_Mixed(t *testing.T) {
 					&mocks.QueryClient{},
 					&mocks.QueryClient{},
 					&mocks.QueryClient{},
-					log.NewNopLogger(),
 				)
 			}
 

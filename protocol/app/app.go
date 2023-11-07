@@ -603,7 +603,7 @@ func New(
 			app.Server.ExpectLiquidationsDaemon(
 				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
 			)
-			app.LiquidationsClient = liquidationclient.NewClient()
+			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
@@ -611,7 +611,6 @@ func New(
 					context.Background(),
 					daemonFlags,
 					appFlags,
-					logger,
 					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
