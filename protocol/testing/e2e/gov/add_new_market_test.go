@@ -62,6 +62,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 	tests := map[string]struct {
 		proposedMsgs                          []sdk.Msg
 		updateClobDelayBlocks                 uint32
+		expectCheckTxFails                    bool
 		expectSubmitProposalFail              bool
 		expectDelayedUpdateClobPairMsgFailure bool
 		expectedProposalStatus                govtypesv1.ProposalStatus
@@ -284,6 +285,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 				ctx,
 				tApp,
 				tc.proposedMsgs,
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
