@@ -165,42 +165,12 @@ BEGIN
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
-    SELECT * INTO perpetual_position_record FROM perpetual_positions WHERE "subaccountId" = subaccount_uuid
-                                                                       AND "perpetualId" = perpetual_market_record."id"
-                                                                       ORDER BY "createdAtHeight" DESC;
-    IF NOT FOUND THEN
-        RAISE EXCEPTION 'Unable to find existing perpetual position, subaccountId: %, perpetualId: %', subaccount_uuid, perpetual_market_record."id";
-    END IF;
-    DECLARE
-        sum_open numeric = perpetual_position_record."sumOpen";
-        entry_price numeric = perpetual_position_record."entryPrice";
-        sum_close numeric = perpetual_position_record."sumClose";
-        exit_price numeric = perpetual_position_record."exitPrice";
-    BEGIN
-        IF dydx_perpetual_position_and_order_side_matching(
-            perpetual_position_record."side", order_side) THEN
-            sum_open = dydx_trim_scale(perpetual_position_record."sumOpen" + fill_amount);
-            entry_price = dydx_get_weighted_average(
-                perpetual_position_record."entryPrice", perpetual_position_record."sumOpen",
-                maker_price, fill_amount);
-            perpetual_position_record."sumOpen" = sum_open;
-            perpetual_position_record."entryPrice" = entry_price;
-        ELSE
-            sum_close = dydx_trim_scale(perpetual_position_record."sumClose" + fill_amount);
-            exit_price = dydx_get_weighted_average(
-                perpetual_position_record."exitPrice", perpetual_position_record."sumClose",
-                maker_price, fill_amount);
-            perpetual_position_record."sumClose" = sum_close;
-            perpetual_position_record."exitPrice" = exit_price;
-        END IF;
-        UPDATE perpetual_positions
-        SET
-            "sumOpen" = sum_open,
-            "entryPrice" = entry_price,
-            "sumClose" = sum_close,
-            "exitPrice" = exit_price
-        WHERE "id" = perpetual_position_record.id;
-    END;
+    perpetual_position_record = dydx_update_perpetual_position(
+            subaccount_uuid,
+            perpetual_market_record."id",
+            order_side,
+            fill_amount,
+            maker_price);
 
     RETURN jsonb_build_object(
             'order',

@@ -7,6 +7,10 @@ CREATE OR REPLACE FUNCTION dydx_update_perpetual_position(
 ) RETURNS perpetual_positions AS $$
 DECLARE
     perpetual_position_record RECORD;
+    sum_open numeric;
+    entry_price numeric;
+    sum_close numeric;
+    exit_price numeric;
 BEGIN
     -- Retrieve the latest perpetual position record
     SELECT * INTO perpetual_position_record
@@ -21,26 +25,35 @@ BEGIN
         RAISE EXCEPTION 'Unable to find existing perpetual position, subaccountId: %, perpetualId: %', subaccount_uuid, perpetual_id;
     END IF;
 
+    sum_open = perpetual_position_record."sumOpen";
+    entry_price = perpetual_position_record."entryPrice";
+    sum_close = perpetual_position_record."sumClose";
+    exit_price = perpetual_position_record."exitPrice";
+
     -- Update the perpetual position record based on the side
     IF dydx_perpetual_position_and_order_side_matching(perpetual_position_record."side", side) THEN
-        perpetual_position_record."sumOpen" := dydx_trim_scale(perpetual_position_record."sumOpen" + size);
-        perpetual_position_record."entryPrice" := dydx_get_weighted_average(
+        sum_open := dydx_trim_scale(perpetual_position_record."sumOpen" + size);
+        entry_price := dydx_get_weighted_average(
             perpetual_position_record."entryPrice", perpetual_position_record."sumOpen", price, size
         );
+        perpetual_position_record."sumOpen" = sum_open;
+        perpetual_position_record."entryPrice" = entry_price;
     ELSE
-        perpetual_position_record."sumClose" := dydx_trim_scale(perpetual_position_record."sumClose" + size);
-        perpetual_position_record."exitPrice" := dydx_get_weighted_average(
+        sum_close := dydx_trim_scale(perpetual_position_record."sumClose" + size);
+        exit_price := dydx_get_weighted_average(
             perpetual_position_record."exitPrice", perpetual_position_record."sumClose", price, size
         );
+        perpetual_position_record."sumClose" = sum_close;
+        perpetual_position_record."exitPrice" = exit_price;
     END IF;
 
     -- Perform the actual update in the database
     UPDATE perpetual_positions
     SET
-        "sumOpen" = perpetual_position_record."sumOpen",
-        "entryPrice" = perpetual_position_record."entryPrice",
-        "sumClose" = perpetual_position_record."sumClose",
-        "exitPrice" = perpetual_position_record."exitPrice"
+        "sumOpen" = sum_open,
+        "entryPrice" = entry_price,
+        "sumClose" = sum_close,
+        "exitPrice" = exit_price
     WHERE "id" = perpetual_position_record.id;
 
     -- Return the updated perpetual position record as jsonb
