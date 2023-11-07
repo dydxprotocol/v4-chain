@@ -109,16 +109,13 @@ func (k Keeper) PlaceShortTermOrder(
 	orderStatus types.OrderStatus,
 	err error,
 ) {
-	msg.Order.OrderId.MustBeShortTermOrder()
-
 	lib.AssertCheckTxMode(ctx)
 	nextBlockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight() + 1)
 
-	// return k.placeOrder(ctx, msg, nextBlockHeight, k.MemClob)
-
 	order := msg.GetOrder()
-
+	order.OrderId.MustBeShortTermOrder()
 	orderLabels := order.GetOrderLabels()
+
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
 	defer func() {
 		telemetry.IncrCounterWithLabels(
