@@ -16,7 +16,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus, FillType,
 } from '@dydxprotocol-indexer/postgres';
-import { CanceledOrderStatus } from '@dydxprotocol-indexer/redis';
+import { CanceledOrderStatus, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
@@ -27,6 +27,7 @@ import * as pg from 'pg';
 import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
+import { redisClient } from '../../helpers/redis/redis-controller';
 import {
   orderFillWithLiquidityToOrderFillEventWithLiquidation,
 } from '../../helpers/translation-helper';
@@ -136,6 +137,13 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       const makerOrder: OrderFromDatabase = OrderModel.fromJson(
         result.rows[0].result.order) as OrderFromDatabase;
 
+      // Update the cache tracking the state-filled amount per order for use in vulcan
+      await StateFilledQuantumsCache.updateStateFilledQuantums(
+        makerOrder!.id,
+        this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
+        redisClient,
+      );
+
       const kafkaEvents: ConsolidatedKafkaEvent[] = [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
@@ -225,6 +233,13 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
     );
 
     if (this.event.liquidity === Liquidity.MAKER) {
+      // Update the cache tracking the state-filled amount per order for use in vulcan
+      await StateFilledQuantumsCache.updateStateFilledQuantums(
+        makerOrder!.id,
+        this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
+        redisClient,
+      );
+
       const kafkaEvents: ConsolidatedKafkaEvent[] = [
         this.generateConsolidatedKafkaEvent(
           castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
