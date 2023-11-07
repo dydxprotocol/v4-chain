@@ -16,7 +16,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
-import { CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
+import { CanceledOrderStatus, CanceledOrdersCache, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OrderFillEventV1, IndexerOrderId, IndexerSubaccountId, IndexerOrder,
@@ -82,8 +82,11 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       this.event.liquidity,
     );
     const orderUuid = OrderTable.orderIdToUuid(orderProto.orderId!);
-    const isOrderCanceled: boolean = await
-    CanceledOrdersCache.isOrderCanceled(orderUuid, redisClient);
+    const canceledOrderStatus:
+    CanceledOrderStatus = await CanceledOrdersCache.getOrderCanceledStatus(
+      orderUuid,
+      redisClient,
+    );
 
     const result: pg.QueryResult = await storeHelpers.rawQuery(
       `SELECT dydx_order_fill_handler_per_order(
@@ -97,7 +100,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         '${this.event.liquidity}', 
         'LIMIT',
         '${USDC_ASSET_ID}',
-        '${isOrderCanceled}'
+        '${canceledOrderStatus}'
       ) AS result;`,
       { txId: this.txId },
     ).catch((error: Error) => {
@@ -139,6 +142,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         orderProto.orderId!,
         this.getTotalFilled(castedOrderFillEventMessage),
       ),
+    );
+
+    // Update the cache tracking the state-filled amount per order for use in vulcan
+    await StateFilledQuantumsCache.updateStateFilledQuantums(
+      order.id,
+      this.getTotalFilled(castedOrderFillEventMessage).toString(),
+      redisClient,
     );
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
@@ -185,8 +195,11 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       this.event.liquidity,
     );
     const orderUuid = OrderTable.orderIdToUuid(orderProto.orderId!);
-    const isOrderCanceled: boolean = await
-    CanceledOrdersCache.isOrderCanceled(orderUuid, redisClient);
+    const canceledOrderStatus:
+    CanceledOrderStatus = await CanceledOrdersCache.getOrderCanceledStatus(
+      orderUuid,
+      redisClient,
+    );
 
     // Must be done in this order, because fills refer to an order
     const order: OrderFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
@@ -194,7 +207,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         perpetualMarket,
         orderProto,
         this.getTotalFilled(castedOrderFillEventMessage),
-        isOrderCanceled,
+        canceledOrderStatus,
       ),
       this.generateTimingStatsOptions('upsert_orders'));
 
@@ -228,6 +241,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
         orderProto.orderId!,
         this.getTotalFilled(castedOrderFillEventMessage),
       ),
+    );
+
+    // Update the cache tracking the state-filled amount per order for use in vulcan
+    await StateFilledQuantumsCache.updateStateFilledQuantums(
+      order.id,
+      this.getTotalFilled(castedOrderFillEventMessage).toString(),
+      redisClient,
     );
 
     // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this

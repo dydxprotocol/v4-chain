@@ -18,6 +18,7 @@ func TestUpdateEventParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateEventParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
@@ -65,6 +66,7 @@ func TestUpdateEventParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -83,6 +85,7 @@ func TestUpdateProposeParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateProposeParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
@@ -132,6 +135,7 @@ func TestUpdateProposeParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -150,6 +154,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 
 	tests := map[string]struct {
 		msg                      *bridgetypes.MsgUpdateSafetyParams
+		expectCheckTxFails       bool
 		expectSubmitProposalFail bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 	}{
@@ -195,6 +200,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)

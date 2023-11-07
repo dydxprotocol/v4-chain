@@ -76,6 +76,7 @@ import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -481,6 +482,14 @@ describe('OrderHandler', () => {
           },
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -710,7 +719,7 @@ describe('OrderHandler', () => {
         totalFilled: totalMakerOrderFilled,
         price,
         status: isOrderCanceled
-          ? OrderStatus.BEST_EFFORT_CANCELED
+          ? OrderStatus.CANCELED
           : OrderStatus.OPEN, // orderSize > totalFilled so status is open
         clobPairId: defaultClobPairId,
         side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
@@ -835,6 +844,14 @@ describe('OrderHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -1044,6 +1061,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1255,6 +1280,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1482,22 +1515,38 @@ describe('OrderHandler', () => {
       IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
     ],
     [
-      'post-only',
+      'post-only best effort canceled',
       'via knex',
       false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
     ],
     [
-      'post-only',
+      'post-only best effort canceled',
       'via SQL function',
       true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+    ],
+    [
+      'post-only canceled',
+      'via knex',
+      false,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
+    ],
+    [
+      'post-only canceled',
+      'via SQL function',
+      true,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
     ],
   ])('correctly sets status for short term %s orders (%s)', async (
     _orderType: string,
     _name: string,
     useSqlFunction: boolean,
     timeInForce: IndexerOrder_TimeInForce,
+    // either BEST_EFFORT_CANCELED or CANCELED
+    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
   ) => {
     config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
@@ -1540,7 +1589,11 @@ describe('OrderHandler', () => {
     });
 
     const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
-    await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    if (status === OrderStatus.BEST_EFFORT_CANCELED) {
+      await CanceledOrdersCache.addBestEffortCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    } else { // Status is only over CANCELED or BEST_EFFORT_CANCELED
+      await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    }
 
     const fillAmount: number = 10;
     const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
@@ -1589,7 +1642,7 @@ describe('OrderHandler', () => {
     expect(takerOrder).toBeDefined();
 
     // maker order is partially filled, and in CanceledOrdersCache
-    expect(makerOrder!.status).toEqual(OrderStatus.BEST_EFFORT_CANCELED);
+    expect(makerOrder!.status).toEqual(status);
     // taker order is partially filled, and not in CanceledOrdersCache
     expect(takerOrder!.status).toEqual(OrderStatus.OPEN);
   });

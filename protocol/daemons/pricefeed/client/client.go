@@ -31,6 +31,9 @@ import (
 // Note: price fetchers manage their own subtasks by blocking on their completion on every subtask run.
 // When the price fetcher is stopped, it will wait for all of its own subtasks to complete before returning.
 type Client struct {
+	// include HealthCheckable to track the health of the daemon.
+	daemontypes.HealthCheckable
+
 	// daemonStartup tracks whether the daemon has finished startup. The daemon
 	// cannot be stopped until all persistent daemon subtasks have been launched within `Start`.
 	daemonStartup sync.WaitGroup
@@ -51,10 +54,17 @@ type Client struct {
 	stopDaemon sync.Once
 }
 
+// Ensure Client implements the HealthCheckable interface.
+var _ daemontypes.HealthCheckable = (*Client)(nil)
+
 func newClient() *Client {
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
+		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
+			constants.PricefeedDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+		),
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -66,7 +76,7 @@ func newClient() *Client {
 // for any subtask kicked off by the client. The ticker and channel are tracked in order to properly clean up and send
 // all needed stop signals when the daemon is stopped.
 // Note: this method is not synchronized. It is expected to be called from the client's `StartNewClient` method before
-// `client.CompleteStartup`.
+// the daemonStartup waitgroup signals.
 func (c *Client) newTickerWithStop(intervalMs int) (*time.Ticker, <-chan bool) {
 	ticker := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
 	c.tickers = append(c.tickers, ticker)
@@ -249,6 +259,7 @@ func (c *Client) start(ctx context.Context,
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
+		c,
 		ctx,
 		priceUpdaterTicker,
 		priceUpdaterStop,
