@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	sdklog "cosmossdk.io/log"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types/constants"
@@ -21,14 +22,20 @@ import (
 // Ethereum blockchain for new bridge events and relays them to the Cosmos gRPC server.
 type Client struct {
 	daemontypes.HealthCheckable
+
+	// logger is the logger used by the bridge daemon.
+	logger log.Logger
 }
 
-func NewClient() *Client {
+func NewClient(logger log.Logger) *Client {
+	logger = logger.With(sdklog.ModuleKey, "bridge-daemon")
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			constants.BridgeDaemonModuleName,
 			&libtime.TimeProviderImpl{},
+			logger,
 		),
+		logger: logger,
 	}
 }
 
@@ -37,11 +44,10 @@ func (c *Client) Start(
 	ctx context.Context,
 	flags daemonflags.DaemonFlags,
 	appFlags appflags.Flags,
-	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 ) error {
 	// Log the daemon flags.
-	logger.Info(
+	c.logger.Info(
 		"Starting bridge daemon with flags",
 		"BridgeFlags", flags.Bridge,
 	)
@@ -54,24 +60,24 @@ func (c *Client) Start(
 	// Make a connection to the Cosmos gRPC query services.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
 	}
 	defer func() {
 		if connErr := grpcClient.CloseConnection(queryConn); connErr != nil {
-			logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
+			c.logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
 		}
 	}()
 
 	// Make a connection to the private daemon gRPC server.
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, flags.Shared.SocketAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
 	}
 	defer func() {
 		if connErr := grpcClient.CloseConnection(daemonConn); connErr != nil {
-			logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
+			c.logger.Error("Failed to close gRPC connection to Cosmos gRPC query services", "error", connErr)
 		}
 	}()
 
@@ -82,7 +88,7 @@ func (c *Client) Start(
 	// Initialize an Ethereum client from an RPC endpoint.
 	ethClient, err := ethclient.Dial(flags.Bridge.EthRpcEndpoint)
 	if err != nil {
-		logger.Error("Failed to establish connection to Ethereum node", "error", err)
+		c.logger.Error("Failed to establish connection to Ethereum node", "error", err)
 		return err
 	}
 	defer func() { ethClient.Close() }()
@@ -96,7 +102,6 @@ func (c *Client) Start(
 		ticker,
 		stop,
 		&SubTaskRunnerImpl{},
-		logger,
 		ethClient,
 		queryClient,
 		serviceClient,
@@ -113,7 +118,6 @@ func StartBridgeDaemonTaskLoop(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	s SubTaskRunner,
-	logger log.Logger,
 	ethClient types.EthClient,
 	queryClient bridgetypes.QueryClient,
 	serviceClient api.BridgeServiceClient,
@@ -124,7 +128,7 @@ func StartBridgeDaemonTaskLoop(
 		case <-ticker.C:
 			if err := s.RunBridgeDaemonTaskLoop(
 				ctx,
-				logger,
+				c.logger,
 				ethClient,
 				queryClient,
 				serviceClient,
@@ -132,7 +136,7 @@ func StartBridgeDaemonTaskLoop(
 				c.ReportSuccess()
 			} else {
 				// TODO(DEC-947): Move daemon shutdown to application.
-				logger.Error("Bridge daemon returned error", "error", err)
+				c.logger.Error("Bridge daemon returned error", "error", err)
 				c.ReportFailure(err)
 			}
 		case <-stop:

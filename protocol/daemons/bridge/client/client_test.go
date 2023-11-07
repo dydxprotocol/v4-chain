@@ -28,11 +28,10 @@ func TestStart_EthRpcEndpointNotSet(t *testing.T) {
 	errorMsg := "flag bridge-daemon-eth-rpc-endpoint is not set"
 	require.EqualError(
 		t,
-		client.NewClient().Start(
+		client.NewClient(log.NewNopLogger()).Start(
 			grpc.Ctx,
 			daemonflags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			&mocks.GrpcClient{},
 		),
 		errorMsg,
@@ -52,11 +51,10 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 
 	require.EqualError(
 		t,
-		client.NewClient().Start(
+		client.NewClient(log.NewNopLogger()).Start(
 			grpc.Ctx,
 			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -84,11 +82,10 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 
 	require.EqualError(
 		t,
-		client.NewClient().Start(
+		client.NewClient(log.NewNopLogger()).Start(
 			grpc.Ctx,
 			daemonFlagsWithEthRpcEndpoint,
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -140,7 +137,7 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			updateResults: []error{
 				TestError, // failed update
 			},
-			expectedHealthStatus: fmt.Errorf("abc"),
+			expectedHealthStatus: fmt.Errorf("no successful update has occurred"),
 		},
 		"healthy: one recent successful update": {
 			updateResults: []error{
@@ -153,12 +150,12 @@ func TestHealthCheck_Mixed(t *testing.T) {
 				nil,       // successful update
 				TestError, // failed update
 			},
-			expectedHealthStatus: fmt.Errorf("abc"),
+			expectedHealthStatus: fmt.Errorf("last update failed"),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			c := client.NewClient()
+			c := client.NewClient(log.NewNopLogger())
 
 			fakeSubTaskRunner := NewFakeSubTaskRunnerWithResults(tc.updateResults)
 
@@ -170,7 +167,6 @@ func TestHealthCheck_Mixed(t *testing.T) {
 					ticker,
 					stop,
 					fakeSubTaskRunner,
-					nil,
 					nil,
 					nil,
 					nil,

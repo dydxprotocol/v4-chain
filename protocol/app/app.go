@@ -15,7 +15,6 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
-	sdklog "cosmossdk.io/log"
 	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -647,14 +646,13 @@ func New(
 			// environments.
 			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
 			go func() {
-				app.BridgeClient = bridgeclient.NewClient()
+				app.BridgeClient = bridgeclient.NewClient(logger)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
 					context.Background(),
 					daemonFlags,
 					appFlags,
-					logger.With(sdklog.ModuleKey, "bridge-daemon"),
 					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)
