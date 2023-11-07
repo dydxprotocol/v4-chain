@@ -20,6 +20,7 @@ import {
   PositionSide,
   TendermintEventTable,
   FillTable,
+  FundingIndexUpdatesTable,
   OraclePriceTable,
   OrderTable,
   protocolTranslations,
@@ -254,6 +255,16 @@ describe('SQL Function Tests', () => {
     const result = await getSingleRawQueryResultRow(
       `SELECT dydx_uuid_from_fill_event_parts('\\x${eventId.toString('hex')}'::bytea, '${liquidity}') AS result`);
     expect(result).toEqual(FillTable.uuid(eventId, liquidity));
+  });
+
+  it.each([
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+  ])('dydx_uuid_from_funding_index_update_parts (%s, %s, %s, %s)', async (blockHeight: number, transactionIndex: number, eventIndex: number, perpetualId: number) => {
+    const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_funding_index_update_parts('${blockHeight}', '\\x${eventId.toString('hex')}'::bytea, '${perpetualId}') AS result`);
+    expect(result).toEqual(FundingIndexUpdatesTable.uuid(`${blockHeight}`, eventId, `${perpetualId}`));
   });
 
   it.each([
