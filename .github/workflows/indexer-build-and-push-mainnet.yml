@@ -1,0 +1,18 @@
+name: Indexer Build & Push Images to AWS ECR for Mainnet
+
+on: # yamllint disable-line rule:truthy
+  push:
+    branches:
+      - main
+      - 'release/[a-z]+/0.[0-9]+.x'  # e.g. release/indexer/v0.1.x
+      - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/indexer/v1.x
+    # TODO(DEC-837): Customize github build and push to ECR by service with paths
+
+jobs:
+  # Build and push to public-testnet
+  call-build-and-push-ecs-services-public-testnet:
+    name: (Mainnet) Build and Push ECS Services
+    uses: ./.github/workflows/indexer-build-and-push-all-ecr-images.yml
+    with:
+      ENVIRONMENT: mainnet
+    secrets: inherit
