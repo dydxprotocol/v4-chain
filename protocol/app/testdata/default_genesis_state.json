@@ -9,8 +9,7 @@
         "denom_exponent": -6,
         "has_market": false,
         "market_id": 0,
-        "atomic_resolution": -6,
-        "long_interest": "0"
+        "atomic_resolution": -6
       }
     ]
   },
@@ -39,8 +38,7 @@
       "durations": [
         "300s",
         "1800s"
-      ],
-      "clock_drift_grace_period_duration": "5s"
+      ]
     }
   },
   "bridge": {
@@ -71,7 +69,6 @@
   "clob": {
     "clob_pairs": [],
     "liquidations_config": {
-      "max_insurance_fund_quantums_for_deleveraging": "0",
       "max_liquidation_fee_ppm": 5000,
       "position_block_limits": {
         "min_position_notional_liquidated": "1000",
@@ -105,7 +102,7 @@
   },
   "delaymsg": {
     "delayed_messages": [],
-    "num_messages": 0
+    "next_delayed_message_id": 0
   },
   "distribution": {
     "params": {
@@ -349,8 +346,8 @@
   "rewards": {
     "params": {
       "treasury_account":"rewards_treasury",
-      "denom":"dv4tnt",
-      "denom_exponent":-6,
+      "denom":"adv4tnt",
+      "denom_exponent":-18,
       "market_id":1,
       "fee_multiplier_ppm":990000
     }
@@ -405,9 +402,16 @@
   "vest": {
     "vest_entries": [
       {
-        "denom": "dv4tnt",
-        "end_time": "2023-10-13T00:00:00Z",
-        "start_time": "2023-09-13T00:00:00Z",
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
+        "treasury_account": "community_treasury",
+        "vester_account": "community_vester"
+      },
+      {
+        "denom": "adv4tnt",
+        "end_time": "2025-01-01T00:00:00Z",
+        "start_time": "2023-01-01T00:00:00Z",
         "treasury_account": "rewards_treasury",
         "vester_account": "rewards_vester"
       }

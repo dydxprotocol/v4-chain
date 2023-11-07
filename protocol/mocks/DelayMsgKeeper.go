@@ -70,18 +70,18 @@ func (_m *DelayMsgKeeper) GetAllDelayedMessages(ctx types.Context) []*delaymsgty
 }
 
 // GetBlockMessageIds provides a mock function with given fields: ctx, blockHeight
-func (_m *DelayMsgKeeper) GetBlockMessageIds(ctx types.Context, blockHeight int64) (delaymsgtypes.BlockMessageIds, bool) {
+func (_m *DelayMsgKeeper) GetBlockMessageIds(ctx types.Context, blockHeight uint32) (delaymsgtypes.BlockMessageIds, bool) {
 	ret := _m.Called(ctx, blockHeight)
 
 	var r0 delaymsgtypes.BlockMessageIds
-	if rf, ok := ret.Get(0).(func(types.Context, int64) delaymsgtypes.BlockMessageIds); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) delaymsgtypes.BlockMessageIds); ok {
 		r0 = rf(ctx, blockHeight)
 	} else {
 		r0 = ret.Get(0).(delaymsgtypes.BlockMessageIds)
 	}
 
 	var r1 bool
-	if rf, ok := ret.Get(1).(func(types.Context, int64) bool); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) bool); ok {
 		r1 = rf(ctx, blockHeight)
 	} else {
 		r1 = ret.Get(1).(bool)
@@ -171,9 +171,9 @@ func (_m *DelayMsgKeeper) SetDelayedMessage(ctx types.Context, msg *delaymsgtype
 	return r0
 }
 
-// SetNumMessages provides a mock function with given fields: ctx, numMessages
-func (_m *DelayMsgKeeper) SetNumMessages(ctx types.Context, numMessages uint32) {
-	_m.Called(ctx, numMessages)
+// SetNextDelayedMessageId provides a mock function with given fields: ctx, nextDelayedMessageId
+func (_m *DelayMsgKeeper) SetNextDelayedMessageId(ctx types.Context, nextDelayedMessageId uint32) {
+	_m.Called(ctx, nextDelayedMessageId)
 }
 
 type mockConstructorTestingTNewDelayMsgKeeper interface {

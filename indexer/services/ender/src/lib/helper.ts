@@ -21,8 +21,11 @@ import {
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
+  SubaccountMessage,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
+import _ from 'lodash';
 import { DateTime } from 'luxon';
 
 import {
@@ -30,6 +33,7 @@ import {
   SECONDS_IN_MILLIS,
 } from '../constants';
 import {
+  AnnotatedSubaccountMessage,
   DydxIndexerSubtypes,
   EventProtoWithTypeAndVersion,
 } from './types';
@@ -53,6 +57,16 @@ export function indexerTendermintEventToTransactionIndex(
   throw new ParseMessageError(
     'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent',
   );
+}
+
+export function convertToSubaccountMessage(
+  annotatedMessage: AnnotatedSubaccountMessage,
+): SubaccountMessage {
+  const subaccountMessage: SubaccountMessage = _.omit(
+    annotatedMessage,
+    ['orderId', 'isFill', 'subaccountMessageContents'],
+  );
+  return subaccountMessage;
 }
 
 export function protoTimestampToDate(
@@ -167,6 +181,14 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
         eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+      };
+    }
+    case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
+      return {
+        type: DydxIndexerSubtypes.DELEVERAGING,
+        eventProto: DeleveragingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
       };

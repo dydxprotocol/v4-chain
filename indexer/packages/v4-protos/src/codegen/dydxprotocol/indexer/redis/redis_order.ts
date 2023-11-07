@@ -72,7 +72,7 @@ export function redisOrder_TickerTypeToJSON(object: RedisOrder_TickerType): stri
 /**
  * RedisOrder is a proto for orders stored in Redis. This proto holds some
  * human-readable values such as price, size and ticker as well as the original
- * `Order` proto from the V4 application.
+ * `Order` proto from the dYdX application.
  */
 
 export interface RedisOrder {
@@ -97,7 +97,7 @@ export interface RedisOrder {
 /**
  * RedisOrder is a proto for orders stored in Redis. This proto holds some
  * human-readable values such as price, size and ticker as well as the original
- * `Order` proto from the V4 application.
+ * `Order` proto from the dYdX application.
  */
 
 export interface RedisOrderSDKType {

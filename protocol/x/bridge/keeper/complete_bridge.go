@@ -9,7 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
 
-// `CompleteBridge` processes a bridge event by transfer the appropriate tokens
+// `CompleteBridge` processes a bridge event by transferring the specified coin
 // from bridge module account to the given address. The id of the bridge is not
 // validated as it should have already been validated by AcknowledgeBridges.
 func (k Keeper) CompleteBridge(
@@ -23,20 +23,29 @@ func (k Keeper) CompleteBridge(
 		metrics.Latency,
 	)
 
+	// Do not complete bridge if bridging is disabled.
+	safetyParams := k.GetSafetyParams(ctx)
+	if safetyParams.IsDisabled {
+		return types.ErrBridgingDisabled
+	}
+
 	// Convert bridge address string to sdk.AccAddress.
 	bridgeAccAddress, err := sdk.AccAddressFromBech32(bridge.Address)
 	if err != nil {
 		return err
 	}
 
-	// Send coin from bridge module account to specified account.
-	if err = k.bankKeeper.SendCoinsFromModuleToAccount(
-		ctx,
-		types.ModuleName,
-		bridgeAccAddress,
-		sdk.Coins{bridge.Coin},
-	); err != nil {
-		return err
+	// If coin amount is positive, send coin from bridge module account to
+	// specified account.
+	if bridge.Coin.Amount.IsPositive() {
+		if err = k.bankKeeper.SendCoinsFromModuleToAccount(
+			ctx,
+			types.ModuleName,
+			bridgeAccAddress,
+			sdk.Coins{bridge.Coin},
+		); err != nil {
+			return err
+		}
 	}
 
 	// Emit metric on last completed bridge id.
@@ -51,6 +60,7 @@ func (k Keeper) CompleteBridge(
 
 // `GetDelayedCompleteBridgeMessages` returns all delayed complete bridge
 // messages and corresponding block heights at which they'll execute.
+// If `address` is given, only returns messages for that address.
 func (k Keeper) GetDelayedCompleteBridgeMessages(
 	ctx sdk.Context,
 	address string,

@@ -107,7 +107,7 @@ func SubmitAndTallyProposal(
 			validator,
 			1, // proposal ID
 			govtypesv1.VoteOption_VOTE_OPTION_YES,
-			"", // metdata
+			"", // metadata
 		)
 		voteCheckTx := MustMakeCheckTxWithPrivKeySupplier(
 			ctx,

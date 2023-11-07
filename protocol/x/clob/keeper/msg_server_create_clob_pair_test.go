@@ -1,11 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -51,20 +50,6 @@ func TestCreateClobPair(t *testing.T) {
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							testClobPair1.MustGetPerpetualId(),
-							testClobPair1.GetId(),
-							testPerp1.Params.Ticker,
-							testPerp1.Params.MarketId,
-							testClobPair1.Status,
-							testClobPair1.QuantumConversionExponent,
-							testPerp1.Params.AtomicResolution,
-							testClobPair1.SubticksPerTick,
-							testClobPair1.StepBaseQuantums,
-							testPerp1.Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -83,7 +68,7 @@ func TestCreateClobPair(t *testing.T) {
 				).Return()
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -109,7 +94,7 @@ func TestCreateClobPair(t *testing.T) {
 				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -136,7 +121,7 @@ func TestCreateClobPair(t *testing.T) {
 				keepertest.CreateTestClobPairs(t, ks.Ctx, ks.ClobKeeper, []types.ClobPair{testClobPair1})
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  *clobtest.GenerateClobPair(clobtest.WithId(3), clobtest.WithPerpetualId(1)),
 			},
 			expectedClobPairs: []types.ClobPair{testClobPair1},
@@ -146,7 +131,7 @@ func TestCreateClobPair(t *testing.T) {
 			setup: func(t *testing.T, ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 			},
 			msg: &types.MsgCreateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair:  testClobPair1,
 			},
 			expectedClobPairs: nil,

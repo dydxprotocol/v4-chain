@@ -17,7 +17,7 @@
     "gen-markdown": "widdershins public/swagger.json -o public/api-documentation.md --omitHeader --language_tabs 'python:Python' 'javascript:Javascript'"
   },
   "author": "",
-  "license": "BSL-1.1",
+  "license": "AGPL-3.0",
   "dependencies": {
     "@bugsnag/core": "^7.18.0",
     "@bugsnag/js": "^7.18.0",

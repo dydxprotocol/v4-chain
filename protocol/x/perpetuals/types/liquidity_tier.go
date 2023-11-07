@@ -13,20 +13,20 @@ import (
 // - Base position notional is not 0.
 func (liquidityTier LiquidityTier) Validate() error {
 	if liquidityTier.InitialMarginPpm > MaxInitialMarginPpm {
-		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.Uint32ToString(liquidityTier.InitialMarginPpm))
+		return errorsmod.Wrap(ErrInitialMarginPpmExceedsMax, lib.UintToString(liquidityTier.InitialMarginPpm))
 	}
 
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
 		return errorsmod.Wrap(ErrMaintenanceFractionPpmExceedsMax,
-			lib.Uint32ToString(liquidityTier.MaintenanceFractionPpm))
+			lib.UintToString(liquidityTier.MaintenanceFractionPpm))
 	}
 
 	if liquidityTier.BasePositionNotional == 0 {
-		return errorsmod.Wrap(ErrBasePositionNotionalIsZero, lib.Uint32ToString(0))
+		return ErrBasePositionNotionalIsZero
 	}
 
 	if liquidityTier.ImpactNotional == 0 {
-		return errorsmod.Wrap(ErrImpactNotionalIsZero, lib.Uint32ToString(0))
+		return ErrImpactNotionalIsZero
 	}
 
 	return nil
@@ -36,6 +36,8 @@ func (liquidityTier LiquidityTier) Validate() error {
 // and maintenance fraction ppm.
 func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 	if liquidityTier.MaintenanceFractionPpm > MaxMaintenanceFractionPpm {
+		// Invariant broken: `MaintenanceFractionPpm` should always be less than `MaxMaintenanceFractionPpm`,
+		// which is checked in `SetLiquidityTier`.
 		panic(errorsmod.Wrapf(ErrMaintenanceFractionPpmExceedsMax, "maintenance fraction ppm: %d",
 			liquidityTier.MaintenanceFractionPpm))
 	}
@@ -52,10 +54,17 @@ func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 // `|S| ≤ Clamp Factor * (Initial Margin - Maintenance Margin)`, which can be applied to both
 // funding rate clamping and premium vote clamping, each having their own clamp factor.
 func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint32) *big.Int {
+	maintenanceMarginPpm := liquidityTier.GetMaintenanceMarginPpm()
+	if maintenanceMarginPpm > liquidityTier.InitialMarginPpm {
+		// Invariant broken: maintenance margin fraction should never be larger than initial margin fraction.
+		panic(errorsmod.Wrapf(ErrMaintenanceMarginLargerThanInitialMargin, "maintenance fraction ppm: %d",
+			liquidityTier.MaintenanceFractionPpm))
+	}
+
 	// Need to divide by 1 million (done by `BigIntMulPpm`) as both clamp factor and margin are in units of ppm.
 	return lib.BigIntMulPpm(
 		new(big.Int).SetUint64(uint64(clampFactorPpm)),
-		liquidityTier.InitialMarginPpm-liquidityTier.GetMaintenanceMarginPpm(),
+		liquidityTier.InitialMarginPpm-maintenanceMarginPpm,
 	)
 }
 

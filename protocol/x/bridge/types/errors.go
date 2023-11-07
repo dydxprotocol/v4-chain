@@ -52,4 +52,9 @@ var (
 		401,
 		"Rate is out of bounds",
 	)
+	ErrBridgingDisabled = errorsmod.Register(
+		ModuleName,
+		402,
+		"Bridging is disabled",
+	)
 )

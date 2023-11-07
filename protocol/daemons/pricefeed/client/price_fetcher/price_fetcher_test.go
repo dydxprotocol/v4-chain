@@ -2,6 +2,7 @@ package price_fetcher
 
 import (
 	"errors"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"testing"
 
 	"cosmossdk.io/math"
@@ -31,7 +32,7 @@ var (
 func TestRunTaskLoop(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig         types.ExchangeStartupConfig
+		queryConfig           types.ExchangeQueryConfig
 		queryDetails          types.ExchangeQueryDetails
 		mutableExchangeConfig types.MutableExchangeMarketConfig
 		mutableMarketConfigs  []*types.MutableMarketConfig
@@ -40,13 +41,13 @@ func TestRunTaskLoop(t *testing.T) {
 		expectedMarketIdsCalled []types.MarketId
 	}{
 		"No markets": {
-			startupConfig:         constants.Exchange1_0MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_0MaxQueries_QueryConfig,
 			queryDetails:          constants.SingleMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_NoMarkets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_0Markets,
 		},
 		"Num markets equals max query markets where there is only 1 market": {
-			startupConfig:         constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:          constants.SingleMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_1Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_1Markets,
@@ -56,7 +57,7 @@ func TestRunTaskLoop(t *testing.T) {
 			},
 		},
 		"Num markets < max query markets": {
-			startupConfig:         constants.Exchange1_2MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_2MaxQueries_QueryConfig,
 			queryDetails:          constants.SingleMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_1Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_1Markets,
@@ -66,7 +67,7 @@ func TestRunTaskLoop(t *testing.T) {
 			},
 		},
 		"Num markets equals max query markets": {
-			startupConfig:         constants.Exchange1_2MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_2MaxQueries_QueryConfig,
 			queryDetails:          constants.SingleMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_2Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_2Markets,
@@ -78,7 +79,7 @@ func TestRunTaskLoop(t *testing.T) {
 			},
 		},
 		"Multi-market, 2 markets": {
-			startupConfig:         constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:          constants.MultiMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_2Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_2Markets,
@@ -90,7 +91,7 @@ func TestRunTaskLoop(t *testing.T) {
 			},
 		},
 		"Num markets greater than max query markets": {
-			startupConfig:         constants.Exchange1_2MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_2MaxQueries_QueryConfig,
 			queryDetails:          constants.SingleMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_3Markets,
@@ -102,7 +103,7 @@ func TestRunTaskLoop(t *testing.T) {
 			},
 		},
 		"Multi-market, 5 markets": {
-			startupConfig:         constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:           constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:          constants.MultiMarketExchangeQueryDetails,
 			mutableExchangeConfig: constants.Exchange1_5Markets_MutableExchangeMarketConfig,
 			mutableMarketConfigs:  constants.MutableMarketConfigs_5Markets,
@@ -129,7 +130,7 @@ func TestRunTaskLoop(t *testing.T) {
 			queryHandler := generateMockExchangeQueryHandler()
 
 			pf, err := NewPriceFetcher(
-				tc.startupConfig,
+				tc.queryConfig,
 				tc.queryDetails,
 				&tc.mutableExchangeConfig,
 				tc.mutableMarketConfigs,
@@ -141,7 +142,7 @@ func TestRunTaskLoop(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				pf.RunTaskLoop(&daemontypes.RequestHandlerImpl{})
 			}
 
 			// Will hang until tests timeout if bCh is not full.
@@ -193,7 +194,7 @@ func TestRunTaskLoop(t *testing.T) {
 // market ids for an exchange on every call.
 func TestGetTaskLoopDefinition_SingleMarketExchange(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_2MaxQueries_StartupConfig,
+		constants.Exchange1_2MaxQueries_QueryConfig,
 		constants.SingleMarketExchangeQueryDetails,
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -231,7 +232,7 @@ func TestGetTaskLoopDefinition_SingleMarketExchange(t *testing.T) {
 // expected task loop definition for a multi-market exchange.
 func TestGetTaskLoopDefinition_MultiMarketExchange(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_1MaxQueries_StartupConfig,
+		constants.Exchange1_1MaxQueries_QueryConfig,
 		constants.MultiMarketExchangeQueryDetails,
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -259,8 +260,8 @@ func TestGetTaskLoopDefinition_MultiMarketExchange(t *testing.T) {
 func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig types.ExchangeStartupConfig
-		queryDetails  types.ExchangeQueryDetails
+		queryConfig  types.ExchangeQueryConfig
+		queryDetails types.ExchangeQueryDetails
 
 		initialMutableExchangeConfig types.MutableExchangeMarketConfig
 		initialMarketConfig          []*types.MutableMarketConfig
@@ -275,7 +276,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 		updateExpectedExponents  map[types.MarketId]types.Exponent
 	}{
 		"Multimarket: No markets to markets": {
-			startupConfig: constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:   constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:  constants.MultiMarketExchangeQueryDetails,
 			isMultiMarket: true,
 
@@ -288,7 +289,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			updateExpectedExponents:     constants.MutableMarketConfigs_3Markets_ExpectedExponents,
 		},
 		"Multimarket: Add markets": {
-			startupConfig: constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:   constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:  constants.MultiMarketExchangeQueryDetails,
 			isMultiMarket: true,
 
@@ -301,8 +302,8 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			updateExpectedExponents:     constants.MutableMarketConfigs_5Markets_ExpectedExponents,
 		},
 		"Single market: No markets to markets": {
-			startupConfig: constants.Exchange1_2MaxQueries_StartupConfig,
-			queryDetails:  constants.SingleMarketExchangeQueryDetails,
+			queryConfig:  constants.Exchange1_2MaxQueries_QueryConfig,
+			queryDetails: constants.SingleMarketExchangeQueryDetails,
 
 			initialMutableExchangeConfig: constants.Exchange1_NoMarkets_MutableExchangeMarketConfig,
 			initialMarketConfig:          constants.MutableMarketConfigs_0Markets,
@@ -313,8 +314,8 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			updateExpectedExponents:     constants.MutableMarketConfigs_3Markets_ExpectedExponents,
 		},
 		"Single market: Add markets": {
-			startupConfig: constants.Exchange1_2MaxQueries_StartupConfig,
-			queryDetails:  constants.SingleMarketExchangeQueryDetails,
+			queryConfig:  constants.Exchange1_2MaxQueries_QueryConfig,
+			queryDetails: constants.SingleMarketExchangeQueryDetails,
 
 			initialMutableExchangeConfig: constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 			initialMarketConfig:          constants.MutableMarketConfigs_3Markets,
@@ -333,7 +334,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			queryHandler := generateMockExchangeQueryHandler()
 
 			pf, err := NewPriceFetcher(
-				tc.startupConfig,
+				tc.queryConfig,
 				tc.queryDetails,
 				&tc.initialMutableExchangeConfig,
 				tc.initialMarketConfig,
@@ -351,7 +352,7 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			if tc.isMultiMarket || len(tc.initialMarketConfig) == 0 {
 				require.Equal(t, tc.initialMutableExchangeConfig.GetMarketIds(), taskLoopDefinition.marketIds)
 			} else {
-				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.startupConfig.MaxQueries))
+				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
 				require.Len(t, taskLoopDefinition.marketIds, numMarkets)
 
 				for i := 0; i < numMarkets; i++ {
@@ -370,8 +371,8 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 			if tc.isMultiMarket {
 				require.Equal(t, tc.updateMutableExchangeConfig.GetMarketIds(), taskLoopDefinition.marketIds)
 			} else {
-				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.startupConfig.MaxQueries))
-				require.Len(t, taskLoopDefinition.marketIds, int(tc.startupConfig.MaxQueries))
+				numMarkets := lib.Min(len(tc.initialMarketConfig), int(tc.queryConfig.MaxQueries))
+				require.Len(t, taskLoopDefinition.marketIds, int(tc.queryConfig.MaxQueries))
 
 				for i := 0; i < numMarkets; i++ {
 					require.Equal(t, tc.updateMarketConfig[i].Id, taskLoopDefinition.marketIds[i])
@@ -387,8 +388,8 @@ func TestUpdateMutableExchangeConfig_CorrectlyUpdatesTaskDefinition(t *testing.T
 func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 	tests := map[string]struct {
 		// parameters
-		startupConfig types.ExchangeStartupConfig
-		queryDetails  types.ExchangeQueryDetails
+		queryConfig  types.ExchangeQueryConfig
+		queryDetails types.ExchangeQueryDetails
 
 		initialMutableExchangeConfig types.MutableExchangeMarketConfig
 		initialMarketConfigs         []*types.MutableMarketConfig
@@ -403,7 +404,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 		expectedNumQueryCalls   int
 	}{
 		"Multimarket: No markets to markets": {
-			startupConfig: constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:   constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:  constants.MultiMarketExchangeQueryDetails,
 			isMultiMarket: true,
 
@@ -426,7 +427,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			expectedNumQueryCalls: 2,
 		},
 		"Multimarket: Add markets": {
-			startupConfig: constants.Exchange1_1MaxQueries_StartupConfig,
+			queryConfig:   constants.Exchange1_1MaxQueries_QueryConfig,
 			queryDetails:  constants.MultiMarketExchangeQueryDetails,
 			isMultiMarket: true,
 
@@ -459,8 +460,8 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			expectedNumQueryCalls: 4,
 		},
 		"Single market: No markets to markets": {
-			startupConfig: constants.Exchange1_2MaxQueries_StartupConfig,
-			queryDetails:  constants.SingleMarketExchangeQueryDetails,
+			queryConfig:  constants.Exchange1_2MaxQueries_QueryConfig,
+			queryDetails: constants.SingleMarketExchangeQueryDetails,
 
 			initialMutableExchangeConfig: constants.Exchange1_NoMarkets_MutableExchangeMarketConfig,
 			initialMarketConfigs:         constants.MutableMarketConfigs_0Markets,
@@ -478,8 +479,8 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			expectedNumQueryCalls: 4,
 		},
 		"Single market: Add markets": {
-			startupConfig: constants.Exchange1_2MaxQueries_StartupConfig,
-			queryDetails:  constants.SingleMarketExchangeQueryDetails,
+			queryConfig:  constants.Exchange1_2MaxQueries_QueryConfig,
+			queryDetails: constants.SingleMarketExchangeQueryDetails,
 
 			initialMutableExchangeConfig: constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 			initialMarketConfigs:         constants.MutableMarketConfigs_3Markets,
@@ -507,7 +508,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 			bCh := newTestPriceFetcherBufferedChannel()
 			queryHandler := generateMockExchangeQueryHandler()
 			pf, err := NewPriceFetcher(
-				tc.startupConfig,
+				tc.queryConfig,
 				tc.queryDetails,
 				&tc.initialMutableExchangeConfig,
 				tc.initialMarketConfigs,
@@ -519,7 +520,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				pf.RunTaskLoop(&daemontypes.RequestHandlerImpl{})
 			}
 
 			// No race conditions should affect the market output of the previous or following task loops.
@@ -528,7 +529,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 
 			// Run sub-task a specified number of iterations.
 			for i := 0; i < taskLoopIterations; i++ {
-				go pf.RunTaskLoop(&lib.RequestHandlerImpl{})
+				go pf.RunTaskLoop(&daemontypes.RequestHandlerImpl{})
 			}
 
 			// Will hang until tests timeout if bCh is not full.
@@ -586,7 +587,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 				// For single market exchanges, the query handler should be called once per market per task loop.
 				marketsPerInitialConfig := math.Min(
 					len(tc.initialMarketConfigs),
-					int(tc.startupConfig.MaxQueries),
+					int(tc.queryConfig.MaxQueries),
 				) * 2
 				for i, marketId := range tc.expectedMarketIdsCalled {
 					marketConfigs := tc.initialMarketConfigs
@@ -607,7 +608,7 @@ func TestUpdateMutableExchangeConfig_ProducesExpectedPrices(t *testing.T) {
 
 func TestGetExchangeId(t *testing.T) {
 	pf, err := NewPriceFetcher(
-		constants.Exchange1_1MaxQueries_StartupConfig,
+		constants.Exchange1_1MaxQueries_QueryConfig,
 		constants.MultiMarketExchangeQueryDetails,
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
@@ -616,7 +617,7 @@ func TestGetExchangeId(t *testing.T) {
 		newTestPriceFetcherBufferedChannel(),
 	)
 	require.NoError(t, err)
-	require.Equal(t, constants.Exchange1_1MaxQueries_StartupConfig.ExchangeId, pf.GetExchangeId())
+	require.Equal(t, constants.Exchange1_1MaxQueries_QueryConfig.ExchangeId, pf.GetExchangeId())
 }
 
 // Test runSubTask behavior with different query handler responses
@@ -663,11 +664,11 @@ func TestRunSubTask_Mixed(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			exchangeStartupConfig := constants.Exchange1_1MaxQueries_StartupConfig
+			exchangeQueryConfig := constants.Exchange1_1MaxQueries_QueryConfig
 			mutableExchangeMarketConfig := constants.Exchange1_1Markets_MutableExchangeMarketConfig
 			mutableMarketConfigs := constants.MutableMarketConfigs_1Markets
 			mockExchangeQueryHandler := &mocks.ExchangeQueryHandler{}
-			rh := &lib.RequestHandlerImpl{}
+			rh := &daemontypes.RequestHandlerImpl{}
 
 			mockExchangeQueryHandler.On(
 				"Query",
@@ -684,7 +685,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 			bCh := newTestPriceFetcherBufferedChannel()
 
 			pf, err := NewPriceFetcher(
-				exchangeStartupConfig,
+				exchangeQueryConfig,
 				constants.MultiMarketExchangeQueryDetails,
 				&mutableExchangeMarketConfig,
 				mutableMarketConfigs,
@@ -696,7 +697,7 @@ func TestRunSubTask_Mixed(t *testing.T) {
 
 			// We just need a valid input that matches the mock signature.
 			pf.runSubTask(
-				&lib.RequestHandlerImpl{},
+				&daemontypes.RequestHandlerImpl{},
 				mutableExchangeMarketConfig.GetMarketIds(),
 				pf.getTaskLoopDefinition(),
 			)
@@ -773,7 +774,7 @@ func mockSingleMarketCalls(mockExchangeQueryHandler *mocks.ExchangeQueryHandler)
 				mock.AnythingOfType("*types.ExchangeQueryDetails"),
 				mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 				[]types.MarketId{marketId},
-				&lib.RequestHandlerImpl{},
+				&daemontypes.RequestHandlerImpl{},
 				generateMarketExponentsMap(initialMarketConfigs),
 			).Return([]*types.MarketPriceTimestamp{priceTimestamp}, nil, nil)
 		}
@@ -797,7 +798,7 @@ func mockMultiMarketCall(
 		mock.AnythingOfType("*types.ExchangeQueryDetails"),
 		mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 		markets,
-		&lib.RequestHandlerImpl{},
+		&daemontypes.RequestHandlerImpl{},
 		generateMarketExponentsMap(mutableMarketConfigs),
 	).Return(prices, nil, nil)
 }
@@ -833,7 +834,7 @@ func assertQueryHandlerCalledWithMarkets(
 		mock.AnythingOfType("*types.ExchangeQueryDetails"),
 		mock.AnythingOfType("*types.MutableExchangeMarketConfig"),
 		markets,
-		&lib.RequestHandlerImpl{},
+		&daemontypes.RequestHandlerImpl{},
 		generateMarketExponentsMap(marketConfigs),
 	)
 }

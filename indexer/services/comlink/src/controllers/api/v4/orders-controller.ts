@@ -262,6 +262,7 @@ router.get(
         'OrdersController GET /',
         'Orders error',
         error,
+        req,
         res,
       );
     } finally {
@@ -300,6 +301,7 @@ router.get(
         'OrdersController GET /:orderId',
         'Orders error',
         error,
+        req,
         res,
       );
     } finally {

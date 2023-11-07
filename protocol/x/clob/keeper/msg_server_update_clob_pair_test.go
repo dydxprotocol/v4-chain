@@ -7,7 +7,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -26,15 +25,14 @@ import (
 
 func TestMsgServerUpdateClobPair(t *testing.T) {
 	tests := map[string]struct {
-		msg           *types.MsgUpdateClobPair
-		setup         func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager)
-		expectedResp  *types.MsgUpdateClobPairResponse
-		expectedErr   error
-		expectedPanic string
+		msg          *types.MsgUpdateClobPair
+		setup        func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager)
+		expectedResp *types.MsgUpdateClobPairResponse
+		expectedErr  error
 	}{
 		"Success": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -56,20 +54,11 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_INITIALIZING
 				b := cdc.MustMarshal(&clobPair)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeUpdateClobPair,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewUpdateClobPairEvent(
-							clobPair.GetClobPairId(),
-							types.ClobPair_STATUS_ACTIVE,
-							clobPair.QuantumConversionExponent,
-							types.SubticksPerTick(clobPair.GetSubticksPerTick()),
-							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
-						),
-					),
 					indexerevents.UpdateClobPairEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewUpdateClobPairEvent(
@@ -86,7 +75,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 		},
 		"Error: unsupported status transition from active to initializing": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -108,13 +97,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				clobPair := constants.ClobPair_Btc
 				clobPair.Status = types.ClobPair_STATUS_ACTIVE
 				b := cdc.MustMarshal(&clobPair)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairStatusTransition,
 		},
 		"Panic: clob pair not found": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -128,7 +117,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 					Status:                    types.ClobPair_STATUS_ACTIVE,
 				},
 			},
-			expectedPanic: "mustGetClobPair: ClobPair with id 0 not found",
+			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
 		"Error: invalid authority": {
 			msg: &types.MsgUpdateClobPair{
@@ -153,13 +142,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: govtypes.ErrInvalidSigner,
 		},
 		"Error: cannot update metadata with new perpetual id": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -180,13 +169,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
 		"Error: cannot update step base quantums": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -207,13 +196,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
 		"Error: cannot update subticks per tick": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -234,13 +223,13 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
-		"Error: cannot update quantum converstion exponent": {
+		"Error: cannot update quantum conversion exponent": {
 			msg: &types.MsgUpdateClobPair{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				ClobPair: types.ClobPair{
 					Id: 0,
 					Metadata: &types.ClobPair_PerpetualClobMetadata{
@@ -261,7 +250,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
-				store.Set(lib.Uint32ToBytes(constants.ClobPair_Btc.Id), b)
+				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc.Id), b)
 			},
 			expectedErr: types.ErrInvalidClobPairUpdate,
 		},
@@ -283,25 +272,18 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(k)
 			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
-			if tc.expectedPanic != "" {
-				require.PanicsWithValue(t, tc.expectedPanic, func() {
-					_, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
-					require.NoError(t, err)
-				})
+			resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
+			require.Equal(t, tc.expectedResp, resp)
+
+			mockIndexerEventManager.AssertExpectations(t)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, err, tc.expectedErr)
 			} else {
-				resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
-				require.Equal(t, tc.expectedResp, resp)
-
-				mockIndexerEventManager.AssertExpectations(t)
-
-				if tc.expectedErr != nil {
-					require.ErrorIs(t, err, tc.expectedErr)
-				} else {
-					require.NoError(t, err)
-					clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
-					require.True(t, found)
-					require.Equal(t, clobPair, tc.msg.ClobPair)
-				}
+				require.NoError(t, err)
+				clobPair, found := k.GetClobPair(ks.Ctx, types.ClobPairId(tc.msg.ClobPair.Id))
+				require.True(t, found)
+				require.Equal(t, clobPair, tc.msg.ClobPair)
 			}
 		})
 	}

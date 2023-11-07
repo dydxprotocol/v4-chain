@@ -23,6 +23,7 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 	mockFileHandler := &mocks.FileHandler{}
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	).WithPriceFeedMarketToExchangePrices(
@@ -43,6 +44,7 @@ func TestUpdateMarketPrices_NotInitialized(t *testing.T) {
 
 	// Create a new server without initializing `MarketToExchange` field.
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	)
@@ -69,6 +71,7 @@ func TestUpdateMarketPrices_InvalidEmptyRequest(t *testing.T) {
 	mockFileHandler := &mocks.FileHandler{}
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	).WithPriceFeedMarketToExchangePrices(
@@ -145,6 +148,7 @@ func TestUpdateMarketPrices_InvalidExchangePrices(t *testing.T) {
 			mockFileHandler := &mocks.FileHandler{}
 
 			s := createServerWithMocks(
+				t,
 				mockGrpcServer,
 				mockFileHandler,
 			).WithPriceFeedMarketToExchangePrices(

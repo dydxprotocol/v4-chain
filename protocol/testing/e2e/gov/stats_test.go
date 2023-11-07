@@ -1,13 +1,13 @@
 package gov_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	statstypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -23,7 +23,7 @@ func TestUpdateParams(t *testing.T) {
 	}{
 		"Success": {
 			msg: &statstypes.MsgUpdateParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				Params: statstypes.Params{
 					WindowDuration: time.Hour,
 				},
@@ -43,7 +43,7 @@ func TestUpdateParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -61,7 +61,7 @@ func TestUpdateParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialParams := tApp.App.StatsKeeper.GetParams(ctx)
 
@@ -69,7 +69,7 @@ func TestUpdateParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,

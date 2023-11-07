@@ -2,11 +2,10 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -42,11 +41,4 @@ func (k msgServer) UpdateDowntimeParams(
 	}
 
 	return &types.MsgUpdateDowntimeParamsResponse{}, nil
-}
-
-func (k msgServer) IsDelayedBlock(
-	goCtx context.Context,
-	msg *types.MsgIsDelayedBlock,
-) (*types.MsgIsDelayedBlockResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "IsDelayedBlock not implemented")
 }

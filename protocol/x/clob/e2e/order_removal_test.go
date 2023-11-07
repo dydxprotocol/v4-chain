@@ -236,7 +236,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -277,7 +277,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Create all orders.
@@ -332,6 +332,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
 				)
@@ -643,7 +644,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -684,7 +685,7 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Create all orders and add to deliverTxsOverride
@@ -853,7 +854,7 @@ func TestOrderRemoval(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -894,7 +895,7 @@ func TestOrderRemoval(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 
 			// Create all orders.
@@ -923,6 +924,7 @@ func TestOrderRemoval(t *testing.T) {
 					testapp.MustMakeCheckTxOptions{
 						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.withdrawal),
 						Gas:                  100_000,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},
 					tc.withdrawal,
 				)
@@ -950,7 +952,7 @@ func TestOrderRemoval(t *testing.T) {
 }
 
 func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
@@ -987,7 +989,7 @@ func TestOrderRemoval_MultipleReplayOperationsDuringPrepareCheckState(t *testing
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Create a resting order for alice.

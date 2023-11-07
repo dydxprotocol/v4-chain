@@ -47,7 +47,7 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -67,7 +67,7 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialParams := tApp.App.PerpetualsKeeper.GetParams(ctx)
 
@@ -75,8 +75,9 @@ func TestUpdatePerpetualsModuleParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				false,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -134,7 +135,7 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -162,7 +163,7 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 					},
 				)
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialPerpetual, err := tApp.App.PerpetualsKeeper.GetPerpetual(ctx, tc.msg.PerpetualParams.Id)
 			require.NoError(t, err)
@@ -171,8 +172,9 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				false,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)
@@ -249,7 +251,7 @@ func TestSetLiquidityTier(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -274,7 +276,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					)
 				}
 				return genesis
-			}).WithTesting(t).Build()
+			}).Build()
 			ctx := tApp.InitChain()
 			initialLts := tApp.App.PerpetualsKeeper.GetAllLiquidityTiers(ctx)
 
@@ -282,8 +284,9 @@ func TestSetLiquidityTier(t *testing.T) {
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
-				&tApp,
+				tApp,
 				[]sdk.Msg{tc.msg},
+				false,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)

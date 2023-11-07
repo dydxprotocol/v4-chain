@@ -12,7 +12,7 @@ import (
 )
 
 func TestParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.StatsKeeper
 
@@ -47,7 +47,7 @@ func TestParams(t *testing.T) {
 }
 
 func TestStatsMetadata(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.StatsKeeper
 	statsMetadata := &types.StatsMetadata{
@@ -86,7 +86,7 @@ func TestStatsMetadata(t *testing.T) {
 }
 
 func TestGlobalStats(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.StatsKeeper
 	globalStats := &types.GlobalStats{
@@ -125,7 +125,7 @@ func TestGlobalStats(t *testing.T) {
 }
 
 func TestUserStats(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.StatsKeeper
 	user := "alice"

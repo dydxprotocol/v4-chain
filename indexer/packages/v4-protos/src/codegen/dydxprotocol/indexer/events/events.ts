@@ -184,7 +184,7 @@ export interface FundingEventV1SDKType {
 }
 /**
  * MarketEvent message contains all the information about a market event on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketEventV1 {
@@ -196,7 +196,7 @@ export interface MarketEventV1 {
 }
 /**
  * MarketEvent message contains all the information about a market event on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketEventV1SDKType {
@@ -208,7 +208,7 @@ export interface MarketEventV1SDKType {
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
- * update on the V4 chain.
+ * update on the dYdX chain.
  */
 
 export interface MarketPriceUpdateEventV1 {
@@ -221,7 +221,7 @@ export interface MarketPriceUpdateEventV1 {
 }
 /**
  * MarketPriceUpdateEvent message contains all the information about a price
- * update on the V4 chain.
+ * update on the dYdX chain.
  */
 
 export interface MarketPriceUpdateEventV1SDKType {
@@ -258,7 +258,7 @@ export interface MarketBaseEventV1SDKType {
 }
 /**
  * MarketCreateEvent message contains all the information about a new market on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketCreateEventV1 {
@@ -274,7 +274,7 @@ export interface MarketCreateEventV1 {
 }
 /**
  * MarketCreateEvent message contains all the information about a new market on
- * the V4 chain.
+ * the dYdX chain.
  */
 
 export interface MarketCreateEventV1SDKType {
@@ -290,25 +290,25 @@ export interface MarketCreateEventV1SDKType {
 }
 /**
  * MarketModifyEvent message contains all the information about a market update
- * on the V4 chain
+ * on the dYdX chain
  */
 
 export interface MarketModifyEventV1 {
   /**
    * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
+   * on the dYdX chain
    */
   base?: MarketBaseEventV1;
 }
 /**
  * MarketModifyEvent message contains all the information about a market update
- * on the V4 chain
+ * on the dYdX chain
  */
 
 export interface MarketModifyEventV1SDKType {
   /**
    * MarketModifyEvent message contains all the information about a market update
-   * on the V4 chain
+   * on the dYdX chain
    */
   base?: MarketBaseEventV1SDKType;
 }
@@ -326,7 +326,7 @@ export interface SourceOfFundsSDKType {
 }
 /**
  * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+ * deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
  * When a subaccount is involved, a SubaccountUpdateEvent message will
  * be produced with the updated asset positions.
  */
@@ -357,7 +357,7 @@ export interface TransferEventV1 {
 }
 /**
  * TransferEvent message contains all the information about a transfer,
- * deposit-to-subaccount, or withdraw-from-subaccount on the V4 chain.
+ * deposit-to-subaccount, or withdraw-from-subaccount on the dYdX chain.
  * When a subaccount is involved, a SubaccountUpdateEvent message will
  * be produced with the updated asset positions.
  */
@@ -388,7 +388,7 @@ export interface TransferEventV1SDKType {
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
- * the V4 chain. This includes the maker/taker orders that matched and the
+ * the dYdX chain. This includes the maker/taker orders that matched and the
  * amount filled.
  */
 
@@ -417,7 +417,7 @@ export interface OrderFillEventV1 {
 }
 /**
  * OrderFillEvent message contains all the information from an order match in
- * the V4 chain. This includes the maker/taker orders that matched and the
+ * the dYdX chain. This includes the maker/taker orders that matched and the
  * amount filled.
  */
 
@@ -443,6 +443,62 @@ export interface OrderFillEventV1SDKType {
   /** Total filled of the taker order in base quantums. */
 
   total_filled_taker: Long;
+}
+/**
+ * DeleveragingEvent message contains all the information for a deleveraging
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+ * the amount filled.
+ */
+
+export interface DeleveragingEventV1 {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountId;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountId;
+  /** The ID of the perpetual that was liquidated. */
+
+  perpetualId: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fillAmount: Long;
+  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+
+  price: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  isBuy: boolean;
+}
+/**
+ * DeleveragingEvent message contains all the information for a deleveraging
+ * on the dYdX chain. This includes the liquidated/offsetting subaccounts and
+ * the amount filled.
+ */
+
+export interface DeleveragingEventV1SDKType {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountIdSDKType;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountIdSDKType;
+  /** The ID of the perpetual that was liquidated. */
+
+  perpetual_id: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fill_amount: Long;
+  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+
+  price: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  is_buy: boolean;
 }
 /**
  * LiquidationOrder represents the liquidation taker order to be included in a
@@ -512,7 +568,7 @@ export interface LiquidationOrderV1SDKType {
 }
 /**
  * SubaccountUpdateEvent message contains information about an update to a
- * subaccount in the V4 chain. This includes the list of updated perpetual
+ * subaccount in the dYdX chain. This includes the list of updated perpetual
  * and asset positions for the subaccount.
  * Note: This event message will contain all the updates to a subaccount
  * at the end of a block which is why multiple asset/perpetual position
@@ -526,7 +582,7 @@ export interface SubaccountUpdateEventV1 {
 }
 /**
  * SubaccountUpdateEvent message contains information about an update to a
- * subaccount in the V4 chain. This includes the list of updated perpetual
+ * subaccount in the dYdX chain. This includes the list of updated perpetual
  * and asset positions for the subaccount.
  * Note: This event message will contain all the updates to a subaccount
  * at the end of a block which is why multiple asset/perpetual position
@@ -638,7 +694,7 @@ export interface StatefulOrderEventV1_LongTermOrderPlacementV1SDKType {
 }
 /**
  * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
+ * the dYdX chain.
  */
 
 export interface AssetCreateEventV1 {
@@ -672,7 +728,7 @@ export interface AssetCreateEventV1 {
 }
 /**
  * AssetCreateEventV1 message contains all the information about an new Asset on
- * the v4 chain.
+ * the dYdX chain.
  */
 
 export interface AssetCreateEventV1SDKType {
@@ -706,7 +762,7 @@ export interface AssetCreateEventV1SDKType {
 }
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the v4 chain.
+ * new Perpetual Market on the dYdX chain.
  */
 
 export interface PerpetualMarketCreateEventV1 {
@@ -776,7 +832,7 @@ export interface PerpetualMarketCreateEventV1 {
 }
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
- * new Perpetual Market on the v4 chain.
+ * new Perpetual Market on the dYdX chain.
  */
 
 export interface PerpetualMarketCreateEventV1SDKType {
@@ -846,7 +902,7 @@ export interface PerpetualMarketCreateEventV1SDKType {
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
- * create/update a Liquidity Tier on the v4 chain.
+ * create/update a Liquidity Tier on the dYdX chain.
  */
 
 export interface LiquidityTierUpsertEventV1 {
@@ -877,7 +933,7 @@ export interface LiquidityTierUpsertEventV1 {
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
- * create/update a Liquidity Tier on the v4 chain.
+ * create/update a Liquidity Tier on the dYdX chain.
  */
 
 export interface LiquidityTierUpsertEventV1SDKType {
@@ -908,7 +964,7 @@ export interface LiquidityTierUpsertEventV1SDKType {
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
- * a clob pair on the v4 chain.
+ * a clob pair on the dYdX chain.
  */
 
 export interface UpdateClobPairEventV1 {
@@ -945,7 +1001,7 @@ export interface UpdateClobPairEventV1 {
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
- * a clob pair on the v4 chain.
+ * a clob pair on the dYdX chain.
  */
 
 export interface UpdateClobPairEventV1SDKType {
@@ -982,7 +1038,7 @@ export interface UpdateClobPairEventV1SDKType {
 }
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
- * to a perpetual on the v4 chain.
+ * to a perpetual on the dYdX chain.
  */
 
 export interface UpdatePerpetualEventV1 {
@@ -1021,7 +1077,7 @@ export interface UpdatePerpetualEventV1 {
 }
 /**
  * UpdatePerpetualEventV1 message contains all the information about an update
- * to a perpetual on the v4 chain.
+ * to a perpetual on the dYdX chain.
  */
 
 export interface UpdatePerpetualEventV1SDKType {
@@ -1714,6 +1770,101 @@ export const OrderFillEventV1 = {
     message.takerFee = object.takerFee !== undefined && object.takerFee !== null ? Long.fromValue(object.takerFee) : Long.ZERO;
     message.totalFilledMaker = object.totalFilledMaker !== undefined && object.totalFilledMaker !== null ? Long.fromValue(object.totalFilledMaker) : Long.UZERO;
     message.totalFilledTaker = object.totalFilledTaker !== undefined && object.totalFilledTaker !== null ? Long.fromValue(object.totalFilledTaker) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
+  return {
+    liquidated: undefined,
+    offsetting: undefined,
+    perpetualId: 0,
+    fillAmount: Long.UZERO,
+    price: Long.UZERO,
+    isBuy: false
+  };
+}
+
+export const DeleveragingEventV1 = {
+  encode(message: DeleveragingEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.liquidated !== undefined) {
+      IndexerSubaccountId.encode(message.liquidated, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.offsetting !== undefined) {
+      IndexerSubaccountId.encode(message.offsetting, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.perpetualId !== 0) {
+      writer.uint32(24).uint32(message.perpetualId);
+    }
+
+    if (!message.fillAmount.isZero()) {
+      writer.uint32(32).uint64(message.fillAmount);
+    }
+
+    if (!message.price.isZero()) {
+      writer.uint32(40).uint64(message.price);
+    }
+
+    if (message.isBuy === true) {
+      writer.uint32(48).bool(message.isBuy);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DeleveragingEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleveragingEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidated = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.offsetting = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 4:
+          message.fillAmount = (reader.uint64() as Long);
+          break;
+
+        case 5:
+          message.price = (reader.uint64() as Long);
+          break;
+
+        case 6:
+          message.isBuy = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<DeleveragingEventV1>): DeleveragingEventV1 {
+    const message = createBaseDeleveragingEventV1();
+    message.liquidated = object.liquidated !== undefined && object.liquidated !== null ? IndexerSubaccountId.fromPartial(object.liquidated) : undefined;
+    message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
+    message.perpetualId = object.perpetualId ?? 0;
+    message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
+    message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
+    message.isBuy = object.isBuy ?? false;
     return message;
   }
 

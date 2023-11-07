@@ -11,6 +11,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
+  CLOB_STATUS_TO_MARKET_STATUS,
   dbHelpers,
   AssetPositionTable,
   PerpetualPositionTable,
@@ -19,6 +20,7 @@ import {
   PositionSide,
   TendermintEventTable,
   FillTable,
+  OraclePriceTable,
   OrderTable,
   protocolTranslations,
   SubaccountTable,
@@ -27,6 +29,7 @@ import {
   uuid,
   TransactionTable,
   TransactionFromDatabase,
+  TransferTable,
   BlockTable,
   TendermintEventFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
@@ -50,6 +53,10 @@ describe('SQL Function Tests', () => {
   });
 
   beforeEach(async () => {
+    await dbHelpers.clearData();
+  });
+
+  afterEach(async () => {
     await dbHelpers.clearData();
   });
 
@@ -286,7 +293,7 @@ describe('SQL Function Tests', () => {
       5,
       6,
     ],
-  ])('dydx_uuid_from_perpetual_position_parts (%s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
+  ])('dydx_uuid_from_perpetual_position_parts (%s, %s, %s, %s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
     const subaccountUuid = SubaccountTable.subaccountIdToUuid(subaccountId);
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
@@ -305,6 +312,66 @@ describe('SQL Function Tests', () => {
 
     result = await getSingleRawQueryResultRow(`SELECT dydx_uuid_from_subaccount_id_parts('${subaccountId.owner}', '${subaccountId.number}') AS result`);
     expect(result).toEqual(SubaccountTable.subaccountIdToUuid(subaccountId));
+  });
+
+  it.each([
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      'senderWallet',
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      undefined,
+      undefined,
+      'recipientWallet',
+    ],
+    [
+      undefined,
+      undefined,
+      'senderWallet',
+      'recipientWallet',
+    ],
+  ])('dydx_uuid_from_transfer_parts (%s, %s, %s, %s)', async (
+    senderSubaccountId: IndexerSubaccountId | undefined,
+    recipientSubaccountId: IndexerSubaccountId | undefined,
+    senderWalletAddress: string | undefined,
+    recipientWalletAddress: string | undefined) => {
+    const eventId: Buffer = TendermintEventTable.createEventId('1', 2, 3);
+    const assetId: string = '0';
+    const senderSubaccountUuid: string | undefined = senderSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(senderSubaccountId) : undefined;
+    const recipientSubaccountUuid: string | undefined = recipientSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(recipientSubaccountId) : undefined;
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_transfer_parts('\\x${eventId.toString('hex')}'::bytea, '${assetId}', ${senderSubaccountUuid ? `'${senderSubaccountUuid}'` : 'NULL'}, ${recipientSubaccountUuid ? `'${recipientSubaccountUuid}'` : 'NULL'}, ${senderWalletAddress ? `'${senderWalletAddress}'` : 'NULL'}, ${recipientWalletAddress ? `'${recipientWalletAddress}'` : 'NULL'}) AS result`);
+    expect(result).toEqual(TransferTable.uuid(
+      eventId,
+      assetId,
+      senderSubaccountUuid,
+      recipientSubaccountUuid,
+      senderWalletAddress,
+      recipientWalletAddress,
+    ));
   });
 
   it.each([
@@ -346,16 +413,38 @@ describe('SQL Function Tests', () => {
     }
   });
 
-  it('dydx_uuid_from_transaction_parts (%s)', async () => {
-    const transactionParts = {
-      blockHeight: '123456',
-      transactionIndex: 123,
-    };
+  it.each([
+    [
+      '123456',
+      123,
+    ],
+  ])('dydx_uuid_from_transaction_parts (%s, %s)', async (blockHeight: string, transactionIndex: number) => {
     const result = await getSingleRawQueryResultRow(
-      `SELECT dydx_uuid_from_transaction_parts('${transactionParts.blockHeight}', '${transactionParts.transactionIndex}') AS result`);
+      `SELECT dydx_uuid_from_transaction_parts('${blockHeight}', '${transactionIndex}') AS result`);
     expect(result).toEqual(
-      TransactionTable.uuid(transactionParts.blockHeight, transactionParts.transactionIndex),
+      TransactionTable.uuid(blockHeight, transactionIndex),
     );
+  });
+
+  it.each([
+    [
+      123,
+      '123456',
+    ],
+  ])('dydx_uuid_from_oracle_price_parts (%s, %s)', async (marketId: number, blockHeight: string) => {
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_oracle_price_parts('${marketId}', '${blockHeight}') AS result`);
+    expect(result).toEqual(
+      OraclePriceTable.uuid(marketId, blockHeight),
+    );
+  });
+
+  it('dydx_clob_pair_status_to_market_status should convert all statuses', async () => {
+    for (const [key, value] of Object.entries(CLOB_STATUS_TO_MARKET_STATUS)) {
+      const result = await getSingleRawQueryResultRow(
+        `SELECT dydx_clob_pair_status_to_market_status('${key}') AS result`);
+      expect(result).toEqual(value);
+    }
   });
 
   it('dydx_create_transaction.sql should insert a transaction and return correct jsonb', async () => {
@@ -474,7 +563,7 @@ describe('SQL Function Tests', () => {
 });
 
 async function getSingleRawQueryResultRow(query: string): Promise<object> {
-  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error) => {
+  const queryResult = await storeHelpers.rawQuery(query, {}).catch((error: Error) => {
     throw error;
   });
   return queryResult.rows[0].result;

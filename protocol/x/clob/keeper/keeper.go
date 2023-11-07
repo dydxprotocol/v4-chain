@@ -7,6 +7,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -44,8 +45,7 @@ type (
 
 		memStoreInitialized *atomic.Bool
 
-		MaxLiquidationOrdersPerBlock    uint32
-		MaxDeleveragingAttemptsPerBlock uint32
+		Flags flags.ClobFlags
 
 		mevTelemetryConfig MevTelemetryConfig
 
@@ -88,7 +88,7 @@ func NewKeeper(
 		storeKey:                     storeKey,
 		memKey:                       memKey,
 		transientStoreKey:            liquidationsStoreKey,
-		authorities:                  lib.SliceToSet(authorities),
+		authorities:                  lib.UniqueSliceToSet(authorities),
 		MemClob:                      memClob,
 		UntriggeredConditionalOrders: make(map[types.ClobPairId]*UntriggeredConditionalOrders),
 		PerpetualIdToClobPairId:      make(map[uint32][]types.ClobPairId),
@@ -108,10 +108,9 @@ func NewKeeper(
 			Host:       clobFlags.MevTelemetryHost,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		MaxLiquidationOrdersPerBlock:    clobFlags.MaxLiquidationOrdersPerBlock,
-		MaxDeleveragingAttemptsPerBlock: clobFlags.MaxDeleveragingAttemptsPerBlock,
-		placeOrderRateLimiter:           placeOrderRateLimiter,
-		cancelOrderRateLimiter:          cancelOrderRateLimiter,
+		Flags:                  clobFlags,
+		placeOrderRateLimiter:  placeOrderRateLimiter,
+		cancelOrderRateLimiter: cancelOrderRateLimiter,
 	}
 
 	// Provide the keeper to the MemClob.
@@ -131,7 +130,12 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, "x/clob")
+	return ctx.Logger().With(
+		sdklog.ModuleKey, "x/clob",
+		metrics.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		metrics.CheckTx, ctx.IsCheckTx(),
+		metrics.ReCheckTx, ctx.IsReCheckTx(),
+	)
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
@@ -180,6 +184,17 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 		for ; iterator.Valid(); iterator.Next() {
 			memPrefixStore.Set(iterator.Key(), iterator.Value())
 		}
+	}
+
+	// Ensure that the stateful order count is accurately represented in the memstore on restart.
+	statefulOrders := k.GetAllStatefulOrders(ctx)
+	for _, order := range statefulOrders {
+		subaccountId := order.GetSubaccountId()
+		k.SetStatefulOrderCount(
+			ctx,
+			subaccountId,
+			k.GetStatefulOrderCount(ctx, subaccountId)+1,
+		)
 	}
 }
 

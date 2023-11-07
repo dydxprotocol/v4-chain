@@ -128,6 +128,8 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				fmt.Sprintf("/dydxprotocol/chain/.%s", moniker),
 				"--p2p.persistent_peers",
 				persistentPeers,
+				"--bridge-daemon-eth-rpc-endpoint",
+				"https://eth-sepolia.g.alchemy.com/v2/demo",
 			},
 			ExtraHosts: []string{
 				fmt.Sprintf("%s:host-gateway", testexchange.TestExchangeHost),

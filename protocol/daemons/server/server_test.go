@@ -6,7 +6,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/mock"
@@ -14,6 +13,7 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
 )
 
 const (
@@ -40,7 +40,7 @@ func TestStartServer_ListenFailsWhenInUse(t *testing.T) {
 			return nil
 		})
 
-	s := createServerWithMocks(mockGrpcServer, mockFileHandler)
+	s := createServerWithMocks(t, mockGrpcServer, mockFileHandler)
 
 	errorString := fmt.Sprintf(
 		"listen %s %s: bind: address already in use",
@@ -66,6 +66,7 @@ func TestStart_Valid(t *testing.T) {
 	mockFileHandler := &mocks.FileHandler{}
 
 	s := createServerWithMocks(
+		t,
 		mockGrpcServer,
 		mockFileHandler,
 	)
@@ -114,6 +115,7 @@ func TestStart_MixedInvalid(t *testing.T) {
 			mockFileHandler := &mocks.FileHandler{}
 
 			s := createServerWithMocks(
+				t,
 				mockGrpcServer,
 				mockFileHandler,
 			)
@@ -157,17 +159,61 @@ func TestStart_MixedInvalid(t *testing.T) {
 	}
 }
 
+func TestRegisterDaemon_DoesNotPanic(t *testing.T) {
+	grpcServer := &mocks.GrpcServer{}
+	grpcServer.On("Stop").Return().Once()
+	server := server.NewServer(
+		log.NewNopLogger(),
+		grpcServer,
+		&mocks.FileHandler{},
+		grpc.SocketPath,
+	)
+	defer server.Stop()
+
+	require.NotPanics(t, func() {
+		server.ExpectPricefeedDaemon(5 * time.Second)
+	})
+}
+
+func TestRegisterDaemon_DoubleRegistrationPanics(t *testing.T) {
+	grpcServer := &mocks.GrpcServer{}
+	grpcServer.On("Stop").Return().Once()
+	server := server.NewServer(
+		log.NewNopLogger(),
+		grpcServer,
+		&mocks.FileHandler{},
+		grpc.SocketPath,
+	)
+	defer server.Stop()
+
+	// First registration should not panic.
+	require.NotPanics(t, func() {
+		server.ExpectPricefeedDaemon(5 * time.Second)
+	})
+
+	// Second registration should panic.
+	require.PanicsWithError(
+		t,
+		"service pricefeed-daemon already registered",
+		func() {
+			server.ExpectPricefeedDaemon(5 * time.Second)
+		},
+	)
+}
+
 func createServerWithMocks(
-	mockGrpcServer lib.GrpcServer,
-	mockFileHandler lib.FileHandler,
+	t testing.TB,
+	mockGrpcServer *mocks.GrpcServer,
+	mockFileHandler *mocks.FileHandler,
 ) *server.Server {
 	server := server.NewServer(
 		log.NewNopLogger(),
 		mockGrpcServer,
 		mockFileHandler,
 		grpc.SocketPath,
-		"test",
 	)
+	mockGrpcServer.On("Stop").Return().Once()
+	t.Cleanup(server.Stop)
 	server.DisableUpdateMonitoringForTesting()
 	return server
 }

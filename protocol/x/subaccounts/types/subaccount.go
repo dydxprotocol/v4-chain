@@ -1,12 +1,13 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
 const (
@@ -72,26 +73,25 @@ func (m *Subaccount) GetUsdcPosition() *big.Int {
 }
 
 // SetUsdcAssetPosition sets the balance of the USDC asset position to `newUsdcPosition`.
-// If the absolute value of `newUsdcPosition` cannot be represented in a uint64,
-// an error is returned.
-func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *big.Int) error {
-	if m != nil {
-		usdcAssetPosition := m.getUsdcAssetPosition()
-		if newUsdcPosition == nil || newUsdcPosition.Sign() == 0 {
-			if usdcAssetPosition != nil {
-				m.AssetPositions = m.AssetPositions[1:]
-			}
-		} else {
-			if usdcAssetPosition == nil {
-				usdcAssetPosition = &AssetPosition{
-					AssetId: lib.UsdcAssetId,
-				}
-				m.AssetPositions = append([]*AssetPosition{usdcAssetPosition}, m.AssetPositions...)
-			}
-			usdcAssetPosition.Quantums = dtypes.NewIntFromBigInt(newUsdcPosition)
-		}
+func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *big.Int) {
+	if m == nil {
+		return
 	}
-	return nil
+
+	usdcAssetPosition := m.getUsdcAssetPosition()
+	if newUsdcPosition == nil || newUsdcPosition.Sign() == 0 {
+		if usdcAssetPosition != nil {
+			m.AssetPositions = m.AssetPositions[1:]
+		}
+	} else {
+		if usdcAssetPosition == nil {
+			usdcAssetPosition = &AssetPosition{
+				AssetId: assettypes.AssetUsdc.Id,
+			}
+			m.AssetPositions = append([]*AssetPosition{usdcAssetPosition}, m.AssetPositions...)
+		}
+		usdcAssetPosition.Quantums = dtypes.NewIntFromBigInt(newUsdcPosition)
+	}
 }
 
 func (m *Subaccount) getUsdcAssetPosition() *AssetPosition {
@@ -100,7 +100,7 @@ func (m *Subaccount) getUsdcAssetPosition() *AssetPosition {
 	}
 
 	firstAsset := m.AssetPositions[0]
-	if firstAsset.AssetId != lib.UsdcAssetId {
+	if firstAsset.AssetId != assettypes.AssetUsdc.Id {
 		return nil
 	}
 	return firstAsset

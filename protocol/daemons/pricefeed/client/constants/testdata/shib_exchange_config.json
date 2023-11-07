@@ -15,10 +15,6 @@
       "ticker": "SHIB-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "SHIB_USD"
-    },
-    {
       "exchangeName": "Gate",
       "ticker": "SHIB_USDT",
       "adjustByMarket": "USDT-USD"

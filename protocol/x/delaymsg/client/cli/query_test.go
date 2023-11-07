@@ -9,7 +9,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/stoppable"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
@@ -50,14 +49,10 @@ func setupNetwork(
 	net := network.New(t, cfg)
 	ctx := net.Validators[0].ClientCtx
 
-	t.Cleanup(func() {
-		stoppable.StopServices(t, cfg.GRPCAddress)
-	})
-
 	return net, ctx
 }
 
-func TestQueryNumMessages(t *testing.T) {
+func TestQueryNextDelayedMessageId(t *testing.T) {
 	tests := map[string]struct {
 		state *types.GenesisState
 	}{
@@ -66,19 +61,19 @@ func TestQueryNumMessages(t *testing.T) {
 		},
 		"Non-zero": {
 			state: &types.GenesisState{
-				NumMessages:     20,
-				DelayedMessages: []*types.DelayedMessage{},
+				DelayedMessages:      []*types.DelayedMessage{},
+				NextDelayedMessageId: 20,
 			},
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			_, ctx := setupNetwork(t, tc.state)
-			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNumMessages(), []string{})
+			out, err := clitestutil.ExecTestCLICmd(ctx, cli.CmdQueryNextDelayedMessageId(), []string{})
 			require.NoError(t, err)
-			var resp types.QueryNumMessagesResponse
+			var resp types.QueryNextDelayedMessageIdResponse
 			require.NoError(t, ctx.Codec.UnmarshalJSON(out.Bytes(), &resp))
-			require.Equal(t, tc.state.NumMessages, resp.NumMessages)
+			require.Equal(t, tc.state.NextDelayedMessageId, resp.NextDelayedMessageId)
 		})
 	}
 }
@@ -93,13 +88,13 @@ func TestQueryMessage(t *testing.T) {
 		},
 		"Non-zero": {
 			state: &types.GenesisState{
-				NumMessages: 20,
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:  0,
 						Msg: encoding.EncodeMessageToAny(t, constants.TestMsg1),
 					},
 				},
+				NextDelayedMessageId: 20,
 			},
 			expectedMsg: constants.TestMsg1,
 		},
@@ -136,7 +131,6 @@ func TestQueryBlockMessageIds(t *testing.T) {
 		},
 		"Non-zero": {
 			state: &types.GenesisState{
-				NumMessages: 20,
 				DelayedMessages: []*types.DelayedMessage{
 					{
 						Id:          0,
@@ -144,6 +138,7 @@ func TestQueryBlockMessageIds(t *testing.T) {
 						BlockHeight: 10,
 					},
 				},
+				NextDelayedMessageId: 20,
 			},
 			expectedBlockMessageIds: []uint32{0},
 		},

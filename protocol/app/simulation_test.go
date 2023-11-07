@@ -83,9 +83,16 @@ type SimApp struct {
 }
 
 // Constructs an application capable of simulation using the appCreator
-func NewSimApp(appCreator func() *app.App) *SimApp {
+func NewSimApp(t testing.TB, appCreator func() *app.App) *SimApp {
 	simApp := &SimApp{appCreator(), nil}
 	baseapp.SetChainID(simChainId)(simApp.GetBaseApp())
+
+	// TODO(CORE-682): Remove shutdown override hook once Cosmos SDK invokes it as part of simapp.
+	t.Cleanup(func() {
+		if err := simApp.App.Close(); err != nil {
+			t.Fatal(err)
+		}
+	})
 	return simApp
 }
 
@@ -184,18 +191,19 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b.Skip("skipping benchmark application simulation")
 	}
 
-	defer func() {
-		require.NoError(b, db.Close())
+	b.Cleanup(func() {
 		require.NoError(b, os.RemoveAll(dir))
-	}()
+	})
 
 	appOptions := defaultAppOptionsForSimulation()
 
 	dydxApp := NewSimApp(
+		b,
 		func() *app.App {
 			return app.New(
 				logger,
 				db,
+				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -256,18 +264,19 @@ func TestFullAppSimulation(t *testing.T) {
 	}
 	require.NoError(t, err, "simulation setup failed")
 
-	defer func() {
-		require.NoError(t, db.Close())
+	t.Cleanup(func() {
 		require.NoError(t, os.RemoveAll(dir))
-	}()
+	})
 
 	appOptions := defaultAppOptionsForSimulation()
 
 	dydxApp := NewSimApp(
+		t,
 		func() *app.App {
 			return app.New(
 				logger,
 				db,
+				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -317,7 +326,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ChainID = simChainId
 
 	numSeeds := 3
-	numTimesToRunPerSeed := 5
+	numTimesToRunPerSeed := 3
 	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
 
 	appOptions := defaultAppOptionsForSimulation()
@@ -335,10 +344,12 @@ func TestAppStateDeterminism(t *testing.T) {
 
 			db := dbm.NewMemDB()
 			dydxApp := NewSimApp(
+				t,
 				func() *app.App {
 					return app.New(
 						logger,
 						db,
+						dbm.NewMemDB(),
 						nil,
 						true,
 						appOptions,

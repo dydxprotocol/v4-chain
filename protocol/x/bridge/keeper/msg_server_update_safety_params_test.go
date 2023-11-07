@@ -2,9 +2,9 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
@@ -19,7 +19,7 @@ func TestMsgServerUpdateSafetyParams(t *testing.T) {
 	}{
 		"Success": {
 			testMsg: types.MsgUpdateSafetyParams{
-				Authority: constants.GovModuleAccAddressString,
+				Authority: lib.GovModuleAddress.String(),
 				Params: types.SafetyParams{
 					IsDisabled:  false,
 					DelayBlocks: 100,

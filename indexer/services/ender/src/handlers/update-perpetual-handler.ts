@@ -1,10 +1,17 @@
 import assert from 'assert';
 
+import { logger } from '@dydxprotocol-indexer/base';
 import {
-  PerpetualMarketFromDatabase, PerpetualMarketTable, perpetualMarketRefresher,
+  PerpetualMarketFromDatabase,
+  PerpetualMarketTable,
+  perpetualMarketRefresher,
+  storeHelpers,
+  PerpetualMarketModel,
 } from '@dydxprotocol-indexer/postgres';
 import { UpdatePerpetualEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
+import config from '../config';
 import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
@@ -18,6 +25,42 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+    if (config.USE_UPDATE_PERPETUAL_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnex();
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const result: pg.QueryResult = await storeHelpers.rawQuery(
+      `SELECT dydx_update_perpetual_handler(
+        '${JSON.stringify(UpdatePerpetualEventV1.decode(eventDataBinary))}'
+      ) AS result;`,
+      { txId: this.txId },
+    ).catch((error: Error) => {
+      logger.error({
+        at: 'UpdatePerpetualHandler#handleViaSqlFunction',
+        message: 'Failed to handle UpdatePerpetualEventV1',
+        error,
+      });
+
+      throw error;
+    });
+
+    const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
+      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+
+    await perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
+
+    return [
+      this.generateConsolidatedMarketKafkaEvent(
+        JSON.stringify(generatePerpetualMarketMessage([perpetualMarket])),
+      ),
+    ];
+  }
+
+  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket:
     PerpetualMarketFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
       this.updatePerpetual(),

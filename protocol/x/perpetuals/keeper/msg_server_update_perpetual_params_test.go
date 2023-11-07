@@ -1,11 +1,10 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
@@ -45,7 +44,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",
@@ -68,7 +67,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "PIKACHU-XXX",
@@ -91,7 +90,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id + 1,
 					Ticker:            "DUMMY-USD",
@@ -115,7 +114,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",
@@ -139,7 +138,7 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				)
 			},
 			msg: &types.MsgUpdatePerpetualParams{
-				Authority: authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+				Authority: lib.GovModuleAddress.String(),
 				PerpetualParams: types.PerpetualParams{
 					Id:                testPerp.Params.Id,
 					Ticker:            "DUMMY-USD",

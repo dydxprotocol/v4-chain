@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	"sync"
 	"time"
 )
@@ -12,7 +13,7 @@ type updateMetadata struct {
 }
 
 // UpdateMonitor monitors the update frequency of daemon services. If a daemon service does not respond within
-// the maximum acceptable update delay set when the daemon is registered, the monitor will panic and halt the
+// the maximum acceptable update delay set when the daemon is registered, the monitor will log an error and halt the
 // protocol. This was judged to be the best solution for network performance because it prevents any validator from
 // participating in the network at all if a daemon service is not responding.
 type UpdateMonitor struct {
@@ -26,12 +27,18 @@ type UpdateMonitor struct {
 	disabled bool
 	// lock is used to synchronize access to the monitor.
 	lock sync.Mutex
+
+	// These fields are initialized in NewUpdateFrequencyMonitor and are not modified after initialization.
+	logger                   log.Logger
+	daemonStartupGracePeriod time.Duration
 }
 
 // NewUpdateFrequencyMonitor creates a new update frequency monitor.
-func NewUpdateFrequencyMonitor() *UpdateMonitor {
+func NewUpdateFrequencyMonitor(daemonStartupGracePeriod time.Duration, logger log.Logger) *UpdateMonitor {
 	return &UpdateMonitor{
-		serviceToUpdateMetadata: make(map[string]updateMetadata),
+		serviceToUpdateMetadata:  make(map[string]updateMetadata),
+		logger:                   logger,
+		daemonStartupGracePeriod: daemonStartupGracePeriod,
 	}
 }
 
@@ -79,22 +86,34 @@ func (ufm *UpdateMonitor) RegisterDaemonServiceWithCallback(
 	}
 
 	ufm.serviceToUpdateMetadata[service] = updateMetadata{
-		timer:           time.AfterFunc(DaemonStartupGracePeriod+maximumAcceptableUpdateDelay, callback),
+		timer:           time.AfterFunc(ufm.daemonStartupGracePeriod+maximumAcceptableUpdateDelay, callback),
 		updateFrequency: maximumAcceptableUpdateDelay,
 	}
 	return nil
 }
 
 // PanicServiceNotResponding returns a function that panics with a message indicating that the specified daemon
-// service is not responding. This is ideal for creating the callback function when registering a daemon service.
+// service is not responding. This is ideal for creating a callback function when registering a daemon service.
 func PanicServiceNotResponding(service string) func() {
 	return func() {
 		panic(fmt.Sprintf("%v daemon not responding", service))
 	}
 }
 
+// LogErrorServiceNotResponding returns a function that logs an error indicating that the specified daemon service
+// is not responding. This is ideal for creating a callback function when registering a daemon service.
+func LogErrorServiceNotResponding(service string, logger log.Logger) func() {
+	return func() {
+		logger.Error(
+			"daemon not responding",
+			"service",
+			service,
+		)
+	}
+}
+
 // RegisterDaemonService registers a new daemon service with the update frequency monitor. If the daemon service
-// fails to respond within the maximum acceptable update delay, the monitor will execute a panic and halt the protocol.
+// fails to respond within the maximum acceptable update delay, the monitor will log an error.
 // This method is synchronized. The method an error if the daemon service was already registered or the monitor has
 // already been stopped.
 func (ufm *UpdateMonitor) RegisterDaemonService(
@@ -104,7 +123,7 @@ func (ufm *UpdateMonitor) RegisterDaemonService(
 	return ufm.RegisterDaemonServiceWithCallback(
 		service,
 		maximumAcceptableUpdateDelay,
-		PanicServiceNotResponding(service),
+		LogErrorServiceNotResponding(service, ufm.logger),
 	)
 }
 

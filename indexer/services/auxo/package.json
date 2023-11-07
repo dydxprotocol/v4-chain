@@ -14,7 +14,7 @@
     "test": "NODE_ENV=test jest --runInBand --forceExit"
   },
   "author": "",
-  "license": "BSL-1.1",
+  "license": "AGPL-3.0",
   "dependencies": {
     "@aws-sdk/client-ecr": "^3.354.0",
     "@aws-sdk/client-ecs": "^3.353.0",

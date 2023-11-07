@@ -12,7 +12,6 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -27,12 +26,12 @@ import (
 )
 
 var (
-	BridgeAuthority      = authtypes.NewModuleAddress(bridgetypes.ModuleName).String()
+	BridgeAuthority      = bridgetypes.ModuleAddress.String()
 	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
 
-	DelayMsgAuthority = authtypes.NewModuleAddress(types.ModuleName).String()
+	DelayMsgAuthority = types.ModuleAddress
 
-	testDenom = "dv4tnt"
+	testDenom = "adv4tnt"
 
 	BridgeGenesisAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000))
 
@@ -62,7 +61,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 	// Mock the bridge keeper methods called by the bridge msg server.
 	bridgeKeeper.On("CompleteBridge", mock.AnythingOfType("types.Context"), mock.Anything).
 		Return(nil).Times(len(constants.AllMsgs))
-	bridgeKeeper.On("HasAuthority", DelayMsgAuthority).Return(true).Times(len(constants.AllMsgs))
+	bridgeKeeper.On("HasAuthority", DelayMsgAuthority.String()).Return(true).Times(len(constants.AllMsgs))
 
 	// Dispatch messages for block 0.
 
@@ -75,7 +74,7 @@ func TestDispatchMessagesForBlock(t *testing.T) {
 }
 
 func setupMockKeeperNoMessages(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{}, false).Once()
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{}, false).Once()
 }
 
 func HandlerSuccess(_ sdk.Context, _ sdk.Msg) (*sdk.Result, error) {
@@ -108,7 +107,7 @@ func mockPanickingRouter(ctx sdk.Context) *mocks.MsgRouter {
 }
 
 func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -143,7 +142,7 @@ func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.Dela
 }
 
 func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -184,7 +183,7 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 }
 
 func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -225,7 +224,7 @@ func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.
 }
 
 func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -266,7 +265,7 @@ func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayM
 }
 
 func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
-	k.On("GetBlockMessageIds", ctx, int64(0)).Return(types.BlockMessageIds{
+	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{
 		Ids: []uint32{0, 1, 2},
 	}, true).Once()
 
@@ -347,7 +346,7 @@ func TestDispatchMessagesForBlock_Mixed(t *testing.T) {
 // generateBridgeEventMsgAny wraps bridge event in a MsgCompleteBridge and encodes it into an Any.
 func generateBridgeEventMsgAny(t *testing.T, event bridgetypes.BridgeEvent) *codectypes.Any {
 	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
-		Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
+		Authority: DelayMsgAuthority.String(),
 		Event:     event,
 	}
 	any, err := codectypes.NewAnyWithValue(&msgCompleteBridge)
@@ -378,18 +377,18 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: the delayed message is in the keeper scheduled for block 2.
@@ -400,7 +399,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
 
 	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Get initial Alice balance
 	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
@@ -414,8 +413,8 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, &tApp, aliceAccountAddress, aliceExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
+	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, aliceExpectedAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -431,7 +430,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
 // correctly.
 func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Update the genesis state to execute the perpetual fee params update at block 2.
 		testapp.UpdateGenesisDocWithAppStateForModule(
@@ -443,7 +442,7 @@ func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	resp, err := tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
@@ -477,22 +476,22 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 		BlockHeight: 2,
 	}
 
-	tApp := testapp.NewTestAppBuilder().WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Add the delayed message to the genesis state.
 		testapp.UpdateGenesisDocWithAppStateForModule(
 			&genesis,
 			func(genesisState *types.GenesisState) {
 				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NumMessages = 1
+				genesisState.NextDelayedMessageId = 1
 			},
 		)
 		return genesis
-	}).WithTesting(t).Build()
+	}).Build()
 	ctx := tApp.InitChain()
 
 	// Sanity check: at block 1, balances are as expected before the message is sent.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Sanity check: a message with this id exists within the keeper.
 	_, found := tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -507,7 +506,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
 	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, &tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
+	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
 
 	// Assert: the message has been deleted from the keeper.
 	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
@@ -529,14 +528,14 @@ func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
 	// Delay a complete bridge message, which calls bank transfer that emits a transfer event.
 	bridgeEvent := bridgetypes.BridgeEvent{
 		Id:             1,
-		Coin:           sdk.NewCoin("dv4tnt", sdkmath.NewInt(1_000)),
+		Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
 		Address:        constants.AliceAccAddress.String(),
 		EthBlockHeight: 0,
 	}
 	_, err = k.DelayMessageByBlocks(
 		ctx,
 		&bridgetypes.MsgCompleteBridge{
-			Authority: authtypes.NewModuleAddress(types.ModuleName).String(),
+			Authority: DelayMsgAuthority.String(),
 			Event:     bridgeEvent,
 		},
 		0,

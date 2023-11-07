@@ -10,8 +10,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
+	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	grpc_util "github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc"
@@ -51,6 +52,7 @@ type FakeSubTaskRunner struct {
 
 // StartPriceUpdater replaces `client.StartPriceUpdater` and advances `UpdaterCallCount` by one.
 func (f *FakeSubTaskRunner) StartPriceUpdater(
+	c *Client,
 	ctx context.Context,
 	ticker *time.Ticker,
 	stop <-chan bool,
@@ -86,7 +88,7 @@ func (f *FakeSubTaskRunner) StartPriceFetcher(
 	ticker *time.Ticker,
 	stop <-chan bool,
 	configs types.PricefeedMutableMarketConfigs,
-	exchangeStartupConfig types.ExchangeStartupConfig,
+	exchangeQueryConfig types.ExchangeQueryConfig,
 	exchangeDetails types.ExchangeQueryDetails,
 	queryHandler handler.ExchangeQueryHandler,
 	logger log.Logger,
@@ -121,9 +123,9 @@ const (
 )
 
 var (
-	validExchangeId                 = constants.ExchangeId1
-	closeConnectionFailsError       = errors.New(closeConnectionFailsErrorMsg)
-	testExchangeStartupConfigLength = len(constants.TestExchangeStartupConfigs)
+	validExchangeId               = constants.ExchangeId1
+	closeConnectionFailsError     = errors.New(closeConnectionFailsErrorMsg)
+	testExchangeQueryConfigLength = len(constants.TestExchangeQueryConfigs)
 )
 
 func TestFixedBufferSize(t *testing.T) {
@@ -136,7 +138,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		mockGrpcClient              *mocks.GrpcClient
 		initialMarketConfig         map[types.MarketId]*types.MutableMarketConfig
 		initialExchangeMarketConfig map[types.ExchangeId]*types.MutableExchangeMarketConfig
-		exchangeIdToStartupConfig   map[types.ExchangeId]*types.ExchangeStartupConfig
+		exchangeIdToQueryConfig     map[types.ExchangeId]*types.ExchangeQueryConfig
 		exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails
 
 		// expectations
@@ -144,7 +146,7 @@ func TestStart_InvalidConfig(t *testing.T) {
 		expectGrpcConnection      bool
 		expectCloseTcpConnection  bool
 		expectCloseGrpcConnection bool
-		// This should equal the length of the `exchangeIdToStartupConfig` passed into
+		// This should equal the length of the `exchangeIdToQueryConfig` passed into
 		// `client.Start`.
 		expectedNumExchangeTasks int
 	}{
@@ -168,16 +170,16 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Valid: 2 exchanges": {
 			mockGrpcClient:              grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
-		"Invalid: empty exchange startup config": {
+		"Invalid: empty exchange query config": {
 			mockGrpcClient:            grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[types.ExchangeId]*types.ExchangeStartupConfig{},
+			exchangeIdToQueryConfig:   map[types.ExchangeId]*types.ExchangeQueryConfig{},
 			expectedError:             errors.New("exchangeIds must not be empty"),
 			expectGrpcConnection:      true,
 			expectCloseTcpConnection:  true,
@@ -185,8 +187,8 @@ func TestStart_InvalidConfig(t *testing.T) {
 		},
 		"Invalid: missing exchange query details": {
 			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(nil, nil, true),
-			exchangeIdToStartupConfig: map[string]*types.ExchangeStartupConfig{
-				validExchangeId: constants.TestExchangeStartupConfigs[validExchangeId],
+			exchangeIdToQueryConfig: map[string]*types.ExchangeQueryConfig{
+				validExchangeId: constants.TestExchangeQueryConfigs[validExchangeId],
 			},
 			expectedError:             fmt.Errorf("no exchange details exists for exchangeId: %v", validExchangeId),
 			expectGrpcConnection:      true,
@@ -199,13 +201,13 @@ func TestStart_InvalidConfig(t *testing.T) {
 				closeConnectionFailsError,
 				true,
 			),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectedError:               closeConnectionFailsError,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
 		"Invalid: grpc close connection fails with good inputs": {
 			mockGrpcClient: grpc_util.GenerateMockGrpcClientWithOptionalGrpcConnectionErrors(
@@ -213,13 +215,13 @@ func TestStart_InvalidConfig(t *testing.T) {
 				closeConnectionFailsError,
 				true,
 			),
-			exchangeIdToStartupConfig:   constants.TestExchangeStartupConfigs,
+			exchangeIdToQueryConfig:     constants.TestExchangeQueryConfigs,
 			exchangeIdToExchangeDetails: constants.TestExchangeIdToExchangeQueryDetails,
 			expectedError:               closeConnectionFailsError,
 			expectGrpcConnection:        true,
 			expectCloseTcpConnection:    true,
 			expectCloseGrpcConnection:   true,
-			expectedNumExchangeTasks:    testExchangeStartupConfigLength,
+			expectedNumExchangeTasks:    testExchangeQueryConfigLength,
 		},
 	}
 	for name, tc := range tests {
@@ -242,9 +244,17 @@ func TestStart_InvalidConfig(t *testing.T) {
 				appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
 				log.NewNopLogger(),
 				tc.mockGrpcClient,
-				tc.exchangeIdToStartupConfig,
+				tc.exchangeIdToQueryConfig,
 				tc.exchangeIdToExchangeDetails,
 				&faketaskRunner,
+			)
+
+			// Expect daemon is not healthy on startup. Daemon becomes healthy after the first successful market
+			// update.
+			require.ErrorContains(
+				t,
+				client.HealthCheck(),
+				"no successful update has occurred",
 			)
 
 			if tc.expectedError == nil {
@@ -297,9 +307,8 @@ func TestStop(t *testing.T) {
 	daemonServer := daemonserver.NewServer(
 		log.NewNopLogger(),
 		grpc.NewServer(),
-		&lib.FileHandlerImpl{},
+		&daemontypes.FileHandlerImpl{},
 		daemonFlags.Shared.SocketAddress,
-		"test",
 	)
 	daemonServer.WithPriceFeedMarketToExchangePrices(
 		pricefeed_types.NewMarketToExchangePrices(5 * time.Second),
@@ -334,8 +343,8 @@ func TestStop(t *testing.T) {
 		daemonFlags,
 		appFlags,
 		log.NewNopLogger(),
-		&lib.GrpcClientImpl{},
-		constants.TestExchangeStartupConfigs,
+		&daemontypes.GrpcClientImpl{},
+		constants.TestExchangeQueryConfigs,
 		constants.TestExchangeIdToExchangeQueryDetails,
 		&SubTaskRunnerImpl{},
 	)
@@ -620,6 +629,7 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 		},
 		"No exchange market prices, does not call `UpdateMarketPrices`": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{},
+			priceUpdateError:        types.ErrEmptyMarketPriceUpdate,
 		},
 		"One market for one exchange": {
 			exchangeAndMarketPrices: []*client.ExchangeIdMarketPriceTimestamp{
@@ -718,6 +728,66 @@ func TestPriceUpdater_Mixed(t *testing.T) {
 			} else {
 				mockPriceFeedClient.AssertNotCalled(t, "UpdateMarketPrices")
 			}
+		})
+	}
+}
+
+func TestHealthCheck_Mixed(t *testing.T) {
+	tests := map[string]struct {
+		updateMarketPricesError error
+		expectedError           error
+	}{
+		"No error - daemon healthy": {
+			updateMarketPricesError: nil,
+			expectedError:           nil,
+		},
+		"Error - daemon unhealthy": {
+			updateMarketPricesError: fmt.Errorf("failed to update market prices"),
+			expectedError: fmt.Errorf(
+				"failed to run price updater task loop for price daemon: failed to update market prices",
+			),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Setup.
+			// Create `ExchangeIdMarketPriceTimestamp` and populate it with market-price updates.
+			etmp, err := types.NewExchangeToMarketPrices([]types.ExchangeId{constants.ExchangeId1})
+			require.NoError(t, err)
+			etmp.UpdatePrice(constants.ExchangeId1, constants.Market9_TimeT_Price1)
+
+			// Create a mock `PriceFeedServiceClient`.
+			mockPriceFeedClient := generateMockQueryClient()
+
+			// Mock the `UpdateMarketPrices` call to return an error if specified.
+			mockPriceFeedClient.On("UpdateMarketPrices", grpc_util.Ctx, mock.Anything).
+				Return(nil, tc.updateMarketPricesError).Once()
+
+			ticker, stop := daemontestutils.SingleTickTickerAndStop()
+			client := newClient()
+
+			// Act.
+			// Run the price updater for a single tick. Expect the daemon to toggle health state based on
+			// `UpdateMarketPrices` error response.
+			subTaskRunnerImpl.StartPriceUpdater(
+				client,
+				grpc_util.Ctx,
+				ticker,
+				stop,
+				etmp,
+				mockPriceFeedClient,
+				log.NewNopLogger(),
+			)
+
+			// Assert.
+			if tc.expectedError == nil {
+				require.NoError(t, client.HealthCheck())
+			} else {
+				require.ErrorContains(t, client.HealthCheck(), tc.expectedError.Error())
+			}
+
+			// Cleanup.
+			close(stop)
 		})
 	}
 }

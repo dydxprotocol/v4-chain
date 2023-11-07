@@ -5,30 +5,37 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestContainsDuplicates(t *testing.T) {
-	// Empty case.
-	require.False(t, lib.ContainsDuplicates([]types.OrderId{}))
-
-	// Unique uint32 case.
-	allUniqueUint32s := []uint32{1, 2, 3, 4}
-	require.False(t, lib.ContainsDuplicates(allUniqueUint32s))
-
-	// Duplicate uint32 case.
-	containsDuplicateUint32 := append(allUniqueUint32s, 3)
-	require.True(t, lib.ContainsDuplicates(containsDuplicateUint32))
-
-	// Unique string case.
-	allUniqueStrings := []string{"hello", "world", "h", "w"}
-	require.False(t, lib.ContainsDuplicates(allUniqueStrings))
-
-	// Duplicate string case.
-	containsDuplicateString := append(allUniqueStrings, "world")
-	require.True(t, lib.ContainsDuplicates(containsDuplicateString))
+	tests := map[string]struct {
+		input    []uint32
+		expected bool
+	}{
+		"Nil": {
+			input:    nil,
+			expected: false,
+		},
+		"Empty": {
+			input:    []uint32{},
+			expected: false,
+		},
+		"True": {
+			input:    []uint32{1, 2, 3, 4},
+			expected: false,
+		},
+		"False": {
+			input:    []uint32{1, 2, 3, 4, 3},
+			expected: true,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.expected, lib.ContainsDuplicates(tc.input))
+		})
+	}
 }
 
 func TestGetSortedKeys(t *testing.T) {
@@ -55,6 +62,44 @@ func TestGetSortedKeys(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			actualResult := lib.GetSortedKeys[sort.StringSlice](tc.inputMap)
 			require.Equal(t, tc.expectedResult, actualResult)
+		})
+	}
+}
+
+func TestUniqueSliceToSet(t *testing.T) {
+	tests := map[string]struct {
+		input     []string
+		expected  map[string]struct{}
+		panicWith string
+	}{
+		"Empty": {
+			input:    []string{},
+			expected: map[string]struct{}{},
+		},
+		"Basic": {
+			input: []string{"0", "1", "2"},
+			expected: map[string]struct{}{
+				"0": {},
+				"1": {},
+				"2": {},
+			},
+		},
+		"Duplicate": {
+			input:     []string{"one", "2", "two", "one", "4"},
+			panicWith: "UniqueSliceToSet: duplicate value: one",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.panicWith != "" {
+				require.PanicsWithValue(
+					t,
+					tc.panicWith,
+					func() { lib.UniqueSliceToSet[string](tc.input) },
+				)
+			} else {
+				require.Equal(t, tc.expected, lib.UniqueSliceToSet[string](tc.input))
+			}
 		})
 	}
 }
@@ -168,59 +213,6 @@ func TestFilterSlice(t *testing.T) {
 				return false
 			},
 		),
-	)
-}
-
-func TestSliceToSet(t *testing.T) {
-	slice := make([]int, 0)
-	for i := 0; i < 3; i++ {
-		slice = append(slice, i)
-	}
-	set := lib.SliceToSet(slice)
-	require.Equal(
-		t,
-		map[int]struct{}{
-			0: {},
-			1: {},
-			2: {},
-		},
-		set,
-	)
-	stringSlice := []string{
-		"one",
-		"two",
-	}
-	stringSet := lib.SliceToSet(stringSlice)
-	require.Equal(
-		t,
-		map[string]struct{}{
-			"one": {},
-			"two": {},
-		},
-		stringSet,
-	)
-
-	emptySlice := []types.OrderId{}
-	emptySet := lib.SliceToSet(emptySlice)
-	require.Equal(
-		t,
-		map[types.OrderId]struct{}{},
-		emptySet,
-	)
-}
-
-func TestSliceToSet_PanicOnDuplicate(t *testing.T) {
-	stringSlice := []string{
-		"one",
-		"two",
-		"one",
-	}
-	require.PanicsWithValue(
-		t,
-		"SliceToSet: duplicate value: one",
-		func() {
-			lib.SliceToSet(stringSlice)
-		},
 	)
 }
 

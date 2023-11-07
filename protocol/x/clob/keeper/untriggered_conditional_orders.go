@@ -2,15 +2,13 @@ package keeper
 
 import (
 	"fmt"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.
@@ -130,7 +128,7 @@ func (k Keeper) PruneUntriggeredConditionalOrders(
 	cancelledStatefulOrderIds []types.OrderId,
 ) {
 	// Merge lists of order ids.
-	orderIdsToPrune := lib.SliceToSet(expiredStatefulOrderIds)
+	orderIdsToPrune := lib.UniqueSliceToSet(expiredStatefulOrderIds)
 	for _, orderId := range cancelledStatefulOrderIds {
 		if _, exists := orderIdsToPrune[orderId]; exists {
 			panic(
@@ -198,7 +196,7 @@ func (untriggeredOrders *UntriggeredConditionalOrders) RemoveUntriggeredConditio
 		}
 	}
 
-	orderIdsToRemoveSet := lib.SliceToSet(orderIdsToRemove)
+	orderIdsToRemoveSet := lib.UniqueSliceToSet(orderIdsToRemove)
 
 	newOrdersToTriggerWhenOraclePriceLTETriggerPrice := make([]types.Order, 0)
 	for _, order := range untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
@@ -307,11 +305,6 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewConditionalOrderTriggeredEvent(
-					triggeredConditionalOrderId,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderTriggeredEvent(
@@ -321,26 +314,4 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		)
 	}
 	return triggeredConditionalOrderIds
-}
-
-// CountUntriggeredSubaccountOrders will count all untriggered orders for a given subaccount that match the provided
-// filter.
-func (k Keeper) CountUntriggeredSubaccountOrders(ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-	filter func(types.OrderId) bool,
-) uint32 {
-	count := uint32(0)
-	for _, untriggeredConditionalOrders := range k.UntriggeredConditionalOrders {
-		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
-			if order.OrderId.SubaccountId == subaccountId && filter(order.OrderId) {
-				count++
-			}
-		}
-		for _, order := range untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
-			if order.OrderId.SubaccountId == subaccountId && filter(order.OrderId) {
-				count++
-			}
-		}
-	}
-	return count
 }

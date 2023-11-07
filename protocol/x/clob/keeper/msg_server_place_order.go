@@ -2,6 +2,8 @@ package keeper
 
 import (
 	"context"
+	"errors"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -9,6 +11,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -16,8 +19,43 @@ import (
 // PlaceOrder is the entry point for stateful `MsgPlaceOrder` messages executed in `runMsgs` during `DeliverTx`.
 // This handler is only invoked for stateful orders due to the filtering logic in the mempool in our CometBFT fork.
 // TODO (CLOB-646) - Support stateful order replacements.
-func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (*types.MsgPlaceOrderResponse, error) {
+func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
+	resp *types.MsgPlaceOrderResponse,
+	err error,
+) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	defer func() {
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.PlaceOrder,
+			metrics.DeliverTx,
+			msg.Order.GetOrderLabels()...,
+		)
+		if err != nil {
+			if errors.Is(err, types.ErrStatefulOrderCollateralizationCheckFailed) {
+				telemetry.IncrCounterWithLabels(
+					[]string{
+						types.ModuleName,
+						metrics.PlaceOrder,
+						metrics.CollateralizationCheckFailed,
+					},
+					1,
+					msg.Order.GetOrderLabels(),
+				)
+				k.Keeper.Logger(ctx).Info(
+					err.Error(),
+					metrics.BlockHeight, ctx.BlockHeight(),
+					metrics.Handler, "PlaceOrder",
+					metrics.Callback, metrics.DeliverTx,
+					metrics.Msg, msg,
+				)
+				return
+			}
+			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
+		}
+	}()
 
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.GetOrder()
@@ -25,7 +63,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
-	cancelledOrderIds := lib.SliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
@@ -33,7 +71,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			order,
 		)
 	}
-	removedOrderIds := lib.SliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
 		return nil, errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyRemoved,
@@ -55,11 +93,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewConditionalOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderPlacementEvent(
@@ -75,11 +108,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		k.Keeper.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
-			indexer_manager.GetB64EncodedEventMessage(
-				indexerevents.NewLongTermOrderPlacementEvent(
-					order,
-				),
-			),
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewLongTermOrderPlacementEvent(
@@ -96,12 +124,6 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	k.Keeper.MustSetProcessProposerMatchesEvents(
 		ctx,
 		processProposerMatchesEvents,
-	)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.StatefulOrderMsgHandlerSuccess, metrics.Count},
-		1,
-		order.GetOrderLabels(),
 	)
 
 	return &types.MsgPlaceOrderResponse{}, nil

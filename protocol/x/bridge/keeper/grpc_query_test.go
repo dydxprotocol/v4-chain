@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,8 +17,12 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
+var (
+	DelayMsgAuthority = delaymsgtypes.ModuleAddress.String()
+)
+
 func TestEventParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -54,7 +57,7 @@ func TestEventParams(t *testing.T) {
 }
 
 func TestProposeParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -89,7 +92,7 @@ func TestProposeParams(t *testing.T) {
 }
 
 func TestSafetyParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -124,7 +127,7 @@ func TestSafetyParams(t *testing.T) {
 }
 
 func TestAcknowledgedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -159,7 +162,7 @@ func TestAcknowledgedEventInfo(t *testing.T) {
 }
 
 func TestRecognizedEventInfo(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -222,7 +225,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 	} {
 		t.Run(name, func(t *testing.T) {
 			// Initialize test app.
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+			tApp := testapp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
 			k := tApp.App.BridgeKeeper
 			delayMsgKeeper := tApp.App.DelayMsgKeeper
@@ -234,10 +237,10 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			_, err = delayMsgKeeper.DelayMessageByBlocks(
 				ctx,
 				sendingtypes.NewMsgSendFromModuleToAccount(
-					authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+					DelayMsgAuthority,
 					types.ModuleName,
 					constants.AliceAccAddress.String(),
-					sdk.NewCoin("dv4tnt", sdk.NewInt(100)),
+					sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
 				),
 				100,
 			)
@@ -245,7 +248,7 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			_, err = delayMsgKeeper.DelayMessageByBlocks(
 				ctx,
 				&pricestypes.MsgUpdateMarketParam{
-					Authority:   authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String(),
+					Authority:   DelayMsgAuthority,
 					MarketParam: pricestest.GenerateMarketParamPrice().Param,
 				},
 				123,
@@ -253,8 +256,8 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 			require.NoError(t, err)
 
 			// Construct expected responses.
-			delayMsgAuthority := authtypes.NewModuleAddress(delaymsgtypes.ModuleName).String()
-			blockOfExecution := int64(k.GetSafetyParams(ctx).DelayBlocks) + ctx.BlockHeight()
+			delayMsgAuthority := DelayMsgAuthority
+			blockOfExecution := k.GetSafetyParams(ctx).DelayBlocks + uint32(ctx.BlockHeight())
 			expectedMsgs := make([]types.DelayedCompleteBridgeMessage, 0)
 			expectedMsgsByAddress := make(map[string][]types.DelayedCompleteBridgeMessage)
 			for _, event := range tc.events {
@@ -274,11 +277,11 @@ func TestDelayedCompleteBridgeMessages(t *testing.T) {
 				)
 			}
 
-			// Get all in flight complete bridge messages and verify they are as expected.
+			// Get all delayed complete bridge messages and verify they are as expected.
 			msgs := k.GetDelayedCompleteBridgeMessages(ctx, "")
 			require.Equal(t, expectedMsgs, msgs)
 
-			// Get in flight complete bridge messages for each address and verify they are as expected.
+			// Get delayed complete bridge messages for each address and verify they are as expected.
 			for address, expectedMsgsForAddr := range expectedMsgsByAddress {
 				msgs := k.GetDelayedCompleteBridgeMessages(ctx, address)
 				require.Equal(t, expectedMsgsForAddr, msgs)

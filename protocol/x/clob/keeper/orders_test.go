@@ -114,12 +114,12 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedMultiStoreWrites: []string{
 				// Update taker subaccount
 				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num0.MustMarshal()),
+					string(constants.Carl_Num0.ToStateKey()),
 				// Indexer event
 				indexer_manager.IndexerEventsKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
-					string(constants.Dave_Num0.MustMarshal()),
+					string(constants.Dave_Num0.ToStateKey()),
 				// Indexer event
 				indexer_manager.IndexerEventsKey,
 				// Update rewards
@@ -435,11 +435,11 @@ func TestPlaceShortTermOrder(t *testing.T) {
 			expectedMultiStoreWrites: []string{
 				// Update taker subaccount
 				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num1.MustMarshal()),
+					string(constants.Carl_Num1.ToStateKey()),
 				indexer_manager.IndexerEventsKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num0.MustMarshal()),
+					string(constants.Carl_Num0.ToStateKey()),
 				indexer_manager.IndexerEventsKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
@@ -809,24 +809,24 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			expectedMultiStoreWrites: []string{
 				// Update taker subaccount.
 				satypes.SubaccountKeyPrefix +
-					string(constants.Carl_Num0.MustMarshal()),
+					string(constants.Carl_Num0.ToStateKey()),
 				indexer_manager.IndexerEventsKey,
 				// Update maker subaccount.
 				satypes.SubaccountKeyPrefix +
-					string(constants.Dave_Num0.MustMarshal()),
+					string(constants.Dave_Num0.ToStateKey()),
 				indexer_manager.IndexerEventsKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update taker order fill amount to state and memStore.
 				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.MustMarshal()),
+					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.MustMarshal()),
+					string(constants.LongTermOrder_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 				// Update maker order fill amount to state and memStore.
 				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.MustMarshal()),
+					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 				types.OrderAmountFilledKeyPrefix +
-					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.MustMarshal()),
+					string(constants.LongTermOrder_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10.OrderId.ToStateKey()),
 			},
 		},
 		`Can place a stateful post-only order that crosses the book`: {
@@ -935,7 +935,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				}
 
 				_, orderStatus, _, err := ks.ClobKeeper.AddPreexistingStatefulOrder(
-					ctx,
+					ctx.WithIsCheckTx(true),
 					&order,
 					blockHeight,
 					memClob,
@@ -966,7 +966,7 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 			orderSizeOptimisticallyFilledFromMatching,
 				orderStatus,
 				_,
-				err := ks.ClobKeeper.AddPreexistingStatefulOrder(ctx, &tc.order, blockHeight, memClob)
+				err := ks.ClobKeeper.AddPreexistingStatefulOrder(ctx.WithIsCheckTx(true), &tc.order, blockHeight, memClob)
 
 			// Verify test expectations.
 			require.ErrorIs(t, err, tc.expectedErr)
@@ -1014,20 +1014,6 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	indexerEventManager.On("AddTxnEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1082,20 +1068,6 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	indexerEventManager.On("AddTxnEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
-		indexer_manager.GetB64EncodedEventMessage(
-			indexerevents.NewPerpetualMarketCreateEvent(
-				0,
-				0,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-				constants.ClobPair_Btc.Status,
-				constants.ClobPair_Btc.QuantumConversionExponent,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-				constants.ClobPair_Btc.SubticksPerTick,
-				constants.ClobPair_Btc.StepBaseQuantums,
-				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-			),
-		),
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1703,28 +1675,31 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder().WithTesting(t).WithGenesisDocFn(func() cmt.GenesisDoc {
-				genesis := testapp.DefaultGenesis()
-				clobPairs := []types.ClobPair{
-					{
-						Metadata: &types.ClobPair_PerpetualClobMetadata{
-							PerpetualClobMetadata: &types.PerpetualClobMetadata{
-								PerpetualId: 0,
+			tApp := testapp.NewTestAppBuilder(t).
+				// Disable non-determinism checks since the tests update state via keeper directly.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() cmt.GenesisDoc {
+					genesis := testapp.DefaultGenesis()
+					clobPairs := []types.ClobPair{
+						{
+							Metadata: &types.ClobPair_PerpetualClobMetadata{
+								PerpetualClobMetadata: &types.PerpetualClobMetadata{
+									PerpetualId: 0,
+								},
 							},
+							Status:           types.ClobPair_STATUS_ACTIVE,
+							StepBaseQuantums: 12,
+							SubticksPerTick:  39,
 						},
-						Status:           types.ClobPair_STATUS_ACTIVE,
-						StepBaseQuantums: 12,
-						SubticksPerTick:  39,
-					},
-				}
-				if tc.clobPairs != nil {
-					clobPairs = tc.clobPairs
-				}
-				testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
-					state.ClobPairs = clobPairs
-				})
-				return genesis
-			}).Build()
+					}
+					if tc.clobPairs != nil {
+						clobPairs = tc.clobPairs
+					}
+					testapp.UpdateGenesisDocWithAppStateForModule(&genesis, func(state *types.GenesisState) {
+						state.ClobPairs = clobPairs
+					})
+					return genesis
+				}).Build()
 
 			ctx := tApp.AdvanceToBlock(
 				// Stateful validation happens at blockHeight+1 for short term order placements.
@@ -1826,20 +1801,6 @@ func TestGetStatePosition_Success(t *testing.T) {
 				indexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
-					indexer_manager.GetB64EncodedEventMessage(
-						indexerevents.NewPerpetualMarketCreateEvent(
-							perpetualId,
-							uint32(i),
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.Ticker,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.MarketId,
-							cp.Status,
-							cp.QuantumConversionExponent,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.AtomicResolution,
-							cp.SubticksPerTick,
-							cp.StepBaseQuantums,
-							constants.Perpetuals_DefaultGenesisState.Perpetuals[i].Params.LiquidityTier,
-						),
-					),
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -1936,7 +1897,7 @@ func TestGetStatePosition_PanicsOnInvalidClob(t *testing.T) {
 // 	)
 // }
 
-func TestInitStatefulOrdersInMemClob(t *testing.T) {
+func TestInitStatefulOrders(t *testing.T) {
 	tests := map[string]struct {
 		// CLOB module return values.
 		statefulOrdersInState       []types.Order
@@ -2053,20 +2014,6 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -2101,6 +2048,8 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 
 				// Write the stateful order placement to state.
 				ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, uint32(i))
+				// Clear the count since we expect InitStatefulOrders to initialize it.
+				ks.ClobKeeper.SetStatefulOrderCount(ks.Ctx, order.OrderId.SubaccountId, 0)
 
 				// No more state or memclob updates are required if this is an untriggered
 				// conditional order.
@@ -2130,7 +2079,7 @@ func TestInitStatefulOrdersInMemClob(t *testing.T) {
 			}
 
 			// Run the test and verify expectations.
-			ks.ClobKeeper.InitStatefulOrdersInMemClob(ks.Ctx)
+			ks.ClobKeeper.InitStatefulOrders(ks.Ctx)
 			indexerEventManager.AssertExpectations(t)
 			indexerEventManager.AssertNumberOfCalls(
 				t,
@@ -2196,20 +2145,6 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 			indexerEventManager.On("AddTxnEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
-				indexer_manager.GetB64EncodedEventMessage(
-					indexerevents.NewPerpetualMarketCreateEvent(
-						0,
-						0,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
-						constants.ClobPair_Btc.Status,
-						constants.ClobPair_Btc.QuantumConversionExponent,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
-						constants.ClobPair_Btc.SubticksPerTick,
-						constants.ClobPair_Btc.StepBaseQuantums,
-						constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
-					),
-				),
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -2523,7 +2458,6 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 
 			// Write to triggered orders state
 			for _, order := range tc.triggeredOrders {
-				orderIdBytes := order.OrderId.MustMarshal()
 				longTermOrderPlacement := types.LongTermOrderPlacement{
 					Order: order,
 				}
@@ -2532,13 +2466,13 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				store := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementStore(ctx)
 				memstore := ks.ClobKeeper.GetTriggeredConditionalOrderPlacementMemStore(ctx)
 
-				store.Set(orderIdBytes, longTermOrderPlacementBytes)
-				memstore.Set(orderIdBytes, longTermOrderPlacementBytes)
+				orderKey := order.OrderId.ToStateKey()
+				store.Set(orderKey, longTermOrderPlacementBytes)
+				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Write to untriggered orders state
 			for _, order := range tc.untriggeredOrders {
-				orderIdBytes := order.OrderId.MustMarshal()
 				longTermOrderPlacement := types.LongTermOrderPlacement{
 					Order: order,
 				}
@@ -2547,8 +2481,9 @@ func TestPlaceConditionalOrdersTriggeredInLastBlock(t *testing.T) {
 				store := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementStore(ctx)
 				memstore := ks.ClobKeeper.GetUntriggeredConditionalOrderPlacementMemStore(ctx)
 
-				store.Set(orderIdBytes, longTermOrderPlacementBytes)
-				memstore.Set(orderIdBytes, longTermOrderPlacementBytes)
+				orderKey := order.OrderId.ToStateKey()
+				store.Set(orderKey, longTermOrderPlacementBytes)
+				memstore.Set(orderKey, longTermOrderPlacementBytes)
 			}
 
 			// Assert expected order placement memclob calls.

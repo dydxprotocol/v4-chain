@@ -24,6 +24,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
+  defaultDateTime,
+  defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
   defaultTime,
@@ -167,6 +169,8 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
 
@@ -212,6 +216,8 @@ describe('statefulOrderPlacementHandler', () => {
       goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(defaultOrder),
       createdAtHeight: '1',
       clientMetadata: '0',
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: '0',
     });
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
@@ -238,6 +244,8 @@ describe('statefulOrderPlacementHandler', () => {
       createdAtHeight: '3',
       clientMetadata: '0',
       triggerPrice: null,
+      updatedAt: defaultDateTime.toISO(),
+      updatedAtHeight: defaultHeight.toString(),
     });
     expectTimingStats();
     // TODO[IND-20]: Add tests for vulcan messages

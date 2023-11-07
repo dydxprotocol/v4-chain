@@ -73,6 +73,8 @@ import { LiquidationHandler } from '../../../src/handlers/order-fills/liquidatio
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -203,18 +205,32 @@ describe('LiquidationHandler', () => {
 
   it.each([
     [
-      'goodTilBlock',
+      'goodTilBlock via knex',
       {
         goodTilBlock: 10,
-        goodTilBlockTime: undefined,
       },
+      false,
     ],
     [
-      'goodTilBlockTime',
+      'goodTilBlock via SQL function',
       {
-        goodTilBlock: undefined,
+        goodTilBlock: 10,
+      },
+      true,
+    ],
+    [
+      'goodTilBlockTime via knex',
+      {
         goodTilBlockTime: 1_000_000_000,
       },
+      false,
+    ],
+    [
+      'goodTilBlockTime via SQL function',
+      {
+        goodTilBlockTime: 1_000_000_000,
+      },
+      true,
     ],
   ])(
     'creates fills and orders (with %s), sends vulcan message for maker order update and updates ' +
@@ -222,7 +238,9 @@ describe('LiquidationHandler', () => {
     async (
       _name: string,
       goodTilOneof: Partial<IndexerOrder>,
+      useSqlFunction: boolean,
     ) => {
+      config.USE_LIQUIDATION_HANDLER_SQL_FUNCTION = useSqlFunction;
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
       const makerQuantums: number = 10_000_000;
@@ -237,7 +255,7 @@ describe('LiquidationHandler', () => {
         goodTilOneof,
         clobPairId: defaultClobPairId,
         orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
+        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
         reduceOnly: true,
         clientMetadata: 0,
       });
@@ -300,11 +318,13 @@ describe('LiquidationHandler', () => {
         clobPairId: defaultClobPairId,
         side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
         orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
-        timeInForce: TimeInForce.IOC,
+        timeInForce: TimeInForce.GTT,
         reduceOnly: true,
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       // No orders should exist for the liquidated account since none are created, and there
@@ -405,26 +425,52 @@ describe('LiquidationHandler', () => {
             exitPrice: makerPrice,
           },
         ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
         expectCandlesUpdated(),
       ]);
 
-      expectTimingStats();
+      if (!useSqlFunction) {
+        expectTimingStats();
+      }
     });
 
   it.each([
     [
-      'goodTilBlock',
+      'goodTilBlock via knex',
       {
         goodTilBlock: 10,
       },
+      false,
       '5',
       undefined,
     ],
     [
-      'goodTilBlockTime',
+      'goodTilBlock via SQL function',
+      {
+        goodTilBlock: 10,
+      },
+      true,
+      '5',
+      undefined,
+    ],
+    [
+      'goodTilBlockTime via knex',
       {
         goodTilBlockTime: 1_000_000,
       },
+      false,
+      undefined,
+      '1970-01-11T13:46:40.000Z',
+    ],
+    [
+      'goodTilBlockTime via SQL function',
+      {
+        goodTilBlockTime: 1_000_000,
+      },
+      true,
       undefined,
       '1970-01-11T13:46:40.000Z',
     ],
@@ -434,10 +480,13 @@ describe('LiquidationHandler', () => {
     async (
       _name: string,
       goodTilOneof: Partial<IndexerOrder>,
+      useSqlFunction: boolean,
       existingGoodTilBlock?: string,
       existingGoodTilBlockTime?: string,
     ) => {
-    // create initial orders
+      config.USE_LIQUIDATION_HANDLER_SQL_FUNCTION = useSqlFunction;
+
+      // create initial orders
       const existingMakerOrder: OrderCreateObject = {
         subaccountId: testConstants.defaultSubaccountId,
         clientId: '0',
@@ -454,6 +503,8 @@ describe('LiquidationHandler', () => {
         goodTilBlock: existingGoodTilBlock,
         goodTilBlockTime: existingGoodTilBlockTime,
         clientMetadata: '0',
+        updatedAt: DateTime.fromMillis(0).toISO(),
+        updatedAtHeight: '0',
       };
 
       await Promise.all([
@@ -535,6 +586,8 @@ describe('LiquidationHandler', () => {
         goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
         goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
         clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
       });
 
       const eventId: Buffer = TendermintEventTable.createEventId(
@@ -618,150 +671,177 @@ describe('LiquidationHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
       ]);
 
-      expectTimingStats();
+      if (!useSqlFunction) {
+        expectTimingStats();
+      }
     });
 
-  it('creates fills and orders with fixed-point notation quoteAmount', async () => {
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
-    const makerQuantums: number = 100;
-    const makerSubticks: number = 1_000_000;
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'creates fills and orders (%s) with fixed-point notation quoteAmount',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_LIQUIDATION_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
+      const eventIndex: number = 0;
+      const makerQuantums: number = 100;
+      const makerSubticks: number = 1_000_000;
 
-    const makerOrderProto: IndexerOrder = createOrder({
-      subaccountId: defaultSubaccountId,
-      clientId: 0,
-      side: IndexerOrder_Side.SIDE_BUY,
-      quantums: makerQuantums,
-      subticks: makerSubticks,
-      goodTilOneof: { goodTilBlock: 10 },
-      clobPairId: defaultClobPairId,
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-      reduceOnly: false,
-      clientMetadata: 0,
-    });
+      const makerOrderProto: IndexerOrder = createOrder({
+        subaccountId: defaultSubaccountId,
+        clientId: 0,
+        side: IndexerOrder_Side.SIDE_BUY,
+        quantums: makerQuantums,
+        subticks: makerSubticks,
+        goodTilOneof: { goodTilBlock: 10 },
+        clobPairId: defaultClobPairId,
+        orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+        timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
+        reduceOnly: false,
+        clientMetadata: 0,
+      });
 
-    const takerSubticks: number = 150_000;
-    const takerQuantums: number = 10;
-    const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
-      subaccountId: defaultSubaccountId2,
-      clobPairId: defaultClobPairId,
-      perpetualId: defaultPerpetualPosition.perpetualId,
-      quantums: takerQuantums,
-      isBuy: false,
-      subticks: takerSubticks,
-    });
+      const takerSubticks: number = 150_000;
+      const takerQuantums: number = 10;
+      const liquidationOrder: LiquidationOrderV1 = createLiquidationOrder({
+        subaccountId: defaultSubaccountId2,
+        clobPairId: defaultClobPairId,
+        perpetualId: defaultPerpetualPosition.perpetualId,
+        quantums: takerQuantums,
+        isBuy: false,
+        subticks: takerSubticks,
+      });
 
-    const fillAmount: number = 10;
-    const orderFillEvent: OrderFillEventV1 = createLiquidationOrderFillEvent(
-      makerOrderProto,
-      liquidationOrder,
-      fillAmount,
-      fillAmount,
-    );
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
-      orderFillEvent,
-      transactionIndex,
-      eventIndex,
-      height: parseInt(defaultHeight, 10),
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
+      const fillAmount: number = 10;
+      const orderFillEvent: OrderFillEventV1 = createLiquidationOrderFillEvent(
+        makerOrderProto,
+        liquidationOrder,
+        fillAmount,
+        fillAmount,
+      );
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromOrderFillEvent({
+        orderFillEvent,
+        transactionIndex,
+        eventIndex,
+        height: parseInt(defaultHeight, 10),
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
 
-    // create initial PerpetualPositions
-    await Promise.all([
-      PerpetualPositionTable.create(defaultPerpetualPosition),
-      PerpetualPositionTable.create({
-        ...defaultPerpetualPosition,
+      // create initial PerpetualPositions
+      await Promise.all([
+        PerpetualPositionTable.create(defaultPerpetualPosition),
+        PerpetualPositionTable.create({
+          ...defaultPerpetualPosition,
+          subaccountId: testConstants.defaultSubaccountId2,
+        }),
+      ]);
+
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+
+      // This size should be in fixed-point notation rather than exponential notation (1e-8)
+      const makerOrderSize: string = '0.00000001'; // quantums in human = 1e2 * 1e-10 = 1e-8
+      const makerPrice: string = '100'; // quote currency / base currency = 1e6 * 1e-8 * 1e-6 / 1e-10 = 1e2
+      const totalFilled: string = '0.000000001'; // fillAmount in human = 1e1 * 1e-10 = 1e-9
+      await expectOrderInDatabase({
+        subaccountId: testConstants.defaultSubaccountId,
+        clientId: '0',
+        size: makerOrderSize,
+        totalFilled,
+        price: makerPrice,
+        status: OrderStatus.OPEN, // orderSize > totalFilled so status is open
+        clobPairId: defaultClobPairId,
+        side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
+        orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
+        timeInForce: TimeInForce.GTT,
+        reduceOnly: false,
+        goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
+        goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
+        clientMetadata: makerOrderProto.clientMetadata.toString(),
+        updatedAt: defaultDateTime.toISO(),
+        updatedAtHeight: defaultHeight.toString(),
+      });
+
+      const eventId: Buffer = TendermintEventTable.createEventId(
+        defaultHeight,
+        transactionIndex,
+        eventIndex,
+      );
+
+      // This size should be in fixed-point notation rather than exponential notation (1e-5)
+      const quoteAmount: string = '0.0000001'; // quote amount is price * fillAmount = 1e2 * 1e-9 = 1e-7
+      await expectFillInDatabase({
+        subaccountId: testConstants.defaultSubaccountId,
+        clientId: '0',
+        liquidity: Liquidity.MAKER,
+        size: totalFilled,
+        price: makerPrice,
+        quoteAmount,
+        eventId,
+        transactionHash: defaultTxHash,
+        createdAt: defaultDateTime.toISO(),
+        createdAtHeight: defaultHeight,
+        type: FillType.LIQUIDATION,
+        clobPairId: defaultClobPairId,
+        side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
+        orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+        clientMetadata: makerOrderProto.clientMetadata.toString(),
+        fee: defaultMakerFee,
+      });
+      await expectFillInDatabase({
         subaccountId: testConstants.defaultSubaccountId2,
-      }),
-    ]);
-
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    // This size should be in fixed-point notation rather than exponential notation (1e-8)
-    const makerOrderSize: string = '0.00000001'; // quantums in human = 1e2 * 1e-10 = 1e-8
-    const makerPrice: string = '100'; // quote currency / base currency = 1e6 * 1e-8 * 1e-6 / 1e-10 = 1e2
-    const totalFilled: string = '0.000000001'; // fillAmount in human = 1e1 * 1e-10 = 1e-9
-    await expectOrderInDatabase({
-      subaccountId: testConstants.defaultSubaccountId,
-      clientId: '0',
-      size: makerOrderSize,
-      totalFilled,
-      price: makerPrice,
-      status: OrderStatus.OPEN, // orderSize > totalFilled so status is open
-      clobPairId: defaultClobPairId,
-      side: makerOrderProto.side === IndexerOrder_Side.SIDE_BUY ? OrderSide.BUY : OrderSide.SELL,
-      orderFlags: makerOrderProto.orderId!.orderFlags.toString(),
-      timeInForce: TimeInForce.GTT,
-      reduceOnly: false,
-      goodTilBlock: protocolTranslations.getGoodTilBlock(makerOrderProto)?.toString(),
-      goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(makerOrderProto),
-      clientMetadata: makerOrderProto.clientMetadata.toString(),
-    });
-
-    const eventId: Buffer = TendermintEventTable.createEventId(
-      defaultHeight,
-      transactionIndex,
-      eventIndex,
-    );
-
-    // This size should be in fixed-point notation rather than exponential notation (1e-5)
-    const quoteAmount: string = '0.0000001'; // quote amount is price * fillAmount = 1e2 * 1e-9 = 1e-7
-    await expectFillInDatabase({
-      subaccountId: testConstants.defaultSubaccountId,
-      clientId: '0',
-      liquidity: Liquidity.MAKER,
-      size: totalFilled,
-      price: makerPrice,
-      quoteAmount,
-      eventId,
-      transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
-      createdAtHeight: defaultHeight,
-      type: FillType.LIQUIDATION,
-      clobPairId: defaultClobPairId,
-      side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      clientMetadata: makerOrderProto.clientMetadata.toString(),
-      fee: defaultMakerFee,
-    });
-    await expectFillInDatabase({
-      subaccountId: testConstants.defaultSubaccountId2,
-      clientId: '0',
-      liquidity: Liquidity.TAKER,
-      size: totalFilled,
-      price: makerPrice,
-      quoteAmount,
-      eventId,
-      transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
-      createdAtHeight: defaultHeight,
-      type: FillType.LIQUIDATED,
-      clobPairId: defaultClobPairId,
-      side: liquidationOrderToOrderSide(liquidationOrder),
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      clientMetadata: null,
-      fee: defaultTakerFee,
-      hasOrderId: false,
-    });
-
-    await Promise.all([
-      expectDefaultOrderFillAndPositionSubaccountKafkaMessages(
-        producerSendMock,
+        clientId: '0',
+        liquidity: Liquidity.TAKER,
+        size: totalFilled,
+        price: makerPrice,
+        quoteAmount,
         eventId,
-        ORDER_FLAG_SHORT_TERM,
-      ),
-      expectDefaultTradeKafkaMessageFromTakerFillId(
-        producerSendMock,
-        eventId,
-      ),
-      expectCandlesUpdated(),
-    ]);
-  });
+        transactionHash: defaultTxHash,
+        createdAt: defaultDateTime.toISO(),
+        createdAtHeight: defaultHeight,
+        type: FillType.LIQUIDATED,
+        clobPairId: defaultClobPairId,
+        side: liquidationOrderToOrderSide(liquidationOrder),
+        orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+        clientMetadata: null,
+        fee: defaultTakerFee,
+        hasOrderId: false,
+      });
+
+      await Promise.all([
+        expectDefaultOrderFillAndPositionSubaccountKafkaMessages(
+          producerSendMock,
+          eventId,
+          ORDER_FLAG_SHORT_TERM,
+        ),
+        expectDefaultTradeKafkaMessageFromTakerFillId(
+          producerSendMock,
+          eventId,
+        ),
+        expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+      ]);
+    });
 
   it('LiquidationOrderFillEvent fails liquidationOrder validation', async () => {
     const makerQuantums: number = 10_000_000;

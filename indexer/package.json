@@ -16,5 +16,5 @@
     "test:all": "pnpm recursive run --workspace-concurrency=1 test"
   },
   "author": "",
-  "license": "BSL-1.1"
+  "license": "AGPL-3.0"
 }

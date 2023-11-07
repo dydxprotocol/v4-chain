@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"cosmossdk.io/errors"
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -11,6 +12,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
+// CreateTransfer initiates a transfer from sender (an `x/subaccounts` subaccount)
+// to a recipient (an `x/subaccounts` subaccount).
 func (k msgServer) CreateTransfer(
 	goCtx context.Context,
 	msg *types.MsgCreateTransfer,
@@ -97,7 +100,7 @@ func (k msgServer) WithdrawFromSubaccount(
 	return &types.MsgWithdrawFromSubaccountResponse{}, nil
 }
 
-// SendFromModuleToAccount sends a coin from a module to an account.
+// SendFromModuleToAccount sends coins from a module to an account.
 func (k msgServer) SendFromModuleToAccount(
 	goCtx context.Context,
 	msg *types.MsgSendFromModuleToAccount,
@@ -113,8 +116,22 @@ func (k msgServer) SendFromModuleToAccount(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	if err := k.Keeper.SendFromModuleToAccount(ctx, msg); err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.SendFromModuleToAccount, metrics.Error},
+			1,
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.SenderModuleName, msg.SenderModuleName),
+			},
+		)
 		return nil, err
 	}
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.SendFromModuleToAccount, metrics.Success},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.SenderModuleName, msg.SenderModuleName),
+		},
+	)
 
 	return &types.MsgSendFromModuleToAccountResponse{}, nil
 }

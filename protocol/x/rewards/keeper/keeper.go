@@ -5,20 +5,20 @@ import (
 	"math/big"
 	"time"
 
-	sdkmath "cosmossdk.io/math"
-
+	errorsmod "cosmossdk.io/errors"
 	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 )
@@ -31,7 +31,7 @@ type (
 
 		// Needed for getting `UsdcAsset.AtomicResolution` (converting quote quantums to a full USDC).
 		assetsKeeper types.AssetsKeeper
-		// Need for getting balance of module account balance and transfering tokens.
+		// Need for getting balance of module account balance and transferring tokens.
 		bankKeeper types.BankKeeper
 		// Needed for getting lowest maker fee.
 		feeTiersKeeper types.FeeTiersKeeper
@@ -61,7 +61,7 @@ func NewKeeper(
 		bankKeeper:        bankKeeper,
 		feeTiersKeeper:    feeTiersKeeper,
 		pricesKeeper:      pricesKeeper,
-		authorities:       lib.SliceToSet(authorities),
+		authorities:       lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -136,21 +136,27 @@ func (k Keeper) AddRewardSharesForFill(
 		makerRebateMulTakerVolume,
 	)
 	if takerWeight.Cmp(lib.BigInt0()) > 0 {
-		k.AddRewardShareToAddress(
+		// We aren't concerned with errors here because we've already validated the weight is positive.
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			takerAddress,
 			takerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 
 	// Process reward weight for maker.
 	makerWeight := new(big.Int).Set(bigMakerFeeQuoteQuantums)
 	if makerWeight.Cmp(lib.BigInt0()) > 0 {
-		k.AddRewardShareToAddress(
+		// We aren't concerned with errors here because we've already validated the weight is positive.
+		if err := k.AddRewardShareToAddress(
 			ctx,
 			makerAddress,
 			makerWeight,
-		)
+		); err != nil {
+			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+		}
 	}
 }
 
@@ -161,7 +167,15 @@ func (k Keeper) AddRewardShareToAddress(
 	ctx sdk.Context,
 	address string,
 	weight *big.Int,
-) {
+) error {
+	if weight.Cmp(lib.BigInt0()) <= 0 {
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			weight.String(),
+		)
+	}
+
 	// Get existing reward share. If no previous reward share, 0 weight is returned.
 	rewardShare := k.GetRewardShare(ctx, address)
 	newWeight := new(big.Int).Add(
@@ -170,7 +184,7 @@ func (k Keeper) AddRewardShareToAddress(
 	)
 
 	// Set the new reward share.
-	k.SetRewardShare(ctx, types.RewardShare{
+	return k.SetRewardShare(ctx, types.RewardShare{
 		Address: address,
 		Weight:  dtypes.NewIntFromBigInt(newWeight),
 	})
@@ -180,11 +194,20 @@ func (k Keeper) AddRewardShareToAddress(
 func (k Keeper) SetRewardShare(
 	ctx sdk.Context,
 	rewardShare types.RewardShare,
-) {
+) error {
+	if rewardShare.Weight.BigInt().Cmp(lib.BigInt0()) <= 0 {
+		return errorsmod.Wrapf(
+			types.ErrNonpositiveWeight,
+			"Invalid weight %v",
+			rewardShare.Weight.String(),
+		)
+	}
+
 	store := prefix.NewStore(ctx.KVStore(k.transientStoreKey), []byte(types.RewardShareKeyPrefix))
 	b := k.cdc.MustMarshal(&rewardShare)
 
 	store.Set([]byte(rewardShare.Address), b)
+	return nil
 }
 
 func (k Keeper) getAllRewardSharesAndTotalWeight(ctx sdk.Context) (
@@ -233,7 +256,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	params := k.GetParams(ctx)
 
 	// Calculate value of `F`.
-	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, lib.UsdcAssetId)
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
 		return fmt.Errorf("failed to get USDC asset")
 	}
@@ -244,7 +267,7 @@ func (k Keeper) ProcessRewardsForBlock(
 	allRewardShares, totalRewardWeight := k.getAllRewardSharesAndTotalWeight(ctx)
 	// Measure total reward weight.
 	telemetry.SetGauge(
-		float32(totalRewardWeight.Int64()),
+		metrics.GetMetricValueFromBigInt(totalRewardWeight),
 		types.ModuleName,
 		metrics.TotalRewardShareWeight,
 	)
@@ -261,17 +284,13 @@ func (k Keeper) ProcessRewardsForBlock(
 	bigIntRewardTokenAmount := lib.BigRatRound(bigRatRewardTokenAmount, false)
 
 	// Calculate value of `T`, the reward tokens balance in the `treasury_account`.
-	rewardTokenBalance := k.bankKeeper.GetBalance(
-		ctx,
-		authtypes.NewModuleAddress(params.TreasuryAccount),
-		params.Denom,
-	)
+	rewardTokenBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
 
 	// Get tokenToDistribute as the min(F, T).
 	tokensToDistribute := lib.BigMin(rewardTokenBalance.Amount.BigInt(), bigIntRewardTokenAmount)
 	// Measure distributed token amount.
 	telemetry.SetGauge(
-		float32(tokensToDistribute.Int64()),
+		metrics.GetMetricValueFromBigInt(tokensToDistribute),
 		types.ModuleName,
 		metrics.DistributedRewardTokens,
 	)
@@ -290,7 +309,7 @@ func (k Keeper) ProcessRewardsForBlock(
 				share.Weight.BigInt(),
 			),
 			totalRewardWeight,
-		) // big.Div() rounds down, so sum of actual distributed tokens will not exeed `tokensToDistribute`
+		) // big.Div() rounds down, so sum of actual distributed tokens will not exceed `tokensToDistribute`
 
 		if rewardAmountForAddress.Sign() == 0 {
 			// Nothing to distribute to this address. This will only happen due to rounding.
@@ -311,23 +330,22 @@ func (k Keeper) ProcessRewardsForBlock(
 				},
 			},
 		); err != nil {
-			panic(
-				fmt.Errorf(
-					"failed to send reward tokens from treasury (%s) to address %s: %w",
-					params.TreasuryAccount, share.Address, err,
-				),
+			k.Logger(ctx).Error(
+				"Failed to send reward tokens from treasury account to address",
+				"treasury_account",
+				params.TreasuryAccount,
+				"address",
+				share.Address,
+				constants.ErrorLogKey,
+				err,
 			)
 		}
 	}
 
 	// Measure treasury balance after distribution.
-	remainingTreasuryBalance := k.bankKeeper.GetBalance(
-		ctx,
-		authtypes.NewModuleAddress(params.TreasuryAccount),
-		params.Denom,
-	)
+	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)
 	telemetry.SetGauge(
-		float32(remainingTreasuryBalance.Amount.Int64()),
+		metrics.GetMetricValueFromBigInt(remainingTreasuryBalance.Amount.BigInt()),
 		types.ModuleName,
 		metrics.TreasuryBalanceAfterDistribution,
 	)

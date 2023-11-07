@@ -9,7 +9,7 @@ import (
 )
 
 func TestGetEventParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -17,7 +17,7 @@ func TestGetEventParams(t *testing.T) {
 }
 
 func TestUpdateEventParams_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -33,7 +33,7 @@ func TestUpdateEventParams_Success(t *testing.T) {
 }
 
 func TestGetProposeParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -41,7 +41,7 @@ func TestGetProposeParams(t *testing.T) {
 }
 
 func TestUpdateProposeParams_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -58,7 +58,7 @@ func TestUpdateProposeParams_Success(t *testing.T) {
 }
 
 func TestUpdateProposeParams_ValidationError(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -73,7 +73,7 @@ func TestUpdateProposeParams_ValidationError(t *testing.T) {
 }
 
 func TestGetSafetyParams(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 
@@ -81,7 +81,7 @@ func TestGetSafetyParams(t *testing.T) {
 }
 
 func TestUpdateSafetyParams_Success(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	k := tApp.App.BridgeKeeper
 

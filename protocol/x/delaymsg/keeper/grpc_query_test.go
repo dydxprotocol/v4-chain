@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestNumMessages(t *testing.T) {
+func TestNextDelayedMessageId(t *testing.T) {
 	tests := map[string]struct {
 		delayedMessages []sdk.Msg
 	}{
@@ -33,9 +33,9 @@ func TestNumMessages(t *testing.T) {
 			}
 
 			wctx := sdk.WrapSDKContext(ctx)
-			res, err := delaymsg.NumMessages(wctx, &types.QueryNumMessagesRequest{})
+			res, err := delaymsg.NextDelayedMessageId(wctx, &types.QueryNextDelayedMessageIdRequest{})
 			require.NoError(t, err)
-			require.Equal(t, uint32(len(tc.delayedMessages)), res.NumMessages)
+			require.Equal(t, uint32(len(tc.delayedMessages)), res.NextDelayedMessageId)
 		})
 	}
 }
@@ -118,10 +118,4 @@ func TestBlockMessageIds(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestBlockMessageIds_InvalidHeight(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-	_, err := delaymsg.BlockMessageIds(sdk.WrapSDKContext(ctx), &types.QueryBlockMessageIdsRequest{BlockHeight: -1})
-	require.ErrorContains(t, err, "invalid block height")
 }

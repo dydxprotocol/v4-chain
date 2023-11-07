@@ -30,6 +30,7 @@ import {
   Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
   defaultMarketCreate,
@@ -63,6 +64,10 @@ describe('syncHandler', () => {
   );
 
   describe('addHandler/process', () => {
+    beforeAll(async () => {
+      await createPostgresFunctions();
+    });
+
     beforeEach(async () => {
       await BlockTable.create({
         blockHeight: '1',
@@ -84,6 +89,10 @@ describe('syncHandler', () => {
 
     afterEach(async () => {
       await dbHelpers.clearData();
+    });
+
+    afterAll(async () => {
+      await dbHelpers.teardown();
     });
 
     it('successfully adds handler', async () => {

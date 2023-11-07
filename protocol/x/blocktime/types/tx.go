@@ -1,8 +1,9 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -23,12 +24,4 @@ func (msg *MsgUpdateDowntimeParams) ValidateBasic() error {
 		)
 	}
 	return msg.Params.Validate()
-}
-
-func (msg *MsgIsDelayedBlock) GetSigners() []sdk.AccAddress {
-	return []sdk.AccAddress{}
-}
-
-func (msg *MsgIsDelayedBlock) ValidateBasic() error {
-	return nil
 }

@@ -21,6 +21,7 @@ type ProcessPricesKeeper interface {
 
 	UpdateSmoothedPrices(
 		ctx sdk.Context,
+		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
 }
 
@@ -65,4 +66,5 @@ type ProcessBridgeKeeper interface {
 		ctx sdk.Context,
 	) (recognizedEventInfo bridgetypes.BridgeEventInfo)
 	GetBridgeEventFromServer(ctx sdk.Context, id uint32) (event bridgetypes.BridgeEvent, found bool)
+	GetSafetyParams(ctx sdk.Context) (safetyParams bridgetypes.SafetyParams)
 }

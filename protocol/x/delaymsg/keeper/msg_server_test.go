@@ -2,8 +2,9 @@ package keeper_test
 
 import (
 	"fmt"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"testing"
+
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -20,7 +21,7 @@ import (
 )
 
 var (
-	AcceptedAuthority = authtypes.NewModuleAddress(bridgemoduletypes.ModuleName).String()
+	AcceptedAuthority = bridgemoduletypes.ModuleAddress.String()
 	InvalidAuthority  = authtypes.NewModuleAddress("INVALID_AUTHORITY").String()
 	TestError         = fmt.Errorf("test error")
 	TestMsgId         = uint32(0)
@@ -101,7 +102,7 @@ func TestDelayMessage(t *testing.T) {
 		"Fails if DelayMessageByBlocks returns an error": {
 			setupMocks:  setupMockWithDelayMessageFailure,
 			msg:         validDelayMsg,
-			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err  = %w", TestError),
+			expectedErr: fmt.Errorf("DelayMessageByBlocks failed, err = %w", TestError),
 		},
 	}
 	for name, tc := range tests {

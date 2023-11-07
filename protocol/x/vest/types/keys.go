@@ -7,18 +7,12 @@ const (
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
-
-	// RouterKey defines the module's message routing key
-	RouterKey = ModuleName
-
-	// MemStoreKey defines the in-memory store key
-	MemStoreKey = "mem_" + ModuleName
 )
 
 // State
 const (
 	// VestEntryKeyPrefix is the prefix used when storing a VestEntry in the state.
-	VestEntryKeyPrefix = "vest_entry/"
+	VestEntryKeyPrefix = "Entry:"
 )
 
 // Module accounts

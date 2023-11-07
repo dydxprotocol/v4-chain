@@ -18,7 +18,7 @@ func TestNewSingleBlockRateLimiter_InvalidNumBlocks(t *testing.T) {
 }
 
 func TestSingleBlockRateLimiter(t *testing.T) {
-	tApp := testapp.NewTestAppBuilder().WithTesting(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	ctx := tApp.InitChain()
 	rl := rate_limit.NewSingleBlockRateLimiter[string]("test", types.MaxPerNBlocksRateLimit{
 		NumBlocks: 1,

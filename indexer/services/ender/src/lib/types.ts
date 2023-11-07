@@ -3,10 +3,10 @@ import {
   Liquidity,
   PerpetualPositionColumns,
   PerpetualPositionFromDatabase,
+  SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import {
   StatefulOrderEventV1,
-  IndexerTendermintBlock,
   IndexerTendermintEvent,
   CandleMessage,
   LiquidationOrderV1,
@@ -30,16 +30,9 @@ import {
   LiquidityTierUpsertEventV1,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
-import { DateTime } from 'luxon';
-
-export interface EventHandlerData {
-  block: IndexerTendermintBlock,
-  event: IndexerTendermintEvent,
-  timestamp: DateTime,
-  txId: number,
-}
 
 // Type sourced from protocol:
 // https://github.com/dydxprotocol/v4-chain/blob/main/protocol/indexer/events/constants.go
@@ -55,6 +48,7 @@ export enum DydxIndexerSubtypes {
   LIQUIDITY_TIER = 'liquidity_tier',
   UPDATE_PERPETUAL = 'update_perpetual',
   UPDATE_CLOB_PAIR = 'update_clob_pair',
+  DELEVERAGING = 'deleveraging',
 }
 
 // Generic interface used for creating the Handler objects
@@ -119,6 +113,11 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+} | {
+  type: DydxIndexerSubtypes.DELEVERAGING,
+  eventProto: DeleveragingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
 });
@@ -188,6 +187,12 @@ export interface SingleTradeMessage extends TradeMessage {
   eventIndex: number,
 }
 
+export interface AnnotatedSubaccountMessage extends SubaccountMessage {
+  orderId?: string,
+  isFill?: boolean,
+  subaccountMessageContents?: SubaccountMessageContents,
+}
+
 export interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
@@ -195,7 +200,7 @@ export interface VulcanMessage {
 
 export type ConsolidatedKafkaEvent = {
   topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-  message: SubaccountMessage,
+  message: AnnotatedSubaccountMessage,
 } | {
   topic: KafkaTopics.TO_WEBSOCKETS_TRADES,
   message: SingleTradeMessage,

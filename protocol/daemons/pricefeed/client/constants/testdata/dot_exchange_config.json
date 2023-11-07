@@ -6,12 +6,13 @@
       "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "CoinbasePro",
-      "ticker": "DOT-USD"
+      "exchangeName": "Bybit",
+      "ticker": "DOTUSDT",
+      "adjustByMarket": "USDT-USD"
     },
     {
-      "exchangeName": "CryptoCom",
-      "ticker": "DOT_USD"
+      "exchangeName": "CoinbasePro",
+      "ticker": "DOT-USD"
     },
     {
       "exchangeName": "Gate",
@@ -25,6 +26,11 @@
     {
       "exchangeName": "Kucoin",
       "ticker": "DOT-USDT",
+      "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "Mexc",
+      "ticker": "DOT_USDT",
       "adjustByMarket": "USDT-USD"
     },
     {

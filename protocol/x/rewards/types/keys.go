@@ -8,20 +8,17 @@ const (
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
 
-	// RouterKey defines the module's message routing key
-	RouterKey = ModuleName
-
 	// TransientStoreKey defines the primary module transient store key
-	TransientStoreKey = "transient_" + ModuleName
+	TransientStoreKey = "tmp_" + ModuleName
 )
 
 // State
 const (
 	// RewardShareKeyPrefix is the prefix to retrieve reward shares for all addresses.
-	RewardShareKeyPrefix = "reward_shares/"
+	RewardShareKeyPrefix = "Shares:"
 
 	// ParamsKey is the key for the params
-	ParamsKey = "params"
+	ParamsKey = "Params"
 )
 
 // Module accounts

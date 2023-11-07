@@ -8,25 +8,22 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
-// newBlockIdStore creates a new prefix store for BlockMessageIds.
+// newBlockMessageIdsStore creates a new prefix store for BlockMessageIds.
 func (k Keeper) newBlockMessageIdsStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.BlockMessageIdsPrefix))
 }
 
-// GetBlockMessageIds gets the ids of delayed messages to execute at a given block.
+// GetBlockMessageIds gets the ids of delayed messages to execute at a given block height.
+// `found` is false is there is no delayed message for the given block height.
 func (k Keeper) GetBlockMessageIds(
 	ctx sdk.Context,
-	blockHeight int64,
+	blockHeight uint32,
 ) (
 	blockMessageIds types.BlockMessageIds,
 	found bool,
 ) {
-	if blockHeight < 0 {
-		return types.BlockMessageIds{}, false
-	}
-
 	store := k.newBlockMessageIdsStore(ctx)
-	b := store.Get(lib.Int64ToBytes(blockHeight))
+	b := store.Get(lib.Uint32ToKey(blockHeight))
 
 	if b == nil {
 		return types.BlockMessageIds{}, false
@@ -37,17 +34,17 @@ func (k Keeper) GetBlockMessageIds(
 	return blockMessageIds, true
 }
 
-// addMessageIdToBlock adds a message id to the list of message ids for a block. This method should only
-// be called from DelayMessageByBlocks whenever a new message is added. When this restriction is followed and the id is
-// only called during DelayedMessage creation, the message ids for a block will always be in ascending order.
+// addMessageIdToBlock adds a message id to the list of message ids for a block height. This method should only
+// be called from DelayMessageByBlocks whenever a new message is added. When this restriction is followed, the
+// message ids for a block height will always be in ascending order.
 func (k Keeper) addMessageIdToBlock(
 	ctx sdk.Context,
 	id uint32,
-	blockHeight int64,
+	blockHeight uint32,
 ) {
 	store := k.newBlockMessageIdsStore(ctx)
 	var blockMessageIds types.BlockMessageIds
-	key := lib.Int64ToBytes(blockHeight)
+	key := lib.Uint32ToKey(blockHeight)
 	if b := store.Get(key); b != nil {
 		k.cdc.MustUnmarshal(b, &blockMessageIds)
 		blockMessageIds.Ids = append(blockMessageIds.Ids, id)
@@ -66,7 +63,7 @@ func (k Keeper) addMessageIdToBlock(
 func (k Keeper) deleteMessageIdFromBlock(
 	ctx sdk.Context,
 	id uint32,
-	blockHeight int64,
+	blockHeight uint32,
 ) (
 	err error,
 ) {
@@ -91,11 +88,11 @@ func (k Keeper) deleteMessageIdFromBlock(
 
 		// If the remaining list of ids is empty, go ahead and delete the BlockMessageIds from the store.
 		if len(blockMessageIds.Ids) == 0 {
-			k.newBlockMessageIdsStore(ctx).Delete(lib.Int64ToBytes(blockHeight))
+			k.newBlockMessageIdsStore(ctx).Delete(lib.Uint32ToKey(blockHeight))
 		} else {
 			// Otherwise, update the BlockMessageIds to have the id of this delayed message removed.
 			k.newBlockMessageIdsStore(ctx).Set(
-				lib.Int64ToBytes(blockHeight),
+				lib.Uint32ToKey(blockHeight),
 				k.cdc.MustMarshal(&blockMessageIds),
 			)
 		}

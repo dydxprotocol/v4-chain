@@ -1,5 +1,5 @@
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
-import { OrderbookMessage, SubaccountMessage } from '@dydxprotocol-indexer/v4-protos';
+import { OffChainUpdateV1, OrderbookMessage, SubaccountMessage } from '@dydxprotocol-indexer/v4-protos';
 import { ProducerRecord } from 'kafkajs';
 
 export function expectWebsocketSubaccountMessage(
@@ -28,4 +28,21 @@ export function expectWebsocketOrderbookMessage(
     orderbookMessageValueBinary,
   );
   expect(orderbookMessage).toEqual(expectedOrderbookMessage);
+}
+
+export function expectOffchainUpdateMessage(
+  offchainUpdateProducerRecord: ProducerRecord,
+  expectedKey: Buffer,
+  expectedOffchainUpdate: OffChainUpdateV1,
+): void {
+  expect(offchainUpdateProducerRecord.topic).toEqual(KafkaTopics.TO_VULCAN);
+  const offchainUpdateMessageValueBinary: Uint8Array = new Uint8Array(
+    offchainUpdateProducerRecord.messages[0].value as Buffer,
+  );
+  const key: Buffer = offchainUpdateProducerRecord.messages[0].key as Buffer;
+  const offchainUpdate: OffChainUpdateV1 = OffChainUpdateV1.decode(
+    offchainUpdateMessageValueBinary,
+  );
+  expect(offchainUpdate).toEqual(expectedOffchainUpdate);
+  expect(key).toEqual(expectedKey);
 }
