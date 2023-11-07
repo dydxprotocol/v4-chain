@@ -5,6 +5,13 @@ import { getAsync, setexAsync } from '../helpers/redis';
 export const STATE_FILLED_QUANTUMS_CACHE_KEY_PREFIX: string = 'v4/state_filled_quantums/';
 export const STATE_FILLED_QUANTUMS_TTL_SECONDS: number = 300; // 5 minutes
 
+/**
+ * Updates the state-filled quantums for an order id. This is the total filled quantums of the order
+ * in the state of the network.
+ * @param orderId 
+ * @param filledQuantums 
+ * @param client 
+ */
 export async function updateStateFilledQuantums(
   orderId: string,
   filledQuantums: string,
@@ -17,6 +24,13 @@ export async function updateStateFilledQuantums(
   }, client);
 }
 
+/**
+ * Gets the state-filled quantums for an order id. This is the total filled quantums of the order
+ * in the state of the network.
+ * @param orderId 
+ * @param client 
+ * @returns 
+ */
 export async function getStateFilledQuantums(
   orderId: string,
   client: RedisClient,
