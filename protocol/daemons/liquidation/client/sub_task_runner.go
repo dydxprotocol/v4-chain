@@ -18,6 +18,7 @@ import (
 // potentially liquidatable subaccount ids. This interface is used to mock the daemon logic in tests.
 type SubTaskRunner interface {
 	RunLiquidationDaemonTaskLoop(
+		client *Client,
 		ctx context.Context,
 		liqFlags flags.LiquidationFlags,
 		subaccountQueryClient satypes.QueryClient,
@@ -34,6 +35,7 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // RunLiquidationDaemonTaskLoop contains the logic to communicate with various gRPC services
 // to find the liquidatable subaccount ids.
 func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
+	client *Client,
 	ctx context.Context,
 	liqFlags flags.LiquidationFlags,
 	subaccountQueryClient satypes.QueryClient,
@@ -49,6 +51,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 	// 1. Fetch all subaccounts from query service.
 	subaccounts, err := GetAllSubaccounts(
+		client,
 		ctx,
 		subaccountQueryClient,
 		liqFlags.SubaccountPageLimit,
@@ -59,6 +62,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 	// 2. Check collateralization statuses of subaccounts with at least one open position.
 	liquidatableSubaccountIds, err := GetLiquidatableSubaccountIds(
+		client,
 		ctx,
 		clobQueryClient,
 		liqFlags,
@@ -84,6 +88,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 // CheckCollateralizationForSubaccounts queries a gRPC server using `AreSubaccountsLiquidatable`
 // and returns a list of collateralization statuses for the given list of subaccount ids.
 func CheckCollateralizationForSubaccounts(
+	daemon *Client,
 	ctx context.Context,
 	client clobtypes.QueryClient,
 	subaccountIds []satypes.SubaccountId,
@@ -105,6 +110,10 @@ func CheckCollateralizationForSubaccounts(
 	if err != nil {
 		return nil, err
 	}
+
+	// For the purposes of the health check, log the successful request as an indicator of daemon health.
+	daemon.ReportSuccess()
+
 	return response.Results, nil
 }
 
@@ -178,6 +187,7 @@ func getSubaccountsFromKey(
 // GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
 // their balances and open positions.
 func GetAllSubaccounts(
+	daemon *Client,
 	ctx context.Context,
 	client satypes.QueryClient,
 	limit uint64,
@@ -201,6 +211,9 @@ func GetAllSubaccounts(
 			return nil, err
 		}
 
+		// For the purposes of the health check, log the successful request as an indicator of daemon health.
+		daemon.ReportSuccess()
+
 		subaccounts = append(subaccounts, subaccountsFromKey...)
 		nextKey = next
 
@@ -222,6 +235,7 @@ func GetAllSubaccounts(
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
 func GetLiquidatableSubaccountIds(
+	daemon *Client,
 	ctx context.Context,
 	client clobtypes.QueryClient,
 	liqFlags flags.LiquidationFlags,
@@ -258,6 +272,7 @@ func GetLiquidatableSubaccountIds(
 		end := lib.Min(start+int(liqFlags.RequestChunkSize), len(subaccountsToCheck))
 
 		results, err := CheckCollateralizationForSubaccounts(
+			daemon,
 			ctx,
 			client,
 			subaccountsToCheck[start:end],

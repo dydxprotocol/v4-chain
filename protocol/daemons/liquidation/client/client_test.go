@@ -226,7 +226,10 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 			s := client.SubTaskRunnerImpl{}
 
+			c := client.NewClient(log.NewNopLogger())
+
 			err := s.RunLiquidationDaemonTaskLoop(
+				c,
 				grpc.Ctx,
 				flags.GetDefaultDaemonFlags().Liquidation,
 				queryClientMock,
@@ -258,6 +261,7 @@ func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
 // RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
 // call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
 func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
+	_ *client.Client,
 	_ context.Context,
 	_ flags.LiquidationFlags,
 	_ satypes.QueryClient,
@@ -268,7 +272,7 @@ func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
 	return f.err
 }
 
-func TestHealthCheck_Mixed(t *testing.T) {
+func TestTopLevelHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		// taskLoopResponses is a list of errors returned by the task loop. If the error is nil, the task loop is
 		// considered to have succeeded.

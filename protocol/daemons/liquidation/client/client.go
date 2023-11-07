@@ -35,6 +35,7 @@ func NewClient(logger log.Logger) *Client {
 			&timelib.TimeProviderImpl{},
 			logger,
 		),
+		logger: logger,
 	}
 }
 
@@ -117,6 +118,7 @@ func StartLiquidationsDaemonTaskLoop(
 		select {
 		case <-ticker.C:
 			if err := s.RunLiquidationDaemonTaskLoop(
+				client,
 				ctx,
 				flags.Liquidation,
 				subaccountQueryClient,
