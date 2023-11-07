@@ -15,6 +15,7 @@ import {
   SubaccountTable,
   USDC_ASSET_ID,
   OrderStatus, FillType,
+} from '@dydxprotocol-indexer/postgres';
 import { CanceledOrderStatus, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
