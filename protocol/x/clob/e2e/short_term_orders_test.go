@@ -1352,7 +1352,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: false,
 			},
 			expectedOrderFillAmounts: map[clobtypes.OrderId]uint64{
-				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        5000, // full size of scaled orders
+				constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20.OrderId:        5000, // full size of smaller order
 				constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC.OrderId: 5000,
 			},
 		},
