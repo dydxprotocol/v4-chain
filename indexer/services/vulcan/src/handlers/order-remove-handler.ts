@@ -13,6 +13,7 @@ import {
   SubaccountTable,
   apiTranslations,
   TimeInForce,
+  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -276,16 +277,23 @@ export class OrderRemoveHandler extends Handler {
 
     // If the remaining amount of the order in state is <= 0, the order is filled and
     // does not need to have it's status updated
+    let canceledOrder: OrderFromDatabase | undefined;
     if (stateRemainingQuantums.gt(0)) {
-      await runFuncWithTimingStat(
+      canceledOrder = await runFuncWithTimingStat(
         this.cancelOrderInPostgres(orderRemove),
         this.generateTimingStatsOptions('cancel_order_in_postgres'),
+      );
+    } else {
+      canceledOrder = await runFuncWithTimingStat(
+        OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
+        this.generateTimingStatsOptions('find_order'),
       );
     }
 
     const subaccountMessage: Message = {
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
         removeOrderResult,
+        canceledOrder,
         orderRemove,
         perpetualMarket,
       ),
@@ -505,6 +513,7 @@ export class OrderRemoveHandler extends Handler {
 
   protected createSubaccountWebsocketMessageFromRemoveOrderResult(
     removeOrderResult: RemoveOrderResult,
+    canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     perpetualMarket: PerpetualMarketFromDatabase,
   ): Buffer {
@@ -512,6 +521,9 @@ export class OrderRemoveHandler extends Handler {
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
       redisOrder.order!.timeInForce,
     );
+    const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
+    const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
+    const updatedAtHeight: string | undefined = canceledOrder?.updatedAtHeight;
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -541,6 +553,9 @@ export class OrderRemoveHandler extends Handler {
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
           removalReason: OrderRemovalReason[orderRemove.reason],
+          ...(createdAtHeight && { createdAtHeight }),
+          ...(updatedAt && { updatedAt }),
+          ...(updatedAtHeight && { updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
@@ -584,6 +599,9 @@ export class OrderRemoveHandler extends Handler {
           goodTilBlockTime: order.goodTilBlockTime ?? undefined,
           ticker: orderTicker,
           removalReason: OrderRemovalReason[orderRemove.reason],
+          createdAtHeight: order.createdAtHeight,
+          updatedAt: order.updatedAt,
+          updatedAtHeight: order.updatedAtHeight,
           clientMetadata: order.clientMetadata,
           triggerPrice: order.triggerPrice ?? undefined,
         },
