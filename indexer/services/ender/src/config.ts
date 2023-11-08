@@ -50,6 +50,9 @@ export const configSchema = {
   USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
