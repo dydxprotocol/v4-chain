@@ -126,7 +126,7 @@ func (h *timeBoundedHealthCheckable) HealthCheck() error {
 		)
 	}
 
-	// If the last successful update was more than 5 minutes ago, report the specific error.
+	// If the last successful update was more than 5 minutes ago, log the specific error.
 	if h.timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaxAcceptableUpdateDelay {
 		h.logger.Error(
 			fmt.Sprintf(

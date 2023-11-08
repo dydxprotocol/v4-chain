@@ -84,7 +84,7 @@ func (c *Client) Start(
 	liquidationServiceClient := api.NewLiquidationServiceClient(daemonConn)
 
 	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
-	done := make(chan bool)
+	stop := make(chan bool)
 
 	s := &SubTaskRunnerImpl{}
 	StartLiquidationsDaemonTaskLoop(
@@ -93,7 +93,7 @@ func (c *Client) Start(
 		s,
 		flags,
 		ticker,
-		done,
+		stop,
 		subaccountQueryClient,
 		clobQueryClient,
 		liquidationServiceClient,
@@ -109,7 +109,7 @@ func StartLiquidationsDaemonTaskLoop(
 	s SubTaskRunner,
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
-	done <-chan bool,
+	stop <-chan bool,
 	subaccountQueryClient satypes.QueryClient,
 	clobQueryClient clobtypes.QueryClient,
 	liquidationServiceClient api.LiquidationServiceClient,
@@ -131,7 +131,7 @@ func StartLiquidationsDaemonTaskLoop(
 			} else {
 				client.ReportSuccess()
 			}
-		case <-done:
+		case <-stop:
 			return
 		}
 	}
