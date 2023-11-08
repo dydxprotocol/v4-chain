@@ -62,7 +62,7 @@ import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -1078,6 +1078,7 @@ function expectWebsocketMessagesSent(
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
       redisOrder.order!.timeInForce,
     );
+    const isStateful: boolean = isStatefulOrder(redisOrder.order!.orderId!.orderFlags);
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -1104,7 +1105,9 @@ function expectWebsocketMessagesSent(
             ?.toString(),
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
-          ...(dbOrder.createdAtHeight && { createdAtHeight: dbOrder.createdAtHeight }),
+          ...(isStateful && { createdAtHeight: dbOrder.createdAtHeight }),
+          ...(isStateful && { updatedAt: dbOrder.updatedAt }),
+          ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
