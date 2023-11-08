@@ -142,7 +142,7 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 		"Success, premium is zeroed for initializing clob pair": {
 			perpetualId: 0,
 			args: testMemClobMethodArgs{
-				clobPair: constants.ClobPair_Btc_Init,
+				clobPair: constants.ClobPair_Btc_Initializing,
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {},
 		},

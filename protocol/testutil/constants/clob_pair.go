@@ -91,7 +91,7 @@ var (
 		QuantumConversionExponent: -8,
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
-	ClobPair_Btc_Init = clobtypes.ClobPair{
+	ClobPair_Btc_Initializing = clobtypes.ClobPair{
 		Id: 0,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{

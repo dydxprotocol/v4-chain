@@ -252,6 +252,7 @@ func (k Keeper) PersistOrderRemovalToState(
 	ctx sdk.Context,
 	orderRemoval types.OrderRemoval,
 ) error {
+	lib.AssertDeliverTxMode(ctx)
 	orderIdToRemove := orderRemoval.GetOrderId()
 	orderIdToRemove.MustBeStatefulOrder()
 
@@ -356,16 +357,13 @@ func (k Keeper) PersistOrderRemovalToState(
 			)
 		}
 	case types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED:
-		// The order should be fully filled.
-		remainingAmount, hasRemainingAmount := k.MemClob.GetOrderRemainingAmount(ctx, orderToRemove)
-		if hasRemainingAmount {
-			return errorsmod.Wrapf(
-				types.ErrOrderHasRemainingSize,
-				"Fill amount (%+v) and total size (%+v).",
-				remainingAmount,
-				orderToRemove.GetBaseQuantums(),
-			)
-		}
+		// Order removal reason fully filled is only used within indexer services.
+		// Fully filled orders are removed from the protocol after persisting the operations queue
+		// to state, instead of through the operations queue.
+		return errorsmod.Wrapf(
+			types.ErrInvalidOrderRemovalReason,
+			"Order removal reason fully filled should not be part of the operations queue.",
+		)
 	// TODO - uncomment when reduce only orders are enabled. Order Removals of this type will fail ValidateBasic.
 	// case types.OrderRemoval_REMOVAL_REASON_INVALID_REDUCE_ONLY:
 	// 	if !orderToRemove.IsReduceOnly() {

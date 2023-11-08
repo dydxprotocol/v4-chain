@@ -180,7 +180,7 @@ const (
 	Status                                       = "status"
 	SubaccountPendingMatches                     = "subaccount_pending_matches"
 	TimeInForce                                  = "time_in_force"
-	TotalOrdersClobPair                          = "total_orders_in_clob"
+	TotalOrdersInClob                            = "total_orders_in_clob"
 	TotalQuoteQuantums                           = "total_quote_quantums"
 	Unfilled                                     = "unfilled"
 	UnfilledLiquidationOrders                    = "unfilled_liquidation_orders"
