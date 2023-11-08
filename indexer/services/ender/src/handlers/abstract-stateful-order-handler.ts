@@ -1,11 +1,29 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  OrderFromDatabase, OrderStatus, OrderTable, OrderUpdateObject, OrderCreateObject, SubaccountTable,
-  OrderSide, OrderType, protocolTranslations,
+  OrderFromDatabase,
+  OrderStatus,
+  OrderTable,
+  OrderUpdateObject,
+  OrderCreateObject,
+  SubaccountTable,
+  OrderSide,
+  OrderType,
+  protocolTranslations,
   PerpetualMarketFromDatabase,
+  storeHelpers,
+  OrderModel,
+  PerpetualMarketModel,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
-import { IndexerOrderId, IndexerOrder, IndexerOrder_Side } from '@dydxprotocol-indexer/v4-protos';
+import SubaccountModel from '@dydxprotocol-indexer/postgres/build/src/models/subaccount-model';
+import {
+  IndexerOrderId,
+  IndexerOrder,
+  IndexerOrder_Side,
+  StatefulOrderEventV1,
+} from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
+import * as pg from 'pg';
 
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { getPrice, getSize } from '../lib/helper';
@@ -18,6 +36,37 @@ export abstract class AbstractStatefulOrderHandler<T> extends Handler<T> {
       // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
       // processed in parallel
       `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderId}`,
+    ];
+  }
+
+  protected async handleEventViaSqlFunction():
+  Promise<[OrderFromDatabase,
+    PerpetualMarketFromDatabase,
+    SubaccountFromDatabase | undefined]> {
+    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
+    const result: pg.QueryResult = await storeHelpers.rawQuery(
+      `SELECT dydx_stateful_order_handler(
+        ${this.block.height},
+        '${this.block.time?.toISOString()}',
+        '${JSON.stringify(StatefulOrderEventV1.decode(eventDataBinary))}'
+      ) AS result;`,
+      { txId: this.txId },
+    ).catch((error: Error) => {
+      logger.error({
+        at: 'AbstractStatefulOrderHandler#handleEventViaSqlFunction',
+        message: 'Failed to handle StatefulOrderEventV1',
+        error,
+      });
+      throw error;
+    });
+
+    return [
+      OrderModel.fromJson(result.rows[0].result.order) as OrderFromDatabase,
+      PerpetualMarketModel.fromJson(
+        result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase,
+      result.rows[0].result.subaccount
+        ? SubaccountModel.fromJson(result.rows[0].result.subaccount) as SubaccountFromDatabase
+        : undefined,
     ];
   }
 

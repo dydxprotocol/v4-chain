@@ -22,13 +22,11 @@ import {
  *
  * @param order
  */
-export async function convertToIndexerOrder(
+export function convertToIndexerOrderWithSubaccount(
   order: OrderFromDatabase,
   perpetualMarket: PerpetualMarketFromDatabase,
-): Promise<IndexerOrder> {
-  const subaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
-    order.subaccountId,
-  );
+  subaccount: SubaccountFromDatabase,
+): IndexerOrder {
   if (!OrderTable.isLongTermOrConditionalOrder(order.orderFlags)) {
     logger.error({
       at: 'protocol-translations#convertToIndexerOrder',
@@ -76,4 +74,30 @@ export async function convertToIndexerOrder(
   };
 
   return indexerOrder;
+}
+
+/**
+ * Converts an order from the database to an IndexerOrder proto.
+ * This is used to resend open stateful orders to Vulcan during Indexer fast sync
+ * to uncross the orderbook.
+ *
+ * @param order
+ */
+export async function convertToIndexerOrder(
+  order: OrderFromDatabase,
+  perpetualMarket: PerpetualMarketFromDatabase,
+): Promise<IndexerOrder> {
+  const subaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
+    order.subaccountId,
+  );
+
+  if (!subaccount === undefined) {
+    logger.error({
+      at: 'protocol-translations#convertToIndexerOrder',
+      message: 'Subaccount for order not found',
+      order,
+    });
+    throw new Error(`Subaccount for order not found: ${order.subaccountId}`);
+  }
+  return convertToIndexerOrderWithSubaccount(order, perpetualMarket, subaccount!);
 }
