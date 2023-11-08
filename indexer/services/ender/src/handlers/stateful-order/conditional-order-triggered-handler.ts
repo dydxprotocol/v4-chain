@@ -6,6 +6,7 @@ import {
   PerpetualMarketFromDatabase,
   orderTranslations,
   perpetualMarketRefresher,
+  SubaccountFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -16,6 +17,7 @@ import {
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -32,6 +34,24 @@ export class ConditionalOrderTriggeredHandler extends
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+    if (config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnex();
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    const result:
+    [OrderFromDatabase,
+      PerpetualMarketFromDatabase,
+      SubaccountFromDatabase | undefined] = await this.handleEventViaSqlFunction();
+
+    const order: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
+      result[0], result[1], result[2]!);
+    return this.createKafkaEvents(order);
+  }
+
+  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     const orderIdProto: IndexerOrderId = this.event.conditionalOrderTriggered!.triggeredOrderId!;
     const orderFromDatabase: OrderFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
       this.updateOrderStatus(orderIdProto, OrderStatus.OPEN),
@@ -56,6 +76,10 @@ export class ConditionalOrderTriggeredHandler extends
       orderFromDatabase,
       perpetualMarket,
     );
+    return this.createKafkaEvents(order);
+  }
+
+  private createKafkaEvents(order: IndexerOrder): ConsolidatedKafkaEvent[] {
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderPlace: {
         order,
@@ -65,7 +89,7 @@ export class ConditionalOrderTriggeredHandler extends
 
     return [
       this.generateConsolidatedVulcanKafkaEvent(
-        getOrderIdHash(orderIdProto),
+        getOrderIdHash(order.orderId!),
         offChainUpdate,
       ),
     ];

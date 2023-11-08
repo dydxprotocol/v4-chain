@@ -7,7 +7,7 @@ import {
   IndexerTendermintEvent_BlockEvent,
   AssetCreateEventV1,
   SubaccountUpdateEventV1,
-  MarketEventV1,
+  MarketEventV1, IndexerOrder_ConditionType,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
@@ -173,6 +173,16 @@ describe('SQL Function Tests', () => {
   ])('dydx_from_protocol_time_in_force (%s)', async (_name: string, value: IndexerOrder_TimeInForce) => {
     const result = await getSingleRawQueryResultRow(`SELECT dydx_from_protocol_time_in_force('${value}') AS result`);
     expect(result).toEqual(protocolTranslations.protocolOrderTIFToTIF(value));
+  });
+
+  it.each([
+    ['LIMIT', IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+    ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
+    ['STOP_LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
+    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type('${value}') AS result`);
+    expect(result).toEqual(protocolTranslations.protocolConditionTypeToOrderType(value));
   });
 
   it.each([

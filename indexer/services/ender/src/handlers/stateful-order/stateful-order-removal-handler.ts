@@ -10,6 +10,7 @@ import {
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -23,13 +24,31 @@ export class StatefulOrderRemovalHandler extends
     return this.getParallelizationIdsFromOrderId(orderId);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+    if (config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnex();
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    const orderIdProto: IndexerOrderId = this.event.orderRemoval!.removedOrderId!;
+    await this.handleEventViaSqlFunction();
+    return this.createKafkaEvents(orderIdProto);
+  }
+
+  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     const orderIdProto: IndexerOrderId = this.event.orderRemoval!.removedOrderId!;
     await this.runFuncWithTimingStatAndErrorLogging(
       this.updateOrderStatus(orderIdProto, OrderStatus.CANCELED),
       this.generateTimingStatsOptions('cancel_order'),
     );
 
+    return this.createKafkaEvents(orderIdProto);
+  }
+
+  private createKafkaEvents(orderIdProto: IndexerOrderId): ConsolidatedKafkaEvent[] {
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderRemove: {
         removedOrderId: orderIdProto,
