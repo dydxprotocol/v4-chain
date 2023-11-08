@@ -44,7 +44,8 @@ import { DateTime } from 'luxon';
 import {
   generateFillSubaccountMessage,
   generateOrderSubaccountMessage,
-  generatePerpetualPositionsContents, isDeleveraging,
+  generatePerpetualPositionsContents,
+  isDeleveraging,
   isLiquidation,
 } from '../../helpers/kafka-helper';
 import {

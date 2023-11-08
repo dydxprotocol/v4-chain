@@ -38,7 +38,6 @@ const scripts: string[] = [
   'dydx_event_id_from_parts.sql',
   'dydx_event_to_transaction_index.sql',
   'dydx_from_jsonlib_long.sql',
-  'dydx_from_protocol_is_buy.sql',
   'dydx_from_protocol_order_side.sql',
   'dydx_from_protocol_time_in_force.sql',
   'dydx_from_serializable_int.sql',

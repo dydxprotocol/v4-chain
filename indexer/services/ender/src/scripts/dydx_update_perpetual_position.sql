@@ -1,3 +1,12 @@
+/**
+  Parameters:
+    - subaccount_uuid: The subaccount uuid of the updated perpetual position.
+    - perpetual_id: The perpetual id of the updated perpetual position.
+    - side: The side of the fill.
+    - size: The size of the fill.
+    - price: The price of the fill.
+  Returns: the updated perpetual position.
+*/
 CREATE OR REPLACE FUNCTION dydx_update_perpetual_position(
     subaccount_uuid uuid,
     perpetual_id bigint,
@@ -53,7 +62,7 @@ BEGIN
         "entryPrice" = entry_price,
         "sumClose" = sum_close,
         "exitPrice" = exit_price
-    WHERE "id" = perpetual_position_record.id;
+    WHERE "id" = perpetual_position_record."id";
 
     -- Return the updated perpetual position record
     RETURN perpetual_position_record;

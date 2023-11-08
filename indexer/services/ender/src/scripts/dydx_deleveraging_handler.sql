@@ -9,8 +9,8 @@
         account the block_event (https://github.com/dydxprotocol/indexer/blob/cc70982/services/ender/src/lib/helper.ts#L33)
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
   Returns: JSON object containing fields:
-    - liquidated_fill: The updated liquidated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
-    - offsetting_fill: The updated liquidated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
+    - liquidated_fill: The created liquidated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
+    - offsetting_fill: The created offsetting fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
     - perpetual_market: The perpetual market for the deleveraging in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
     - liquidated_perpetual_position: The updated liquidated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
     - offsetting_perpetual_position: The updated offsetting perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
@@ -58,7 +58,7 @@ BEGIN
 
     liquidated_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'liquidated');
     offsetting_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'offsetting');
-    offsetting_side = dydx_from_protocol_is_buy((event_data->'isBuy')::bool);
+    offsetting_side = CASE WHEN (event_data->'isBuy')::bool THEN 'BUY' ELSE 'SELL' END;
     liquidated_side = CASE WHEN offsetting_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
     clob_pair_id = perpetual_market_record."clobPairId";
 
@@ -105,17 +105,17 @@ BEGIN
 
     /* Upsert the perpetual_position records for this deleveraging event. */
     liquidated_perpetual_position_record = dydx_update_perpetual_position(
-    liquidated_subaccount_uuid,
+        liquidated_subaccount_uuid,
         perpetual_id,
         liquidated_side,
         size,
         price);
     offsetting_perpetual_position_record = dydx_update_perpetual_position(
         offsetting_subaccount_uuid,
-            perpetual_id,
-            offsetting_side,
-            size,
-            price);
+        perpetual_id,
+        offsetting_side,
+        size,
+        price);
 
 
     RETURN jsonb_build_object(

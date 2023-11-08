@@ -120,7 +120,7 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'deleveragingHandler#handleViaSqlFunction',
+        at: 'DeleveragingHandler#handleViaSqlFunction',
         message: 'Failed to handle DeleveragingEventV1',
         error,
       });
