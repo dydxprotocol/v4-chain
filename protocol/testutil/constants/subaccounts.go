@@ -517,6 +517,21 @@ var (
 			},
 		},
 	}
+	Dave_Num1_1BTC_Long_49501USD_Short = satypes.Subaccount{
+		Id: &Dave_Num1,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(-49_501_000_000), // -$49,501
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId: 0,
+				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+			},
+		},
+	}
 	Dave_Num1_1ETH_Long_50000USD = satypes.Subaccount{
 		Id: &Dave_Num1,
 		AssetPositions: []*satypes.AssetPosition{

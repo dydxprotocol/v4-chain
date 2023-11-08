@@ -39,7 +39,7 @@ func TestLiquidationConfig(t *testing.T) {
 		// Expectations.
 		expectedSubaccounts []satypes.Subaccount
 	}{
-		`Liquidation respects position block limit - MinPositionNotionalLiquidated`: {
+		`Liquidating short respects position block limit - MinPositionNotionalLiquidated`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -89,7 +89,57 @@ func TestLiquidationConfig(t *testing.T) {
 				},
 			},
 		},
-		`Liquidation respects position block limit - MaxPositionPortionLiquidatedPpm`: {
+		`Liquidatiing long respects position block limit - MinPositionNotionalLiquidated`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_49501USD_Short,
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10, // Order at $50,000
+			},
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0},
+			liquidationConfig: clobtypes.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				PositionBlockLimits: clobtypes.PositionBlockLimits{
+					// 1% of $50,000 is $500 so $500 worth of BTC should get liquidated.
+					// However, this is smaller than the minimum position notional liquidated of $100,000,
+					// so the entire position should get liquidated.
+					MinPositionNotionalLiquidated:   100_000_000_000, // $100,000
+					MaxPositionPortionLiquidatedPpm: 10_000,          // 1%
+				},
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+			},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(-49_501_000_000 + 50_000_000_000 - 250_000_000),
+						},
+					},
+				},
+			},
+		},
+		`Liquidatiing short respects position block limit - MaxPositionPortionLiquidatedPpm`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -151,7 +201,69 @@ func TestLiquidationConfig(t *testing.T) {
 				},
 			},
 		},
-		`Liquidation respects subaccount block limit - MaxNotionalLiquidated`: {
+		`Liquidatiing long respects position block limit - MaxPositionPortionLiquidatedPpm`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_49501USD_Short,
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10, // Order at $50,000
+			},
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0},
+			liquidationConfig: clobtypes.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				PositionBlockLimits: clobtypes.PositionBlockLimits{
+					// 10% of $50,000 is $5,000 so $5,000 worth of BTC should get liquidated.
+					MinPositionNotionalLiquidated:   100_000_000, // $1,000
+					MaxPositionPortionLiquidatedPpm: 100_000,     // 10%
+				},
+				SubaccountBlockLimits: constants.SubaccountBlockLimits_Default,
+			},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 5_000_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(-49_501_000_000 + 5_000_000_000 - 25_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
+		`Liquidating short respects subaccount block limit - MaxNotionalLiquidated`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
@@ -213,7 +325,69 @@ func TestLiquidationConfig(t *testing.T) {
 				},
 			},
 		},
-		`Liquidation respects subaccount block limit - MaxQuantumsInsuranceLost`: {
+		`Liquidating long respects subaccount block limit - MaxNotionalLiquidated`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_49501USD_Short,
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				&constants.Order_Carl_Num0_Id2_Clob0_Buy1BTC_Price50500_GTB10, // Order at $50,500
+			},
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0},
+			liquidationConfig: clobtypes.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Default,
+				PositionBlockLimits:  constants.PositionBlockLimits_Default,
+				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
+					// Subaccount may only liquidate $5,000 per block.
+					MaxNotionalLiquidated:    5_000_000_000,
+					MaxQuantumsInsuranceLost: 100_000_000_000_000,
+				},
+			},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 5_050_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(-90_000_000), // -0.9 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(-49_501_000_000 + 5_050_000_000 - 25_250_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
+		`Liquidating short respects subaccount block limit - MaxQuantumsInsuranceLost`: {
 			subaccounts: []satypes.Subaccount{
 				// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -279,6 +453,77 @@ func TestLiquidationConfig(t *testing.T) {
 						{
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(-10_000_000), // -0.1 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
+		`Liquidating long respects subaccount block limit - MaxQuantumsInsuranceLost`: {
+			subaccounts: []satypes.Subaccount{
+				// Carl_Num0 is irrelevant to the test, but is used to seed the insurance fund.
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_49501USD_Short,
+				constants.Dave_Num1_1BTC_Long_49501USD_Short,
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				// This order is irrelevant to the test, but is used to seed the insurance fund.
+				&constants.Order_Carl_Num0_Id2_Clob0_Buy1BTC_Price50500_GTB10, // Order at $50,500
+
+				// Bankruptcy price is $49,501, and closing at $49,500 would require $1 from the insurance fund.
+				// First order would transfer $0.1 from the insurance fund and would succeed.
+				// Second order would require $0.9 from the insurance fund and would fail.
+				&constants.Order_Carl_Num0_Id1_Clob0_Buy01BTC_Price49500_GTB10, // Order at $49,500
+				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,  // Order at $49,500
+			},
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0, constants.Dave_Num1},
+			liquidationConfig: clobtypes.LiquidationsConfig{
+				MaxLiquidationFeePpm: 5_000,
+				FillablePriceConfig:  constants.FillablePriceConfig_Max_Smmr,
+				PositionBlockLimits:  constants.PositionBlockLimits_Default,
+				SubaccountBlockLimits: clobtypes.SubaccountBlockLimits{
+					// Subaccount may only lose $0.5 per block.
+					MaxNotionalLiquidated:    100_000_000_000_000,
+					MaxQuantumsInsuranceLost: 500_000,
+				},
+			},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 50_500_000_000 - 4_950_000_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(-49_501_000_000 + 4_950_000_000 + 100_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(90_000_000), // 0.9 BTC
 							FundingIndex: dtypes.NewInt(0),
 						},
 					},
