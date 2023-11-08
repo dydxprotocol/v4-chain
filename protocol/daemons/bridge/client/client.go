@@ -28,7 +28,7 @@ type Client struct {
 }
 
 func NewClient(logger log.Logger) *Client {
-	logger = logger.With(sdklog.ModuleKey, "bridge-daemon")
+	logger = logger.With(sdklog.ModuleKey, constants.BridgeDaemonModuleName)
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			constants.BridgeDaemonModuleName,
