@@ -1,7 +1,7 @@
 import { IndexerTendermintEvent, DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
-import { DeleveragingHandler } from '../handlers/deleveraging-handler';
 import { Handler } from '../handlers/handler';
+import { DeleveragingHandler } from '../handlers/order-fills/deleveraging-handler';
 import { Validator } from './validator';
 
 export class DeleveragingValidator extends Validator<DeleveragingEventV1> {

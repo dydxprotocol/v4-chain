@@ -104,13 +104,13 @@ BEGIN
     RETURNING * INTO offsetting_fill_record;
 
     /* Upsert the perpetual_position records for this deleveraging event. */
-    liquidated_perpetual_position_record = dydx_update_perpetual_position(
+    liquidated_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
         liquidated_subaccount_uuid,
         perpetual_id,
         liquidated_side,
         size,
         price);
-    offsetting_perpetual_position_record = dydx_update_perpetual_position(
+    offsetting_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
         offsetting_subaccount_uuid,
         perpetual_id,
         offsetting_side,

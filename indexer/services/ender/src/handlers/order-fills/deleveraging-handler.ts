@@ -8,21 +8,17 @@ import {
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   storeHelpers,
-  SubaccountMessageContents,
   SubaccountTable,
-  TradeMessageContents,
-  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
-import { DeleveragingEventV1, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
+import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
-import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
-import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
-import { ConsolidatedKafkaEvent } from '../lib/types';
-import { Handler } from './handler';
+import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
+import { ConsolidatedKafkaEvent } from '../../lib/types';
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
-export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
+export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEventV1> {
   eventType: string = 'DeleveragingEvent';
 
   public getParallelizationIds(): string[] {
@@ -53,53 +49,6 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
       `${DELEVERAGING_EVENT_TYPE}_${offsettingSubaccountUuid}`,
       `${DELEVERAGING_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
     ];
-  }
-
-  protected generateConsolidatedKafkaEvent(
-    subaccountIdProto: IndexerSubaccountId,
-    position: UpdatedPerpetualPositionSubaccountKafkaObject | undefined,
-    fill: FillFromDatabase,
-    perpetualMarket: PerpetualMarketFromDatabase,
-  ): ConsolidatedKafkaEvent {
-    const message: SubaccountMessageContents = {
-      fills: [
-        generateFillSubaccountMessage(fill, perpetualMarket.ticker),
-      ],
-      perpetualPositions: position === undefined ? undefined : generatePerpetualPositionsContents(
-        subaccountIdProto,
-        [position],
-        perpetualMarketRefresher.getPerpetualMarketsMap(),
-      ),
-    };
-    return this.generateConsolidatedSubaccountKafkaEvent(
-      JSON.stringify(message),
-      subaccountIdProto,
-      undefined,
-      true,
-      message,
-    );
-  }
-
-  protected generateTradeKafkaEventFromDeleveraging(
-    fill: FillFromDatabase,
-  ): ConsolidatedKafkaEvent {
-    const tradeContents: TradeMessageContents = {
-      trades: [
-        {
-          id: fill.eventId.toString('hex'),
-          size: fill.size,
-          price: fill.price,
-          side: fill.side.toString(),
-          createdAt: fill.createdAt,
-          liquidation: false,
-          deleveraging: true,
-        },
-      ],
-    };
-    return this.generateConsolidatedTradeKafkaEvent(
-      JSON.stringify(tradeContents),
-      fill.clobPairId,
-    );
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
@@ -141,17 +90,19 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
     const kafkaEvents: ConsolidatedKafkaEvent[] = [
       this.generateConsolidatedKafkaEvent(
         this.event.liquidated!,
+        undefined,
         liquidatedPerpetualPosition,
         liquidatedFill,
         perpetualMarket,
       ),
       this.generateConsolidatedKafkaEvent(
         this.event.offsetting!,
+        undefined,
         offsettingPerpetualPosition,
         offsettingFill,
         perpetualMarket,
       ),
-      this.generateTradeKafkaEventFromDeleveraging(
+      this.generateTradeKafkaEventFromTakerOrderFill(
         liquidatedFill,
       ),
     ];

@@ -7,7 +7,7 @@
     - price: The price of the fill.
   Returns: the updated perpetual position.
 */
-CREATE OR REPLACE FUNCTION dydx_update_perpetual_position(
+CREATE OR REPLACE FUNCTION dydx_update_perpetual_position_aggregate_fields(
     subaccount_uuid uuid,
     perpetual_id bigint,
     side text,
@@ -21,7 +21,8 @@ DECLARE
     sum_close numeric;
     exit_price numeric;
 BEGIN
-    -- Retrieve the latest perpetual position record
+    -- Retrieve the latest perpetual position record.
+    -- TODO(IND-485): Order by openEventId instead of createdAtHeight.
     SELECT * INTO perpetual_position_record
     FROM perpetual_positions
     WHERE "subaccountId" = subaccount_uuid

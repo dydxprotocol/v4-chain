@@ -58,7 +58,7 @@ const scripts: string[] = [
   'dydx_trim_scale.sql',
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_handler.sql',
-  'dydx_update_perpetual_position.sql',
+  'dydx_update_perpetual_position_aggregate_fields.sql',
   'dydx_uuid.sql',
   'dydx_uuid_from_asset_position_parts.sql',
   'dydx_uuid_from_fill_event_parts.sql',

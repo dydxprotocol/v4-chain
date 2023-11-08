@@ -165,7 +165,7 @@ BEGIN
     RETURNING * INTO fill_record;
 
     /* Upsert the perpetual_position record for this order_fill event. */
-    perpetual_position_record = dydx_update_perpetual_position(
+    perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
             subaccount_uuid,
             perpetual_market_record."id",
             order_side,
