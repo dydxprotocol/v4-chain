@@ -45,6 +45,7 @@ import Long from 'long';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
 describe('conditionalOrderPlacementHandler', () => {
   beforeAll(async () => {
@@ -125,7 +126,14 @@ describe('conditionalOrderPlacementHandler', () => {
     });
   });
 
-  it('successfully places order', async () => {
+  it.each([
+    ['via knex', false],
+    ['via SQL function', true],
+  ])('successfully places order (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
@@ -154,7 +162,9 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    expectTimingStats();
+    if (!useSqlFunction) {
+      expectTimingStats();
+    }
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
       defaultOrder.orderId!.subaccountId!,
@@ -162,7 +172,14 @@ describe('conditionalOrderPlacementHandler', () => {
     );
   });
 
-  it('successfully upserts order', async () => {
+  it.each([
+    ['via knex', false],
+    ['via SQL function', true],
+  ])('successfully upserts order (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const subaccountId: string = SubaccountTable.subaccountIdToUuid(
       defaultOrder.orderId!.subaccountId!,
     );
@@ -215,7 +232,9 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    expectTimingStats();
+    if (!useSqlFunction) {
+      expectTimingStats();
+    }
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
       defaultOrder.orderId!.subaccountId!,
