@@ -414,6 +414,7 @@ describe('kafka-publisher', () => {
         side: 'side',
         createdAt: 'today',
         liquidation: false,
+        deleveraging: false,
       };
       const singleTrade1: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent1,
@@ -427,6 +428,7 @@ describe('kafka-publisher', () => {
         side: 'side',
         createdAt: 'today',
         liquidation: false,
+        deleveraging: false,
       };
       const singleTrade2: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent2,
@@ -441,6 +443,7 @@ describe('kafka-publisher', () => {
         side: 'side',
         createdAt: 'today',
         liquidation: false,
+        deleveraging: false,
       };
       const singleTrade3: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent3,
