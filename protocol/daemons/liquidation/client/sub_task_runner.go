@@ -111,13 +111,6 @@ func CheckCollateralizationForSubaccounts(
 		return nil, err
 	}
 
-	// For the purposes of the health check, log the successful request as an indicator of daemon health.
-	// We log a success after every paginated call in order to provide a more granular view of daemon health.
-	// Request pagination ensures that these queries can be expected to complete in constant time and not
-	// O(# subaccounts), so reporting once per success for all paginated queries provides health update signals
-	// with a consistent frequency.
-	daemon.ReportSuccess()
-
 	return response.Results, nil
 }
 
@@ -214,13 +207,6 @@ func GetAllSubaccounts(
 		if err != nil {
 			return nil, err
 		}
-
-		// For the purposes of the health check, log the successful request as an indicator of daemon health.
-		// We log a success after every paginated call in order to provide a more granular view of daemon health.
-		// Request pagination ensures that these queries can be expected to complete in constant time and not
-		// O(# subaccounts), so reporting once per success for all paginated queries provides health update signals
-		// with a consistent frequency.
-		daemon.ReportSuccess()
 
 		subaccounts = append(subaccounts, subaccountsFromKey...)
 		nextKey = next

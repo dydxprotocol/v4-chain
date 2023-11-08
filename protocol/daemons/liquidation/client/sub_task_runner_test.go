@@ -17,10 +17,6 @@ import (
 	"testing"
 )
 
-const (
-	daemonInitializingErrorString = "no successful update has occurred"
-)
-
 func TestGetAllSubaccounts(t *testing.T) {
 	df := flags.GetDefaultDaemonFlags()
 	tests := map[string]struct {
@@ -113,13 +109,8 @@ func TestGetAllSubaccounts(t *testing.T) {
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
-				// The daemon initializes as unhealthy.
-				// If a request fails, the daemon will not be toggled to healthy.
-				require.ErrorContains(t, daemonClient.HealthCheck(), daemonInitializingErrorString)
 			} else {
 				require.Equal(t, tc.expectedSubaccounts, actual)
-				// If the request(s) succeeded, expect a healthy daemon.
-				require.NoError(t, daemonClient.HealthCheck())
 			}
 		})
 	}
@@ -220,13 +211,8 @@ func TestCheckCollateralizationForSubaccounts(t *testing.T) {
 
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
-				// The daemon initializes as unhealthy.
-				// If a request fails, the daemon will not be toggled to healthy.
-				require.ErrorContains(t, daemon.HealthCheck(), daemonInitializingErrorString)
 			} else {
 				require.Equal(t, tc.expectedResults, actual)
-				// If the request(s) succeeded, expect a healthy daemon.
-				require.NoError(t, daemon.HealthCheck())
 			}
 		})
 	}

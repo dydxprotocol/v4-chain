@@ -272,7 +272,7 @@ func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
 	return f.err
 }
 
-func TestTopLevelHealthCheck_Mixed(t *testing.T) {
+func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		// taskLoopResponses is a list of errors returned by the task loop. If the error is nil, the task loop is
 		// considered to have succeeded.
