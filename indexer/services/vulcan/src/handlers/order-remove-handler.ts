@@ -284,7 +284,7 @@ export class OrderRemoveHandler extends Handler {
         this.generateTimingStatsOptions('cancel_order_in_postgres'),
       );
     } else {
-      await runFuncWithTimingStat(
+      canceledOrder = await runFuncWithTimingStat(
         OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
         this.generateTimingStatsOptions('find_order'),
       );
