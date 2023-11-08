@@ -66,6 +66,7 @@ export interface OrderFromDatabase extends IdBasedModelFromDatabase {
   updatedAtHeight: string;
   goodTilBlock?: string;
   goodTilBlockTime?: string;
+  // createdAtHeight is optional because short term orders do not have a createdAtHeight.
   createdAtHeight?: string;
   clientMetadata: string;
   triggerPrice?: string;
