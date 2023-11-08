@@ -287,6 +287,11 @@ export const defaultTendermintEvent3: TendermintEventCreateObject = {
   transactionIndex: 0,
   eventIndex: 0,
 };
+export const defaultTendermintEvent4: TendermintEventCreateObject = {
+  blockHeight: '2',
+  transactionIndex: 1,
+  eventIndex: 1,
+};
 export const defaultTendermintEventId: Buffer = TendermintEventTable.createEventId(
   defaultTendermintEvent.blockHeight,
   defaultTendermintEvent.transactionIndex,
@@ -301,6 +306,11 @@ export const defaultTendermintEventId3: Buffer = TendermintEventTable.createEven
   defaultTendermintEvent3.blockHeight,
   defaultTendermintEvent3.transactionIndex,
   defaultTendermintEvent3.eventIndex,
+);
+export const defaultTendermintEventId4: Buffer = TendermintEventTable.createEventId(
+  defaultTendermintEvent4.blockHeight,
+  defaultTendermintEvent4.transactionIndex,
+  defaultTendermintEvent4.eventIndex,
 );
 
 // ============== Transactions ==============

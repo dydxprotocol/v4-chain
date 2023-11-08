@@ -24,6 +24,7 @@ import {
   defaultTendermintEvent,
   defaultTendermintEvent2,
   defaultTendermintEvent3,
+  defaultTendermintEvent4,
 } from './constants';
 
 export async function seedData() {
@@ -53,6 +54,7 @@ export async function seedData() {
     TendermintEventTable.create(defaultTendermintEvent),
     TendermintEventTable.create(defaultTendermintEvent2),
     TendermintEventTable.create(defaultTendermintEvent3),
+    TendermintEventTable.create(defaultTendermintEvent4),
   ]);
   await Promise.all([
     AssetTable.create(defaultAsset),
