@@ -332,6 +332,10 @@ func TestLiquidationConfig(t *testing.T) {
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
+				// Maker order at $50,500.
+				// This maker order is specifically chosen to be above the oracle price, to ensure that
+				// block limits use the notional value of the position (oracle price),
+				// and not the notional liquidated (match price)
 				&constants.Order_Carl_Num0_Id2_Clob0_Buy1BTC_Price50500_GTB10, // Order at $50,500
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Dave_Num0},
@@ -401,7 +405,8 @@ func TestLiquidationConfig(t *testing.T) {
 
 				// Bankruptcy price is $50,499, and closing at $50,500 would require $1 from the insurance fund.
 				// First order would transfer $0.1 from the insurance fund and would succeed.
-				// Second order would require $0.9 from the insurance fund and would fail.
+				// Second order would require $0.9 from the insurance fund and would fail since subaccounts
+				// may only lose $0.5 per block.
 				&constants.Order_Dave_Num0_Id1_Clob0_Sell01BTC_Price50500_GTB10, // Order at $50,500
 				&constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50500_GTB10,  // Order at $50,500
 			},
@@ -473,7 +478,8 @@ func TestLiquidationConfig(t *testing.T) {
 
 				// Bankruptcy price is $49,501, and closing at $49,500 would require $1 from the insurance fund.
 				// First order would transfer $0.1 from the insurance fund and would succeed.
-				// Second order would require $0.9 from the insurance fund and would fail.
+				// Second order would require $0.9 from the insurance fund and would fail since subaccounts
+				// may only lose $0.5 per block.
 				&constants.Order_Carl_Num0_Id1_Clob0_Buy01BTC_Price49500_GTB10, // Order at $49,500
 				&constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,  // Order at $49,500
 			},
