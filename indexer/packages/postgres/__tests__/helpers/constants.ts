@@ -226,6 +226,7 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   clientId: '2',
   goodTilBlock: undefined,
   goodTilBlockTime: '2023-01-22T00:00:00.000Z',
+  createdAtHeight: '1',
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
 };
 
