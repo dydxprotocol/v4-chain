@@ -67,56 +67,6 @@ export class DeleveragingHandler extends Handler<DeleveragingEventV1> {
     ];
   }
 
-  protected createFillsFromEvent(
-    perpetualMarket: PerpetualMarketFromDatabase,
-    event: DeleveragingEventV1,
-  ): Promise<FillFromDatabase>[] {
-    const eventId: Buffer = TendermintEventTable.createEventId(
-      this.block.height.toString(),
-      indexerTendermintEventToTransactionIndex(this.indexerTendermintEvent),
-      this.indexerTendermintEvent.eventIndex,
-    );
-    const size: string = protocolTranslations.quantumsToHumanFixedString(
-      event.fillAmount.toString(),
-      perpetualMarket.atomicResolution,
-    );
-    const price: string = protocolTranslations.quantumsToHuman(
-      event.price.toString(10),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed();
-    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
-      this.indexerTendermintEvent,
-    );
-
-    const liquidatedSubaccountFill: FillCreateObject = {
-      subaccountId: SubaccountTable.uuid(event.liquidated!.owner, event.liquidated!.number),
-      side: event.isBuy ? OrderSide.BUY : OrderSide.SELL,
-      liquidity: Liquidity.TAKER,
-      type: FillType.DELEVERAGED,
-      clobPairId: perpetualMarket.clobPairId,
-      size,
-      price,
-      quoteAmount: Big(size).times(price).toFixed(),
-      eventId,
-      transactionHash: this.block.txHashes[transactionIndex],
-      createdAt: this.timestamp.toISO(),
-      createdAtHeight: this.block.height.toString(),
-      fee: '0',
-    };
-    const offsettingSubaccountFill: FillCreateObject = {
-      ...liquidatedSubaccountFill,
-      subaccountId: SubaccountTable.uuid(event.offsetting!.owner, event.offsetting!.number),
-      side: event.isBuy ? OrderSide.SELL : OrderSide.BUY,
-      liquidity: Liquidity.MAKER,
-      type: FillType.OFFSETTING,
-    };
-
-    return [
-      FillTable.create(liquidatedSubaccountFill, { txId: this.txId }),
-      FillTable.create(offsettingSubaccountFill, { txId: this.txId }),
-    ];
-  }
-
   protected generateConsolidatedKafkaEvent(
     subaccountIdProto: IndexerSubaccountId,
     position: UpdatedPerpetualPositionSubaccountKafkaObject | undefined,

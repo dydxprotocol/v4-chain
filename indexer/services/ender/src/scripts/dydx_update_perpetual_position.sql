@@ -20,7 +20,6 @@ BEGIN
     ORDER BY "createdAtHeight" DESC
     LIMIT 1;
 
-    -- Check if a perpetual position record was found
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Unable to find existing perpetual position, subaccountId: %, perpetualId: %', subaccount_uuid, perpetual_id;
     END IF;
@@ -56,7 +55,7 @@ BEGIN
         "exitPrice" = exit_price
     WHERE "id" = perpetual_position_record.id;
 
-    -- Return the updated perpetual position record as jsonb
+    -- Return the updated perpetual position record
     RETURN perpetual_position_record;
 END;
 $$ LANGUAGE plpgsql;

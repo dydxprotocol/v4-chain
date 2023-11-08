@@ -58,8 +58,8 @@ BEGIN
 
     liquidated_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'liquidated');
     offsetting_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'offsetting');
-    liquidated_side = dydx_from_protocol_is_buy((event_data->'isBuy')::bool);
-    offsetting_side = CASE WHEN liquidated_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
+    offsetting_side = dydx_from_protocol_is_buy((event_data->'isBuy')::bool);
+    liquidated_side = CASE WHEN offsetting_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
     clob_pair_id = perpetual_market_record."clobPairId";
 
     /* Insert the associated fill records for this deleveraging event. */

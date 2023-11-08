@@ -1,4 +1,4 @@
-import { logger, stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import {
   assetRefresher,
@@ -72,9 +72,6 @@ describe('DeleveragingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -103,6 +100,8 @@ describe('DeleveragingHandler', () => {
     nanos: (defaultDateTime.toMillis() % SECONDS_IN_MILLIS) * MILLIS_IN_NANOS,
   };
   const defaultTxHash: string = '0x32343534306431622d306461302d343831322d613730372d3965613162336162';
+  const transactionIndex: number = 0;
+  const eventIndex: number = 0;
 
   const offsettingPerpetualPosition: PerpetualPositionCreateObject = {
     subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.offsetting!),
@@ -123,8 +122,6 @@ describe('DeleveragingHandler', () => {
   it('getParallelizationIds', () => {
     const offsettingSubaccountId: IndexerSubaccountId = defaultDeleveragingEvent.offsetting!;
     const deleveragedSubaccountId: IndexerSubaccountId = defaultDeleveragingEvent.liquidated!;
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
 
     const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
       DydxIndexerSubtypes.DELEVERAGING,
@@ -179,8 +176,6 @@ describe('DeleveragingHandler', () => {
         ...defaultDeleveragingEvent,
         liquidated: undefined,
       });
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromDeleveragingEvent({
       deleveragingEvent,
       transactionIndex,
@@ -199,8 +194,6 @@ describe('DeleveragingHandler', () => {
   });
 
   it('creates fills and updates perpetual positions', async () => {
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromDeleveragingEvent({
       deleveragingEvent: defaultDeleveragingEvent,
       transactionIndex,
@@ -255,7 +248,7 @@ describe('DeleveragingHandler', () => {
       createdAtHeight: defaultHeight,
       type: FillType.OFFSETTING,
       clobPairId: perpetualMarket!.clobPairId,
-      side: OrderSide.SELL,
+      side: OrderSide.BUY,
       orderFlags: '0',
       clientMetadata: null,
       hasOrderId: false,
@@ -274,7 +267,7 @@ describe('DeleveragingHandler', () => {
       createdAtHeight: defaultHeight,
       type: FillType.DELEVERAGED,
       clobPairId: perpetualMarket!.clobPairId,
-      side: OrderSide.BUY,
+      side: OrderSide.SELL,
       orderFlags: '0',
       clientMetadata: null,
       hasOrderId: false,
@@ -297,7 +290,6 @@ describe('DeleveragingHandler', () => {
         eventId,
       ),
     ]);
-    expectTimingStats();
   });
 
   async function expectFillsAndPositionsSubaccountKafkaMessages(
@@ -321,20 +313,11 @@ describe('DeleveragingHandler', () => {
         subaccountId,
         FillTable.uuid(eventId, liquidity),
         positionId,
+        defaultHeight,
+        transactionIndex,
+        eventIndex,
+        testConstants.defaultPerpetualMarket2.ticker,
       ),
     ]);
   }
 });
-
-function expectTimingStats() {
-  expectTimingStat('create_fills');
-  expectTimingStat('update_perpetual_positions');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'DeleveragingHandler', eventType: 'DeleveragingEvent', fnName },
-  );
-}
