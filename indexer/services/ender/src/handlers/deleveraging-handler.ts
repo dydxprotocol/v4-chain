@@ -1,34 +1,22 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  FillCreateObject,
   FillFromDatabase,
   FillModel,
-  FillTable,
-  FillType,
-  Liquidity,
-  OrderSide,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
-  protocolTranslations,
   storeHelpers,
   SubaccountMessageContents,
   SubaccountTable,
-  TendermintEventTable,
   TradeMessageContents,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { DeleveragingEventV1, IndexerSubaccountId } from '@dydxprotocol-indexer/v4-protos';
-import Big from 'big.js';
 import * as pg from 'pg';
 
-import {
-  DELEVERAGING_EVENT_TYPE,
-  QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
-} from '../constants';
+import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { generateFillSubaccountMessage, generatePerpetualPositionsContents } from '../helpers/kafka-helper';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
