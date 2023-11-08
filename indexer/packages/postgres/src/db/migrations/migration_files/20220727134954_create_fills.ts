@@ -19,8 +19,6 @@ export async function up(knex: Knex): Promise<void> {
         'LIMIT',
         'LIQUIDATED',
         'LIQUIDATION',
-        'DELEVERAGED',
-        'OFFSETTING',
       ]).notNullable();
       table.bigInteger('clobPairId').notNullable();
       table.uuid('orderId').nullable();
