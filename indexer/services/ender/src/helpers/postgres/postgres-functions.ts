@@ -52,6 +52,8 @@ const scripts: string[] = [
   'dydx_order_fill_handler_per_order.sql',
   'dydx_perpetual_market_handler.sql',
   'dydx_perpetual_position_and_order_side_matching.sql',
+  'dydx_protocol_condition_type_to_order_type.sql',
+  'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
   'dydx_transfer_handler.sql',
   'dydx_trim_scale.sql',

@@ -39,8 +39,9 @@ import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
+import config from '../../../src/config';
 
-describe('statefulOrderRemovalHandler', () => {
+describe('conditionalOrderTriggeredHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
@@ -110,7 +111,14 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it('successfully triggers order and sends to vulcan', async () => {
+  it.each([
+    ['via knex', false],
+    ['via SQL function', true],
+  ])('successfully triggers order and sends to vulcan (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     await OrderTable.create({
       ...testConstants.defaultOrderGoodTilBlockTime,
       orderFlags: conditionalOrderId.orderFlags.toString(),
@@ -147,16 +155,25 @@ describe('statefulOrderRemovalHandler', () => {
       orderId: conditionalOrderId,
       offchainUpdate: expectedOffchainUpdate,
     });
-    expectTimingStats();
+    if (!useSqlFunction) {
+      expectTimingStats();
+    }
   });
 
-  it('throws error when attempting to trigger an order that does not exist', async () => {
+  it.each([
+    ['via knex', false],
+    ['via SQL function', true],
+  ])('throws error when attempting to trigger an order that does not exist (%s)', async (
+    _name: string,
+    useSqlFunction: boolean,
+  ) => {
+    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new Error(`Unable to update order status with orderId: ${orderId}`),
+      `Unable to update order status with orderId: ${orderId}`,
     );
   });
 });

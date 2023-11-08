@@ -5,8 +5,10 @@
 CREATE OR REPLACE FUNCTION dydx_from_protocol_order_side(order_side jsonb) RETURNS text AS $$
 BEGIN
     CASE order_side
-        WHEN '1'::jsonb THEN RETURN 'BUY';
-        ELSE RETURN 'SELL';
-        END CASE;
+    WHEN '1'::jsonb THEN
+        RETURN 'BUY';
+    ELSE
+        RETURN 'SELL';
+    END CASE;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
