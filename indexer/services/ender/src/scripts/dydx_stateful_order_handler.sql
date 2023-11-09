@@ -25,15 +25,7 @@ BEGIN
         order_ = COALESCE(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
-        BEGIN
-            SELECT * INTO STRICT perpetual_market_record FROM perpetual_markets WHERE "clobPairId" = clob_pair_id;
-        EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                RAISE EXCEPTION 'Unable to find perpetual market with clobPairId: %', clob_pair_id;
-            WHEN TOO_MANY_ROWS THEN
-                /** This should never happen and if it ever were to would indicate that the table has malformed data. */
-                RAISE EXCEPTION 'Found multiple perpetual markets with clobPairId: %', clob_pair_id;
-        END;
+        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
 
         /**
           Calculate sizes, prices, and fill amounts.
@@ -113,15 +105,7 @@ BEGIN
         END CASE;
 
         clob_pair_id = (order_id->'clobPairId')::bigint;
-        BEGIN
-            SELECT * INTO STRICT perpetual_market_record FROM perpetual_markets WHERE "clobPairId" = clob_pair_id;
-        EXCEPTION
-            WHEN NO_DATA_FOUND THEN
-                RAISE EXCEPTION 'Unable to find perpetual market with clobPairId: %', clob_pair_id;
-            WHEN TOO_MANY_ROWS THEN
-                /** This should never happen and if it ever were to would indicate that the table has malformed data. */
-                RAISE EXCEPTION 'Found multiple perpetual markets with clobPairId: %', clob_pair_id;
-        END;
+        perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
 
         subaccount_id = dydx_uuid_from_subaccount_id(order_id->'subaccountId');
         SELECT * INTO subaccount_record FROM subaccounts WHERE "id" = subaccount_id;
