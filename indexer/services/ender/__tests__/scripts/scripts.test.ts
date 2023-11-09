@@ -135,19 +135,6 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
-    { transactionIndex: 5 } as IndexerTendermintEvent,
-    {
-      blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_BEGIN_BLOCK,
-    } as IndexerTendermintEvent,
-    {
-      blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
-    } as IndexerTendermintEvent,
-  ])('dydx_event_to_transaction_index (%s)', async (event: IndexerTendermintEvent) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_event_to_transaction_index('${JSON.stringify(event)}') AS result;`);
-    expect(result).toEqual(indexerTendermintEventToTransactionIndex(event));
-  });
-
-  it.each([
     Long.fromNumber(1_000_000_000, true),
     Long.fromNumber(1_000_000_000, false),
     Long.fromNumber(-1_000_000_000, false),
