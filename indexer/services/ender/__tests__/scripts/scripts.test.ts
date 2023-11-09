@@ -397,7 +397,7 @@ describe('SQL Function Tests', () => {
     },
     {
       event: { blockEvent: '3' },
-      expectedError: 'Received V4 event with invalid block event type: 3',
+      expectedError: 'Received V4 event with invalid block event type: "3"',
     },
     {
       event: {},
