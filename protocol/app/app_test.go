@@ -97,11 +97,17 @@ func TestAppIsFullyInitialized(t *testing.T) {
 			tApp.InitChain()
 			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*tApp.App))
 
-			// Note that the PriceFeedClient is currently hard coded as disabled in GetDefaultTestAppOptions.
-			// Normally it would be only disabled for non-validating full nodes or for nodes where the
-			// price feed client is explicitly disabled.
-			if idx := slices.Index(uninitializedFields, "PriceFeedClient"); idx >= 0 {
-				slices.Remove(&uninitializedFields, idx)
+			// Note that the daemon clients are currently hard coded as disabled in GetDefaultTestAppOptions.
+			// Normally they would be only disabled for non-validating full nodes or for nodes where any
+			// daemon is explicitly disabled.
+			expectedUninitializedFields := []string{
+				"PriceFeedClient",
+				"LiquidationsClient",
+			}
+			for _, field := range expectedUninitializedFields {
+				if idx := slices.Index(uninitializedFields, field); idx >= 0 {
+					slices.Remove(&uninitializedFields, idx)
+				}
 			}
 
 			require.Len(

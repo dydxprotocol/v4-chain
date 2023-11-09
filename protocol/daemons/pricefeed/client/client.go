@@ -52,19 +52,25 @@ type Client struct {
 
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
+
+	// logger is the logger for the daemon.
+	logger log.Logger
 }
 
 // Ensure Client implements the HealthCheckable interface.
 var _ daemontypes.HealthCheckable = (*Client)(nil)
 
-func newClient() *Client {
+func newClient(logger log.Logger) *Client {
+	logger = logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName)
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			constants.PricefeedDaemonModuleName,
 			&libtime.TimeProviderImpl{},
+			logger,
 		),
+		logger: logger,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -126,7 +132,6 @@ func (c *Client) Stop() {
 func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
-	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
@@ -135,7 +140,7 @@ func (c *Client) start(ctx context.Context,
 	// 1. Establish connections to gRPC servers.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
 	}
 	// Defer closing gRPC connection until job completes.
@@ -147,7 +152,7 @@ func (c *Client) start(ctx context.Context,
 
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, daemonFlags.Shared.SocketAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
 	}
 	// Defer closing gRPC connection until job completes.
@@ -207,7 +212,7 @@ func (c *Client) start(ctx context.Context,
 				exchangeId,
 				priceFeedMutableMarketConfigs,
 				exchangeToMarketPrices,
-				logger,
+				c.logger,
 				bCh,
 			)
 		}()
@@ -223,7 +228,7 @@ func (c *Client) start(ctx context.Context,
 				*exchangeConfig,
 				exchangeDetails,
 				&handler.ExchangeQueryHandlerImpl{TimeProvider: timeProvider},
-				logger,
+				c.logger,
 				bCh,
 			)
 		}()
@@ -240,7 +245,7 @@ func (c *Client) start(ctx context.Context,
 			marketParamUpdaterStop,
 			priceFeedMutableMarketConfigs,
 			pricesQueryClient,
-			logger,
+			c.logger,
 		)
 	}()
 
@@ -265,7 +270,7 @@ func (c *Client) start(ctx context.Context,
 		priceUpdaterStop,
 		exchangeToMarketPrices,
 		pricefeedClient,
-		logger,
+		c.logger,
 	)
 	return nil
 }
@@ -291,7 +296,7 @@ func StartNewClient(
 		"PriceFlags", daemonFlags.Price,
 	)
 
-	client = newClient()
+	client = newClient(logger)
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer client.runningSubtasksWaitGroup.Done()
@@ -299,7 +304,6 @@ func StartNewClient(
 			ctx,
 			daemonFlags,
 			appFlags,
-			logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName),
 			grpcClient,
 			exchangeIdToQueryConfig,
 			exchangeIdToExchangeDetails,

@@ -288,7 +288,8 @@ type App struct {
 	// can correctly operate.
 	startDaemons func()
 
-	PriceFeedClient *pricefeedclient.Client
+	PriceFeedClient    *pricefeedclient.Client
+	LiquidationsClient *liquidationclient.Client
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -602,14 +603,14 @@ func New(
 			app.Server.ExpectLiquidationsDaemon(
 				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
 			)
+			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
-				if err := liquidationclient.Start(
+				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
 					context.Background(),
 					daemonFlags,
 					appFlags,
-					logger,
 					&daemontypes.GrpcClientImpl{},
 				); err != nil {
 					panic(err)

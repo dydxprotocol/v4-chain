@@ -3,23 +3,24 @@ package client_test
 import (
 	"context"
 	"errors"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	"testing"
-
+	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestStart_TcpConnectionFails(t *testing.T) {
@@ -28,13 +29,13 @@ func TestStart_TcpConnectionFails(t *testing.T) {
 	mockGrpcClient := &mocks.GrpcClient{}
 	mockGrpcClient.On("NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint).Return(nil, errors.New(errorMsg))
 
+	liquidationsClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
-		client.Start(
+		liquidationsClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -52,13 +53,13 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.On("NewGrpcConnection", grpc.Ctx, grpc.SocketPath).Return(nil, errors.New(errorMsg))
 	mockGrpcClient.On("CloseConnection", grpc.GrpcConn).Return(nil)
 
+	liquidationsClient := client.NewClient(log.NewNopLogger())
 	require.EqualError(
 		t,
-		client.Start(
+		liquidationsClient.Start(
 			grpc.Ctx,
 			flags.GetDefaultDaemonFlags(),
 			appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil)),
-			log.NewNopLogger(),
 			mockGrpcClient,
 		),
 		errorMsg,
@@ -223,8 +224,12 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
+			s := client.SubTaskRunnerImpl{}
 
-			err := client.RunLiquidationDaemonTaskLoop(
+			c := client.NewClient(log.NewNopLogger())
+
+			err := s.RunLiquidationDaemonTaskLoop(
+				c,
 				grpc.Ctx,
 				flags.GetDefaultDaemonFlags().Liquidation,
 				queryClientMock,
@@ -241,245 +246,94 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 	}
 }
 
-func TestGetAllSubaccounts(t *testing.T) {
-	df := flags.GetDefaultDaemonFlags()
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
+// FakeSubTaskRunner is a mock implementation of the SubTaskRunner interface for testing.
+type FakeSubTaskRunner struct {
+	err    error
+	called bool
+}
 
-		// expectations
-		expectedSubaccounts []satypes.Subaccount
-		expectedError       error
-	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_599USD,
-						constants.Dave_Num0_599USD,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_599USD,
-				constants.Dave_Num0_599USD,
-			},
-		},
-		"Success Paginated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				nextKey := []byte("next key")
-				response := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_599USD,
-					},
-					Pagination: &query.PageResponse{
-						NextKey: nextKey,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-				req2 := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Key:   nextKey,
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response2 := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Dave_Num0_599USD,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req2).Return(response2, nil)
-			},
-			expectedSubaccounts: []satypes.Subaccount{
-				constants.Carl_Num0_599USD,
-				constants.Dave_Num0_599USD,
-			},
-		},
-		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(nil, errors.New("test error"))
-			},
-			expectedError: errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock)
-
-			actual, err := client.GetAllSubaccounts(grpc.Ctx, queryClientMock, df.Liquidation.SubaccountPageLimit)
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedSubaccounts, actual)
-			}
-		})
+func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
+	return &FakeSubTaskRunner{
+		err: err,
 	}
 }
 
-func TestCheckCollateralizationForSubaccounts(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(
-			ctx context.Context,
-			mck *mocks.QueryClient,
-			results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-		)
-		subaccountIds []satypes.SubaccountId
-
-		// expectations
-		expectedResults []clobtypes.AreSubaccountsLiquidatableResponse_Result
-		expectedError   error
-	}{
-		"Success": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{
-						constants.Alice_Num0,
-						constants.Bob_Num0,
-					},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds: []satypes.SubaccountId{
-				constants.Alice_Num0,
-				constants.Bob_Num0,
-			},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{
-				{
-					SubaccountId:   constants.Alice_Num0,
-					IsLiquidatable: true,
-				},
-				{
-					SubaccountId:   constants.Bob_Num0,
-					IsLiquidatable: false,
-				},
-			},
-		},
-		"Success - Empty": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-		},
-		"Errors are propagated": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(nil, errors.New("test error"))
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-			expectedError:   errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.expectedResults)
-
-			actual, err := client.CheckCollateralizationForSubaccounts(grpc.Ctx, queryClientMock, tc.subaccountIds)
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedResults, actual)
-			}
-		})
-	}
+// RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
+// call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
+func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
+	_ *client.Client,
+	_ context.Context,
+	_ flags.LiquidationFlags,
+	_ satypes.QueryClient,
+	_ clobtypes.QueryClient,
+	_ api.LiquidationServiceClient,
+) error {
+	f.called = true
+	return f.err
 }
 
-func TestSendLiquidatableSubaccountIds(t *testing.T) {
+func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
-		// mocks
-		setupMocks    func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId)
-		subaccountIds []satypes.SubaccountId
-
-		// expectations
-		expectedError error
+		// taskLoopResponses is a list of errors returned by the task loop. If the error is nil, the task loop is
+		// considered to have succeeded.
+		taskLoopResponses    []error
+		expectedHealthStatus error
 	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
-				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
-				}
-				response := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+		"Healthy - successful update": {
+			taskLoopResponses: []error{
+				nil, // 1 successful update
 			},
-			subaccountIds: []satypes.SubaccountId{
-				constants.Alice_Num0,
-				constants.Bob_Num0,
-			},
+			expectedHealthStatus: nil, // healthy status
 		},
-		"Success Empty": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
-				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
-				}
-				response := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
+		"Unhealthy - failed update": {
+			taskLoopResponses: []error{
+				fmt.Errorf("failed to update"), // 1 failed update
 			},
-			subaccountIds: []satypes.SubaccountId{},
+			expectedHealthStatus: fmt.Errorf("no successful update has occurred"),
 		},
-		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
-				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
-				}
-				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
+		"Unhealthy - failed update after successful update": {
+			taskLoopResponses: []error{
+				nil,                            // 1 successful update
+				fmt.Errorf("failed to update"), // 1 failed update
 			},
-			subaccountIds: []satypes.SubaccountId{},
-			expectedError: errors.New("test error"),
+			expectedHealthStatus: fmt.Errorf("last update failed"),
 		},
 	}
-
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.subaccountIds)
+			// Setup.
+			c := client.NewClient(log.NewNopLogger())
 
-			err := client.SendLiquidatableSubaccountIds(grpc.Ctx, queryClientMock, tc.subaccountIds)
-			require.Equal(t, tc.expectedError, err)
+			// Sanity check - the client should be unhealthy before the first successful update.
+			require.ErrorContains(
+				t,
+				c.HealthCheck(),
+				"no successful update has occurred",
+			)
+
+			// Run the sequence of task loop responses.
+			for _, taskLoopError := range tc.taskLoopResponses {
+				ticker, stop := daemontestutils.SingleTickTickerAndStop()
+				// Start the daemon task loop. Since we created a single-tick ticker, this will run for one iteration and
+				// return.
+				client.StartLiquidationsDaemonTaskLoop(
+					c,
+					grpc.Ctx,
+					NewFakeSubTaskRunnerWithError(taskLoopError),
+					flags.GetDefaultDaemonFlags(),
+					ticker,
+					stop,
+					&mocks.QueryClient{},
+					&mocks.QueryClient{},
+					&mocks.QueryClient{},
+				)
+			}
+
+			if tc.expectedHealthStatus == nil {
+				require.NoError(t, c.HealthCheck())
+			} else {
+				require.ErrorContains(t, c.HealthCheck(), tc.expectedHealthStatus.Error())
+			}
 		})
 	}
 }
