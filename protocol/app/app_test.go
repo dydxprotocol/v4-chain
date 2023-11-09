@@ -103,6 +103,7 @@ func TestAppIsFullyInitialized(t *testing.T) {
 			expectedUninitializedFields := []string{
 				"PriceFeedClient",
 				"LiquidationsClient",
+				"BridgeClient",
 			}
 			for _, field := range expectedUninitializedFields {
 				if idx := slices.Index(uninitializedFields, field); idx >= 0 {
