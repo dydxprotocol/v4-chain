@@ -1639,6 +1639,7 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker
       "side": "BUY",
       "size": "string",
       "price": "string",
+      "type": "MARKET",
       "createdAt": "string",
       "createdAtHeight": "string"
     }
@@ -3062,6 +3063,7 @@ or
   "side": "BUY",
   "size": "string",
   "price": "string",
+  "type": "MARKET",
   "createdAt": "string",
   "createdAtHeight": "string"
 }
@@ -3076,6 +3078,7 @@ or
 |side|[OrderSide](#schemaorderside)|true|none|none|
 |size|string|true|none|none|
 |price|string|true|none|none|
+|type|[FillType](#schemafilltype)|true|none|none|
 |createdAt|[IsoString](#schemaisostring)|true|none|none|
 |createdAtHeight|string|true|none|none|
 
@@ -3094,6 +3097,7 @@ or
       "side": "BUY",
       "size": "string",
       "price": "string",
+      "type": "MARKET",
       "createdAt": "string",
       "createdAtHeight": "string"
     }

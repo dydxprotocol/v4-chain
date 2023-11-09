@@ -174,6 +174,7 @@ export interface TradeResponseObject {
   side: OrderSide,
   size: string,
   price: string,
+  type: FillType,
   createdAt: IsoString,
   createdAtHeight: string,
 }

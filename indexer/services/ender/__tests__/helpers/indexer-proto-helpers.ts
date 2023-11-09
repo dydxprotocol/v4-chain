@@ -807,8 +807,7 @@ export async function expectDefaultTradeKafkaMessageFromTakerFillId(
         price: takerFill!.price,
         side: takerFill!.side.toString(),
         createdAt: takerFill!.createdAt,
-        liquidation: isLiquidation(takerFill!),
-        deleveraging: isDeleveraging(takerFill!),
+        type: takerFill!.type,
       },
     ],
   };

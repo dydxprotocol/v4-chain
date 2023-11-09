@@ -428,8 +428,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
           price: fill.price,
           side: fill.side.toString(),
           createdAt: fill.createdAt,
-          liquidation: isLiquidation(fill),
-          deleveraging: isDeleveraging(fill),
+          type: fill.type,
         },
       ],
     };
