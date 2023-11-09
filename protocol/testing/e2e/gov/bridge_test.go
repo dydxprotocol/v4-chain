@@ -15,22 +15,40 @@ import (
 )
 
 var (
-	GENESIS_EVENT_PARAMS = bridgetypes.EventParams{
+	// Genesis params.
+	GenesisEventParams = bridgetypes.EventParams{
 		Denom:      "testdenom",
 		EthChainId: 123,
 		EthAddress: "0x0123",
 	}
-	GENESIS_PROPOSE_PARAMS = bridgetypes.ProposeParams{
+	GenesisProposeParams = bridgetypes.ProposeParams{
 		MaxBridgesPerBlock:           10,
 		ProposeDelayDuration:         time.Minute,
 		SkipRatePpm:                  800_000,
 		SkipIfBlockDelayedByDuration: time.Minute,
 	}
-	GENESIS_SAFETY_PARAMS = bridgetypes.SafetyParams{
+	GenesisSafetyParams = bridgetypes.SafetyParams{
 		IsDisabled:  false,
 		DelayBlocks: 10,
 	}
-	INVALID_BRIDGE_AUTHORITY = constants.AliceAccAddress.String()
+	// Modified params.
+	ModifiedEventParams = bridgetypes.EventParams{
+		Denom:      "advtnt",
+		EthChainId: 1,
+		EthAddress: "0xabcd",
+	}
+	ModifiedProposeParams = bridgetypes.ProposeParams{
+		MaxBridgesPerBlock:           7,
+		ProposeDelayDuration:         time.Second,
+		SkipRatePpm:                  700_007,
+		SkipIfBlockDelayedByDuration: time.Second,
+	}
+	ModifiedSafetyParams = bridgetypes.SafetyParams{
+		IsDisabled:  true,
+		DelayBlocks: 5,
+	}
+	// Invalid authority address.
+	InvalidBridgeAuthority = constants.AliceAccAddress.String()
 )
 
 func TestUpdateEventParams(t *testing.T) {
@@ -43,11 +61,7 @@ func TestUpdateEventParams(t *testing.T) {
 		"Success": {
 			msg: &bridgetypes.MsgUpdateEventParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: bridgetypes.EventParams{
-					Denom:      "adv4tnt",
-					EthChainId: 1,
-					EthAddress: "0xabcd",
-				},
+				Params:    ModifiedEventParams,
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
@@ -55,8 +69,8 @@ func TestUpdateEventParams(t *testing.T) {
 			msg: &bridgetypes.MsgUpdateEventParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.EventParams{
-					Denom:      "adv4tnt",
-					EthChainId: 1,
+					Denom:      ModifiedEventParams.Denom,
+					EthChainId: ModifiedEventParams.EthChainId,
 					EthAddress: "",
 				},
 			},
@@ -65,11 +79,7 @@ func TestUpdateEventParams(t *testing.T) {
 		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateEventParams{
 				Authority: constants.BobAccAddress.String(),
-				Params: bridgetypes.EventParams{
-					Denom:      "adv4tnt",
-					EthChainId: 1,
-					EthAddress: "0xabcd",
-				},
+				Params:    ModifiedEventParams,
 			},
 			expectSubmitProposalFails: true,
 		},
@@ -88,7 +98,7 @@ func TestUpdateEventParams(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *bridgetypes.GenesisState) {
-						genesisState.EventParams = GENESIS_EVENT_PARAMS
+						genesisState.EventParams = GenesisEventParams
 					},
 				)
 				return genesis
@@ -112,7 +122,7 @@ func TestUpdateEventParams(t *testing.T) {
 				require.Equal(t, tc.msg.Params, updatedEventParams)
 			} else {
 				// Otherwise, verify that event params are unchanged.
-				require.Equal(t, GENESIS_EVENT_PARAMS, tApp.App.BridgeKeeper.GetEventParams(ctx))
+				require.Equal(t, GenesisEventParams, tApp.App.BridgeKeeper.GetEventParams(ctx))
 			}
 		})
 	}
@@ -128,12 +138,7 @@ func TestUpdateProposeParams(t *testing.T) {
 		"Success": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: bridgetypes.ProposeParams{
-					MaxBridgesPerBlock:           7,
-					ProposeDelayDuration:         time.Second,
-					SkipRatePpm:                  700_001,
-					SkipIfBlockDelayedByDuration: time.Second,
-				},
+				Params:    ModifiedProposeParams,
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
@@ -141,10 +146,10 @@ func TestUpdateProposeParams(t *testing.T) {
 			msg: &bridgetypes.MsgUpdateProposeParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.ProposeParams{
-					MaxBridgesPerBlock:           7,
+					MaxBridgesPerBlock:           ModifiedProposeParams.MaxBridgesPerBlock,
 					ProposeDelayDuration:         -time.Second,
-					SkipRatePpm:                  700_001,
-					SkipIfBlockDelayedByDuration: time.Second,
+					SkipRatePpm:                  ModifiedProposeParams.SkipRatePpm,
+					SkipIfBlockDelayedByDuration: ModifiedProposeParams.SkipIfBlockDelayedByDuration,
 				},
 			},
 			expectCheckTxFails: true,
@@ -153,9 +158,9 @@ func TestUpdateProposeParams(t *testing.T) {
 			msg: &bridgetypes.MsgUpdateProposeParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.ProposeParams{
-					MaxBridgesPerBlock:           7,
-					ProposeDelayDuration:         time.Second,
-					SkipRatePpm:                  700_001,
+					MaxBridgesPerBlock:           ModifiedProposeParams.MaxBridgesPerBlock,
+					ProposeDelayDuration:         ModifiedProposeParams.ProposeDelayDuration,
+					SkipRatePpm:                  ModifiedProposeParams.SkipRatePpm,
 					SkipIfBlockDelayedByDuration: -time.Second,
 				},
 			},
@@ -165,23 +170,18 @@ func TestUpdateProposeParams(t *testing.T) {
 			msg: &bridgetypes.MsgUpdateProposeParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: bridgetypes.ProposeParams{
-					MaxBridgesPerBlock:           7,
-					ProposeDelayDuration:         time.Second,
+					MaxBridgesPerBlock:           ModifiedProposeParams.MaxBridgesPerBlock,
+					ProposeDelayDuration:         ModifiedProposeParams.ProposeDelayDuration,
 					SkipRatePpm:                  1_000_001, // greater than 1 million.
-					SkipIfBlockDelayedByDuration: time.Second,
+					SkipIfBlockDelayedByDuration: ModifiedProposeParams.SkipIfBlockDelayedByDuration,
 				},
 			},
 			expectCheckTxFails: true,
 		},
 		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateProposeParams{
-				Authority: INVALID_BRIDGE_AUTHORITY,
-				Params: bridgetypes.ProposeParams{
-					MaxBridgesPerBlock:           7,
-					ProposeDelayDuration:         time.Second,
-					SkipRatePpm:                  700_001,
-					SkipIfBlockDelayedByDuration: time.Second,
-				},
+				Authority: InvalidBridgeAuthority,
+				Params:    ModifiedProposeParams,
 			},
 			expectSubmitProposalFails: true,
 		},
@@ -200,7 +200,7 @@ func TestUpdateProposeParams(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *bridgetypes.GenesisState) {
-						genesisState.ProposeParams = GENESIS_PROPOSE_PARAMS
+						genesisState.ProposeParams = GenesisProposeParams
 					},
 				)
 				return genesis
@@ -224,7 +224,7 @@ func TestUpdateProposeParams(t *testing.T) {
 				require.Equal(t, tc.msg.Params, updatedProposeParams)
 			} else {
 				// Otherwise, verify that propose params are unchanged.
-				require.Equal(t, GENESIS_PROPOSE_PARAMS, tApp.App.BridgeKeeper.GetProposeParams(ctx))
+				require.Equal(t, GenesisProposeParams, tApp.App.BridgeKeeper.GetProposeParams(ctx))
 			}
 		})
 	}
@@ -239,20 +239,14 @@ func TestUpdateSafetyParams(t *testing.T) {
 		"Success": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
 				Authority: lib.GovModuleAddress.String(),
-				Params: bridgetypes.SafetyParams{
-					IsDisabled:  true,
-					DelayBlocks: 123,
-				},
+				Params:    ModifiedSafetyParams,
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 		},
 		"Failure: invalid authority": {
 			msg: &bridgetypes.MsgUpdateSafetyParams{
-				Authority: INVALID_BRIDGE_AUTHORITY,
-				Params: bridgetypes.SafetyParams{
-					IsDisabled:  true,
-					DelayBlocks: 123,
-				},
+				Authority: InvalidBridgeAuthority,
+				Params:    ModifiedSafetyParams,
 			},
 			expectSubmitProposalFails: true,
 		},
@@ -271,7 +265,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *bridgetypes.GenesisState) {
-						genesisState.SafetyParams = GENESIS_SAFETY_PARAMS
+						genesisState.SafetyParams = GenesisSafetyParams
 					},
 				)
 				return genesis
@@ -295,7 +289,7 @@ func TestUpdateSafetyParams(t *testing.T) {
 				require.Equal(t, tc.msg.Params, updatedSafetyParams)
 			} else {
 				// Otherwise, verify that safety params are unchanged.
-				require.Equal(t, GENESIS_SAFETY_PARAMS, tApp.App.BridgeKeeper.GetSafetyParams(ctx))
+				require.Equal(t, GenesisSafetyParams, tApp.App.BridgeKeeper.GetSafetyParams(ctx))
 			}
 		})
 	}
