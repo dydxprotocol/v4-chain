@@ -784,9 +784,6 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			} else {
 				require.ErrorContains(t, client.HealthCheck(), tc.expectedError.Error())
 			}
-
-			// Cleanup.
-			close(stop)
 		})
 	}
 }
