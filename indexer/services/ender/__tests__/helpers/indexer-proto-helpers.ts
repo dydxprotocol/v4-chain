@@ -57,7 +57,8 @@ import {
   convertPerpetualPosition,
   generateFillSubaccountMessage,
   generatePerpetualMarketMessage,
-  generatePerpetualPositionsContents, isDeleveraging,
+  generatePerpetualPositionsContents,
+  isDeleveraging,
   isLiquidation,
 } from '../../src/helpers/kafka-helper';
 import { protoTimestampToDate } from '../../src/lib/helper';
