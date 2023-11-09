@@ -40,14 +40,10 @@ export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEv
     return [
       `${this.eventType}_${offsettingSubaccountUuid}_${perpetualMarket.clobPairId}`,
       `${this.eventType}_${deleveragedSubaccountUuid}_${perpetualMarket.clobPairId}`,
-      // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-      // processed in parallel
+      // To ensure that SubaccountUpdateEvents, OrderFillEvents, and DeleveragingEvents for the same
+      // subaccount are not processed in parallel
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
-      // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
-      // processed in parallel
-      `${DELEVERAGING_EVENT_TYPE}_${offsettingSubaccountUuid}`,
-      `${DELEVERAGING_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
     ];
   }
 

@@ -67,9 +67,6 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
         // processed in parallel
         `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-        // To ensure that DeleveragingEvents for the same subaccount are not
-        // processed in parallel
-        `${DELEVERAGING_EVENT_TYPE}_${subaccountUuid}`,
       ];
     } else {
       const liquidationOrder: LiquidationOrderV1 = liquidatedOrderFill.liquidationOrder!;

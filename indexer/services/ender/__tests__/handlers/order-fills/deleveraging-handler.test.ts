@@ -37,7 +37,7 @@ import {
   createKafkaMessageFromDeleveragingEvent,
   expectDefaultTradeKafkaMessageFromTakerFillId,
   expectFillInDatabase,
-  expectFillSubaccountKafkaMessageFromLiquidationEvent,
+  expectFillSubaccountKafkaMessageFromLiquidationEvent, expectPerpetualPosition,
 } from '../../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
@@ -53,6 +53,8 @@ import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import Big from 'big.js';
+import { getWeightedAverage } from '../../../src/lib/helper';
 
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
@@ -117,6 +119,10 @@ describe('DeleveragingHandler', () => {
     openEventId: testConstants.defaultTendermintEventId,
     lastEventId: testConstants.defaultTendermintEventId,
     settledFunding: '200000',
+  };
+  const deleveragedPerpetualPosition: PerpetualPositionCreateObject = {
+    ...offsettingPerpetualPosition,
+    subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
   };
 
   it('getParallelizationIds', () => {
@@ -211,10 +217,7 @@ describe('DeleveragingHandler', () => {
     // create initial PerpetualPositions
     await Promise.all([
       PerpetualPositionTable.create(offsettingPerpetualPosition),
-      PerpetualPositionTable.create({
-        ...offsettingPerpetualPosition,
-        subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
-      }),
+      PerpetualPositionTable.create(deleveragedPerpetualPosition),
     ]);
 
     const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
@@ -235,44 +238,76 @@ describe('DeleveragingHandler', () => {
         defaultDeleveragingEvent.perpetualId.toString(),
       );
 
-    await expectFillInDatabase({
-      subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.offsetting!),
-      clientId: '0',
-      liquidity: Liquidity.MAKER,
-      size: totalFilled,
-      price,
-      quoteAmount,
-      eventId,
-      transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
-      createdAtHeight: defaultHeight,
-      type: FillType.OFFSETTING,
-      clobPairId: perpetualMarket!.clobPairId,
-      side: OrderSide.BUY,
-      orderFlags: '0',
-      clientMetadata: null,
-      hasOrderId: false,
-      fee: '0',
-    });
-    await expectFillInDatabase({
-      subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
-      clientId: '0',
-      liquidity: Liquidity.TAKER,
-      size: totalFilled,
-      price,
-      quoteAmount,
-      eventId,
-      transactionHash: defaultTxHash,
-      createdAt: defaultDateTime.toISO(),
-      createdAtHeight: defaultHeight,
-      type: FillType.DELEVERAGED,
-      clobPairId: perpetualMarket!.clobPairId,
-      side: OrderSide.SELL,
-      orderFlags: '0',
-      clientMetadata: null,
-      hasOrderId: false,
-      fee: '0',
-    });
+    await Promise.all([
+      expectFillInDatabase({
+        subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.offsetting!),
+        clientId: '0',
+        liquidity: Liquidity.MAKER,
+        size: totalFilled,
+        price,
+        quoteAmount,
+        eventId,
+        transactionHash: defaultTxHash,
+        createdAt: defaultDateTime.toISO(),
+        createdAtHeight: defaultHeight,
+        type: FillType.OFFSETTING,
+        clobPairId: perpetualMarket!.clobPairId,
+        side: OrderSide.BUY,
+        orderFlags: '0',
+        clientMetadata: null,
+        hasOrderId: false,
+        fee: '0',
+      }),
+      expectFillInDatabase({
+        subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
+        clientId: '0',
+        liquidity: Liquidity.TAKER,
+        size: totalFilled,
+        price,
+        quoteAmount,
+        eventId,
+        transactionHash: defaultTxHash,
+        createdAt: defaultDateTime.toISO(),
+        createdAtHeight: defaultHeight,
+        type: FillType.DELEVERAGED,
+        clobPairId: perpetualMarket!.clobPairId,
+        side: OrderSide.SELL,
+        orderFlags: '0',
+        clientMetadata: null,
+        hasOrderId: false,
+        fee: '0',
+      }),
+      expectPerpetualPosition(
+        PerpetualPositionTable.uuid(
+          offsettingPerpetualPosition.subaccountId,
+          offsettingPerpetualPosition.openEventId,
+        ),
+        {
+          sumOpen: Big(offsettingPerpetualPosition.size).plus(totalFilled).toFixed(),
+          entryPrice: getWeightedAverage(
+            offsettingPerpetualPosition.entryPrice!,
+            offsettingPerpetualPosition.size,
+            price,
+            totalFilled,
+          ),
+        },
+      ),
+      expectPerpetualPosition(
+        PerpetualPositionTable.uuid(
+          deleveragedPerpetualPosition.subaccountId,
+          deleveragedPerpetualPosition.openEventId,
+        ),
+        {
+          sumOpen: Big(deleveragedPerpetualPosition.size).plus(totalFilled).toFixed(),
+          entryPrice: getWeightedAverage(
+            deleveragedPerpetualPosition.entryPrice!,
+            deleveragedPerpetualPosition.size,
+            price,
+            totalFilled,
+          ),
+        },
+      ),
+    ]);
 
     await Promise.all([
       expectFillsAndPositionsSubaccountKafkaMessages(
@@ -307,17 +342,15 @@ describe('DeleveragingHandler', () => {
       )
     )!.id;
 
-    await Promise.all([
-      expectFillSubaccountKafkaMessageFromLiquidationEvent(
-        producerSendMock,
-        subaccountId,
-        FillTable.uuid(eventId, liquidity),
-        positionId,
-        defaultHeight,
-        transactionIndex,
-        eventIndex,
-        testConstants.defaultPerpetualMarket2.ticker,
-      ),
-    ]);
+    await expectFillSubaccountKafkaMessageFromLiquidationEvent(
+      producerSendMock,
+      subaccountId,
+      FillTable.uuid(eventId, liquidity),
+      positionId,
+      defaultHeight,
+      transactionIndex,
+      eventIndex,
+      testConstants.defaultPerpetualMarket2.ticker,
+    );
   }
 });
