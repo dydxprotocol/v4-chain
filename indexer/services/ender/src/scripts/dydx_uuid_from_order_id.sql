@@ -1,5 +1,5 @@
 /**
-  Returns a UUID using the JSON.stringify format of an IndexerOrderId (https://github.com/dydxprotocol/v4-proto/blob/437f6d8/dydxprotocol/indexer/protocol/v1/clob.proto#L15).
+  Returns a UUID using the JSON.stringify format of an IndexerOrderId (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L15).
 */
 CREATE OR REPLACE FUNCTION dydx_uuid_from_order_id(order_id jsonb) RETURNS uuid AS $$
 BEGIN

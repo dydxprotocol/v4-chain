@@ -1,10 +1,10 @@
 /**
-  Returns the market status (https://github.com/dydxprotocol/v4-chain/blob/ea4f6895a73627aaa9bc5e21eed1ba51313b1ce4/indexer/packages/postgres/src/types/perpetual-market-types.ts#L60)
-  from the clob pair status (https://github.com/dydxprotocol/v4-chain/blob/ea4f6895a73627aaa9bc5e21eed1ba51313b1ce4/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L157).
-  The conversion is equivalent to https://github.com/dydxprotocol/v4-chain/blob/ea4f6895a73627aaa9bc5e21eed1ba51313b1ce4/indexer/packages/postgres/src/lib/protocol-translations.ts#L351.
+  Returns the market status (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/types/perpetual-market-types.ts#L60)
+  from the clob pair status (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L157).
+  The conversion is equivalent to https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/lib/protocol-translations.ts#L351.
 
   Parameters:
-    - status: the ClobPairStatus (https://github.com/dydxprotocol/v4-chain/blob/ea4f6895a73627aaa9bc5e21eed1ba51313b1ce4/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L157)
+    - status: the ClobPairStatus (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/protocol/v1/clob.proto#L157)
 */
 CREATE OR REPLACE FUNCTION dydx_clob_pair_status_to_market_status(status jsonb)
     RETURNS text AS $$

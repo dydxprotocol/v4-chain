@@ -3,21 +3,21 @@
     - field: the field storing the order to process.
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-proto/blob/8d35c86/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/indexer/blob/cc70982/services/ender/src/lib/helper.ts#L33)
+        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
     - usdc_asset_id: The USDC asset id.
   Returns: JSON object containing fields:
-    - order: The updated order in order-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/order-model.ts).
+    - order: The updated order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
         Only returned if field == 'makerOrder'.
-    - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
-    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
-    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
+    - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
+    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
+    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
 */
 CREATE OR REPLACE FUNCTION dydx_liquidation_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
