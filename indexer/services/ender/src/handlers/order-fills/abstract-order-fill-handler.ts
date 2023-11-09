@@ -45,8 +45,6 @@ import {
   generateFillSubaccountMessage,
   generateOrderSubaccountMessage,
   generatePerpetualPositionsContents,
-  isDeleveraging,
-  isLiquidation,
 } from '../../helpers/kafka-helper';
 import {
   getPrice,
