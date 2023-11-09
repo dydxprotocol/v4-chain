@@ -182,7 +182,7 @@ BEGIN
     /* Upsert the perpetual_position record for this order_fill event. */
     SELECT * INTO perpetual_position_record FROM perpetual_positions WHERE "subaccountId" = subaccount_uuid
                                                                        AND "perpetualId" = perpetual_market_record."id"
-    ORDER BY "createdAtHeight" DESC;
+    ORDER BY "openEventId" DESC;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Unable to find existing perpetual position, subaccountId: %, perpetualId: %', subaccount_uuid, perpetual_market_record."id";
     END IF;

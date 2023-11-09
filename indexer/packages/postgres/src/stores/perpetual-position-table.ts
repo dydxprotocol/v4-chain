@@ -124,7 +124,7 @@ export async function findAll(
       PerpetualPositionColumns.subaccountId,
       Ordering.ASC,
     ).orderBy(
-      PerpetualPositionColumns.createdAtHeight,
+      PerpetualPositionColumns.openEventId,
       Ordering.DESC,
     );
   }

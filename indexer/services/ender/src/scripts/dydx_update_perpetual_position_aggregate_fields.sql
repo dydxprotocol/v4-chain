@@ -22,12 +22,11 @@ DECLARE
     exit_price numeric;
 BEGIN
     -- Retrieve the latest perpetual position record.
-    -- TODO(IND-485): Order by openEventId instead of createdAtHeight.
     SELECT * INTO perpetual_position_record
     FROM perpetual_positions
     WHERE "subaccountId" = subaccount_uuid
       AND "perpetualId" = perpetual_id
-    ORDER BY "createdAtHeight" DESC
+    ORDER BY "openEventId" DESC
     LIMIT 1;
 
     IF NOT FOUND THEN

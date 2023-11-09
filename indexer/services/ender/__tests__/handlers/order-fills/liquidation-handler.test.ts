@@ -141,8 +141,8 @@ describe('LiquidationHandler', () => {
     entryPrice: '15000',
     createdAt: DateTime.utc().toISO(),
     createdAtHeight: '1',
-    openEventId: testConstants.defaultTendermintEventId,
-    lastEventId: testConstants.defaultTendermintEventId,
+    openEventId: testConstants.defaultTendermintEventId4,
+    lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
 
@@ -234,7 +234,7 @@ describe('LiquidationHandler', () => {
     ],
   ])(
     'creates fills and orders (with %s), sends vulcan message for maker order update and updates ' +
-    ' perpetualPosition',
+    'perpetualPosition',
     async (
       _name: string,
       goodTilOneof: Partial<IndexerOrder>,
@@ -297,8 +297,7 @@ describe('LiquidationHandler', () => {
         // older perpetual position to ensure that the correct perpetual position is being updated
         PerpetualPositionTable.create({
           ...defaultPerpetualPosition,
-          createdAtHeight: '0',
-          openEventId: testConstants.defaultTendermintEventId2,
+          openEventId: testConstants.defaultTendermintEventId,
         }),
       ]);
 
