@@ -1639,7 +1639,7 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker
       "side": "BUY",
       "size": "string",
       "price": "string",
-      "type": "MARKET",
+      "type": "LIMIT",
       "createdAt": "string",
       "createdAtHeight": "string"
     }
@@ -3063,7 +3063,7 @@ or
   "side": "BUY",
   "size": "string",
   "price": "string",
-  "type": "MARKET",
+  "type": "LIMIT",
   "createdAt": "string",
   "createdAtHeight": "string"
 }
@@ -3097,7 +3097,7 @@ or
       "side": "BUY",
       "size": "string",
       "price": "string",
-      "type": "MARKET",
+      "type": "LIMIT",
       "createdAt": "string",
       "createdAtHeight": "string"
     }
