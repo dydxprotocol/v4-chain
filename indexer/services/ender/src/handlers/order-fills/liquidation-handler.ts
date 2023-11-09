@@ -25,11 +25,7 @@ import Long from 'long';
 import * as pg from 'pg';
 
 import config from '../../config';
-import {
-  DELEVERAGING_EVENT_TYPE,
-  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
-} from '../../constants';
+import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import {
@@ -78,9 +74,6 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
         // processed in parallel
         `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${subaccountUuid}`,
-        // To ensure that DeleveragingEvents for the same subaccount are not
-        // processed in parallel
-        `${DELEVERAGING_EVENT_TYPE}_${subaccountUuid}`,
         // We do not need to add the StatefulOrderEvent parallelizationId here, because liquidation
         // fills have no order in postgres
       ];

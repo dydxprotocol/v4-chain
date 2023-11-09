@@ -13,7 +13,7 @@ import {
 import { DeleveragingEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { DELEVERAGING_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
+import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';

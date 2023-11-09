@@ -41,7 +41,6 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
-  DELEVERAGING_EVENT_TYPE,
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
   SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
@@ -165,14 +164,10 @@ describe('DeleveragingHandler', () => {
     expect(handler.getParallelizationIds()).toEqual([
       `${handler.eventType}_${offsettingSubaccountUuid}_${perpetualMarket!.clobPairId}`,
       `${handler.eventType}_${deleveragedSubaccountUuid}_${perpetualMarket!.clobPairId}`,
-      // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-      // processed in parallel
+      // To ensure that SubaccountUpdateEvents, OrderFillEvents, and DeleveragingEvents for
+      // the same subaccount are not processed in parallel
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
       `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
-      // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
-      // processed in parallel
-      `${DELEVERAGING_EVENT_TYPE}_${offsettingSubaccountUuid}`,
-      `${DELEVERAGING_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
     ]);
   });
 
@@ -298,13 +293,8 @@ describe('DeleveragingHandler', () => {
           deleveragedPerpetualPosition.openEventId,
         ),
         {
-          sumOpen: Big(deleveragedPerpetualPosition.size).plus(totalFilled).toFixed(),
-          entryPrice: getWeightedAverage(
-            deleveragedPerpetualPosition.entryPrice!,
-            deleveragedPerpetualPosition.size,
-            price,
-            totalFilled,
-          ),
+          sumClose: Big(totalFilled).toFixed(),
+          exitPrice: price,
         },
       ),
     ]);

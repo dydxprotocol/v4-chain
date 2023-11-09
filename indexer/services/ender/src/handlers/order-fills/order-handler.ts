@@ -25,11 +25,7 @@ import Long from 'long';
 import * as pg from 'pg';
 
 import config from '../../config';
-import {
-  DELEVERAGING_EVENT_TYPE,
-  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
-} from '../../constants';
+import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
@@ -61,9 +57,6 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
       // processed in parallel
       `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-      // To ensure that DeleveragingEvents for the same subaccount are not
-      // processed in parallel
-      `${DELEVERAGING_EVENT_TYPE}_${subaccountUuid}`,
     ];
   }
 
