@@ -15,7 +15,7 @@ CREATE OR REPLACE FUNCTION dydx_update_perpetual_position_aggregate_fields(
     price numeric
 ) RETURNS perpetual_positions AS $$
 DECLARE
-    perpetual_position_record RECORD;
+    perpetual_position_record perpetual_positions%ROWTYPE;
     sum_open numeric;
     entry_price numeric;
     sum_close numeric;

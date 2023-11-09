@@ -42,6 +42,7 @@ const scripts: string[] = [
   'dydx_from_serializable_int.sql',
   'dydx_funding_handler.sql',
   'dydx_get_fee_from_liquidity.sql',
+  'dydx_get_perpetual_market_for_clob_pair.sql',
   'dydx_get_order_status.sql',
   'dydx_get_total_filled_from_liquidity.sql',
   'dydx_get_weighted_average.sql',

@@ -52,15 +52,7 @@ BEGIN
         clob_pair_id = jsonb_extract_path(order_, 'clobPairId')::bigint;
     END IF;
 
-    BEGIN
-        SELECT * INTO STRICT perpetual_market_record FROM perpetual_markets WHERE "clobPairId" = clob_pair_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE EXCEPTION 'Unable to find perpetual market with clobPairId %', clob_pair_id;
-        WHEN TOO_MANY_ROWS THEN
-            /** This should never happen and if it ever were to would indicate that the table has malformed data. */
-            RAISE EXCEPTION 'Found multiple perpetual markets with clobPairId %', clob_pair_id;
-    END;
+    perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
 
     BEGIN
         SELECT * INTO STRICT asset_record FROM assets WHERE "id" = usdc_asset_id;
