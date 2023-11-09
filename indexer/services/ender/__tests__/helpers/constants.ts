@@ -325,6 +325,7 @@ export const defaultTradeContent: TradeContent = {
   side: 'BUY',
   createdAt: 'createdAt',
   liquidation: true,
+  deleveraging: false,
 };
 export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessage(
   defaultTradeContent,

@@ -45,6 +45,7 @@ import {
   generateFillSubaccountMessage,
   generateOrderSubaccountMessage,
   generatePerpetualPositionsContents,
+  isDeleveraging,
   isLiquidation,
 } from '../../helpers/kafka-helper';
 import {
@@ -428,6 +429,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
           side: fill.side.toString(),
           createdAt: fill.createdAt,
           liquidation: isLiquidation(fill),
+          deleveraging: isDeleveraging(fill),
         },
       ],
     };

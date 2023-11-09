@@ -48,6 +48,7 @@ import {
   OffChainUpdateV1,
   IndexerOrderId,
   PerpetualMarketCreateEventV1,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
@@ -57,6 +58,7 @@ import {
   generateFillSubaccountMessage,
   generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
+  isDeleveraging,
   isLiquidation,
 } from '../../src/helpers/kafka-helper';
 import { protoTimestampToDate } from '../../src/lib/helper';
@@ -471,6 +473,41 @@ export function createKafkaMessageFromOrderFillEvent({
   return createKafkaMessage(Buffer.from(binaryBlock));
 }
 
+export function createKafkaMessageFromDeleveragingEvent({
+  deleveragingEvent,
+  transactionIndex,
+  eventIndex,
+  height,
+  time,
+  txHash,
+}: {
+  deleveragingEvent: DeleveragingEventV1,
+  transactionIndex: number,
+  eventIndex: number,
+  height: number,
+  time: Timestamp,
+  txHash: string,
+}) {
+  const events: IndexerTendermintEvent[] = [
+    createIndexerTendermintEvent(
+      DydxIndexerSubtypes.DELEVERAGING,
+      Uint8Array.from(DeleveragingEventV1.encode(deleveragingEvent).finish()),
+      transactionIndex,
+      eventIndex,
+    ),
+  ];
+
+  const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+    height,
+    time,
+    events,
+    [txHash],
+  );
+
+  const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+  return createKafkaMessage(Buffer.from(binaryBlock));
+}
+
 export function liquidationOrderToOrderSide(
   liquidationOrder: LiquidationOrderV1,
 ): OrderSide {
@@ -771,6 +808,7 @@ export async function expectDefaultTradeKafkaMessageFromTakerFillId(
         side: takerFill!.side.toString(),
         createdAt: takerFill!.createdAt,
         liquidation: isLiquidation(takerFill!),
+        deleveraging: isDeleveraging(takerFill!),
       },
     ],
   };

@@ -176,6 +176,7 @@ export interface TradeContent {
   side: string,
   createdAt: IsoString,
   liquidation: boolean,
+  deleveraging: boolean,
 }
 
 /* ------- MarketMessageContents ------- */
