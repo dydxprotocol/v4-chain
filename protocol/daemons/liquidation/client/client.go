@@ -15,8 +15,8 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-// Client implements a daemon service client that periodically queries a gRPC server for all liquidatable subaccounts
-// and reports them back to the protocol via the daemon server.
+// Client implements a daemon service client that periodically calculates and reports liquidatable subaccounts
+// to the protocol.
 type Client struct {
 	// include HealthCheckable to track the health of the daemon.
 	daemontypes.HealthCheckable
