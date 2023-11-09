@@ -714,7 +714,7 @@ interface TradeContent {
   price: string,
   side: string,
   createdAt: IsoString,
-  liquidation: boolean,
+  type: FillType,
 }
 ```
 
@@ -736,7 +736,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIQUIDATION"
       },
       {
         "id": "38e64479-af09-5417-a795-195f83879156",
@@ -744,7 +744,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIQUIDATION"
       },
       {
         "id": "d310c32c-f066-5ba8-a97d-10a29d9a6c84",
@@ -752,7 +752,7 @@ interface TradeContent {
         "price": "27837",
         "side": "SELL",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "MARKET"
       },
       {
         "id": "dd1088b5-5cab-518f-a59c-4d5f735ab861",
@@ -760,7 +760,7 @@ interface TradeContent {
         "price": "27837",
         "side": "SELL",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIMIT"
       },
     ],
   },

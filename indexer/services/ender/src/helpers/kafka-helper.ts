@@ -2,32 +2,31 @@ import {
   apiTranslations,
   AssetFromDatabase,
   AssetPositionFromDatabase,
+  AssetPositionSubaccountMessageContents,
   AssetsMap,
   FillFromDatabase,
   FillSubaccountMessageContents,
-  FillType,
+  helpers,
+  liquidityTierRefresher,
+  LiquidityTiersFromDatabase,
+  LiquidityTiersMap,
   MarketMessageContents,
   MarketsMap,
   OraclePriceFromDatabase,
   OrderFromDatabase,
   OrderSubaccountMessageContents,
+  PerpetualMarketColumns,
   PerpetualMarketFromDatabase,
   PerpetualMarketsMap,
+  PerpetualPositionFromDatabase,
   PerpetualPositionSubaccountMessageContents,
   PositionSide,
   SubaccountMessageContents,
-  TransferFromDatabase,
-  helpers,
-  UpdatedPerpetualPositionSubaccountKafkaObject,
-  PerpetualPositionFromDatabase,
-  AssetPositionSubaccountMessageContents,
   SubaccountTable,
-  LiquidityTiersFromDatabase,
-  liquidityTierRefresher,
-  LiquidityTiersMap,
-  PerpetualMarketColumns,
-  TradingPerpetualMarketMessage,
   TradingMarketMessageContents,
+  TradingPerpetualMarketMessage,
+  TransferFromDatabase,
+  UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import { SubaccountId } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -272,14 +271,6 @@ export function generateOraclePriceContents(
       },
     },
   };
-}
-
-export function isLiquidation(fill: FillFromDatabase): boolean {
-  return fill.type === FillType.LIQUIDATION || fill.type === FillType.LIQUIDATED;
-}
-
-export function isDeleveraging(fill: FillFromDatabase): boolean {
-  return fill.type === FillType.DELEVERAGED || fill.type === FillType.OFFSETTING;
 }
 
 export function generateFillSubaccountMessage(

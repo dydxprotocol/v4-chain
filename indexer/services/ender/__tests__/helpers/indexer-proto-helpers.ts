@@ -58,8 +58,6 @@ import {
   generateFillSubaccountMessage,
   generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
-  isDeleveraging,
-  isLiquidation,
 } from '../../src/helpers/kafka-helper';
 import { protoTimestampToDate } from '../../src/lib/helper';
 import { DydxIndexerSubtypes, VulcanMessage } from '../../src/lib/types';
@@ -807,8 +805,7 @@ export async function expectDefaultTradeKafkaMessageFromTakerFillId(
         price: takerFill!.price,
         side: takerFill!.side.toString(),
         createdAt: takerFill!.createdAt,
-        liquidation: isLiquidation(takerFill!),
-        deleveraging: isDeleveraging(takerFill!),
+        type: takerFill!.type,
       },
     ],
   };
