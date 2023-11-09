@@ -176,6 +176,16 @@ var (
 		},
 		testapp.DefaultGenesis(),
 	))
+	PlaceOrder_Bob_Num0_Id0_Clob0_Sell4_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
+			Side:         clobtypes.Order_SIDE_SELL,
+			Quantums:     4,
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		},
+		testapp.DefaultGenesis(),
+	))
 	CancelOrder_Bob_Num0_Id0_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
 		clobtypes.OrderId{
 			SubaccountId: constants.Bob_Num0,

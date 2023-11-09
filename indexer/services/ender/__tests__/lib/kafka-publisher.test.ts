@@ -19,11 +19,7 @@ import {
 import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
-import {
-  AnnotatedSubaccountMessage,
-  ConsolidatedKafkaEvent,
-  SingleTradeMessage,
-} from '../../src/lib/types';
+import { AnnotatedSubaccountMessage, ConsolidatedKafkaEvent, SingleTradeMessage } from '../../src/lib/types';
 
 import { KafkaPublisher } from '../../src/lib/kafka-publisher';
 import {
@@ -413,7 +409,7 @@ describe('kafka-publisher', () => {
         price: '10000',
         side: 'side',
         createdAt: 'today',
-        liquidation: false,
+        type: FillType.LIMIT,
       };
       const singleTrade1: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent1,
@@ -426,7 +422,7 @@ describe('kafka-publisher', () => {
         price: '12000',
         side: 'side',
         createdAt: 'today',
-        liquidation: false,
+        type: FillType.LIMIT,
       };
       const singleTrade2: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent2,
@@ -440,7 +436,7 @@ describe('kafka-publisher', () => {
         price: '1000',
         side: 'side',
         createdAt: 'today',
-        liquidation: false,
+        type: FillType.LIMIT,
       };
       const singleTrade3: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent3,

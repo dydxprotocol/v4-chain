@@ -304,7 +304,9 @@
           "MARKET",
           "LIMIT",
           "LIQUIDATED",
-          "LIQUIDATION"
+          "LIQUIDATION",
+          "DELEVERAGED",
+          "OFFSETTING"
         ],
         "type": "string"
       },
@@ -857,6 +859,9 @@
           "price": {
             "type": "string"
           },
+          "type": {
+            "$ref": "#/components/schemas/FillType"
+          },
           "createdAt": {
             "$ref": "#/components/schemas/IsoString"
           },
@@ -869,6 +874,7 @@
           "side",
           "size",
           "price",
+          "type",
           "createdAt",
           "createdAtHeight"
         ],

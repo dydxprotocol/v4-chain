@@ -7,7 +7,7 @@ import {
   IndexerTendermintEvent_BlockEvent,
   AssetCreateEventV1,
   SubaccountUpdateEventV1,
-  MarketEventV1,
+  MarketEventV1, IndexerOrder_ConditionType,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
@@ -20,6 +20,7 @@ import {
   PositionSide,
   TendermintEventTable,
   FillTable,
+  FundingIndexUpdatesTable,
   OraclePriceTable,
   OrderTable,
   protocolTranslations,
@@ -175,6 +176,16 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
+    ['LIMIT', IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+    ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
+    ['STOP_LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
+    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type('${value}') AS result`);
+    expect(result).toEqual(protocolTranslations.protocolConditionTypeToOrderType(value));
+  });
+
+  it.each([
     '0', '1', '-1', '10000000000000000000000000000', '-20000000000000000000000000000',
   ])('dydx_from_serializable_int (%s)', async (value: string) => {
     const byteArray = bigIntToBytes(BigInt(value));
@@ -254,6 +265,16 @@ describe('SQL Function Tests', () => {
     const result = await getSingleRawQueryResultRow(
       `SELECT dydx_uuid_from_fill_event_parts('\\x${eventId.toString('hex')}'::bytea, '${liquidity}') AS result`);
     expect(result).toEqual(FillTable.uuid(eventId, liquidity));
+  });
+
+  it.each([
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+  ])('dydx_uuid_from_funding_index_update_parts (%s, %s, %s, %s)', async (blockHeight: number, transactionIndex: number, eventIndex: number, perpetualId: number) => {
+    const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_funding_index_update_parts('${blockHeight}', '\\x${eventId.toString('hex')}'::bytea, '${perpetualId}') AS result`);
+    expect(result).toEqual(FundingIndexUpdatesTable.uuid(`${blockHeight}`, eventId, `${perpetualId}`));
   });
 
   it.each([

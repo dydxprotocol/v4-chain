@@ -26,6 +26,9 @@ export const configSchema = {
   USE_ASSET_CREATE_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
+  USE_FUNDING_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
   USE_LIQUIDATION_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
@@ -45,6 +48,9 @@ export const configSchema = {
     default: true,
   }),
   USE_PERPETUAL_MARKET_HANDLER_SQL_FUNCTION: parseBoolean({
+    default: true,
+  }),
+  USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION: parseBoolean({
     default: true,
   }),
   USE_SUBACCOUNT_UPDATE_SQL_FUNCTION: parseBoolean({

@@ -71,22 +71,24 @@ func (k Keeper) CancelShortTermOrder(
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.CancelShortTermOrder, metrics.Latency)
 	telemetry.IncrCounter(1, types.ModuleName, metrics.CancelShortTermOrder, metrics.Count)
 
-	// Perform all stateful validation on the order. Order may be stateful or short term.
+	// Perform all stateful validation on the short term order.
 	if err := k.PerformOrderCancellationStatefulValidation(ctx, msgCancelOrder, nextBlockHeight); err != nil {
 		return err
 	}
 
-	// Update in-memory orderbook to remove order.
+	// Update in-memory orderbook to remove short term order.
 	offchainUpdates, err := k.MemClob.CancelOrder(ctx, msgCancelOrder)
-
-	if err == nil {
-		k.sendOffchainMessagesWithTxHash(
-			offchainUpdates,
-			tmhash.Sum(ctx.TxBytes()),
-			metrics.SendCancelOrderOffchainUpdates,
-		)
+	if err != nil {
+		return err
 	}
-	return err
+
+	k.sendOffchainMessagesWithTxHash(
+		offchainUpdates,
+		tmhash.Sum(ctx.TxBytes()),
+		metrics.SendCancelOrderOffchainUpdates,
+	)
+
+	return nil
 }
 
 // PlaceShortTermOrder places an order on the corresponding orderbook, and performs matching if placing the
@@ -95,8 +97,8 @@ func (k Keeper) CancelShortTermOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
-//   - Equity tier limit exceeded.
-//   - The memclob itself returns an error.
+//   - The subaccount's equity tier limit is exceeded.
+//   - Placing the short term order on the memclob returns an error.
 //
 // This method will panic if the provided order is not a Short-Term order.
 func (k Keeper) PlaceShortTermOrder(
@@ -107,12 +109,66 @@ func (k Keeper) PlaceShortTermOrder(
 	orderStatus types.OrderStatus,
 	err error,
 ) {
-	msg.Order.OrderId.MustBeShortTermOrder()
-
 	lib.AssertCheckTxMode(ctx)
 	nextBlockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight() + 1)
 
-	return k.placeOrder(ctx, msg, nextBlockHeight, k.MemClob)
+	order := msg.GetOrder()
+	order.OrderId.MustBeShortTermOrder()
+	orderLabels := order.GetOrderLabels()
+
+	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
+	defer func() {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Count},
+			1,
+			orderLabels,
+		)
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.PlaceOrder, metrics.Rejected},
+				1,
+				orderLabels,
+			)
+		}
+	}()
+
+	// Perform stateful validation.
+	err = k.PerformStatefulOrderValidation(ctx, &order, nextBlockHeight, true)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
+	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
+	if err != nil {
+		return 0, 0, err
+	}
+
+	// Place the order on the memclob and return the result.
+	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
+		ctx,
+		msg.Order,
+	)
+
+	// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
+	// the messages to be sent in a channel and should be non-blocking.
+	// Off-chain update messages should be only be returned if the `IndexerMessageSender`
+	// is enabled (`msgSender.Enabled()` returns true).
+	k.sendOffchainMessagesWithTxHash(
+		offchainUpdates,
+		tmhash.Sum(ctx.TxBytes()),
+		metrics.SendPlaceOrderOffchainUpdates,
+	)
+
+	if orderSizeOptimisticallyFilledFromMatchingQuantums > 0 {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Matched},
+			1,
+			orderLabels,
+		)
+	}
+
+	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
 }
 
 // CancelStatefulOrder performs stateful order cancellation validation and removes the stateful order
@@ -325,81 +381,6 @@ func (k Keeper) ReplayPlaceOrder(
 	)
 
 	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err
-}
-
-// placeOrder contains shared logic for order placement. It performs
-// matching if placing the order causes an overlap. This function will return the result of
-// calling `PlaceOrder` on the specified memclob.
-//
-// An error will be returned if any of the following conditions are true:
-//   - Standard stateful validation fails.
-//   - The subaccount's equity tier limit is exceeded.
-//   - Placing the stateful order on the memclob returns an error.
-func (k Keeper) placeOrder(
-	ctx sdk.Context,
-	msg *types.MsgPlaceOrder,
-	blockHeight uint32,
-	memclob types.MemClob,
-) (
-	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
-	orderStatus types.OrderStatus,
-	err error,
-) {
-	order := msg.GetOrder()
-	orderLabels := order.GetOrderLabels()
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.PlaceOrder, metrics.Latency)
-	defer func() {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Count},
-			1,
-			orderLabels,
-		)
-		if err != nil {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.PlaceOrder, metrics.Rejected},
-				1,
-				orderLabels,
-			)
-		}
-	}()
-
-	// Perform stateful validation.
-	err = k.PerformStatefulOrderValidation(ctx, &order, blockHeight, true)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
-	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
-	if err != nil {
-		return 0, 0, err
-	}
-
-	// Place the order on the memclob and return the result.
-	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := memclob.PlaceOrder(
-		ctx,
-		msg.Order,
-	)
-
-	// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
-	// the messages to be sent in a channel and should be non-blocking.
-	// Off-chain update messages should be only be returned if the `IndexerMessageSender`
-	// is enabled (`msgSender.Enabled()` returns true).
-	k.sendOffchainMessagesWithTxHash(
-		offchainUpdates,
-		tmhash.Sum(ctx.TxBytes()),
-		metrics.SendPlaceOrderOffchainUpdates,
-	)
-
-	if orderSizeOptimisticallyFilledFromMatchingQuantums > 0 {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.PlaceOrder, metrics.Matched},
-			1,
-			orderLabels,
-		)
-	}
-
-	return orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, err
 }
 
 // AddPreexistingStatefulOrder performs stateful validation on an order and adds it to the specified memclob.

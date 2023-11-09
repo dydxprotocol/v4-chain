@@ -226,6 +226,7 @@ export const defaultOrderGoodTilBlockTime: OrderCreateObject = {
   clientId: '2',
   goodTilBlock: undefined,
   goodTilBlockTime: '2023-01-22T00:00:00.000Z',
+  createdAtHeight: '1',
   orderFlags: ORDER_FLAG_LONG_TERM.toString(),
 };
 
@@ -286,6 +287,11 @@ export const defaultTendermintEvent3: TendermintEventCreateObject = {
   transactionIndex: 0,
   eventIndex: 0,
 };
+export const defaultTendermintEvent4: TendermintEventCreateObject = {
+  blockHeight: '2',
+  transactionIndex: 1,
+  eventIndex: 1,
+};
 export const defaultTendermintEventId: Buffer = TendermintEventTable.createEventId(
   defaultTendermintEvent.blockHeight,
   defaultTendermintEvent.transactionIndex,
@@ -300,6 +306,11 @@ export const defaultTendermintEventId3: Buffer = TendermintEventTable.createEven
   defaultTendermintEvent3.blockHeight,
   defaultTendermintEvent3.transactionIndex,
   defaultTendermintEvent3.eventIndex,
+);
+export const defaultTendermintEventId4: Buffer = TendermintEventTable.createEventId(
+  defaultTendermintEvent4.blockHeight,
+  defaultTendermintEvent4.transactionIndex,
+  defaultTendermintEvent4.eventIndex,
 );
 
 // ============== Transactions ==============
