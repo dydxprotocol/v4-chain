@@ -441,7 +441,7 @@ func TestFunding(t *testing.T) {
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
 
-			// Build a DeiverTx override with MsgUpdateMarketPrices to update oracle price for funding index.
+			// Build a DeliverTx override with MsgUpdateMarketPrices to update oracle price for funding index.
 			msgPriceUpdate := &pricestypes.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					pricestypes.NewMarketPriceUpdate(0, pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5)),
