@@ -31,9 +31,9 @@ func TestConditionalOrder(t *testing.T) {
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
 
 		// these expectations are asserted after all blocks are processed
-		expectedExistInState               map[clobtypes.OrderId]bool
-		expectedOrderFillAmount            map[clobtypes.OrderId]uint64
-		expectedSubaccounts                []satypes.Subaccount
+		expectedExistInState    map[clobtypes.OrderId]bool
+		expectedOrderFillAmount map[clobtypes.OrderId]uint64
+		expectedSubaccounts     []satypes.Subaccount
 	}{
 		"TakeProfit/Buy conditional order is placed but not triggered (no price update)": {
 			subaccounts: []satypes.Subaccount{
