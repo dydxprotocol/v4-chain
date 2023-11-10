@@ -28,8 +28,10 @@ func TestConditionalOrder(t *testing.T) {
 		priceUpdateForFirstBlock  *prices.MsgUpdateMarketPrices
 		priceUpdateForSecondBlock *prices.MsgUpdateMarketPrices
 
-		expectedExistInState               map[clobtypes.OrderId]bool
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
+
+		// these expectations are asserted after all blocks are processed
+		expectedExistInState               map[clobtypes.OrderId]bool
 		expectedOrderFillAmount            map[clobtypes.OrderId]uint64
 		expectedSubaccounts                []satypes.Subaccount
 	}{
@@ -528,7 +530,7 @@ func TestConditionalOrder(t *testing.T) {
 				4: {constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50001.OrderId: true},
 			},
 		},
-		"StopLoss/Buy IOC conditional order can place, trigger, partially match, and be removed from state.": {
+		"StopLoss/Buy IOC conditional order can place, trigger, partially match, and be removed from state": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
 				constants.Dave_Num0_10000USD,
@@ -600,7 +602,7 @@ func TestConditionalOrder(t *testing.T) {
 				},
 			},
 		},
-		"TakeProfit/Sell FOK conditional order can place, trigger, fully match, and be removed from state.": {
+		"TakeProfit/Sell FOK conditional order can place, trigger, fully match, and be removed from state": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
 				constants.Dave_Num0_500000USD,
@@ -642,7 +644,7 @@ func TestConditionalOrder(t *testing.T) {
 				},
 			},
 		},
-		"StopLoss/Buy IOC conditional order can place, trigger, fully match, and be removed from state.": {
+		"StopLoss/Buy IOC conditional order can place, trigger, fully match, and be removed from state": {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_10000USD,
 				constants.Dave_Num0_500000USD,
