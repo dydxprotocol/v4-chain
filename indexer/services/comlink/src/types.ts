@@ -16,7 +16,8 @@ import {
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PositionSide,
-  SubaccountFromDatabase, TradeType,
+  SubaccountFromDatabase,
+  TradeType,
   TransferType,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
