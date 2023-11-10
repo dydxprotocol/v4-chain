@@ -7,6 +7,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
@@ -14,6 +15,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -150,10 +152,10 @@ func TestFunding(t *testing.T) {
 		oracelPriceForFundingIndex map[uint32]string
 		// address -> funding
 		expectedSubaccountSettlements []expectedSettlements
-		expectedFundingPremium        int32
+		expectedFundingPremiums       []perptypes.MarketPremiums
 		expectedFundingIndex          int64
 	}{
-		"Test funding": {
+		"Index price below impact bid, positive funding, longs pay shorts": {
 			testHumanOrders: []TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
@@ -192,31 +194,169 @@ func TestFunding(t *testing.T) {
 			oracelPriceForFundingIndex: map[uint32]string{
 				0: "27000",
 			},
-			expectedFundingPremium: 1430, // 28_000 / 27_960 - 1 ~= 0.001430
-			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 483
-			expectedFundingIndex: 483,
+			expectedFundingPremiums: []perptypes.MarketPremiums{
+				{
+					PerpetualId: 0,
+					// 28_000 / 27_960 - 1 ~= 0.001430
+					Premiums: constants.GenerateConstantFundingPremiums(1430, 60),
+				},
+			},
+			// 1430 / 8 * 27000 * 10^(btc_atomic_resolution - quote_atomic_resolution) ~= 482.625
+			expectedFundingIndex: 482,
 			expectedSubaccountSettlements: []expectedSettlements{
 				{
 					SubaccountId: constants.Alice_Num0,
 					// Alice is long 0.8 BTC, pays funding
-					// 0.00143 / 8 * 27_000 * 0.8 ~= $3.864
-					Settlement: -3_864_000,
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.8 ~= $3.864
+					// Actual (from funding index): 482 * 8e9 (base quantums) / 1e6 (quote atomic) = $3.856
+					Settlement: -3_856_000,
 				},
 				{
 					SubaccountId: constants.Bob_Num0,
 					// Bob is short 1 BTC, receives funding
-					// 0.00143 / 8 * 27_000 * 1 ~= $4.83
-					Settlement: 4_830_000,
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 1 ~= $4.82625
+					// Actual (from funding index): 482 * 1e10 (base quantums) / 1e6 (quote atomic) = $4.82
+					Settlement: 4_820_000,
 				},
 				{
 					SubaccountId: constants.Carl_Num0,
 					// Carl is long 0.2 BTC, pays funding
-					// 0.00143 / 8 * 27_000 * 0.2 ~= $0.966
-					Settlement: -966_000,
+					// Theoretical (from funding rate): 0.00143 / 8 * 27_000 * 0.2 ~= $0.96525
+					// Actual (from funding index): 482 * 2e9 (base quantums) / 1e6 (quote atomic) = $0.964
+					Settlement: -964_000,
 				},
 			},
 		},
-		// TODO(CORE-712): Add more test cases
+		"Index price above impact ask, negative funding, final funding rate clamped": {
+			testHumanOrders: []TestHumanOrder{
+				// Unmatched orders to generate funding premiums.
+				{
+					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
+					HumanPrice: "28005",
+					HumanSize:  "2",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28000",
+					HumanSize:  "2",
+				},
+				// Matched orders to set up positions for Alice, Bob and Carl
+				{
+					Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "1",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.8",
+				},
+				{
+					Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.2",
+				},
+			},
+			initialIndexPrice: map[uint32]string{
+				0: "28002",
+			},
+			indexPriceForPremium: map[uint32]string{
+				0: "34000",
+			},
+			oracelPriceForFundingIndex: map[uint32]string{
+				0: "33500",
+			},
+			expectedFundingPremiums: []perptypes.MarketPremiums{
+				{
+					PerpetualId: 0,
+					// 28005  / 34000 - 1 ~= -0.176323 (-17.6%)
+					Premiums: constants.GenerateConstantFundingPremiums(-176_323, 60),
+				},
+			},
+			// Funding rate clamp = premium_rate_clamp_factor * (initial_margin - maintenance_margin)
+			//                    = 600% * (0.05 - 0.03) = 12% = 120_000 ppm
+			// 120_000 / 8 * 33500 * 10^(btc_atomic_resolution - quote_atomic_resolution) = 50_250
+			expectedFundingIndex: -50_250,
+			expectedSubaccountSettlements: []expectedSettlements{
+				{
+					SubaccountId: constants.Alice_Num0,
+					// Alice is long 0.8 BTC, receives funding
+					// Theoretical (from funding rate): 0.12 / 8 * 33_500 * 0.8 = $402
+					// Actual (from funding index): 50_250 * 8e9 (base quantums) / 1e6 (quote atomic) = $402
+					Settlement: 402_000_000,
+				},
+				{
+					SubaccountId: constants.Bob_Num0,
+					// Bob is short 1 BTC, pays funding
+					// Theoretical (from funding rate): 0.12 / 8 * 33_500 * 1 = $502.5
+					// Actual (from funding index): 50_250 * 1e10 (base quantums) / 1e6 (quote atomic) = $502.5
+					Settlement: -502_500_000,
+				},
+				{
+					SubaccountId: constants.Carl_Num0,
+					// Carl is long 0.2 BTC, receives funding
+					// Theoretical (from funding rate): 0.12 / 8 * 33_500 * 0.2 = $100.5
+					// Actual (from funding index): 50_250 * 2e9 (base quantums) / 1e6 (quote atomic) = $100.5
+					Settlement: 100_500_000,
+				},
+			},
+		},
+		"Index price between impact bid and ask, zero funding": {
+			testHumanOrders: []TestHumanOrder{
+				// Unmatched orders to generate funding premiums.
+				{
+					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
+					HumanPrice: "28005", // Impact ask price
+					HumanSize:  "2",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28000", // Impact bid price
+					HumanSize:  "2",
+				},
+				// Matched orders to set up positions for Alice, Bob and Carl
+				{
+					Order:      OrderTemplate_Bob_Num0_Id1_Clob0_Sell_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "1",
+				},
+				{
+					Order:      OrderTemplate_Alice_Num0_Id1_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.8",
+				},
+				{
+					Order:      OrderTemplate_Carl_Num0_Id0_Clob0_Buy_LongTerm,
+					HumanPrice: "28003",
+					HumanSize:  "0.2",
+				},
+			},
+			initialIndexPrice: map[uint32]string{
+				0: "28002",
+			},
+			indexPriceForPremium: map[uint32]string{
+				0: "28003", // Between impact bid and ask
+			},
+			oracelPriceForFundingIndex: map[uint32]string{
+				0: "27500",
+			},
+			expectedFundingPremiums: nil,
+			expectedFundingIndex:    0,
+			expectedSubaccountSettlements: []expectedSettlements{
+				{
+					SubaccountId: constants.Alice_Num0,
+					Settlement:   0,
+				},
+				{
+					SubaccountId: constants.Bob_Num0,
+					Settlement:   0,
+				},
+				{
+					SubaccountId: constants.Carl_Num0,
+					Settlement:   0,
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -295,32 +435,27 @@ func TestFunding(t *testing.T) {
 
 			premiumSamples = tApp.App.PerpetualsKeeper.GetPremiumSamples(ctx)
 			require.Equal(t, 60, int(premiumSamples.NumPremiums))
-			expectedAllMarketPremiums := []perptypes.MarketPremiums{
-				{
-					PerpetualId: 0,
-					Premiums:    constants.GenerateConstantFundingPremiums(tc.expectedFundingPremium, 60),
-				},
-			}
-			require.Equal(t, expectedAllMarketPremiums, premiumSamples.AllMarketPremiums)
+			require.Equal(t, tc.expectedFundingPremiums, premiumSamples.AllMarketPremiums)
 
-			// Update index price for each validator so they propose this price as the new oracle price.
-			// This price will be used for calculating the funding index at the end of `funding-tick`.
-			pricefeed_testutil.UpdateIndexPrice(
-				t,
-				ctx,
-				tApp.App,
-				pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5),
-				// Only index price past a certain threshold is used for premium calculation.
-				// Use additional buffer here to ensure `test-race` passes.
-				time.Now().Add(1*time.Hour),
-			)
-			// Advance another 30 seconds to the end of the second funding-tick epoch. This will trigger processing
-			// of `funding-tick`, which calculates the final funding rate and updates the funding index.
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight()+NumBlocksPerMinute-1), testapp.AdvanceToBlockOptions{
 				BlockTime: SecondFundingTick.Add(-BlockTimeDuration),
 			})
+
+			// Build a DeliverTx override with MsgUpdateMarketPrices to update oracle price for funding index.
+			msgPriceUpdate := &pricestypes.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+					pricestypes.NewMarketPriceUpdate(0, pricestest.MustHumanPriceToMarketPrice(tc.oracelPriceForFundingIndex[0], -5)),
+				},
+			}
+			txBuilder := encoding.GetTestEncodingCfg().TxConfig.NewTxBuilder()
+			require.NoError(t, txBuilder.SetMsgs(msgPriceUpdate))
+			priceUpdateTxBytes, err := encoding.GetTestEncodingCfg().TxConfig.TxEncoder()(txBuilder.GetTx())
+			require.NoError(t, err)
+
+			// Update oracle price for funding index, using the DeliverTx override.
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{
-				BlockTime: SecondFundingTick,
+				DeliverTxsOverride: [][]byte{priceUpdateTxBytes},
+				BlockTime:          SecondFundingTick,
 			})
 
 			premiumSamples = tApp.App.PerpetualsKeeper.GetPremiumSamples(ctx)
@@ -381,10 +516,12 @@ func TestFunding(t *testing.T) {
 				require.Equal(t,
 					getSubaccountUsdcBalance(subaccsBeforeSettlement[i])+expectedSettlements.Settlement,
 					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
-					"subaccount id: %v, expected settlement: %v, balance before settlement: %v, "+
-						"balance after (minus test transfer): %v",
+					"subaccount id: %v, expected settlement: %v, got settlement: %v,"+
+						"balance before settlement: %v, balance after (minus test transfer): %v",
 					expectedSettlements.SubaccountId,
 					expectedSettlements.Settlement,
+					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement-
+						getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
 					getSubaccountUsdcBalance(subaccsBeforeSettlement[i]),
 					getSubaccountUsdcBalance(subaccAfterSettlement)-TestTransferUsdcForSettlement,
 				)
