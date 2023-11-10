@@ -300,7 +300,7 @@ export class OrderRemoveHandler extends Handler {
     }
     // TODO: consolidate remove handler logic into a single lua script.
     await this.addOrderToCanceledOrdersCache(
-      OrderTable.orderIdToUuid(orderRemove.removedOrderId!),
+      orderRemove,
       Date.now(),
     );
   }
@@ -338,13 +338,28 @@ export class OrderRemoveHandler extends Handler {
    * @protected
    */
   protected async addOrderToCanceledOrdersCache(
-    orderId: string,
+    orderRemove: OrderRemoveV1,
     timestampMs: number,
   ): Promise<void> {
-    await runFuncWithTimingStat(
-      CanceledOrdersCache.addCanceledOrderId(orderId, timestampMs, redisClient),
-      this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
-    );
+    const orderId: string = OrderTable.orderIdToUuid(orderRemove.removedOrderId!);
+
+    if (
+      orderRemove.removalStatus ===
+      OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
+    ) {
+      await runFuncWithTimingStat(
+        CanceledOrdersCache.addBestEffortCanceledOrderId(orderId, timestampMs, redisClient),
+        this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
+      );
+    } else if (
+      orderRemove.removalStatus ===
+      OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED
+    ) {
+      await runFuncWithTimingStat(
+        CanceledOrdersCache.addCanceledOrderId(orderId, timestampMs, redisClient),
+        this.generateTimingStatsOptions('add_order_to_canceled_order_cache'),
+      );
+    }
   }
 
   /**

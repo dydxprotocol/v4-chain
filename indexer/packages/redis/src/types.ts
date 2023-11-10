@@ -67,6 +67,12 @@ export type LuaScript = {
   readonly hash: string;
 };
 
+export enum CanceledOrderStatus {
+  CANCELED = 'CANCELED',
+  BEST_EFFORT_CANCELED = 'BEST_EFFORT_CANCELED',
+  NOT_CANCELED = 'NOT_CANCELED',
+}
+
 /* ------- PNL Creation TYPES ------- */
 export type PnlTickForSubaccounts = {
   // Stores a PnlTicksCreateObject for the most recent pnl tick for each subaccount.

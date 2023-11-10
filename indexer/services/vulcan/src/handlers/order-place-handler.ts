@@ -364,7 +364,7 @@ export class OrderPlaceHandler extends Handler {
     orderId: string,
   ): Promise<void> {
     await runFuncWithTimingStat(
-      CanceledOrdersCache.removeOrderFromCache(orderId, redisClient),
+      CanceledOrdersCache.removeOrderFromCaches(orderId, redisClient),
       this.generateTimingStatsOptions('remove_order_from_cancel_cache'),
     );
   }

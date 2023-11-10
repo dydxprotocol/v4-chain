@@ -12,7 +12,7 @@
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
     - usdc_asset_id: The USDC asset id.
-    - is_cancelled: Whether the order is cancelled.
+    - order_canceled_status: Status of order cancelation
   Returns: JSON object containing fields:
     - order: The updated order in order-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/order-model.ts).
     - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
@@ -21,7 +21,7 @@
 */
 CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
-    transaction_hash text, fill_liquidity text, fill_type text, usdc_asset_id text, is_cancelled boolean) RETURNS jsonb AS $$
+    transaction_hash text, fill_liquidity text, fill_type text, usdc_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
 DECLARE
     order_ jsonb;
     maker_order jsonb;
@@ -105,7 +105,7 @@ BEGIN
 
     IF FOUND THEN
         order_record."totalFilled" = total_filled;
-        order_record."status" = dydx_get_order_status(total_filled, order_record.size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = dydx_get_order_status(total_filled, order_record.size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
 
         UPDATE orders
         SET
@@ -131,7 +131,7 @@ BEGIN
         order_record."type" = 'LIMIT'; /* TODO: Add additional order types once we support */
 
         order_record."totalFilled" = fill_amount;
-        order_record."status" = dydx_get_order_status(fill_amount, order_size, is_cancelled, order_record."orderFlags", order_record."timeInForce");
+        order_record."status" = dydx_get_order_status(fill_amount, order_size, order_canceled_status, order_record."orderFlags", order_record."timeInForce");
         order_record."createdAtHeight" = block_height;
         INSERT INTO orders
             ("id", "subaccountId", "clientId", "clobPairId", "side", "size", "totalFilled", "price", "type",

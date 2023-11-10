@@ -1,9 +1,11 @@
 import { Callback, RedisClient } from 'redis';
 
 import { zRemAsync, zScoreAsync } from '../helpers/redis';
+import { CanceledOrderStatus } from '../types';
 import { addCanceledOrderIdScript } from './scripts';
 // Cache of cancelled orders
 export const CANCELED_ORDERS_CACHE_KEY: string = 'v4/cancelled_orders';
+export const BEST_EFFORT_CANCELED_ORDERS_CACHE_KEY: string = 'v4/best_effort_cancelled_orders';
 // 10 seconds in milliseconds
 export const CANCELED_ORDER_WINDOW_SIZE: number = 30 * 1000;
 
@@ -24,16 +26,62 @@ export async function isOrderCanceled(
   orderId: string,
   client: RedisClient,
 ): Promise<boolean> {
-  const score: string | null = await
-  zScoreAsync({ hash: CANCELED_ORDERS_CACHE_KEY, key: orderId }, client);
-  return score !== null;
+  const [
+    canceledScore,
+    bestEffortCanceledScore,
+  ]: (string | null)[] = await Promise.all([
+    zScoreAsync({ hash: CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+    zScoreAsync({ hash: BEST_EFFORT_CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+  ]);
+  return canceledScore !== null || bestEffortCanceledScore !== null;
 }
 
-export async function removeOrderFromCache(
+export async function getOrderCanceledStatus(
   orderId: string,
   client: RedisClient,
+): Promise<CanceledOrderStatus> {
+  const [
+    canceledScore,
+    bestEffortCanceledScore,
+  ]: (string | null)[] = await Promise.all([
+    zScoreAsync({ hash: CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+    zScoreAsync({ hash: BEST_EFFORT_CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+  ]);
+
+  if (canceledScore !== null) {
+    return CanceledOrderStatus.CANCELED;
+  }
+
+  if (bestEffortCanceledScore !== null) {
+    return CanceledOrderStatus.BEST_EFFORT_CANCELED;
+  }
+
+  return CanceledOrderStatus.NOT_CANCELED;
+}
+
+export async function removeOrderFromCaches(
+  orderId: string,
+  client: RedisClient,
+): Promise<void> {
+  await Promise.all([
+    zRemAsync({ hash: CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+    zRemAsync({ hash: BEST_EFFORT_CANCELED_ORDERS_CACHE_KEY, key: orderId }, client),
+  ]);
+}
+
+/**
+ * addCanceledOrderId adds the order id to the best effort canceled orders cache.
+ *
+ * @param orderId
+ * @param timestamp
+ * @param client
+ */
+export async function addBestEffortCanceledOrderId(
+  orderId: string,
+  timestamp: number,
+  client: RedisClient,
 ): Promise<number> {
-  return zRemAsync({ hash: CANCELED_ORDERS_CACHE_KEY, key: orderId }, client);
+  return addOrderIdtoCache(orderId, timestamp, client, BEST_EFFORT_CANCELED_ORDERS_CACHE_KEY);
 }
 
 /**
@@ -47,6 +95,22 @@ export async function addCanceledOrderId(
   orderId: string,
   timestamp: number,
   client: RedisClient,
+): Promise<number> {
+  return addOrderIdtoCache(orderId, timestamp, client, CANCELED_ORDERS_CACHE_KEY);
+}
+
+/**
+ * addCanceledOrderId adds the order id to the cacheKey's cache.
+ *
+ * @param orderId
+ * @param timestamp
+ * @param client
+ */
+export async function addOrderIdtoCache(
+  orderId: string,
+  timestamp: number,
+  client: RedisClient,
+  cacheKey: string,
 ): Promise<number> {
   const numKeys: number = 2;
   let evalAsync: (
@@ -69,7 +133,7 @@ export async function addCanceledOrderId(
       client.evalsha(
         addCanceledOrderIdScript.hash,
         numKeys,
-        CANCELED_ORDERS_CACHE_KEY,
+        cacheKey,
         CANCELED_ORDER_WINDOW_SIZE,
         canceledOrderId,
         currentTimestampMs,
