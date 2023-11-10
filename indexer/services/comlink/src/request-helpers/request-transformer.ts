@@ -4,7 +4,7 @@ import {
   BestEffortOpenedStatus,
   CandleColumns,
   CandleFromDatabase,
-  FillFromDatabase,
+  FillFromDatabase, fillTypeToTradeType,
   FundingIndexUpdatesFromDatabase,
   helpers,
   LiquidityTiersFromDatabase,
@@ -177,7 +177,7 @@ export function fillToTradeResponseObject(
     side: fill.side,
     size: fill.size,
     price: fill.price,
-    type: fill.type,
+    type: fillTypeToTradeType(fill.type),
     createdAt: fill.createdAt,
     createdAtHeight: fill.createdAtHeight,
   };

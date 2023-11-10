@@ -29,6 +29,7 @@ import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
   IsoString,
+  fillTypeToTradeType,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -805,7 +806,7 @@ export async function expectDefaultTradeKafkaMessageFromTakerFillId(
         price: takerFill!.price,
         side: takerFill!.side.toString(),
         createdAt: takerFill!.createdAt,
-        type: takerFill!.type,
+        type: fillTypeToTradeType(takerFill!.type),
       },
     ],
   };

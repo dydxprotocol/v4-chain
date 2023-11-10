@@ -3049,6 +3049,32 @@ or
 |iso|[IsoString](#schemaisostring)|true|none|none|
 |epoch|number(double)|true|none|none|
 
+## TradeType
+
+<a id="schematradetype"></a>
+<a id="schema_TradeType"></a>
+<a id="tocStradetype"></a>
+<a id="tocstradetype"></a>
+
+```json
+"LIMIT"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|LIMIT|
+|*anonymous*|LIQUIDATED|
+|*anonymous*|DELEVERAGED|
+
 ## TradeResponseObject
 
 <a id="schematraderesponseobject"></a>
@@ -3077,7 +3103,7 @@ or
 |side|[OrderSide](#schemaorderside)|true|none|none|
 |size|string|true|none|none|
 |price|string|true|none|none|
-|type|[FillType](#schemafilltype)|true|none|none|
+|type|[TradeType](#schematradetype)|true|none|none|
 |createdAt|[IsoString](#schemaisostring)|true|none|none|
 |createdAtHeight|string|true|none|none|
 

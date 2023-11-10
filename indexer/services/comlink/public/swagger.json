@@ -844,6 +844,14 @@
         "type": "object",
         "additionalProperties": false
       },
+      "TradeType": {
+        "enum": [
+          "LIMIT",
+          "LIQUIDATED",
+          "DELEVERAGED"
+        ],
+        "type": "string"
+      },
       "TradeResponseObject": {
         "properties": {
           "id": {
@@ -859,7 +867,7 @@
             "type": "string"
           },
           "type": {
-            "$ref": "#/components/schemas/FillType"
+            "$ref": "#/components/schemas/TradeType"
           },
           "createdAt": {
             "$ref": "#/components/schemas/IsoString"

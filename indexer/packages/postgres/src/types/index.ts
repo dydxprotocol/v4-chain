@@ -12,6 +12,7 @@ export * from './utility-types';
 export * from './asset-types';
 export * from './asset-position-types';
 export * from './transfer-types';
+export * from './trade-types';
 export * from './market-types';
 export * from './oracle-price-types';
 export * from './websocket-message-types';
