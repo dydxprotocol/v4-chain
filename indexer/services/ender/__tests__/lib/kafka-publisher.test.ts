@@ -14,6 +14,7 @@ import {
   testConstants,
   TradeContent,
   TradeMessageContents,
+  TradeType,
   TransferFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { IndexerSubaccountId, SubaccountMessage, TradeMessage } from '@dydxprotocol-indexer/v4-protos';
@@ -409,7 +410,7 @@ describe('kafka-publisher', () => {
         price: '10000',
         side: 'side',
         createdAt: 'today',
-        type: FillType.LIMIT,
+        type: TradeType.LIMIT,
       };
       const singleTrade1: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent1,
@@ -422,7 +423,7 @@ describe('kafka-publisher', () => {
         price: '12000',
         side: 'side',
         createdAt: 'today',
-        type: FillType.LIMIT,
+        type: TradeType.LIMIT,
       };
       const singleTrade2: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent2,
@@ -436,7 +437,7 @@ describe('kafka-publisher', () => {
         price: '1000',
         side: 'side',
         createdAt: 'today',
-        type: FillType.LIMIT,
+        type: TradeType.LIMIT,
       };
       const singleTrade3: SingleTradeMessage = contentToSingleTradeMessage(
         tradeContent3,

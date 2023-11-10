@@ -1,5 +1,5 @@
 import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
-import { FillType, testConstants, TradeContent } from '@dydxprotocol-indexer/postgres';
+import { testConstants, TradeContent, TradeType } from '@dydxprotocol-indexer/postgres';
 import {
   bigIntToBytes,
   ORDER_FLAG_CONDITIONAL,
@@ -325,7 +325,7 @@ export const defaultTradeContent: TradeContent = {
   price: '10000',
   side: 'BUY',
   createdAt: 'createdAt',
-  type: FillType.LIMIT,
+  type: TradeType.LIMIT,
 };
 export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessage(
   defaultTradeContent,

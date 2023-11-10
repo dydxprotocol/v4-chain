@@ -266,6 +266,15 @@ export enum FillType {
   OFFSETTING = 'OFFSETTING',
 }
 
+export enum TradeType {
+  // LIMIT is the trade type for a fill with a limit taker order.
+  LIMIT = 'LIMIT',
+  // LIQUIDATED is the trade type for a fill with a liquidated taker order.
+  LIQUIDATED = 'LIQUIDATED',
+  // DELEVERAGED is the trade type for a fill with a deleveraged taker order.
+  DELEVERAGED = 'DELEVERAGED',
+}
+
 export interface TransferSubaccountMessageContents {
   sender: {
     address: string,
@@ -712,7 +721,7 @@ interface TradeContent {
   price: string,
   side: string,
   createdAt: IsoString,
-  type: FillType,
+  type: TradeType,
 }
 ```
 
@@ -734,7 +743,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "type": "LIQUIDATION"
+        "type": "LIQUIDATED"
       },
       {
         "id": "38e64479-af09-5417-a795-195f83879156",
@@ -742,7 +751,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "type": "LIQUIDATION"
+        "type": "LIQUIDATED"
       },
       {
         "id": "d310c32c-f066-5ba8-a97d-10a29d9a6c84",

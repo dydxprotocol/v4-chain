@@ -6,6 +6,7 @@ import {
   FillFromDatabase,
   FillTable,
   FillType,
+  fillTypeToTradeType,
   Liquidity,
   OrderCreateObject,
   OrderFromDatabase,
@@ -426,7 +427,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
           price: fill.price,
           side: fill.side.toString(),
           createdAt: fill.createdAt,
-          type: fill.type,
+          type: fillTypeToTradeType(fill.type),
         },
       ],
     };
