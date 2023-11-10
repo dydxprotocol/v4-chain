@@ -14,8 +14,6 @@ export enum Liquidity {
 }
 
 export enum FillType {
-  // MARKET is the fill type for a fill with a market taker order.
-  MARKET = 'MARKET',
   // LIMIT is the fill type for a fill with a limit taker order.
   LIMIT = 'LIMIT',
   // LIQUIDATED is for the taker side of the fill where the subaccount was liquidated.

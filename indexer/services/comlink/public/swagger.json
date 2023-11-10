@@ -301,7 +301,6 @@
       },
       "FillType": {
         "enum": [
-          "MARKET",
           "LIMIT",
           "LIQUIDATED",
           "LIQUIDATION",
