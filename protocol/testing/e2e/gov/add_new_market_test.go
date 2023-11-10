@@ -1,8 +1,10 @@
 package gov_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -10,6 +12,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -20,25 +23,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	NumBlocksAfterTradingEnabled = 50
+	TestMarketId                 = 1001
+	// Expected response log when a order is submitted but oracle price is zero.
+	ExpectedPlaceOrderCheckTxResponseLog = "recovered: clob pair ID = (1001), perpetual ID = (1001), " +
+		"market ID = (1001): Oracle price must be > 0"
+)
+
+var (
+	GenesisTime                                     = time.Unix(1690000000, 0)
+	OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   TestMarketId,
+		},
+		Quantums: 1_000_000_000_000,
+		Subticks: 1_000_000_000,
+		Side:     clobtypes.Order_SIDE_BUY,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+			GoodTilBlockTime: uint32(GenesisTime.Add(1 * time.Hour).Unix()),
+		},
+	}
+)
+
 func TestAddNewMarketProposal(t *testing.T) {
-	testId := uint32(1001)
 	testMarketParam := pricestest.GenerateMarketParamPrice(
-		pricestest.WithId(testId),
+		pricestest.WithId(TestMarketId),
 	)
 	testClobPair := clobtest.GenerateClobPair(
-		clobtest.WithId(testId),
-		clobtest.WithPerpetualId(testId),
+		clobtest.WithId(TestMarketId),
+		clobtest.WithPerpetualId(TestMarketId),
 		clobtest.WithStatus(clobtypes.ClobPair_STATUS_INITIALIZING),
 	)
 	testPerpetual := perptest.GeneratePerpetual(
-		perptest.WithId(testId),
-		perptest.WithMarketId(testId),
+		perptest.WithId(TestMarketId),
+		perptest.WithMarketId(TestMarketId),
 	)
 	msgUpdateClobPairToActive := &clobtypes.MsgUpdateClobPair{
 		Authority: delaymsgtypes.ModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
-			clobtest.WithId(testId),
-			clobtest.WithPerpetualId(testId),
+			clobtest.WithId(TestMarketId),
+			clobtest.WithPerpetualId(TestMarketId),
 			clobtest.WithStatus(clobtypes.ClobPair_STATUS_ACTIVE),
 		),
 	}
@@ -46,15 +74,15 @@ func TestAddNewMarketProposal(t *testing.T) {
 		Authority: delaymsgtypes.ModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
 			clobtest.WithId(9999), // non existing clob pair
-			clobtest.WithPerpetualId(testId),
+			clobtest.WithPerpetualId(TestMarketId),
 			clobtest.WithStatus(clobtypes.ClobPair_STATUS_ACTIVE),
 		),
 	}
 	msgUpdateClobPairToActive_WrongAuthority := &clobtypes.MsgUpdateClobPair{
 		Authority: lib.GovModuleAddress.String(),
 		ClobPair: *clobtest.GenerateClobPair(
-			clobtest.WithId(testId),
-			clobtest.WithPerpetualId(testId),
+			clobtest.WithId(TestMarketId),
+			clobtest.WithPerpetualId(TestMarketId),
 			clobtest.WithStatus(clobtypes.ClobPair_STATUS_ACTIVE),
 		),
 	}
@@ -272,6 +300,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 						genesisState.Params.VotingPeriod = &testapp.TestVotingPeriod
 					},
 				)
+				genesis.GenesisTime = GenesisTime
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
@@ -342,7 +371,32 @@ func TestAddNewMarketProposal(t *testing.T) {
 
 				// Check that clob pair is updated.
 				require.Equal(t, msgUpdateClobPairToActive.ClobPair, clobPair)
-				// TODO(CORE-585): Check that orders cannot be placed if no valid oracle price update has occurred.
+
+				// Advance to some blocks after, and place an order on the market.
+				ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+NumBlocksAfterTradingEnabled, testapp.AdvanceToBlockOptions{})
+				price, err := tApp.App.PricesKeeper.GetMarketPrice(ctx, testMarketParam.Param.Id)
+				require.NoError(t, err)
+				// No oracle price updates were made.
+				require.Equal(t, uint64(0), price.Price)
+
+				// Place an order on the market which is now ACTIVE with 0 oracle price.
+				checkTx := testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *clobtypes.NewMsgPlaceOrder(
+					OrderTemplate_Alice_Num0_Id0_Clob0_Buy_LongTerm,
+				))
+				resp := tApp.CheckTx(checkTx[0])
+				require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
+				require.Contains(t,
+					resp.Log,
+					ExpectedPlaceOrderCheckTxResponseLog,
+					"expected CheckTx response log to contain: %s, got: %s",
+					ExpectedPlaceOrderCheckTxResponseLog, resp.Log,
+				)
+
+				// Advance to the next block and check chain is not halted.
+				tApp.AdvanceToBlock(
+					uint32(ctx.BlockHeight())+1,
+					testapp.AdvanceToBlockOptions{},
+				)
 			default:
 				t.Errorf("unexpected proposal status: %s", tc.expectedProposalStatus)
 			}
