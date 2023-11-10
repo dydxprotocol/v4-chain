@@ -45,6 +45,7 @@ const DEFAULT_SUBACCOUNT_UPDATE_DEFAULT_POSITION_FIELDS = {
 };
 
 export function uuid(subaccountId: string, openEventId: Buffer): string {
+  // TODO(IND-483): Fix all uuid string substitutions to use Array.join.
   return getUuid(Buffer.from(`${subaccountId}-${openEventId.toString('hex')}`, BUFFER_ENCODING_UTF_8));
 }
 
@@ -123,7 +124,7 @@ export async function findAll(
       PerpetualPositionColumns.subaccountId,
       Ordering.ASC,
     ).orderBy(
-      PerpetualPositionColumns.createdAtHeight,
+      PerpetualPositionColumns.openEventId,
       Ordering.DESC,
     );
   }

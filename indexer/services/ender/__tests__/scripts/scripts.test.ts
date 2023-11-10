@@ -7,7 +7,7 @@ import {
   IndexerTendermintEvent_BlockEvent,
   AssetCreateEventV1,
   SubaccountUpdateEventV1,
-  MarketEventV1,
+  MarketEventV1, IndexerOrder_ConditionType,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   BUFFER_ENCODING_UTF_8,
@@ -20,6 +20,7 @@ import {
   PositionSide,
   TendermintEventTable,
   FillTable,
+  FundingIndexUpdatesTable,
   OraclePriceTable,
   OrderTable,
   protocolTranslations,
@@ -29,6 +30,7 @@ import {
   uuid,
   TransactionTable,
   TransactionFromDatabase,
+  TransferTable,
   BlockTable,
   TendermintEventFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
@@ -133,19 +135,6 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
-    { transactionIndex: 5 } as IndexerTendermintEvent,
-    {
-      blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_BEGIN_BLOCK,
-    } as IndexerTendermintEvent,
-    {
-      blockEvent: IndexerTendermintEvent_BlockEvent.BLOCK_EVENT_END_BLOCK,
-    } as IndexerTendermintEvent,
-  ])('dydx_event_to_transaction_index (%s)', async (event: IndexerTendermintEvent) => {
-    const result = await getSingleRawQueryResultRow(`SELECT dydx_event_to_transaction_index('${JSON.stringify(event)}') AS result;`);
-    expect(result).toEqual(indexerTendermintEventToTransactionIndex(event));
-  });
-
-  it.each([
     Long.fromNumber(1_000_000_000, true),
     Long.fromNumber(1_000_000_000, false),
     Long.fromNumber(-1_000_000_000, false),
@@ -171,6 +160,16 @@ describe('SQL Function Tests', () => {
   ])('dydx_from_protocol_time_in_force (%s)', async (_name: string, value: IndexerOrder_TimeInForce) => {
     const result = await getSingleRawQueryResultRow(`SELECT dydx_from_protocol_time_in_force('${value}') AS result`);
     expect(result).toEqual(protocolTranslations.protocolOrderTIFToTIF(value));
+  });
+
+  it.each([
+    ['LIMIT', IndexerOrder_ConditionType.UNRECOGNIZED],
+    ['LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED],
+    ['TAKE_PROFIT', IndexerOrder_ConditionType.CONDITION_TYPE_TAKE_PROFIT],
+    ['STOP_LIMIT', IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS],
+  ])('dydx_protocol_condition_type_to_order_type (%s)', async (_name: string, value: IndexerOrder_ConditionType) => {
+    const result = await getSingleRawQueryResultRow(`SELECT dydx_protocol_condition_type_to_order_type('${value}') AS result`);
+    expect(result).toEqual(protocolTranslations.protocolConditionTypeToOrderType(value));
   });
 
   it.each([
@@ -256,6 +255,16 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
+    [1, 2, 3, 4],
+    [5, 6, 7, 8],
+  ])('dydx_uuid_from_funding_index_update_parts (%s, %s, %s, %s)', async (blockHeight: number, transactionIndex: number, eventIndex: number, perpetualId: number) => {
+    const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_funding_index_update_parts('${blockHeight}', '\\x${eventId.toString('hex')}'::bytea, '${perpetualId}') AS result`);
+    expect(result).toEqual(FundingIndexUpdatesTable.uuid(`${blockHeight}`, eventId, `${perpetualId}`));
+  });
+
+  it.each([
     {
       subaccountId: {
         owner: testConstants.defaultSubaccount.address,
@@ -292,7 +301,7 @@ describe('SQL Function Tests', () => {
       5,
       6,
     ],
-  ])('dydx_uuid_from_perpetual_position_parts (%s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
+  ])('dydx_uuid_from_perpetual_position_parts (%s, %s, %s, %s)', async (subaccountId: IndexerSubaccountId, blockHeight: number, transactionIndex: number, eventIndex: number) => {
     const subaccountUuid = SubaccountTable.subaccountIdToUuid(subaccountId);
     const eventId = TendermintEventTable.createEventId(`${blockHeight}`, transactionIndex, eventIndex);
     const result = await getSingleRawQueryResultRow(
@@ -314,6 +323,66 @@ describe('SQL Function Tests', () => {
   });
 
   it.each([
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount2.address,
+        number: testConstants.defaultSubaccount2.subaccountNumber,
+      },
+      undefined,
+      'senderWallet',
+      undefined,
+    ],
+    [
+      {
+        owner: testConstants.defaultSubaccount.address,
+        number: testConstants.defaultSubaccount.subaccountNumber,
+      },
+      undefined,
+      undefined,
+      'recipientWallet',
+    ],
+    [
+      undefined,
+      undefined,
+      'senderWallet',
+      'recipientWallet',
+    ],
+  ])('dydx_uuid_from_transfer_parts (%s, %s, %s, %s)', async (
+    senderSubaccountId: IndexerSubaccountId | undefined,
+    recipientSubaccountId: IndexerSubaccountId | undefined,
+    senderWalletAddress: string | undefined,
+    recipientWalletAddress: string | undefined) => {
+    const eventId: Buffer = TendermintEventTable.createEventId('1', 2, 3);
+    const assetId: string = '0';
+    const senderSubaccountUuid: string | undefined = senderSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(senderSubaccountId) : undefined;
+    const recipientSubaccountUuid: string | undefined = recipientSubaccountId
+      ? SubaccountTable.subaccountIdToUuid(recipientSubaccountId) : undefined;
+    const result = await getSingleRawQueryResultRow(
+      `SELECT dydx_uuid_from_transfer_parts('\\x${eventId.toString('hex')}'::bytea, '${assetId}', ${senderSubaccountUuid ? `'${senderSubaccountUuid}'` : 'NULL'}, ${recipientSubaccountUuid ? `'${recipientSubaccountUuid}'` : 'NULL'}, ${senderWalletAddress ? `'${senderWalletAddress}'` : 'NULL'}, ${recipientWalletAddress ? `'${recipientWalletAddress}'` : 'NULL'}) AS result`);
+    expect(result).toEqual(TransferTable.uuid(
+      eventId,
+      assetId,
+      senderSubaccountUuid,
+      recipientSubaccountUuid,
+      senderWalletAddress,
+      recipientWalletAddress,
+    ));
+  });
+
+  it.each([
     {
       event: { transactionIndex: 123 },
       expectedResult: 123,
@@ -328,7 +397,7 @@ describe('SQL Function Tests', () => {
     },
     {
       event: { blockEvent: '3' },
-      expectedError: 'Received V4 event with invalid block event type: 3',
+      expectedError: 'Received V4 event with invalid block event type: "3"',
     },
     {
       event: {},

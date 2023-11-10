@@ -74,6 +74,7 @@ import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -140,8 +141,8 @@ describe('LiquidationHandler', () => {
     entryPrice: '15000',
     createdAt: DateTime.utc().toISO(),
     createdAtHeight: '1',
-    openEventId: testConstants.defaultTendermintEventId,
-    lastEventId: testConstants.defaultTendermintEventId,
+    openEventId: testConstants.defaultTendermintEventId4,
+    lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
 
@@ -233,7 +234,7 @@ describe('LiquidationHandler', () => {
     ],
   ])(
     'creates fills and orders (with %s), sends vulcan message for maker order update and updates ' +
-    ' perpetualPosition',
+    'perpetualPosition',
     async (
       _name: string,
       goodTilOneof: Partial<IndexerOrder>,
@@ -296,8 +297,7 @@ describe('LiquidationHandler', () => {
         // older perpetual position to ensure that the correct perpetual position is being updated
         PerpetualPositionTable.create({
           ...defaultPerpetualPosition,
-          createdAtHeight: '0',
-          openEventId: testConstants.defaultTendermintEventId2,
+          openEventId: testConstants.defaultTendermintEventId,
         }),
       ]);
 
@@ -423,6 +423,10 @@ describe('LiquidationHandler', () => {
             sumClose: totalFilled,
             exitPrice: makerPrice,
           },
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
         ),
         expectCandlesUpdated(),
       ]);
@@ -666,6 +670,10 @@ describe('LiquidationHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -827,6 +835,10 @@ describe('LiquidationHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
       ]);
     });
 

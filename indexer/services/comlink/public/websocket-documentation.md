@@ -251,8 +251,6 @@ export enum Liquidity {
 }
 
 export enum FillType {
-  // MARKET is the fill type for a fill with a market taker order.
-  MARKET = 'MARKET',
   // LIMIT is the fill type for a fill with a limit taker order.
   LIMIT = 'LIMIT',
   // LIQUIDATED is for the taker side of the fill where the subaccount was liquidated.
@@ -260,6 +258,12 @@ export enum FillType {
   LIQUIDATED = 'LIQUIDATED',
   // LIQUIDATION is for the maker side of the fill, never used for orders
   LIQUIDATION = 'LIQUIDATION',
+  // DELEVERAGED is for the subaccount that was deleveraged in a deleveraging event.
+  // The fill type will be set to taker.
+  DELEVERAGED = 'DELEVERAGED',
+  // OFFSETTING is for the offsetting subaccount in a deleveraging event.
+  // The fill type will be set to maker.
+  OFFSETTING = 'OFFSETTING',
 }
 
 export interface TransferSubaccountMessageContents {
@@ -708,7 +712,7 @@ interface TradeContent {
   price: string,
   side: string,
   createdAt: IsoString,
-  liquidation: boolean,
+  type: FillType,
 }
 ```
 
@@ -730,7 +734,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIQUIDATION"
       },
       {
         "id": "38e64479-af09-5417-a795-195f83879156",
@@ -738,7 +742,7 @@ interface TradeContent {
         "price": "27839",
         "side": "BUY",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIQUIDATION"
       },
       {
         "id": "d310c32c-f066-5ba8-a97d-10a29d9a6c84",
@@ -746,7 +750,7 @@ interface TradeContent {
         "price": "27837",
         "side": "SELL",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIMIT"
       },
       {
         "id": "dd1088b5-5cab-518f-a59c-4d5f735ab861",
@@ -754,7 +758,7 @@ interface TradeContent {
         "price": "27837",
         "side": "SELL",
         "createdAt": "2023-04-04T00:29:19.353Z",
-        "liquidation": false
+        "type": "LIMIT"
       },
     ],
   },

@@ -13,6 +13,7 @@ import {
   SubaccountTable,
   apiTranslations,
   TimeInForce,
+  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -39,7 +40,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { getTriggerPrice } from './helpers';
+import { getStateRemainingQuantums, getTriggerPrice } from './helpers';
 
 /**
  * Handler for OrderRemove messages.
@@ -260,6 +261,9 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
+    const stateRemainingQuantums: Big = await getStateRemainingQuantums(
+      removeOrderResult.removedOrder!,
+    );
     const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
       .getPerpetualMarketFromTicker(removeOrderResult.removedOrder!.ticker);
     if (perpetualMarket === undefined) {
@@ -271,21 +275,31 @@ export class OrderRemoveHandler extends Handler {
       return;
     }
 
-    await runFuncWithTimingStat(
-      this.cancelOrderInPostgres(orderRemove),
-      this.generateTimingStatsOptions('cancel_order_in_postgres'),
-    );
+    // If the remaining amount of the order in state is <= 0, the order is filled and
+    // does not need to have it's status updated
+    let canceledOrder: OrderFromDatabase | undefined;
+    if (stateRemainingQuantums.gt(0)) {
+      canceledOrder = await runFuncWithTimingStat(
+        this.cancelOrderInPostgres(orderRemove),
+        this.generateTimingStatsOptions('cancel_order_in_postgres'),
+      );
+    } else {
+      canceledOrder = await runFuncWithTimingStat(
+        OrderTable.findById(OrderTable.orderIdToUuid(orderRemove.removedOrderId!)),
+        this.generateTimingStatsOptions('find_order'),
+      );
+    }
 
     const subaccountMessage: Message = {
       value: this.createSubaccountWebsocketMessageFromRemoveOrderResult(
         removeOrderResult,
+        canceledOrder,
         orderRemove,
         perpetualMarket,
       ),
     };
 
-    // TODO(IND-147): Remove this check once fully-filled orders are removed by ender
-    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult)) {
+    if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
 
@@ -499,6 +513,7 @@ export class OrderRemoveHandler extends Handler {
 
   protected createSubaccountWebsocketMessageFromRemoveOrderResult(
     removeOrderResult: RemoveOrderResult,
+    canceledOrder: OrderFromDatabase | undefined,
     orderRemove: OrderRemoveV1,
     perpetualMarket: PerpetualMarketFromDatabase,
   ): Buffer {
@@ -506,6 +521,9 @@ export class OrderRemoveHandler extends Handler {
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
       redisOrder.order!.timeInForce,
     );
+    const createdAtHeight: string | undefined = canceledOrder?.createdAtHeight;
+    const updatedAt: IsoString | undefined = canceledOrder?.updatedAt;
+    const updatedAtHeight: string | undefined = canceledOrder?.updatedAtHeight;
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -535,6 +553,9 @@ export class OrderRemoveHandler extends Handler {
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
           removalReason: OrderRemovalReason[orderRemove.reason],
+          ...(createdAtHeight && { createdAtHeight }),
+          ...(updatedAt && { updatedAt }),
+          ...(updatedAtHeight && { updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
@@ -578,6 +599,9 @@ export class OrderRemoveHandler extends Handler {
           goodTilBlockTime: order.goodTilBlockTime ?? undefined,
           ticker: orderTicker,
           removalReason: OrderRemovalReason[orderRemove.reason],
+          createdAtHeight: order.createdAtHeight,
+          updatedAt: order.updatedAt,
+          updatedAtHeight: order.updatedAtHeight,
           clientMetadata: order.clientMetadata,
           triggerPrice: order.triggerPrice ?? undefined,
         },
@@ -616,21 +640,26 @@ export class OrderRemoveHandler extends Handler {
   protected shouldSendSubaccountMessage(
     orderRemove: OrderRemoveV1,
     removeOrderResult: RemoveOrderResult,
+    stateRemainingQuantums: Big,
   ): boolean {
-    const remainingQuantums: Big = Big(this.getSizeDeltaInQuantums(
-      removeOrderResult,
-      removeOrderResult.removedOrder!,
-    ));
     const status: OrderRemoveV1_OrderRemovalStatus = orderRemove.removalStatus;
     const reason: OrderRemovalReason = orderRemove.reason;
+
+    logger.info({
+      at: 'orderRemoveHandler#shouldSendSubaccountMessage',
+      message: 'Compared state filled quantums and size',
+      stateRemainingQuantums: stateRemainingQuantums.toFixed(),
+      removeOrderResult,
+    });
+
     if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_USER_CANCELED
     ) {
       return false;
     } else if (
-      remainingQuantums.eq(0) &&
+      stateRemainingQuantums.lte(0) &&
       status === OrderRemoveV1_OrderRemovalStatus.ORDER_REMOVAL_STATUS_CANCELED &&
       reason === OrderRemovalReason.ORDER_REMOVAL_REASON_INDEXER_EXPIRED
     ) {

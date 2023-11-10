@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"sync"
 	"time"
@@ -61,12 +62,20 @@ type timeBoundedHealthCheckable struct {
 	// timeProvider is the time provider used to determine the current time. This is used for timestamping
 	// creation and checking for update staleness during HealthCheck.
 	timeProvider libtime.TimeProvider
+
+	// logger is the logger used to log errors.
+	logger log.Logger
 }
 
 // NewTimeBoundedHealthCheckable creates a new HealthCheckable instance.
-func NewTimeBoundedHealthCheckable(serviceName string, timeProvider libtime.TimeProvider) HealthCheckable {
+func NewTimeBoundedHealthCheckable(
+	serviceName string,
+	timeProvider libtime.TimeProvider,
+	logger log.Logger,
+) HealthCheckable {
 	hc := &timeBoundedHealthCheckable{
 		timeProvider: timeProvider,
+		logger:       logger,
 	}
 	// Initialize the timeBoudnedHealthCheckable to an unhealthy state by reporting an error.
 	hc.ReportFailure(fmt.Errorf("%v is initializing", serviceName))
@@ -117,14 +126,17 @@ func (h *timeBoundedHealthCheckable) HealthCheck() error {
 		)
 	}
 
-	// If the last successful update was more than 5 minutes ago, report the specific error.
+	// If the last successful update was more than 5 minutes ago, log the specific error.
 	if h.timeProvider.Now().Sub(h.lastSuccessfulUpdate) > MaxAcceptableUpdateDelay {
-		return fmt.Errorf(
-			"last successful update occurred at %v, which is more than %v ago. Last failure occurred at %v with error '%w'",
-			h.lastSuccessfulUpdate,
-			MaxAcceptableUpdateDelay,
-			h.lastFailedUpdate.Timestamp(),
-			h.lastFailedUpdate.Error(),
+		h.logger.Error(
+			fmt.Sprintf(
+				"last successful update occurred at %v, which is more than %v ago. "+
+					"Last failure occurred at %v with error '%v'",
+				h.lastSuccessfulUpdate,
+				MaxAcceptableUpdateDelay,
+				h.lastFailedUpdate.Timestamp(),
+				h.lastFailedUpdate.Error(),
+			),
 		)
 	}
 

@@ -618,7 +618,7 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/fills?address=string&subaccoun
       "id": "string",
       "side": "BUY",
       "liquidity": "TAKER",
-      "type": "MARKET",
+      "type": "LIMIT",
       "market": "string",
       "marketType": "PERPETUAL",
       "price": "string",
@@ -1639,6 +1639,7 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/trades/perpetualMarket/{ticker
       "side": "BUY",
       "size": "string",
       "price": "string",
+      "type": "LIMIT",
       "createdAt": "string",
       "createdAtHeight": "string"
     }
@@ -2269,7 +2270,7 @@ This operation does not require authentication
 <a id="tocsfilltype"></a>
 
 ```json
-"MARKET"
+"LIMIT"
 
 ```
 
@@ -2283,10 +2284,11 @@ This operation does not require authentication
 
 |Property|Value|
 |---|---|
-|*anonymous*|MARKET|
 |*anonymous*|LIMIT|
 |*anonymous*|LIQUIDATED|
 |*anonymous*|LIQUIDATION|
+|*anonymous*|DELEVERAGED|
+|*anonymous*|OFFSETTING|
 
 ## MarketType
 
@@ -2325,7 +2327,7 @@ This operation does not require authentication
   "id": "string",
   "side": "BUY",
   "liquidity": "TAKER",
-  "type": "MARKET",
+  "type": "LIMIT",
   "market": "string",
   "marketType": "PERPETUAL",
   "price": "string",
@@ -2371,7 +2373,7 @@ This operation does not require authentication
       "id": "string",
       "side": "BUY",
       "liquidity": "TAKER",
-      "type": "MARKET",
+      "type": "LIMIT",
       "market": "string",
       "marketType": "PERPETUAL",
       "price": "string",
@@ -3060,6 +3062,7 @@ or
   "side": "BUY",
   "size": "string",
   "price": "string",
+  "type": "LIMIT",
   "createdAt": "string",
   "createdAtHeight": "string"
 }
@@ -3074,6 +3077,7 @@ or
 |side|[OrderSide](#schemaorderside)|true|none|none|
 |size|string|true|none|none|
 |price|string|true|none|none|
+|type|[FillType](#schemafilltype)|true|none|none|
 |createdAt|[IsoString](#schemaisostring)|true|none|none|
 |createdAtHeight|string|true|none|none|
 
@@ -3092,6 +3096,7 @@ or
       "side": "BUY",
       "size": "string",
       "price": "string",
+      "type": "LIMIT",
       "createdAt": "string",
       "createdAtHeight": "string"
     }

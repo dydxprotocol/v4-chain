@@ -45,7 +45,6 @@ import {
   generateFillSubaccountMessage,
   generateOrderSubaccountMessage,
   generatePerpetualPositionsContents,
-  isLiquidation,
 } from '../../helpers/kafka-helper';
 import {
   getPrice,
@@ -427,7 +426,7 @@ export abstract class AbstractOrderFillHandler<T> extends Handler<T> {
           price: fill.price,
           side: fill.side.toString(),
           createdAt: fill.createdAt,
-          liquidation: isLiquidation(fill),
+          type: fill.type,
         },
       ],
     };

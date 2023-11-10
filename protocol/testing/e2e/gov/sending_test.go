@@ -20,6 +20,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 	tests := map[string]struct {
 		msg                      *sendingtypes.MsgSendFromModuleToAccount
 		initialModuleBalance     int64
+		expectCheckTxFails       bool
 		expectedProposalStatus   govtypesv1.ProposalStatus
 		expectSubmitProposalFail bool
 	}{
@@ -104,6 +105,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
 			)

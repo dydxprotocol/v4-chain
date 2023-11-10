@@ -51,12 +51,12 @@ import { updateBlockCache } from '../../src/caches/block-cache';
 import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import { DeleveragingHandler } from '../../src/handlers/deleveraging-handler';
+import { DeleveragingHandler } from '../../src/handlers/order-fills/deleveraging-handler';
 
 jest.mock('../../src/handlers/subaccount-update-handler');
 jest.mock('../../src/handlers/transfer-handler');
 jest.mock('../../src/handlers/funding-handler');
-jest.mock('../../src/handlers/deleveraging-handler');
+jest.mock('../../src/handlers/order-fills/deleveraging-handler');
 jest.mock('../../src/handlers/markets/market-modify-handler');
 
 describe('on-message', () => {

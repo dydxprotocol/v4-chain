@@ -1,7 +1,7 @@
 /**
   Returns the weighted average between two prices.
 
-  Note that since division is used the scale of the resulting number if limited to 20 which matches the division
+  Note that since division is used the scale of the resulting number is limited to 20 which matches the division
   precision (DP) of the https://mikemcl.github.io/big.js/ library.
 
   Parameters:

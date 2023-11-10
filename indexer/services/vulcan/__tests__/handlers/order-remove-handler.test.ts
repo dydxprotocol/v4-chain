@@ -37,6 +37,7 @@ import {
   placeOrder,
   redis,
   redisTestConstants,
+  StateFilledQuantumsCache,
   SubaccountOrderIdsCache,
   updateOrder,
   CanceledOrderStatus,
@@ -340,6 +341,9 @@ describe('OrderRemoveHandler', () => {
             goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(removedRedisOrder.order!),
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+            createdAtHeight: removedOrder.createdAtHeight,
+            updatedAt: removedOrder.updatedAt,
+            updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           },
@@ -474,6 +478,9 @@ describe('OrderRemoveHandler', () => {
             goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(removedRedisOrder.order!),
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+            createdAtHeight: removedOrder.createdAtHeight,
+            updatedAt: removedOrder.updatedAt,
+            updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           },
@@ -609,6 +616,9 @@ describe('OrderRemoveHandler', () => {
             goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(removedRedisOrder.order!),
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+            createdAtHeight: removedOrder.createdAtHeight,
+            updatedAt: removedOrder.updatedAt,
+            updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           }],
@@ -745,6 +755,9 @@ describe('OrderRemoveHandler', () => {
             goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(removedRedisOrder.order!),
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[defaultOrderRemove.reason],
+            createdAtHeight: removedOrder.createdAtHeight,
+            updatedAt: removedOrder.updatedAt,
+            updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: removedRedisOrder.order!.clientMetadata.toString(),
             triggerPrice,
           }],
@@ -769,27 +782,36 @@ describe('OrderRemoveHandler', () => {
       [
         'goodTilBlock',
         redisTestConstants.defaultOrderId,
-        testConstants.defaultOrder,
+        {
+          ...testConstants.defaultOrder,
+          status: OrderStatus.FILLED,
+        },
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
       ],
       [
         'goodTilBlockTime',
         redisTestConstants.defaultOrderIdGoodTilBlockTime,
-        testConstants.defaultOrderGoodTilBlockTime,
+        {
+          ...testConstants.defaultOrderGoodTilBlockTime,
+          status: OrderStatus.FILLED,
+        },
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
       ],
       [
         'conditional',
         redisTestConstants.defaultOrderIdConditional,
-        testConstants.defaultConditionalOrder,
+        {
+          ...testConstants.defaultConditionalOrder,
+          status: OrderStatus.FILLED,
+        },
         redisTestConstants.defaultRedisOrderConditional,
         redisTestConstants.defaultOrderUuidConditional,
       ],
     ])(
-      'does not send subaccount message for fully-filled orders for best effort user cancel ' +
-      '(with %s)',
+      'does not send subaccount message for orders fully-filled in state for best effort ' +
+      'user cancel (with %s)',
       async (
         _name: string,
         removedOrderId: IndexerOrderId,
@@ -813,6 +835,11 @@ describe('OrderRemoveHandler', () => {
             sizeDeltaInQuantums: defaultQuantums.toString(),
             client: redisClient,
           }),
+          StateFilledQuantumsCache.updateStateFilledQuantums(
+            expectedOrderUuid,
+            removedRedisOrder.order!.quantums.toString(),
+            redisClient,
+          ),
         ]);
 
         const fullyFilledUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
@@ -838,7 +865,7 @@ describe('OrderRemoveHandler', () => {
         await orderRemoveHandler.handleUpdate(offChainUpdate);
 
         await Promise.all([
-          expectOrderStatus(expectedOrderUuid, OrderStatus.BEST_EFFORT_CANCELED),
+          expectOrderStatus(expectedOrderUuid, removedOrder.status),
           // orderbook should not be affected, so it will be set to defaultQuantums
           expectOrderbookLevelCache(
             removedRedisOrder.ticker,
@@ -855,7 +882,7 @@ describe('OrderRemoveHandler', () => {
         // no orderbook message because no change in orderbook levels
         expectNoWebsocketMessagesSent(producerSendSpy);
         expect(logger.error).not.toHaveBeenCalled();
-        expectTimingStats(true, true);
+        expectTimingStats(true, false);
       },
     );
 
@@ -1026,6 +1053,9 @@ describe('OrderRemoveHandler', () => {
           goodTilBlockTime: removedOrder.goodTilBlockTime,
           ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
+          createdAtHeight: removedOrder.createdAtHeight,
+          updatedAt: removedOrder.updatedAt,
+          updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
@@ -1137,6 +1167,9 @@ describe('OrderRemoveHandler', () => {
           goodTilBlockTime: removedOrder.goodTilBlockTime,
           ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
+          createdAtHeight: removedOrder.createdAtHeight,
+          updatedAt: removedOrder.updatedAt,
+          updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
@@ -1256,6 +1289,9 @@ describe('OrderRemoveHandler', () => {
           goodTilBlockTime: removedOrder.goodTilBlockTime,
           ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
+          createdAtHeight: removedOrder.createdAtHeight,
+          updatedAt: removedOrder.updatedAt,
+          updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
@@ -1391,6 +1427,9 @@ describe('OrderRemoveHandler', () => {
           goodTilBlockTime: removedOrder.goodTilBlockTime,
           ticker: removedRedisOrder.ticker,
           removalReason: OrderRemovalReason[statefulCancelationOrderRemove.reason],
+          createdAtHeight: removedOrder.createdAtHeight,
+          updatedAt: removedOrder.updatedAt,
+          updatedAtHeight: removedOrder.updatedAtHeight,
           clientMetadata: removedOrder.clientMetadata.toString(),
           triggerPrice,
         }],
@@ -1522,6 +1561,9 @@ describe('OrderRemoveHandler', () => {
             goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(removedRedisOrder.order!),
             ticker: redisTestConstants.defaultRedisOrder.ticker,
             removalReason: OrderRemovalReason[indexerExpiredOrderRemoved.reason],
+            createdAtHeight: removedOrder.createdAtHeight,
+            updatedAt: removedOrder.updatedAt,
+            updatedAtHeight: removedOrder.updatedAtHeight,
             clientMetadata: testConstants.defaultOrderGoodTilBlockTime.clientMetadata.toString(),
           },
         ],
@@ -1553,7 +1595,10 @@ describe('OrderRemoveHandler', () => {
 
     it('successfully removes fully filled expired order and does not send websocket message', async () => {
       const removedOrderId: IndexerOrderId = redisTestConstants.defaultOrderId;
-      const removedOrder: OrderCreateObject = indexerExpiredDefaultOrder;
+      const removedOrder: OrderCreateObject = {
+        ...indexerExpiredDefaultOrder,
+        status: OrderStatus.FILLED,
+      };
       const removedRedisOrder: RedisOrder = redisTestConstants.defaultRedisOrder;
       const expectedOrderUuid: string = redisTestConstants.defaultOrderUuid;
 
@@ -1574,6 +1619,11 @@ describe('OrderRemoveHandler', () => {
           sizeDeltaInQuantums: orderbookLevel,
           client: redisClient,
         }),
+        StateFilledQuantumsCache.updateStateFilledQuantums(
+          expectedOrderUuid,
+          removedRedisOrder.order!.quantums.toString(),
+          redisClient,
+        ),
       ]);
 
       await Promise.all([
@@ -1600,7 +1650,7 @@ describe('OrderRemoveHandler', () => {
         orderbookLevel,
       ).toString();
       await Promise.all([
-        expectOrderStatus(expectedOrderUuid, OrderStatus.CANCELED),
+        expectOrderStatus(expectedOrderUuid, removedOrder.status),
         expectOrderbookLevelCache(
           removedRedisOrder.ticker,
           OrderSide.BUY,
@@ -1613,7 +1663,7 @@ describe('OrderRemoveHandler', () => {
         expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.CANCELED),
       ]);
       expectNoWebsocketMessagesSent(producerSendSpy);
-      expectTimingStats(true, true);
+      expectTimingStats(true, false);
     });
 
     it('error: when latest block not found, log and exit', async () => {

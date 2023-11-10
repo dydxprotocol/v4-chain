@@ -15,9 +15,9 @@ BEGIN
     transaction_idx := dydx_tendermint_event_to_transaction_index(event);
     event_id := dydx_event_id_from_parts(CAST(block_height AS int), transaction_idx, CAST(event->>'eventIndex' AS int));
 
-        INSERT INTO tendermint_events ("id", "blockHeight", "transactionIndex", "eventIndex")
-        VALUES (event_id, block_height::bigint, transaction_idx, CAST(event->>'eventIndex' AS int))
-        RETURNING to_jsonb(tendermint_events.*) INTO inserted_event;
+    INSERT INTO tendermint_events ("id", "blockHeight", "transactionIndex", "eventIndex")
+    VALUES (event_id, block_height::bigint, transaction_idx, CAST(event->>'eventIndex' AS int))
+    RETURNING to_jsonb(tendermint_events.*) INTO inserted_event;
 
     RETURN inserted_event;
 END;

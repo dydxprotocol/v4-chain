@@ -75,6 +75,7 @@ import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -142,8 +143,8 @@ describe('OrderHandler', () => {
     entryPrice: '15000',
     createdAt: DateTime.utc().toISO(),
     createdAtHeight: '10',
-    openEventId: testConstants.defaultTendermintEventId,
-    lastEventId: testConstants.defaultTendermintEventId,
+    openEventId: testConstants.defaultTendermintEventId4,
+    lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
 
@@ -313,7 +314,6 @@ describe('OrderHandler', () => {
         // older perpetual position to ensure that the correct perpetual position is being updated
         PerpetualPositionTable.create({
           ...defaultPerpetualPosition,
-          createdAtHeight: '0',
           openEventId: testConstants.defaultTendermintEventId2,
         }),
       ]);
@@ -479,6 +479,14 @@ describe('OrderHandler', () => {
           },
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -833,6 +841,14 @@ describe('OrderHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -898,19 +914,17 @@ describe('OrderHandler', () => {
       // previous position for subaccount 1
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // previous position for subaccount 2
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         subaccountId: testConstants.defaultSubaccountId2,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // initial position for subaccount 2
       PerpetualPositionTable.create(defaultPerpetualPosition),
@@ -1042,6 +1056,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1104,20 +1126,18 @@ describe('OrderHandler', () => {
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         perpetualId: testConstants.defaultPerpetualMarket3.id,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // previous position for subaccount 2
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         perpetualId: testConstants.defaultPerpetualMarket3.id,
         subaccountId: testConstants.defaultSubaccountId2,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // initial position for subaccount 2
       PerpetualPositionTable.create({
@@ -1253,6 +1273,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 

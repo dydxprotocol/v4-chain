@@ -20,6 +20,7 @@ func SingleTickTickerAndStop() (*time.Ticker, chan bool) {
 			// Once the single tick is consumed, stop the ticker and signal the stop channel.
 			if len(ticker.C) == 0 {
 				stop <- true
+				close(stop)
 				ticker.Stop()
 				return
 			}

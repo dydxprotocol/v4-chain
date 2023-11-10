@@ -1,25 +1,20 @@
 /**
   Gets the transaction index from the IndexerTendermint event.
+
   Parameters:
-    - event: The IndexerTendermintEvent object.
+    - event: The JSON.stringify of a IndexerTendermintEvent object (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25).
   Returns: int.
 */
 CREATE OR REPLACE FUNCTION dydx_tendermint_event_to_transaction_index(event jsonb) RETURNS int AS $$
-DECLARE
-    transaction_index_text text;
-    block_event_text text;
 BEGIN
-    transaction_index_text := jsonb_extract_path_text(event, 'transactionIndex');
-    block_event_text := jsonb_extract_path_text(event, 'blockEvent');
-
-    IF transaction_index_text IS NOT NULL THEN
-        RETURN transaction_index_text::int;
-    ELSIF block_event_text IS NOT NULL THEN
-        CASE block_event_text
-            WHEN '1' THEN RETURN -2; -- BLOCK_EVENT_BEGIN_BLOCK
-            WHEN '2' THEN RETURN -1; -- BLOCK_EVENT_END_BLOCK
-            ELSE RAISE EXCEPTION 'Received V4 event with invalid block event type: %', block_event_text;
-        END CASE;
+    IF event->'transactionIndex' IS NOT NULL THEN
+        RETURN (event->'transactionIndex')::int;
+    ELSIF event->'blockEvent' IS NOT NULL THEN
+        CASE event->'blockEvent'
+            WHEN '1'::jsonb THEN RETURN -2; /** BLOCK_EVENT_BEGIN_BLOCK */
+            WHEN '2'::jsonb THEN RETURN -1; /** BLOCK_EVENT_END_BLOCK */
+            ELSE RAISE EXCEPTION 'Received V4 event with invalid block event type: %', event->'blockEvent';
+            END CASE;
     END IF;
 
     RAISE EXCEPTION 'Either transactionIndex or blockEvent must be defined in IndexerTendermintEvent';

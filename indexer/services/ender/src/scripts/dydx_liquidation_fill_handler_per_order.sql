@@ -3,21 +3,21 @@
     - field: the field storing the order to process.
     - block_height: the height of the block being processing.
     - block_time: the time of the block being processed.
-    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-proto/blob/8d35c86/dydxprotocol/indexer/indexer_manager/event.proto#L25)
+    - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
     - event_index: The 'event_index' of the IndexerTendermintEvent.
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
-        account the block_event (https://github.com/dydxprotocol/indexer/blob/cc70982/services/ender/src/lib/helper.ts#L33)
+        account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
     - transaction_hash: The transaction hash corresponding to this event from the IndexerTendermintBlock 'tx_hashes'.
     - fill_liquidity: The liquidity for the fill record.
     - fill_type: The type for the fill record.
     - usdc_asset_id: The USDC asset id.
   Returns: JSON object containing fields:
-    - order: The updated order in order-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/order-model.ts).
+    - order: The updated order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
         Only returned if field == 'makerOrder'.
-    - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/fill-model.ts).
-    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-market-model.ts).
-    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/indexer/blob/cc70982/packages/postgres/src/models/perpetual-position-model.ts).
+    - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
+    - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
+    - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
 */
 CREATE OR REPLACE FUNCTION dydx_liquidation_fill_handler_per_order(
     field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
@@ -52,15 +52,7 @@ BEGIN
         clob_pair_id = jsonb_extract_path(order_, 'clobPairId')::bigint;
     END IF;
 
-    BEGIN
-        SELECT * INTO STRICT perpetual_market_record FROM perpetual_markets WHERE "clobPairId" = clob_pair_id;
-    EXCEPTION
-        WHEN NO_DATA_FOUND THEN
-            RAISE EXCEPTION 'Unable to find perpetual market with clobPairId %', clob_pair_id;
-        WHEN TOO_MANY_ROWS THEN
-            /** This should never happen and if it ever were to would indicate that the table has malformed data. */
-            RAISE EXCEPTION 'Found multiple perpetual markets with clobPairId %', clob_pair_id;
-    END;
+    perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
 
     BEGIN
         SELECT * INTO STRICT asset_record FROM assets WHERE "id" = usdc_asset_id;
@@ -182,7 +174,7 @@ BEGIN
     /* Upsert the perpetual_position record for this order_fill event. */
     SELECT * INTO perpetual_position_record FROM perpetual_positions WHERE "subaccountId" = subaccount_uuid
                                                                        AND "perpetualId" = perpetual_market_record."id"
-    ORDER BY "createdAtHeight" DESC;
+    ORDER BY "openEventId" DESC;
     IF NOT FOUND THEN
         RAISE EXCEPTION 'Unable to find existing perpetual position, subaccountId: %, perpetualId: %', subaccount_uuid, perpetual_market_record."id";
     END IF;

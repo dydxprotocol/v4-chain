@@ -14,6 +14,7 @@ import {
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -34,7 +35,28 @@ export class StatefulOrderPlacementHandler extends
     return this.getParallelizationIdsFromOrderId(orderId);
   }
 
+  // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+    if (config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION) {
+      return this.handleViaSqlFunction();
+    }
+    return this.handleViaKnex();
+  }
+
+  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+    await this.handleEventViaSqlFunction();
+
+    let order: IndexerOrder;
+    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
+    if (this.event.orderPlace !== undefined) {
+      order = this.event.orderPlace!.order!;
+    } else {
+      order = this.event.longTermOrderPlacement!.order!;
+    }
+    return this.createKafkaEvents(order);
+  }
+
+  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
@@ -60,6 +82,10 @@ export class StatefulOrderPlacementHandler extends
       this.generateTimingStatsOptions('upsert_order'),
     );
 
+    return this.createKafkaEvents(order);
+  }
+
+  private createKafkaEvents(order: IndexerOrder): ConsolidatedKafkaEvent[] {
     const kafakEvents: ConsolidatedKafkaEvent[] = [];
 
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({

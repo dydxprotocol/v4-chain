@@ -87,8 +87,14 @@ sleep 10
 dydxprotocold init --chain-id=${CHAIN_ID} --home /dydxprotocol/chain/local_node local_node
 curl -X GET ${genesis_file_rpc_address}/genesis | jq '.result.genesis' > /dydxprotocol/chain/local_node/config/genesis.json
 
-# Set pruning to prune all but the last two states. Prevents snapshots from getting too big.
+# Prune snapshots to prevent them from getting too big. We make 3 changes:
+# Prune all app state except last 2 blocks
 sed -i 's/pruning = "default"/pruning = "everything"/' /dydxprotocol/chain/local_node/config/app.toml
+# Tendermint pruning is decided by picking the most restrictive of multiple factors.
+# Make the custom config setting as permissive as possible.
+sed -i 's/min-retain-blocks = 0/min-retain-blocks = 2/' /dydxprotocol/chain/local_node/config/app.toml
+# Do not index tx_index.db
+sed -i 's/indexer = "kv"/indexer = "null"/' /dydxprotocol/chain/local_node/config/config.toml
 
 setup_cosmovisor
 

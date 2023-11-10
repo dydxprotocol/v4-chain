@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"fmt"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -100,23 +101,6 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			healthCheckTime:      Time3,
 			expectedHealthStatus: nil, // expect healthy
 		},
-		"unhealthy: last successful update was more than max delay": {
-			updates: []struct {
-				timestamp time.Time
-				err       error
-			}{
-				{Time1, nil}, // successful update
-			},
-			healthCheckTime: Time_5Minutes_And_2Seconds,
-			expectedHealthStatus: fmt.Errorf(
-				"last successful update occurred at %v, which is more than %v ago. "+
-					"Last failure occurred at %v with error '%w'",
-				Time1,
-				types.MaxAcceptableUpdateDelay,
-				Time0,
-				InitializingStatus,
-			),
-		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -138,6 +122,7 @@ func TestHealthCheckableImpl_Mixed(t *testing.T) {
 			hci := types.NewTimeBoundedHealthCheckable(
 				"test",
 				mockTimeProviderWithTimestamps(timestamps),
+				log.NewNopLogger(),
 			)
 
 			// Act.
