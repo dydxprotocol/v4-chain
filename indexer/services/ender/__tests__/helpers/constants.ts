@@ -325,7 +325,7 @@ export const defaultTradeContent: TradeContent = {
   price: '10000',
   side: 'BUY',
   createdAt: 'createdAt',
-  type: FillType.MARKET,
+  type: FillType.LIMIT,
 };
 export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessage(
   defaultTradeContent,

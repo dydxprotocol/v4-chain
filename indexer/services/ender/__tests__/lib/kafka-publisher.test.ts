@@ -241,7 +241,7 @@ describe('kafka-publisher', () => {
       subaccountId: testConstants.defaultSubaccountId,
       side: OrderSide.BUY,
       liquidity: Liquidity.TAKER,
-      type: FillType.MARKET,
+      type: FillType.LIMIT,
       clobPairId: '1',
       orderId: testConstants.defaultOrderId,
       size: '10',

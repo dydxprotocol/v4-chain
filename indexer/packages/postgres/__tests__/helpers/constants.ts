@@ -355,7 +355,7 @@ export const defaultFill: FillCreateObject = {
   subaccountId: defaultSubaccountId,
   side: OrderSide.BUY,
   liquidity: Liquidity.TAKER,
-  type: FillType.MARKET,
+  type: FillType.LIMIT,
   clobPairId: '1',
   orderId: defaultOrderId,
   size: '10',
