@@ -361,7 +361,9 @@ func (k Keeper) ProcessRewardsForBlock(
 	)
 
 	k.Logger(ctx).Info(fmt.Sprintf(
-		"Tokens distributed: %v, remaining treasuryBalance: %v", tokensToDistribute, remainingTreasuryBalance.Amount),
+		"Rewards tokens distributed: %v, remaining treasuryBalance: %v", tokensToDistribute, remainingTreasuryBalance.Amount),
+		"test_log_ley",
+		"rewards",
 		metrics.BlockHeight,
 		ctx.BlockHeight(),
 	)

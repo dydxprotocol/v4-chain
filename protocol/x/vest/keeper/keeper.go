@@ -144,13 +144,17 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				telemetry.IncrCounter(1, metrics.ProcessVesting, metrics.AccountTransfer, metrics.Error)
 				continue
 			}
-		}
 
-		k.Logger(ctx).Info(
-			fmt.Sprintf("Vested tokens: %v", vestAmount),
-			metrics.BlockHeight,
-			ctx.BlockHeight(),
-		)
+			k.Logger(ctx).Info(
+				fmt.Sprintf("Vested tokens: %v", vestAmount),
+				metrics.BlockHeight,
+				ctx.BlockHeight(),
+				"test_log_ley",
+				"vesting",
+				"denom",
+				entry.Denom,
+			)
+		}
 
 		// Report vest amount.
 		telemetry.SetGaugeWithLabels(
