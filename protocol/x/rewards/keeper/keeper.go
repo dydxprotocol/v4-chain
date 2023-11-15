@@ -322,6 +322,24 @@ func (k Keeper) ProcessRewardsForBlock(
 			continue
 		}
 
+		if rewardAmountForAddress.Cmp(big.NewInt(200_000_000_000_000_000)) > 0 {
+			k.Logger(ctx).Info(
+				fmt.Sprintf(
+					"Calculating rewards for %v: tokens to distribute: %v, share weight: %v, total weight: %v, rewardAmount: %v, rewardTokenPrice: %v",
+					share.Address,
+					tokensToDistribute,
+					share.Weight,
+					totalRewardWeight,
+					rewardAmountForAddress,
+					rewardTokenPrice.Price,
+				),
+				metrics.BlockHeight,
+				ctx.BlockHeight(),
+				"test_log_key",
+				"rewards",
+			)
+		}
+
 		if err := k.bankKeeper.SendCoinsFromModuleToAccount(
 			ctx,
 			params.TreasuryAccount,
@@ -362,7 +380,7 @@ func (k Keeper) ProcessRewardsForBlock(
 
 	k.Logger(ctx).Info(fmt.Sprintf(
 		"Rewards tokens distributed: %v, remaining treasuryBalance: %v", tokensToDistribute, remainingTreasuryBalance.Amount),
-		"test_log_ley",
+		"test_log_key",
 		"rewards",
 		metrics.BlockHeight,
 		ctx.BlockHeight(),

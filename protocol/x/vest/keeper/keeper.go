@@ -149,7 +149,7 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				fmt.Sprintf("Vested tokens: %v", vestAmount),
 				metrics.BlockHeight,
 				ctx.BlockHeight(),
-				"test_log_ley",
+				"test_log_key",
 				"vesting",
 				"denom",
 				entry.Denom,
