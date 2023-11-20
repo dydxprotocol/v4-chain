@@ -14,9 +14,11 @@ const (
 	ClobDeleverageSubaccount                          = "clob_deleverage_subaccount"
 	LiqidationsPlacePerpetualLiquidationQuoteQuantums = "liquidations_place_perpetual_liquidation_quote_quantums"
 	LiquidationsLiquidationMatchNegativeTNC           = "liquidations_liquidation_match_negative_tnc"
+	ClobMevErrorCount                                 = "clob_mev_error_count"
 
 	// gauge
 	InsuranceFundBalance = "insurance_fund_balance"
+	ClobMev              = "clob_mev"
 
 	// sample
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
@@ -31,4 +33,5 @@ const (
 
 	// Measure since
 	ClobOffsettingSubaccountPerpetualPosition = "clob_offsetting_subaccount_perpetual_position"
+	MevLatency                                = "mev_latency"
 )
