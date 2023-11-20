@@ -50,7 +50,6 @@ func recordSuccessMetrics(params successMetricParams) {
 	)
 
 	// Funding tx.
-	// TODO(DEC-1254): add more metrics for Funding tx.
 	telemetry.SetGauge(
 		float32(params.fundingTx.NumVotes),
 		ModuleName,

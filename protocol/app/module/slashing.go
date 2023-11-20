@@ -1,9 +1,10 @@
 package module
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
@@ -18,7 +19,6 @@ type SlashingModuleBasic struct {
 }
 
 // DefaultGenesis returns custom `x/slashing` module genesis state.
-// TODO(DEC-1776): Adjust below values based on final state of `Network Parameters` doc.
 func (SlashingModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
 	genState := slashingtypes.DefaultGenesisState()
 
