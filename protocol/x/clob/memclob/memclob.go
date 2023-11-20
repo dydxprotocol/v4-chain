@@ -1828,7 +1828,7 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 		telemetry.SetGaugeWithLabels(
 			[]string{
 				types.ModuleName,
-				metrics.TotalOrdersClobPair,
+				metrics.TotalOrdersInClob,
 			},
 			float32(orderbook.TotalOpenOrders),
 			[]gometrics.Label{

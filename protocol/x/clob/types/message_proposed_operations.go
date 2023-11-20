@@ -114,7 +114,10 @@ func ValidateAndTransformRawOperations(
 			if err := orderRemoval.OrderId.Validate(); err != nil {
 				return nil, err
 			}
-			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED {
+			// Order removal reason fully filled is only used by indexer and should not be
+			// placed in the operations queue.
+			if orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_UNSPECIFIED ||
+				orderRemoval.RemovalReason == OrderRemoval_REMOVAL_REASON_FULLY_FILLED {
 				return nil, errorsmod.Wrapf(
 					ErrInvalidOrderRemoval,
 					"Invalid order removal reason: %+v",
