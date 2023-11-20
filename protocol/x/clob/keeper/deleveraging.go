@@ -3,15 +3,14 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"time"
 
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -41,11 +40,9 @@ func (k Keeper) MaybeDeleverageSubaccount(
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
 	if !canPerformDeleveraging {
-		telemetry.IncrCounter(
+		metrics.IncrCounter(
+			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
 			1,
-			types.ModuleName,
-			metrics.PrepareCheckState,
-			metrics.CannotDeleverageSubaccount,
 		)
 		return new(big.Int), nil
 	}
@@ -67,7 +64,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
 	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
 
-	labels := []gometrics.Label{
+	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 		metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
 	}
@@ -79,22 +76,27 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		labels = append(labels, metrics.GetLabelForStringValue(metrics.Status, metrics.PartiallyFilled))
 	}
 	// Record the status of the deleveraging operation.
-	telemetry.IncrCounterWithLabels([]string{types.ModuleName, metrics.DeleverageSubaccount}, 1, labels)
+	metrics.IncrCounterWithLabels(
+		metrics.ClobDeleverageSubaccount,
+		1,
+		labels...,
+	)
 
 	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
 		new(big.Int).Abs(deltaQuantums),
 	); err == nil {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums},
+		metrics.IncrCounterWithLabels(
+			metrics.ClobDeleverageSubaccountTotalQuoteQuantums,
 			metrics.GetMetricValueFromBigInt(quoteQuantums),
-			labels,
+			labels...,
 		)
-		gometrics.AddSampleWithLabels(
-			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.TotalQuoteQuantums, metrics.Distribution},
+
+		metrics.AddSampleWithLabels(
+			metrics.ClobDeleverageSubaccountTotalQuoteQuantumsDistribution,
 			metrics.GetMetricValueFromBigInt(quoteQuantums),
-			labels,
+			labels...,
 		)
 	}
 
@@ -103,10 +105,11 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		new(big.Float).SetInt(new(big.Int).Abs(quantumsDeleveraged)),
 		new(big.Float).SetInt(new(big.Int).Abs(deltaQuantums)),
 	).Float32()
-	gometrics.AddSampleWithLabels(
-		[]string{metrics.Deleveraging, metrics.PercentFilled, metrics.Distribution},
+
+	metrics.AddSampleWithLabels(
+		metrics.DeleveragingPercentFilledDistribution,
 		percentFilled,
-		labels,
+		labels...,
 	)
 
 	return quantumsDeleveraged, err
@@ -195,11 +198,11 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
 ) {
-	defer telemetry.ModuleMeasureSince(
+
+	defer metrics.ModuleMeasureSince(
 		types.ModuleName,
+		metrics.ClobOffsettingSubaccountPerpetualPosition,
 		time.Now(),
-		types.ModuleName,
-		metrics.OffsettingSubaccountPerpetualPosition,
 	)
 
 	numSubaccountsIterated := uint32(0)
@@ -280,29 +283,25 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		k.GetPseudoRand(ctx),
 	)
 
-	labels := []gometrics.Label{
+	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
-	gometrics.AddSampleWithLabels(
-		[]string{
-			types.ModuleName, metrics.Deleveraging, metrics.NumSubaccountsIterated, metrics.Count,
-		},
+
+	metrics.AddSampleWithLabels(
+		metrics.ClobDeleveragingNumSubaccountsIteratedCount,
 		float32(numSubaccountsIterated),
-		labels,
+		labels...,
 	)
-	gometrics.AddSampleWithLabels(
-		[]string{
-			types.ModuleName, metrics.Deleveraging, metrics.NonOverlappingBankruptcyPrices, metrics.Count,
-		},
+
+	metrics.AddSampleWithLabels(
+		metrics.ClobDeleveragingNonOverlappingBankrupcyPricesCount,
 		float32(numSubaccountsWithNonOverlappingBankruptcyPrices),
-		labels,
+		labels...,
 	)
-	gometrics.AddSampleWithLabels(
-		[]string{
-			types.ModuleName, metrics.Deleveraging, metrics.NoOpenPositionOnOppositeSide, metrics.Count,
-		},
+	metrics.AddSampleWithLabels(
+		metrics.ClobDeleveragingNoOpenPositionOnOppositeSideCount,
 		float32(numSubaccountsWithNoOpenPositionOnOppositeSide),
-		labels,
+		labels...,
 	)
 	return fills, deltaQuantumsRemaining
 }
@@ -423,15 +422,16 @@ func (k Keeper) ProcessDeleveraging(
 		perpetualId,
 		new(big.Int).Abs(deltaQuantums),
 	); err == nil {
-		labels := []gometrics.Label{
+		labels := []metrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
 			metrics.GetLabelForBoolValue(metrics.IsLong, deltaQuantums.Sign() == -1),
 		}
-		gometrics.AddSampleWithLabels(
-			[]string{types.ModuleName, metrics.DeleverageSubaccount, metrics.Filled, metrics.QuoteQuantums},
+
+		metrics.AddSampleWithLabels(
+			metrics.ClobDeleverageSubaccountFilledQuoteQuantums,
 			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
-			labels,
+			labels...,
 		)
 	}
 
