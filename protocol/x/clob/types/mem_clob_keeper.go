@@ -60,7 +60,6 @@ type MemClobKeeper interface {
 	AddPreexistingStatefulOrder(
 		ctx sdk.Context,
 		order *Order,
-		blockHeight uint32,
 		memclob MemClob,
 	) (
 		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,

@@ -973,7 +973,6 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(
 				ctx,
 				&statefulOrderPlacement.Order,
-				uint32(ctx.BlockHeight()),
 				m,
 			)
 			placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
