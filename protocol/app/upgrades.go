@@ -2,31 +2,35 @@ package app
 
 import (
 	"fmt"
+
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	v2_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v2.0.0"
 )
 
 var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{}
-	Forks    = []upgrades.Fork{}
+	Upgrades = []upgrades.Upgrade{v2_0_0.Upgrade}
+	Forks    = []upgrades.Fork{v2_0_0.Fork}
 )
 
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	for _, upgrade := range Upgrades {
-		if app.UpgradeKeeper.HasHandler(upgrade.UpgradeName) {
-			panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", upgrade.UpgradeName))
-		}
-		app.UpgradeKeeper.SetUpgradeHandler(
-			upgrade.UpgradeName,
-			upgrade.CreateUpgradeHandler(app.ModuleManager, app.configurator),
-		)
+	if app.UpgradeKeeper.HasHandler(v2_0_0.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v2_0_0.UpgradeName))
 	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v2_0_0.UpgradeName,
+		v2_0_0.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
+			app.AccountKeeper,
+		),
+	)
 }
 
 // setUpgradeStoreLoaders sets custom store loaders to customize the rootMultiStore
@@ -65,6 +69,7 @@ func (app *App) scheduleForkUpgrade(ctx sdk.Context) {
 				Info:   fork.UpgradeInfo,
 			}
 
+			ctx.Logger().Info(fmt.Sprintf("Scheduling fork upgrade: %+v", fork))
 			// schedule the upgrade plan to the current block height, effectively performing
 			// a hard fork that uses the upgrade handler to manage the migration.
 			if err := app.UpgradeKeeper.ScheduleUpgrade(ctx, upgradePlan); err != nil {
