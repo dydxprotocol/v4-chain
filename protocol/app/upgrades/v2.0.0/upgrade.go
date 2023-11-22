@@ -69,8 +69,9 @@ func CreateUpgradeHandler(
 				baseAccount, ok := acc.(*types.BaseAccount)
 				if !ok {
 					panic(fmt.Sprintf(
-						"cannot cast %v into a BaseAccount",
+						"cannot cast +v into a BaseAccount, acc = %+v",
 						modAccName,
+						acc,
 					))
 				}
 				newModuleAccount := authtypes.NewModuleAccount(
