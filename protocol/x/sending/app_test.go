@@ -1,10 +1,12 @@
 package sending_test
 
 import (
+	"bytes"
 	"math/big"
 	"testing"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,6 +28,283 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
+
+func TestMsgCreateTransfer(t *testing.T) {
+	tests := map[string]struct {
+		// Initial balance of sender subaccount.
+		senderInitialBalance uint64
+
+		// Sender subaccount ID.
+		senderSubaccountId satypes.SubaccountId
+
+		// Recipient subaccount ID.
+		recipientSubaccountId satypes.SubaccountId
+
+		// Asset to transfer.
+		asset assetstypes.Asset
+
+		// Amount to transfer.
+		amount uint64
+
+		/* Expectations */
+		// A string that CheckTx response should contain, if any.
+		checkTxResponseContains string
+
+		// Whether CheckTx fails.
+		checkTxFails bool
+
+		// Whether DeliverTx fails.
+		deliverTxFails bool
+	}{
+		"Success: transfer from Alice subaccount 1 to Alice subaccount 2": {
+			senderInitialBalance:  600_000_000,
+			senderSubaccountId:    constants.Alice_Num0,
+			recipientSubaccountId: constants.Alice_Num1,
+			asset:                 *constants.Usdc,
+			amount:                500_000_000,
+		},
+		"Success: transfer from Bob subaccount to Carl subaccount": {
+			senderInitialBalance:  10_000_000,
+			senderSubaccountId:    constants.Bob_Num0,
+			recipientSubaccountId: constants.Carl_Num0,
+			asset:                 *constants.Usdc,
+			amount:                7_654_321,
+		},
+		// Transfer to a non-existent subaccount will create that subaccount and succeed.
+		"Success: transfer from Alice subaccount to non-existent subaccount": {
+			senderInitialBalance: 10_000_000,
+			senderSubaccountId:   constants.Alice_Num0,
+			recipientSubaccountId: satypes.SubaccountId{
+				Owner:  constants.BobAccAddress.String(),
+				Number: 104,
+			},
+			asset:  *constants.Usdc,
+			amount: 3_000_000,
+		},
+		"Failure: transfer more than balance": {
+			senderInitialBalance:  600_000_000,
+			senderSubaccountId:    constants.Alice_Num0,
+			recipientSubaccountId: constants.Alice_Num1,
+			asset:                 *constants.Usdc,
+			amount:                600_000_001,
+			deliverTxFails:        true,
+		},
+		"Failure: transfer a non-USDC asset": {
+			senderSubaccountId:      constants.Alice_Num0,
+			recipientSubaccountId:   constants.Alice_Num1,
+			asset:                   *constants.BtcUsd, // non-USDC asset
+			amount:                  7_000_000,
+			checkTxResponseContains: "Non-USDC asset transfer not implemented",
+			checkTxFails:            true,
+		},
+		"Failure: transfer zero amount": {
+			senderSubaccountId:      constants.Alice_Num0,
+			recipientSubaccountId:   constants.Alice_Num1,
+			asset:                   *constants.Usdc,
+			amount:                  0,
+			checkTxResponseContains: "Invalid transfer amount",
+			checkTxFails:            true,
+		},
+		"Failure: transfer from a subaccount to itself": {
+			senderSubaccountId:      constants.Bob_Num0,
+			recipientSubaccountId:   constants.Bob_Num0,
+			asset:                   *constants.Usdc,
+			amount:                  123_456,
+			checkTxResponseContains: "Sender is the same as recipient",
+			checkTxFails:            true,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Set up tApp with indexer and sender subaccount balance of USDC.
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{
+							{
+								Id: &tc.senderSubaccountId,
+								AssetPositions: []*satypes.AssetPosition{
+									{
+										AssetId: constants.Usdc.Id,
+										Index:   0,
+										Quantums: dtypes.NewIntFromUint64(
+											tc.senderInitialBalance,
+										),
+									},
+								},
+							},
+						}
+					},
+				)
+				return genesis
+			}).WithAppOptions(appOpts).Build()
+			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			// Clear any messages produced prior to CheckTx calls.
+			msgSender.Clear()
+
+			senderQuantumsBeforeTransfer :=
+				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.senderSubaccountId, tc.asset)
+			recipientQuantumsBeforeTransfer :=
+				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.recipientSubaccountId, tc.asset)
+
+			// Construct message.
+			msgCreateTransfer := sendingtypes.MsgCreateTransfer{
+				Transfer: &sendingtypes.Transfer{
+					Sender:    tc.senderSubaccountId,
+					Recipient: tc.recipientSubaccountId,
+					AssetId:   tc.asset.Id,
+					Amount:    tc.amount,
+				},
+			}
+
+			// Invoke CheckTx.
+			CheckTx_MsgCreateTransfer := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgCreateTransfer),
+					Gas:                  100_000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				&msgCreateTransfer,
+			)
+			checkTxResp := tApp.CheckTx(CheckTx_MsgCreateTransfer)
+
+			// Check that CheckTx response log contains expected string, if any.
+			if tc.checkTxResponseContains != "" {
+				require.Contains(t, checkTxResp.Log, tc.checkTxResponseContains)
+			}
+			// Check that CheckTx succeeds or fails as expected.
+			if tc.checkTxFails {
+				require.Conditionf(t, checkTxResp.IsErr, "Expected CheckTx to error. Response: %+v", checkTxResp)
+				return
+			}
+			require.Conditionf(t, checkTxResp.IsOK, "Expected CheckTx to succeed. Response: %+v", checkTxResp)
+
+			// Check that no indexer events are emitted so far.
+			require.Empty(t, msgSender.GetOnchainMessages())
+
+			if tc.deliverTxFails {
+				// Check that DeliverTx fails on MsgCreateTransfer.
+				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+					ValidateDeliverTxs: func(
+						context sdk.Context,
+						request abcitypes.RequestDeliverTx,
+						response abcitypes.ResponseDeliverTx,
+						_ int,
+					) (haltChain bool) {
+						if bytes.Equal(request.Tx, CheckTx_MsgCreateTransfer.Tx) {
+							require.True(t, response.IsErr())
+						} else {
+							require.True(t, response.IsOK())
+						}
+						return false
+					},
+				})
+				return
+			} else {
+				// Advance to block 3.
+				ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			}
+
+			// Verify expected sender subaccount balance.
+			senderQuantumsAfterTransfer :=
+				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.senderSubaccountId, tc.asset)
+			require.Equal(
+				t,
+				new(big.Int).Sub(
+					senderQuantumsBeforeTransfer,
+					new(big.Int).SetUint64(tc.amount),
+				),
+				senderQuantumsAfterTransfer,
+			)
+			// Verify expected recipient subaccount balance.
+			recipientQuantumsAfterTransfer :=
+				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.recipientSubaccountId, tc.asset)
+			require.Equal(
+				t,
+				new(big.Int).Add(
+					recipientQuantumsBeforeTransfer,
+					new(big.Int).SetUint64(tc.amount),
+				),
+				recipientQuantumsAfterTransfer,
+			)
+			// Verify that there are no offchain messages.
+			require.Empty(t, msgSender.GetOffchainMessages())
+			// Verify expected indexer events.
+			expectedOnchainMessages := []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+				&indexer_manager.IndexerTendermintBlock{
+					Height: 3,
+					Time:   ctx.BlockTime(),
+					Events: []*indexer_manager.IndexerTendermintEvent{
+						{
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          0,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
+								indexerevents.NewSubaccountUpdateEvent(
+									&tc.senderSubaccountId,
+									[]*satypes.PerpetualPosition{},
+									[]*satypes.AssetPosition{
+										{
+											AssetId:  assetstypes.AssetUsdc.Id,
+											Quantums: dtypes.NewIntFromBigInt(senderQuantumsAfterTransfer),
+										},
+									},
+									nil, // no funding payment should have occurred
+								),
+							),
+						},
+						{
+							Subtype:             indexerevents.SubtypeSubaccountUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          1,
+							Version:             indexerevents.SubaccountUpdateEventVersion,
+							DataBytes: indexer_manager.GetBytes(
+								indexerevents.NewSubaccountUpdateEvent(
+									&tc.recipientSubaccountId,
+									[]*satypes.PerpetualPosition{},
+									[]*satypes.AssetPosition{
+										{
+											AssetId:  assetstypes.AssetUsdc.Id,
+											Quantums: dtypes.NewIntFromBigInt(recipientQuantumsAfterTransfer),
+										},
+									},
+									nil, // no funding payment should have occurred
+								),
+							),
+						},
+						{
+							Subtype:             indexerevents.SubtypeTransfer,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          2,
+							Version:             indexerevents.TransferEventVersion,
+							DataBytes: indexer_manager.GetBytes(
+								indexerevents.NewTransferEvent(
+									tc.senderSubaccountId,
+									tc.recipientSubaccountId,
+									tc.asset.Id,
+									satypes.BaseQuantums(tc.amount),
+								),
+							),
+						},
+					},
+					TxHashes: []string{string(lib.GetTxHash(CheckTx_MsgCreateTransfer.GetTx()))},
+				},
+			)}
+			require.ElementsMatch(t, expectedOnchainMessages, msgSender.GetOnchainMessages())
+		})
+	}
+}
 
 func TestMsgDepositToSubaccount(t *testing.T) {
 	tests := map[string]struct {
