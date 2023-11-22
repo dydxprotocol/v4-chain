@@ -6,16 +6,13 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
-	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
-
-	// Modules
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
 var (
@@ -53,8 +50,8 @@ func CreateUpgradeHandler(
 			// Try to get the account in state.
 			acc := ak.GetAccount(ctx, addr)
 			if acc != nil {
-				// Account has been initalized.
-				macc, isModuleAccount := acc.(types.ModuleAccountI)
+				// Account has been initialized.
+				macc, isModuleAccount := acc.(authtypes.ModuleAccountI)
 				if isModuleAccount {
 					// Module account was correctly initialized. Skipping
 					ctx.Logger().Info(fmt.Sprintf(
@@ -63,13 +60,13 @@ func CreateUpgradeHandler(
 					))
 					continue
 				}
-				// Module account has been initalized as a BaseAccount. Change to module account.
+				// Module account has been initialized as a BaseAccount. Change to module account.
 				// Note: We need to get the base account to retrieve its account number, and convert it
 				// in place into a module account.
-				baseAccount, ok := acc.(*types.BaseAccount)
+				baseAccount, ok := acc.(*authtypes.BaseAccount)
 				if !ok {
 					panic(fmt.Sprintf(
-						"cannot cast +v into a BaseAccount, acc = %+v",
+						"cannot cast %v into a BaseAccount, acc = %+v",
 						modAccName,
 						acc,
 					))
@@ -92,7 +89,7 @@ func CreateUpgradeHandler(
 			// Implementation taken from
 			// https://github.com/dydxprotocol/cosmos-sdk/blob/bdf96fdd/x/auth/keeper/keeper.go#L213
 			newModuleAccount := authtypes.NewEmptyModuleAccount(modAccName, perms...)
-			maccI := (ak.NewAccount(ctx, newModuleAccount)).(types.ModuleAccountI) // this set the account number
+			maccI := (ak.NewAccount(ctx, newModuleAccount)).(authtypes.ModuleAccountI) // this set the account number
 			ak.SetModuleAccount(ctx, maccI)
 			ctx.Logger().Info(fmt.Sprintf(
 				"Successfully initialized module account in state: %+v",
