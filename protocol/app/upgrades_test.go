@@ -75,6 +75,6 @@ func TestSetupUpgradeHandlers(t *testing.T) {
 }
 
 func TestDefaultUpgradesAndForks(t *testing.T) {
-	require.Empty(t, app.Upgrades, "Expected empty upgrades list")
-	require.Empty(t, app.Forks, "Expected empty forks list")
+	require.Len(t, app.Upgrades, 1)
+	require.Len(t, app.Forks, 1)
 }
