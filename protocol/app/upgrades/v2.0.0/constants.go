@@ -8,7 +8,7 @@ import (
 const (
 	UpgradeName = "v2.0.0"
 
-	UpgradeHeight = 1810000 // Estimated to be 5:50 PM ET Nov 23, 2023
+	UpgradeHeight = 1805000 // Estimated to be 4:00 PM ET Nov 23, 2023
 )
 
 var (
