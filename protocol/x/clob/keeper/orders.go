@@ -389,7 +389,6 @@ func (k Keeper) ReplayPlaceOrder(
 func (k Keeper) AddPreexistingStatefulOrder(
 	ctx sdk.Context,
 	order *types.Order,
-	blockHeight uint32,
 	memclob types.MemClob,
 ) (
 	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
@@ -399,7 +398,8 @@ func (k Keeper) AddPreexistingStatefulOrder(
 ) {
 	order.MustBeStatefulOrder()
 	// Perform stateful validation without checking existing order in state.
-	err = k.PerformStatefulOrderValidation(ctx, order, blockHeight, true)
+	// Block height is not used when validating stateful orders, so always pass in zero.
+	err = k.PerformStatefulOrderValidation(ctx, order, 0, true)
 	if err != nil {
 		return 0, 0, nil, err
 	}
@@ -456,7 +456,6 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		_, orderStatus, placeOrderOffchainUpdates, err := k.AddPreexistingStatefulOrder(
 			ctx,
 			&order,
-			0,
 			k.MemClob,
 		)
 

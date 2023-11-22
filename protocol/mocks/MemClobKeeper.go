@@ -47,6 +47,43 @@ func (_m *MemClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobP
 	return r0, r1
 }
 
+// AddPreexistingStatefulOrder provides a mock function with given fields: ctx, order, memclob
+func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *clobtypes.Order, memclob clobtypes.MemClob) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
+	ret := _m.Called(ctx, order, memclob)
+
+	var r0 subaccountstypes.BaseQuantums
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) subaccountstypes.BaseQuantums); ok {
+		r0 = rf(ctx, order, memclob)
+	} else {
+		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
+	}
+
+	var r1 clobtypes.OrderStatus
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) clobtypes.OrderStatus); ok {
+		r1 = rf(ctx, order, memclob)
+	} else {
+		r1 = ret.Get(1).(clobtypes.OrderStatus)
+	}
+
+	var r2 *clobtypes.OffchainUpdates
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) *clobtypes.OffchainUpdates); ok {
+		r2 = rf(ctx, order, memclob)
+	} else {
+		if ret.Get(2) != nil {
+			r2 = ret.Get(2).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	var r3 error
+	if rf, ok := ret.Get(3).(func(types.Context, *clobtypes.Order, clobtypes.MemClob) error); ok {
+		r3 = rf(ctx, order, memclob)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
+}
+
 // CanDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId
 func (_m *MemClobKeeper) CanDeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
 	ret := _m.Called(ctx, subaccountId)
