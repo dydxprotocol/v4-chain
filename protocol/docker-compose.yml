@@ -4,7 +4,7 @@ services:
   dydxprotocold0:
     image: local:dydxprotocol
     entrypoint:
-      - cosmovisor
+      - /dydxprotocol/start.sh
       - run
       - start
       - --log_level
@@ -22,6 +22,7 @@ services:
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.alice
+      - DYDXPROTOCOLD_PATH=/bin/dydxprotocold_v1.0.1
     volumes:
       - ./localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
     ports:
@@ -32,7 +33,7 @@ services:
   dydxprotocold1:
     image: local:dydxprotocol
     entrypoint:
-       - cosmovisor
+       - /dydxprotocol/start.sh
        - run
        - start
        - --log_level
@@ -48,6 +49,7 @@ services:
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.bob
+      - DYDXPROTOCOLD_PATH=/bin/dydxprotocold_v1.0.1
     volumes:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
     ports:
@@ -56,7 +58,7 @@ services:
   dydxprotocold2:
     image: local:dydxprotocol
     entrypoint:
-       - cosmovisor
+       - /dydxprotocol/start.sh
        - run
        - start
        - --log_level
@@ -72,13 +74,14 @@ services:
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.carl
+      - DYDXPROTOCOLD_PATH=/bin/dydxprotocold_v1.0.1
     volumes:
       - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
   
   dydxprotocold3:
     image: local:dydxprotocol
     entrypoint:
-       - cosmovisor
+       - /dydxprotocol/start.sh
        - run
        - start
        - --log_level
@@ -94,6 +97,7 @@ services:
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.dave
+      - DYDXPROTOCOLD_PATH=/bin/dydxprotocold_v1.0.1
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
 
