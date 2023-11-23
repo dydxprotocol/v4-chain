@@ -30,14 +30,14 @@ REWARDS_MULTIPLIER=330000 # in parts-per-million (example given: 0.33)
 # First update to the rewards multiplier. 
 REWARDS_MULTIPLIER_UPDATE_1=660000 # in parts-per-million (example given: 0.66)
 # TODO: update time
-UPDATE_1_TIME_UTC="2024-12-01T15:00:00+00:00"
+UPDATE_1_TIME_UTC="2023-12-19T15:00:00+00:00"
 
 # Second update to the rewards multipler. Fill in value and time.
 REWARDS_MULTIPLIER_UPDATE_2=900000 # in parts-per-million (example given: 0.9)
 # TODO: update time
-UPDATE_2_TIME_UTC="2025-12-01T15:00:00+00:00"
+UPDATE_2_TIME_UTC="2024-01-16T15:00:00+00:00"
 
-AVG_BLOCK_TIME_FOR_ESTIMATE=1.25 # Can be checked in Mintscan. Value range for reference: 1.2 < X < 1.35
+AVG_BLOCK_TIME_FOR_ESTIMATE=1.233 # Can be checked in Mintscan. Value range for reference: 1.2 < X < 1.35
 
 ########################################################################## 
 ### Script contants - do not change                                    ###
@@ -46,7 +46,7 @@ AUTHORITY="dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky" # Governance module acco
 COMMUNITY_VESTER_ADDRESS="dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk"
 REWARDS_VESTER_ADDRESS="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
 DELAY_MSG_MODULE_ADDRESS="dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr"
-DEPOSIT=f"10000${NINE_ZEROS}{NINE_ZEROS}{NATIVE_TOKEN_DENOM}" # 10,000 native tokens
+DEPOSIT=f"10000{NINE_ZEROS}{NINE_ZEROS}{NATIVE_TOKEN_DENOM}" # 10,000 native tokens
 OUTPUT_FILE='proposal_bridge_vesters_set_rewards.json'
 BLOCK_HEIGHT_FOR_ESTIMATE=1793496 
 BLOCK_TIME_FOR_ESTIMATE="2023-11-23T17:10:19+00:00"
