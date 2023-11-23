@@ -103,7 +103,7 @@ proposal_template = {
     "messages": [
         {
             "@type": "/dydxprotocol.sending.MsgSendFromModuleToAccount",
-            "GOV_MODULE_ADDRESS": GOV_MODULE_ADDRESS,
+            "authority": GOV_MODULE_ADDRESS,
             "sender_module_name": "bridge",
             "recipient": COMMUNITY_VESTER_ADDRESS,
             "coin": {
@@ -113,7 +113,7 @@ proposal_template = {
         },
         {
             "@type": "/dydxprotocol.sending.MsgSendFromModuleToAccount",
-            "GOV_MODULE_ADDRESS": GOV_MODULE_ADDRESS,
+            "authority": GOV_MODULE_ADDRESS,
             "sender_module_name": "bridge",
             "recipient": REWARDS_VESTER_ADDRESS,
             "coin": {
@@ -123,7 +123,7 @@ proposal_template = {
         },
         {
             "@type": "/dydxprotocol.rewards.MsgUpdateParams",
-            "GOV_MODULE_ADDRESS": GOV_MODULE_ADDRESS,
+            "authority": GOV_MODULE_ADDRESS,
             "params": {
                 "treasuryAccount": "rewards_treasury",
                 "denom": NATIVE_TOKEN_DENOM,
@@ -143,10 +143,10 @@ for delayed_block_number, new_fee_multiplier in [
     proposal_template["messages"].append(
         {
             "@type": "/dydxprotocol.delaymsg.MsgDelayMessage",
-            "GOV_MODULE_ADDRESS": GOV_MODULE_ADDRESS,
+            "authority": GOV_MODULE_ADDRESS,
             "msg": {
                 "@type": "/dydxprotocol.rewards.MsgUpdateParams",
-                "GOV_MODULE_ADDRESS": DELAY_MSG_MODULE_ADDRESS,
+                "authority": DELAY_MSG_MODULE_ADDRESS,
                 "params": {
                     "treasuryAccount": "rewards_treasury",
                     "denom": NATIVE_TOKEN_DENOM,
