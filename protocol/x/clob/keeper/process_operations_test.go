@@ -1358,7 +1358,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_Init,
+				constants.ClobPair_Btc_Initializing,
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRaw(
@@ -1379,7 +1379,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_Init,
+				constants.ClobPair_Btc_Initializing,
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewShortTermOrderPlacementOperationRaw(
@@ -1394,7 +1394,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Btc_Init,
+				constants.ClobPair_Btc_Initializing,
 			},
 			preExistingStatefulOrders: []types.Order{
 				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
@@ -1406,6 +1406,25 @@ func TestProcessProposerOperations(t *testing.T) {
 				),
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with order removal reason fully filled": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			preExistingStatefulOrders: []types.Order{
+				constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewOrderRemovalOperationRaw(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				),
+			},
+			expectedError: types.ErrInvalidOrderRemoval,
 		},
 	}
 
@@ -1912,7 +1931,30 @@ func setupNewMockEventManager(
 				),
 			).Once().Return()
 		}
+		if isClobMatchPerpetualDeleveraging(operation) {
+			// Bankruptcy price in DeleveragingEvent is not exposed by API. It is also
+			// being tested in other e2e tests. So we don't test it here.
+			mockIndexerEventManager.On("AddTxnEvent",
+				mock.Anything,
+				indexerevents.SubtypeDeleveraging,
+				indexerevents.DeleveragingEventVersion,
+				mock.Anything,
+			).Return()
+		}
 	}
+}
+
+// isClobMatchPerpetualDeleveraging checks if the Operation field is a ClobMatch with a MatchPerpetualDeleveraging.
+// It returns true if it is, otherwise false.
+func isClobMatchPerpetualDeleveraging(
+	operationRaw types.OperationRaw,
+) bool {
+	matchOperation, ok := operationRaw.Operation.(*types.OperationRaw_Match)
+	if !ok {
+		return false
+	}
+	_, ok = matchOperation.Match.Match.(*types.ClobMatch_MatchPerpetualDeleveraging)
+	return ok
 }
 
 func assertSubaccountState(

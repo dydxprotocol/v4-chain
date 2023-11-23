@@ -470,6 +470,19 @@ func (f *FakeMemClobKeeper) OffsetSubaccountPerpetualPosition(
 	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
 }
 
+func (f *FakeMemClobKeeper) AddPreexistingStatefulOrder(
+	ctx sdk.Context,
+	order *types.Order,
+	memclob types.MemClob,
+) (
+	orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
+	orderStatus types.OrderStatus,
+	offchainUpdates *types.OffchainUpdates,
+	err error,
+) {
+	panic("This function should not be implemented as FakeMemClobKeeper is getting deprecated (CLOB-175)")
+}
+
 func (f *FakeMemClobKeeper) IsLiquidatable(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,

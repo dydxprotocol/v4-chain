@@ -18,6 +18,7 @@ import {
   TransactionTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  DeleveragingEventV1,
   FundingEventV1,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -39,6 +40,7 @@ import { logger, stats } from '@dydxprotocol-indexer/base';
 import { TransferHandler } from '../../src/handlers/transfer-handler';
 import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
+  defaultDeleveragingEvent,
   defaultFundingUpdateSampleEvent,
   defaultHeight,
   defaultMarketModify,
@@ -49,10 +51,12 @@ import { updateBlockCache } from '../../src/caches/block-cache';
 import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { DeleveragingHandler } from '../../src/handlers/order-fills/deleveraging-handler';
 
 jest.mock('../../src/handlers/subaccount-update-handler');
 jest.mock('../../src/handlers/transfer-handler');
 jest.mock('../../src/handlers/funding-handler');
+jest.mock('../../src/handlers/order-fills/deleveraging-handler');
 jest.mock('../../src/handlers/markets/market-modify-handler');
 
 describe('on-message', () => {
@@ -76,6 +80,11 @@ describe('on-message', () => {
       getParallelizationIds: () => [],
     });
     (FundingHandler as jest.Mock).mockReturnValue({
+      handle: () => [],
+      validate: () => null,
+      getParallelizationIds: () => [],
+    });
+    (DeleveragingHandler as jest.Mock).mockReturnValue({
       handle: () => [],
       validate: () => null,
       getParallelizationIds: () => [],
@@ -151,6 +160,10 @@ describe('on-message', () => {
 
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketModify,
+  ).finish());
+
+  const defaultDeleveragingEventBinary: Uint8Array = Uint8Array.from(DeleveragingEventV1.encode(
+    defaultDeleveragingEvent,
   ).finish());
 
   it.each([
@@ -360,6 +373,63 @@ describe('on-message', () => {
       events[0],
       expect.any(Number),
       defaultFundingUpdateSampleEvent,
+    );
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
+  it('successfully processes block with deleveraging event', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      MarketTable.create(testConstants.defaultMarket2),
+    ]);
+    await Promise.all([
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
+    ]);
+    await Promise.all([
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+    ]);
+    await perpetualMarketRefresher.updatePerpetualMarkets();
+
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.DELEVERAGING,
+        defaultDeleveragingEventBinary,
+        transactionIndex,
+        eventIndex,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    expect((DeleveragingHandler as jest.Mock)).toHaveBeenCalledTimes(1);
+    expect((DeleveragingHandler as jest.Mock)).toHaveBeenNthCalledWith(
+      1,
+      block,
+      events[0],
+      expect.any(Number),
+      defaultDeleveragingEvent,
     );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(

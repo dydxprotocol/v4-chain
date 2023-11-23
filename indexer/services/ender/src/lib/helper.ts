@@ -22,6 +22,7 @@ import {
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   SubaccountMessage,
+  DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -180,6 +181,14 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
         eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+      };
+    }
+    case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
+      return {
+        type: DydxIndexerSubtypes.DELEVERAGING,
+        eventProto: DeleveragingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
       };

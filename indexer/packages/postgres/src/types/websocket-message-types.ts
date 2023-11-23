@@ -8,6 +8,7 @@ import {
 import { PerpetualMarketStatus } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
+import { TradeType } from './trade-types';
 import { TransferType } from './transfer-types';
 import { IsoString } from './utility-types';
 
@@ -175,7 +176,7 @@ export interface TradeContent {
   price: string,
   side: string,
   createdAt: IsoString,
-  liquidation: boolean,
+  type: TradeType,
 }
 
 /* ------- MarketMessageContents ------- */

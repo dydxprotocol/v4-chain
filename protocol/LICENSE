@@ -1,7 +1,8 @@
 Copyright (C) 2023 dYdX Trading Inc.
 
-Subject to your compliance with applicable law, you are granted the right to use the Licensed Work (defined below) under the terms of the GNU Affero General Public License as set forth below; provided, however, that if you violate any such applicable law in your use of the Licensed Work, all of your rights and licenses to use (including any rights to reproduce, distribute, install or modify) the Licensed Work will automatically and immediately terminate.
+Subject to your compliance with applicable law and the v4 Terms of Use, available at dydx.exchange/legal, you are granted the right to use the Program or Licensed Work (defined below) under the terms of the GNU Affero General Public License as set forth below; provided, however, that if you violate any such applicable law in your use of the Program or Licensed Work, all of your rights and licenses to use (including any rights to reproduce, distribute, install or modify) the Program or Licensed Work will automatically and immediately terminate.
 
+The “Program” or “Licensed Work” shall mean any of the following: dydxprotocol/cosmos-sdk, dydxprotocol/cometbft, dydxprotocol/v4-chain, dydxprotocol/v4-clients, dydxprotocol/v4-web, dydxprotocol/v4-abacus, dydxprotocol/v4-localization, dydxprotocol/v4-documentation, and any dYdX or dYdX Trading Inc. repository reflecting a copy of, or link to, this license.
 
 The GNU Affero General Public License
 Version 3, 19 November 2007

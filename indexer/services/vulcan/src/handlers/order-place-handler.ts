@@ -16,6 +16,7 @@ import {
   perpetualMarketRefresher,
   protocolTranslations,
   OrderFromDatabase,
+  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -280,6 +281,8 @@ export class OrderPlaceHandler extends Handler {
         : APIOrderStatusEnum.BEST_EFFORT_OPENED
     );
     const createdAtHeight: string | undefined = order?.createdAtHeight;
+    const updatedAt: IsoString | undefined = order?.updatedAt;
+    const updatedAtHeight: string | undefined = order?.updatedAtHeight;
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -305,6 +308,8 @@ export class OrderPlaceHandler extends Handler {
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
           ...(createdAtHeight && { createdAtHeight }),
+          ...(updatedAt && { updatedAt }),
+          ...(updatedAtHeight && { updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },
@@ -364,7 +369,7 @@ export class OrderPlaceHandler extends Handler {
     orderId: string,
   ): Promise<void> {
     await runFuncWithTimingStat(
-      CanceledOrdersCache.removeOrderFromCache(orderId, redisClient),
+      CanceledOrdersCache.removeOrderFromCaches(orderId, redisClient),
       this.generateTimingStatsOptions('remove_order_from_cancel_cache'),
     );
   }

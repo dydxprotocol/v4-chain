@@ -43,7 +43,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: types.Params{
 					FundingRateClampFactorPpm: 3_000_000,
 					PremiumVoteClampFactorPpm: 30_000_000,
-					MinNumVotesPerSample:      0,
+					MinNumVotesPerSample:      15,
 				},
 			},
 			expectedError: nil,
@@ -274,6 +274,36 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: errors.New("Premium vote clamp factor ppm is zero"),
 		},
+		"invalid: min num votes per sample": {
+			genState: &types.GenesisState{
+				Perpetuals: []types.Perpetual{
+					{
+						Params: types.PerpetualParams{
+							Id:            0,
+							Ticker:        "EXAM-USD",
+							LiquidityTier: 0,
+						},
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+				LiquidityTiers: []types.LiquidityTier{
+					{
+						Id:                     0,
+						Name:                   "Large-Cap",
+						InitialMarginPpm:       200_000,
+						MaintenanceFractionPpm: 1_000_000,
+						BasePositionNotional:   100,
+						ImpactNotional:         2_500_000_000,
+					},
+				},
+				Params: types.Params{
+					FundingRateClampFactorPpm: 6_000_000,
+					PremiumVoteClampFactorPpm: 60_000_000,
+					MinNumVotesPerSample:      0,
+				},
+			},
+			expectedError: errors.New("MinNumVotesPerSample is zero"),
+		},
 		"invalid: impact notional is zero": {
 			genState: &types.GenesisState{
 				Perpetuals: []types.Perpetual{
@@ -299,6 +329,7 @@ func TestGenesisState_Validate(t *testing.T) {
 				Params: types.Params{
 					FundingRateClampFactorPpm: 6_000_000,
 					PremiumVoteClampFactorPpm: 60_000_000,
+					MinNumVotesPerSample:      15,
 				},
 			},
 			expectedError: errors.New("Impact notional is zero"),

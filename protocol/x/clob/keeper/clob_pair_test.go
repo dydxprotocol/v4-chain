@@ -896,7 +896,7 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 			perpetualIdToClobPairId: map[uint32][]types.ClobPairId{
 				0: {types.ClobPairId(0)},
 			},
-			clobPair: &constants.ClobPair_Btc_Init,
+			clobPair: &constants.ClobPair_Btc_Initializing,
 			resp:     false,
 		},
 		"Succeeds when clob pair is active": {

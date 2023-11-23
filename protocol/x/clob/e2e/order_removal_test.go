@@ -606,23 +606,6 @@ func TestOrderRemoval_Invalid(t *testing.T) {
 			},
 			expectedErr: "Immediate-or-cancel order is fully filled",
 		},
-		"invalid proposal: non fully-filled long-term order cannot be removed with fully filled removal reason": {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_100_000USD,
-			},
-			orders: []clobtypes.Order{
-				constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
-			},
-			msgProposedOperations: &clobtypes.MsgProposedOperations{
-				OperationsQueue: []clobtypes.OperationRaw{
-					clobtestutils.NewOrderRemovalOperationRaw(
-						constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
-						clobtypes.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
-					),
-				},
-			},
-			expectedErr: "Order has remaining size",
-		},
 		"invalid proposal: post-only removal reason used for non post-only order": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,

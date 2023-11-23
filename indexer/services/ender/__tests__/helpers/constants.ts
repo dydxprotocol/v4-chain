@@ -1,32 +1,36 @@
 import { SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
-import { testConstants, TradeContent } from '@dydxprotocol-indexer/postgres';
+import { testConstants, TradeContent, TradeType } from '@dydxprotocol-indexer/postgres';
 import {
   bigIntToBytes,
+  ORDER_FLAG_CONDITIONAL,
   ORDER_FLAG_LONG_TERM,
   ORDER_FLAG_SHORT_TERM,
-  ORDER_FLAG_CONDITIONAL,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
+  AssetCreateEventV1,
+  ClobPairStatus,
+  DeleveragingEventV1,
   FundingEventV1_Type,
-  LiquidationOrderV1,
-  MarketBaseEventV1,
-  MarketEventV1,
   IndexerOrder,
+  IndexerOrder_ConditionType,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-  OrderFillEventV1,
   IndexerOrderId,
-  StatefulOrderEventV1,
   IndexerSubaccountId,
+  LiquidationOrderV1,
+  LiquidityTierUpsertEventV1,
+  MarketBaseEventV1,
+  MarketEventV1,
+  OrderFillEventV1,
+  OrderRemovalReason,
+  PerpetualMarketCreateEventV1,
+  StatefulOrderEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
   TransferEventV1,
-  IndexerOrder_ConditionType,
-  OrderRemovalReason,
-  AssetCreateEventV1,
-  PerpetualMarketCreateEventV1,
-  ClobPairStatus, LiquidityTierUpsertEventV1, UpdatePerpetualEventV1, UpdateClobPairEventV1,
+  UpdateClobPairEventV1,
+  UpdatePerpetualEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -36,7 +40,8 @@ import { SubaccountUpdate } from '../../src/lib/translated-types';
 import {
   ConsolidatedKafkaEvent,
   FundingEventMessage,
-  OrderFillEventWithLiquidation, OrderFillEventWithOrder,
+  OrderFillEventWithLiquidation,
+  OrderFillEventWithOrder,
   SingleTradeMessage,
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
@@ -276,6 +281,14 @@ export const defaultTransferEvent: TransferEventV1 = {
     subaccountId: defaultRecipientSubaccountId,
   },
 };
+export const defaultDeleveragingEvent: DeleveragingEventV1 = {
+  liquidated: defaultSenderSubaccountId,
+  offsetting: defaultRecipientSubaccountId,
+  perpetualId: 1,
+  fillAmount: Long.fromValue(10_000, true),
+  price: Long.fromValue(1_000_000_000, true),
+  isBuy: true,
+};
 export const defaultDepositEvent: TransferEventV1 = {
   assetId: 0,
   amount: Long.fromValue(100, true),
@@ -312,7 +325,7 @@ export const defaultTradeContent: TradeContent = {
   price: '10000',
   side: 'BUY',
   createdAt: 'createdAt',
-  liquidation: true,
+  type: TradeType.LIMIT,
 };
 export const defaultTradeMessage: SingleTradeMessage = contentToSingleTradeMessage(
   defaultTradeContent,

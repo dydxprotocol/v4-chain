@@ -12,6 +12,7 @@ import {
   PerpetualPositionSubaccountUpdateObject,
   PositionSide,
   SubaccountToPerpetualPositionsMap,
+  TendermintEventCreateObject,
 } from '../../src/types';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
@@ -26,12 +27,14 @@ import {
   defaultPerpetualPosition,
   defaultSubaccountId,
   defaultSubaccountId2,
+  defaultTendermintEvent3,
   defaultTendermintEventId,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '../helpers/constants';
 import { checkLengthAndContains } from './helpers';
 import _ from 'lodash';
+import { TendermintEventTable } from '../../src';
 
 describe('PerpetualPosition store', () => {
   beforeAll(async () => {
@@ -183,6 +186,41 @@ describe('PerpetualPosition store', () => {
     );
 
     checkLengthAndContains(perpetualPositions, expectedLength, expectedPosition);
+  });
+
+  it('Successfully finds PerpetualPositions sorted by openEventId', async () => {
+    const earlierPosition: PerpetualPositionCreateObject = {
+      ...defaultPerpetualPosition,
+      openEventId: defaultTendermintEventId3,
+      lastEventId: defaultTendermintEventId3,
+    };
+    const nextTendermintEvent: TendermintEventCreateObject = {
+      blockHeight: defaultTendermintEvent3.blockHeight,
+      transactionIndex: defaultTendermintEvent3.transactionIndex,
+      eventIndex: defaultTendermintEvent3.eventIndex + 1,
+    };
+    const nextTendermintEventId: Buffer = TendermintEventTable.createEventId(
+      nextTendermintEvent.blockHeight,
+      nextTendermintEvent.transactionIndex,
+      nextTendermintEvent.eventIndex,
+    );
+    const laterPosition: PerpetualPositionCreateObject = {
+      ...defaultPerpetualPosition,
+      openEventId: nextTendermintEventId,
+      lastEventId: nextTendermintEventId,
+    };
+    await TendermintEventTable.create(nextTendermintEvent);
+    await Promise.all([
+      await PerpetualPositionTable.create(earlierPosition),
+      await PerpetualPositionTable.create(laterPosition),
+    ]);
+
+    const perpetualPositions: PerpetualPositionFromDatabase[] = await
+    PerpetualPositionTable.findAll({}, [], { readReplica: true });
+
+    expect(perpetualPositions.length).toEqual(2);
+    expect(perpetualPositions[0]).toEqual(expect.objectContaining(laterPosition));
+    expect(perpetualPositions[1]).toEqual(expect.objectContaining(earlierPosition));
   });
 
   it.each([

@@ -1,12 +1,17 @@
 import { CandleMessage_Resolution, ClobPairStatus } from '@dydxprotocol-indexer/v4-protos';
 
 import config from './config';
+import AssetModel from './models/asset-model';
 import AssetPositionModel from './models/asset-position-model';
 import FillModel from './models/fill-model';
+import LiquidityTiersModel from './models/liquidity-tiers-model';
+import MarketModel from './models/market-model';
+import OraclePriceModel from './models/oracle-price-model';
 import OrderModel from './models/order-model';
 import PerpetualMarketModel from './models/perpetual-market-model';
 import PerpetualPositionModel from './models/perpetual-position-model';
 import SubaccountModel from './models/subaccount-model';
+import TransferModel from './models/transfer-model';
 import {
   APITimeInForce,
   CandleResolution,
@@ -81,12 +86,17 @@ export const TIME_IN_FORCE_TO_API_TIME_IN_FORCE: Record<TimeInForce, APITimeInFo
 
 // A list of models that have sqlToJsonConversions defined.
 export const SQL_TO_JSON_DEFINED_MODELS = [
+  AssetModel,
   AssetPositionModel,
   FillModel,
+  LiquidityTiersModel,
+  MarketModel,
+  OraclePriceModel,
   OrderModel,
   PerpetualMarketModel,
   PerpetualPositionModel,
   SubaccountModel,
+  TransferModel,
 ];
 
 export type SpecifiedClobPairStatus =

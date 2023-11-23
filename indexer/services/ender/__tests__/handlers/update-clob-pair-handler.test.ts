@@ -33,6 +33,7 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import config from '../../src/config';
 
 describe('update-clob-pair-handler', () => {
   beforeAll(async () => {
@@ -91,35 +92,54 @@ describe('update-clob-pair-handler', () => {
     });
   });
 
-  it('updates an existing perpetual market', async () => {
-    const transactionIndex: number = 0;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdateClobPairEvent({
-      updatePerpetualEvent: defaultUpdateClobPairEvent,
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-    });
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
+  it.each([
+    [
+      'via knex',
+      false,
+    ],
+    [
+      'via SQL function',
+      true,
+    ],
+  ])(
+    'updates an existing perpetual market (%s)',
+    async (
+      _name: string,
+      useSqlFunction: boolean,
+    ) => {
+      config.USE_UPDATE_CLOB_PAIR_HANDLER_SQL_FUNCTION = useSqlFunction;
+      const transactionIndex: number = 0;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdateClobPairEvent({
+        updatePerpetualEvent: defaultUpdateClobPairEvent,
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+      });
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
 
-    const perpetualMarketId: string = perpetualMarketRefresher.getPerpetualMarketFromClobPairId(
-      defaultUpdateClobPairEvent.clobPairId.toString(),
-    )!.id;
-    const perpetualMarket:
-    PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-      perpetualMarketId,
-    );
-    expect(perpetualMarket).toEqual(expect.objectContaining({
-      clobPairId: defaultUpdateClobPairEvent.clobPairId.toString(),
-      status: protocolTranslations.clobStatusToMarketStatus(defaultUpdateClobPairEvent.status),
-      quantumConversionExponent: defaultUpdateClobPairEvent.quantumConversionExponent,
-      subticksPerTick: defaultUpdateClobPairEvent.subticksPerTick,
-      stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
-    }));
-    expectTimingStats();
-    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
-  });
+      const perpetualMarketId: string = perpetualMarketRefresher.getPerpetualMarketFromClobPairId(
+        defaultUpdateClobPairEvent.clobPairId.toString(),
+      )!.id;
+      const perpetualMarket:
+      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+        perpetualMarketId,
+      );
+      expect(perpetualMarket).toEqual(expect.objectContaining({
+        clobPairId: defaultUpdateClobPairEvent.clobPairId.toString(),
+        status: protocolTranslations.clobStatusToMarketStatus(defaultUpdateClobPairEvent.status),
+        quantumConversionExponent: defaultUpdateClobPairEvent.quantumConversionExponent,
+        subticksPerTick: defaultUpdateClobPairEvent.subticksPerTick,
+        stepBaseQuantums: defaultUpdateClobPairEvent.stepBaseQuantums.toNumber(),
+      }));
+      expect(perpetualMarket).toEqual(
+        perpetualMarketRefresher.getPerpetualMarketFromId(perpetualMarketId));
+      if (!useSqlFunction) {
+        expectTimingStats();
+      }
+      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+    });
 });
 
 function expectTimingStats() {

@@ -17,6 +17,7 @@ import {
   PerpetualPositionStatus,
   PositionSide,
   SubaccountFromDatabase,
+  TradeType,
   TransferType,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -174,6 +175,7 @@ export interface TradeResponseObject {
   side: OrderSide,
   size: string,
   price: string,
+  type: TradeType,
   createdAt: IsoString,
   createdAtHeight: string,
 }

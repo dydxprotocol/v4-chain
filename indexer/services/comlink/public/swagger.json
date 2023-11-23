@@ -301,10 +301,11 @@
       },
       "FillType": {
         "enum": [
-          "MARKET",
           "LIMIT",
           "LIQUIDATED",
-          "LIQUIDATION"
+          "LIQUIDATION",
+          "DELEVERAGED",
+          "OFFSETTING"
         ],
         "type": "string"
       },
@@ -843,6 +844,14 @@
         "type": "object",
         "additionalProperties": false
       },
+      "TradeType": {
+        "enum": [
+          "LIMIT",
+          "LIQUIDATED",
+          "DELEVERAGED"
+        ],
+        "type": "string"
+      },
       "TradeResponseObject": {
         "properties": {
           "id": {
@@ -857,6 +866,9 @@
           "price": {
             "type": "string"
           },
+          "type": {
+            "$ref": "#/components/schemas/TradeType"
+          },
           "createdAt": {
             "$ref": "#/components/schemas/IsoString"
           },
@@ -869,6 +881,7 @@
           "side",
           "size",
           "price",
+          "type",
           "createdAt",
           "createdAtHeight"
         ],

@@ -107,6 +107,11 @@ var (
 		21,
 		"Maintenance margin fraction is larger than initial margin fraction",
 	)
+	ErrMinNumVotesPerSampleIsZero = errorsmod.Register(
+		ModuleName,
+		22,
+		"MinNumVotesPerSample is zero",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

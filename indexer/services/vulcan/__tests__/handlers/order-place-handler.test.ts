@@ -41,6 +41,7 @@ import {
   CanceledOrdersCache,
   updateOrder,
   StatefulOrderUpdatesCache,
+  CanceledOrderStatus,
 } from '@dydxprotocol-indexer/redis';
 
 import {
@@ -58,10 +59,10 @@ import Long from 'long';
 import { convertToRedisOrder, getTriggerPrice } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
-import { expectCanceledOrdersCacheEmpty, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
+import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -178,7 +179,7 @@ describe('order-place-handler', () => {
       ]);
       jest.spyOn(stats, 'timing');
       jest.spyOn(OrderbookLevelsCache, 'updatePriceLevel');
-      jest.spyOn(CanceledOrdersCache, 'removeOrderFromCache');
+      jest.spyOn(CanceledOrdersCache, 'removeOrderFromCaches');
       jest.spyOn(stats, 'increment');
       jest.spyOn(redisPackage, 'placeOrder');
       jest.spyOn(logger, 'error');
@@ -381,9 +382,9 @@ describe('order-place-handler', () => {
       );
       expect(OrderbookLevelsCache.updatePriceLevel).not.toHaveBeenCalled();
       if (hasCanceledOrderId) {
-        expect(CanceledOrdersCache.removeOrderFromCache).toHaveBeenCalled();
+        expect(CanceledOrdersCache.removeOrderFromCaches).toHaveBeenCalled();
       }
-      await expectCanceledOrdersCacheEmpty(expectedOrderUuid);
+      await expectCanceledOrderStatus(expectedOrderUuid, CanceledOrderStatus.NOT_CANCELED);
 
       expect(logger.error).not.toHaveBeenCalled();
       expectWebsocketMessagesSent(
@@ -1077,6 +1078,7 @@ function expectWebsocketMessagesSent(
     const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
       redisOrder.order!.timeInForce,
     );
+    const isStateful: boolean = isStatefulOrder(redisOrder.order!.orderId!.orderFlags);
     const contents: SubaccountMessageContents = {
       orders: [
         {
@@ -1103,7 +1105,9 @@ function expectWebsocketMessagesSent(
             ?.toString(),
           goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
           ticker: redisOrder.ticker,
-          ...(dbOrder.createdAtHeight && { createdAtHeight: dbOrder.createdAtHeight }),
+          ...(isStateful && { createdAtHeight: dbOrder.createdAtHeight }),
+          ...(isStateful && { updatedAt: dbOrder.updatedAt }),
+          ...(isStateful && { updatedAtHeight: dbOrder.updatedAtHeight }),
           clientMetadata: redisOrder.order!.clientMetadata.toString(),
           triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
         },

@@ -57,6 +57,16 @@ type MemClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		err error,
 	)
+	AddPreexistingStatefulOrder(
+		ctx sdk.Context,
+		order *Order,
+		memclob MemClob,
+	) (
+		orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums,
+		orderStatus OrderStatus,
+		offchainUpdates *OffchainUpdates,
+		err error,
+	)
 	CancelShortTermOrder(
 		ctx sdk.Context,
 		msgCancelOrder *MsgCancelOrder,

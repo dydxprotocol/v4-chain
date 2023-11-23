@@ -31,6 +31,9 @@ import (
 // Note: price fetchers manage their own subtasks by blocking on their completion on every subtask run.
 // When the price fetcher is stopped, it will wait for all of its own subtasks to complete before returning.
 type Client struct {
+	// include HealthCheckable to track the health of the daemon.
+	daemontypes.HealthCheckable
+
 	// daemonStartup tracks whether the daemon has finished startup. The daemon
 	// cannot be stopped until all persistent daemon subtasks have been launched within `Start`.
 	daemonStartup sync.WaitGroup
@@ -49,12 +52,25 @@ type Client struct {
 
 	// Ensure stop only executes one time.
 	stopDaemon sync.Once
+
+	// logger is the logger for the daemon.
+	logger log.Logger
 }
 
-func newClient() *Client {
+// Ensure Client implements the HealthCheckable interface.
+var _ daemontypes.HealthCheckable = (*Client)(nil)
+
+func newClient(logger log.Logger) *Client {
+	logger = logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName)
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},
+		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
+			constants.PricefeedDaemonModuleName,
+			&libtime.TimeProviderImpl{},
+			logger,
+		),
+		logger: logger,
 	}
 
 	// Set the client's daemonStartup state to indicate that the daemon has not finished starting up.
@@ -66,7 +82,7 @@ func newClient() *Client {
 // for any subtask kicked off by the client. The ticker and channel are tracked in order to properly clean up and send
 // all needed stop signals when the daemon is stopped.
 // Note: this method is not synchronized. It is expected to be called from the client's `StartNewClient` method before
-// `client.CompleteStartup`.
+// the daemonStartup waitgroup signals.
 func (c *Client) newTickerWithStop(intervalMs int) (*time.Ticker, <-chan bool) {
 	ticker := time.NewTicker(time.Duration(intervalMs) * time.Millisecond)
 	c.tickers = append(c.tickers, ticker)
@@ -116,7 +132,6 @@ func (c *Client) Stop() {
 func (c *Client) start(ctx context.Context,
 	daemonFlags flags.DaemonFlags,
 	appFlags appflags.Flags,
-	logger log.Logger,
 	grpcClient daemontypes.GrpcClient,
 	exchangeIdToQueryConfig map[types.ExchangeId]*types.ExchangeQueryConfig,
 	exchangeIdToExchangeDetails map[types.ExchangeId]types.ExchangeQueryDetails,
@@ -125,7 +140,7 @@ func (c *Client) start(ctx context.Context,
 	// 1. Establish connections to gRPC servers.
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
 		return err
 	}
 	// Defer closing gRPC connection until job completes.
@@ -137,7 +152,7 @@ func (c *Client) start(ctx context.Context,
 
 	daemonConn, err := grpcClient.NewGrpcConnection(ctx, daemonFlags.Shared.SocketAddress)
 	if err != nil {
-		logger.Error("Failed to establish gRPC connection to socket address", "error", err)
+		c.logger.Error("Failed to establish gRPC connection to socket address", "error", err)
 		return err
 	}
 	// Defer closing gRPC connection until job completes.
@@ -197,7 +212,7 @@ func (c *Client) start(ctx context.Context,
 				exchangeId,
 				priceFeedMutableMarketConfigs,
 				exchangeToMarketPrices,
-				logger,
+				c.logger,
 				bCh,
 			)
 		}()
@@ -213,7 +228,7 @@ func (c *Client) start(ctx context.Context,
 				*exchangeConfig,
 				exchangeDetails,
 				&handler.ExchangeQueryHandlerImpl{TimeProvider: timeProvider},
-				logger,
+				c.logger,
 				bCh,
 			)
 		}()
@@ -230,7 +245,7 @@ func (c *Client) start(ctx context.Context,
 			marketParamUpdaterStop,
 			priceFeedMutableMarketConfigs,
 			pricesQueryClient,
-			logger,
+			c.logger,
 		)
 	}()
 
@@ -249,12 +264,13 @@ func (c *Client) start(ctx context.Context,
 
 	pricefeedClient := api.NewPriceFeedServiceClient(daemonConn)
 	subTaskRunner.StartPriceUpdater(
+		c,
 		ctx,
 		priceUpdaterTicker,
 		priceUpdaterStop,
 		exchangeToMarketPrices,
 		pricefeedClient,
-		logger,
+		c.logger,
 	)
 	return nil
 }
@@ -280,7 +296,7 @@ func StartNewClient(
 		"PriceFlags", daemonFlags.Price,
 	)
 
-	client = newClient()
+	client = newClient(logger)
 	client.runningSubtasksWaitGroup.Add(1)
 	go func() {
 		defer client.runningSubtasksWaitGroup.Done()
@@ -288,7 +304,6 @@ func StartNewClient(
 			ctx,
 			daemonFlags,
 			appFlags,
-			logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName),
 			grpcClient,
 			exchangeIdToQueryConfig,
 			exchangeIdToExchangeDetails,

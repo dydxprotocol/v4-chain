@@ -75,6 +75,7 @@ import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 import config from '../../../src/config';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
+import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
 const defaultClobPairId: string = testConstants.defaultPerpetualMarket.clobPairId;
 const defaultMakerFeeQuantum: number = 1_000_000;
@@ -142,8 +143,8 @@ describe('OrderHandler', () => {
     entryPrice: '15000',
     createdAt: DateTime.utc().toISO(),
     createdAtHeight: '10',
-    openEventId: testConstants.defaultTendermintEventId,
-    lastEventId: testConstants.defaultTendermintEventId,
+    openEventId: testConstants.defaultTendermintEventId4,
+    lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
 
@@ -313,7 +314,6 @@ describe('OrderHandler', () => {
         // older perpetual position to ensure that the correct perpetual position is being updated
         PerpetualPositionTable.create({
           ...defaultPerpetualPosition,
-          createdAtHeight: '0',
           openEventId: testConstants.defaultTendermintEventId2,
         }),
       ]);
@@ -479,6 +479,14 @@ describe('OrderHandler', () => {
           },
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -609,8 +617,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: defaultDateTime.toISO(),
-          updatedAtHeight: defaultHeight.toString(),
+          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAtHeight: '0',
         }),
         // taker order
         OrderTable.create({
@@ -629,8 +637,8 @@ describe('OrderHandler', () => {
           goodTilBlockTime: existingGoodTilBlockTime,
           orderFlags: ORDER_FLAG_LONG_TERM.toString(),
           clientMetadata: '0',
-          updatedAt: defaultDateTime.toISO(),
-          updatedAtHeight: defaultHeight.toString(),
+          updatedAt: DateTime.fromMillis(0).toISO(),
+          updatedAtHeight: '0',
         }),
       ]);
 
@@ -708,7 +716,7 @@ describe('OrderHandler', () => {
         totalFilled: totalMakerOrderFilled,
         price,
         status: isOrderCanceled
-          ? OrderStatus.BEST_EFFORT_CANCELED
+          ? OrderStatus.CANCELED
           : OrderStatus.OPEN, // orderSize > totalFilled so status is open
         clobPairId: defaultClobPairId,
         side: protocolTranslations.protocolOrderSideToOrderSide(makerOrderProto.side),
@@ -833,6 +841,14 @@ describe('OrderHandler', () => {
           eventId,
         ),
         expectCandlesUpdated(),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+          orderFillEvent.totalFilledMaker.toString(),
+        ),
+        expectStateFilledQuantums(
+          OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+          orderFillEvent.totalFilledTaker.toString(),
+        ),
       ]);
 
       if (!useSqlFunction) {
@@ -898,19 +914,17 @@ describe('OrderHandler', () => {
       // previous position for subaccount 1
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // previous position for subaccount 2
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         subaccountId: testConstants.defaultSubaccountId2,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // initial position for subaccount 2
       PerpetualPositionTable.create(defaultPerpetualPosition),
@@ -1042,6 +1056,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1104,20 +1126,18 @@ describe('OrderHandler', () => {
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         perpetualId: testConstants.defaultPerpetualMarket3.id,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // previous position for subaccount 2
       PerpetualPositionTable.create({
         ...defaultPerpetualPosition,
         perpetualId: testConstants.defaultPerpetualMarket3.id,
         subaccountId: testConstants.defaultSubaccountId2,
-        createdAtHeight: '1',
         size: '0',
         status: PerpetualPositionStatus.CLOSED,
-        openEventId: testConstants.defaultTendermintEventId2,
+        openEventId: testConstants.defaultTendermintEventId,
       }),
       // initial position for subaccount 2
       PerpetualPositionTable.create({
@@ -1253,6 +1273,14 @@ describe('OrderHandler', () => {
         eventId,
       ),
       expectCandlesUpdated(),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(makerOrderProto.orderId!),
+        orderFillEvent.totalFilledMaker.toString(),
+      ),
+      expectStateFilledQuantums(
+        OrderTable.orderIdToUuid(takerOrderProto.orderId!),
+        orderFillEvent.totalFilledTaker.toString(),
+      ),
     ]);
   });
 
@@ -1480,22 +1508,38 @@ describe('OrderHandler', () => {
       IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
     ],
     [
-      'post-only',
+      'post-only best effort canceled',
       'via knex',
       false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
     ],
     [
-      'post-only',
+      'post-only best effort canceled',
       'via SQL function',
       true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+    ],
+    [
+      'post-only canceled',
+      'via knex',
+      false,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
+    ],
+    [
+      'post-only canceled',
+      'via SQL function',
+      true,
+      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
+      OrderStatus.CANCELED,
     ],
   ])('correctly sets status for short term %s orders (%s)', async (
     _orderType: string,
     _name: string,
     useSqlFunction: boolean,
     timeInForce: IndexerOrder_TimeInForce,
+    // either BEST_EFFORT_CANCELED or CANCELED
+    status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
   ) => {
     config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
@@ -1538,7 +1582,11 @@ describe('OrderHandler', () => {
     });
 
     const makerOrderId: string = OrderTable.orderIdToUuid(makerOrderProto.orderId!);
-    await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    if (status === OrderStatus.BEST_EFFORT_CANCELED) {
+      await CanceledOrdersCache.addBestEffortCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    } else { // Status is only over CANCELED or BEST_EFFORT_CANCELED
+      await CanceledOrdersCache.addCanceledOrderId(makerOrderId, Date.now(), redisClient);
+    }
 
     const fillAmount: number = 10;
     const orderFillEvent: OrderFillEventV1 = createOrderFillEvent(
@@ -1587,7 +1635,7 @@ describe('OrderHandler', () => {
     expect(takerOrder).toBeDefined();
 
     // maker order is partially filled, and in CanceledOrdersCache
-    expect(makerOrder!.status).toEqual(OrderStatus.BEST_EFFORT_CANCELED);
+    expect(makerOrder!.status).toEqual(status);
     // taker order is partially filled, and not in CanceledOrdersCache
     expect(takerOrder!.status).toEqual(OrderStatus.OPEN);
   });

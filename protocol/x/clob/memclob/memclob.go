@@ -969,11 +969,11 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 
-			// Note that we use `memclob.PlaceOrder` here, this will skip writing the stateful order placement to state.
 			// TODO(DEC-998): Research whether it's fine for two post-only orders to be matched. Currently they are dropped.
-			_, orderStatus, placeOrderOffchainUpdates, err := m.PlaceOrder(
+			_, orderStatus, placeOrderOffchainUpdates, err := m.clobKeeper.AddPreexistingStatefulOrder(
 				ctx,
-				statefulOrderPlacement.Order,
+				&statefulOrderPlacement.Order,
+				m,
 			)
 			placedPreexistingStatefulOrderIds[*orderId] = struct{}{}
 			existingOffchainUpdates = m.GenerateOffchainUpdatesForReplayPlaceOrder(
@@ -1828,7 +1828,7 @@ func (m *MemClobPriceTimePriority) SetMemclobGauges(
 		telemetry.SetGaugeWithLabels(
 			[]string{
 				types.ModuleName,
-				metrics.TotalOrdersClobPair,
+				metrics.TotalOrdersInClob,
 			},
 			float32(orderbook.TotalOpenOrders),
 			[]gometrics.Label{

@@ -5,6 +5,7 @@ import _ from 'lodash';
 
 import { Handler } from '../handlers/handler';
 import { AssetValidator } from '../validators/asset-validator';
+import { DeleveragingValidator } from '../validators/deleveraging-validator';
 import { FundingValidator } from '../validators/funding-validator';
 import { LiquidityTierValidator } from '../validators/liquidity-tier-validator';
 import { MarketValidator } from '../validators/market-validator';
@@ -35,6 +36,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 1)]: LiquidityTierValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
