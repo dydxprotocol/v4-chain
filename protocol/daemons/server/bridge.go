@@ -2,9 +2,6 @@ package server
 
 import (
 	"context"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"time"
-
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	bdtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
 )
@@ -21,14 +18,6 @@ func (server *Server) WithBridgeEventManager(
 ) *Server {
 	server.bridgeEventManager = bridgeEventManager
 	return server
-}
-
-// ExpectBridgeDaemon registers the bridge daemon with the server. This is required
-// in order to ensure that the daemon service is called at least once during every
-// maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
-// respond within maximumAcceptableUpdateDelay duration.
-func (server *Server) ExpectBridgeDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(types.BridgeDaemonServiceName, maximumAcceptableUpdateDelay)
 }
 
 // AddBridgeEvents stores any bridge events recognized by the daemon

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	errorsmod "cosmossdk.io/errors"
-	servertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -31,14 +30,6 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 	return server
 }
 
-// ExpectPricefeedDaemon registers the pricefeed daemon with the server. This is required
-// in order to ensure that the daemon service is called at least once during every
-// maximumAcceptableUpdateDelay duration. It will cause the protocol to panic if the daemon does not
-// respond within maximumAcceptableUpdateDelay duration.
-func (server *Server) ExpectPricefeedDaemon(maximumAcceptableUpdateDelay time.Duration) {
-	server.registerDaemon(servertypes.PricefeedDaemonServiceName, maximumAcceptableUpdateDelay)
-}
-
 // UpdateMarketPrices updates prices from exchanges for each market provided.
 func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
@@ -51,12 +42,6 @@ func (s *Server) UpdateMarketPrices(
 		metrics.PricefeedServerUpdatePrices,
 		metrics.Latency,
 	)
-
-	// If the daemon is unable to report a response, there is either an error in the registration of
-	// this daemon, or another one. In either case, the protocol should panic.
-	if err := s.reportResponse(servertypes.PricefeedDaemonServiceName); err != nil {
-		panic(err)
-	}
 
 	if s.marketToExchange == nil {
 		panic(

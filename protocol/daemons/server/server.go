@@ -1,19 +1,14 @@
 package server
 
 import (
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"net"
 	"syscall"
-	"time"
 )
 
 // Server struct defines the shared gRPC server for all daemons.
@@ -25,8 +20,6 @@ type Server struct {
 	gsrv          daemontypes.GrpcServer
 	fileHandler   daemontypes.FileHandler
 	socketAddress string
-
-	updateMonitor *types.UpdateMonitor
 
 	BridgeServer
 	PriceFeedServer
@@ -47,58 +40,12 @@ func NewServer(
 		gsrv:          grpcServer,
 		fileHandler:   fileHandler,
 		socketAddress: socketAddress,
-		updateMonitor: types.NewUpdateFrequencyMonitor(types.DaemonStartupGracePeriod, logger),
 	}
 }
 
 // Stop stops the daemon server's gRPC service.
 func (server *Server) Stop() {
-	server.updateMonitor.Stop()
 	server.gsrv.Stop()
-}
-
-// DisableUpdateMonitoringForTesting disables the update monitor for testing purposes. This is needed in integration
-// tests that do not run the full protocol.
-func (server *Server) DisableUpdateMonitoringForTesting() {
-	server.updateMonitor.DisableForTesting()
-}
-
-// registerDaemon registers a daemon service with the update monitor.
-func (server *Server) registerDaemon(
-	daemonKey string,
-	maximumAcceptableUpdateDelay time.Duration,
-) {
-	if err := server.updateMonitor.RegisterDaemonService(daemonKey, maximumAcceptableUpdateDelay); err != nil {
-		server.logger.Error(
-			"Failed to register daemon service with update monitor",
-			"error",
-			err,
-			"service",
-			daemonKey,
-			"maximumAcceptableUpdateDelay",
-			maximumAcceptableUpdateDelay,
-		)
-		panic(err)
-	}
-}
-
-// reportResponse reports a response from a daemon service with the update monitor. This is used to
-// ensure that the daemon continues to operate. If the update monitor does not see a response from a
-// registered daemon within the maximumAcceptableUpdateDelay, it will cause the protocol to panic.
-func (server *Server) reportResponse(
-	daemonKey string,
-) error {
-	telemetry.IncrCounterWithLabels(
-		[]string{
-			metrics.DaemonServer,
-			metrics.ValidResponse,
-		},
-		1,
-		[]gometrics.Label{
-			metrics.GetLabelForStringValue(metrics.Daemon, daemonKey),
-		},
-	)
-	return server.updateMonitor.RegisterValidResponse(daemonKey)
 }
 
 // Start clears the current socket and establishes a new socket connection

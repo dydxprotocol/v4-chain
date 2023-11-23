@@ -5,6 +5,7 @@ package client_test
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
@@ -219,6 +220,7 @@ type PriceDaemonIntegrationTestSuite struct {
 	exchangeServer     *pricefeed.ExchangeServer
 	daemonServer       *daemonserver.Server
 	exchangePriceCache *pricefeedserver_types.MarketToExchangePrices
+	healthMonitor      *servertypes.HealthMonitor
 
 	pricesMockQueryServer *mocks.QueryServer
 	pricesGrpcServer      *grpc.Server
@@ -278,7 +280,13 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
 	)
-	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
+
+	s.healthMonitor = servertypes.NewHealthMonitor(
+		servertypes.DaemonStartupGracePeriod,
+		servertypes.HealthCheckPollFrequency,
+		log.TestingLogger(),
+	)
+
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	s.daemonServer.WithPriceFeedMarketToExchangePrices(s.exchangePriceCache)
 
@@ -329,6 +337,8 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},
 	)
+	err := s.healthMonitor.RegisterService(s.pricefeedDaemon, app.MaximumDaemonUnhealthyDuration)
+	s.Require().NoError(err)
 }
 
 // expectPricesWithTimeout waits for the exchange price cache to contain the expected prices, with a timeout.

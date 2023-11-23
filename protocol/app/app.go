@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"math"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -183,6 +183,10 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
+
+	// MaximumDaemonUnhealthyDuration is the maximum amount of time that a daemon can be unhealthy before the
+	// application panics.
+	MaximumDaemonUnhealthyDuration = 5 * time.Minute
 )
 
 var (
@@ -290,6 +294,8 @@ type App struct {
 	PriceFeedClient    *pricefeedclient.Client
 	LiquidationsClient *liquidationclient.Client
 	BridgeClient       *bridgeclient.Client
+
+	HealthMonitor *daemonservertypes.HealthMonitor
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -589,6 +595,11 @@ func New(
 	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
 	app.Server.WithBridgeEventManager(bridgeEventManager)
 
+	app.HealthMonitor = daemonservertypes.NewHealthMonitor(
+		daemonservertypes.DaemonStartupGracePeriod,
+		daemonservertypes.HealthCheckPollFrequency,
+		app.Logger(),
+	)
 	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
@@ -600,11 +611,9 @@ func New(
 
 		// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 		if daemonFlags.Liquidation.Enabled {
-			app.Server.ExpectLiquidationsDaemon(
-				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
-			)
 			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
+				app.MonitorDaemon(app.LiquidationsClient, MaximumDaemonUnhealthyDuration)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -621,7 +630,6 @@ func New(
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
 			exchangeQueryConfig := constants.StaticExchangeQueryConfig
-			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
@@ -637,6 +645,7 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
+			app.MonitorDaemon(app.PriceFeedClient, MaximumDaemonUnhealthyDuration)
 		}
 
 		// Start Bridge Daemon.
@@ -644,9 +653,9 @@ func New(
 		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
 			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
 			// environments.
-			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
+			app.BridgeClient = bridgeclient.NewClient(logger)
 			go func() {
-				app.BridgeClient = bridgeclient.NewClient(logger)
+				app.MonitorDaemon(app.BridgeClient, MaximumDaemonUnhealthyDuration)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -675,10 +684,6 @@ func New(
 					)
 				}
 			}()
-			// Don't panic if metrics daemon loops are delayed. Use maximum value.
-			app.Server.ExpectMetricsDaemon(
-				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
-			)
 			metricsclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
@@ -1220,6 +1225,31 @@ func New(
 	)
 
 	return app
+}
+
+// MonitorDaemon registers a daemon service with the update monitor. If the daemon does not register, the method will
+// panic.
+func (app *App) MonitorDaemon(
+	healthCheckableDaemon daemontypes.HealthCheckable,
+	maximumAcceptableUpdateDelay time.Duration,
+) {
+	if err := app.HealthMonitor.RegisterService(healthCheckableDaemon, maximumAcceptableUpdateDelay); err != nil {
+		app.Logger().Error(
+			"Failed to register daemon service with update monitor",
+			"error",
+			err,
+			"service",
+			healthCheckableDaemon.ServiceName(),
+			"maximumAcceptableUpdateDelay",
+			maximumAcceptableUpdateDelay,
+		)
+		panic(err)
+	}
+}
+
+// DisableHealthMonitorForTesting disables the health monitor for testing.
+func (app *App) DisableHealthMonitorForTesting() {
+	app.HealthMonitor.DisableForTesting()
 }
 
 // hydrateMemStores hydrates the memStores used for caching state.
