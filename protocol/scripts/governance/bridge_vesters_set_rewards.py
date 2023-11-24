@@ -34,11 +34,11 @@ REWARDS_MULTIPLIER=330000 # in parts-per-million (example given: 0.33)
 # First update to the rewards multiplier. 
 REWARDS_MULTIPLIER_UPDATE_1=660000 # in parts-per-million (example given: 0.66)
 # TODO: update time
-UPDATE_1_TIME_UTC="2023-12-19T15:00:00+00:00"
+UPDATE_1_TIME_UTC="2024-12-01T15:00:00+00:00"
 # Second update to the rewards multipler. Fill in value and time.
 REWARDS_MULTIPLIER_UPDATE_2=900000 # in parts-per-million (example given: 0.9)
 # TODO: update time
-UPDATE_2_TIME_UTC="2024-01-16T15:00:00+00:00"
+UPDATE_2_TIME_UTC="2025-12-01T15:00:00+00:00"
 # TODO: update as needed. Can be checked in Mintscan by visiting a future block: 
 # `www.mintscan.io/chain_name/block/9000000`
 # This can fluctuate; value range for reference: 1.2 <= X <= 1.3
