@@ -80,7 +80,7 @@ def estimate_blocks_between_timestamps(base_block_timestamp, average_block_time,
 
 # Get current time in UTC
 current_utc_time = datetime.now(pytz.utc)
-# Add 4 days to the current time - use this as rough estimate for proposal pass time.
+# Add voting period so we can use the estimated time for gov proposal execution.
 estimated_proposal_pass_time = current_utc_time + timedelta(days=VOTING_PERIOD_DAYS)
 formatted_estimated_proposal_pass_time = estimated_proposal_pass_time.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
@@ -100,8 +100,8 @@ if delay_blocks_update_1 <= 0 or delay_blocks_update_2 <= 0:
     sys.exit(f"Estimated delay_blocks <= 0: {delay_blocks_update_1}, {delay_blocks_update_2}")
 
 print(f"Estimated proposal pass time ({VOTING_PERIOD_DAYS} days from now) = {formatted_estimated_proposal_pass_time}")
-print(f"Estimated block delay for first update @ {UPDATE_1_TIME_UTC} = {delay_blocks_update_1}")
-print(f"Estimated block delay for first update @ {UPDATE_2_TIME_UTC} = {delay_blocks_update_2}")
+print(f"Estimated block delay for **first** update @ {UPDATE_1_TIME_UTC} = {delay_blocks_update_1}")
+print(f"Estimated block delay for **second** update @ {UPDATE_2_TIME_UTC} = {delay_blocks_update_2}")
 
 proposal_template = {
     "title": TITLE,
