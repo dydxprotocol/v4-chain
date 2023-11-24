@@ -1,5 +1,7 @@
 import json
 from dateutil import parser
+from datetime import datetime, timedelta
+import pytz
 
 NINE_ZEROS="000000000"
 
@@ -92,9 +94,23 @@ rewards_update_2_block = estimate_block_height(
     AVG_BLOCK_TIME_FOR_ESTIMATE,
     UPDATE_2_TIME_UTC,
 )
+# Get current time in UTC
+current_utc_time = datetime.now(pytz.utc)
+# Add 4 days to the current time - use this as rough estimate for proposal pass time.
+estimated_proposal_pass_time = current_utc_time + timedelta(days=4)
+formatted_estimated_proposal_pass_time = estimated_proposal_pass_time.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
-print(f"Estimated block height for rewards multiplier update 1 {UPDATE_1_TIME_UTC} = {rewards_update_1_block}")
-print(f"Estimated block height for rewards multiplier update 2 {UPDATE_2_TIME_UTC} = {rewards_update_2_block}")
+proposal_pass_block_estimate = estimate_block_height(
+    REF_BLOCK_HEIGHT_FOR_ESTIMATE, 
+    REF_BLOCK_TIME_FOR_ESTIMATE,
+    AVG_BLOCK_TIME_FOR_ESTIMATE,
+    formatted_estimated_proposal_pass_time,
+)
+delay_blocks_update_1 = rewards_update_1_block - proposal_pass_block_estimate
+delay_blocks_update_2 = rewards_update_2_block - proposal_pass_block_estimate
+print(f"Estimated block height for proposal pass time @ {formatted_estimated_proposal_pass_time} = proposal_pass_block_estimate")
+print(f"Estimated block height for rewards multiplier update 1 @ {UPDATE_1_TIME_UTC} = {rewards_update_1_block}, delay_blocks = {delay_blocks_update_1}")
+print(f"Estimated block height for rewards multiplier update 2 @ {UPDATE_2_TIME_UTC} = {rewards_update_2_block}, delay_blocks = {delay_blocks_update_2}")
 
 proposal_template = {
     "title": TITLE,
@@ -125,10 +141,10 @@ proposal_template = {
             "@type": "/dydxprotocol.rewards.MsgUpdateParams",
             "authority": GOV_MODULE_ADDRESS,
             "params": {
-                "treasuryAccount": "rewards_treasury",
+                "treasury_account": "rewards_treasury",
                 "denom": NATIVE_TOKEN_DENOM,
-                "denomExponent": -18,
-                "marketId": 1000001,
+                "denom_exponent": -18,
+                "market_id": 1000001,
                 "fee_multiplier_ppm": REWARDS_MULTIPLIER
             }
         },
@@ -137,8 +153,8 @@ proposal_template = {
 
 # Add delayed messages
 for delayed_block_number, new_fee_multiplier in [
-    (rewards_update_1_block, REWARDS_MULTIPLIER_UPDATE_1), 
-    (rewards_update_2_block, REWARDS_MULTIPLIER_UPDATE_2),
+    (delay_blocks_update_1, REWARDS_MULTIPLIER_UPDATE_1), 
+    (delay_blocks_update_2, REWARDS_MULTIPLIER_UPDATE_2),
 ]:
     proposal_template["messages"].append(
         {
@@ -148,10 +164,10 @@ for delayed_block_number, new_fee_multiplier in [
                 "@type": "/dydxprotocol.rewards.MsgUpdateParams",
                 "authority": DELAY_MSG_MODULE_ADDRESS,
                 "params": {
-                    "treasuryAccount": "rewards_treasury",
+                    "treasury_account": "rewards_treasury",
                     "denom": NATIVE_TOKEN_DENOM,
-                    "denomExponent": -18,
-                    "marketId": 1000001,
+                    "denom_exponent": -18,
+                    "market_id": 1000001,
                     "fee_multiplier_ppm": new_fee_multiplier
                 }
             },
