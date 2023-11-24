@@ -1,5 +1,8 @@
 import json
 from dateutil import parser
+from datetime import datetime, timedelta
+import pytz
+import sys
 
 NINE_ZEROS="000000000"
 
@@ -7,6 +10,8 @@ NINE_ZEROS="000000000"
 # Usage:
 # 1. Update below section with appropriate values
 # 2. Run `python3 bridge_vesters_set_rewards.py`
+# 3. Use generated `.json` file submitting proposal. This should be done within a few hours after
+#    the script is generated so that the estimated delay_blocks are accurate.
 
 
 ########################################################################## 
@@ -34,13 +39,20 @@ UPDATE_1_TIME_UTC="2024-12-01T15:00:00+00:00"
 REWARDS_MULTIPLIER_UPDATE_2=900000 # in parts-per-million (example given: 0.9)
 # TODO: update time
 UPDATE_2_TIME_UTC="2025-12-01T15:00:00+00:00"
-# TODO: update as needed. Can be checked in Mintscan. Value range for reference: 1.2 < X < 1.35
-AVG_BLOCK_TIME_FOR_ESTIMATE=1.3
+# TODO: update as needed. Can be checked in Mintscan by visiting a future block: 
+# `www.mintscan.io/chain_name/block/9000000`
+# This can fluctuate; value range for reference: 1.2 <= X <= 1.3
+AVG_BLOCK_TIME_FOR_ESTIMATE=1.25
 ########################################################################## 
 ### END: Required proposal fields.                                     ###
 ### TODO: update above fields as needed                                ###
 ########################################################################## 
 
+##########################################################################
+### Network specific constants                                         ###
+### Only change if used on a non-prod network                          ### 
+##########################################################################
+VOTING_PERIOD_DAYS = 4
 
 ########################################################################## 
 ### Script contants - do not change                                    ###
@@ -51,50 +63,45 @@ REWARDS_VESTER_ADDRESS="dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp"
 DELAY_MSG_MODULE_ADDRESS="dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr"
 DEPOSIT=f"10000{NINE_ZEROS}{NINE_ZEROS}{NATIVE_TOKEN_DENOM}" # 10,000 native tokens
 OUTPUT_FILE='proposal_bridge_vesters_set_rewards.json'
-REF_BLOCK_HEIGHT_FOR_ESTIMATE=1793496 
-REF_BLOCK_TIME_FOR_ESTIMATE="2023-11-23T17:10:19+00:00"
 
-# Helper function to estimate future block time.
-def estimate_block_height(current_block_height, current_block_timestamp, average_block_time, future_timestamp):
-    """
-    Estimates the block height at a future timestamp.
-
-    :param current_block_height: Current height of the blockchain (in blocks)
-    :param current_block_timestamp: UTC Timestamp of the current block (ISO 8601 format)
-    :param average_block_time: Average time it takes to mine a block (in seconds, can be a float)
-    :param future_timestamp: UTC Future timestamp for which block height is to be estimated (ISO 8601 format)
-    :return: Estimated block height at the future timestamp
-    """
+# Helper function to estimate number of blocks between two times.
+def estimate_blocks_between_timestamps(base_block_timestamp, average_block_time, future_timestamp):
     # Convert ISO 8601 timestamps to datetime objects
-    current_block_time = parser.isoparse(current_block_timestamp)
+    base_block_time = parser.isoparse(base_block_timestamp)
     future_time = parser.isoparse(future_timestamp)
 
     # Calculate the time difference in seconds
-    time_difference = (future_time - current_block_time).total_seconds()
+    time_difference = (future_time - base_block_time).total_seconds()
 
     # Estimate the number of blocks that will be added in this time
     estimated_blocks = float(time_difference) / average_block_time
 
-    # Calculate the estimated future block height
-    estimated_future_block_height = current_block_height + estimated_blocks
+    return int(round(estimated_blocks))
 
-    return int(round(estimated_future_block_height))
+# Get current time in UTC
+current_utc_time = datetime.now(pytz.utc)
+# Add voting period so we can use the estimated time for gov proposal execution.
+estimated_proposal_pass_time = current_utc_time + timedelta(days=VOTING_PERIOD_DAYS)
+formatted_estimated_proposal_pass_time = estimated_proposal_pass_time.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
-rewards_update_1_block = estimate_block_height(
-    REF_BLOCK_HEIGHT_FOR_ESTIMATE, 
-    REF_BLOCK_TIME_FOR_ESTIMATE,
+# Delayed update block heights are expected be after the proposal pass time.
+delay_blocks_update_1 = estimate_blocks_between_timestamps(
+    formatted_estimated_proposal_pass_time, 
     AVG_BLOCK_TIME_FOR_ESTIMATE,
     UPDATE_1_TIME_UTC,
 )
-rewards_update_2_block = estimate_block_height(
-    REF_BLOCK_HEIGHT_FOR_ESTIMATE, 
-    REF_BLOCK_TIME_FOR_ESTIMATE,
+delay_blocks_update_2 = estimate_blocks_between_timestamps(
+    formatted_estimated_proposal_pass_time, 
     AVG_BLOCK_TIME_FOR_ESTIMATE,
     UPDATE_2_TIME_UTC,
 )
 
-print(f"Estimated block height for rewards multiplier update 1 {UPDATE_1_TIME_UTC} = {rewards_update_1_block}")
-print(f"Estimated block height for rewards multiplier update 2 {UPDATE_2_TIME_UTC} = {rewards_update_2_block}")
+if delay_blocks_update_1 <= 0 or delay_blocks_update_2 <= 0:
+    sys.exit(f"Estimated delay_blocks <= 0: {delay_blocks_update_1}, {delay_blocks_update_2}")
+
+print(f"Estimated proposal pass time ({VOTING_PERIOD_DAYS} days from now) = {formatted_estimated_proposal_pass_time}")
+print(f"Estimated block delay for **first** update @ {UPDATE_1_TIME_UTC} = {delay_blocks_update_1}")
+print(f"Estimated block delay for **second** update @ {UPDATE_2_TIME_UTC} = {delay_blocks_update_2}")
 
 proposal_template = {
     "title": TITLE,
@@ -125,10 +132,10 @@ proposal_template = {
             "@type": "/dydxprotocol.rewards.MsgUpdateParams",
             "authority": GOV_MODULE_ADDRESS,
             "params": {
-                "treasuryAccount": "rewards_treasury",
+                "treasury_account": "rewards_treasury",
                 "denom": NATIVE_TOKEN_DENOM,
-                "denomExponent": -18,
-                "marketId": 1000001,
+                "denom_exponent": -18,
+                "market_id": 1000001,
                 "fee_multiplier_ppm": REWARDS_MULTIPLIER
             }
         },
@@ -137,8 +144,8 @@ proposal_template = {
 
 # Add delayed messages
 for delayed_block_number, new_fee_multiplier in [
-    (rewards_update_1_block, REWARDS_MULTIPLIER_UPDATE_1), 
-    (rewards_update_2_block, REWARDS_MULTIPLIER_UPDATE_2),
+    (delay_blocks_update_1, REWARDS_MULTIPLIER_UPDATE_1), 
+    (delay_blocks_update_2, REWARDS_MULTIPLIER_UPDATE_2),
 ]:
     proposal_template["messages"].append(
         {
@@ -148,10 +155,10 @@ for delayed_block_number, new_fee_multiplier in [
                 "@type": "/dydxprotocol.rewards.MsgUpdateParams",
                 "authority": DELAY_MSG_MODULE_ADDRESS,
                 "params": {
-                    "treasuryAccount": "rewards_treasury",
+                    "treasury_account": "rewards_treasury",
                     "denom": NATIVE_TOKEN_DENOM,
-                    "denomExponent": -18,
-                    "marketId": 1000001,
+                    "denom_exponent": -18,
+                    "market_id": 1000001,
                     "fee_multiplier_ppm": new_fee_multiplier
                 }
             },
