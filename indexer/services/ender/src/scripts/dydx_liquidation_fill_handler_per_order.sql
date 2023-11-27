@@ -90,6 +90,7 @@ BEGIN
         order_uuid = NULL;
         subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'liquidated'));
         order_client_metadata = NULL;
+        /** Liquidation order proto has an isBuy property rather than a side property **/
         order_side = CASE WHEN (order_->'isBuy')::bool THEN 'BUY' ELSE 'SELL' END;
     END IF;
 
