@@ -80,16 +80,18 @@ BEGIN
                                   power(10, perpetual_market_record."quantumConversionExponent" +
                                             asset_record."atomicResolution" -
                                             perpetual_market_record."atomicResolution")::numeric);
-    order_side = dydx_from_protocol_order_side(order_->'side');
 
     IF field = 'makerOrder' THEN
         order_uuid = dydx_uuid_from_order_id(order_->'orderId');
         subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'orderId', 'subaccountId'));
         order_client_metadata = (order_->'clientMetadata')::bigint;
+        order_side = dydx_from_protocol_order_side(order_->'side');
     ELSE
         order_uuid = NULL;
         subaccount_uuid = dydx_uuid_from_subaccount_id(jsonb_extract_path(order_, 'liquidated'));
         order_client_metadata = NULL;
+        /** Liquidation order proto has an isBuy property rather than a side property **/
+        order_side = CASE WHEN (order_->'isBuy')::bool THEN 'BUY' ELSE 'SELL' END;
     END IF;
 
     IF field = 'makerOrder' THEN
@@ -98,6 +100,7 @@ BEGIN
 
         /** Upsert the order, populating the order_record fields with what will be in the database. */
         SELECT * INTO order_record FROM orders WHERE "id" = order_uuid;
+        order_record."side" = order_side;
         order_record."size" = order_size;
         order_record."price" = order_price;
         order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
@@ -115,6 +118,7 @@ BEGIN
 
             UPDATE orders
             SET
+                "side" = order_record."side",
                 "size" = order_record."size",
                 "totalFilled" = order_record."totalFilled",
                 "price" = order_record."price",

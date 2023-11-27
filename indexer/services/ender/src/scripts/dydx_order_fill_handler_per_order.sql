@@ -84,6 +84,7 @@ BEGIN
 
     /** Upsert the order, populating the order_record fields with what will be in the database. */
     SELECT * INTO order_record FROM orders WHERE "id" = order_uuid;
+    order_record."side" = order_side;
     order_record."size" = order_size;
     order_record."price" = order_price;
     order_record."timeInForce" = dydx_from_protocol_time_in_force(order_->'timeInForce');
@@ -101,6 +102,7 @@ BEGIN
 
         UPDATE orders
         SET
+            "side" = order_record."side",
             "size" = order_record."size",
             "totalFilled" = order_record."totalFilled",
             "price" = order_record."price",
