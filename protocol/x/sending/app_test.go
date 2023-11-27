@@ -31,8 +31,12 @@ import (
 
 func TestMsgCreateTransfer(t *testing.T) {
 	tests := map[string]struct {
+		/* Setup */
 		// Initial balance of sender subaccount.
 		senderInitialBalance uint64
+
+		// Whether recipient subaccount exists.
+		recipientDoesNotExist bool
 
 		// Sender subaccount ID.
 		senderSubaccountId satypes.SubaccountId
@@ -72,8 +76,9 @@ func TestMsgCreateTransfer(t *testing.T) {
 		},
 		// Transfer to a non-existent subaccount will create that subaccount and succeed.
 		"Success: transfer from Alice subaccount to non-existent subaccount": {
-			senderInitialBalance: 10_000_000,
-			senderSubaccountId:   constants.Alice_Num0,
+			senderInitialBalance:  10_000_000,
+			recipientDoesNotExist: true,
+			senderSubaccountId:    constants.Alice_Num0,
 			recipientSubaccountId: satypes.SubaccountId{
 				Owner:  constants.BobAccAddress.String(),
 				Number: 104,
@@ -129,7 +134,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 					func(genesisState *satypes.GenesisState) {
 						genesisState.Subaccounts = []satypes.Subaccount{
 							{
-								Id: &tc.senderSubaccountId,
+								Id: &(tc.senderSubaccountId),
 								AssetPositions: []*satypes.AssetPosition{
 									{
 										AssetId: constants.Usdc.Id,
@@ -140,6 +145,23 @@ func TestMsgCreateTransfer(t *testing.T) {
 									},
 								},
 							},
+						}
+						if !tc.recipientDoesNotExist {
+							genesisState.Subaccounts = append(
+								genesisState.Subaccounts,
+								satypes.Subaccount{
+									Id: &(tc.recipientSubaccountId),
+									AssetPositions: []*satypes.AssetPosition{
+										{
+											AssetId: constants.Usdc.Id,
+											Index:   0,
+											Quantums: dtypes.NewIntFromUint64(
+												rand.NewRand().Uint64(),
+											),
+										},
+									},
+								},
+							)
 						}
 					},
 				)
