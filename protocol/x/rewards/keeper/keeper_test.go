@@ -625,6 +625,104 @@ func TestProcessRewardsForBlock(t *testing.T) {
 				},
 			},
 		},
+		"three reward shares, enough treasury balance, $1.18 token price, 0.99 fee multiplier": {
+			rewardShares: []types.RewardShare{
+				{
+					Address: TestAddress1,
+					Weight:  dtypes.NewInt(125_560_000), // $125.56 weight of fee (~56.72% of total weight)
+				},
+				{
+					Address: TestAddress2,
+					Weight:  dtypes.NewInt(500_000), // $0.5 weight of fee (~0.23% of total weight)
+				},
+				{
+					Address: TestAddress3,
+					Weight:  dtypes.NewInt(95_300_000), // $95.3 weight of fee (~43.05% of total weight)
+				},
+			},
+			tokenPrice:             tokenPrice1_18Usdc,
+			treasuryAccountBalance: sdkmath.NewInt(200_000_000), // 200 full coins
+			feeMultiplierPpm:       990_000,                     // 99%
+			expectedBalances: []banktypes.Balance{
+				{
+					Address: TestAddress1,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(105_342_711), // 125_560_000 / 1.18 * 0.99 ~=105.34 full coins
+					}},
+				},
+				{
+					Address: TestAddress2,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(419_491), // 500_000 / 1.18 * 0.99 ~= 0.419 full coins
+					}},
+				},
+				{
+					Address: TestAddress3,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(79_955_084), // 95_300_000 / 1.18 * 0.99 ~= 79.955 full coins
+					}},
+				},
+				{
+					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(14_282_714), // 200 - 105.34 - 79.955 - 0.419 ~= 14.28 full coins
+					}},
+				},
+			},
+		},
+		"three reward shares, enough treasury balance, $1.18 token price, 0.33 fee multiplier": {
+			rewardShares: []types.RewardShare{
+				{
+					Address: TestAddress1,
+					Weight:  dtypes.NewInt(125_560_000), // $125.56 weight of fee (~56.72% of total weight)
+				},
+				{
+					Address: TestAddress2,
+					Weight:  dtypes.NewInt(500_000), // $0.5 weight of fee (~0.23% of total weight)
+				},
+				{
+					Address: TestAddress3,
+					Weight:  dtypes.NewInt(95_300_000), // $95.3 weight of fee (~43.05% of total weight)
+				},
+			},
+			tokenPrice:             tokenPrice1_18Usdc,
+			treasuryAccountBalance: sdkmath.NewInt(200_000_000), // 200 full coins
+			feeMultiplierPpm:       330_000,                     // 99%
+			expectedBalances: []banktypes.Balance{
+				{
+					Address: TestAddress1,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(35_114_236), // 125_560_000 / 1.18 * 0.33 ~=35.114 full coins
+					}},
+				},
+				{
+					Address: TestAddress2,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(139_830), // 500_000 / 1.18 * 0.33 ~= 0.13983 full coins
+					}},
+				},
+				{
+					Address: TestAddress3,
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(26_651_694), // 95_300_000 / 1.18 * 0.33 ~= 26.651 full coins
+					}},
+				},
+				{
+					Address: authtypes.NewModuleAddress(types.TreasuryAccountName).String(),
+					Coins: []sdk.Coin{{
+						Denom:  TestRewardTokenDenom,
+						Amount: sdkmath.NewInt(138_094_240), // 200 - 105.34 - 79.955 - 0.419 ~= 138.094 full coins
+					}},
+				},
+			},
+		},
 		"2 reward shares, one address reward was rounded to 0, fee multipler = 0.99": {
 			rewardShares: []types.RewardShare{
 				{
