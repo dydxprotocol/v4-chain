@@ -1,4 +1,4 @@
-import { STATS_FUNCTION_NAME, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
@@ -32,7 +32,6 @@ import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import config from '../../src/config';
 
 describe('update-perpetual-handler', () => {
   beforeAll(async () => {
@@ -91,69 +90,35 @@ describe('update-perpetual-handler', () => {
     });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'updates an existing perpetual market (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_UPDATE_PERPETUAL_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
-        updatePerpetualEvent: defaultUpdatePerpetualEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
-
-      const perpetualMarket:
-      PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
-        defaultUpdatePerpetualEvent.id.toString(),
-      );
-      expect(perpetualMarket).toEqual(expect.objectContaining({
-        id: defaultUpdatePerpetualEvent.id.toString(),
-        ticker: defaultUpdatePerpetualEvent.ticker,
-        marketId: defaultUpdatePerpetualEvent.marketId,
-        atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
-        liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
-      }));
-      expect(perpetualMarket).toEqual(
-        perpetualMarketRefresher.getPerpetualMarketFromId(
-          defaultUpdatePerpetualEvent.id.toString()));
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-      expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+  it('updates an existing perpetual market', async () => {
+    const transactionIndex: number = 0;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromUpdatePerpetualEvent({
+      updatePerpetualEvent: defaultUpdatePerpetualEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
     });
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const perpetualMarket:
+    PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable.findById(
+      defaultUpdatePerpetualEvent.id.toString(),
+    );
+    expect(perpetualMarket).toEqual(expect.objectContaining({
+      id: defaultUpdatePerpetualEvent.id.toString(),
+      ticker: defaultUpdatePerpetualEvent.ticker,
+      marketId: defaultUpdatePerpetualEvent.marketId,
+      atomicResolution: defaultUpdatePerpetualEvent.atomicResolution,
+      liquidityTierId: defaultUpdatePerpetualEvent.liquidityTier,
+    }));
+    expect(perpetualMarket).toEqual(
+      perpetualMarketRefresher.getPerpetualMarketFromId(
+        defaultUpdatePerpetualEvent.id.toString()));
+    expectPerpetualMarketKafkaMessage(producerSendMock, [perpetualMarket!]);
+  });
 });
-
-function expectTimingStats() {
-  expectTimingStat('update_perpetual');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    {
-      className: 'UpdatePerpetualHandler',
-      eventType: 'UpdatePerpetualEventV1',
-      fnName,
-    },
-  );
-}
 
 function createKafkaMessageFromUpdatePerpetualEvent({
   updatePerpetualEvent,

@@ -32,14 +32,13 @@ import {
   createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
 
 describe('conditionalOrderTriggeredHandler', () => {
   beforeAll(async () => {
@@ -111,14 +110,7 @@ describe('conditionalOrderTriggeredHandler', () => {
     });
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully triggers order and sends to vulcan (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('successfully triggers order and sends to vulcan', async () => {
     await OrderTable.create({
       ...testConstants.defaultOrderGoodTilBlockTime,
       orderFlags: conditionalOrderId.orderFlags.toString(),
@@ -155,19 +147,9 @@ describe('conditionalOrderTriggeredHandler', () => {
       orderId: conditionalOrderId,
       offchainUpdate: expectedOffchainUpdate,
     });
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('throws error when attempting to trigger an order that does not exist (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('throws error when attempting to trigger an order that does not exist', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
@@ -177,15 +159,3 @@ describe('conditionalOrderTriggeredHandler', () => {
     );
   });
 });
-
-function expectTimingStats() {
-  expectTimingStat('trigger_order');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'ConditionalOrderTriggeredHandler', eventType: 'StatefulOrderEvent', fnName },
-  );
-}

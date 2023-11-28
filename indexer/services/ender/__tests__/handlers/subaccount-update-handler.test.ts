@@ -1,4 +1,4 @@
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -58,7 +58,6 @@ import {
   defaultTxHash,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import config from '../../src/config';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('subaccountUpdateHandler', () => {
@@ -144,14 +143,7 @@ describe('subaccountUpdateHandler', () => {
     });
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully creates subaccount (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
+  it('successfully creates subaccount', async () => {
     const transactionIndex: number = 0;
     const address: string = 'cosmosnewaddress';
     const subaccountId: string = SubaccountTable.uuid(
@@ -188,24 +180,16 @@ describe('subaccountUpdateHandler', () => {
       [],
       [],
     );
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
   });
 
   it.each([
-    ['via knex', 'positive', 200000, '-0.2', false],
-    ['via SQL function', 'positive', 200000, '-0.2', true],
-    ['via knex', 'negative', -200000, '0.2', false],
-    ['via SQL function', 'negative', -200000, '0.2', true],
-  ])('successfully upserts perpetual position (%s) with %s funding payment', async (
-    _method: string,
+    ['positive', 200000, '-0.2'],
+    ['negative', -200000, '0.2'],
+  ])('successfully upserts perpetual position with %s funding payment', async (
     _name: string,
     fundingPayment: number,
     settledFunding: string,
-    useSqlFunction: boolean,
   ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
@@ -275,24 +259,16 @@ describe('subaccountUpdateHandler', () => {
       [updatedPerpetualPositionSubaccountKafkaObject],
       [],
     );
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
   });
 
   it.each([
-    ['via knex', 'positive', 2_000_000, '-200002', false],
-    ['via SQL function', 'positive', 2_000_000, '-200002', true],
-    ['via knex', 'negative', -2_000_000, '-199998', false],
-    ['via SQL function', 'negative', -2_000_000, '-199998', true],
+    ['positive', 2_000_000, '-200002'],
+    ['negative', -2_000_000, '-199998'],
   ])('successfully updates existing perpetual position with %s funding payment', async (
-    _method: string,
     _name: string,
     fundingPayment: number,
     settledFunding: string,
-    useSqlFunction: boolean,
   ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const fundingIndex: number = 200;
@@ -346,19 +322,9 @@ describe('subaccountUpdateHandler', () => {
       [updatedPerpetualPositionSubaccountKafkaObject],
       [],
     );
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('closes and creates new position when when side is opposing (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
+  it('closes and creates new position when when side is opposing', async () => {
     const transactionIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const fundingIndex: number = 200;
@@ -440,14 +406,7 @@ describe('subaccountUpdateHandler', () => {
     );
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('updates existing asset position (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
+  it('updates existing asset position', async () => {
     const transactionIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
@@ -495,16 +454,11 @@ describe('subaccountUpdateHandler', () => {
   });
 
   it.each([
-    ['via knex', 1_000_000, false],
-    ['via SQL function', 1_000_000, true],
-    ['via knex', -2_000_000, false],
-    ['via SQL function', -2_000_000, true],
-  ])('creates new asset position (%s), size = %d', async (
-    _name: string,
+    [1_000_000],
+    [-2_000_000],
+  ])('creates new asset position, size = %d', async (
     sizeInQuantums: number,
-    useSqlFunction: boolean,
   ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
     const subaccountUpdateEvent: SubaccountUpdateEventV1 = SubaccountUpdateEventV1.fromPartial({
       // eslint-disable-next-line  @typescript-eslint/no-explicit-any
@@ -567,14 +521,7 @@ describe('subaccountUpdateHandler', () => {
     );
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('closes existing position when size is 0 (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
+  it('closes existing position when size is 0', async () => {
     const transactionIndex: number = 0;
     const sizeInQuantums: number = 1_000_000;
     const fundingIndex: number = 200;
@@ -640,14 +587,7 @@ describe('subaccountUpdateHandler', () => {
     ).toBeUndefined();
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully upserts perpetual and asset position with fixed-point notation sizes (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SUBACCOUNT_UPDATE_SQL_FUNCTION = useSqlFunction;
+  it('successfully upserts perpetual and asset position with fixed-point notation sizes', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const sizeInQuantums: number = 10;
@@ -739,20 +679,6 @@ describe('subaccountUpdateHandler', () => {
     );
   });
 });
-
-function expectTimingStats() {
-  expectTimingStat('upsert_subaccount');
-  expectTimingStat('get_existing_perpetual_positions');
-  expectTimingStat('update_perpetual_positions');
-  expectTimingStat('update_asset_positions');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'SubaccountUpdateHandler', eventType: 'SubaccountUpdateEvent', fnName });
-}
 
 function createKafkaMessageFromSubaccountUpdateEvent({
   subaccountUpdateEvent,

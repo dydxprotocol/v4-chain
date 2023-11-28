@@ -1,10 +1,5 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   OrderTable,
-  OrderType,
-  PerpetualMarketFromDatabase,
-  perpetualMarketRefresher,
-  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
@@ -14,7 +9,6 @@ import {
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
-import config from '../../config';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
 
@@ -37,13 +31,6 @@ export class StatefulOrderPlacementHandler extends
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    if (config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION) {
-      return this.handleViaSqlFunction();
-    }
-    return this.handleViaKnex();
-  }
-
-  private async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
     await this.handleEventViaSqlFunction();
 
     let order: IndexerOrder;
@@ -53,35 +40,6 @@ export class StatefulOrderPlacementHandler extends
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
-    return this.createKafkaEvents(order);
-  }
-
-  private async handleViaKnex(): Promise<ConsolidatedKafkaEvent[]> {
-    let order: IndexerOrder;
-    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    if (this.event.orderPlace !== undefined) {
-      order = this.event.orderPlace!.order!;
-    } else {
-      order = this.event.longTermOrderPlacement!.order!;
-    }
-    const clobPairId: string = order.orderId!.clobPairId.toString();
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(clobPairId);
-    if (perpetualMarket === undefined) {
-      logger.error({
-        at: 'statefulOrderPlacementHandler#internalHandle',
-        message: 'Unable to find perpetual market',
-        clobPairId,
-        order,
-      });
-      throw new Error(`Unable to find perpetual market with clobPairId: ${clobPairId}`);
-    }
-
-    await this.runFuncWithTimingStatAndErrorLogging(
-      this.upsertOrder(perpetualMarket!, order, OrderType.LIMIT, OrderStatus.OPEN),
-      this.generateTimingStatsOptions('upsert_order'),
-    );
-
     return this.createKafkaEvents(order);
   }
 

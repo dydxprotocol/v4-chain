@@ -8,7 +8,6 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
-  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   storeHelpers,
@@ -16,7 +15,7 @@ import {
   USDC_ASSET_ID,
   OrderStatus, FillType,
 } from '@dydxprotocol-indexer/postgres';
-import { CanceledOrderStatus, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
+import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
@@ -24,7 +23,6 @@ import {
 import Long from 'long';
 import * as pg from 'pg';
 
-import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
@@ -37,7 +35,7 @@ import {
   ConsolidatedKafkaEvent,
   OrderFillEventWithLiquidation,
 } from '../../lib/types';
-import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
@@ -86,7 +84,7 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       : castedOrderFillEventMessage.totalFilledMaker;
   }
 
-  public async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
@@ -182,108 +180,5 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
         ),
       ];
     }
-  }
-
-  // eslint-disable-next-line @typescript-eslint/require-await
-  public async handleViaKnexQueries(): Promise<ConsolidatedKafkaEvent[]> {
-    const castedLiquidationFillEventMessage:
-    OrderFillEventWithLiquidation = orderFillWithLiquidityToOrderFillEventWithLiquidation(
-      this.event,
-    );
-    const clobPairId:
-    string = castedLiquidationFillEventMessage.makerOrder.orderId!.clobPairId.toString();
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(clobPairId);
-    if (perpetualMarket === undefined) {
-      logger.error({
-        at: 'liquidationHandler#internalHandle',
-        message: 'Unable to find perpetual market',
-        clobPairId,
-        castedLiquidationFillEventMessage,
-      });
-      throw new Error(`Unable to find perpetual market with clobPairId: ${clobPairId}`);
-    }
-
-    const orderFillBaseEventBase: OrderFillEventBase = this.createEventBaseFromLiquidation(
-      castedLiquidationFillEventMessage,
-      this.event.liquidity,
-    );
-
-    // Must be done in this order, because fills refer to an order
-    // We do not create a taker order for liquidations.
-    let makerOrder: OrderFromDatabase | undefined;
-    if (this.event.liquidity === Liquidity.MAKER) {
-      makerOrder = await this.runFuncWithTimingStatAndErrorLogging(
-        this.upsertOrderFromEvent(
-          perpetualMarket,
-          castedLiquidationFillEventMessage.makerOrder,
-          this.getTotalFilled(castedLiquidationFillEventMessage),
-          CanceledOrderStatus.NOT_CANCELED,
-        ), this.generateTimingStatsOptions('upsert_maker_order'));
-    }
-
-    const fill: FillFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
-      this.createFillFromEvent(perpetualMarket, orderFillBaseEventBase),
-      this.generateTimingStatsOptions('create_fill'),
-    );
-
-    const position: PerpetualPositionFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
-      this.updatePerpetualPosition(perpetualMarket, orderFillBaseEventBase),
-      this.generateTimingStatsOptions('update_perpetual_position'),
-    );
-
-    if (this.event.liquidity === Liquidity.MAKER) {
-      // Update the cache tracking the state-filled amount per order for use in vulcan
-      await StateFilledQuantumsCache.updateStateFilledQuantums(
-        makerOrder!.id,
-        this.getTotalFilled(castedLiquidationFillEventMessage).toString(),
-        redisClient,
-      );
-
-      const kafkaEvents: ConsolidatedKafkaEvent[] = [
-        this.generateConsolidatedKafkaEvent(
-          castedLiquidationFillEventMessage.makerOrder.orderId!.subaccountId!,
-          makerOrder,
-          convertPerpetualPosition(position),
-          fill,
-          perpetualMarket,
-        ),
-        // Update vulcan with the total filled amount of the maker order.
-        this.getOrderUpdateKafkaEvent(
-          castedLiquidationFillEventMessage.makerOrder!.orderId!,
-          castedLiquidationFillEventMessage.totalFilledMaker,
-        ),
-      ];
-
-      // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
-      // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
-      // block.
-      if (makerOrder?.status === OrderStatus.FILLED && isStatefulOrder(makerOrder?.orderFlags)) {
-        kafkaEvents.push(
-          this.getOrderRemoveKafkaEvent(castedLiquidationFillEventMessage.makerOrder!.orderId!),
-        );
-      }
-      return kafkaEvents;
-    } else {
-      return [
-        this.generateConsolidatedKafkaEvent(
-          castedLiquidationFillEventMessage.liquidationOrder.liquidated!,
-          undefined,
-          convertPerpetualPosition(position),
-          fill,
-          perpetualMarket,
-        ),
-        this.generateTradeKafkaEventFromTakerOrderFill(
-          fill,
-        ),
-      ];
-    }
-  }
-
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    if (config.USE_LIQUIDATION_HANDLER_SQL_FUNCTION) {
-      return this.handleViaSqlFunction();
-    }
-    return this.handleViaKnexQueries();
   }
 }
