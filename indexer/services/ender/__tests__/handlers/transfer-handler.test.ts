@@ -1,8 +1,6 @@
 import {
   logger,
   ParseMessageError,
-  stats,
-  STATS_FUNCTION_NAME,
 } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
@@ -52,15 +50,11 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import config from '../../src/config';
 
 describe('transferHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -135,452 +129,332 @@ describe('transferHandler', () => {
     });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'fails when TransferEvent does not contain sender subaccountId (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-      const transferEvent: TransferEventV1 = TransferEventV1.fromPartial({
-        recipient: {
-          subaccountId: {
-            owner: '',
-            number: 0,
-          },
+  it('fails when TransferEvent does not contain sender subaccountId', async () => {
+    const transactionIndex: number = 0;
+    const transferEvent: TransferEventV1 = TransferEventV1.fromPartial({
+      recipient: {
+        subaccountId: {
+          owner: '',
+          number: 0,
         },
-        assetId: 0,
-        amount: 100,
-      });
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      const loggerCrit = jest.spyOn(logger, 'crit');
-      const loggerError = jest.spyOn(logger, 'error');
-      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-        new ParseMessageError(
-          'TransferEvent must have either a sender subaccount id or sender wallet address',
-        ),
-      );
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'TransferValidator#logAndThrowParseMessageError',
-        message: 'TransferEvent must have either a sender subaccount id or sender wallet address',
-      }));
-      expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'onMessage#onMessage',
-        message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
-      }));
+      },
+      assetId: 0,
+      amount: 100,
+    });
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'fails when TransferEvent does not contain recipient subaccountId (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-      const transferEvent: TransferEventV1 = TransferEventV1.fromPartial({
-        sender: {
-          subaccountId: {
-            owner: '',
-            number: 0,
-          },
+    const loggerCrit = jest.spyOn(logger, 'crit');
+    const loggerError = jest.spyOn(logger, 'error');
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+      new ParseMessageError(
+        'TransferEvent must have either a sender subaccount id or sender wallet address',
+      ),
+    );
+
+    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+      at: 'TransferValidator#logAndThrowParseMessageError',
+      message: 'TransferEvent must have either a sender subaccount id or sender wallet address',
+    }));
+    expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
+      at: 'onMessage#onMessage',
+      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+    }));
+  });
+
+  it('fails when TransferEvent does not contain recipient subaccountId', async () => {
+    const transactionIndex: number = 0;
+    const transferEvent: TransferEventV1 = TransferEventV1.fromPartial({
+      sender: {
+        subaccountId: {
+          owner: '',
+          number: 0,
         },
-        assetId: 0,
-        amount: 100,
-      });
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      const loggerCrit = jest.spyOn(logger, 'crit');
-      const loggerError = jest.spyOn(logger, 'error');
-      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-        new ParseMessageError(
-          'TransferEvent must have either a recipient subaccount id or recipient wallet address',
-        ),
-      );
-
-      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'TransferValidator#logAndThrowParseMessageError',
-        message: 'TransferEvent must have either a recipient subaccount id or recipient wallet address',
-      }));
-      expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-        at: 'onMessage#onMessage',
-        message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
-      }));
+      },
+      assetId: 0,
+      amount: 100,
+    });
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new transfer for existing subaccounts (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
+    const loggerCrit = jest.spyOn(logger, 'crit');
+    const loggerError = jest.spyOn(logger, 'error');
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+      new ParseMessageError(
+        'TransferEvent must have either a recipient subaccount id or recipient wallet address',
+      ),
+    );
 
-      const transferEvent: TransferEventV1 = defaultTransferEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
+    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+      at: 'TransferValidator#logAndThrowParseMessageError',
+      message: 'TransferEvent must have either a recipient subaccount id or recipient wallet address',
+    }));
+    expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
+      at: 'onMessage#onMessage',
+      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+    }));
+  });
 
-      // Create the subaccounts
-      await Promise.all([
-        SubaccountTable.upsert(defaultSenderSubaccount),
-        SubaccountTable.upsert(defaultRecipientSubaccount),
-      ]);
+  it('creates new transfer for existing subaccounts', async () => {
+    const transactionIndex: number = 0;
 
-      // Confirm there are subaccounts
-      const subaccountIds: string[] = [defaultSenderSubaccountId, defaultRecipientSubaccountId];
-      _.each(subaccountIds, async (subaccountId) => {
-        const existingSubaccount:
-        SubaccountFromDatabase | undefined = await SubaccountTable.findById(
-          subaccountId,
-        );
-        expect(existingSubaccount).toBeDefined();
-      });
+    const transferEvent: TransferEventV1 = defaultTransferEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
 
-      // Confirm there is no existing transfer to or from the recipient/sender subaccounts
-      await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
+    // Create the subaccounts
+    await Promise.all([
+      SubaccountTable.upsert(defaultSenderSubaccount),
+      SubaccountTable.upsert(defaultRecipientSubaccount),
+    ]);
 
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
+    // Confirm there are subaccounts
+    const subaccountIds: string[] = [defaultSenderSubaccountId, defaultRecipientSubaccountId];
+    _.each(subaccountIds, async (subaccountId) => {
+      const existingSubaccount:
+      SubaccountFromDatabase | undefined = await SubaccountTable.findById(
+        subaccountId,
+      );
+      expect(existingSubaccount).toBeDefined();
+    });
 
-      const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer({
+    // Confirm there is no existing transfer to or from the recipient/sender subaccounts
+    await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer({
+      recipientSubaccountId: defaultRecipientSubaccountId,
+      senderSubaccountId: defaultSenderSubaccountId,
+    });
+
+    expectTransferMatchesEvent(transferEvent, newTransfer, asset);
+
+    await expectTransfersSubaccountKafkaMessage(
+      producerSendMock,
+      transferEvent,
+      newTransfer,
+      asset,
+    );
+  });
+
+  it('creates new deposit for existing subaccount', async () => {
+    const transactionIndex: number = 0;
+
+    const depositEvent: TransferEventV1 = defaultDepositEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent: depositEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    // Create the subaccounts
+    await Promise.all([
+      SubaccountTable.upsert(defaultRecipientSubaccount),
+    ]);
+
+    // Confirm there is a recipient subaccount
+    const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
+      defaultRecipientSubaccountId,
+    );
+    expect(existingSubaccount).toBeDefined();
+
+    // Confirm there is no existing transfer to or from the recipient subaccount
+    await expectNoExistingTransfers([defaultRecipientSubaccountId]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
+      {
+        recipientSubaccountId: defaultRecipientSubaccountId,
+      },
+    );
+
+    expectTransferMatchesEvent(depositEvent, newTransfer, asset);
+
+    await expectTransfersSubaccountKafkaMessage(
+      producerSendMock,
+      depositEvent,
+      newTransfer,
+      asset,
+    );
+    // Confirm the wallet was created
+    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
+      defaultWalletAddress,
+    );
+    expect(wallet).toBeDefined();
+  });
+
+  it('creates new deposit for previously non-existent subaccount', async () => {
+    const transactionIndex: number = 0;
+
+    const depositEvent: TransferEventV1 = defaultDepositEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent: depositEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    // Confirm there is no recipient subaccount
+    const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
+      defaultRecipientSubaccountId,
+    );
+    expect(existingSubaccount).toBeUndefined();
+
+    // Confirm there is no existing transfer to or from the recipient subaccount
+    await expectNoExistingTransfers([defaultRecipientSubaccountId]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
+      {
+        recipientSubaccountId: defaultRecipientSubaccountId,
+      },
+    );
+
+    expectTransferMatchesEvent(depositEvent, newTransfer, asset);
+    await expectTransfersSubaccountKafkaMessage(
+      producerSendMock,
+      depositEvent,
+      newTransfer,
+      asset,
+    );
+    // Confirm the wallet was created
+    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
+      defaultWalletAddress,
+    );
+    const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
+    SubaccountTable.findById(
+      defaultRecipientSubaccountId,
+    );
+    expect(newRecipientSubaccount).toBeDefined();
+    expect(wallet).toBeDefined();
+  });
+
+  it('creates new withdrawal for existing subaccount', async () => {
+    const transactionIndex: number = 0;
+
+    const withdrawalEvent: TransferEventV1 = defaultWithdrawalEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent: withdrawalEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    // Create the subaccounts
+    await Promise.all([
+      SubaccountTable.upsert(defaultSenderSubaccount),
+    ]);
+
+    // Confirm there is a sender subaccount
+    const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
+      defaultSenderSubaccountId,
+    );
+    expect(existingSubaccount).toBeDefined();
+
+    // Confirm there is no existing transfer to or from the sender subaccount
+    await expectNoExistingTransfers([defaultSenderSubaccountId]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
+      {
+        senderSubaccountId: defaultSenderSubaccountId,
+      },
+    );
+
+    expectTransferMatchesEvent(withdrawalEvent, newTransfer, asset);
+
+    await expectTransfersSubaccountKafkaMessage(
+      producerSendMock,
+      withdrawalEvent,
+      newTransfer,
+      asset,
+    );
+    // Confirm the wallet was created
+    const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
+      defaultWalletAddress,
+    );
+    expect(wallet).toBeDefined();
+  });
+
+  it('creates new transfer and the recipient subaccount', async () => {
+    const transactionIndex: number = 0;
+
+    const transferEvent: TransferEventV1 = defaultTransferEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
+      transferEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
+
+    await SubaccountTable.upsert(defaultSenderSubaccount);
+
+    // Confirm there is 1 subaccount
+    const existingSenderSubaccount: SubaccountFromDatabase | undefined = await
+    SubaccountTable.findById(
+      defaultSenderSubaccountId,
+    );
+    expect(existingSenderSubaccount).toBeDefined();
+    const existingRecipientSubaccount: SubaccountFromDatabase | undefined = await
+    SubaccountTable.findById(
+      defaultRecipientSubaccountId,
+    );
+    expect(existingRecipientSubaccount).toBeUndefined();
+
+    // Confirm there is no existing transfers
+    await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
+
+    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+    await onMessage(kafkaMessage);
+
+    const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
+      {
         recipientSubaccountId: defaultRecipientSubaccountId,
         senderSubaccountId: defaultSenderSubaccountId,
       });
 
-      expectTransferMatchesEvent(transferEvent, newTransfer, asset);
+    expectTransferMatchesEvent(transferEvent, newTransfer, asset);
+    const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
+    SubaccountTable.findById(
+      defaultRecipientSubaccountId,
+    );
+    expect(newRecipientSubaccount).toBeDefined();
 
-      await expectTransfersSubaccountKafkaMessage(
-        producerSendMock,
-        transferEvent,
-        newTransfer,
-        asset,
-      );
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-    });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new deposit for existing subaccount (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-
-      const depositEvent: TransferEventV1 = defaultDepositEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent: depositEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      // Create the subaccounts
-      await Promise.all([
-        SubaccountTable.upsert(defaultRecipientSubaccount),
-      ]);
-
-      // Confirm there is a recipient subaccount
-      const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
-        defaultRecipientSubaccountId,
-      );
-      expect(existingSubaccount).toBeDefined();
-
-      // Confirm there is no existing transfer to or from the recipient subaccount
-      await expectNoExistingTransfers([defaultRecipientSubaccountId]);
-
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
-
-      const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-        {
-          recipientSubaccountId: defaultRecipientSubaccountId,
-        },
-      );
-
-      expectTransferMatchesEvent(depositEvent, newTransfer, asset);
-
-      await expectTransfersSubaccountKafkaMessage(
-        producerSendMock,
-        depositEvent,
-        newTransfer,
-        asset,
-      );
-      // Confirm the wallet was created
-      const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-        defaultWalletAddress,
-      );
-      expect(wallet).toBeDefined();
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-    });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new deposit for previously non-existent subaccount (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-
-      const depositEvent: TransferEventV1 = defaultDepositEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent: depositEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      // Confirm there is no recipient subaccount
-      const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
-        defaultRecipientSubaccountId,
-      );
-      expect(existingSubaccount).toBeUndefined();
-
-      // Confirm there is no existing transfer to or from the recipient subaccount
-      await expectNoExistingTransfers([defaultRecipientSubaccountId]);
-
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
-
-      const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-        {
-          recipientSubaccountId: defaultRecipientSubaccountId,
-        },
-      );
-
-      expectTransferMatchesEvent(depositEvent, newTransfer, asset);
-      await expectTransfersSubaccountKafkaMessage(
-        producerSendMock,
-        depositEvent,
-        newTransfer,
-        asset,
-      );
-      // Confirm the wallet was created
-      const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-        defaultWalletAddress,
-      );
-      const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
-      SubaccountTable.findById(
-        defaultRecipientSubaccountId,
-      );
-      expect(newRecipientSubaccount).toBeDefined();
-      expect(wallet).toBeDefined();
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-    });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new withdrawal for existing subaccount (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-
-      const withdrawalEvent: TransferEventV1 = defaultWithdrawalEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent: withdrawalEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      // Create the subaccounts
-      await Promise.all([
-        SubaccountTable.upsert(defaultSenderSubaccount),
-      ]);
-
-      // Confirm there is a sender subaccount
-      const existingSubaccount: SubaccountFromDatabase | undefined = await SubaccountTable.findById(
-        defaultSenderSubaccountId,
-      );
-      expect(existingSubaccount).toBeDefined();
-
-      // Confirm there is no existing transfer to or from the sender subaccount
-      await expectNoExistingTransfers([defaultSenderSubaccountId]);
-
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
-
-      const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-        {
-          senderSubaccountId: defaultSenderSubaccountId,
-        },
-      );
-
-      expectTransferMatchesEvent(withdrawalEvent, newTransfer, asset);
-
-      await expectTransfersSubaccountKafkaMessage(
-        producerSendMock,
-        withdrawalEvent,
-        newTransfer,
-        asset,
-      );
-      // Confirm the wallet was created
-      const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-        defaultWalletAddress,
-      );
-      expect(wallet).toBeDefined();
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-    });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new transfer and the recipient subaccount (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_TRANSFER_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-
-      const transferEvent: TransferEventV1 = defaultTransferEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromTransferEvent({
-        transferEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      await SubaccountTable.upsert(defaultSenderSubaccount);
-
-      // Confirm there is 1 subaccount
-      const existingSenderSubaccount: SubaccountFromDatabase | undefined = await
-      SubaccountTable.findById(
-        defaultSenderSubaccountId,
-      );
-      expect(existingSenderSubaccount).toBeDefined();
-      const existingRecipientSubaccount: SubaccountFromDatabase | undefined = await
-      SubaccountTable.findById(
-        defaultRecipientSubaccountId,
-      );
-      expect(existingRecipientSubaccount).toBeUndefined();
-
-      // Confirm there is no existing transfers
-      await expectNoExistingTransfers([defaultRecipientSubaccountId, defaultSenderSubaccountId]);
-
-      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-      await onMessage(kafkaMessage);
-
-      const newTransfer: TransferFromDatabase = await expectAndReturnNewTransfer(
-        {
-          recipientSubaccountId: defaultRecipientSubaccountId,
-          senderSubaccountId: defaultSenderSubaccountId,
-        });
-
-      expectTransferMatchesEvent(transferEvent, newTransfer, asset);
-      const newRecipientSubaccount: SubaccountFromDatabase | undefined = await
-      SubaccountTable.findById(
-        defaultRecipientSubaccountId,
-      );
-      expect(newRecipientSubaccount).toBeDefined();
-
-      await expectTransfersSubaccountKafkaMessage(
-        producerSendMock,
-        transferEvent,
-        newTransfer,
-        asset,
-      );
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-    });
+    await expectTransfersSubaccountKafkaMessage(
+      producerSendMock,
+      transferEvent,
+      newTransfer,
+      asset,
+    );
+  });
 });
 
 function createKafkaMessageFromTransferEvent({
@@ -619,23 +493,6 @@ function createKafkaMessageFromTransferEvent({
 
   const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
   return createKafkaMessage(Buffer.from(binaryBlock));
-}
-
-function expectTimingStats() {
-  expectTimingStat('upsert_recipient_subaccount_and_wallets');
-  expectTimingStat('create_transfer_and_get_asset');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    {
-      className: 'TransferHandler',
-      eventType: 'TransferEvent',
-      fnName,
-    },
-  );
 }
 
 function expectTransferMatchesEvent(

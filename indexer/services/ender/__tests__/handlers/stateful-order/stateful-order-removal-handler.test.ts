@@ -31,19 +31,14 @@ import {
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
 
 describe('statefulOrderRemovalHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -105,14 +100,7 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully cancels and removes order (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('successfully cancels and removes order', async () => {
     await OrderTable.create({
       ...testConstants.defaultOrder,
       clientId: '0',
@@ -129,9 +117,6 @@ describe('statefulOrderRemovalHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     }));
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
       orderRemove: {
@@ -147,14 +132,7 @@ describe('statefulOrderRemovalHandler', () => {
     });
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('throws error when attempting to cancel an order that does not exist (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('throws error when attempting to cancel an order that does not exist', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
@@ -164,15 +142,3 @@ describe('statefulOrderRemovalHandler', () => {
     );
   });
 });
-
-function expectTimingStats() {
-  expectTimingStat('cancel_order');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'StatefulOrderRemovalHandler', eventType: 'StatefulOrderEvent', fnName },
-  );
-}

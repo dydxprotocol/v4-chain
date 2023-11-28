@@ -1,4 +1,3 @@
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import {
   FundingEventV1,
   FundingEventV1_Type,
@@ -42,15 +41,11 @@ import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 import { startPriceCache } from '../../src/caches/price-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import config from '../../src/config';
 
 describe('fundingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -115,281 +110,196 @@ describe('fundingHandler', () => {
     });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'successfully processes single premium sample event (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_FUNDING_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [defaultFundingUpdateSampleEvent],
-        height: defaultHeight,
-        time: defaultTime,
-      });
-
-      await onMessage(kafkaMessage);
-
-      await expectNextFundingRate(
-        'BTC-USD',
-        new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
-          defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
-        )),
-      );
-      if (!useSqlFunction) {
-        expectTimingStat('handle_premium_sample');
-      }
+  it('successfully processes single premium sample event', async () => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingUpdateSampleEvent],
+      height: defaultHeight,
+      time: defaultTime,
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'successfully processes multiple premium sample event for different markets (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_FUNDING_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const fundingUpdateSampleEvent2: FundingEventV1 = {
-        type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
-        updates: [
-          {
-            perpetualId: 0,
-            fundingValuePpm: 100,
-            fundingIndex: bigIntToBytes(BigInt(0)),
-          },
-          {
-            perpetualId: 1,
-            fundingValuePpm: 50,
-            fundingIndex: bigIntToBytes(BigInt(0)),
-          },
-        ],
-      };
+    await onMessage(kafkaMessage);
 
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [defaultFundingUpdateSampleEvent, fundingUpdateSampleEvent2],
-        height: defaultHeight,
-        time: defaultTime,
-      });
+    await expectNextFundingRate(
+      'BTC-USD',
+      new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
+        defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
+      )),
+    );
+  });
 
-      await onMessage(kafkaMessage);
+  it('successfully processes multiple premium sample event for different markets', async () => {
+    const fundingUpdateSampleEvent2: FundingEventV1 = {
+      type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
+      updates: [
+        {
+          perpetualId: 0,
+          fundingValuePpm: 100,
+          fundingIndex: bigIntToBytes(BigInt(0)),
+        },
+        {
+          perpetualId: 1,
+          fundingValuePpm: 50,
+          fundingIndex: bigIntToBytes(BigInt(0)),
+        },
+      ],
+    };
 
-      await expectNextFundingRate(
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingUpdateSampleEvent, fundingUpdateSampleEvent2],
+      height: defaultHeight,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage);
+
+    await expectNextFundingRate(
+      'BTC-USD',
+      new Big('0.000006875'),
+    );
+    await expectNextFundingRate(
+      'ETH-USD',
+      new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
+        fundingUpdateSampleEvent2.updates[1].fundingValuePpm,
+      )),
+    );
+  });
+
+  it('successfully processes and clears cache for a new funding rate', async () => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingUpdateSampleEvent],
+      height: defaultHeight,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage);
+
+    await expectNextFundingRate(
+      'BTC-USD',
+      new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
+        defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
+      )),
+    );
+
+    const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingRateEvent],
+      height: 4,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage2);
+    await expectNextFundingRate(
+      'BTC-USD',
+      undefined,
+    );
+    const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
+    FundingIndexUpdatesTable.findAll({}, [], {});
+
+    expect(fundingIndices.length).toEqual(1);
+    expect(fundingIndices[0]).toEqual(expect.objectContaining({
+      perpetualId: '0',
+      rate: '0.00000125',
+      oraclePrice: '10000',
+      fundingIndex: '0.1',
+    }));
+  });
+
+  it('successfully processes and clears cache for multiple new funding rates', async () => {
+    const fundingSampleEvent: FundingEventV1 = {
+      type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
+      updates: [
+        {
+          perpetualId: 0,
+          fundingValuePpm: 100,
+          fundingIndex: bigIntToBytes(BigInt(0)),
+        },
+        {
+          perpetualId: 1,
+          fundingValuePpm: 50,
+          fundingIndex: bigIntToBytes(BigInt(0)),
+        },
+      ],
+    };
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [fundingSampleEvent],
+      height: defaultHeight,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage);
+
+    await Promise.all([
+      expectNextFundingRate(
         'BTC-USD',
-        new Big('0.000006875'),
-      );
-      await expectNextFundingRate(
+        new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
+          fundingSampleEvent.updates[0].fundingValuePpm,
+        )),
+      ),
+      expectNextFundingRate(
         'ETH-USD',
         new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
-          fundingUpdateSampleEvent2.updates[1].fundingValuePpm,
+          fundingSampleEvent.updates[1].fundingValuePpm,
         )),
-      );
-      if (!useSqlFunction) {
-        expectTimingStat('handle_premium_sample');
-      }
+      ),
+    ]);
+
+    const fundingRateEvent: FundingEventMessage = {
+      type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
+      updates: [
+        {
+          perpetualId: 0,
+          fundingValuePpm: 10,
+          fundingIndex: bigIntToBytes(BigInt(10)),
+        },
+        {
+          perpetualId: 1,
+          fundingValuePpm: 100,
+          fundingIndex: bigIntToBytes(BigInt(100)),
+        },
+      ],
+    };
+    const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [fundingRateEvent],
+      height: 4,
+      time: defaultTime,
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'successfully processes and clears cache for a new funding rate (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_FUNDING_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [defaultFundingUpdateSampleEvent],
-        height: defaultHeight,
-        time: defaultTime,
-      });
-
-      await onMessage(kafkaMessage);
-
-      await expectNextFundingRate(
-        'BTC-USD',
-        new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
-          defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
-        )),
-      );
-      if (!useSqlFunction) {
-        expectTimingStat('handle_premium_sample');
-      }
-
-      const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [defaultFundingRateEvent],
-        height: 4,
-        time: defaultTime,
-      });
-
-      await onMessage(kafkaMessage2);
-      await expectNextFundingRate(
+    await onMessage(kafkaMessage2);
+    await Promise.all([
+      expectNextFundingRate(
         'BTC-USD',
         undefined,
-      );
-      const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
-      FundingIndexUpdatesTable.findAll({}, [], {});
+      ),
+      expectNextFundingRate(
+        'ETH-USD',
+        undefined,
+      ),
+    ]);
+    const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
+    FundingIndexUpdatesTable.findAll(
+      {},
+      [],
+      {
+        orderBy: [[FundingIndexUpdatesColumns.perpetualId, Ordering.ASC]],
+      },
+    );
 
-      expect(fundingIndices.length).toEqual(1);
-      expect(fundingIndices[0]).toEqual(expect.objectContaining({
-        perpetualId: '0',
-        rate: '0.00000125',
-        oraclePrice: '10000',
-        fundingIndex: '0.1',
-      }));
-      if (!useSqlFunction) {
-        expectTimingStat('handle_funding_rate');
-      }
-    });
-
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'successfully processes and clears cache for multiple new funding rates (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_FUNDING_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const fundingSampleEvent: FundingEventV1 = {
-        type: FundingEventV1_Type.TYPE_PREMIUM_SAMPLE,
-        updates: [
-          {
-            perpetualId: 0,
-            fundingValuePpm: 100,
-            fundingIndex: bigIntToBytes(BigInt(0)),
-          },
-          {
-            perpetualId: 1,
-            fundingValuePpm: 50,
-            fundingIndex: bigIntToBytes(BigInt(0)),
-          },
-        ],
-      };
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [fundingSampleEvent],
-        height: defaultHeight,
-        time: defaultTime,
-      });
-
-      await onMessage(kafkaMessage);
-
-      await Promise.all([
-        expectNextFundingRate(
-          'BTC-USD',
-          new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
-            fundingSampleEvent.updates[0].fundingValuePpm,
-          )),
-        ),
-        expectNextFundingRate(
-          'ETH-USD',
-          new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
-            fundingSampleEvent.updates[1].fundingValuePpm,
-          )),
-        ),
-      ]);
-      if (!useSqlFunction) {
-        expectTimingStat('handle_premium_sample');
-      }
-
-      const fundingRateEvent: FundingEventMessage = {
-        type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
-        updates: [
-          {
-            perpetualId: 0,
-            fundingValuePpm: 10,
-            fundingIndex: bigIntToBytes(BigInt(10)),
-          },
-          {
-            perpetualId: 1,
-            fundingValuePpm: 100,
-            fundingIndex: bigIntToBytes(BigInt(100)),
-          },
-        ],
-      };
-      const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
-        fundingEvents: [fundingRateEvent],
-        height: 4,
-        time: defaultTime,
-      });
-
-      await onMessage(kafkaMessage2);
-      await Promise.all([
-        expectNextFundingRate(
-          'BTC-USD',
-          undefined,
-        ),
-        expectNextFundingRate(
-          'ETH-USD',
-          undefined,
-        ),
-      ]);
-      const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
-      FundingIndexUpdatesTable.findAll(
-        {},
-        [],
-        {
-          orderBy: [[FundingIndexUpdatesColumns.perpetualId, Ordering.ASC]],
-        },
-      );
-
-      expect(fundingIndices.length).toEqual(2);
-      expect(fundingIndices[0]).toEqual(expect.objectContaining({
-        perpetualId: '0',
-        rate: '0.00000125',
-        oraclePrice: '10000',
-        // 1e1 * 1e-6 * 1e-6 / 1e-10 = 1e-1
-        fundingIndex: '0.1',
-      }));
-      expect(fundingIndices[1]).toEqual(expect.objectContaining({
-        perpetualId: '1',
-        rate: '0.0000125',
-        oraclePrice: '500',
-        // 1e2 * 1e-6 * 1e-6 / 1e-18 = 1e8
-        fundingIndex: '100000000',
-      }));
-      if (!useSqlFunction) {
-        expectTimingStat('handle_funding_rate');
-      }
-    });
+    expect(fundingIndices.length).toEqual(2);
+    expect(fundingIndices[0]).toEqual(expect.objectContaining({
+      perpetualId: '0',
+      rate: '0.00000125',
+      oraclePrice: '10000',
+      // 1e1 * 1e-6 * 1e-6 / 1e-10 = 1e-1
+      fundingIndex: '0.1',
+    }));
+    expect(fundingIndices[1]).toEqual(expect.objectContaining({
+      perpetualId: '1',
+      rate: '0.0000125',
+      oraclePrice: '500',
+      // 1e2 * 1e-6 * 1e-6 / 1e-18 = 1e8
+      fundingIndex: '100000000',
+    }));
+  });
 });
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'FundingHandler', eventType: 'FundingEvent', fnName });
-}
 
 function createKafkaMessageFromFundingEvents({
   fundingEvents,

@@ -40,20 +40,15 @@ import {
 } from '../../helpers/indexer-proto-helpers';
 import { StatefulOrderPlacementHandler } from '../../../src/handlers/stateful-order/stateful-order-placement-handler';
 import { getPrice, getSize } from '../../../src/lib/helper';
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
 
 describe('statefulOrderPlacementHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -139,16 +134,12 @@ describe('statefulOrderPlacementHandler', () => {
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement (via knex)', defaultStatefulOrderEvent, false],
-    ['stateful order placement (via SQL function)', defaultStatefulOrderEvent, true],
-    ['stateful long term order placement (via knex)', defaultStatefulOrderLongTermEvent, false],
-    ['stateful long term order placement (via SQL function)', defaultStatefulOrderLongTermEvent, true],
+    ['stateful order placement', defaultStatefulOrderEvent],
+    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
   ])('successfully places order with %s', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
-    useSqlFunction: boolean,
   ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       statefulOrderEvent,
     );
@@ -177,9 +168,6 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
 
     const expectedOffchainUpdate: OffChainUpdateV1 = {
       orderPlace: {
@@ -196,16 +184,12 @@ describe('statefulOrderPlacementHandler', () => {
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    ['stateful order placement (via knex)', defaultStatefulOrderEvent, false],
-    ['stateful order placement (via SQL function)', defaultStatefulOrderEvent, true],
-    ['stateful long term order placement (via knex)', defaultStatefulOrderLongTermEvent, false],
-    ['stateful long term order placement (via SQL function)', defaultStatefulOrderLongTermEvent, true],
+    ['stateful order placement', defaultStatefulOrderEvent],
+    ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
   ])('successfully upserts order with %s', async (
     _name: string,
     statefulOrderEvent: StatefulOrderEventV1,
-    useSqlFunction: boolean,
   ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const subaccountId: string = SubaccountTable.subaccountIdToUuid(
       defaultOrder.orderId!.subaccountId!,
     );
@@ -258,21 +242,6 @@ describe('statefulOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
     // TODO[IND-20]: Add tests for vulcan messages
   });
 });
-
-function expectTimingStats() {
-  expectTimingStat('upsert_order');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'StatefulOrderPlacementHandler', eventType: 'StatefulOrderEvent', fnName },
-  );
-}

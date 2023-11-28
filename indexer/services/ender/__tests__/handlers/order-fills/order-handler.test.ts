@@ -1,4 +1,4 @@
-import { logger, stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   IndexerOrder,
   IndexerOrder_Side,
@@ -73,7 +73,6 @@ import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
 import { redisClient } from '../../../src/helpers/redis/redis-controller';
 import { expectStateFilledQuantums } from '../../helpers/redis-helpers';
 
@@ -93,9 +92,6 @@ describe('OrderHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -203,44 +199,22 @@ describe('OrderHandler', () => {
 
   it.each([
     [
-      'goodTilBlock via knex',
+      'goodTilBlock',
       {
         goodTilBlock: 10,
       },
       {
         goodTilBlock: 15,
       },
-      false,
     ],
     [
-      'goodTilBlock via SQL function',
-      {
-        goodTilBlock: 10,
-      },
-      {
-        goodTilBlock: 15,
-      },
-      true,
-    ],
-    [
-      'goodTilBlockTime via knex',
+      'goodTilBlockTime',
       {
         goodTilBlockTime: 1_000_000_000,
       },
       {
         goodTilBlockTime: 1_000_005_000,
       },
-      false,
-    ],
-    [
-      'goodTilBlockTime via SQL function',
-      {
-        goodTilBlockTime: 1_000_000_000,
-      },
-      {
-        goodTilBlockTime: 1_000_005_000,
-      },
-      false,
     ],
   ])(
     'creates fills and orders (with %s), sends vulcan messages for order updates and order ' +
@@ -249,9 +223,7 @@ describe('OrderHandler', () => {
       _name: string,
       makerGoodTilOneof: Partial<IndexerOrder>,
       takerGoodTilOneof: Partial<IndexerOrder>,
-      useSqlFunction: boolean,
     ) => {
-      config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
       const transactionIndex: number = 0;
       const eventIndex: number = 0;
       const makerQuantums: number = 1_000_000;
@@ -488,15 +460,11 @@ describe('OrderHandler', () => {
           orderFillEvent.totalFilledTaker.toString(),
         ),
       ]);
-
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
     });
 
   it.each([
     [
-      'goodTilBlock via knex',
+      'goodTilBlock',
       {
         goodTilBlock: 10,
       },
@@ -504,71 +472,29 @@ describe('OrderHandler', () => {
         goodTilBlock: 15,
       },
       false,
-      false,
       '5',
       undefined,
     ],
     [
-      'goodTilBlock via SQL function',
-      {
-        goodTilBlock: 10,
-      },
-      {
-        goodTilBlock: 15,
-      },
-      true,
-      false,
-      '5',
-      undefined,
-    ],
-    [
-      'goodTilBlockTime via knex',
+      'goodTilBlockTime',
       {
         goodTilBlockTime: 1_000_000_000,
       },
       {
         goodTilBlockTime: 1_000_005_000,
       },
-      false,
       false,
       undefined,
       '1970-01-11T13:46:40.000Z',
     ],
     [
-      'goodTilBlockTime via SQL function',
+      'goodTilBlockTime w/ cancelled maker order',
       {
         goodTilBlockTime: 1_000_000_000,
       },
       {
         goodTilBlockTime: 1_000_005_000,
       },
-      true,
-      false,
-      undefined,
-      '1970-01-11T13:46:40.000Z',
-    ],
-    [
-      'goodTilBlockTime w/ cancelled maker order via knex',
-      {
-        goodTilBlockTime: 1_000_000_000,
-      },
-      {
-        goodTilBlockTime: 1_000_005_000,
-      },
-      false,
-      true,
-      undefined,
-      '1970-01-11T13:46:40.000Z',
-    ],
-    [
-      'goodTilBlockTime w/ cancelled maker order via SQL function',
-      {
-        goodTilBlockTime: 1_000_000_000,
-      },
-      {
-        goodTilBlockTime: 1_000_005_000,
-      },
-      true,
       true,
       undefined,
       '1970-01-11T13:46:40.000Z',
@@ -580,12 +506,10 @@ describe('OrderHandler', () => {
       _name: string,
       makerGoodTilOneof: Partial<IndexerOrder>,
       takerGoodTilOneof: Partial<IndexerOrder>,
-      useSqlFunction: boolean,
       isOrderCanceled: boolean,
       existingGoodTilBlock?: string,
       existingGoodTilBlockTime?: string,
     ) => {
-      config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
       if (isOrderCanceled) {
         await CanceledOrdersCache.addCanceledOrderId(
           OrderTable.uuid(
@@ -850,58 +774,28 @@ describe('OrderHandler', () => {
           orderFillEvent.totalFilledTaker.toString(),
         ),
       ]);
-
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
     });
 
   it.each([
     [
-      'goodTilBlock via knex',
+      'goodTilBlock',
       {
         goodTilBlock: 10,
       },
       {
         goodTilBlock: 15,
       },
-      false,
       '5',
       undefined,
     ],
     [
-      'goodTilBlock via SQL function',
-      {
-        goodTilBlock: 10,
-      },
-      {
-        goodTilBlock: 15,
-      },
-      true,
-      '5',
-      undefined,
-    ],
-    [
-      'goodTilBlockTime via knex',
+      'goodTilBlockTime',
       {
         goodTilBlockTime: 1_000_000_000,
       },
       {
         goodTilBlockTime: 1_000_005_000,
       },
-      false,
-      undefined,
-      '1970-01-11T13:46:40.000Z',
-    ],
-    [
-      'goodTilBlockTime via SQL function',
-      {
-        goodTilBlockTime: 1_000_000_000,
-      },
-      {
-        goodTilBlockTime: 1_000_005_000,
-      },
-      true,
       undefined,
       '1970-01-11T13:46:40.000Z',
     ],
@@ -911,11 +805,9 @@ describe('OrderHandler', () => {
       _name: string,
       makerGoodTilOneof: Partial<IndexerOrder>,
       takerGoodTilOneof: Partial<IndexerOrder>,
-      useSqlFunction: boolean,
       existingGoodTilBlock?: string,
       existingGoodTilBlockTime?: string,
     ) => {
-      config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
       // create initial orders
       await Promise.all([
         // maker order
@@ -1154,26 +1046,9 @@ describe('OrderHandler', () => {
           orderFillEvent.totalFilledTaker.toString(),
         ),
       ]);
-
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('creates fills and orders with fixed-point notation quoteAmount (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('creates fills and orders with fixed-point notation quoteAmount', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
@@ -1371,20 +1246,7 @@ describe('OrderHandler', () => {
     ]);
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('creates fills and orders with fixed-point notation price (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('creates fills and orders with fixed-point notation price', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
@@ -1692,20 +1554,7 @@ describe('OrderHandler', () => {
     await expectNoCandles();
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('correctly sets status for short term IOC orders (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('correctly sets status for short term IOC orders', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
@@ -1801,51 +1650,23 @@ describe('OrderHandler', () => {
   it.each([
     [
       'limit',
-      'via knex',
-      false,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-    ],
-    [
-      'limit',
-      'via SQL function',
-      true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
     ],
     [
       'post-only best effort canceled',
-      'via knex',
-      false,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-    ],
-    [
-      'post-only best effort canceled',
-      'via SQL function',
-      true,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
     ],
     [
       'post-only canceled',
-      'via knex',
-      false,
       IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
       OrderStatus.CANCELED,
     ],
-    [
-      'post-only canceled',
-      'via SQL function',
-      true,
-      IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
-      OrderStatus.CANCELED,
-    ],
-  ])('correctly sets status for short term %s orders (%s)', async (
+  ])('correctly sets status for short term %s orders', async (
     _orderType: string,
-    _name: string,
-    useSqlFunction: boolean,
     timeInForce: IndexerOrder_TimeInForce,
     // either BEST_EFFORT_CANCELED or CANCELED
     status: OrderStatus = OrderStatus.BEST_EFFORT_CANCELED,
   ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
@@ -2010,21 +1831,6 @@ function createOrderFillEvent(
     totalFilledMaker: Long.fromValue(totalFilledMaker, true),
     totalFilledTaker: Long.fromValue(totalFilledTaker, true),
   } as OrderFillEventV1;
-}
-
-function expectTimingStats() {
-  expectTimingStat('upsert_orders');
-  expectTimingStat('create_fill');
-  expectTimingStat('update_perpetual_position');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'OrderHandler', eventType: 'OrderFillEvent', fnName },
-  );
-
 }
 
 async function expectCandlesUpdated() {

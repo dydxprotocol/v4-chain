@@ -38,22 +38,17 @@ import {
   expectOrderSubaccountKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize, getTriggerPrice } from '../../../src/lib/helper';
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
-import config from '../../../src/config';
 
 describe('conditionalOrderPlacementHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -126,14 +121,7 @@ describe('conditionalOrderPlacementHandler', () => {
     });
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully places order (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('successfully places order', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(
       defaultStatefulOrderEvent,
     );
@@ -162,9 +150,6 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
       defaultOrder.orderId!.subaccountId!,
@@ -172,14 +157,7 @@ describe('conditionalOrderPlacementHandler', () => {
     );
   });
 
-  it.each([
-    ['via knex', false],
-    ['via SQL function', true],
-  ])('successfully upserts order (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_STATEFUL_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
+  it('successfully upserts order', async () => {
     const subaccountId: string = SubaccountTable.subaccountIdToUuid(
       defaultOrder.orderId!.subaccountId!,
     );
@@ -232,9 +210,6 @@ describe('conditionalOrderPlacementHandler', () => {
       updatedAt: defaultDateTime.toISO(),
       updatedAtHeight: defaultHeight.toString(),
     });
-    if (!useSqlFunction) {
-      expectTimingStats();
-    }
     expectOrderSubaccountKafkaMessage(
       producerSendMock,
       defaultOrder.orderId!.subaccountId!,
@@ -242,15 +217,3 @@ describe('conditionalOrderPlacementHandler', () => {
     );
   });
 });
-
-function expectTimingStats() {
-  expectTimingStat('upsert_order');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    { className: 'ConditionalOrderPlacementHandler', eventType: 'StatefulOrderEvent', fnName },
-  );
-}

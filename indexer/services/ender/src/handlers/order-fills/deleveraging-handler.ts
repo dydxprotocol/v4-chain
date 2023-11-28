@@ -65,7 +65,7 @@ export class DeleveragingHandler extends AbstractOrderFillHandler<DeleveragingEv
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'DeleveragingHandler#handleViaSqlFunction',
+        at: 'DeleveragingHandler#internalHandle',
         message: 'Failed to handle DeleveragingEventV1',
         error,
       });

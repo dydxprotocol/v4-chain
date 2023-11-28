@@ -8,7 +8,6 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
-  perpetualMarketRefresher,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
   storeHelpers,
@@ -24,7 +23,6 @@ import {
 import Long from 'long';
 import * as pg from 'pg';
 
-import config from '../../config';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
@@ -32,7 +30,7 @@ import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/t
 import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
-import { AbstractOrderFillHandler, OrderFillEventBase } from './abstract-order-fill-handler';
+import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
@@ -60,7 +58,13 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     ];
   }
 
-  public async handleViaSqlFunction(): Promise<ConsolidatedKafkaEvent[]> {
+  protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithOrder): Long {
+    return this.event.liquidity === Liquidity.TAKER
+      ? castedOrderFillEventMessage.totalFilledTaker
+      : castedOrderFillEventMessage.totalFilledMaker;
+  }
+
+  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
     const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
     const transactionIndex: number = indexerTendermintEventToTransactionIndex(
       this.indexerTendermintEvent,
@@ -98,7 +102,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'orderHandler#handleViaSqlFunction',
+        at: 'orderHandler#internalHandle',
         message: 'Failed to handle OrderFillEventV1',
         error,
       });
@@ -157,117 +161,5 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     }
 
     return kafkaEvents;
-  }
-
-  public async handleViaKnexQueries(): Promise<ConsolidatedKafkaEvent[]> {
-    // OrderFillHandler already makes sure the event has 'takerOrder' as the oneofKind.
-    const castedOrderFillEventMessage:
-    OrderFillEventWithOrder = orderFillWithLiquidityToOrderFillEventWithOrder(this.event);
-    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
-
-    const clobPairId:
-    string = castedOrderFillEventMessage.makerOrder.orderId!.clobPairId.toString();
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromClobPairId(clobPairId);
-    if (perpetualMarket === undefined) {
-      logger.error({
-        at: 'orderHandler#handleViaKnexQueries',
-        message: 'Unable to find perpetual market',
-        clobPairId,
-        castedOrderFillEventMessage,
-      });
-      throw new Error(`Unable to find perpetual market with clobPairId: ${clobPairId}`);
-    }
-
-    const orderFillBaseEvent: OrderFillEventBase = this.createEventBase(
-      castedOrderFillEventMessage,
-      this.event.liquidity,
-    );
-    const orderProto: IndexerOrder = this.liquidityToOrder(
-      castedOrderFillEventMessage,
-      this.event.liquidity,
-    );
-    const orderUuid = OrderTable.orderIdToUuid(orderProto.orderId!);
-    const canceledOrderStatus:
-    CanceledOrderStatus = await CanceledOrdersCache.getOrderCanceledStatus(
-      orderUuid,
-      redisClient,
-    );
-
-    // Must be done in this order, because fills refer to an order
-    const order: OrderFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
-      this.upsertOrderFromEvent(
-        perpetualMarket,
-        orderProto,
-        this.getTotalFilled(castedOrderFillEventMessage),
-        canceledOrderStatus,
-      ),
-      this.generateTimingStatsOptions('upsert_orders'));
-
-    const fill: FillFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
-      this.createFillFromEvent(perpetualMarket, orderFillBaseEvent),
-      this.generateTimingStatsOptions('create_fill'));
-
-    const position: PerpetualPositionFromDatabase = await this.runFuncWithTimingStatAndErrorLogging(
-      this.updatePerpetualPosition(perpetualMarket, orderFillBaseEvent),
-      this.generateTimingStatsOptions('update_perpetual_position'));
-
-    let subaccountId: IndexerSubaccountId;
-    if (this.event.liquidity === Liquidity.MAKER) {
-      subaccountId = castedOrderFillEventMessage.makerOrder.orderId!.subaccountId!;
-    } else {
-      subaccountId = castedOrderFillEventMessage.order.orderId!.subaccountId!;
-    }
-    kafkaEvents.push(
-      this.generateConsolidatedKafkaEvent(
-        subaccountId,
-        order,
-        convertPerpetualPosition(position),
-        fill,
-        perpetualMarket,
-      ),
-    );
-
-    // Update vulcan with the total filled amount of the order.
-    kafkaEvents.push(
-      this.getOrderUpdateKafkaEvent(
-        orderProto.orderId!,
-        this.getTotalFilled(castedOrderFillEventMessage),
-      ),
-    );
-
-    // Update the cache tracking the state-filled amount per order for use in vulcan
-    await StateFilledQuantumsCache.updateStateFilledQuantums(
-      order.id,
-      this.getTotalFilled(castedOrderFillEventMessage).toString(),
-      redisClient,
-    );
-
-    // If the order is stateful and fully-filled, send an order removal to vulcan. We only do this
-    // for stateful orders as we are guaranteed a stateful order cannot be replaced until the next
-    // block.
-    if (order.status === OrderStatus.FILLED && isStatefulOrder(order.orderFlags)) {
-      kafkaEvents.push(this.getOrderRemoveKafkaEvent(orderProto.orderId!));
-    }
-
-    if (this.event.liquidity === Liquidity.TAKER) {
-      kafkaEvents.push(this.generateTradeKafkaEventFromTakerOrderFill(fill));
-      return kafkaEvents;
-    }
-
-    return kafkaEvents;
-  }
-
-  protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithOrder): Long {
-    return this.event.liquidity === Liquidity.TAKER
-      ? castedOrderFillEventMessage.totalFilledTaker
-      : castedOrderFillEventMessage.totalFilledMaker;
-  }
-
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    if (config.USE_ORDER_HANDLER_SQL_FUNCTION) {
-      return this.handleViaSqlFunction();
-    }
-    return this.handleViaKnexQueries();
   }
 }

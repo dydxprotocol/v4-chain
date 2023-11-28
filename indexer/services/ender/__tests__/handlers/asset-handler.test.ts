@@ -1,4 +1,3 @@
-import { stats, STATS_FUNCTION_NAME } from '@dydxprotocol-indexer/base';
 import {
   AssetCreateEventV1,
   IndexerTendermintBlock,
@@ -36,15 +35,11 @@ import {
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import config from '../../src/config';
 
 describe('assetHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -100,99 +95,50 @@ describe('assetHandler', () => {
     });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'fails when market doesnt exist for asset (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_ASSET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
-      const transactionIndex: number = 0;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
-        assetEvent: defaultAssetCreateEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
-
-      await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-        'Unable to find market with id: 0',
-      );
+  it('fails when market doesnt exist for asset', async () => {
+    const transactionIndex: number = 0;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
+      assetEvent: defaultAssetCreateEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
     });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])(
-    'creates new asset (%s)',
-    async (
-      _name: string,
-      useSqlFunction: boolean,
-    ) => {
-      config.USE_ASSET_CREATE_HANDLER_SQL_FUNCTION = useSqlFunction;
-      await MarketTable.create(testConstants.defaultMarket);
-      await marketRefresher.updateMarkets();
-      const transactionIndex: number = 0;
+    await expect(onMessage(kafkaMessage)).rejects.toThrowError(
+      'Unable to find market with id: 0',
+    );
+  });
 
-      const assetEvent: AssetCreateEventV1 = defaultAssetCreateEvent;
-      const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
-        assetEvent,
-        transactionIndex,
-        height: defaultHeight,
-        time: defaultTime,
-        txHash: defaultTxHash,
-      });
+  it('creates new asset', async () => {
+    await MarketTable.create(testConstants.defaultMarket);
+    await marketRefresher.updateMarkets();
+    const transactionIndex: number = 0;
+
+    const assetEvent: AssetCreateEventV1 = defaultAssetCreateEvent;
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromAssetEvent({
+      assetEvent,
+      transactionIndex,
+      height: defaultHeight,
+      time: defaultTime,
+      txHash: defaultTxHash,
+    });
       // Confirm there is no existing asset to or from the sender subaccount
-      await expectNoExistingAssets();
+    await expectNoExistingAssets();
 
-      await onMessage(kafkaMessage);
+    await onMessage(kafkaMessage);
 
-      const newAssets: AssetFromDatabase[] = await AssetTable.findAll(
-        {},
-        [], {
-          orderBy: [[AssetColumns.id, Ordering.ASC]],
-        });
-      expect(newAssets.length).toEqual(1);
-      expectAssetMatchesEvent(assetEvent, newAssets[0]);
-      if (!useSqlFunction) {
-        expectTimingStats();
-      }
-      const asset: AssetFromDatabase = assetRefresher.getAssetFromId('0');
-      expect(asset).toBeDefined();
-    });
+    const newAssets: AssetFromDatabase[] = await AssetTable.findAll(
+      {},
+      [], {
+        orderBy: [[AssetColumns.id, Ordering.ASC]],
+      });
+    expect(newAssets.length).toEqual(1);
+    expectAssetMatchesEvent(assetEvent, newAssets[0]);
+    const asset: AssetFromDatabase = assetRefresher.getAssetFromId('0');
+    expect(asset).toBeDefined();
+  });
 });
-
-function expectTimingStats() {
-  expectTimingStat('create_asset');
-}
-
-function expectTimingStat(fnName: string) {
-  expect(stats.timing).toHaveBeenCalledWith(
-    `ender.${STATS_FUNCTION_NAME}.timing`,
-    expect.any(Number),
-    {
-      className: 'AssetCreationHandler',
-      eventType: 'AssetCreateEvent',
-      fnName,
-    },
-  );
-}
 
 function expectAssetMatchesEvent(
   event: AssetCreateEventV1,
