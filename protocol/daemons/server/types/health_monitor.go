@@ -15,134 +15,6 @@ const (
 	HealthCheckPollFrequency = 5 * time.Second
 )
 
-// timestampWithError couples a timestamp and error to make it easier to update them in tandem.
-type timestampWithError struct {
-	timestamp time.Time
-	err       error
-}
-
-func (u *timestampWithError) Update(timestamp time.Time, err error) {
-	u.timestamp = timestamp
-	u.err = err
-}
-
-func (u *timestampWithError) Reset() {
-	u.Update(time.Time{}, nil)
-}
-
-func (u *timestampWithError) IsZero() bool {
-	return u.timestamp.IsZero()
-}
-
-func (u *timestampWithError) Timestamp() time.Time {
-	return u.timestamp
-}
-
-func (u *timestampWithError) Error() error {
-	return u.err
-}
-
-// healthChecker encapsulates the logic for monitoring the health of a health checkable service.
-type healthChecker struct {
-	// The following fields are initialized in StartNewHealthChecker and are not modified after initialization.
-	// healthCheckable is the health checkable service to be monitored.
-	healthCheckable types.HealthCheckable
-
-	// pollFrequency is the frequency at which the health checkable service is polled.
-	pollFrequency time.Duration
-
-	// maximumAcceptableUnhealthyDuration is the maximum acceptable duration for a health checkable service to
-	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
-	// specified callback function.
-	maximumAcceptableUnhealthyDuration time.Duration
-
-	// unhealthyCallback is the callback function to be executed if the health checkable service remains
-	// unhealthy for a period of time greater than or equal to the maximum acceptable unhealthy duration.
-	// This callback function is executed with the error that caused the service to become unhealthy.
-	unhealthyCallback func(error)
-
-	// lock is used to synchronize access to the health checker's dynamically updated fields.
-	lock sync.Mutex
-
-	// The following fields are dynamically updated by the health checker:
-	// timer triggers a health check poll for a health checkable service.
-	// Access to the timer is synchronized.
-	timer *time.Timer
-
-	// mostRecentSuccess is the timestamp of the most recent successful health check.
-	// Access to mostRecentSuccess is synchronized.
-	mostRecentSuccess time.Time
-
-	// firstFailureInStreak is the timestamp of the first error in the most recent streak of errors. It is set
-	// whenever the service toggles from healthy to an unhealthy state, and used to determine how long the daemon has
-	// been unhealthy. If this timestamp is nil, then the error streak ended before it could trigger a callback.
-	// Access to firstFailureInStreak is synchronized.
-	firstFailureInStreak timestampWithError
-
-	// timeProvider is used to get the current time. It is added as a field so that it can be mocked in tests.
-	// Access to timeProvider is synchronized.
-	timeProvider libtime.TimeProvider
-}
-
-// Poll executes a health check for the health checkable service. If the service has been unhealthy for longer than the
-// maximum acceptable unhealthy duration, the callback function is executed.
-// This method is publicly exposed for testing. This method is synchronized.
-func (hc *healthChecker) Poll() {
-	hc.lock.Lock()
-	defer hc.lock.Unlock()
-
-	// Don't return an error if the monitor has been disabled.
-	err := hc.healthCheckable.HealthCheck()
-	now := hc.timeProvider.Now()
-	if err == nil {
-		hc.mostRecentSuccess = now
-		// Whenever the service is healthy, reset the first failure in streak timestamp.
-		hc.firstFailureInStreak.Reset()
-	} else if hc.firstFailureInStreak.IsZero() {
-		// Capture the timestamp of the first failure in a new streak.
-		hc.firstFailureInStreak.Update(now, err)
-	}
-
-	// If the service has been unhealthy for longer than the maximum acceptable unhealthy duration, execute the
-	// callback function.
-	if !hc.firstFailureInStreak.IsZero() &&
-		now.Sub(hc.firstFailureInStreak.Timestamp()) >= hc.maximumAcceptableUnhealthyDuration {
-		hc.unhealthyCallback(hc.firstFailureInStreak.Error())
-	}
-	// Schedule the next poll.
-	hc.timer.Reset(hc.pollFrequency)
-}
-
-// Stop stops the health checker. This method is synchronized.
-func (hc *healthChecker) Stop() {
-	hc.lock.Lock()
-	defer hc.lock.Unlock()
-
-	hc.timer.Stop()
-}
-
-// StartNewHealthChecker creates and starts a new health checker for a health checkable service.
-func StartNewHealthChecker(
-	healthCheckable types.HealthCheckable,
-	pollFrequency time.Duration,
-	unhealthyCallback func(error),
-	timeProvider libtime.TimeProvider,
-	maximumAcceptableUnhealthyDuration time.Duration,
-	startupGracePeriod time.Duration,
-) *healthChecker {
-	checker := &healthChecker{
-		healthCheckable:                    healthCheckable,
-		pollFrequency:                      pollFrequency,
-		unhealthyCallback:                  unhealthyCallback,
-		timeProvider:                       timeProvider,
-		maximumAcceptableUnhealthyDuration: maximumAcceptableUnhealthyDuration,
-	}
-	// The first poll is scheduled after the startup grace period to allow the service to initialize.
-	checker.timer = time.AfterFunc(startupGracePeriod, checker.Poll)
-
-	return checker
-}
-
 // HealthMonitor monitors the health of daemon services, which implement the HealthCheckable interface. If a
 // registered health-checkable service sustains an unhealthy state for the maximum acceptable unhealthy duration,
 // the monitor will execute a callback function.
@@ -189,7 +61,8 @@ func (hm *HealthMonitor) DisableForTesting() {
 // stays unhealthy every time it is polled during the maximum acceptable unhealthy duration, the monitor will
 // execute the callback function.
 // This method is synchronized. The method returns an error if the service was already registered or the
-// monitor has already been stopped.
+// monitor has already been stopped. If the monitor has been stopped, this method will proactively stop the
+// health-checkable service before returning.
 func (hm *HealthMonitor) RegisterServiceWithCallback(
 	hc types.HealthCheckable,
 	maximumAcceptableUnhealthyDuration time.Duration,
@@ -216,6 +89,12 @@ func (hm *HealthMonitor) RegisterServiceWithCallback(
 	// This could be a concern for short-running integration test cases, where the network
 	// stops before all daemon services have been registered.
 	if hm.stopped {
+		// If the service is stoppable, stop it. This helps us to clean up daemon services in test cases
+		// where the monitor is stopped before all daemon services have been registered.
+		if stoppable, ok := hc.(Stoppable); ok {
+			stoppable.Stop()
+		}
+
 		return fmt.Errorf(
 			"health check registration failure for service %v: monitor has been stopped",
 			hc.ServiceName(),
@@ -233,6 +112,7 @@ func (hm *HealthMonitor) RegisterServiceWithCallback(
 		&libtime.TimeProviderImpl{},
 		maximumAcceptableUnhealthyDuration,
 		hm.startupGracePeriod,
+		hm.logger,
 	)
 	return nil
 }
@@ -263,7 +143,8 @@ func LogErrorServiceNotResponding(hc types.HealthCheckable, logger log.Logger) f
 // is unhealthy every time it is polled for a duration greater than or equal to the maximum acceptable unhealthy
 // duration, the monitor will panic.
 // This method is synchronized. It returns an error if the service was already registered or the monitor has
-// already been stopped.
+// already been stopped. If the monitor has been stopped, this method will proactively stop the health-checkable
+// service before returning.
 func (hm *HealthMonitor) RegisterService(
 	hc types.HealthCheckable,
 	maximumAcceptableUnhealthyDuration time.Duration,

@@ -233,5 +233,9 @@ func TestMonitorDaemon_Panics(t *testing.T) {
 
 	app.MonitorDaemon(hc, 5*time.Minute)
 	// The second registration should fail, causing a panic.
-	require.Panics(t, func() { app.MonitorDaemon(hc, 5*time.Minute) })
+	require.PanicsWithError(
+		t,
+		"service test-service already registered",
+		func() { app.MonitorDaemon(hc, 5*time.Minute) },
+	)
 }

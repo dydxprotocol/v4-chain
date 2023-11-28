@@ -672,6 +672,9 @@ func New(
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
 		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
+		// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
+		// for this service. The task loop does not produce any errors because the telemetry calls themselves are
+		// not error-returning, so in effect this daemon would never become unhealthy.
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {

@@ -3,6 +3,7 @@ package types_test
 import (
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -57,123 +58,6 @@ func callbackWithErrorPointer() (func(error), *error) {
 		callbackError = err
 	}
 	return callback, &callbackError
-}
-
-func TestHealthChecker(t *testing.T) {
-	tests := map[string]struct {
-		healthCheckResponses []error
-		expectedUnhealthy    error
-	}{
-		"initialized: no callback triggered": {
-			healthCheckResponses: []error{},
-			expectedUnhealthy:    nil,
-		},
-		"healthy, then unhealthy for < maximum unhealthy duration: no callback triggered": {
-			healthCheckResponses: []error{
-				nil,
-				TestError1,
-			},
-			expectedUnhealthy: nil,
-		},
-		"unhealthy for < maximum unhealthy duration: no callback triggered": {
-			healthCheckResponses: []error{
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-			},
-			expectedUnhealthy: nil,
-		},
-		"unhealthy, healthy, unhealthy: no callback triggered": {
-			healthCheckResponses: []error{
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				nil,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-			},
-			expectedUnhealthy: nil,
-		},
-		"unhealthy for maximum unhealthy duration: callback triggered": {
-			healthCheckResponses: []error{
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-				TestError1,
-			},
-			expectedUnhealthy: TestError1,
-		},
-		"unhealthy with multiple errors: first error returned": {
-			healthCheckResponses: []error{
-				TestError1,
-				TestError2,
-				TestError2,
-				TestError2,
-				TestError2,
-				TestError2,
-			},
-			expectedUnhealthy: TestError1,
-		},
-	}
-	for name, test := range tests {
-		t.Run(name, func(t *testing.T) {
-			// Setup.
-			// Set up callback to track error passed to it.
-			callback, callbackError := callbackWithErrorPointer()
-
-			// Set up health checkable service.
-			checkable := &mocks.HealthCheckable{}
-			for _, response := range test.healthCheckResponses {
-				checkable.On("HealthCheck").Return(response).Once()
-			}
-
-			// Set up time provider to return a sequence of timestamps one second apart starting at Time0.
-			timeProvider := &mocks.TimeProvider{}
-			for i := range test.healthCheckResponses {
-				timeProvider.On("Now").Return(Time0.Add(time.Duration(i) * time.Second)).Once()
-			}
-
-			healthChecker := types.StartNewHealthChecker(
-				checkable,
-				TestLargeDuration, // set to a >> value so that poll is never auto-triggered by the timer
-				callback,
-				timeProvider,
-				TestMaximumUnhealthyDuration,
-				types.DaemonStartupGracePeriod,
-			)
-
-			// Cleanup.
-			defer func() {
-				healthChecker.Stop()
-			}()
-
-			// Act - simulate the health checker polling for updates.
-			for i := 0; i < len(test.healthCheckResponses); i++ {
-				healthChecker.Poll()
-			}
-
-			// Assert.
-			// Validate the expected polls occurred according to the mocks.
-			checkable.AssertExpectations(t)
-			timeProvider.AssertExpectations(t)
-
-			// Validate the callback was called with the expected error.
-			if test.expectedUnhealthy == nil {
-				require.NoError(t, *callbackError)
-			} else {
-				require.ErrorContains(t, *callbackError, test.expectedUnhealthy.Error())
-			}
-		})
-	}
 }
 
 // The following tests may still intermittently fail or report false positives on an overloaded system as they rely
@@ -270,17 +154,47 @@ func TestRegisterServiceWithCallback_DoubleRegistrationFails(t *testing.T) {
 	require.Equal(t, TestError1, *callbackError)
 }
 
+// Create a struct that implements HealthCheckable and Stoppable to check that the monitor stops the service.
+type stoppableFakeHealthChecker struct {
+	stopped bool
+}
+
+// Implement stub methods to conform to interfaces.
+func (f *stoppableFakeHealthChecker) ServiceName() string   { return "test-service" }
+func (f *stoppableFakeHealthChecker) HealthCheck() error    { return nil }
+func (f *stoppableFakeHealthChecker) ReportSuccess()        {}
+func (f *stoppableFakeHealthChecker) ReportFailure(_ error) {}
+
+// Stop stub tracks whether the service was stopped.
+func (f *stoppableFakeHealthChecker) Stop() {
+	f.stopped = true
+}
+
+var _ types.Stoppable = (*stoppableFakeHealthChecker)(nil)
+var _ daemontypes.HealthCheckable = (*stoppableFakeHealthChecker)(nil)
+
 func TestRegisterService_RegistrationFailsAfterStop(t *testing.T) {
 	ufm, logger := createTestMonitor()
 	ufm.Stop()
 
-	hc := mockFailingHealthCheckerWithError("test-service", TestError1)
-	err := ufm.RegisterService(hc, 50*time.Millisecond)
+	stoppableHc := &stoppableFakeHealthChecker{}
+	hc2 := mockFailingHealthCheckerWithError("test-service-2", TestError1)
+
+	// Register a stoppable service.
+	err := ufm.RegisterService(stoppableHc, 50*time.Millisecond)
+	require.ErrorContains(t, err, "monitor has been stopped")
+
+	// Register a non-stoppable service.
+	err = ufm.RegisterService(hc2, 50*time.Millisecond)
 	require.ErrorContains(t, err, "monitor has been stopped")
 
 	// Any scheduled functions with error logs that were not cleaned up should trigger before this sleep finishes.
 	time.Sleep(100 * time.Millisecond)
 	mock.AssertExpectationsForObjects(t, logger)
+
+	// Assert that the monitor proactively stops any stoppable service that was registered after the monitor was
+	// stopped.
+	require.True(t, stoppableHc.stopped)
 }
 
 func TestRegisterValidResponseWithCallback_NegativeUnhealthyDuration(t *testing.T) {
