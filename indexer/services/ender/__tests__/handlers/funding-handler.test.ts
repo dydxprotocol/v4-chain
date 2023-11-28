@@ -1,4 +1,3 @@
-import { stats } from '@dydxprotocol-indexer/base';
 import {
   FundingEventV1,
   FundingEventV1_Type,
@@ -47,9 +46,6 @@ describe('fundingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

@@ -34,7 +34,7 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'MarketCreateHandler#handleViaSqlFunction',
+        at: 'MarketCreateHandler#internalHandle',
         message: 'Failed to handle MarketEventV1',
         error,
       });

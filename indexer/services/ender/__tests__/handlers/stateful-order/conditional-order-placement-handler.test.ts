@@ -38,7 +38,6 @@ import {
   expectOrderSubaccountKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize, getTriggerPrice } from '../../../src/lib/helper';
-import { stats } from '@dydxprotocol-indexer/base';
 import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
@@ -50,9 +49,6 @@ describe('conditionalOrderPlacementHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

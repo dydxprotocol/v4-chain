@@ -65,7 +65,7 @@ export class FundingHandler extends Handler<FundingEventMessage> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'FundingHandler#handleViaSqlFunction',
+        at: 'FundingHandler#internalHandle',
         message: 'Failed to handle FundingEventV1',
         error,
       });

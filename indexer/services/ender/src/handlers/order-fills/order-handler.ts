@@ -102,7 +102,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'orderHandler#handleViaSqlFunction',
+        at: 'orderHandler#internalHandle',
         message: 'Failed to handle OrderFillEventV1',
         error,
       });

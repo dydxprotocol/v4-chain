@@ -1,4 +1,3 @@
-import { stats } from '@dydxprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
@@ -37,9 +36,6 @@ describe('update-perpetual-handler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

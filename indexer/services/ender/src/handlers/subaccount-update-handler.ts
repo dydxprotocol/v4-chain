@@ -53,7 +53,7 @@ export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
     { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'subaccountUpdateHandler#handleViaSqlFunction',
+        at: 'subaccountUpdateHandler#internalHandle',
         message: 'Failed to handle SubaccountUpdateEventV1',
         error,
       });

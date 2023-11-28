@@ -32,7 +32,7 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'LiquidityTierHandler#handleViaSqlFunction',
+        at: 'LiquidityTierHandler#internalHandle',
         message: 'Failed to handle LiquidityTierUpsertEventV1',
         error,
       });

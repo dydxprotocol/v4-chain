@@ -41,7 +41,7 @@ export class TransferHandler extends Handler<TransferEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'TransferHandler#handleViaSqlFunction',
+        at: 'TransferHandler#internalHandle',
         message: 'Failed to handle TransferEventV1',
         error,
       });

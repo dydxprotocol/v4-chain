@@ -29,7 +29,7 @@ export class UpdatePerpetualHandler extends Handler<UpdatePerpetualEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'UpdatePerpetualHandler#handleViaSqlFunction',
+        at: 'UpdatePerpetualHandler#internalHandle',
         message: 'Failed to handle UpdatePerpetualEventV1',
         error,
       });

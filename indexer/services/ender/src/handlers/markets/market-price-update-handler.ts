@@ -41,7 +41,7 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'MarketPriceUpdateHandler#handleViaSqlFunction',
+        at: 'MarketPriceUpdateHandler#internalHandle',
         message: 'Failed to handle MarketEventV1',
         error,
       });

@@ -1,4 +1,3 @@
-import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetCreateEventV1,
   IndexerTendermintBlock,
@@ -41,9 +40,6 @@ describe('assetHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

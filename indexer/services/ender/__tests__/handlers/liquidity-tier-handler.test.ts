@@ -1,4 +1,3 @@
-import { stats } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -44,9 +43,6 @@ describe('liquidityTierHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

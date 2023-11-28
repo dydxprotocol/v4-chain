@@ -28,7 +28,7 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'PerpetualMarketCreationHandler#handleViaSqlFunction',
+        at: 'PerpetualMarketCreationHandler#internalHandle',
         message: 'Failed to handle PerpetualMarketCreateEventV1',
         error,
       });

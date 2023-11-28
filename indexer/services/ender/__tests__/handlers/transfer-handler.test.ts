@@ -1,7 +1,6 @@
 import {
   logger,
   ParseMessageError,
-  stats,
 } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock,
@@ -56,9 +55,6 @@ describe('transferHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
-    jest.spyOn(stats, 'increment');
-    jest.spyOn(stats, 'timing');
-    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {

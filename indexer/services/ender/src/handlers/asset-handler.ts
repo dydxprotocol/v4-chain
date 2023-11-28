@@ -28,7 +28,7 @@ export class AssetCreationHandler extends Handler<AssetCreateEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'AssetCreationHandler#handleViaSqlFunction',
+        at: 'AssetCreationHandler#internalHandle',
         message: 'Failed to handle AssetCreateEventV1',
         error,
       });

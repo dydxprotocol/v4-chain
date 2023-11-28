@@ -29,7 +29,7 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
       { txId: this.txId },
     ).catch((error: Error) => {
       logger.error({
-        at: 'UpdateClobPairHandler#handleViaSqlFunction',
+        at: 'UpdateClobPairHandler#internalHandle',
         message: 'Failed to handle UpdateClobPairEventV1',
         error,
       });
