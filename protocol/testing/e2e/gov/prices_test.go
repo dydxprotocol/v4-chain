@@ -27,9 +27,9 @@ var (
 	}
 
 	MODIFIED_MARKET_PARAM = pricestypes.MarketParam{
-		Id:                 0,
+		Id:                 GENESIS_MARKET_PARAM.Id,
 		Pair:               "eth-adv4tnt",
-		Exponent:           -8,
+		Exponent:           GENESIS_MARKET_PARAM.Exponent, // exponent cannot be updated
 		MinExchanges:       3,
 		MinPriceChangePpm:  2_002,
 		ExchangeConfigJson: `{"exchanges":[{"exchangeName":"Bitfinex","ticker":"tBTCUSD"}]}`,
@@ -55,7 +55,7 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 GENESIS_MARKET_PARAM.Id + 1, // id does not exist
+					Id:                 MODIFIED_MARKET_PARAM.Id + 1, // id does not exist
 					Pair:               MODIFIED_MARKET_PARAM.Pair,
 					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
 					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
@@ -69,7 +69,7 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 GENESIS_MARKET_PARAM.Id,
+					Id:                 MODIFIED_MARKET_PARAM.Id,
 					Pair:               MODIFIED_MARKET_PARAM.Pair,
 					Exponent:           MODIFIED_MARKET_PARAM.Exponent + 1, // update to exponent is not permitted.
 					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
@@ -83,7 +83,7 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 GENESIS_MARKET_PARAM.Id,
+					Id:                 MODIFIED_MARKET_PARAM.Id,
 					Pair:               "", // invalid
 					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
 					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
@@ -97,7 +97,7 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 GENESIS_MARKET_PARAM.Id,
+					Id:                 MODIFIED_MARKET_PARAM.Id,
 					Pair:               MODIFIED_MARKET_PARAM.Pair,
 					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
 					MinExchanges:       0, // invalid
@@ -111,7 +111,7 @@ func TestUpdateMarketParam(t *testing.T) {
 			msg: &pricestypes.MsgUpdateMarketParam{
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
-					Id:                 GENESIS_MARKET_PARAM.Id,
+					Id:                 MODIFIED_MARKET_PARAM.Id,
 					Pair:               MODIFIED_MARKET_PARAM.Pair,
 					Exponent:           MODIFIED_MARKET_PARAM.Exponent,
 					MinExchanges:       MODIFIED_MARKET_PARAM.MinExchanges,
