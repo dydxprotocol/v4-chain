@@ -44,41 +44,53 @@ func (u *timestampWithError) Error() error {
 
 // healthChecker encapsulates the logic for monitoring the health of a health checkable service.
 type healthChecker struct {
+	// The following fields are initialized in StartNewHealthChecker and are not modified after initialization.
 	// healthCheckable is the health checkable service to be monitored.
 	healthCheckable types.HealthCheckable
-
-	// timer triggers a health check poll for a health checkable service.
-	timer *time.Timer
 
 	// pollFrequency is the frequency at which the health checkable service is polled.
 	pollFrequency time.Duration
 
-	// mostRecentSuccess is the timestamp of the most recent successful health check.
-	mostRecentSuccess time.Time
-
-	// firstFailureInStreak is the timestamp of the first error in the most recent streak of errors. It is set
-	// whenever the service toggles from healthy to an unhealthy state, and used to determine how long the daemon has
-	// been unhealthy. If this timestamp is nil, then the error streak ended before it could trigger a callback.
-	firstFailureInStreak timestampWithError
+	// maximumAcceptableUnhealthyDuration is the maximum acceptable duration for a health checkable service to
+	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
+	// specified callback function.
+	maximumAcceptableUnhealthyDuration time.Duration
 
 	// unhealthyCallback is the callback function to be executed if the health checkable service remains
 	// unhealthy for a period of time greater than or equal to the maximum acceptable unhealthy duration.
 	// This callback function is executed with the error that caused the service to become unhealthy.
 	unhealthyCallback func(error)
 
-	// timeProvider is used to get the current time. It is added as a field so that it can be mocked in tests.
-	timeProvider libtime.TimeProvider
+	// lock is used to synchronize access to the health checker's dynamically updated fields.
+	lock sync.Mutex
 
-	// maximumAcceptableUnhealthyDuration is the maximum acceptable duration for a health checkable service to
-	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
-	// specified callback function.
-	maximumAcceptableUnhealthyDuration time.Duration
+	// The following fields are dynamically updated by the health checker:
+	// timer triggers a health check poll for a health checkable service.
+	// Access to the timer is synchronized.
+	timer *time.Timer
+
+	// mostRecentSuccess is the timestamp of the most recent successful health check.
+	// Access to mostRecentSuccess is synchronized.
+	mostRecentSuccess time.Time
+
+	// firstFailureInStreak is the timestamp of the first error in the most recent streak of errors. It is set
+	// whenever the service toggles from healthy to an unhealthy state, and used to determine how long the daemon has
+	// been unhealthy. If this timestamp is nil, then the error streak ended before it could trigger a callback.
+	// Access to firstFailureInStreak is synchronized.
+	firstFailureInStreak timestampWithError
+
+	// timeProvider is used to get the current time. It is added as a field so that it can be mocked in tests.
+	// Access to timeProvider is synchronized.
+	timeProvider libtime.TimeProvider
 }
 
 // Poll executes a health check for the health checkable service. If the service has been unhealthy for longer than the
 // maximum acceptable unhealthy duration, the callback function is executed.
-// This method is publicly exposed for testing.
+// This method is publicly exposed for testing. This method is synchronized.
 func (hc *healthChecker) Poll() {
+	hc.lock.Lock()
+	defer hc.lock.Unlock()
+
 	// Don't return an error if the monitor has been disabled.
 	err := hc.healthCheckable.HealthCheck()
 	now := hc.timeProvider.Now()
@@ -101,7 +113,11 @@ func (hc *healthChecker) Poll() {
 	hc.timer.Reset(hc.pollFrequency)
 }
 
+// Stop stops the health checker. This method is synchronized.
 func (hc *healthChecker) Stop() {
+	hc.lock.Lock()
+	defer hc.lock.Unlock()
+
 	hc.timer.Stop()
 }
 
