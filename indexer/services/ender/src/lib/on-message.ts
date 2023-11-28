@@ -9,18 +9,12 @@ import {
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   Transaction,
-  BlockTable,
-  TransactionTable,
-  TendermintEventTable,
-  TendermintEventFromDatabase,
-  TransactionFromDatabase,
   IsolationLevel,
   CandleFromDatabase,
   storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
-  IndexerTendermintEvent,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   KafkaMessage,
@@ -38,7 +32,6 @@ import { refreshDataCaches } from './cache-manager';
 import { CandlesGenerator } from './candles-generator';
 import {
   dateToDateTime,
-  indexerTendermintEventToTransactionIndex,
 } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
 
@@ -75,10 +68,14 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
-    await createInitialRows(
-      blockHeight,
-      txId,
-      indexerTendermintBlock,
+    await runFuncWithTimingStat(
+      createInitialRows(
+        blockHeight,
+        txId,
+        indexerTendermintBlock,
+      ),
+      {},
+      'create_initial_rows',
     );
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
@@ -218,49 +215,7 @@ function validateIndexerTendermintBlock(
   }
 }
 
-function createTendermintEvents(
-  events: IndexerTendermintEvent[],
-  blockHeight: string,
-  txId: number,
-): Promise<TendermintEventFromDatabase>[] {
-  return _.map(events, (event: IndexerTendermintEvent) => {
-    return createTendermintEvent(event, blockHeight, txId);
-  });
-}
-
-function createTendermintEvent(
-  event: IndexerTendermintEvent,
-  blockHeight: string,
-  txId: number,
-): Promise<TendermintEventFromDatabase> {
-  return TendermintEventTable.create({
-    blockHeight,
-    transactionIndex: indexerTendermintEventToTransactionIndex(event),
-    eventIndex: event.eventIndex,
-  }, { txId });
-}
-
-function createTransactions(
-  transactionHashes: string[],
-  blockHeight: string,
-  txId: number,
-): Promise<TransactionFromDatabase>[] {
-  return _.map(
-    transactionHashes,
-    (transactionHash: string, transactionIndex: number) => {
-      return TransactionTable.create(
-        {
-          blockHeight,
-          transactionIndex,
-          transactionHash,
-        },
-        { txId },
-      );
-    },
-  );
-}
-
-async function createInitialRowsViaSqlFunction(
+async function createInitialRows(
   blockHeight: string,
   txId: number,
   block: IndexerTendermintBlock,
@@ -285,43 +240,4 @@ async function createInitialRowsViaSqlFunction(
     });
     throw error;
   });
-}
-
-async function createInitialRows(
-  blockHeight: string,
-  txId: number,
-  indexerTendermintBlock: IndexerTendermintBlock,
-): Promise<void> {
-  if (config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS) {
-    return runFuncWithTimingStat(
-      createInitialRowsViaSqlFunction(
-        blockHeight,
-        txId,
-        indexerTendermintBlock,
-      ),
-      {},
-      'create_initial_rows',
-    );
-  } else {
-    await runFuncWithTimingStat(
-      Promise.all([
-        BlockTable.create({
-          blockHeight,
-          time: indexerTendermintBlock.time!.toISOString(),
-        }, { txId }),
-        ...createTransactions(
-          indexerTendermintBlock.txHashes,
-          blockHeight,
-          txId,
-        ),
-        ...createTendermintEvents(
-          indexerTendermintBlock.events,
-          blockHeight,
-          txId,
-        ),
-      ]),
-      {},
-      'create_initial_rows',
-    );
-  }
 }

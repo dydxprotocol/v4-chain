@@ -166,20 +166,7 @@ describe('on-message', () => {
     defaultDeleveragingEvent,
   ).finish());
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('successfully processes block with transaction event (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+  it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -232,11 +219,7 @@ describe('on-message', () => {
       'via SQL function',
       true,
     ],
-  ])('successfully processes block with transaction event with unset version (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+  ])('successfully processes block with transaction event with unset version', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -561,20 +544,7 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('successfully processes block with block event (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+  it('successfully processes block with block event', async () => {
     // -1 so that createIndexerTendermintEvent creates a block event
     const transactionIndex: number = -1;
     const eventIndex: number = 0;
@@ -616,20 +586,7 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('successfully processes block with transaction event and block event (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+  it('successfully processes block with transaction event and block event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
 
@@ -682,20 +639,7 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('successfully processes block with multiple transactions (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
-    config.USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS = useSqlFunction;
+  it('successfully processes block with multiple transactions', async () => {
     const transactionIndex0: number = 0;
     const transactionIndex1: number = 1;
     const eventIndex0: number = 0;

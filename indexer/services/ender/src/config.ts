@@ -23,9 +23,6 @@ export const configSchema = {
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
     default: true,
   }),
-  USE_SQL_FUNCTION_TO_CREATE_INITIAL_ROWS: parseBoolean({
-    default: true,
-  }),
 };
 
 export default parseSchema(configSchema);
