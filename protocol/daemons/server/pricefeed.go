@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
@@ -11,7 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -35,6 +36,7 @@ func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
 	req *api.UpdateMarketPricesRequest,
 ) (*api.UpdateMarketPricesResponse, error) {
+	s.reportResponse(types.PricefeedDaemonServiceName)
 	// Measure latency in ingesting and handling gRPC price update.
 	defer telemetry.ModuleMeasureSince(
 		metrics.PricefeedServer,
@@ -46,7 +48,7 @@ func (s *Server) UpdateMarketPrices(
 	if s.marketToExchange == nil {
 		panic(
 			errorsmod.Wrapf(
-				types.ErrServerNotInitializedCorrectly,
+				daemontypes.ErrServerNotInitializedCorrectly,
 				"MarketToExchange not initialized",
 			),
 		)
@@ -65,7 +67,7 @@ func (s *Server) UpdateMarketPrices(
 // validateMarketPricesUpdatesMessage validates a `UpdateMarketPricesRequest`.
 func validateMarketPricesUpdatesMessage(req *api.UpdateMarketPricesRequest) error {
 	if len(req.MarketPriceUpdates) == 0 {
-		return types.ErrPriceFeedMarketPriceUpdateEmpty
+		return daemontypes.ErrPriceFeedMarketPriceUpdateEmpty
 	}
 
 	for _, mpu := range req.MarketPriceUpdates {
@@ -95,7 +97,7 @@ func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 	for _, ep := range mpu.ExchangePrices {
 		if ep.Price == constants.DefaultPrice {
 			return generateSdkErrorForExchangePrice(
-				types.ErrPriceFeedInvalidPrice,
+				daemontypes.ErrPriceFeedInvalidPrice,
 				ep,
 				mpu.MarketId,
 			)
@@ -103,7 +105,7 @@ func validateMarketPriceUpdate(mpu *api.MarketPriceUpdate) error {
 
 		if ep.LastUpdateTime == nil {
 			return generateSdkErrorForExchangePrice(
-				types.ErrPriceFeedLastUpdateTimeNotSet,
+				daemontypes.ErrPriceFeedLastUpdateTimeNotSet,
 				ep,
 				mpu.MarketId,
 			)

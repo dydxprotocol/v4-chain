@@ -1,12 +1,15 @@
 package server
 
 import (
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	liquidationapi "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"net"
 	"syscall"
 )
@@ -46,6 +49,20 @@ func NewServer(
 // Stop stops the daemon server's gRPC service.
 func (server *Server) Stop() {
 	server.gsrv.Stop()
+}
+
+// reportResponse reports a response from a daemon service for metrics collection purposes.
+func (server *Server) reportResponse(daemonKey string) {
+	telemetry.IncrCounterWithLabels(
+		[]string{
+			metrics.DaemonServer,
+			metrics.ValidResponse,
+		},
+		1,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.Daemon, daemonKey),
+		},
+	)
 }
 
 // Start clears the current socket and establishes a new socket connection

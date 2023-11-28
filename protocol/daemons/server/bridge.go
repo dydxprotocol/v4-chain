@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	bdtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
 )
 
@@ -29,12 +30,7 @@ func (s *Server) AddBridgeEvents(
 	*api.AddBridgeEventsResponse,
 	error,
 ) {
-	// If the daemon is unable to report a response, there is either an error in the registration of
-	// this daemon, or another one. In either case, the protocol should panic.
-	// TODO(CORE-582): Re-enable this check once the bridge daemon is fixed in local / CI environments.
-	//if err := s.reportResponse(types.BridgeDaemonServiceName); err != nil {
-	//	panic(err)
-	//}
+	s.reportResponse(types.BridgeDaemonServiceName)
 	if err := s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}

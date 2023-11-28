@@ -295,7 +295,7 @@ type App struct {
 	LiquidationsClient *liquidationclient.Client
 	BridgeClient       *bridgeclient.Client
 
-	HealthMonitor *daemonservertypes.HealthMonitor
+	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -595,7 +595,7 @@ func New(
 	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
 	app.Server.WithBridgeEventManager(bridgeEventManager)
 
-	app.HealthMonitor = daemonservertypes.NewHealthMonitor(
+	app.DaemonHealthMonitor = daemonservertypes.NewHealthMonitor(
 		daemonservertypes.DaemonStartupGracePeriod,
 		daemonservertypes.HealthCheckPollFrequency,
 		app.Logger(),
@@ -1233,7 +1233,7 @@ func (app *App) MonitorDaemon(
 	healthCheckableDaemon daemontypes.HealthCheckable,
 	maximumAcceptableUpdateDelay time.Duration,
 ) {
-	if err := app.HealthMonitor.RegisterService(healthCheckableDaemon, maximumAcceptableUpdateDelay); err != nil {
+	if err := app.DaemonHealthMonitor.RegisterService(healthCheckableDaemon, maximumAcceptableUpdateDelay); err != nil {
 		app.Logger().Error(
 			"Failed to register daemon service with update monitor",
 			"error",
@@ -1249,7 +1249,7 @@ func (app *App) MonitorDaemon(
 
 // DisableHealthMonitorForTesting disables the health monitor for testing.
 func (app *App) DisableHealthMonitorForTesting() {
-	app.HealthMonitor.DisableForTesting()
+	app.DaemonHealthMonitor.DisableForTesting()
 }
 
 // hydrateMemStores hydrates the memStores used for caching state.

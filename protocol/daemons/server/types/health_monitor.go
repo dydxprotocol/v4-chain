@@ -95,10 +95,9 @@ func (hc *healthChecker) Poll() {
 	if !hc.firstFailureInStreak.IsZero() &&
 		now.Sub(hc.firstFailureInStreak.Timestamp()) >= hc.maximumAcceptableUnhealthyDuration {
 		hc.unhealthyCallback(hc.firstFailureInStreak.Error())
-	} else {
-		// If we do not execute the callback, schedule the next poll.
-		hc.timer.Reset(hc.pollFrequency)
 	}
+	// Schedule the next poll.
+	hc.timer.Reset(hc.pollFrequency)
 }
 
 func (hc *healthChecker) Stop() {

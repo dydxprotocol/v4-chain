@@ -283,7 +283,7 @@ func TestRegisterService_RegistrationFailsAfterStop(t *testing.T) {
 	mock.AssertExpectationsForObjects(t, logger)
 }
 
-func TestRegisterValidResponseWithCallback_NegativeUpdateDuration(t *testing.T) {
+func TestRegisterValidResponseWithCallback_NegativeUnhealthyDuration(t *testing.T) {
 	ufm, _ := createTestMonitor()
 	hc := mockFailingHealthCheckerWithError("test-service", TestError1)
 	err := ufm.RegisterServiceWithCallback(hc, -50*time.Millisecond, func(error) {})
