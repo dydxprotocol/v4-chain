@@ -11,6 +11,7 @@ import (
 )
 
 const (
+	// HealthCheckPollFrequency is the frequency at which the health checkable service is polled.
 	HealthCheckPollFrequency = 5 * time.Second
 )
 
