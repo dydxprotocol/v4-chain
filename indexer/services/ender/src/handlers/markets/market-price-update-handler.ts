@@ -8,7 +8,6 @@ import {
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
-import { updatePriceCacheWithPrice } from '../../caches/price-cache';
 import { generateOraclePriceContents } from '../../helpers/kafka-helper';
 import {
   ConsolidatedKafkaEvent,
@@ -64,7 +63,6 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       result.rows[0].result.oracle_price) as OraclePriceFromDatabase;
 
     marketRefresher.updateMarket(market);
-    updatePriceCacheWithPrice(oraclePrice);
 
     return [
       this.generateKafkaEvent(
