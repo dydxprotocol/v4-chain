@@ -6,7 +6,6 @@ export interface PerpetualMarketCreateObject {
   ticker: string;
   marketId: number;
   status: PerpetualMarketStatus;
-  lastPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;
@@ -25,7 +24,6 @@ export interface PerpetualMarketUpdateObject {
   ticker?: string;
   marketId?: number;
   status?: PerpetualMarketStatus;
-  lastPrice?: string;
   priceChange24H?: string;
   volume24H?: string;
   trades24H?: number;
@@ -44,7 +42,6 @@ export enum PerpetualMarketColumns {
   ticker = 'ticker',
   marketId = 'marketId',
   status = 'status',
-  lastPrice = 'lastPrice',
   priceChange24H = 'priceChange24H',
   volume24H = 'volume24H',
   trades24H = 'trades24H',

@@ -208,7 +208,6 @@ export interface TradingPerpetualMarketMessage {
   stepBaseQuantums?: number;
 
   // Fields that are likely to change
-  lastPrice?: string;
   priceChange24H?: string;
   volume24H?: string;
   trades24H?: number;

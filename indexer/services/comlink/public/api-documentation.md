@@ -1282,7 +1282,6 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets?limit=0',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
@@ -1303,7 +1302,6 @@ fetch('https://indexer.v4testnet.dydx.exchange/v4/perpetualMarkets?limit=0',
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
@@ -2831,7 +2829,6 @@ or
   "clobPairId": "string",
   "ticker": "string",
   "status": "ACTIVE",
-  "lastPrice": "string",
   "oraclePrice": "string",
   "priceChange24H": "string",
   "volume24H": "string",
@@ -2858,7 +2855,6 @@ or
 |clobPairId|string|true|none|none|
 |ticker|string|true|none|none|
 |status|[PerpetualMarketStatus](#schemaperpetualmarketstatus)|true|none|none|
-|lastPrice|string|true|none|none|
 |oraclePrice|string|true|none|none|
 |priceChange24H|string|true|none|none|
 |volume24H|string|true|none|none|
@@ -2889,7 +2885,6 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",
@@ -2910,7 +2905,6 @@ or
       "clobPairId": "string",
       "ticker": "string",
       "status": "ACTIVE",
-      "lastPrice": "string",
       "oraclePrice": "string",
       "priceChange24H": "string",
       "volume24H": "string",

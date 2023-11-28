@@ -852,7 +852,6 @@ export async function expectPerpetualPosition(
 // Values of the `PerpetualMarketCreateObject` which are hard-coded and not derived
 // from PerpetualMarketCreate events.
 export const HARDCODED_PERPETUAL_MARKET_VALUES: Object = {
-  lastPrice: '0',
   priceChange24H: '0',
   trades24H: 0,
   volume24H: '0',

@@ -804,7 +804,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "status": "ACTIVE",
         "baseAsset": "",
         "quoteAsset": "",
-        "lastPrice": "0",
         "oraclePrice": "27752.92",
         "priceChange24H": "0",
         "volume24H": "63894023.044245577",
@@ -830,7 +829,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "status": "ACTIVE",
         "baseAsset": "",
         "quoteAsset": "",
-        "lastPrice": "0",
         "oraclePrice": "1808.2",
         "priceChange24H": "0",
         "volume24H": "67487133.70842158",
@@ -894,7 +892,6 @@ interface TradingPerpetualMarketMessage {
   atomicResolution?: number;
   subticksPerTick?: number;
   stepBaseQuantums?: number;
-  lastPrice?: string;
   priceChange24H?: string;
   volume24H?: string;
   trades24H?: number;
