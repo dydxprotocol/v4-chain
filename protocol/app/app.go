@@ -183,10 +183,6 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// MaximumDaemonUnhealthyDuration is the maximum amount of time that a daemon can be unhealthy before the
-	// application panics.
-	MaximumDaemonUnhealthyDuration = 5 * time.Minute
 )
 
 var (
@@ -599,6 +595,7 @@ func New(
 		daemonservertypes.DaemonStartupGracePeriod,
 		daemonservertypes.HealthCheckPollFrequency,
 		app.Logger(),
+		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
 	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
@@ -613,7 +610,10 @@ func New(
 		if daemonFlags.Liquidation.Enabled {
 			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
-				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(
+					app.LiquidationsClient,
+					time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+				)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -645,17 +645,21 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, MaximumDaemonUnhealthyDuration)
+			app.RegisterDaemonWithHealthMonitor(
+				app.PriceFeedClient,
+				time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+			)
 		}
 
 		// Start Bridge Daemon.
 		// Non-validating full-nodes have no need to run the bridge daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
-			// environments.
 			app.BridgeClient = bridgeclient.NewClient(logger)
 			go func() {
-				app.RegisterDaemonWithHealthMonitor(app.BridgeClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(
+					app.BridgeClient,
+					time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+				)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.

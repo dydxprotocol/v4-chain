@@ -39,6 +39,7 @@ func createTestMonitor() (*types.HealthMonitor, *mocks.Logger) {
 		ZeroDuration,
 		10*time.Millisecond,
 		logger,
+		true, // enable panics here for stricter testing - a panic will definitely cause a test failure.
 	), logger
 }
 
@@ -124,6 +125,44 @@ func TestRegisterServiceWithCallback_Mixed(t *testing.T) {
 			require.Equal(t, test.healthCheckResponse, *callbackError)
 		})
 	}
+}
+
+func TestHealthMonitor_DisablePanics_DoesNotPanic(t *testing.T) {
+	logger := &mocks.Logger{}
+	logger.On("With", "module", "health-monitor").Return(logger).Once()
+	logger.On(
+		"Error",
+		"health-checked service is unhealthy",
+		"service",
+		"test-service",
+		"error",
+		mock.Anything,
+	).Return()
+
+	hm := types.NewHealthMonitor(
+		ZeroDuration,
+		10*time.Millisecond,
+		logger,
+		false,
+	)
+
+	hc := mockFailingHealthCheckerWithError("test-service", TestError1)
+
+	err := hm.RegisterService(hc, 10*time.Millisecond)
+	require.NoError(t, err)
+
+	defer func() {
+		hm.Stop()
+	}()
+
+	// A 100ms sleep should be sufficient for the health monitor to detect the unhealthy service and trigger a callback.
+	time.Sleep(100 * time.Millisecond)
+
+	// Assert.
+	// This test is confirmed to panic when panics are not disabled - but because the panic occurs in a separate
+	// go-routine, it cannot be easily captured with an assert. Instead, we assert that the logger was called with
+	// the expected arguments.
+	mock.AssertExpectationsForObjects(t, logger)
 }
 
 func TestRegisterServiceWithCallback_DoubleRegistrationFails(t *testing.T) {
