@@ -1,3 +1,4 @@
+CREATE OR REPLACE FUNCTION dydx_event_id_from_parts(block_height int, transaction_index int, event_index int) RETURNS bytea AS $$
 /**
   Returns an event id from parts.
 
@@ -6,8 +7,9 @@
     - transaction_index: The transaction_index of the IndexerTendermintEvent after the conversion that takes into
         account the block_event (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/services/ender/src/lib/helper.ts#L41)
     - event_index: The 'event_index' of the IndexerTendermintEvent.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_event_id_from_parts(block_height int, transaction_index int, event_index int) RETURNS bytea AS $$
 BEGIN
     /*
     int4send converts to network order (which is also big endian order).
