@@ -40,6 +40,12 @@ func WithMinExchanges(minExchanges uint32) MarketParamPriceModifierOption {
 	}
 }
 
+func WithMinPriceChangePpm(minPriceChangePpm uint32) MarketParamPriceModifierOption {
+	return func(cp *pricestypes.MarketParamPrice) {
+		cp.Param.MinPriceChangePpm = minPriceChangePpm
+	}
+}
+
 func WithExchangeConfigJson(configJson string) MarketParamPriceModifierOption {
 	return func(cp *pricestypes.MarketParamPrice) {
 		cp.Param.ExchangeConfigJson = configJson
