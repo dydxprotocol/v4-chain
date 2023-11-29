@@ -339,7 +339,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 	)
 	err := s.healthMonitor.RegisterService(
 		s.pricefeedDaemon,
-		time.Duration(s.daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+		time.Duration(s.daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
 	)
 	s.Require().NoError(err)
 }

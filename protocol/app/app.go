@@ -612,7 +612,7 @@ func New(
 			go func() {
 				app.RegisterDaemonWithHealthMonitor(
 					app.LiquidationsClient,
-					time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+					time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
 				)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
@@ -647,7 +647,7 @@ func New(
 			)
 			app.RegisterDaemonWithHealthMonitor(
 				app.PriceFeedClient,
-				time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+				time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
 			)
 		}
 
@@ -658,7 +658,7 @@ func New(
 			go func() {
 				app.RegisterDaemonWithHealthMonitor(
 					app.BridgeClient,
-					time.Duration(daemonFlags.Shared.MaximumDaemonUnhealthySeconds)*time.Second,
+					time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
 				)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from

@@ -9,9 +9,9 @@ import (
 // List of CLI flags for Server and Client.
 const (
 	// Flag names
-	FlagUnixSocketAddress             = "unix-socket-address"
-	FlagPanicOnDaemonFailureEnabled   = "panic-on-daemon-failure-enabled"
-	FlagMaximumDaemonUnhealthySeconds = "maximum-daemon-unhealthy-seconds"
+	FlagUnixSocketAddress           = "unix-socket-address"
+	FlagPanicOnDaemonFailureEnabled = "panic-on-daemon-failure-enabled"
+	FlagMaxDaemonUnhealthySeconds   = "max-daemon-unhealthy-seconds"
 
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
@@ -32,8 +32,8 @@ type SharedFlags struct {
 	SocketAddress string
 	// PanicOnDaemonFailureEnabled toggles whether the daemon should panic on failure.
 	PanicOnDaemonFailureEnabled bool
-	// MaximumDaemonUnhealthySeconds is the maximum allowable duration for which a daemon can be unhealthy.
-	MaximumDaemonUnhealthySeconds uint32
+	// MaxDaemonUnhealthySeconds is the maximum allowable duration for which a daemon can be unhealthy.
+	MaxDaemonUnhealthySeconds uint32
 }
 
 // BridgeFlags contains configuration flags for the Bridge Daemon.
@@ -80,9 +80,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
-				SocketAddress:                 "/tmp/daemons.sock",
-				PanicOnDaemonFailureEnabled:   true,
-				MaximumDaemonUnhealthySeconds: 5 * 60,
+				SocketAddress:               "/tmp/daemons.sock",
+				PanicOnDaemonFailureEnabled: true,
+				MaxDaemonUnhealthySeconds:   5 * 60,
 			},
 			Bridge: BridgeFlags{
 				Enabled:        true,
@@ -126,8 +126,8 @@ func AddDaemonFlagsToCmd(
 		"Enables panicking when a daemon fails.",
 	)
 	cmd.Flags().Uint32(
-		FlagMaximumDaemonUnhealthySeconds,
-		df.Shared.MaximumDaemonUnhealthySeconds,
+		FlagMaxDaemonUnhealthySeconds,
+		df.Shared.MaxDaemonUnhealthySeconds,
 		"Maximum allowable duration for which a daemon can be unhealthy.",
 	)
 
@@ -201,9 +201,9 @@ func GetDaemonFlagValuesFromOptions(
 			result.Shared.PanicOnDaemonFailureEnabled = v
 		}
 	}
-	if option := appOpts.Get(FlagMaximumDaemonUnhealthySeconds); option != nil {
+	if option := appOpts.Get(FlagMaxDaemonUnhealthySeconds); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
-			result.Shared.MaximumDaemonUnhealthySeconds = v
+			result.Shared.MaxDaemonUnhealthySeconds = v
 		}
 	}
 
