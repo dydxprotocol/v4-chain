@@ -1,3 +1,4 @@
+CREATE OR REPLACE FUNCTION dydx_from_jsonlib_long(long_value jsonb) RETURNS numeric AS $$
 /**
   Converts JSON objects of the form (https://www.npmjs.com/package/long):
     {
@@ -7,8 +8,9 @@
     }
   and converts it to a numeric. Note that this is the format used to convert Long types when converted using
   JSON.stringify.
- */
-CREATE OR REPLACE FUNCTION dydx_from_jsonlib_long(long_value jsonb) RETURNS numeric AS $$
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
+*/
 DECLARE
     POWER_2_32 constant numeric = power(2::numeric, 32::numeric);
 BEGIN

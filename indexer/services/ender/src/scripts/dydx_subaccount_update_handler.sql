@@ -1,3 +1,6 @@
+CREATE OR REPLACE FUNCTION dydx_subaccount_update_handler(
+    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int)
+    RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -11,10 +14,9 @@
     - subaccount: The upserted subaccount in subaccount-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/subaccount-model.ts).
     - perpetual_positions: A JSON array of upserted perpetual positions in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
     - asset_positions: A JSON array of upserted asset positions in asset-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/asset-position-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_subaccount_update_handler(
-    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int)
-    RETURNS jsonb AS $$
 DECLARE
     QUOTE_CURRENCY_ATOMIC_RESOLUTION constant numeric = -6;
     event_id bytea;

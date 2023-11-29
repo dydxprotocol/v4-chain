@@ -1,7 +1,9 @@
+CREATE OR REPLACE FUNCTION dydx_uuid_from_transfer_parts(event_id bytea, asset_id text, sender_subaccount_id uuid, recipient_subaccount_id uuid, sender_wallet_address text, recipient_wallet_address text) RETURNS uuid AS $$
 /**
   Returns a UUID using the parts of a transfer.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_uuid_from_transfer_parts(event_id bytea, asset_id text, sender_subaccount_id uuid, recipient_subaccount_id uuid, sender_wallet_address text, recipient_wallet_address text) RETURNS uuid AS $$
 DECLARE
     sender_subaccount_id_or_undefined text;
     recipient_subaccount_id_or_undefined text;

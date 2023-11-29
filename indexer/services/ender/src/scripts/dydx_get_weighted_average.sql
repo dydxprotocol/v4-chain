@@ -1,3 +1,4 @@
+CREATE OR REPLACE FUNCTION dydx_get_weighted_average(first_price numeric, first_weight numeric, second_price numeric, second_weight numeric) RETURNS numeric AS $$
 /**
   Returns the weighted average between two prices.
 
@@ -9,8 +10,9 @@
     - first_weight: The weight of the first price.
     - second_price: The second price. Defaults to 0 if null.
     - second_weight: The weight of the second price.
- */
-CREATE OR REPLACE FUNCTION dydx_get_weighted_average(first_price numeric, first_weight numeric, second_price numeric, second_weight numeric) RETURNS numeric AS $$
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
+*/
 BEGIN
     RETURN dydx_trim_scale((coalesce(first_price, 0::numeric) * first_weight +
                             coalesce(second_price, 0::numeric) * second_weight)::numeric(256, 20)

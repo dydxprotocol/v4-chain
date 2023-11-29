@@ -1,3 +1,6 @@
+CREATE OR REPLACE FUNCTION dydx_deleveraging_handler(
+    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
+    transaction_hash text) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -14,10 +17,9 @@
     - perpetual_market: The perpetual market for the deleveraging in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
     - liquidated_perpetual_position: The updated liquidated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
     - offsetting_perpetual_position: The updated offsetting perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_deleveraging_handler(
-    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
-    transaction_hash text) RETURNS jsonb AS $$
 DECLARE
     QUOTE_CURRENCY_ATOMIC_RESOLUTION constant numeric = -6;
     FEE constant numeric = 0;

@@ -1,3 +1,10 @@
+CREATE OR REPLACE FUNCTION dydx_update_perpetual_position_aggregate_fields(
+    subaccount_uuid uuid,
+    perpetual_id bigint,
+    side text,
+    size numeric,
+    price numeric
+) RETURNS perpetual_positions AS $$
 /**
   Parameters:
     - subaccount_uuid: The subaccount uuid of the updated perpetual position.
@@ -6,14 +13,9 @@
     - size: The size of the fill.
     - price: The price of the fill.
   Returns: the updated perpetual position.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_update_perpetual_position_aggregate_fields(
-    subaccount_uuid uuid,
-    perpetual_id bigint,
-    side text,
-    size numeric,
-    price numeric
-) RETURNS perpetual_positions AS $$
 DECLARE
     perpetual_position_record perpetual_positions%ROWTYPE;
     sum_open numeric;
