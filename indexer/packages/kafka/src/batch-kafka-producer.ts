@@ -2,7 +2,6 @@ import { logger } from '@dydxprotocol-indexer/base';
 import { Producer, RecordMetadata } from 'kafkajs';
 import _ from 'lodash';
 
-import config from './config';
 import { KafkaTopics } from './types';
 
 /**
@@ -28,7 +27,7 @@ export class BatchKafkaProducer {
   constructor(
     topic: KafkaTopics,
     producer: Producer,
-    maxBatchSizeBytes: number = config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES,
+    maxBatchSizeBytes: number,
   ) {
     this.maxBatchSizeBytes = maxBatchSizeBytes;
     this.producer = producer;

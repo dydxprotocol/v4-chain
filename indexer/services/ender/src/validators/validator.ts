@@ -7,14 +7,17 @@ import { EventMessage } from '../lib/types';
 export type ValidatorInitializer = new (
   event: EventMessage,
   block: IndexerTendermintBlock,
+  eventBlockIndex: number,
 ) => Validator<EventMessage>;
 
-export abstract class Validator<T> {
+export abstract class Validator<T extends object> {
   event: T;
   block: IndexerTendermintBlock;
+  blockEventIndex: number;
 
-  constructor(event: T, block: IndexerTendermintBlock) {
+  constructor(event: T, block: IndexerTendermintBlock, blockEventIndex: number) {
     this.event = event;
+    this.blockEventIndex = blockEventIndex;
     this.block = block;
   }
 
@@ -22,6 +25,16 @@ export abstract class Validator<T> {
    * Throws ParseMessageError and logs error if the event is invalid in any way.
    */
   public abstract validate(): void;
+
+  /**
+   * Returns the decoded event and any additional details the SQL function needs to process.
+   */
+  // TODO(IND-513): Convert handlers to have a 1-1 relationship with each validator by merging
+  // the order fill handlers together into a single handler (and the respective SQL function)
+  // and push this method down into the handler itself.
+  public getEventForBlockProcessor(): Promise<object> {
+    return Promise.resolve(this.event);
+  }
 
   protected logAndThrowParseMessageError(
     message: string,

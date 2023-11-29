@@ -127,6 +127,7 @@ describe('subaccountUpdateHandler', () => {
 
       const handler: SubaccountUpdateHandler = new SubaccountUpdateHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultEmptySubaccountUpdate,

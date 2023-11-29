@@ -1,4 +1,4 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers,
   MarketFromDatabase,
@@ -54,7 +54,6 @@ describe('marketPriceUpdateHandler', () => {
     jest.resetAllMocks();
   });
   const loggerCrit = jest.spyOn(logger, 'crit');
-  const loggerError = jest.spyOn(logger, 'error');
   const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
 
   describe('getParallelizationIds', () => {
@@ -83,6 +82,7 @@ describe('marketPriceUpdateHandler', () => {
 
       const handler: MarketPriceUpdateHandler = new MarketPriceUpdateHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         marketEvent,
@@ -111,16 +111,12 @@ describe('marketPriceUpdateHandler', () => {
     });
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new ParseMessageError('MarketPriceUpdateEvent contains a non-existent market id'),
+      'MarketPriceUpdateEvent contains a non-existent market id',
     );
 
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'MarketPriceUpdateHandler#logAndThrowParseMessageError',
-      message: 'MarketPriceUpdateEvent contains a non-existent market id',
-    }));
     expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'onMessage#onMessage',
-      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+      at: expect.stringContaining('PL/pgSQL function dydx_market_price_update_handler('),
+      message: expect.stringContaining('MarketPriceUpdateEvent contains a non-existent market id'),
     }));
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });

@@ -90,6 +90,7 @@ describe('perpetualMarketHandler', () => {
 
       const handler: PerpetualMarketCreationHandler = new PerpetualMarketCreationHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultPerpetualMarketCreateEvent,

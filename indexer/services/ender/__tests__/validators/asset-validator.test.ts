@@ -28,6 +28,7 @@ describe('asset-validator', () => {
       const validator: AssetValidator = new AssetValidator(
         defaultAssetCreateEvent,
         createBlock(defaultAssetCreateEvent),
+        0,
       );
 
       validator.validate();

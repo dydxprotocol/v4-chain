@@ -64,25 +64,19 @@ export async function rawQuery(
   options: Options,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<Knex.Raw<any>> {
-  if (options.readReplica) {
-    if (options.txId) {
-      return knexReadReplica.getConnection().raw(queryString).transacting(
+  const connection = options.readReplica ? knexReadReplica.getConnection() : knexPrimary;
+  let queryBuilder = options.bindings === undefined
+    ? connection.raw(queryString) : connection.raw(queryString, options.bindings);
+  if (options.txId) {
+    queryBuilder = queryBuilder.transacting(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         <Knex.Transaction<any, any>>Transaction.get(options.txId),
-      );
-    } else {
-      return knexReadReplica.getConnection().raw(queryString);
-    }
-  } else {
-    if (options.txId) {
-      return knexPrimary.raw(queryString).transacting(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        <Knex.Transaction<any, any>>Transaction.get(options.txId),
-      );
-    } else {
-      return knexPrimary.raw(queryString);
-    }
+    );
   }
+  if (options.sqlOptions) {
+    queryBuilder = queryBuilder.options(options.sqlOptions);
+  }
+  return queryBuilder;
 }
 
 /* ------- Bulk Helpers ------- */

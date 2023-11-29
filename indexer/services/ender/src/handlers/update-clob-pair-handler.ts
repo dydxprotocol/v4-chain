@@ -1,9 +1,7 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   perpetualMarketRefresher,
-  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { UpdateClobPairEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
@@ -20,25 +18,9 @@ export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_update_clob_pair_handler(
-        '${JSON.stringify(UpdateClobPairEventV1.decode(eventDataBinary))}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'UpdateClobPairHandler#internalHandle',
-        message: 'Failed to handle UpdateClobPairEventV1',
-        error,
-      });
-
-      throw error;
-    });
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
-      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+      resultRow.perpetual_market) as PerpetualMarketFromDatabase;
 
     perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
 

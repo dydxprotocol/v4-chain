@@ -21,6 +21,7 @@ export class UpdatePerpetualValidator extends Validator<UpdatePerpetualEventV1> 
   ): Handler<UpdatePerpetualEventV1>[] {
     const handler: Handler<UpdatePerpetualEventV1> = new UpdatePerpetualHandler(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

@@ -41,6 +41,7 @@ export class PerpetualMarketValidator extends Validator<PerpetualMarketCreateEve
   ): Handler<PerpetualMarketCreateEventV1>[] {
     const handler: Handler<PerpetualMarketCreateEventV1> = new PerpetualMarketCreationHandler(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

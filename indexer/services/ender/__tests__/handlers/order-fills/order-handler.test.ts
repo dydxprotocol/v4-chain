@@ -180,6 +180,7 @@ describe('OrderHandler', () => {
 
       const handler: OrderHandler = new OrderHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         {

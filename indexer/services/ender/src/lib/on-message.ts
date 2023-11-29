@@ -4,14 +4,12 @@ import {
   ParseMessageError,
   wrapBackgroundTask,
   STATS_NO_SAMPLING,
-  runFuncWithTimingStat,
 } from '@dydxprotocol-indexer/base';
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
   Transaction,
   IsolationLevel,
   CandleFromDatabase,
-  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import {
   IndexerTendermintBlock,
@@ -68,15 +66,6 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
 
-    await runFuncWithTimingStat(
-      createInitialRows(
-        blockHeight,
-        txId,
-        indexerTendermintBlock,
-      ),
-      {},
-      'create_initial_rows',
-    );
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
       txId,
@@ -213,31 +202,4 @@ function validateIndexerTendermintBlock(
       'IndexerTendermintBlock.time cannot be undefined',
     );
   }
-}
-
-async function createInitialRows(
-  blockHeight: string,
-  txId: number,
-  block: IndexerTendermintBlock,
-): Promise<void> {
-  const txHashesString = block.txHashes.length > 0 ? `ARRAY['${block.txHashes.join("','")}']::text[]` : 'null';
-  const eventsString = block.events.length > 0 ? `ARRAY['${block.events.map((event) => JSON.stringify(event)).join("','")}']::jsonb[]` : 'null';
-
-  const queryString: string = `SELECT dydx_create_initial_rows_for_tendermint_block(
-      '${blockHeight}'::text, 
-      '${block.time!.toISOString()}'::text,
-      ${txHashesString},
-      ${eventsString}
-  ) AS result;`;
-  await storeHelpers.rawQuery(
-    queryString,
-    { txId },
-  ).catch((error: Error) => {
-    logger.error({
-      at: 'on-message#createInitialRowsViaSqlFunction',
-      message: 'Failed to create initial rows',
-      error,
-    });
-    throw error;
-  });
 }

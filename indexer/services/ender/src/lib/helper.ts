@@ -91,6 +91,7 @@ export function dateToDateTime(
  * @returns
  */
 export function indexerTendermintEventToEventProtoWithType(
+  blockEventIndex: number,
   event: IndexerTendermintEvent,
 ): EventProtoWithTypeAndVersion | undefined {
   const eventDataBinary: Uint8Array = event.dataBytes;
@@ -103,6 +104,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: OrderFillEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.SUBACCOUNT_UPDATE.toString()): {
@@ -111,6 +113,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: SubaccountUpdateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.TRANSFER.toString()): {
@@ -119,6 +122,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: TransferEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.MARKET.toString()): {
@@ -127,6 +131,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: MarketEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.STATEFUL_ORDER.toString()): {
@@ -135,6 +140,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: StatefulOrderEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.FUNDING.toString()): {
@@ -143,6 +149,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: FundingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.ASSET.toString()): {
@@ -151,6 +158,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: AssetCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.PERPETUAL_MARKET.toString()): {
@@ -159,6 +167,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: PerpetualMarketCreateEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
@@ -167,6 +176,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
@@ -175,6 +185,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: UpdatePerpetualEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString()): {
@@ -183,6 +194,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: UpdateClobPairEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
@@ -191,6 +203,7 @@ export function indexerTendermintEventToEventProtoWithType(
         eventProto: DeleveragingEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
+        blockEventIndex,
       };
     }
     default: {
