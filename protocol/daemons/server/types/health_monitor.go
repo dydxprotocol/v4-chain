@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	// HealthCheckPollFrequency is the frequency at which the health checkable service is polled.
+	// HealthCheckPollFrequency is the frequency at which the health-checkable service is polled.
 	HealthCheckPollFrequency = 5 * time.Second
 )
 
@@ -30,8 +30,8 @@ type healthMonitorMutableState struct {
 	disabled bool
 }
 
-// NewHealthMonitorMutableState creates a new health monitor mutable state.
-func NewHealthMonitorMutableState() *healthMonitorMutableState {
+// newHealthMonitorMutableState creates a new health monitor mutable state.
+func newHealthMonitorMutableState() *healthMonitorMutableState {
 	return &healthMonitorMutableState{
 		serviceToHealthChecker: make(map[string]*healthChecker),
 	}
@@ -64,13 +64,29 @@ func (ms *healthMonitorMutableState) Stop() {
 	ms.stopped = true
 }
 
-// RegisterHealthChecker registers a new health checker for a health checkable with the health monitor. The health
+// RegisterHealthChecker registers a new health checker for a health-checkable with the health monitor. The health
 // checker is lazily created using the provided function if needed. This method is synchronized. It returns an error if
 // the service was already registered.
 func (ms *healthMonitorMutableState) RegisterHealthChecker(
 	checkable types.HealthCheckable,
 	lazyHealthCheckerCreator func() *healthChecker,
 ) error {
+	stopService := false
+
+	// If the monitor has already been stopped, we want to stop the checkable service before returning.
+	// However, we'd prefer not to stop the service within the critical section in order to prevent deadlocks.
+	// This defer will be called last, after the lock is released.
+	defer func() {
+		if stopService {
+			// If the service is stoppable, stop it. This helps us to clean up daemon services in test cases
+			// where the monitor is stopped before all daemon services have been registered.
+			if stoppable, ok := checkable.(Stoppable); ok {
+				stoppable.Stop()
+			}
+		}
+	}()
+
+	// Enter into the critical section.
 	ms.Lock()
 	defer ms.Unlock()
 
@@ -83,11 +99,8 @@ func (ms *healthMonitorMutableState) RegisterHealthChecker(
 	// This could be a concern for short-running integration test cases, where the network
 	// stops before all daemon services have been registered.
 	if ms.stopped {
-		// If the service is stoppable, stop it. This helps us to clean up daemon services in test cases
-		// where the monitor is stopped before all daemon services have been registered.
-		if stoppable, ok := checkable.(Stoppable); ok {
-			stoppable.Stop()
-		}
+		// Toggle the stopService flag to true so that the service is stopped after the lock is released.
+		stopService = true
 		return nil
 	}
 
@@ -118,7 +131,7 @@ func NewHealthMonitor(
 	logger log.Logger,
 ) *HealthMonitor {
 	return &HealthMonitor{
-		mutableState:       NewHealthMonitorMutableState(),
+		mutableState:       newHealthMonitorMutableState(),
 		logger:             logger.With(cosmoslog.ModuleKey, "health-monitor"),
 		startupGracePeriod: startupGracePeriod,
 		pollingFrequency:   pollingFrequency,
@@ -171,7 +184,7 @@ func PanicServiceNotResponding(hc types.HealthCheckable) func(error) {
 }
 
 // LogErrorServiceNotResponding returns a function that logs an error indicating that the specified service
-// is not responding. This is ideal for creating a callback function when registering a health checkable service.
+// is not responding. This is ideal for creating a callback function when registering a health-checkable service.
 func LogErrorServiceNotResponding(hc types.HealthCheckable, logger log.Logger) func(error) {
 	return func(err error) {
 		logger.Error(
@@ -184,7 +197,7 @@ func LogErrorServiceNotResponding(hc types.HealthCheckable, logger log.Logger) f
 	}
 }
 
-// RegisterService registers a new health checkable service with the health check monitor. If the service
+// RegisterService registers a new health-checkable service with the health check monitor. If the service
 // is unhealthy every time it is polled for a duration greater than or equal to the maximum acceptable unhealthy
 // duration, the monitor will panic.
 // This method is synchronized. It returns an error if the service was already registered or the monitor has

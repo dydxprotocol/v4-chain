@@ -83,26 +83,26 @@ func (u *healthCheckerMutableState) ReportFailure(now time.Time, err error) time
 	return now.Sub(u.mostRecentFailureStreakError.Timestamp())
 }
 
-// healthChecker encapsulates the logic for monitoring the health of a health checkable service.
+// healthChecker encapsulates the logic for monitoring the health of a health-checkable service.
 type healthChecker struct {
 	// mutableState is the mutable state of the health checker. Access to these fields is synchronized.
 	mutableState *healthCheckerMutableState
 
-	// healthCheckable is the health checkable service to be monitored.
+	// healthCheckable is the health-checkable service to be monitored.
 	healthCheckable types.HealthCheckable
 
-	// pollFrequency is the frequency at which the health checkable service is polled.
+	// pollFrequency is the frequency at which the health-checkable service is polled.
 	pollFrequency time.Duration
 
-	// timer triggers a health check poll for a health checkable service.
+	// timer triggers a health check poll for a health-checkable service.
 	timer *time.Timer
 
-	// maxAcceptableUnhealthyDuration is the maximum acceptable duration for a health checkable service to
+	// maxAcceptableUnhealthyDuration is the maximum acceptable duration for a health-checkable service to
 	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
 	// specified callback function.
 	maxAcceptableUnhealthyDuration time.Duration
 
-	// unhealthyCallback is the callback function to be executed if the health checkable service remains
+	// unhealthyCallback is the callback function to be executed if the health-checkable service remains
 	// unhealthy for a period of time greater than or equal to the maximum acceptable unhealthy duration.
 	// This callback function is executed with the error that caused the service to become unhealthy.
 	unhealthyCallback func(error)
@@ -113,7 +113,7 @@ type healthChecker struct {
 	logger log.Logger
 }
 
-// Poll executes a health check for the health checkable service. If the service has been unhealthy for longer than the
+// Poll executes a health check for the health-checkable service. If the service has been unhealthy for longer than the
 // maximum acceptable unhealthy duration, the callback function is executed.
 // This method is publicly exposed for testing. This method is synchronized.
 func (hc *healthChecker) Poll() {
@@ -137,12 +137,12 @@ func (hc *healthChecker) Poll() {
 	hc.timer.Reset(hc.pollFrequency)
 }
 
-// Stop stops the health checker. This method is synchronized.
+// Stop stops the health checker. This method is not synchronized, as the timer does not need synchronization.
 func (hc *healthChecker) Stop() {
 	hc.timer.Stop()
 }
 
-// StartNewHealthChecker creates and starts a new health checker for a health checkable service.
+// StartNewHealthChecker creates and starts a new health checker for a health-checkable service.
 func StartNewHealthChecker(
 	healthCheckable types.HealthCheckable,
 	pollFrequency time.Duration,
