@@ -20,6 +20,7 @@ import {
   KafkaMessage,
 } from 'kafkajs';
 import _ from 'lodash';
+import { DateTime } from 'luxon';
 
 import {
   shouldSkipBlock,
@@ -55,6 +56,11 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   if (indexerTendermintBlock === undefined) {
     return;
   }
+  stats.timing(
+    `${config.SERVICE_NAME}.block_time_lag.timing`,
+    DateTime.now().diff(dateToDateTime(indexerTendermintBlock.time!)).toMillis(),
+    STATS_NO_SAMPLING,
+  );
 
   const offset = message.offset;
   const blockHeight: string = indexerTendermintBlock.height.toString();
