@@ -125,6 +125,11 @@ func AddDaemonFlagsToCmd(
 		df.Shared.PanicOnDaemonFailureEnabled,
 		"Enables panicking when a daemon fails.",
 	)
+	cmd.Flags().Uint32(
+		FlagMaximumDaemonUnhealthySeconds,
+		df.Shared.MaximumDaemonUnhealthySeconds,
+		"Maximum allowable duration for which a daemon can be unhealthy.",
+	)
 
 	// Bridge Daemon.
 	cmd.Flags().Bool(

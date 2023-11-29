@@ -160,8 +160,8 @@ func TestHealthMonitor_DisablePanics_DoesNotPanic(t *testing.T) {
 
 	// Assert.
 	// This test is confirmed to panic when panics are not disabled - but because the panic occurs in a separate
-	// go-routine, it cannot be easily captured with an assert. Instead, we assert that the logger was called with
-	// the expected arguments.
+	// go-routine, it cannot be easily captured with an assert. Instead, we do not try to capture the panic, but
+	// assert that the logger was called with the expected arguments.
 	mock.AssertExpectationsForObjects(t, logger)
 }
 
