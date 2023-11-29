@@ -25,6 +25,7 @@ export interface SubaccountFromDatabase extends IdBasedModelFromDatabase {
 
 export interface WalletFromDatabase {
   address: string,
+  totalTradingRewards: string,
 }
 
 export interface PerpetualPositionFromDatabase extends IdBasedModelFromDatabase {

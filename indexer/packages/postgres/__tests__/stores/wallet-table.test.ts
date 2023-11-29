@@ -40,6 +40,7 @@ describe('Wallet store', () => {
       WalletTable.create(defaultWallet),
       WalletTable.create({
         address: 'fake_address',
+        totalTradingRewards: '0',
       }),
     ]);
 

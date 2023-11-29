@@ -1,3 +1,4 @@
+import { NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
@@ -17,9 +18,11 @@ export default class WalletModel extends BaseModel {
       type: 'object',
       required: [
         'address',
+        'totalTradingRewards',
       ],
       properties: {
         address: { type: 'string' },
+        totalTradingRewards: { type: 'string', pattern: NumericPattern },
       },
     };
   }
@@ -39,4 +42,6 @@ export default class WalletModel extends BaseModel {
   QueryBuilderType!: UpsertQueryBuilder<this>;
 
   address!: string;
+
+  totalTradingRewards!: string;
 }
