@@ -35,8 +35,17 @@ func (server *Server) WithPriceFeedMarketToExchangePrices(
 func (s *Server) UpdateMarketPrices(
 	ctx context.Context,
 	req *api.UpdateMarketPricesRequest,
-) (*api.UpdateMarketPricesResponse, error) {
-	s.reportResponse(types.PricefeedDaemonServiceName)
+) (
+	response *api.UpdateMarketPricesResponse,
+	err error,
+) {
+	// Capture valid responses in metrics.
+	defer func() {
+		if err == nil {
+			s.reportValidResponse(types.PricefeedDaemonServiceName)
+		}
+	}()
+
 	// Measure latency in ingesting and handling gRPC price update.
 	defer telemetry.ModuleMeasureSince(
 		metrics.PricefeedServer,
@@ -54,13 +63,14 @@ func (s *Server) UpdateMarketPrices(
 		)
 	}
 
-	if err := validateMarketPricesUpdatesMessage(req); err != nil {
+	if err = validateMarketPricesUpdatesMessage(req); err != nil {
 		// Log if failure occurs during an update.
 		s.logger.Error("Failed to validate price update message", "error", err)
 		return nil, err
 	}
 
 	s.marketToExchange.UpdatePrices(req.MarketPriceUpdates)
+
 	return &api.UpdateMarketPricesResponse{}, nil
 }
 

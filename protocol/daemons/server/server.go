@@ -51,8 +51,8 @@ func (server *Server) Stop() {
 	server.gsrv.Stop()
 }
 
-// reportResponse reports a response from a daemon service for metrics collection purposes.
-func (server *Server) reportResponse(daemonKey string) {
+// reportValidResponse reports a valid request/response from a daemon service for metrics collection purposes.
+func (server *Server) reportValidResponse(daemonKey string) {
 	telemetry.IncrCounterWithLabels(
 		[]string{
 			metrics.DaemonServer,

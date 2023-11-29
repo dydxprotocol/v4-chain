@@ -161,7 +161,7 @@ type stoppableFakeHealthChecker struct {
 
 // Implement stub methods to conform to interfaces.
 func (f *stoppableFakeHealthChecker) ServiceName() string   { return "test-service" }
-func (f *stoppableFakeHealthChecker) HealthCheck() error    { return nil }
+func (f *stoppableFakeHealthChecker) HealthCheck() error    { return fmt.Errorf("unhealthy") }
 func (f *stoppableFakeHealthChecker) ReportSuccess()        {}
 func (f *stoppableFakeHealthChecker) ReportFailure(_ error) {}
 
@@ -174,23 +174,25 @@ var _ types.Stoppable = (*stoppableFakeHealthChecker)(nil)
 var _ daemontypes.HealthCheckable = (*stoppableFakeHealthChecker)(nil)
 
 func TestRegisterService_RegistrationFailsAfterStop(t *testing.T) {
-	ufm, logger := createTestMonitor()
+	ufm, _ := createTestMonitor()
 	ufm.Stop()
 
 	stoppableHc := &stoppableFakeHealthChecker{}
 	hc2 := mockFailingHealthCheckerWithError("test-service-2", TestError1)
 
-	// Register a stoppable service.
-	err := ufm.RegisterService(stoppableHc, 50*time.Millisecond)
-	require.ErrorContains(t, err, "monitor has been stopped")
+	// Register unhealthy services. These services are confirmed to trigger a panic if registered when the monitor is
+	// not stopped.
+	// Register a stoppable unhealthy service.
+	err := ufm.RegisterService(stoppableHc, 10*time.Millisecond)
+	require.Nil(t, err)
 
-	// Register a non-stoppable service.
-	err = ufm.RegisterService(hc2, 50*time.Millisecond)
-	require.ErrorContains(t, err, "monitor has been stopped")
+	// Register a non-stoppable unhealthy service.
+	err = ufm.RegisterService(hc2, 10*time.Millisecond)
+	require.Nil(t, err)
 
-	// Any scheduled functions with error logs that were not cleaned up should trigger before this sleep finishes.
+	// Since the max allowable unhealthy duration is 10ms, and the polling period is 10ms, 100ms is long enough to wait
+	// in order to trigger a panic if a service is polled.
 	time.Sleep(100 * time.Millisecond)
-	mock.AssertExpectationsForObjects(t, logger)
 
 	// Assert that the monitor proactively stops any stoppable service that was registered after the monitor was
 	// stopped.

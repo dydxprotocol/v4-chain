@@ -15,10 +15,11 @@ const (
 	HealthCheckPollFrequency = 5 * time.Second
 )
 
-// HealthMonitor monitors the health of daemon services, which implement the HealthCheckable interface. If a
-// registered health-checkable service sustains an unhealthy state for the maximum acceptable unhealthy duration,
-// the monitor will execute a callback function.
-type HealthMonitor struct {
+// healthMonitorMutableState tracks all mutable state associated with the health monitor. This state is gathered into
+// a single struct for ease of synchronization.
+type healthMonitorMutableState struct {
+	sync.Mutex
+
 	// serviceToHealthChecker maps daemon service names to their update metadata.
 	serviceToHealthChecker map[string]*healthChecker
 	// stopped indicates whether the monitor has been stopped. Additional daemon services cannot be registered
@@ -27,8 +28,82 @@ type HealthMonitor struct {
 	// disabled indicates whether the monitor has been disabled. This is used to disable the monitor in testApp
 	// tests, where app.New is not executed.
 	disabled bool
-	// lock is used to synchronize access to the monitor.
-	lock sync.Mutex
+}
+
+// NewHealthMonitorMutableState creates a new health monitor mutable state.
+func NewHealthMonitorMutableState() *healthMonitorMutableState {
+	return &healthMonitorMutableState{
+		serviceToHealthChecker: make(map[string]*healthChecker),
+	}
+}
+
+// DisableForTesting disables the health monitor mutable state from receiving updates. This prevents the monitor
+// from registering services when called before app initialization and is used for testing.
+func (ms *healthMonitorMutableState) DisableForTesting() {
+	ms.Lock()
+	defer ms.Unlock()
+
+	ms.disabled = true
+}
+
+// Stop stops the update frequency monitor. This method is synchronized.
+func (ms *healthMonitorMutableState) Stop() {
+	ms.Lock()
+	defer ms.Unlock()
+
+	// Don't stop the monitor if it has already been stopped.
+	if ms.stopped {
+		return
+	}
+
+	// Stop all health checkers.
+	for _, checker := range ms.serviceToHealthChecker {
+		checker.Stop()
+	}
+
+	ms.stopped = true
+}
+
+// RegisterHealthChecker registers a new health checker for a health checkable with the health monitor. The health
+// checker is lazily created using the provided function if needed. This method is synchronized. It returns an error if
+// the service was already registered.
+func (ms *healthMonitorMutableState) RegisterHealthChecker(
+	checkable types.HealthCheckable,
+	lazyHealthCheckerCreator func() *healthChecker,
+) error {
+	ms.Lock()
+	defer ms.Unlock()
+
+	// Don't register daemon services if the monitor has been disabled.
+	if ms.disabled {
+		return nil
+	}
+
+	// Don't register additional daemon services if the monitor has already been stopped.
+	// This could be a concern for short-running integration test cases, where the network
+	// stops before all daemon services have been registered.
+	if ms.stopped {
+		// If the service is stoppable, stop it. This helps us to clean up daemon services in test cases
+		// where the monitor is stopped before all daemon services have been registered.
+		if stoppable, ok := checkable.(Stoppable); ok {
+			stoppable.Stop()
+		}
+		return nil
+	}
+
+	if _, ok := ms.serviceToHealthChecker[checkable.ServiceName()]; ok {
+		return fmt.Errorf("service %v already registered", checkable.ServiceName())
+	}
+
+	ms.serviceToHealthChecker[checkable.ServiceName()] = lazyHealthCheckerCreator()
+	return nil
+}
+
+// HealthMonitor monitors the health of daemon services, which implement the HealthCheckable interface. If a
+// registered health-checkable service sustains an unhealthy state for the maximum acceptable unhealthy duration,
+// the monitor will execute a callback function.
+type HealthMonitor struct {
+	mutableState *healthMonitorMutableState
 
 	// These fields are initialized in NewHealthMonitor and are not modified after initialization.
 	logger             log.Logger
@@ -43,18 +118,15 @@ func NewHealthMonitor(
 	logger log.Logger,
 ) *HealthMonitor {
 	return &HealthMonitor{
-		serviceToHealthChecker: make(map[string]*healthChecker),
-		logger:                 logger.With(cosmoslog.ModuleKey, "health-monitor"),
-		startupGracePeriod:     startupGracePeriod,
-		pollingFrequency:       pollingFrequency,
+		mutableState:       NewHealthMonitorMutableState(),
+		logger:             logger.With(cosmoslog.ModuleKey, "health-monitor"),
+		startupGracePeriod: startupGracePeriod,
+		pollingFrequency:   pollingFrequency,
 	}
 }
 
 func (hm *HealthMonitor) DisableForTesting() {
-	hm.lock.Lock()
-	defer hm.lock.Unlock()
-
-	hm.disabled = true
+	hm.mutableState.DisableForTesting()
 }
 
 // RegisterServiceWithCallback registers a HealthCheckable with the health monitor. If the service
@@ -68,9 +140,6 @@ func (hm *HealthMonitor) RegisterServiceWithCallback(
 	maximumAcceptableUnhealthyDuration time.Duration,
 	callback func(error),
 ) error {
-	hm.lock.Lock()
-	defer hm.lock.Unlock()
-
 	if maximumAcceptableUnhealthyDuration <= 0 {
 		return fmt.Errorf(
 			"health check registration failure for service %v: "+
@@ -80,41 +149,17 @@ func (hm *HealthMonitor) RegisterServiceWithCallback(
 		)
 	}
 
-	// Don't register daemon services if the monitor has been disabled.
-	if hm.disabled {
-		return nil
-	}
-
-	// Don't register additional daemon services if the monitor has already been stopped.
-	// This could be a concern for short-running integration test cases, where the network
-	// stops before all daemon services have been registered.
-	if hm.stopped {
-		// If the service is stoppable, stop it. This helps us to clean up daemon services in test cases
-		// where the monitor is stopped before all daemon services have been registered.
-		if stoppable, ok := hc.(Stoppable); ok {
-			stoppable.Stop()
-		}
-
-		return fmt.Errorf(
-			"health check registration failure for service %v: monitor has been stopped",
-			hc.ServiceName(),
+	return hm.mutableState.RegisterHealthChecker(hc, func() *healthChecker {
+		return StartNewHealthChecker(
+			hc,
+			hm.pollingFrequency,
+			callback,
+			&libtime.TimeProviderImpl{},
+			maximumAcceptableUnhealthyDuration,
+			hm.startupGracePeriod,
+			hm.logger,
 		)
-	}
-
-	if _, ok := hm.serviceToHealthChecker[hc.ServiceName()]; ok {
-		return fmt.Errorf("service %v already registered", hc.ServiceName())
-	}
-
-	hm.serviceToHealthChecker[hc.ServiceName()] = StartNewHealthChecker(
-		hc,
-		hm.pollingFrequency,
-		callback,
-		&libtime.TimeProviderImpl{},
-		maximumAcceptableUnhealthyDuration,
-		hm.startupGracePeriod,
-		hm.logger,
-	)
-	return nil
+	})
 }
 
 // PanicServiceNotResponding returns a function that panics with a message indicating that the specified daemon
@@ -158,17 +203,5 @@ func (hm *HealthMonitor) RegisterService(
 
 // Stop stops the update frequency monitor. This method is synchronized.
 func (hm *HealthMonitor) Stop() {
-	hm.lock.Lock()
-	defer hm.lock.Unlock()
-
-	// Don't stop the monitor if it has already been stopped.
-	if hm.stopped {
-		return
-	}
-
-	for _, checker := range hm.serviceToHealthChecker {
-		checker.Stop()
-	}
-
-	hm.stopped = true
+	hm.mutableState.Stop()
 }

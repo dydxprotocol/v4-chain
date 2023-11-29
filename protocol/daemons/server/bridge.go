@@ -27,11 +27,18 @@ func (s *Server) AddBridgeEvents(
 	ctx context.Context,
 	req *api.AddBridgeEventsRequest,
 ) (
-	*api.AddBridgeEventsResponse,
-	error,
+	response *api.AddBridgeEventsResponse,
+	err error,
 ) {
-	s.reportResponse(types.BridgeDaemonServiceName)
-	if err := s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
+	// Capture valid responses in metrics.
+	defer func() {
+		if err == nil {
+			s.reportValidResponse(types.PricefeedDaemonServiceName)
+		}
+	}()
+
+	s.reportValidResponse(types.BridgeDaemonServiceName)
+	if err = s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}
 	return &api.AddBridgeEventsResponse{}, nil
