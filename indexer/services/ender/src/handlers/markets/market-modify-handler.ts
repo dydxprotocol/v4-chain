@@ -1,9 +1,8 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  MarketFromDatabase, storeHelpers, MarketModel,
+  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
-import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent, MarketModifyEventMessage } from '../../lib/types';
 import { Handler } from '../handler';
@@ -24,7 +23,7 @@ export class MarketModifyHandler extends Handler<MarketEventV1> {
     });
 
     const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
+    await storeHelpers.rawQuery(
       `SELECT dydx_market_modify_handler(
         '${JSON.stringify(MarketEventV1.decode(eventDataBinary))}' 
       ) AS result;`,

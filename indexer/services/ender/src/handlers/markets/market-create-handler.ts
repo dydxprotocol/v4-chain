@@ -49,8 +49,6 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
       throw error;
     });
 
-    const market: MarketFromDatabase = MarketModel.fromJson(
-      result.rows[0].result.market) as MarketFromDatabase;
     return [];
   }
 }

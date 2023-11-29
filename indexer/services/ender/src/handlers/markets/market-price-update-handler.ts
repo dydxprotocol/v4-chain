@@ -62,7 +62,6 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
     const oraclePrice: OraclePriceFromDatabase = OraclePriceModel.fromJson(
       result.rows[0].result.oracle_price) as OraclePriceFromDatabase;
 
-
     return [
       this.generateKafkaEvent(
         oraclePrice, market.pair,
