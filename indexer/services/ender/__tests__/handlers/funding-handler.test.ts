@@ -39,7 +39,6 @@ import { redis } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
-import { startPriceCache } from '../../src/caches/price-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('fundingHandler', () => {
@@ -57,7 +56,6 @@ describe('fundingHandler', () => {
     await perpetualMarketRefresher.updatePerpetualMarkets();
     await assetRefresher.updateAssets();
     updateBlockCache(defaultPreviousHeight);
-    await startPriceCache(defaultPreviousHeight);
   });
 
   afterEach(async () => {

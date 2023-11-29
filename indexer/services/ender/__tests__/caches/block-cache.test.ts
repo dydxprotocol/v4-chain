@@ -17,7 +17,6 @@ import {
   shouldSkipBlock,
 } from '../../src/caches/block-cache';
 import { clearCandlesMap, getCandlesMap } from '../../src/caches/candle-cache';
-import { clearPriceMap, getPriceMap } from '../../src/caches/price-cache';
 
 describe('block-cache', () => {
   beforeAll(async () => {
@@ -34,7 +33,6 @@ describe('block-cache', () => {
     await dbHelpers.clearData();
     resetBlockCache();
     clearCandlesMap();
-    clearPriceMap();
     perpetualMarketRefresher.clear();
     assetRefresher.clear();
     marketRefresher.clear();
@@ -80,7 +78,6 @@ describe('block-cache', () => {
         // validate that block, candles, and price cache are updated
         expect(getCurrentBlockHeight()).toEqual('3');
         expect(getCandlesMap()).not.toEqual({});
-        expect(getPriceMap()).not.toEqual({});
         expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
         expect(assetRefresher.getAssetsMap()).not.toEqual({});
         expect(marketRefresher.getMarketsMap()).not.toEqual({});
@@ -93,7 +90,6 @@ describe('block-cache', () => {
       // Validate that caches are empty
       expect(getCurrentBlockHeight()).toEqual('-1');
       expect(getCandlesMap()).toEqual({});
-      expect(getPriceMap()).toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
       expect(assetRefresher.getAssetsMap()).toEqual({});
       expect(marketRefresher.getMarketsMap()).toEqual({});
@@ -103,7 +99,6 @@ describe('block-cache', () => {
       // Validate that caches are populated
       expect(getCurrentBlockHeight()).toEqual('2');
       expect(getCandlesMap()).not.toEqual({});
-      expect(getPriceMap()).not.toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
       expect(assetRefresher.getAssetsMap()).not.toEqual({});
       expect(marketRefresher.getMarketsMap()).not.toEqual({});

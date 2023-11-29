@@ -31,7 +31,6 @@ import { updateBlockCache } from '../../../src/caches/block-cache';
 import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
 import { MarketPriceUpdateHandler } from '../../../src/handlers/markets/market-price-update-handler';
 import Long from 'long';
-import { getPrice } from '../../../src/caches/price-cache';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketPriceUpdateHandler', () => {
@@ -148,8 +147,6 @@ describe('marketPriceUpdateHandler', () => {
       defaultHeight,
     );
 
-    expect(getPrice(oraclePrice.marketId)).toEqual(oraclePrice.price);
-
     const contents: MarketMessageContents = generateOraclePriceContents(
       oraclePrice,
       market.pair,
@@ -201,8 +198,6 @@ describe('marketPriceUpdateHandler', () => {
       market,
       defaultHeight,
     );
-
-    expect(getPrice(oraclePrice.marketId)).toEqual(oraclePrice.price);
 
     const contents: MarketMessageContents = generateOraclePriceContents(
       oraclePrice,

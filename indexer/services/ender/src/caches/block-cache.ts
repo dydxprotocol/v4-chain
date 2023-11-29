@@ -12,7 +12,6 @@ import Big from 'big.js';
 
 import config from '../config';
 import { startCandleCache } from './candle-cache';
-import { startPriceCache } from './price-cache';
 
 const INITIAL_BLOCK_HEIGHT: string = '-1';
 
@@ -114,8 +113,6 @@ export async function initializeAllCaches(): Promise<void> {
     assetRefresher.updateAssets({ txId }),
     marketRefresher.updateMarkets({ txId }),
   ]);
-  // Must be run after startBlockCache() because it uses the block cache.
-  await startPriceCache(getCurrentBlockHeight(), txId);
 
   await Transaction.rollback(txId);
 }
