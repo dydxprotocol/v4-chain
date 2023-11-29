@@ -12,7 +12,6 @@ import {
   MarketTable,
   Ordering,
   testConstants,
-  marketRefresher,
   BlockTable,
   TendermintEventTable,
   perpetualMarketRefresher,
@@ -115,7 +114,6 @@ describe('perpetualMarketHandler', () => {
 
   it('fails when liquidity tier doesnt exist for perpetual market', async () => {
     await MarketTable.create(testConstants.defaultMarket);
-    await marketRefresher.updateMarkets();
     const transactionIndex: number = 0;
     const kafkaMessage: KafkaMessage = createKafkaMessageFromPerpetualMarketEvent({
       perpetualMarketEvent: defaultPerpetualMarketCreateEvent,
@@ -134,7 +132,6 @@ describe('perpetualMarketHandler', () => {
       LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
     ]);
     await liquidityTierRefresher.updateLiquidityTiers();
-    await marketRefresher.updateMarkets();
 
     const transactionIndex: number = 0;
 

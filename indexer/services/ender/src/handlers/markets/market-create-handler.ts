@@ -2,7 +2,6 @@ import { logger } from '@dydxprotocol-indexer/base';
 import {
   MarketFromDatabase,
   MarketModel,
-  marketRefresher,
   storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
@@ -52,7 +51,6 @@ export class MarketCreateHandler extends Handler<MarketEventV1> {
 
     const market: MarketFromDatabase = MarketModel.fromJson(
       result.rows[0].result.market) as MarketFromDatabase;
-    marketRefresher.updateMarket(market);
     return [];
   }
 }

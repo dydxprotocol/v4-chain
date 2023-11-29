@@ -1,7 +1,7 @@
 import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
 import { PerpetualMarketCreateEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
 import {
-  dbHelpers, marketRefresher, testMocks, perpetualMarketRefresher,
+  dbHelpers, testMocks, perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
@@ -18,7 +18,6 @@ import Long from 'long';
 describe('perpetual-market-validator', () => {
   beforeEach(async () => {
     await testMocks.seedData();
-    await marketRefresher.updateMarkets();
     jest.spyOn(logger, 'error');
   });
 

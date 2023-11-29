@@ -4,7 +4,6 @@ import {
   OraclePriceTable,
   assetRefresher,
   dbHelpers,
-  marketRefresher,
   perpetualMarketRefresher,
   testConstants,
   testMocks,
@@ -35,7 +34,6 @@ describe('block-cache', () => {
     clearCandlesMap();
     perpetualMarketRefresher.clear();
     assetRefresher.clear();
-    marketRefresher.clear();
   });
 
   afterAll(async () => {
@@ -80,7 +78,6 @@ describe('block-cache', () => {
         expect(getCandlesMap()).not.toEqual({});
         expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
         expect(assetRefresher.getAssetsMap()).not.toEqual({});
-        expect(marketRefresher.getMarketsMap()).not.toEqual({});
       }
     });
   });
@@ -92,7 +89,6 @@ describe('block-cache', () => {
       expect(getCandlesMap()).toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).toEqual({});
       expect(assetRefresher.getAssetsMap()).toEqual({});
-      expect(marketRefresher.getMarketsMap()).toEqual({});
 
       await initializeAllCaches();
 
@@ -101,7 +97,6 @@ describe('block-cache', () => {
       expect(getCandlesMap()).not.toEqual({});
       expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
       expect(assetRefresher.getAssetsMap()).not.toEqual({});
-      expect(marketRefresher.getMarketsMap()).not.toEqual({});
     });
   });
 });

@@ -2,7 +2,6 @@ import {
   IsolationLevel,
   Transaction,
   assetRefresher,
-  marketRefresher,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
 
@@ -13,7 +12,6 @@ export async function refreshDataCaches(): Promise<void> {
   await Promise.all([
     perpetualMarketRefresher.updatePerpetualMarkets({ txId, readReplica: true }),
     assetRefresher.updateAssets({ txId, readReplica: true }),
-    marketRefresher.updateMarkets({ txId, readReplica: true }),
   ]);
 
   await Transaction.rollback(txId);

@@ -6,7 +6,6 @@ import {
   dbHelpers,
   IsoString,
   LiquidityTiersTable,
-  marketRefresher,
   MarketTable,
   perpetualMarketRefresher,
   PerpetualMarketTable,
@@ -893,13 +892,11 @@ describe('on-message', () => {
     // Initialize assetRefresher
     await assetRefresher.updateAssets();
     await perpetualMarketRefresher.updatePerpetualMarkets();
-    await marketRefresher.updateMarkets();
     (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
       handle: () => {
         // clear cache so we can confirm that the cache is updated after the error
         assetRefresher.clear();
         perpetualMarketRefresher.clear();
-        marketRefresher.clear();
         throw new Error();
       },
       validate: () => null,
@@ -909,7 +906,6 @@ describe('on-message', () => {
 
     expect(assetRefresher.getAssetsMap()).not.toEqual({});
     expect(perpetualMarketRefresher.getPerpetualMarketsMap()).not.toEqual({});
-    expect(marketRefresher.getMarketsMap()).not.toEqual({});
   });
 });
 
