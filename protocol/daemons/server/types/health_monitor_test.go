@@ -242,7 +242,7 @@ func TestRegisterValidResponseWithCallback_NegativeUnhealthyDuration(t *testing.
 	ufm, _ := createTestMonitor()
 	hc := mockFailingHealthCheckerWithError("test-service", TestError1)
 	err := ufm.RegisterServiceWithCallback(hc, -50*time.Millisecond, func(error) {})
-	require.ErrorContains(t, err, "maximum acceptable unhealthy duration -50ms must be positive")
+	require.ErrorContains(t, err, "maximum unhealthy duration -50ms must be positive")
 }
 
 func TestPanicServiceNotResponding(t *testing.T) {

@@ -82,7 +82,7 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Shared: SharedFlags{
 				SocketAddress:               "/tmp/daemons.sock",
 				PanicOnDaemonFailureEnabled: true,
-				MaxDaemonUnhealthySeconds:   5 * 60,
+				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
 			},
 			Bridge: BridgeFlags{
 				Enabled:        true,
