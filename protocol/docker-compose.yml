@@ -18,7 +18,7 @@ services:
       - --bridge-daemon-eth-rpc-endpoint
       - "${ETH_RPC_ENDPOINT}"
       - --maximum-daemon-unhealthy-seconds
-      - "4294967295"
+      - "4294967295" # Effectively disable the daemon monitor because bridge daemon is flaky in localnet.
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
