@@ -54,6 +54,7 @@ BEGIN
         transfer_record."recipientWalletAddress" = event_data->'recipient'->>'address';
 
         recipient_wallet_record."address" = transfer_record."recipientWalletAddress";
+        recipient_wallet_record."totalTradingRewards" = '0';
         INSERT INTO wallets VALUES (recipient_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
@@ -61,6 +62,7 @@ BEGIN
         transfer_record."senderWalletAddress" = event_data->'sender'->>'address';
 
         sender_wallet_record."address" = transfer_record."senderWalletAddress";
+        sender_wallet_record."totalTradingRewards" = '0';
         INSERT INTO wallets VALUES (sender_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 

@@ -96,6 +96,7 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
 // ============== Wallets ==============
 export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
+  totalTradingRewards: '0',
 };
 
 // ============== Assets ==============
