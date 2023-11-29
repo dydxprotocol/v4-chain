@@ -2,31 +2,36 @@ package app
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
+	v3_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v3.0.0"
 )
 
 var (
 	// `Upgrades` defines the upgrade handlers and store loaders for the application.
 	// New upgrades should be added to this slice after they are implemented.
-	Upgrades = []upgrades.Upgrade{}
-	Forks    = []upgrades.Fork{}
+	Upgrades = []upgrades.Upgrade{
+		v3_0_0.Upgrade,
+	}
+	Forks = []upgrades.Fork{}
 )
 
 // setupUpgradeHandlers registers the upgrade handlers to perform custom upgrade
 // logic and state migrations for software upgrades.
 func (app *App) setupUpgradeHandlers() {
-	for _, upgrade := range Upgrades {
-		if app.UpgradeKeeper.HasHandler(upgrade.UpgradeName) {
-			panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", upgrade.UpgradeName))
-		}
-		app.UpgradeKeeper.SetUpgradeHandler(
-			upgrade.UpgradeName,
-			upgrade.CreateUpgradeHandler(app.ModuleManager, app.configurator),
-		)
+	if app.UpgradeKeeper.HasHandler(v3_0_0.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v3_0_0.UpgradeName))
 	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v3_0_0.UpgradeName,
+		v3_0_0.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
+			app.AccountKeeper,
+		),
+	)
 }
 
 // setUpgradeStoreLoaders sets custom store loaders to customize the rootMultiStore
