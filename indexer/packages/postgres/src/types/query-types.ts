@@ -71,6 +71,7 @@ export enum QueryableField {
   UPDATED_ON_OR_AFTER = 'updatedOnOrAfter',
   PROVIDER = 'provider',
   BLOCKED = 'blocked',
+  BLOCK_TIME_BEFORE_OR_AT = 'blockTimeBeforeOrAt',
 }
 
 export interface QueryConfig {
@@ -262,4 +263,10 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.PROVIDER]?: string;
   [QueryableField.BLOCKED]?: boolean;
+}
+
+export interface TradingRewardQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string;
+  [QueryableField.BLOCK_HEIGHT]?: string;
+  [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString;
 }

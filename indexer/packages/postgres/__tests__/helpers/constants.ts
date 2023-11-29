@@ -43,6 +43,7 @@ import {
   SubaccountCreateObject,
   TendermintEventCreateObject,
   TimeInForce,
+  TradingRewardCreateObject,
   TransactionCreateObject,
   TransferCreateObject,
   WalletCreateObject,
@@ -580,4 +581,13 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   blocked: false,
   riskScore: '10.00',
   updatedAt: createdDateTime.plus(1).toISO(),
+};
+
+// ========= Trading Reward Data ==========
+
+export const defaultTradingReward: TradingRewardCreateObject = {
+  address: defaultAddress,
+  blockHeight: createdHeight,
+  blockTime: createdDateTime.toISO(),
+  amount: '1.00',
 };

@@ -223,6 +223,14 @@ export interface ComplianceDataFromDatabase {
   updatedAt: string;
 }
 
+export interface TradingRewardFromDatabase {
+  id: string;
+  address: string;
+  blockTime: IsoString;
+  blockHeight: string;
+  amount: string;
+}
+
 export type SubaccountAssetNetTransferMap = { [subaccountId: string]:
 { [assetId: string]: string } };
 export type SubaccountToPerpetualPositionsMap = { [subaccountId: string]:

@@ -1,4 +1,8 @@
-import { NumericPattern } from '../lib/validators';
+import path from 'path';
+
+import { Model } from 'objection';
+
+import { NonNegativeNumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
@@ -11,7 +15,32 @@ export default class WalletModel extends BaseModel {
     return 'address';
   }
 
-  static relationMappings = {};
+  static relationMappings = {
+    transferRecipientWallet: {
+      relation: Model.HasManyRelation,
+      modelClass: path.join(__dirname, 'transfer-model'),
+      join: {
+        from: 'wallets.address',
+        to: 'transfers.recipientWalletAddress',
+      },
+    },
+    transferSenderWallet: {
+      relation: Model.HasManyRelation,
+      modelClass: path.join(__dirname, 'transfer-model'),
+      join: {
+        from: 'wallets.address',
+        to: 'transfers.senderWalletAddress',
+      },
+    },
+    tradingRewards: {
+      relation: Model.HasManyRelation,
+      modelClass: path.join(__dirname, 'trading-reward-model'),
+      join: {
+        from: 'wallets.address',
+        to: 'trading_rewards.address',
+      },
+    },
+  };
 
   static get jsonSchema() {
     return {
@@ -22,7 +51,7 @@ export default class WalletModel extends BaseModel {
       ],
       properties: {
         address: { type: 'string' },
-        totalTradingRewards: { type: 'string', pattern: NumericPattern },
+        totalTradingRewards: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
