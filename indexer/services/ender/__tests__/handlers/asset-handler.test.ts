@@ -12,7 +12,6 @@ import {
   MarketTable,
   Ordering,
   testConstants,
-  marketRefresher,
   BlockTable,
   TendermintEventTable,
   assetRefresher,
@@ -112,7 +111,6 @@ describe('assetHandler', () => {
 
   it('creates new asset', async () => {
     await MarketTable.create(testConstants.defaultMarket);
-    await marketRefresher.updateMarkets();
     const transactionIndex: number = 0;
 
     const assetEvent: AssetCreateEventV1 = defaultAssetCreateEvent;

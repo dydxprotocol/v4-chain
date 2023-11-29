@@ -3,7 +3,7 @@ import {
   MarketFromDatabase,
   OraclePriceFromDatabase,
   OraclePriceModel,
-  MarketMessageContents, storeHelpers, MarketModel, marketRefresher,
+  MarketMessageContents, storeHelpers, MarketModel,
 } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
@@ -61,8 +61,6 @@ export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
       result.rows[0].result.market) as MarketFromDatabase;
     const oraclePrice: OraclePriceFromDatabase = OraclePriceModel.fromJson(
       result.rows[0].result.oracle_price) as OraclePriceFromDatabase;
-
-    marketRefresher.updateMarket(market);
 
     return [
       this.generateKafkaEvent(

@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { AssetCreateEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
-import { dbHelpers, marketRefresher, testMocks } from '@dydxprotocol-indexer/postgres';
+import { dbHelpers, testMocks } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
   defaultAssetCreateEvent, defaultHeight, defaultTime, defaultTxHash,
@@ -15,7 +15,6 @@ import { AssetValidator } from '../../src/validators/asset-validator';
 describe('asset-validator', () => {
   beforeEach(async () => {
     await testMocks.seedData();
-    await marketRefresher.updateMarkets();
     jest.spyOn(logger, 'error');
   });
 
