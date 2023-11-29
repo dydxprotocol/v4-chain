@@ -1,7 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
-import {
-  storeHelpers,
-} from '@dydxprotocol-indexer/postgres';
+import { storeHelpers } from '@dydxprotocol-indexer/postgres';
 import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { ConsolidatedKafkaEvent, MarketModifyEventMessage } from '../../lib/types';
