@@ -78,7 +78,6 @@ export interface PerpetualMarketFromDatabase {
   ticker: string;
   marketId: number;
   status: PerpetualMarketStatus;
-  lastPrice: string;
   priceChange24H: string;
   volume24H: string;
   trades24H: number;

@@ -701,9 +701,6 @@
           "status": {
             "$ref": "#/components/schemas/PerpetualMarketStatus"
           },
-          "lastPrice": {
-            "type": "string"
-          },
           "oraclePrice": {
             "type": "string"
           },
@@ -759,7 +756,6 @@
           "clobPairId",
           "ticker",
           "status",
-          "lastPrice",
           "oraclePrice",
           "priceChange24H",
           "volume24H",

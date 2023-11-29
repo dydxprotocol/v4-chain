@@ -58,7 +58,6 @@ describe('request-transformer', () => {
           clobPairId: perpetualMarket.clobPairId,
           ticker: perpetualMarket.ticker,
           status: perpetualMarket.status,
-          lastPrice: perpetualMarket.lastPrice,
           oraclePrice: market.oraclePrice,
           priceChange24H: perpetualMarket.priceChange24H,
           volume24H: perpetualMarket.volume24H,

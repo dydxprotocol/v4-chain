@@ -14,7 +14,6 @@ BEGIN
     perpetual_market_record."ticker" = event_data->>'ticker';
     perpetual_market_record."marketId" = (event_data->'marketId')::integer;
     perpetual_market_record."status" = dydx_clob_pair_status_to_market_status(event_data->'status');
-    perpetual_market_record."lastPrice" = 0;
     perpetual_market_record."priceChange24H" = 0;
     perpetual_market_record."trades24H" = 0;
     perpetual_market_record."volume24H" = 0;

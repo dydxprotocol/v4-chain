@@ -56,7 +56,6 @@ export default class PerpetualMarketModel extends Model {
         'ticker',
         'marketId',
         'status',
-        'lastPrice',
         'priceChange24H',
         'volume24H',
         'trades24H',
@@ -74,7 +73,6 @@ export default class PerpetualMarketModel extends Model {
         ticker: { type: 'string' },
         marketId: { type: 'integer' },
         status: { type: 'string', enum: [...Object.values(PerpetualMarketStatus)] },
-        lastPrice: { type: 'string', pattern: NonNegativeNumericPattern },
         priceChange24H: { type: 'string', pattern: NumericPattern },
         volume24H: { type: 'string', pattern: NonNegativeNumericPattern },
         trades24H: { type: 'integer' },
@@ -102,7 +100,6 @@ export default class PerpetualMarketModel extends Model {
       ticker: 'string',
       marketId: 'integer',
       status: 'string',
-      lastPrice: 'string',
       priceChange24H: 'string',
       volume24H: 'string',
       trades24H: 'integer',
@@ -125,8 +122,6 @@ export default class PerpetualMarketModel extends Model {
   marketId!: number;
 
   status!: PerpetualMarketStatus;
-
-  lastPrice!: string;
 
   priceChange24H!: string;
 
