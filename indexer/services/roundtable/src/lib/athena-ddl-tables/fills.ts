@@ -22,7 +22,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`transactionHash\` string,
   \`createdAt\` string,
   \`createdAtHeight\` bigint,
-  \`clientMetadata\` bigint
+  \`clientMetadata\` bigint,
+  \`fee\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -39,7 +40,8 @@ const TABLE_COLUMNS: string = `
   "transactionHash",
   ${castToTimestamp('createdAt')},
   "createdAtHeight",
-  "clientMetadata"
+  "clientMetadata",
+  "fee"
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {
