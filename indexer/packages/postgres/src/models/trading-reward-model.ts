@@ -4,6 +4,7 @@ import { Model } from 'objection';
 
 import { IntegerPattern, NonNegativeNumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
+import { IsoString } from '../types';
 
 export default class TradingRewardModel extends Model {
   static get tableName() {
@@ -67,7 +68,7 @@ export default class TradingRewardModel extends Model {
 
   address!: string;
 
-  blockTime!: string;
+  blockTime!: IsoString;
 
   blockHeight!: string;
 
