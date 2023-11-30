@@ -109,6 +109,9 @@ services:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
     ports:
       - "26658:26657"
+    depends_on:
+      kafka:
+        condition: service_healthy
  
   dydxprotocold2:
     image: local:dydxprotocol
