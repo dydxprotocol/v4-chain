@@ -11,7 +11,7 @@ describe('TradingReward store', () => {
 
   beforeEach(async () => {
     await WalletTable.create(defaultWallet);
-  })
+  });
 
   afterEach(async () => {
     await clearData();
