@@ -1,12 +1,17 @@
 import { TradingRewardFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultTradingReward } from '../helpers/constants';
+import { defaultTradingReward, defaultWallet } from '../helpers/constants';
 import * as TradingRewardTable from '../../src/stores/trading-reward-table';
+import { WalletTable } from '../../src';
 
 describe('TradingReward store', () => {
   beforeAll(async () => {
     await migrate();
   });
+
+  beforeEach(async () => {
+    await WalletTable.create(defaultWallet);
+  })
 
   afterEach(async () => {
     await clearData();
