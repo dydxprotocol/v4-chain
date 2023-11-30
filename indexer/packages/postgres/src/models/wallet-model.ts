@@ -1,4 +1,4 @@
-import { NumericPattern } from '../lib/validators';
+import { NonNegativeNumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
@@ -22,7 +22,7 @@ export default class WalletModel extends BaseModel {
       ],
       properties: {
         address: { type: 'string' },
-        totalTradingRewards: { type: 'string', pattern: NumericPattern },
+        totalTradingRewards: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }

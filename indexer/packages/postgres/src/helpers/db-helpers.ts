@@ -23,6 +23,7 @@ const layer1Tables = [
   'liquidity_tiers',
   'wallets',
   'compliance_data',
+  'trading_rewards',
 ];
 
 /**
