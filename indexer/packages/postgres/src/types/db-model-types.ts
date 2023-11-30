@@ -237,8 +237,8 @@ export interface TradingRewardAggregationFromDatabase {
   address: string;
   startedAt: IsoString;
   startedAtHeight: string;
-  endedAt: IsoString;
-  endedAtHeight: string;
+  endedAt?: IsoString;
+  endedAtHeight?: string;
   period: TradingRewardAggregationPeriod;
   amount: string;
 }

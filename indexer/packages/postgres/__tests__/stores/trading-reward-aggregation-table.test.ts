@@ -71,7 +71,7 @@ describe('TradingRewardAggregation store', () => {
     );
   });
 
-  it('Successfully returns undefined when upgrating a nonexistent TradingRewardAggregation', async () => {
+  it('Successfully returns undefined when updating a nonexistent TradingRewardAggregation', async () => {
     const fakeUpdate:
     TradingRewardAggregationFromDatabase | undefined = await TradingRewardAggregationTable.update({
       id: defaultSubaccountId,
