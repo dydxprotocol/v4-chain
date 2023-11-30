@@ -36,11 +36,11 @@ describe('TradingReward store', () => {
     );
 
     expect(tradingRewards.length).toEqual(2);
-    expect(tradingRewards[0]).toEqual(expect.objectContaining(defaultTradingReward));
-    expect(tradingRewards[1]).toEqual(expect.objectContaining({
+    expect(tradingRewards[0]).toEqual(expect.objectContaining({
       ...defaultTradingReward,
       blockHeight: '20',
     }));
+    expect(tradingRewards[1]).toEqual(expect.objectContaining(defaultTradingReward));
   });
 
   it('Successfully finds a TradingReward', async () => {
