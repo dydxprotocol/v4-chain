@@ -79,7 +79,7 @@ describe('TradingRewardAggregation store', () => {
     expect(fakeUpdate).toBeUndefined();
   });
 
-  it('Successfully returns undefined when upgrating a nonexistent TradingRewardAggregation', async () => {
+  it('Successfully updates an existing TradingRewardAggregation', async () => {
     await TradingRewardAggregationTable.create(defaultTradingRewardAggregation);
 
     const amount: string = '100000.00';
