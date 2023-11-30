@@ -68,7 +68,10 @@ export async function findAll(
   } else {
     baseQuery = baseQuery.orderBy(
       TradingRewardColumns.blockHeight,
-      Ordering.ASC,
+      Ordering.DESC,
+    ).orderBy(
+      TradingRewardColumns.address,
+      Ordering.DESC,
     );
   }
 

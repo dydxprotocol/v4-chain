@@ -16,22 +16,6 @@ export default class WalletModel extends BaseModel {
   }
 
   static relationMappings = {
-    transferRecipientWallet: {
-      relation: Model.HasManyRelation,
-      modelClass: path.join(__dirname, 'transfer-model'),
-      join: {
-        from: 'wallets.address',
-        to: 'transfers.recipientWalletAddress',
-      },
-    },
-    transferSenderWallet: {
-      relation: Model.HasManyRelation,
-      modelClass: path.join(__dirname, 'transfer-model'),
-      join: {
-        from: 'wallets.address',
-        to: 'transfers.senderWalletAddress',
-      },
-    },
     tradingRewards: {
       relation: Model.HasManyRelation,
       modelClass: path.join(__dirname, 'trading-reward-model'),
