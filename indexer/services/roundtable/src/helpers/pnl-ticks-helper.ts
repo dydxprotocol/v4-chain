@@ -71,6 +71,10 @@ export async function getPnlTicksCreateObjects(
     ),
     ...newSubaccountIds,
   ];
+  stats.gauge(
+    `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
+    accountsToUpdate.length,
+  );
   const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
     subaccountsWithTransfers,
     'id',
