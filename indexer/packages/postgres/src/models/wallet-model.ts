@@ -15,16 +15,7 @@ export default class WalletModel extends BaseModel {
     return 'address';
   }
 
-  static relationMappings = {
-    tradingRewards: {
-      relation: Model.HasManyRelation,
-      modelClass: path.join(__dirname, 'trading-reward-model'),
-      join: {
-        from: 'wallets.address',
-        to: 'trading_rewards.address',
-      },
-    },
-  };
+  static relationMappings = {};
 
   static get jsonSchema() {
     return {
