@@ -17,7 +17,7 @@ generateSpec({
   swaggerDocument.info.version = 'v1.0.0';
   swaggerDocument.servers = [
     {
-      url: 'https://indexer.v4testnet.dydx.exchange/v4',
+      url: 'https://dydx-testnet.imperator.co/v4',
       description: 'Public Testnet',
     },
   ];
