@@ -24,6 +24,7 @@ const layer1Tables = [
   'wallets',
   'compliance_data',
   'trading_rewards',
+  'trading_reward_aggregations',
 ];
 
 /**

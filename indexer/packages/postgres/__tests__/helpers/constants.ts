@@ -13,6 +13,7 @@ import * as OrderTable from '../../src/stores/order-table';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
+import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-aggregation-table';
 import * as TransactionTable from '../../src/stores/transaction-table';
 import * as TransferTable from '../../src/stores/transfer-table';
 import {
@@ -43,6 +44,8 @@ import {
   SubaccountCreateObject,
   TendermintEventCreateObject,
   TimeInForce,
+  TradingRewardAggregationCreateObject,
+  TradingRewardAggregationPeriod,
   TradingRewardCreateObject,
   TransactionCreateObject,
   TransferCreateObject,
@@ -591,3 +594,18 @@ export const defaultTradingReward: TradingRewardCreateObject = {
   blockTime: createdDateTime.toISO(),
   amount: '1.00',
 };
+
+// ========= Trading Reward Aggregation Data ==========
+
+export const defaultTradingRewardAggregation: TradingRewardAggregationCreateObject = {
+  address: defaultAddress,
+  startedAtHeight: createdHeight,
+  startedAt: createdDateTime.toISO(),
+  period: TradingRewardAggregationPeriod.DAILY,
+  amount: '1.00',
+};
+export const defaultTradingRewardAggregationId: string = TradingRewardAggregationTable.uuid(
+  defaultTradingRewardAggregation.address,
+  defaultTradingRewardAggregation.period,
+  defaultTradingRewardAggregation.startedAtHeight,
+);

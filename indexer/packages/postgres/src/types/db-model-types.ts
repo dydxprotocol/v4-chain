@@ -9,6 +9,7 @@ import {
 import { PerpetualMarketStatus } from './perpetual-market-types';
 import { PerpetualPositionStatus } from './perpetual-position-types';
 import { PositionSide } from './position-types';
+import { TradingRewardAggregationPeriod } from './trading-reward-aggregation-types';
 
 type IsoString = string;
 
@@ -228,6 +229,17 @@ export interface TradingRewardFromDatabase {
   address: string;
   blockTime: IsoString;
   blockHeight: string;
+  amount: string;
+}
+
+export interface TradingRewardAggregationFromDatabase {
+  id: string;
+  address: string;
+  startedAt: IsoString;
+  startedAtHeight: string;
+  endedAt: IsoString;
+  endedAtHeight: string;
+  period: TradingRewardAggregationPeriod;
   amount: string;
 }
 
