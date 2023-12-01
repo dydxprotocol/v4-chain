@@ -60,6 +60,8 @@ func AddSample(key string, val float32) {
 // ModuleMeasureSince provides a wrapper functionality for emitting a time measure
 // metric with global labels (if any).
 // Please try to use `AddSample` instead.
+// TODO(CLOB-1022) Roll our own calculations for timing on top of AddSample instead
+// of using MeasureSince.
 func ModuleMeasureSince(module string, key string, start time.Time) {
 	telemetry.ModuleMeasureSince(
 		module,
@@ -69,9 +71,10 @@ func ModuleMeasureSince(module string, key string, start time.Time) {
 }
 
 // ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
-// metric for a module with labels. Global labels are not included
-// in this metric.
+// metric for a module with labels. Global labels are not included in this metric.
 // Please try to use `AddSampleWithLabels` instead.
+// TODO(CLOB-1022) Roll our own calculations for timing on top of AddSample instead
+// of using MeasureSince.
 func ModuleMeasureSinceWithLabels(
 	module string,
 	keys []string,
