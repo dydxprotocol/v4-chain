@@ -49,7 +49,7 @@ func (k Keeper) getValidSubaccountUpdatesForTransfer(
 		return nil, types.ErrAssetTransferThroughBankNotImplemented
 	}
 
-	success, successPerUpdate, err := k.CanUpdateSubaccounts(ctx, updates)
+	success, successPerUpdate := k.CanUpdateSubaccounts(ctx, updates)
 	if err != nil {
 		return nil, err
 	}
@@ -71,13 +71,7 @@ func (k Keeper) applyValidSubaccountUpdateForTransfer(
 	updates []types.Update,
 ) error {
 	// Update subaccount to reflect the transfer.
-	success, successPerUpdate, err := k.UpdateSubaccounts(ctx, updates)
-
-	// Neither of the two conditions below should be true, since `k.CanUpdateSubaccount()`
-	// already succeeded.
-	if err != nil {
-		return err
-	}
+	success, successPerUpdate := k.UpdateSubaccounts(ctx, updates)
 
 	return types.GetErrorFromUpdateResults(success, successPerUpdate, updates)
 }

@@ -19,7 +19,7 @@ type SubaccountsKeeper struct {
 }
 
 // CanUpdateSubaccounts provides a mock function with given fields: ctx, updates
-func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult, error) {
+func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult) {
 	ret := _m.Called(ctx, updates)
 
 	var r0 bool
@@ -38,14 +38,7 @@ func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []s
 		}
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update) error); ok {
-		r2 = rf(ctx, updates)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // DepositFundsFromAccountToSubaccount provides a mock function with given fields: ctx, fromAccount, toSubaccountId, assetId, amount
@@ -79,7 +72,7 @@ func (_m *SubaccountsKeeper) GetAllSubaccount(ctx types.Context) []subaccountsty
 }
 
 // GetNetCollateralAndMarginRequirements provides a mock function with given fields: ctx, update
-func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (*big.Int, *big.Int, *big.Int, error) {
+func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (*big.Int, *big.Int, *big.Int) {
 	ret := _m.Called(ctx, update)
 
 	var r0 *big.Int
@@ -109,14 +102,7 @@ func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Con
 		}
 	}
 
-	var r3 error
-	if rf, ok := ret.Get(3).(func(types.Context, subaccountstypes.Update) error); ok {
-		r3 = rf(ctx, update)
-	} else {
-		r3 = ret.Error(3)
-	}
-
-	return r0, r1, r2, r3
+	return r0, r1, r2
 }
 
 // GetRandomSubaccount provides a mock function with given fields: ctx, _a1
@@ -160,7 +146,7 @@ func (_m *SubaccountsKeeper) SetSubaccount(ctx types.Context, subaccount subacco
 }
 
 // UpdateSubaccounts provides a mock function with given fields: ctx, updates
-func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult, error) {
+func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult) {
 	ret := _m.Called(ctx, updates)
 
 	var r0 bool
@@ -179,14 +165,7 @@ func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []suba
 		}
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update) error); ok {
-		r2 = rf(ctx, updates)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0, r1
 }
 
 // WithdrawFundsFromSubaccountToAccount provides a mock function with given fields: ctx, fromSubaccountId, toAccount, assetId, amount

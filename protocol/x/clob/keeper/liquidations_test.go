@@ -2654,7 +2654,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				require.Equal(t, tc.expectedBankruptcyPriceQuoteQuantums, bankruptcyPriceInQuoteQuantums)
 
 				// Verify that the returned delta quote quantums can pass `CanUpdateSubaccounts` function.
-				success, _, err := ks.SubaccountsKeeper.CanUpdateSubaccounts(
+				success, _ := ks.SubaccountsKeeper.CanUpdateSubaccounts(
 					ks.Ctx,
 					[]satypes.Update{
 						{
@@ -2671,7 +2671,6 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				)
 
 				require.True(t, success)
-				require.NoError(t, err)
 			}
 		})
 	}

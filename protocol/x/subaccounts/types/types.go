@@ -17,7 +17,6 @@ type SubaccountsKeeper interface {
 		bigNetCollateral *big.Int,
 		bigInitialMargin *big.Int,
 		bigMaintenanceMargin *big.Int,
-		err error,
 	)
 	CanUpdateSubaccounts(
 		ctx sdk.Context,
@@ -25,7 +24,6 @@ type SubaccountsKeeper interface {
 	) (
 		success bool,
 		successPerUpdate []UpdateResult,
-		err error,
 	)
 	UpdateSubaccounts(
 		ctx sdk.Context,
@@ -33,7 +31,6 @@ type SubaccountsKeeper interface {
 	) (
 		success bool,
 		successPerUpdate []UpdateResult,
-		err error,
 	)
 	DepositFundsFromAccountToSubaccount(
 		ctx sdk.Context,

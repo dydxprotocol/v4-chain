@@ -34,13 +34,8 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
-	if err != nil {
-		return new(big.Int), err
-	}
-
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
-	if !canPerformDeleveraging {
+	if canPerformDeleveraging := k.CanDeleverageSubaccount(ctx, subaccountId); !canPerformDeleveraging {
 		telemetry.IncrCounter(
 			1,
 			types.ModuleName,
@@ -136,29 +131,19 @@ func (k Keeper) GetInsuranceFundBalance(
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
 // Specifically, this function returns true if both of the following are true:
 // - The subaccount's total net collateral is negative.
-// This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error.
 func (k Keeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
-) (bool, error) {
+) bool {
 	bigNetCollateral,
 		_,
-		_,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		_ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
-	if err != nil {
-		return false, err
-	}
 
-	// Deleveraging cannot be performed if the subaccounts net collateral is non-negative.
-	if bigNetCollateral.Sign() >= 0 {
-		return false, nil
-	}
-
-	// The subaccount's total net collateral is negative, so deleveraging can be performed.
-	return true, nil
+	// Deleveraging can only be performed if the subaccounts net collateral is negative.
+	return bigNetCollateral.Sign() < 0
 }
 
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
@@ -407,10 +392,7 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Apply the update.
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates)
-	if err != nil {
-		return err
-	}
+	success, successPerUpdate := k.subaccountsKeeper.UpdateSubaccounts(ctx, updates)
 
 	// If not successful, return error indicating why.
 	if updateErr := satypes.GetErrorFromUpdateResults(success, successPerUpdate, updates); updateErr != nil {

@@ -83,15 +83,12 @@ func SimulateMsgCreateTransfer(
 			), nil, nil
 		}
 
-		bigNetCollateral, bigInitialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
+		bigNetCollateral, bigInitialMargin, _ := sk.GetNetCollateralAndMarginRequirements(
 			ctx,
 			satypes.Update{
 				SubaccountId: *senderAccount.GetId(),
 			},
 		)
-		if err != nil {
-			panic(err)
-		}
 
 		// Select a different subaccount as the recipient.
 		recipientAccount, err := sk.GetRandomSubaccount(ctx, r)

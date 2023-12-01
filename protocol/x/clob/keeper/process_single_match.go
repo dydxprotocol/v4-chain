@@ -52,7 +52,7 @@ func (k Keeper) ProcessSingleMatch(
 		defer func() {
 			if errors.Is(err, satypes.ErrFailedToUpdateSubaccounts) && !takerUpdateResult.IsSuccess() {
 				takerSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, matchWithOrders.TakerOrder.GetSubaccountId())
-				takerTnc, takerIMR, takerMMR, _ := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+				takerTnc, takerIMR, takerMMR := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
@@ -397,13 +397,10 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// Apply the update.
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(
+	success, successPerUpdate := k.subaccountsKeeper.UpdateSubaccounts(
 		ctx,
 		updates,
 	)
-	if err != nil {
-		return satypes.UpdateCausedError, satypes.UpdateCausedError, err
-	}
 
 	takerUpdateResult = successPerUpdate[0]
 	makerUpdateResult = successPerUpdate[1]
