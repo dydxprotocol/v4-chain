@@ -7,42 +7,39 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
-// main entrypoint for logging in the v4 protocol
-// type Label struct {
-// 	Name  string
-// 	Value string
-// }
+// This file provides a main entrypoint for logging in the v4 protocol.
+// TODO(CLOB-1013) Drop both metrics libraries above for a library
+// that supports float64 (i.e hashicorp go-metrics)
 
 type Label = gometrics.Label
 
-// IncrCounter provides a wrapper functionality for emitting a counter
+// IncrCounterWithLabels provides a wrapper functionality for emitting a counter
 // metric with global labels (if any) along with the provided labels.
 func IncrCounterWithLabels(key string, val float32, labels ...Label) {
 	telemetry.IncrCounterWithLabels([]string{key}, val, labels)
 }
 
 // IncrCounter provides a wrapper functionality for emitting a counter
-// metric with global labels (if any) along with the provided labels.
+// metric with global labels (if any).
 func IncrCounter(key string, val float32) {
 	telemetry.IncrCounterWithLabels([]string{key}, val, []gometrics.Label{})
 }
 
-// Gauge provides a wrapper functionality for emitting a counter
+// SetGaugeWithLabels provides a wrapper functionality for emitting a gauge
 // metric with global labels (if any) along with the provided labels.
 func SetGaugeWithLabels(key string, val float32, labels ...gometrics.Label) {
 	telemetry.SetGaugeWithLabels([]string{key}, val, labels)
 }
 
-// Gauge provides a wrapper functionality for emitting a counter
-// metric with global labels (if any) along with the provided labels.
+// SetGauge provides a wrapper functionality for emitting a gauge
+// metric with global labels (if any).
 func SetGauge(key string, val float32) {
 	telemetry.SetGaugeWithLabels([]string{key}, val, []gometrics.Label{})
 }
 
-// Histogram provides a wrapper functionality for emitting a counter
-// metric with global labels (if any) along with the provided labels.
+// AddSampleWithLabels provides a wrapper functionality for emitting a sample
+// metric with the provided labels.
 func AddSampleWithLabels(key string, val float32, labels ...gometrics.Label) {
-	// TODO why the f is this a differnet library
 	gometrics.AddSampleWithLabels(
 		[]string{key},
 		val,
@@ -50,8 +47,8 @@ func AddSampleWithLabels(key string, val float32, labels ...gometrics.Label) {
 	)
 }
 
-// Histogram provides a wrapper functionality for emitting a counter
-// metric with global labels (if any) along with the provided labels.
+// AddSample provides a wrapper functionality for emitting a sample
+// metric.
 func AddSample(key string, val float32) {
 	// TODO why the f is this a differnet library
 	gometrics.AddSampleWithLabels(
@@ -61,6 +58,9 @@ func AddSample(key string, val float32) {
 	)
 }
 
+// ModuleMeasureSince provides a wrapper functionality for emitting a time measure
+// metric with global labels (if any).
+// Please try to use `AddSample` instead.
 func ModuleMeasureSince(module string, key string, start time.Time) {
 	telemetry.ModuleMeasureSince(
 		module,
@@ -70,8 +70,9 @@ func ModuleMeasureSince(module string, key string, start time.Time) {
 }
 
 // ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
-// metric for a module with a given set of keys and labels.
-// NOTE: global labels are not included in this metric.
+// metric for a module with labels. Global labels are not included
+// in this metric.
+// Please try to use `AddSampleWithLabels` instead.
 func ModuleMeasureSinceWithLabels(
 	module string,
 	keys []string,

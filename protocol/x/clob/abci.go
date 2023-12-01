@@ -65,7 +65,7 @@ func EndBlocker(
 		metrics.IncrCounterWithLabels(
 			metrics.ClobExpiredStatefulOrders,
 			1,
-			orderId.GetOrderIdLabels(),
+			orderId.GetOrderIdLabels()...,
 		)
 	}
 
