@@ -176,6 +176,8 @@ func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) ClobPairStatus {
 		return ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY
 	case clobtypes.ClobPair_STATUS_INITIALIZING:
 		return ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING
+	case clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT:
+		return ClobPairStatus_CLOB_PAIR_STATUS_FINAL_SETTLEMENT
 	default:
 		panic("invalid clob pair status")
 	}
