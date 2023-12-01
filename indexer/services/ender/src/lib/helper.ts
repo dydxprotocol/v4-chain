@@ -87,7 +87,8 @@ export function dateToDateTime(
 /**
  * Determines the event subtype and parses the IndexerTendermintEvent
  * to the correct EventProto and returns it all in an object.
- * @param event
+ * @param blockEventIndex - the index of the event in the block.
+ * @param event - the event.
  * @returns
  */
 export function indexerTendermintEventToEventProtoWithType(

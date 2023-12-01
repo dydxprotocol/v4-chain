@@ -37,7 +37,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
     }
   }
 
-  public async getEventForBlockProcessor(): Promise<object> {
+  public async getEventForBlockProcessor(): Promise<OrderFillEventV1> {
     // If event.order is populated then this means it is not a liquidation
     // order, and therefore we need to know the canceled order status stored
     // in redis to correctly update the database.

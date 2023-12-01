@@ -36,6 +36,7 @@ BEGIN
         event_data = event_->'dataBytes';
         CASE event_->'subtype'
             WHEN '"order_fill"'::jsonb THEN
+                /** If event_data.order is populated then this means it is not a liquidation order. */
                 IF event_data->'order' IS NOT NULL THEN
                     rval[i] = jsonb_build_object(
                             'makerOrder',

@@ -45,6 +45,7 @@ export abstract class Handler<T> {
   indexerTendermintEvent: IndexerTendermintEvent;
   timestamp: DateTime;
   txId: number;
+  // The index of the event in the block.
   blockEventIndex: number;
   event: T;
   abstract eventType: string;

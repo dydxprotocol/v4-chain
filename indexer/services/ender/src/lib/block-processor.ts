@@ -223,6 +223,9 @@ export class BlockProcessor {
         const event: IndexerTendermintEvent = this.block.events[i];
         this.sqlBlock.events[i] = {
           ...event,
+          // Specifically use the decoded version of the event instead of the bytes
+          // since the SQL block processor doesn't know how to decode protobuf
+          // natively.
           dataBytes: values[i],
         };
       }

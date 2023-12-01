@@ -32,7 +32,7 @@ export abstract class Validator<T extends object> {
   // TODO(IND-513): Convert handlers to have a 1-1 relationship with each validator by merging
   // the order fill handlers together into a single handler (and the respective SQL function)
   // and push this method down into the handler itself.
-  public getEventForBlockProcessor(): Promise<object> {
+  public getEventForBlockProcessor(): Promise<T> {
     return Promise.resolve(this.event);
   }
 
