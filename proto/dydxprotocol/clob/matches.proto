@@ -75,4 +75,9 @@ message MatchPerpetualDeleveraging {
   }
   // An ordered list of fills created by this liquidation.
   repeated Fill fills = 3 [ (gogoproto.nullable) = false ];
+
+  // Flag denoting whether the deleveraging operation was for the purpose
+  // of final settlement. Final settlement matches are at the oracle price,
+  // whereas deleveraging normally happens at the bankruptcy price.bool
+  bool is_final_settlement = 4;
 }

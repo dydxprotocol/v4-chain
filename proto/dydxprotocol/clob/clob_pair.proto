@@ -66,7 +66,8 @@ message ClobPair {
     // both short-term and post-only.
     STATUS_INITIALIZING = 5;
     // STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
-    // and trading has ceased. All open positions will be closed by the protocol.
+    // and trading has ceased. All open positions will be closed by the
+    // protocol.
     STATUS_FINAL_SETTLEMENT = 6;
   }
 

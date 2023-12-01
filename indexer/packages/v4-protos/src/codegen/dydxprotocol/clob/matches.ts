@@ -128,6 +128,13 @@ export interface MatchPerpetualDeleveraging {
   /** An ordered list of fills created by this liquidation. */
 
   fills: MatchPerpetualDeleveraging_Fill[];
+  /**
+   * Flag denoting whether the deleveraging operation was for the purpose
+   * of final settlement. Final settlement matches are at the oracle price,
+   * whereas deleveraging normally happens at the bankruptcy price.bool
+   */
+
+  isFinalSettlement: boolean;
 }
 /**
  * MatchPerpetualDeleveraging is an injected message used for deleveraging a
@@ -143,6 +150,13 @@ export interface MatchPerpetualDeleveragingSDKType {
   /** An ordered list of fills created by this liquidation. */
 
   fills: MatchPerpetualDeleveraging_FillSDKType[];
+  /**
+   * Flag denoting whether the deleveraging operation was for the purpose
+   * of final settlement. Final settlement matches are at the oracle price,
+   * whereas deleveraging normally happens at the bankruptcy price.bool
+   */
+
+  is_final_settlement: boolean;
 }
 /** Fill represents a fill between the liquidated and offsetting subaccount. */
 
@@ -451,7 +465,8 @@ function createBaseMatchPerpetualDeleveraging(): MatchPerpetualDeleveraging {
   return {
     liquidated: undefined,
     perpetualId: 0,
-    fills: []
+    fills: [],
+    isFinalSettlement: false
   };
 }
 
@@ -467,6 +482,10 @@ export const MatchPerpetualDeleveraging = {
 
     for (const v of message.fills) {
       MatchPerpetualDeleveraging_Fill.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (message.isFinalSettlement === true) {
+      writer.uint32(32).bool(message.isFinalSettlement);
     }
 
     return writer;
@@ -493,6 +512,10 @@ export const MatchPerpetualDeleveraging = {
           message.fills.push(MatchPerpetualDeleveraging_Fill.decode(reader, reader.uint32()));
           break;
 
+        case 4:
+          message.isFinalSettlement = reader.bool();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -507,6 +530,7 @@ export const MatchPerpetualDeleveraging = {
     message.liquidated = object.liquidated !== undefined && object.liquidated !== null ? SubaccountId.fromPartial(object.liquidated) : undefined;
     message.perpetualId = object.perpetualId ?? 0;
     message.fills = object.fills?.map(e => MatchPerpetualDeleveraging_Fill.fromPartial(e)) || [];
+    message.isFinalSettlement = object.isFinalSettlement ?? false;
     return message;
   }
 

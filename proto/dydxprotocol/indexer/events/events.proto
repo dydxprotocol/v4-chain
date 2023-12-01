@@ -184,6 +184,9 @@ message DeleveragingEventV1 {
   uint64 price = 5;
   // `true` if liquidating a short position, `false` otherwise.
   bool is_buy = 6;
+  // `true` if the deleveraging event is for final settlement, indicating
+  // the match occurred at the oracle price rather than bankruptcy price.
+  bool is_final_settlement = 7;
 }
 
 // LiquidationOrder represents the liquidation taker order to be included in a
