@@ -20,19 +20,23 @@ DECLARE
 BEGIN
     PERFORM dydx_create_initial_rows_for_tendermint_block(block_height, block_time, block->'txHashes', block->'events');
 
-    /** In genesis, handle sync events first, then batched events. In other blocks, handle batched events first, then sync events. */
+    /** In genesis, handle ordered events first, then unordered events. In other blocks, handle unordered events first, then ordered events. */
     IF NOT block_height = 0 THEN
-        rval = dydx_block_processor_batched_handlers(block);
-        rval_to_merge = dydx_block_processor_sync_handlers(block);
+        rval = dydx_block_processor_unordered_handlers(block);
+        rval_to_merge = dydx_block_processor_ordered_handlers(block);
     ELSE
-        rval = dydx_block_processor_sync_handlers(block);
-        rval_to_merge = dydx_block_processor_batched_handlers(block);
+        rval = dydx_block_processor_ordered_handlers(block);
+        rval_to_merge = dydx_block_processor_unordered_handlers(block);
     END IF;
 
-    /** Note that arrays are 1-indexed in PostgreSQL and empty arrays return NULL for array_length. */
-     FOR i in 1..coalesce(array_length(rval, 1), 0) LOOP
-         rval[i] = coalesce(rval[i], rval_to_merge[i]);
-     END LOOP;
+    /**
+      Merge the results of the two handlers together by taking the first non-null result of each.
+
+      Note that arrays are 1-indexed in PostgreSQL and empty arrays return NULL for array_length.
+    */
+    FOR i in 1..coalesce(array_length(rval, 1), 0) LOOP
+        rval[i] = coalesce(rval[i], rval_to_merge[i]);
+    END LOOP;
 
     RETURN to_jsonb(rval);
 END;

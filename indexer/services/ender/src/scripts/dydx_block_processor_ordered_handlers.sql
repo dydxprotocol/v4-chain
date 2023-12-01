@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION dydx_block_processor_sync_handlers(block jsonb) RETURNS jsonb[] AS $$
+CREATE OR REPLACE FUNCTION dydx_block_processor_ordered_handlers(block jsonb) RETURNS jsonb[] AS $$
 /**
   Processes each event that should be handled by the batched handler. This includes all synchronous types
   (https://github.com/dydxprotocol/v4-chain/blob/b5d4e8a7c5cc48c460731b21c47f22eabef8b2b7/indexer/services/ender/src/lib/sync-handlers.ts#L11).

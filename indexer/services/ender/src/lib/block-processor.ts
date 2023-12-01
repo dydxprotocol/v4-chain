@@ -70,7 +70,7 @@ type DecodedIndexerTendermintEvent = Omit<IndexerTendermintEvent, 'dataBytes'> &
 
 export class BlockProcessor {
   block: IndexerTendermintBlock;
-  sqlEvents: Promise<object>[];
+  sqlEventPromises: Promise<object>[];
   sqlBlock: DecodedIndexerTendermintBlock;
   txId: number;
   batchedHandlers: BatchedHandlers;
@@ -86,7 +86,7 @@ export class BlockProcessor {
       ...this.block,
       events: new Array(this.block.events.length),
     };
-    this.sqlEvents = new Array(this.block.events.length);
+    this.sqlEventPromises = new Array(this.block.events.length);
     this.batchedHandlers = new BatchedHandlers();
     this.syncHandlers = new SyncHandlers();
   }
@@ -200,7 +200,7 @@ export class BlockProcessor {
     );
 
     validator.validate();
-    this.sqlEvents[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
+    this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
     const handlers: Handler<EventMessage>[] = validator.createHandlers(
       eventProto.indexerTendermintEvent,
       this.txId,
@@ -218,7 +218,7 @@ export class BlockProcessor {
   private async processEvents(): Promise<KafkaPublisher> {
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
 
-    await Promise.all(this.sqlEvents).then((values) => {
+    await Promise.all(this.sqlEventPromises).then((values) => {
       for (let i: number = 0; i < this.block.events.length; i++) {
         const event: IndexerTendermintEvent = this.block.events[i];
         this.sqlBlock.events[i] = {

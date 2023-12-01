@@ -27,6 +27,9 @@ export class BatchKafkaProducer {
   constructor(
     topic: KafkaTopics,
     producer: Producer,
+    // Note that default parameters are bound during module load time making it difficult
+    // to modify the parameter during a test so we explicitly require callers to pass in
+    // config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES.
     maxBatchSizeBytes: number,
   ) {
     this.maxBatchSizeBytes = maxBatchSizeBytes;
