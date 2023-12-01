@@ -1426,6 +1426,16 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrInvalidOrderRemoval,
 		},
+		// "Fails with order removal for market in final settlement": {
+
+		// },
+		// "Fails with short-term order placement for market in final settlement": {
+
+		// },
+		// "Fails with ClobMatch_MatchOrders for market in final settlement": {},
+		// "Fails with ClobMatch_MatchPerpetualLiquidation for market in final settlement": {},
+		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {},
+		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {},
 	}
 
 	for name, tc := range tests {
