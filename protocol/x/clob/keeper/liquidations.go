@@ -321,7 +321,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 		liquidationOrder.GetBaseQuantums().ToBigInt(),
 	); err == nil {
 		metrics.IncrCounterWithLabels(
-			metrics.LiqidationsPlacePerpetualLiquidationQuoteQuantums,
+			metrics.LiquidationsPlacePerpetualLiquidationQuoteQuantums,
 			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
 			labels...,
 		)
