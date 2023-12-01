@@ -42,6 +42,7 @@ describe('funding-validator', () => {
       const validator: FundingValidator = new FundingValidator(
         event,
         createBlock(event),
+        0,
       );
 
       validator.validate();
@@ -83,6 +84,7 @@ describe('funding-validator', () => {
       const validator: FundingValidator = new FundingValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

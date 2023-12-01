@@ -223,6 +223,7 @@ export class StatefulOrderValidator extends Validator<StatefulOrderEventV1> {
     // @ts-ignore
     const handler: Handler<StatefulOrderEvent> = new Initializer(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

@@ -42,6 +42,7 @@ export class FundingValidator extends Validator<FundingEventV1> {
   ): Handler<FundingEventMessage>[] {
     const handler: Handler<FundingEventMessage> = new FundingHandler(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event as FundingEventMessage,

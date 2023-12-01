@@ -90,6 +90,7 @@ describe('liquidityTierHandler', () => {
 
       const handler: LiquidityTierHandler = new LiquidityTierHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultLiquidityTierUpsertEvent,

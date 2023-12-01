@@ -178,6 +178,7 @@ describe('LiquidationHandler', () => {
 
       const handler: LiquidationHandler = new LiquidationHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         {

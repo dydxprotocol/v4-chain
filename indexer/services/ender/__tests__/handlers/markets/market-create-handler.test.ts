@@ -1,4 +1,4 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers, MarketFromDatabase, MarketTable, testMocks,
 } from '@dydxprotocol-indexer/postgres';
@@ -46,7 +46,6 @@ describe('marketCreateHandler', () => {
   });
 
   const loggerCrit = jest.spyOn(logger, 'crit');
-  const loggerError = jest.spyOn(logger, 'error');
   const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
 
   describe('getParallelizationIds', () => {
@@ -75,6 +74,7 @@ describe('marketCreateHandler', () => {
 
       const handler: MarketCreateHandler = new MarketCreateHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         marketEvent,
@@ -128,7 +128,7 @@ describe('marketCreateHandler', () => {
       txHash: defaultTxHash,
     });
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new ParseMessageError('Market in MarketCreate already exists'),
+      'Market in MarketCreate already exists',
     );
 
     // Check that market in database is the old market.
@@ -137,13 +137,9 @@ describe('marketCreateHandler', () => {
     ) as MarketFromDatabase;
     expect(market.minPriceChangePpm).toEqual(50);
 
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'MarketCreateHandler#logAndThrowParseMessageError',
-      message: 'Market in MarketCreate already exists',
-    }));
     expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'onMessage#onMessage',
-      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+      at: expect.stringContaining('PL/pgSQL function dydx_market_create_handler('),
+      message: expect.stringContaining('Market in MarketCreate already exists'),
     }));
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });

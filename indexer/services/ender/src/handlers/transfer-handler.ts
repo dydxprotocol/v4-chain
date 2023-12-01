@@ -1,8 +1,6 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   AssetFromDatabase,
   AssetModel,
-  storeHelpers,
   SubaccountMessageContents,
   TransferFromDatabase,
   TransferModel,
@@ -11,7 +9,6 @@ import { TransferEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
 
 import { generateTransferContents } from '../helpers/kafka-helper';
-import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
@@ -24,35 +21,11 @@ export class TransferHandler extends Handler<TransferEventV1> {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
-      this.indexerTendermintEvent,
-    );
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_transfer_handler(
-        ${this.block.height},
-        '${this.block.time?.toISOString()}',
-        '${JSON.stringify(TransferEventV1.decode(eventDataBinary))}',
-        ${this.indexerTendermintEvent.eventIndex},
-        ${transactionIndex},
-        '${this.block.txHashes[transactionIndex]}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'TransferHandler#internalHandle',
-        message: 'Failed to handle TransferEventV1',
-        error,
-      });
-
-      throw error;
-    });
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const asset: AssetFromDatabase = AssetModel.fromJson(
-      result.rows[0].result.asset) as AssetFromDatabase;
+      resultRow.asset) as AssetFromDatabase;
     const transfer: TransferFromDatabase = TransferModel.fromJson(
-      result.rows[0].result.transfer) as TransferFromDatabase;
+      resultRow.transfer) as TransferFromDatabase;
     return this.generateKafkaEvents(
       transfer,
       asset,

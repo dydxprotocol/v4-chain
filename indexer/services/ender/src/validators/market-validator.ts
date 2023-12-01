@@ -116,6 +116,7 @@ export class MarketValidator extends Validator<MarketEventV1> {
     // @ts-ignore
     const handler: Handler<MarketEvent> = new Initializer(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

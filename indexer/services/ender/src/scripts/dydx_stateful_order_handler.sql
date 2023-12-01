@@ -24,7 +24,7 @@ DECLARE
 BEGIN
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
     IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL THEN
-        order_ = COALESCE(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
+        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);
