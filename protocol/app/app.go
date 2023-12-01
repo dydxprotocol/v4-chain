@@ -858,6 +858,7 @@ func New(
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
 	)
+
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
 		app.ClobKeeper,
