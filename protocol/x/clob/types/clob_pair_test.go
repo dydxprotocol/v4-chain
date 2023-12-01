@@ -42,6 +42,7 @@ func TestIsSupportedClobPairStatus_Supported(t *testing.T) {
 	// these are the only two supported statuses
 	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_ACTIVE))
 	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_INITIALIZING))
+	require.True(t, types.IsSupportedClobPairStatus(types.ClobPair_STATUS_FINAL_SETTLEMENT))
 }
 
 func TestIsSupportedClobPairStatus_Unsupported(t *testing.T) {
@@ -56,9 +57,17 @@ func TestIsSupportedClobPairStatus_Unsupported(t *testing.T) {
 }
 
 func TestIsSupportedClobPairStatusTransition_Supported(t *testing.T) {
-	// only supported transition
 	require.True(t, types.IsSupportedClobPairStatusTransition(
 		types.ClobPair_STATUS_INITIALIZING, types.ClobPair_STATUS_ACTIVE,
+	))
+	require.True(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_STATUS_INITIALIZING, types.ClobPair_STATUS_FINAL_SETTLEMENT,
+	))
+	require.True(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_STATUS_ACTIVE, types.ClobPair_STATUS_FINAL_SETTLEMENT,
+	))
+	require.True(t, types.IsSupportedClobPairStatusTransition(
+		types.ClobPair_STATUS_FINAL_SETTLEMENT, types.ClobPair_STATUS_INITIALIZING,
 	))
 }
 
@@ -77,10 +86,52 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 	// iterate over all permutations of clob pair statuses
 	for _, fromClobPairStatus := range types.ClobPair_Status_value {
 		for _, toClobPairStatus := range types.ClobPair_Status_value {
-			if fromClobPairStatus == int32(types.ClobPair_STATUS_INITIALIZING) &&
-				toClobPairStatus == int32(types.ClobPair_STATUS_ACTIVE) {
-				continue
-			} else {
+			switch fromClobPairStatus {
+			case int32(types.ClobPair_STATUS_INITIALIZING): {
+				switch toClobPairStatus {
+				case int32(types.ClobPair_STATUS_ACTIVE):
+					fallthrough
+				case int32(types.ClobPair_STATUS_FINAL_SETTLEMENT):
+					continue
+				default:
+					require.False(
+						t,
+						types.IsSupportedClobPairStatusTransition(
+							types.ClobPair_Status(fromClobPairStatus),
+							types.ClobPair_Status(toClobPairStatus),
+						),
+					)
+				}
+			}
+			case int32(types.ClobPair_STATUS_ACTIVE): {
+				switch toClobPairStatus {
+				case int32(types.ClobPair_STATUS_FINAL_SETTLEMENT):
+					continue
+				default:
+					require.False(
+						t,
+						types.IsSupportedClobPairStatusTransition(
+							types.ClobPair_Status(fromClobPairStatus),
+							types.ClobPair_Status(toClobPairStatus),
+						),
+					)
+				}
+			}
+			case int32(types.ClobPair_STATUS_FINAL_SETTLEMENT): {
+				switch toClobPairStatus {
+				case int32(types.ClobPair_STATUS_INITIALIZING):
+					continue
+				default:
+					require.False(
+						t,
+						types.IsSupportedClobPairStatusTransition(
+							types.ClobPair_Status(fromClobPairStatus),
+							types.ClobPair_Status(toClobPairStatus),
+						),
+					)
+				}
+			}
+			default:
 				require.False(
 					t,
 					types.IsSupportedClobPairStatusTransition(
@@ -88,6 +139,7 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 						types.ClobPair_Status(toClobPairStatus),
 					),
 				)
+
 			}
 		}
 	}
