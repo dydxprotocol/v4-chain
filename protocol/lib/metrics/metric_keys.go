@@ -6,17 +6,19 @@ package metrics
 // 3. Suffix keys with a unit of measurement
 // 4. Delimit with '_'
 // 5. Information such as callback type should be added as tags, not in key names.
+// Example: clob_place_order_count, clob_msg_place_order_latency_ms, clob_operations_queue_length
+// clob_expired_stateful_orders_count, clob_processed_orders_ms_total
 
 // Clob Metrics Keys
 const (
 	// Stats
-	ClobExpiredStatefulOrders                         = "clob_expired_stateful_order_removed"
-	ClobPrepareCheckStateCannotDeleverageSubaccount   = "clob_prepare_check_state_cannot_deleverage_subaccount"
-	ClobDeleverageSubaccountTotalQuoteQuantums        = "clob_deleverage_subaccount_total_quote_quantums"
-	ClobDeleverageSubaccount                          = "clob_deleverage_subaccount"
-	LiqidationsPlacePerpetualLiquidationQuoteQuantums = "liquidations_place_perpetual_liquidation_quote_quantums"
-	LiquidationsLiquidationMatchNegativeTNC           = "liquidations_liquidation_match_negative_tnc"
-	ClobMevErrorCount                                 = "clob_mev_error_count"
+	ClobExpiredStatefulOrders                          = "clob_expired_stateful_order_removed"
+	ClobPrepareCheckStateCannotDeleverageSubaccount    = "clob_prepare_check_state_cannot_deleverage_subaccount"
+	ClobDeleverageSubaccountTotalQuoteQuantums         = "clob_deleverage_subaccount_total_quote_quantums"
+	ClobDeleverageSubaccount                           = "clob_deleverage_subaccount"
+	LiquidationsPlacePerpetualLiquidationQuoteQuantums = "liquidations_place_perpetual_liquidation_quote_quantums"
+	LiquidationsLiquidationMatchNegativeTNC            = "liquidations_liquidation_match_negative_tnc"
+	ClobMevErrorCount                                  = "clob_mev_error_count"
 
 	// Gauges
 	InsuranceFundBalance = "insurance_fund_balance"

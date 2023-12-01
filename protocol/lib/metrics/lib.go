@@ -50,7 +50,6 @@ func AddSampleWithLabels(key string, val float32, labels ...gometrics.Label) {
 // AddSample provides a wrapper functionality for emitting a sample
 // metric.
 func AddSample(key string, val float32) {
-	// TODO why the f is this a differnet library
 	gometrics.AddSampleWithLabels(
 		[]string{key},
 		val,
