@@ -613,7 +613,7 @@ func New(
 		if daemonFlags.Liquidation.Enabled {
 			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
-				app.MonitorDaemon(app.LiquidationsClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, MaximumDaemonUnhealthyDuration)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -645,7 +645,7 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			app.MonitorDaemon(app.PriceFeedClient, MaximumDaemonUnhealthyDuration)
+			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, MaximumDaemonUnhealthyDuration)
 		}
 
 		// Start Bridge Daemon.
@@ -655,7 +655,7 @@ func New(
 			// environments.
 			app.BridgeClient = bridgeclient.NewClient(logger)
 			go func() {
-				app.MonitorDaemon(app.BridgeClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.BridgeClient, MaximumDaemonUnhealthyDuration)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -1230,9 +1230,9 @@ func New(
 	return app
 }
 
-// MonitorDaemon registers a daemon service with the update monitor. If the daemon does not register, the method will
-// panic.
-func (app *App) MonitorDaemon(
+// RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
+// the health of the daemon. If the daemon does not register, the method will panic.
+func (app *App) RegisterDaemonWithHealthMonitor(
 	healthCheckableDaemon daemontypes.HealthCheckable,
 	maximumAcceptableUpdateDelay time.Duration,
 ) {

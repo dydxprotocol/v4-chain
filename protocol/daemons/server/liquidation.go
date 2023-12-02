@@ -33,13 +33,6 @@ func (s *Server) LiquidateSubaccounts(
 	response *api.LiquidateSubaccountsResponse,
 	err error,
 ) {
-	// Capture valid responses in metrics.
-	defer func() {
-		if err == nil {
-			s.reportValidResponse(types.PricefeedDaemonServiceName)
-		}
-	}()
-
 	telemetry.ModuleSetGauge(
 		metrics.LiquidationDaemon,
 		float32(len(req.SubaccountIds)),
@@ -49,5 +42,9 @@ func (s *Server) LiquidateSubaccounts(
 	)
 
 	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)
+
+	// Capture valid responses in metrics.
+	s.reportValidResponse(types.LiquidationsDaemonServiceName)
+
 	return &api.LiquidateSubaccountsResponse{}, nil
 }

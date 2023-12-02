@@ -39,13 +39,6 @@ func (s *Server) UpdateMarketPrices(
 	response *api.UpdateMarketPricesResponse,
 	err error,
 ) {
-	// Capture valid responses in metrics.
-	defer func() {
-		if err == nil {
-			s.reportValidResponse(types.PricefeedDaemonServiceName)
-		}
-	}()
-
 	// Measure latency in ingesting and handling gRPC price update.
 	defer telemetry.ModuleMeasureSince(
 		metrics.PricefeedServer,
@@ -54,6 +47,8 @@ func (s *Server) UpdateMarketPrices(
 		metrics.Latency,
 	)
 
+	// This panic is an unexpected condition because we initialize the market price cache in app initialization before
+	// starting the server or daemons.
 	if s.marketToExchange == nil {
 		panic(
 			errorsmod.Wrapf(
@@ -70,6 +65,9 @@ func (s *Server) UpdateMarketPrices(
 	}
 
 	s.marketToExchange.UpdatePrices(req.MarketPriceUpdates)
+
+	// Capture valid responses in metrics.
+	s.reportValidResponse(types.PricefeedDaemonServiceName)
 
 	return &api.UpdateMarketPricesResponse{}, nil
 }

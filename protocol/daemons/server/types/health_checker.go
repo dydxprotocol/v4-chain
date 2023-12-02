@@ -17,27 +17,36 @@ type timestampWithError struct {
 	err       error
 }
 
+// Update updates the timeStampWithError to reflect the current error. If the timestamp is zero, this is the first
+// update, so set the timestamp.
 func (u *timestampWithError) Update(timestamp time.Time, err error) {
 	// If the timestamp is zero, this is the first update, so set the timestamp.
 	if u.timestamp.IsZero() {
 		u.timestamp = timestamp
 	}
+
 	u.err = err
 }
 
+// Reset resets the timestampWithError to its zero value, indicating that the service is healthy.
 func (u *timestampWithError) Reset() {
 	u.timestamp = time.Time{}
 	u.err = nil
 }
 
+// IsZero returns true if the timestampWithError is zero, indicating that the service is healthy.
 func (u *timestampWithError) IsZero() bool {
 	return u.timestamp.IsZero() && u.err == nil
 }
 
+// Timestamp returns the timestamp associated with the timestampWithError, which is the timestamp of the first error
+// in the current error streak.
 func (u *timestampWithError) Timestamp() time.Time {
 	return u.timestamp
 }
 
+// Error returns the error associated with the timestampWithError, which is the most recent error in the current error
+// streak.
 func (u *timestampWithError) Error() error {
 	return u.err
 }
@@ -48,9 +57,9 @@ type healthCheckerMutableState struct {
 	// lock is used to synchronize access to mutable state fields.
 	lock sync.Mutex
 
-	// mostRecentSuccess is the timestamp of the most recent successful health check.
-	// Access to mostRecentSuccess is synchronized.
-	mostRecentSuccess time.Time
+	// lastSuccessTimestamp is the timestamp of the most recent successful health check.
+	// Access to lastSuccessTimestamp is synchronized.
+	lastSuccessTimestamp time.Time
 
 	// mostRecentFailureStreakError tracks the timestamp of the first error in the most recent streak of errors, as well
 	// as the most recent error. It is updated on every error and reset every time the service sees a healthy response.
@@ -58,6 +67,21 @@ type healthCheckerMutableState struct {
 	// the service has never been unhealthy, or the most recent error streak ended before it could trigger a callback.
 	// Access to mostRecentFailureStreakError is synchronized.
 	mostRecentFailureStreakError timestampWithError
+
+	// timer triggers a health check poll for a health-checkable service.
+	timer *time.Timer
+
+	// stopped indicates whether the health checker has been stopped. Additional health checks cannot be scheduled
+	// after the health checker has been stopped.
+	stopped bool
+}
+
+// newHealthCheckerMutableState creates a new health checker mutable state scheduled to trigger a poll after the
+// initial poll delay.
+func newHealthCheckerMutableState(initialPollDelay time.Duration, pollFunc func()) *healthCheckerMutableState {
+	return &healthCheckerMutableState{
+		timer: time.AfterFunc(initialPollDelay, pollFunc),
+	}
 }
 
 // ReportSuccess updates the health checker's mutable state to reflect a successful health check and schedules the next
@@ -66,7 +90,7 @@ func (u *healthCheckerMutableState) ReportSuccess(now time.Time) {
 	u.lock.Lock()
 	defer u.lock.Unlock()
 
-	u.mostRecentSuccess = now
+	u.lastSuccessTimestamp = now
 
 	// Whenever the service is healthy, reset the first failure in streak timestamp.
 	u.mostRecentFailureStreakError.Reset()
@@ -83,6 +107,35 @@ func (u *healthCheckerMutableState) ReportFailure(now time.Time, err error) time
 	return now.Sub(u.mostRecentFailureStreakError.Timestamp())
 }
 
+// SchedulePoll schedules the next poll for the health-checkable service. If the service is stopped, the next poll
+// will not be scheduled. This method is synchronized.
+func (u *healthCheckerMutableState) SchedulePoll(nextPollDelay time.Duration) {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+
+	// Don't schedule a poll if the health checker has been stopped.
+	if u.stopped {
+		return
+	}
+
+	// Schedule the next poll.
+	u.timer.Reset(nextPollDelay)
+}
+
+// Stop stops the health checker. This method is synchronized.
+func (u *healthCheckerMutableState) Stop() {
+	u.lock.Lock()
+	defer u.lock.Unlock()
+
+	// Don't stop the health checker if it has already been stopped.
+	if u.stopped {
+		return
+	}
+
+	u.timer.Stop()
+	u.stopped = true
+}
+
 // healthChecker encapsulates the logic for monitoring the health of a health-checkable service.
 type healthChecker struct {
 	// mutableState is the mutable state of the health checker. Access to these fields is synchronized.
@@ -93,9 +146,6 @@ type healthChecker struct {
 
 	// pollFrequency is the frequency at which the health-checkable service is polled.
 	pollFrequency time.Duration
-
-	// timer triggers a health check poll for a health-checkable service.
-	timer *time.Timer
 
 	// maxAcceptableUnhealthyDuration is the maximum acceptable duration for a health-checkable service to
 	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
@@ -134,12 +184,12 @@ func (hc *healthChecker) Poll() {
 	}
 
 	// Schedule next poll.
-	hc.timer.Reset(hc.pollFrequency)
+	hc.mutableState.SchedulePoll(hc.pollFrequency)
 }
 
 // Stop stops the health checker. This method is not synchronized, as the timer does not need synchronization.
 func (hc *healthChecker) Stop() {
-	hc.timer.Stop()
+	hc.mutableState.Stop()
 }
 
 // StartNewHealthChecker creates and starts a new health checker for a health-checkable service.
@@ -159,11 +209,10 @@ func StartNewHealthChecker(
 		timeProvider:                   timeProvider,
 		maxAcceptableUnhealthyDuration: maximumAcceptableUnhealthyDuration,
 		logger:                         logger,
-		mutableState:                   &healthCheckerMutableState{},
 	}
 
 	// The first poll is scheduled after the startup grace period to allow the service to initialize.
-	checker.timer = time.AfterFunc(startupGracePeriod, checker.Poll)
+	checker.mutableState = newHealthCheckerMutableState(startupGracePeriod, checker.Poll)
 
 	return checker
 }

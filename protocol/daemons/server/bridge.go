@@ -30,16 +30,12 @@ func (s *Server) AddBridgeEvents(
 	response *api.AddBridgeEventsResponse,
 	err error,
 ) {
-	// Capture valid responses in metrics.
-	defer func() {
-		if err == nil {
-			s.reportValidResponse(types.PricefeedDaemonServiceName)
-		}
-	}()
-
-	s.reportValidResponse(types.BridgeDaemonServiceName)
 	if err = s.bridgeEventManager.AddBridgeEvents(req.BridgeEvents); err != nil {
 		return nil, err
 	}
+
+	// Capture valid responses in metrics.
+	s.reportValidResponse(types.BridgeDaemonServiceName)
+
 	return &api.AddBridgeEventsResponse{}, nil
 }

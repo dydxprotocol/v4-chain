@@ -225,17 +225,17 @@ func TestModuleBasics(t *testing.T) {
 	require.Equal(t, expectedFieldTypes, actualFieldTypes, "Module basics does not match expected")
 }
 
-func TestMonitorDaemon_Panics(t *testing.T) {
+func TestRegisterDaemonWithHealthMonitor_Panics(t *testing.T) {
 	app := testapp.DefaultTestApp(nil)
 	hc := &mocks.HealthCheckable{}
 	hc.On("ServiceName").Return("test-service")
 	hc.On("HealthCheck").Return(nil)
 
-	app.MonitorDaemon(hc, 5*time.Minute)
+	app.RegisterDaemonWithHealthMonitor(hc, 5*time.Minute)
 	// The second registration should fail, causing a panic.
 	require.PanicsWithError(
 		t,
 		"service test-service already registered",
-		func() { app.MonitorDaemon(hc, 5*time.Minute) },
+		func() { app.RegisterDaemonWithHealthMonitor(hc, 5*time.Minute) },
 	)
 }

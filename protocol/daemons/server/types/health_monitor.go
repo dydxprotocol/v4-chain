@@ -13,6 +13,9 @@ import (
 const (
 	// HealthCheckPollFrequency is the frequency at which the health-checkable service is polled.
 	HealthCheckPollFrequency = 5 * time.Second
+
+	// HealthMonitorLogModuleName is the module name used for logging within the health monitor.
+	HealthMonitorLogModuleName = "daemon-health-monitor"
 )
 
 // healthMonitorMutableState tracks all mutable state associated with the health monitor. This state is gathered into
@@ -132,7 +135,7 @@ func NewHealthMonitor(
 ) *HealthMonitor {
 	return &HealthMonitor{
 		mutableState:       newHealthMonitorMutableState(),
-		logger:             logger.With(cosmoslog.ModuleKey, "health-monitor"),
+		logger:             logger.With(cosmoslog.ModuleKey, HealthMonitorLogModuleName),
 		startupGracePeriod: startupGracePeriod,
 		pollingFrequency:   pollingFrequency,
 	}
