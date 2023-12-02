@@ -1426,14 +1426,85 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrInvalidOrderRemoval,
 		},
-		// "Fails with order removal for market in final settlement": {
-
-		// },
-		// "Fails with short-term order placement for market in final settlement": {
-
-		// },
-		// "Fails with ClobMatch_MatchOrders for market in final settlement": {},
-		// "Fails with ClobMatch_MatchPerpetualLiquidation for market in final settlement": {},
+		"Fails with order removal for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewOrderRemovalOperationRaw(
+					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+					types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with short-term order placement for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewShortTermOrderPlacementOperationRaw(
+					constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with ClobMatch_MatchOrders for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRaw(
+					&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+					[]types.MakerFill{
+						{
+							FillAmount: 10,
+							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.OrderId,
+						},
+					},
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
+		"Fails with ClobMatch_MatchPerpetualLiquidation for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
+					types.MatchPerpetualLiquidation{
+						Liquidated:  constants.Alice_Num0,
+						ClobPairId: 0,
+						PerpetualId: 0,
+						TotalSize: 10,
+						IsBuy: false,
+						Fills: []types.MakerFill{
+							{
+								FillAmount: 10,
+								MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+							},
+						},
+					},
+				),
+			},
+			expectedError: types.ErrOperationConflictsWithClobPairStatus,
+		},
 		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {},
 		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {},
 	}

@@ -103,6 +103,18 @@ var (
 		QuantumConversionExponent: -8,
 		Status:                    clobtypes.ClobPair_STATUS_INITIALIZING,
 	}
+	ClobPair_Btc_Final_Settlement = clobtypes.ClobPair{
+		Id: 0,
+		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
+			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
+				PerpetualId: 0,
+			},
+		},
+		StepBaseQuantums:          5,
+		SubticksPerTick:           5,
+		QuantumConversionExponent: -8,
+		Status:                    clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT,
+	}
 	ClobPair_Btc_Paused = clobtypes.ClobPair{
 		Id: 0,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
