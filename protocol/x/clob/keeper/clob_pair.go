@@ -468,13 +468,19 @@ func (k Keeper) UpdateClobPair(
 
 	oldStatus := oldClobPair.Status
 	newStatus := clobPair.Status
-	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
-		return errorsmod.Wrapf(
-			types.ErrInvalidClobPairStatusTransition,
-			"Cannot transition from status %+v to status %+v",
-			oldStatus,
-			newStatus,
-		)
+	if oldStatus != newStatus {
+		if !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
+			return errorsmod.Wrapf(
+				types.ErrInvalidClobPairStatusTransition,
+				"Cannot transition from status %+v to status %+v",
+				oldStatus,
+				newStatus,
+			)
+		}
+
+		if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			k.mustEnterFinalSettlement(ctx, clobPair.GetClobPairId())
+		}
 	}
 
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
@@ -624,7 +630,7 @@ func (k Keeper) IsPerpetualClobPairActive(
 	if !found {
 		return false, errorsmod.Wrapf(
 			types.ErrInvalidClob,
-			"GetPerpetualClobPairStatus: did not find clob pair with id = %d",
+			"IsPerpetualClobPairActive: did not find clob pair with id = %d",
 			clobPairId,
 		)
 	}

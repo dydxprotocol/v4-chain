@@ -1437,7 +1437,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			rawOperations: []types.OperationRaw{
 				clobtest.NewOrderRemovalOperationRaw(
 					constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
-					types.OrderRemoval_REMOVAL_REASON_FULLY_FILLED,
+					types.OrderRemoval_REMOVAL_REASON_INVALID_SELF_TRADE,
 				),
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
@@ -1505,8 +1505,49 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
+		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			subaccounts: []satypes.Subaccount{
+				// liquidatable: MMR = $5000, TNC = $499
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: 0,
+				constants.Dave_Num0: constants.Usdc_Asset_100_499.GetBigQuantums().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: {},
+				constants.Dave_Num0: {},
+			},
+		},
 		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {},
-		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {},
 	}
 
 	for name, tc := range tests {

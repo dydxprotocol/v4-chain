@@ -7,6 +7,7 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -19,6 +20,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
@@ -595,6 +597,121 @@ func TestClobPairGetAll(t *testing.T) {
 		nullify.Fill(items), //nolint:staticcheck
 		nullify.Fill(ks.ClobKeeper.GetAllClobPairs(ks.Ctx)), //nolint:staticcheck
 	)
+}
+
+func TestUpdateClobPair_FinalSettlement(t *testing.T) {
+	memClob := memclob.NewMemClobPriceTimePriority(false)
+	mockIndexerEventManager := &mocks.IndexerEventManager{}
+	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
+	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
+
+	clobPair := constants.ClobPair_Btc
+	mockIndexerEventManager.On("AddTxnEvent",
+		ks.Ctx,
+		indexerevents.SubtypePerpetualMarket,
+		indexerevents.PerpetualMarketEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewPerpetualMarketCreateEvent(
+				0,
+				0,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.Ticker,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketId,
+				types.ClobPair_STATUS_ACTIVE,
+				clobPair.QuantumConversionExponent,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.AtomicResolution,
+				clobPair.SubticksPerTick,
+				clobPair.StepBaseQuantums,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+			),
+		),
+	).Once().Return()
+
+	_, err := ks.ClobKeeper.CreatePerpetualClobPair(
+		ks.Ctx,
+		clobPair.Id,
+		clobtest.MustPerpetualId(clobPair),
+		satypes.BaseQuantums(clobPair.StepBaseQuantums),
+		clobPair.QuantumConversionExponent,
+		clobPair.SubticksPerTick,
+		types.ClobPair_STATUS_ACTIVE,
+	)
+	require.NoError(t, err)
+
+	mockIndexerEventManager.On("AddTxnEvent",
+		ks.Ctx,
+		indexerevents.SubtypeUpdateClobPair,
+		indexerevents.UpdateClobPairEventVersion,
+		indexer_manager.GetBytes(
+			indexerevents.NewUpdateClobPairEvent(
+				clobPair.GetClobPairId(),
+				types.ClobPair_STATUS_FINAL_SETTLEMENT,
+				clobPair.QuantumConversionExponent,
+				types.SubticksPerTick(clobPair.GetSubticksPerTick()),
+				satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+			),
+		),
+	).Once().Return()
+
+	statefulOrders := []types.Order{
+		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+		constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
+		constants.LongTermOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5, // different clob pair
+	}
+	for _, order := range statefulOrders {
+		ks.ClobKeeper.SetLongTermOrderPlacement(ks.Ctx, order, 5)
+		ks.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+			ks.Ctx,
+			order.MustGetUnixGoodTilBlockTime(),
+			order.GetOrderId(),
+		)
+
+		if order.OrderId.ClobPairId == 0 {
+			mockIndexerEventManager.On("AddTxnEvent",
+				ks.Ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewStatefulOrderRemovalEvent(
+						order.OrderId,
+						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_FINAL_SETTLEMENT,
+					),
+				),
+			).Once().Return()
+		}
+	}
+
+	ks.ClobKeeper.UntriggeredConditionalOrders = map[types.ClobPairId]*keeper.UntriggeredConditionalOrders{
+		0: {}, // leaving blank, orders here don't matter in particular since we clear the whole key
+	}
+
+	clobPair.Status = types.ClobPair_STATUS_FINAL_SETTLEMENT
+	err = ks.ClobKeeper.UpdateClobPair(ks.Ctx, clobPair)
+	require.NoError(t, err)
+
+	// Verify indexer expectations.
+	mockIndexerEventManager.AssertExpectations(t)
+
+	// Verify stateful orders are removed from state.
+	for _, order := range statefulOrders {
+		_, found := ks.ClobKeeper.GetLongTermOrderPlacement(ks.Ctx, order.OrderId)
+		require.Equal(t, order.OrderId.ClobPairId != 0, found)
+	}
+
+	// Verify ProcessProposerMatchesEvents.RemovedStatefulOrderIds is populated correctly.
+	ppme := ks.ClobKeeper.GetProcessProposerMatchesEvents(ks.Ctx)
+	require.Equal(
+		t,
+		[]types.OrderId{
+			constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15.OrderId,
+			constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
+		},
+		ppme.RemovedStatefulOrderIds,
+	)
+
+	// Verify UntriggeredConditionalOrders is cleared.
+	_, found := ks.ClobKeeper.UntriggeredConditionalOrders[0]
+	require.False(t, found)
 }
 
 func TestUpdateClobPair(t *testing.T) {
