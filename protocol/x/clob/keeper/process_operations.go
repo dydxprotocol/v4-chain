@@ -665,6 +665,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			fill.OffsettingSubaccountId,
 			perpetualId,
 			deltaQuantums,
+			false,
 		); err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidDeleveragingFill,
