@@ -1478,6 +1478,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
+		// Liquidations are disallowed for markets in final settlement because they may result
+		// in a position increasing in size. This is not allowed for markets in final settlement.
 		"Fails with ClobMatch_MatchPerpetualLiquidation for market in final settlement": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
@@ -1505,6 +1507,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
+		// Deleveraging is allowed for markets in final settlement to close out all open positions. A deleveraging
+		// event with IsFinalSettlement set to false represents a negative TNC subaccount in the market getting deleveraged.
 		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
@@ -1547,6 +1551,9 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Dave_Num0: {},
 			},
 		},
+		// Deleveraging is allowed for markets in final settlement to close out all open positions. A deleveraging
+		// event with IsFinalSettlement set to true represents a non-negative TNC subaccount having its position closed
+		// at the oracle price against other subaccounts with open positions on the opposing side of the book.
 		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {},
 	}
 
