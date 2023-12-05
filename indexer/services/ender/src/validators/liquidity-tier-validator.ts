@@ -47,6 +47,7 @@ export class LiquidityTierValidator extends Validator<LiquidityTierUpsertEventV1
   ): Handler<LiquidityTierUpsertEventV1>[] {
     const handler: Handler<LiquidityTierUpsertEventV1> = new LiquidityTierHandler(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

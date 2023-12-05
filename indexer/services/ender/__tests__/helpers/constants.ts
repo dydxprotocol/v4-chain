@@ -288,6 +288,7 @@ export const defaultDeleveragingEvent: DeleveragingEventV1 = {
   fillAmount: Long.fromValue(10_000, true),
   price: Long.fromValue(1_000_000_000, true),
   isBuy: true,
+  isFinalSettlement: false,
 };
 export const defaultDepositEvent: TransferEventV1 = {
   assetId: 0,

@@ -23,6 +23,7 @@ export class SubaccountUpdateValidator extends Validator<SubaccountUpdateEventV1
     return [
       new SubaccountUpdateHandler(
         this.block,
+        this.blockEventIndex,
         indexerTendermintEvent,
         txId,
         subaccountUpdateEventV1ToSubaccountUpdate(this.event),

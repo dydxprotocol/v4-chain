@@ -23,6 +23,7 @@ export class UpdateClobPairValidator extends Validator<UpdateClobPairEventV1> {
   ): Handler<UpdateClobPairEventV1>[] {
     const handler: Handler<UpdateClobPairEventV1> = new UpdateClobPairHandler(
       this.block,
+      this.blockEventIndex,
       indexerTendermintEvent,
       txId,
       this.event,

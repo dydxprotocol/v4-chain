@@ -8,6 +8,7 @@ import {
   OrderRemoveV1_OrderRemovalStatus,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
@@ -23,9 +24,8 @@ export class StatefulOrderRemovalHandler extends
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const orderIdProto: IndexerOrderId = this.event.orderRemoval!.removedOrderId!;
-    await this.handleEventViaSqlFunction();
     return this.createKafkaEvents(orderIdProto);
   }
 

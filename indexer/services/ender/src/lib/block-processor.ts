@@ -1,8 +1,17 @@
 /* eslint-disable max-len */
-import { logger } from '@dydxprotocol-indexer/base';
-import { IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
+import { logger, stats, STATS_NO_SAMPLING } from '@dydxprotocol-indexer/base';
+import {
+  storeHelpers,
+} from '@dydxprotocol-indexer/postgres';
+import {
+  IndexerTendermintBlock,
+  IndexerTendermintEvent,
+} from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
+import * as pg from 'pg';
+import { DatabaseError } from 'pg';
 
+import config from '../config';
 import { Handler } from '../handlers/handler';
 import { AssetValidator } from '../validators/asset-validator';
 import { DeleveragingValidator } from '../validators/deleveraging-validator';
@@ -50,8 +59,19 @@ function serializeSubtypeAndVersion(
   return `${subtype}-${version}`;
 }
 
+type DecodedIndexerTendermintBlock = Omit<IndexerTendermintBlock, 'events'> & {
+  events: DecodedIndexerTendermintEvent[];
+};
+
+type DecodedIndexerTendermintEvent = Omit<IndexerTendermintEvent, 'dataBytes'> & {
+  /** Decoded tendermint event. */
+  dataBytes: object;
+};
+
 export class BlockProcessor {
   block: IndexerTendermintBlock;
+  sqlEventPromises: Promise<object>[];
+  sqlBlock: DecodedIndexerTendermintBlock;
   txId: number;
   batchedHandlers: BatchedHandlers;
   syncHandlers: SyncHandlers;
@@ -62,6 +82,11 @@ export class BlockProcessor {
   ) {
     this.block = block;
     this.txId = txId;
+    this.sqlBlock = {
+      ...this.block,
+      events: new Array(this.block.events.length),
+    };
+    this.sqlEventPromises = new Array(this.block.events.length);
     this.batchedHandlers = new BatchedHandlers();
     this.syncHandlers = new SyncHandlers();
   }
@@ -81,6 +106,7 @@ export class BlockProcessor {
    * @returns the kafka publisher which contains all the events to be published to the kafka
    */
   public async process(): Promise<KafkaPublisher> {
+
     const groupedEvents: GroupedEvents = this.groupEvents();
     this.validateAndOrganizeEvents(groupedEvents);
     return this.processEvents();
@@ -101,22 +127,24 @@ export class BlockProcessor {
       groupedEvents.transactionEvents.push([]);
     }
 
-    _.forEach(this.block.events, (event: IndexerTendermintEvent) => {
+    for (let i: number = 0; i < this.block.events.length; i++) {
+      const event: IndexerTendermintEvent = this.block.events[i];
       const transactionIndex: number = indexerTendermintEventToTransactionIndex(event);
       const eventProtoWithType:
       EventProtoWithTypeAndVersion | undefined = indexerTendermintEventToEventProtoWithType(
+        i,
         event,
       );
       if (eventProtoWithType === undefined) {
-        return;
+        continue;
       }
       if (transactionIndex === -1) {
         groupedEvents.blockEvents.push(eventProtoWithType);
-        return;
+        continue;
       }
 
       groupedEvents.transactionEvents[transactionIndex].push(eventProtoWithType);
-    });
+    }
     return groupedEvents;
   }
 
@@ -168,9 +196,11 @@ export class BlockProcessor {
     const validator: Validator<EventMessage> = new Initializer(
       eventProto.eventProto,
       this.block,
+      eventProto.blockEventIndex,
     );
 
     validator.validate();
+    this.sqlEventPromises[eventProto.blockEventIndex] = validator.getEventForBlockProcessor();
     const handlers: Handler<EventMessage>[] = validator.createHandlers(
       eventProto.indexerTendermintEvent,
       this.txId,
@@ -187,14 +217,58 @@ export class BlockProcessor {
 
   private async processEvents(): Promise<KafkaPublisher> {
     const kafkaPublisher: KafkaPublisher = new KafkaPublisher();
+
+    await Promise.all(this.sqlEventPromises).then((values) => {
+      for (let i: number = 0; i < this.block.events.length; i++) {
+        const event: IndexerTendermintEvent = this.block.events[i];
+        this.sqlBlock.events[i] = {
+          ...event,
+          // Specifically use the decoded version of the event instead of the bytes
+          // since the SQL block processor doesn't know how to decode protobuf
+          // natively.
+          dataBytes: values[i],
+        };
+      }
+    });
+
+    const start: number = Date.now();
+    let success = false;
+    let resultRow: pg.QueryResultRow;
+    try {
+      const result: pg.QueryResult = await storeHelpers.rawQuery(
+        'SELECT dydx_block_processor(?) AS result;',
+        {
+          txId: this.txId,
+          bindings: [JSON.stringify(this.sqlBlock)],
+          sqlOptions: { name: 'dydx_block_processor' },
+        },
+      ).catch((error: DatabaseError) => {
+        logger.crit({
+          at: `BlockProcessor#processEvents\n${error.where}`,
+          message: error.message,
+          error,
+        });
+        throw error;
+      });
+      resultRow = result.rows[0].result;
+      success = true;
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.processed_block_sql.timing`,
+        Date.now() - start,
+        STATS_NO_SAMPLING,
+        { success: success.toString() },
+      );
+    }
+
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
     if (this.block.height === 0) {
-      await this.syncHandlers.process(kafkaPublisher);
-      await this.batchedHandlers.process(kafkaPublisher);
+      await this.syncHandlers.process(kafkaPublisher, resultRow);
+      await this.batchedHandlers.process(kafkaPublisher, resultRow);
     } else {
-      await this.batchedHandlers.process(kafkaPublisher);
-      await this.syncHandlers.process(kafkaPublisher);
+      await this.batchedHandlers.process(kafkaPublisher, resultRow);
+      await this.syncHandlers.process(kafkaPublisher, resultRow);
     }
     return kafkaPublisher;
   }

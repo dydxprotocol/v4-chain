@@ -94,6 +94,8 @@ export interface ValidatorMevMatchesSDKType {
 export interface MevNodeToNodeMetrics {
   validatorMevMatches?: ValidatorMevMatches;
   clobMidPrices: ClobMidPrice[];
+  bpMevMatches?: ValidatorMevMatches;
+  proposalReceiveTime: Long;
 }
 /**
  * MevNodeToNodeMetrics is a data structure for encapsulating all MEV node <>
@@ -103,6 +105,8 @@ export interface MevNodeToNodeMetrics {
 export interface MevNodeToNodeMetricsSDKType {
   validator_mev_matches?: ValidatorMevMatchesSDKType;
   clob_mid_prices: ClobMidPriceSDKType[];
+  bp_mev_matches?: ValidatorMevMatchesSDKType;
+  proposal_receive_time: Long;
 }
 
 function createBaseMEVMatch(): MEVMatch {
@@ -448,7 +452,9 @@ export const ValidatorMevMatches = {
 function createBaseMevNodeToNodeMetrics(): MevNodeToNodeMetrics {
   return {
     validatorMevMatches: undefined,
-    clobMidPrices: []
+    clobMidPrices: [],
+    bpMevMatches: undefined,
+    proposalReceiveTime: Long.UZERO
   };
 }
 
@@ -460,6 +466,14 @@ export const MevNodeToNodeMetrics = {
 
     for (const v of message.clobMidPrices) {
       ClobMidPrice.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.bpMevMatches !== undefined) {
+      ValidatorMevMatches.encode(message.bpMevMatches, writer.uint32(26).fork()).ldelim();
+    }
+
+    if (!message.proposalReceiveTime.isZero()) {
+      writer.uint32(32).uint64(message.proposalReceiveTime);
     }
 
     return writer;
@@ -482,6 +496,14 @@ export const MevNodeToNodeMetrics = {
           message.clobMidPrices.push(ClobMidPrice.decode(reader, reader.uint32()));
           break;
 
+        case 3:
+          message.bpMevMatches = ValidatorMevMatches.decode(reader, reader.uint32());
+          break;
+
+        case 4:
+          message.proposalReceiveTime = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -495,6 +517,8 @@ export const MevNodeToNodeMetrics = {
     const message = createBaseMevNodeToNodeMetrics();
     message.validatorMevMatches = object.validatorMevMatches !== undefined && object.validatorMevMatches !== null ? ValidatorMevMatches.fromPartial(object.validatorMevMatches) : undefined;
     message.clobMidPrices = object.clobMidPrices?.map(e => ClobMidPrice.fromPartial(e)) || [];
+    message.bpMevMatches = object.bpMevMatches !== undefined && object.bpMevMatches !== null ? ValidatorMevMatches.fromPartial(object.bpMevMatches) : undefined;
+    message.proposalReceiveTime = object.proposalReceiveTime !== undefined && object.proposalReceiveTime !== null ? Long.fromValue(object.proposalReceiveTime) : Long.UZERO;
     return message;
   }
 

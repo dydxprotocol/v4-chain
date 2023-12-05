@@ -120,6 +120,7 @@ describe('transferHandler', () => {
 
       const handler: TransferHandler = new TransferHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultTransferEvent,
