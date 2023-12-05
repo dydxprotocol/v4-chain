@@ -57,4 +57,6 @@ message ValidatorMevMatches {
 message MevNodeToNodeMetrics {
   ValidatorMevMatches validator_mev_matches = 1;
   repeated ClobMidPrice clob_mid_prices = 2 [ (gogoproto.nullable) = false ];
+  ValidatorMevMatches bp_mev_matches = 3;
+  uint64 proposal_receive_time = 4;
 }
