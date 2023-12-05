@@ -1156,7 +1156,7 @@ export interface AddressTradingReward {
    * equivalent to a single coin.
    */
 
-  denoms: Long;
+  denoms: Uint8Array;
 }
 export interface AddressTradingRewardSDKType {
   /** The address of the wallet that will receive the trading reward. */
@@ -1166,7 +1166,7 @@ export interface AddressTradingRewardSDKType {
    * equivalent to a single coin.
    */
 
-  denoms: Long;
+  denoms: Uint8Array;
 }
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
@@ -2937,7 +2937,7 @@ export const TradingRewardEventV1 = {
 function createBaseAddressTradingReward(): AddressTradingReward {
   return {
     owner: "",
-    denoms: Long.UZERO
+    denoms: new Uint8Array()
   };
 }
 
@@ -2947,8 +2947,8 @@ export const AddressTradingReward = {
       writer.uint32(10).string(message.owner);
     }
 
-    if (!message.denoms.isZero()) {
-      writer.uint32(16).uint64(message.denoms);
+    if (message.denoms.length !== 0) {
+      writer.uint32(18).bytes(message.denoms);
     }
 
     return writer;
@@ -2968,7 +2968,7 @@ export const AddressTradingReward = {
           break;
 
         case 2:
-          message.denoms = (reader.uint64() as Long);
+          message.denoms = reader.bytes();
           break;
 
         default:
@@ -2983,7 +2983,7 @@ export const AddressTradingReward = {
   fromPartial(object: DeepPartial<AddressTradingReward>): AddressTradingReward {
     const message = createBaseAddressTradingReward();
     message.owner = object.owner ?? "";
-    message.denoms = object.denoms !== undefined && object.denoms !== null ? Long.fromValue(object.denoms) : Long.UZERO;
+    message.denoms = object.denoms ?? new Uint8Array();
     return message;
   }
 
