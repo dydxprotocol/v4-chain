@@ -625,10 +625,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			perps := []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
-			} {
+			}
+			for _, p := range perps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -639,6 +640,42 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					p.Params.LiquidityTier,
 				)
 				require.NoError(t, err)
+			}
+
+			clobPairs := []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			}
+			for i, clobPair := range clobPairs {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							clobPair.MustGetPerpetualId(),
+							clobPair.Id,
+							perps[i].Params.Ticker,
+							perps[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perps[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perps[i].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobPair.Id,
+					clobPair.MustGetPerpetualId(),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
 			}
 
 			for _, subaccount := range tc.subaccounts {
@@ -1066,14 +1103,15 @@ func TestProcessDeleveraging(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
+			bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			require.NoError(t, err)
+
 			if tc.expectedErr == nil {
-				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
-					ks.Ctx,
-					*tc.liquidatedSubaccount.GetId(),
-					uint32(0),
-					tc.deltaQuantums,
-				)
-				require.NoError(t, err)
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
@@ -1096,7 +1134,7 @@ func TestProcessDeleveraging(t *testing.T) {
 				*tc.offsettingSubaccount.GetId(),
 				uint32(0),
 				tc.deltaQuantums,
-				false,
+				bankruptcyPriceQuoteQuantums,
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
@@ -1121,6 +1159,9 @@ func TestProcessDeleveraging(t *testing.T) {
 	}
 }
 
+// Note that final settlement matches piggyback off of the deleveraging operation. Because of this
+// the pair of subaccounts offsetting each other are still referred to as "liquidated subaccount" and
+// "offsetting subaccount" in the test cases below.
 func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 	tests := map[string]struct {
 		// Setup.
@@ -1270,14 +1311,15 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
+			fillPriceQuoteQuantums, err := ks.PerpetualsKeeper.GetNetNotional(
+				ks.Ctx,
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			fillPriceQuoteQuantums.Neg(fillPriceQuoteQuantums)
+			require.NoError(t, err)
+
 			if tc.expectedErr == nil {
-				fillPriceQuoteQuantums, err := ks.PerpetualsKeeper.GetNetNotional(
-					ks.Ctx,
-					uint32(0),
-					tc.deltaQuantums,
-				)
-				fillPriceQuoteQuantums.Neg(fillPriceQuoteQuantums)
-				require.NoError(t, err)
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
@@ -1300,7 +1342,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 				*tc.offsettingSubaccount.GetId(),
 				uint32(0),
 				tc.deltaQuantums,
-				true,
+				fillPriceQuoteQuantums,
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
@@ -1428,14 +1470,15 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
+			bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			require.NoError(t, err)
+
 			if tc.expectedErr == nil {
-				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
-					ks.Ctx,
-					*tc.liquidatedSubaccount.GetId(),
-					uint32(0),
-					tc.deltaQuantums,
-				)
-				require.NoError(t, err)
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
@@ -1458,7 +1501,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 				*tc.offsettingSubaccount.GetId(),
 				uint32(0),
 				tc.deltaQuantums,
-				false,
+				bankruptcyPriceQuoteQuantums,
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
