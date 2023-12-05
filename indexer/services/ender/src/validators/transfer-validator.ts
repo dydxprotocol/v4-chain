@@ -50,6 +50,7 @@ export class TransferValidator extends Validator<TransferEventV1> {
     return [
       new TransferHandler(
         this.block,
+        this.blockEventIndex,
         indexerTendermintEvent,
         txId,
         this.event,

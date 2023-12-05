@@ -108,6 +108,7 @@ describe('conditionalOrderPlacementHandler', () => {
 
       const handler: ConditionalOrderPlacementHandler = new ConditionalOrderPlacementHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultStatefulOrderEvent,

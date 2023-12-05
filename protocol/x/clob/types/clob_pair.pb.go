@@ -44,7 +44,9 @@ const (
 	// both short-term and post-only.
 	ClobPair_STATUS_INITIALIZING ClobPair_Status = 5
 	// STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
-	// and trading has ceased. All open positions will be closed by the protocol.option
+	// and trading has ceased. All open positions will be closed by the
+	// protocol. Open stateful orders will be cancelled. Open short-term
+	// orders will be left to expire.
 	ClobPair_STATUS_FINAL_SETTLEMENT ClobPair_Status = 6
 )
 

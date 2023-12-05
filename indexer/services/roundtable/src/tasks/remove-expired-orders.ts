@@ -49,6 +49,7 @@ export default async function runTask(): Promise<void> {
     const batchKafkaProducer: BatchKafkaProducer = new BatchKafkaProducer(
       KafkaTopics.TO_VULCAN,
       producer,
+      config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES,
     );
 
     const allPromises: Promise<void>[] = _.map(orderUuids, (orderUuid: string) => {

@@ -27,6 +27,7 @@ describe('subaccount-update-validator', () => {
       const validator: SubaccountUpdateValidator = new SubaccountUpdateValidator(
         defaultEmptySubaccountUpdateEvent,
         createBlock(defaultEmptySubaccountUpdateEvent),
+        0,
       );
 
       validator.validate();
@@ -41,6 +42,7 @@ describe('subaccount-update-validator', () => {
       const validator: SubaccountUpdateValidator = new SubaccountUpdateValidator(
         invalidEvent,
         createBlock(invalidEvent),
+        0,
       );
 
       const message: string = 'SubaccountUpdateEvent must contain a subaccountId';

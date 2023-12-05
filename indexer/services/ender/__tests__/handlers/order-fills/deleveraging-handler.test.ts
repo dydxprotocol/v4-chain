@@ -143,6 +143,7 @@ describe('DeleveragingHandler', () => {
 
     const handler: DeleveragingHandler = new DeleveragingHandler(
       block,
+      0,
       indexerTendermintEvent,
       0,
       defaultDeleveragingEvent,

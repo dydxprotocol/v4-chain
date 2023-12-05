@@ -77,6 +77,7 @@ describe('update-perpetual-handler', () => {
 
       const handler: UpdatePerpetualHandler = new UpdatePerpetualHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultUpdatePerpetualEvent,

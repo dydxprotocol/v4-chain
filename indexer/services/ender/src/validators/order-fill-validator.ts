@@ -1,4 +1,8 @@
-import { Liquidity } from '@dydxprotocol-indexer/postgres';
+import {
+  Liquidity,
+  OrderTable,
+} from '@dydxprotocol-indexer/postgres';
+import { CanceledOrdersCache } from '@dydxprotocol-indexer/redis';
 import {
   IndexerTendermintEvent,
   LiquidationOrderV1,
@@ -9,6 +13,7 @@ import _ from 'lodash';
 import { Handler, HandlerInitializer } from '../handlers/handler';
 import { LiquidationHandler } from '../handlers/order-fills/liquidation-handler';
 import { OrderHandler } from '../handlers/order-fills/order-handler';
+import { redisClient } from '../helpers/redis/redis-controller';
 import { orderFillEventV1ToOrderFill } from '../helpers/translation-helper';
 import { OrderFillWithLiquidity } from '../lib/translated-types';
 import { OrderFillEventWithLiquidity } from '../lib/types';
@@ -30,6 +35,33 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
     } else {
       this.validateLiquidationOrder(this.event.liquidationOrder!);
     }
+  }
+
+  public async getEventForBlockProcessor(): Promise<OrderFillEventV1> {
+    // If event.order is populated then this means it is not a liquidation
+    // order, and therefore we need to know the canceled order status stored
+    // in redis to correctly update the database.
+    if (this.event.order) {
+      return Promise.all([
+        CanceledOrdersCache.getOrderCanceledStatus(
+          OrderTable.orderIdToUuid(this.event.makerOrder!.orderId!),
+          redisClient,
+        ),
+        CanceledOrdersCache.getOrderCanceledStatus(
+          OrderTable.orderIdToUuid(this.event.order.orderId!),
+          redisClient,
+        ),
+      ],
+      ).then((canceledOrderStatuses) => {
+        return {
+          makerCanceledOrderStatus: canceledOrderStatuses[0],
+          takerCanceledOrderstatus: canceledOrderStatuses[1],
+          ...this.event,
+        };
+      });
+    }
+
+    return this.event;
   }
 
   private validateOrder(
@@ -82,6 +114,7 @@ export class OrderFillValidator extends Validator<OrderFillEventV1> {
       (orderFillEventWithLiquidity: OrderFillEventWithLiquidity) => {
         return new Initializer(
           this.block,
+          this.blockEventIndex,
           indexerTendermintEvent,
           txId,
           orderFillEventV1ToOrderFill(orderFillEventWithLiquidity),

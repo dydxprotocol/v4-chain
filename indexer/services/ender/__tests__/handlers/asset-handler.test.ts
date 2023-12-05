@@ -85,6 +85,7 @@ describe('assetHandler', () => {
 
       const handler: AssetCreationHandler = new AssetCreationHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultAssetCreateEvent,

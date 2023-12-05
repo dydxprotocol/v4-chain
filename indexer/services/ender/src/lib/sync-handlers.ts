@@ -1,5 +1,6 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import _ from 'lodash';
+import * as pg from 'pg';
 
 import config from '../config';
 import { Handler } from '../handlers/handler';
@@ -24,6 +25,8 @@ export const SYNCHRONOUS_SUBTYPES: DydxIndexerSubtypes[] = [
  * After genesis block, these events should be handled after events in BatchedHandlers.
  * It is used for processing asset and market events.
  */
+// TODO(IND-514): Remove the batch and sync handlers completely by moving all redis updates into
+// a pipeline similar to how we return kafka events and then batch and emit them.
 export class SyncHandlers {
   handlerBatch: HandlerBatch;
   initializationTime: number;
@@ -60,7 +63,7 @@ export class SyncHandlers {
    * Adds events to the kafkaPublisher.
    */
   public async process(
-    kafkaPublisher: KafkaPublisher,
+    kafkaPublisher: KafkaPublisher, resultRow: pg.QueryResultRow,
   ): Promise<void> {
     const start: number = Date.now();
     const handlerCountMapping: { [key: string]: number } = {};
@@ -71,7 +74,8 @@ export class SyncHandlers {
         handlerCountMapping[handlerName] = 0;
       }
       handlerCountMapping[handlerName] += 1;
-      const events: ConsolidatedKafkaEvent[] = await handler.handle();
+      const events: ConsolidatedKafkaEvent[] = await handler.handle(
+        resultRow[handler.blockEventIndex]);
       consolidatedKafkaEventGroup.push(events);
     }
 

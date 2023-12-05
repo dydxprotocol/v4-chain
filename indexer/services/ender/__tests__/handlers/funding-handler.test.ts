@@ -89,6 +89,7 @@ describe('fundingHandler', () => {
 
       const handler: FundingHandler = new FundingHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultFundingUpdateSampleEvent,

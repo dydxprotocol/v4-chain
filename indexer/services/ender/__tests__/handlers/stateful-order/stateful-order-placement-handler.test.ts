@@ -119,6 +119,7 @@ describe('statefulOrderPlacementHandler', () => {
 
       const handler: StatefulOrderPlacementHandler = new StatefulOrderPlacementHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         statefulOrderEvent,

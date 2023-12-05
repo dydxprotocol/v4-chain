@@ -46,6 +46,7 @@ describe('stateful-order-validator', () => {
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,
         createBlock(event),
+        0,
       );
 
       validator.validate();
@@ -346,6 +347,7 @@ describe('stateful-order-validator', () => {
       const validator: StatefulOrderValidator = new StatefulOrderValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

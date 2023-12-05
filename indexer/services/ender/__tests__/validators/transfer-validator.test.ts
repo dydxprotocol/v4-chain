@@ -31,6 +31,7 @@ describe('transfer-validator', () => {
       const validator: TransferValidator = new TransferValidator(
         defaultTransferEvent,
         createBlock(defaultTransferEvent),
+        0,
       );
 
       validator.validate();
@@ -93,6 +94,7 @@ describe('transfer-validator', () => {
       const validator: TransferValidator = new TransferValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

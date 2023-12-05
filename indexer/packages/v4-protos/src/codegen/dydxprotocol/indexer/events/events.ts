@@ -465,12 +465,20 @@ export interface DeleveragingEventV1 {
    */
 
   fillAmount: Long;
-  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+  /** Fill price of deleveraging event, in USDC quote quantums. */
 
   price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   isBuy: boolean;
+  /**
+   * `true` if the deleveraging event is for final settlement, indicating
+   * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
+   */
+
+  isFinalSettlement: boolean;
 }
 /**
  * DeleveragingEvent message contains all the information for a deleveraging
@@ -493,12 +501,20 @@ export interface DeleveragingEventV1SDKType {
    */
 
   fill_amount: Long;
-  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+  /** Fill price of deleveraging event, in USDC quote quantums. */
 
   price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   is_buy: boolean;
+  /**
+   * `true` if the deleveraging event is for final settlement, indicating
+   * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
+   */
+
+  is_final_settlement: boolean;
 }
 /**
  * LiquidationOrder represents the liquidation taker order to be included in a
@@ -1782,7 +1798,8 @@ function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
     perpetualId: 0,
     fillAmount: Long.UZERO,
     price: Long.UZERO,
-    isBuy: false
+    isBuy: false,
+    isFinalSettlement: false
   };
 }
 
@@ -1810,6 +1827,10 @@ export const DeleveragingEventV1 = {
 
     if (message.isBuy === true) {
       writer.uint32(48).bool(message.isBuy);
+    }
+
+    if (message.isFinalSettlement === true) {
+      writer.uint32(56).bool(message.isFinalSettlement);
     }
 
     return writer;
@@ -1848,6 +1869,10 @@ export const DeleveragingEventV1 = {
           message.isBuy = reader.bool();
           break;
 
+        case 7:
+          message.isFinalSettlement = reader.bool();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -1865,6 +1890,7 @@ export const DeleveragingEventV1 = {
     message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
     message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
     message.isBuy = object.isBuy ?? false;
+    message.isFinalSettlement = object.isFinalSettlement ?? false;
     return message;
   }
 

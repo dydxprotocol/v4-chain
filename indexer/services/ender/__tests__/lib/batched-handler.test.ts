@@ -48,6 +48,7 @@ function generateFakeHandler(parallelizationIds: string[]): FakeHandler {
 
   const handler: FakeHandler = new FakeHandler(
     block,
+    0,
     defaultEvent,
     fakeTxId,
     {},

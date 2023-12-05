@@ -33,6 +33,7 @@ describe('liquidity-tier-validator', () => {
       const validator: LiquidityTierValidator = new LiquidityTierValidator(
         defaultLiquidityTierUpsertEvent,
         createBlock(defaultLiquidityTierUpsertEvent),
+        0,
       );
 
       validator.validate();
@@ -60,6 +61,7 @@ describe('liquidity-tier-validator', () => {
       const validator: LiquidityTierValidator = new LiquidityTierValidator(
         event,
         createBlock(event),
+        0,
       );
       expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
     });
@@ -89,6 +91,7 @@ describe('liquidity-tier-validator', () => {
       const validator: LiquidityTierValidator = new LiquidityTierValidator(
         event,
         createBlock(event),
+        0,
       );
       validator.validate();
       expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
