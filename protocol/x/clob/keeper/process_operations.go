@@ -619,27 +619,38 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
-
-	// Validate that the provided subaccount can be deleveraged.
-	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
-		panic(
-			fmt.Sprintf(
-				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
-					"SubaccountId %+v, error %+v",
-				liquidatedSubaccountId,
-				err,
-			),
-		)
-	} else if !canDeleverageSubaccount {
-		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
-		return errorsmod.Wrapf(
-			types.ErrInvalidDeleveragedSubaccount,
-			"Subaccount %+v failed deleveraging validation",
-			liquidatedSubaccountId,
-		)
-	}
-
 	perpetualId := matchDeleveraging.GetPerpetualId()
+
+	if matchDeleveraging.IsFinalSettlement {
+		if clobPair := k.mustGetClobPairForPerpetualId(ctx, matchDeleveraging.GetPerpetualId()); clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			return errorsmod.Wrapf(
+				types.ErrInvalidDeleveragedSubaccount,
+				"Subaccount %+v failed deleveraging validation. "+
+					"Final settlement is not enabled for perpetual %+v",
+				liquidatedSubaccountId,
+				matchDeleveraging.GetPerpetualId(),
+			)
+		}
+	} else {
+		// Validate that the provided subaccount can be deleveraged.
+		if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
+			panic(
+				fmt.Sprintf(
+					"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+						"SubaccountId %+v, error %+v",
+					liquidatedSubaccountId,
+					err,
+				),
+			)
+		} else if !canDeleverageSubaccount {
+			// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
+			return errorsmod.Wrapf(
+				types.ErrInvalidDeleveragedSubaccount,
+				"Subaccount %+v failed deleveraging validation",
+				liquidatedSubaccountId,
+			)
+		}
+	}
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
@@ -665,7 +676,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			fill.OffsettingSubaccountId,
 			perpetualId,
 			deltaQuantums,
-			false,
+			matchDeleveraging.IsFinalSettlement,
 		); err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidDeleveragingFill,
