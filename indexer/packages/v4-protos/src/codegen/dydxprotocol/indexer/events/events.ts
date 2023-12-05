@@ -929,6 +929,8 @@ export interface LiquidityTierUpsertEventV1 {
    * the margin requirements increase at a rate of sqrt(size).
    */
 
+  /** @deprecated */
+
   basePositionNotional: Long;
 }
 /**
@@ -959,6 +961,8 @@ export interface LiquidityTierUpsertEventV1SDKType {
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
    */
+
+  /** @deprecated */
 
   base_position_notional: Long;
 }

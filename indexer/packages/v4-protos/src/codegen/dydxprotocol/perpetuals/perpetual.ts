@@ -200,6 +200,8 @@ export interface LiquidityTier {
    * the margin requirements increase at a rate of sqrt(size).
    */
 
+  /** @deprecated */
+
   basePositionNotional: Long;
   /**
    * The impact notional amount (in quote quantums) is used to determine impact
@@ -238,6 +240,8 @@ export interface LiquidityTierSDKType {
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
    */
+
+  /** @deprecated */
 
   base_position_notional: Long;
   /**
