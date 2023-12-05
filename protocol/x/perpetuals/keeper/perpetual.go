@@ -836,9 +836,7 @@ func (k Keeper) GetNetCollateral(
 //
 // Margin requirements are a function of the absolute value of the open notional of the position as well as
 // the parameters of the relevant `LiquidityTier` of the perpetual.
-// Initial margin requirement is determined by multiplying `InitialMarginPpm` by `marginAdjustmentPpm`,
-// then limited to a maximum of 100%. `marginAdjustmentPpm“ is given by the equation
-// `sqrt(notionalValue / liquidityTier.BasePositionNotional)` limited to a minimum of 100%.
+// Initial margin requirement is determined by multiplying `InitialMarginPpm` and `notionalValue`.
 // `notionalValue` is determined by multiplying the size of the position by the oracle price of the position.
 // Maintenance margin requirement is then simply a fraction (`maintenanceFractionPpm`) of initial margin requirement.
 //
@@ -891,8 +889,8 @@ func (k Keeper) GetMarginRequirements(
 		marketPrice.Exponent,
 	)
 
-	// Initial margin requirement quote quantums = size in quote quantums * adjusted initial margin PPM.
-	bigInitialMarginQuoteQuantums = liquidityTier.GetAdjustedInitialMarginQuoteQuantums(bigQuoteQuantums)
+	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
+	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums)
 
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
@@ -1297,7 +1295,6 @@ func (k Keeper) SetLiquidityTier(
 	name string,
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
-	basePositionNotional uint64,
 	impactNotional uint64,
 ) (
 	liquidityTier types.LiquidityTier,
@@ -1309,7 +1306,6 @@ func (k Keeper) SetLiquidityTier(
 		Name:                   name,
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
-		BasePositionNotional:   basePositionNotional,
 		ImpactNotional:         impactNotional,
 	}
 
@@ -1332,7 +1328,6 @@ func (k Keeper) SetLiquidityTier(
 				name,
 				initialMarginPpm,
 				maintenanceFractionPpm,
-				basePositionNotional,
 			),
 		),
 	)
