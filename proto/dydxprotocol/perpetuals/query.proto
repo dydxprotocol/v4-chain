@@ -22,6 +22,12 @@ service Query {
     option (google.api.http).get = "/dydxprotocol/perpetuals/perpetual";
   }
 
+  // Queries a list of LiquidityTiers.
+  rpc AllLiquidityTiers(QueryAllLiquidityTiersRequest)
+      returns (QueryAllLiquidityTiersResponse) {
+    option (google.api.http).get = "/dydxprotocol/perpetuals/liquidity_tiers";
+  }
+
   // Queries a list of premium votes.
   rpc PremiumVotes(QueryPremiumVotesRequest)
       returns (QueryPremiumVotesResponse) {
@@ -57,6 +63,14 @@ message QueryAllPerpetualsRequest {
 message QueryAllPerpetualsResponse {
   repeated Perpetual perpetual = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// Queries a list of LiquidityTier items.
+message QueryAllLiquidityTiersRequest {}
+
+// QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers RPC method.
+message QueryAllLiquidityTiersResponse {
+  repeated LiquidityTier liquidity_tiers = 1 [ (gogoproto.nullable) = false ];
 }
 
 // QueryPremiumVotesRequest is the request type for the PremiumVotes RPC method.
