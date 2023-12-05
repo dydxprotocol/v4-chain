@@ -550,10 +550,10 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			initialMarginPpm:             uint32(oneBip * 1),
 			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
 			bigExpectedInitialMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349108", 10),
+				new(big.Int).SetString("340282366920938463426481119284349109", 10),
 			),
 			bigExpectedMaintenanceMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349108", 10),
+				new(big.Int).SetString("340282366920938463426481119284349109", 10),
 			),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6": {
@@ -590,8 +590,8 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			maintenanceFractionPpm:       uint32(600_000), // 60% of IM
 			// quoteQuantums = 123_456 * 74_523 = 9_200_311_488
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
-			// = 50_000 * 9_200_311_488 / 1_000_000 ~= 460_015_574
-			bigExpectedInitialMarginPpm:     big.NewInt(460_015_574),
+			// = 50_000 * 9_200_311_488 / 1_000_000 ~= 460_015_575
+			bigExpectedInitialMarginPpm:     big.NewInt(460_015_575),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(276_009_345),
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6": {
