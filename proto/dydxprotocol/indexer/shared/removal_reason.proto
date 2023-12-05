@@ -51,4 +51,6 @@ enum OrderRemovalReason {
   // The order has been removed since the subaccount does not satisfy the
   // equity tier requirements.
   ORDER_REMOVAL_REASON_EQUITY_TIER = 13;
+  // The order has been removed since its ClobPair has entered final settlement.
+  ORDER_REMOVAL_REASON_FINAL_SETTLEMENT = 14;
 }

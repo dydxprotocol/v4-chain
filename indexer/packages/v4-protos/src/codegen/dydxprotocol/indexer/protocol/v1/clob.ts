@@ -307,6 +307,14 @@ export enum ClobPairStatus {
    * both short-term and post-only.
    */
   CLOB_PAIR_STATUS_INITIALIZING = 5,
+
+  /**
+   * CLOB_PAIR_STATUS_FINAL_SETTLEMENT - CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
+   * deactivated. Clob pairs in this state do not accept new orders and trading
+   * is blocked. All open positions are closed by the protocol when the clob
+   * pair gains this status.
+   */
+  CLOB_PAIR_STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,
 }
 /**
@@ -348,6 +356,14 @@ export enum ClobPairStatusSDKType {
    * both short-term and post-only.
    */
   CLOB_PAIR_STATUS_INITIALIZING = 5,
+
+  /**
+   * CLOB_PAIR_STATUS_FINAL_SETTLEMENT - CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
+   * deactivated. Clob pairs in this state do not accept new orders and trading
+   * is blocked. All open positions are closed by the protocol when the clob
+   * pair gains this status.
+   */
+  CLOB_PAIR_STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,
 }
 export function clobPairStatusFromJSON(object: any): ClobPairStatus {
@@ -376,6 +392,10 @@ export function clobPairStatusFromJSON(object: any): ClobPairStatus {
     case "CLOB_PAIR_STATUS_INITIALIZING":
       return ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING;
 
+    case 6:
+    case "CLOB_PAIR_STATUS_FINAL_SETTLEMENT":
+      return ClobPairStatus.CLOB_PAIR_STATUS_FINAL_SETTLEMENT;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -401,6 +421,9 @@ export function clobPairStatusToJSON(object: ClobPairStatus): string {
 
     case ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING:
       return "CLOB_PAIR_STATUS_INITIALIZING";
+
+    case ClobPairStatus.CLOB_PAIR_STATUS_FINAL_SETTLEMENT:
+      return "CLOB_PAIR_STATUS_FINAL_SETTLEMENT";
 
     case ClobPairStatus.UNRECOGNIZED:
     default:

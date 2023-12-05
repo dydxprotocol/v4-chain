@@ -398,7 +398,10 @@ func TestConvertToClobPairStatus(t *testing.T) {
 			expectedStatus: v1.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
 		}
 		if value == int32(clobtypes.ClobPair_STATUS_UNSPECIFIED) {
-			testCase.expectedPanic = "invalid clob pair status"
+			testCase.expectedPanic = fmt.Sprintf(
+				"ConvertToClobPairStatus: invalid clob pair status: %+v",
+				clobtypes.ClobPair_STATUS_UNSPECIFIED,
+			)
 		}
 		tests[testName] = testCase
 	}

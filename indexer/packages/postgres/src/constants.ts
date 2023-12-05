@@ -110,6 +110,7 @@ Record<SpecifiedClobPairStatus, PerpetualMarketStatus> = {
   [ClobPairStatus.CLOB_PAIR_STATUS_PAUSED]: PerpetualMarketStatus.PAUSED,
   [ClobPairStatus.CLOB_PAIR_STATUS_POST_ONLY]: PerpetualMarketStatus.POST_ONLY,
   [ClobPairStatus.CLOB_PAIR_STATUS_INITIALIZING]: PerpetualMarketStatus.INITIALIZING,
+  [ClobPairStatus.CLOB_PAIR_STATUS_FINAL_SETTLEMENT]: PerpetualMarketStatus.FINAL_SETTLEMENT,
 };
 
 export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
