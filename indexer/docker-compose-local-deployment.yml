@@ -126,6 +126,8 @@ services:
       - RATE_LIMIT_REDIS_URL=redis://redis:6379
       - PORT=3002
       - RATE_LIMIT_ENABLED=false
+      - INDEXER_LEVEL_GEOBLOCKING_ENABLED=false
+      - COMPLIANCE_DATA_CLIENT=PLACEHOLDER
     labels:
       com.datadoghq.ad.logs: '[{"source": "indexer", "service": "comlink"}]'
     ports:
