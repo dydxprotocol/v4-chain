@@ -1,0 +1,51 @@
+{
+  "name": "e2e-testing",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index",
+  "scripts": {
+    "start": "node --heapsnapshot-signal=SIGUSR2 -r dotenv-flow/config build/src/index.js",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "validate-pnl": "ts-node src/validate-pnl.ts",
+    "print-block": "ts-node src/print-block.ts",
+    "coverage": "pnpm test -- --coverage",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/kafka": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-proto-parser": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
+    "dotenv-flow": "^3.2.0",
+    "long": "^5.2.1",
+    "big.js": "^6.0.2",
+    "lodash": "^4.17.21",
+    "yargs": "^13.3.0",
+    "kafkajs": "^2.1.0"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
+    "@types/jest": "^28.1.4",
+    "@types/node": "^18.0.3",
+    "jest": "^28.1.2",
+    "ts-node": "^10.8.2",
+    "tsconfig-paths": "^4.0.0",
+    "typescript": "4.7.4",
+    "@types/yargs": "^16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/indexer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/indexer/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+}
