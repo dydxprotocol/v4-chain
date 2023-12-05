@@ -341,7 +341,8 @@ type MatchPerpetualDeleveraging struct {
 	Fills []MatchPerpetualDeleveraging_Fill `protobuf:"bytes,3,rep,name=fills,proto3" json:"fills"`
 	// Flag denoting whether the deleveraging operation was for the purpose
 	// of final settlement. Final settlement matches are at the oracle price,
-	// whereas deleveraging normally happens at the bankruptcy price.bool
+	// whereas deleveraging happens at the bankruptcy price of the deleveraged
+	// subaccount.
 	IsFinalSettlement bool `protobuf:"varint,4,opt,name=is_final_settlement,json=isFinalSettlement,proto3" json:"is_final_settlement,omitempty"`
 }
 

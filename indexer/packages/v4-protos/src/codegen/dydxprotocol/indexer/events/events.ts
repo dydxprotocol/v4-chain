@@ -465,7 +465,7 @@ export interface DeleveragingEventV1 {
    */
 
   fillAmount: Long;
-  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+  /** Fill price of deleveraging event, in USDC quote quantums. */
 
   price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
@@ -474,6 +474,8 @@ export interface DeleveragingEventV1 {
   /**
    * `true` if the deleveraging event is for final settlement, indicating
    * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
    */
 
   isFinalSettlement: boolean;
@@ -499,7 +501,7 @@ export interface DeleveragingEventV1SDKType {
    */
 
   fill_amount: Long;
-  /** Bankruptcy price of liquidated subaccount, in USDC quote quantums. */
+  /** Fill price of deleveraging event, in USDC quote quantums. */
 
   price: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
@@ -508,6 +510,8 @@ export interface DeleveragingEventV1SDKType {
   /**
    * `true` if the deleveraging event is for final settlement, indicating
    * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
    */
 
   is_final_settlement: boolean;

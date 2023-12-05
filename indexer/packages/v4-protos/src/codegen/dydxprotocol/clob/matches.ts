@@ -131,7 +131,8 @@ export interface MatchPerpetualDeleveraging {
   /**
    * Flag denoting whether the deleveraging operation was for the purpose
    * of final settlement. Final settlement matches are at the oracle price,
-   * whereas deleveraging normally happens at the bankruptcy price.bool
+   * whereas deleveraging happens at the bankruptcy price of the deleveraged
+   * subaccount.
    */
 
   isFinalSettlement: boolean;
@@ -153,7 +154,8 @@ export interface MatchPerpetualDeleveragingSDKType {
   /**
    * Flag denoting whether the deleveraging operation was for the purpose
    * of final settlement. Final settlement matches are at the oracle price,
-   * whereas deleveraging normally happens at the bankruptcy price.bool
+   * whereas deleveraging happens at the bankruptcy price of the deleveraged
+   * subaccount.
    */
 
   is_final_settlement: boolean;

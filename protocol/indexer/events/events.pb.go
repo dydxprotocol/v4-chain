@@ -856,12 +856,14 @@ type DeleveragingEventV1 struct {
 	// The amount filled between the liquidated and offsetting position, in
 	// base quantums.
 	FillAmount uint64 `protobuf:"varint,4,opt,name=fill_amount,json=fillAmount,proto3" json:"fill_amount,omitempty"`
-	// Bankruptcy price of liquidated subaccount, in USDC quote quantums.
+	// Fill price of deleveraging event, in USDC quote quantums.
 	Price uint64 `protobuf:"varint,5,opt,name=price,proto3" json:"price,omitempty"`
 	// `true` if liquidating a short position, `false` otherwise.
 	IsBuy bool `protobuf:"varint,6,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	// `true` if the deleveraging event is for final settlement, indicating
 	// the match occurred at the oracle price rather than bankruptcy price.
+	// When this flag is `false`, the fill price is the bankruptcy price
+	// of the liquidated subaccount.
 	IsFinalSettlement bool `protobuf:"varint,7,opt,name=is_final_settlement,json=isFinalSettlement,proto3" json:"is_final_settlement,omitempty"`
 }
 
