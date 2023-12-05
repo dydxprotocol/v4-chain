@@ -1,3 +1,4 @@
+// nolint:lll
 package metrics
 
 // Metrics Keys Guidelines

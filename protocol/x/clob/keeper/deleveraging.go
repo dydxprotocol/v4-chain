@@ -198,7 +198,6 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
 ) {
-
 	defer metrics.ModuleMeasureSince(
 		types.ModuleName,
 		metrics.ClobOffsettingSubaccountPerpetualPosition,
