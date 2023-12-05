@@ -676,6 +676,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					clobPair.SubticksPerTick,
 					clobPair.Status,
 				)
+				require.NoError(t, err)
 			}
 
 			for _, subaccount := range tc.subaccounts {
