@@ -686,7 +686,8 @@
           "PAUSED",
           "CANCEL_ONLY",
           "POST_ONLY",
-          "INITIALIZING"
+          "INITIALIZING",
+          "FINAL_SETTLEMENT"
         ],
         "type": "string"
       },
