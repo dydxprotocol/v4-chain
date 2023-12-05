@@ -72,7 +72,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedMevTelemetryHosts:                   []string{"https://localhost:13137"},
 			expectedMevTelemetryIdentifier:              "node-agent-01",
 		},
-		"Sets values from options with mulitple hosts": {
+		"Sets values from options with multiple hosts": {
 			optsMap: map[string]any{
 				flags.MaxLiquidationAttemptsPerBlock:      uint32(50),
 				flags.MaxDeleveragingAttemptsPerBlock:     uint32(25),
