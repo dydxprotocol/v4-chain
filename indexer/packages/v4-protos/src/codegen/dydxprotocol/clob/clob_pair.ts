@@ -37,7 +37,8 @@ export enum ClobPair_Status {
   /**
    * STATUS_FINAL_SETTLEMENT - STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
    * and trading has ceased. All open positions will be closed by the
-   * protocol.
+   * protocol. Open stateful orders will be cancelled. Open short-term
+   * orders will be left to expire.
    */
   STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,
@@ -79,7 +80,8 @@ export enum ClobPair_StatusSDKType {
   /**
    * STATUS_FINAL_SETTLEMENT - STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
    * and trading has ceased. All open positions will be closed by the
-   * protocol.
+   * protocol. Open stateful orders will be cancelled. Open short-term
+   * orders will be left to expire.
    */
   STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,
