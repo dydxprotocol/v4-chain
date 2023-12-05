@@ -4,12 +4,10 @@ import {
   PerpetualMarketFromDatabase,
   TendermintEventTable,
   protocolTranslations,
-  storeHelpers,
   PerpetualMarketModel,
 } from '@dydxprotocol-indexer/postgres';
 import { NextFundingCache } from '@dydxprotocol-indexer/redis';
 import {
-  FundingEventV1,
   FundingEventV1_Type,
   FundingUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
@@ -49,33 +47,10 @@ export class FundingHandler extends Handler<FundingEventMessage> {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
-      this.indexerTendermintEvent,
-    );
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_funding_handler(
-        ${this.block.height},
-        '${this.block.time?.toISOString()}',
-        '${JSON.stringify(FundingEventV1.decode(eventDataBinary))}',
-        ${this.indexerTendermintEvent.eventIndex},
-        ${transactionIndex}
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'FundingHandler#internalHandle',
-        message: 'Failed to handle FundingEventV1',
-        error,
-      });
-
-      throw error;
-    });
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarkets:
     Map<string, PerpetualMarketFromDatabase> = new Map<string, PerpetualMarketFromDatabase>();
-    for (const [key, perpetualMarket] of Object.entries(result.rows[0].result.perpetual_markets)) {
+    for (const [key, perpetualMarket] of Object.entries(resultRow.perpetual_markets)) {
       perpetualMarkets.set(
         key,
         PerpetualMarketModel.fromJson(perpetualMarket as object) as PerpetualMarketFromDatabase,
@@ -86,10 +61,10 @@ export class FundingHandler extends Handler<FundingEventMessage> {
 
     for (let i: number = 0; i < this.event.updates.length; i++) {
       const update: FundingUpdateV1 = this.event.updates[i];
-      if (result.rows[0].result.errors[i] != null) {
+      if (resultRow.errors[i] != null) {
         logger.error({
           at: 'FundingHandler#handleFundingSample',
-          message: result.rows[0].result.errors[i],
+          message: resultRow.errors[i],
           update,
         });
         continue;

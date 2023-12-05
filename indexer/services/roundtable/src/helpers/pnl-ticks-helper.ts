@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionTable,
   FundingIndexMap,
@@ -36,6 +36,7 @@ export async function getPnlTicksCreateObjects(
   blockTime: IsoString,
   txId: number,
 ): Promise<PnlTicksCreateObject[]> {
+  const startGetPnlTicksCreateObjects: number = Date.now();
   const pnlTicksToBeCreatedAt: DateTime = DateTime.utc();
   const [
     mostRecentPnlTicks,
@@ -47,6 +48,10 @@ export async function getPnlTicksCreateObjects(
     getMostRecentPnlTicksForEachAccount(),
     SubaccountTable.getSubaccountsWithTransfers(blockHeight, { readReplica: true, txId }),
   ]);
+  stats.timing(
+    `${config.SERVICE_NAME}_get_ticks_relevant_accounts`,
+    new Date().getTime() - startGetPnlTicksCreateObjects,
+  );
   const accountToLastUpdatedBlockTime: _.Dictionary<IsoString> = _.mapValues(
     mostRecentPnlTicks,
     (pnlTick: PnlTicksCreateObject) => pnlTick.blockTime,
@@ -66,17 +71,27 @@ export async function getPnlTicksCreateObjects(
     ),
     ...newSubaccountIds,
   ];
+  stats.gauge(
+    `${config.SERVICE_NAME}_get_ticks_accounts_to_update`,
+    accountsToUpdate.length,
+  );
   const idToSubaccount: _.Dictionary<SubaccountFromDatabase> = _.keyBy(
     subaccountsWithTransfers,
     'id',
   );
+  const getFundingIndexStart: number = Date.now();
   const blockHeightToFundingIndexMap: _.Dictionary<FundingIndexMap> = await
   getBlockHeightToFundingIndexMap(
     subaccountsWithTransfers,
     accountsToUpdate,
     txId,
   );
+  stats.timing(
+    `${config.SERVICE_NAME}_get_ticks_funding_indices`,
+    new Date().getTime() - getFundingIndexStart,
+  );
 
+  const getAccountInfoStart: number = Date.now();
   const [
     subaccountTotalTransfersMap,
     openPerpetualPositions,
@@ -122,7 +137,12 @@ export async function getPnlTicksCreateObjects(
     OraclePriceTable.findLatestPrices(blockHeight),
     FundingIndexUpdatesTable.findFundingIndexMap(blockHeight),
   ]);
+  stats.timing(
+    `${config.SERVICE_NAME}_get_ticks_account_info`,
+    new Date().getTime() - getAccountInfoStart,
+  );
 
+  const computePnlStart: number = Date.now();
   const newTicksToCreate: PnlTicksCreateObject[] = accountsToUpdate.map(
     (account: string) => getNewPnlTick(
       account,
@@ -138,6 +158,10 @@ export async function getPnlTicksCreateObjects(
       blockHeightToFundingIndexMap[idToSubaccount[account].updatedAtHeight],
       currentFundingIndexMap,
     ),
+  );
+  stats.timing(
+    `${config.SERVICE_NAME}_get_ticks_compute_pnl`,
+    new Date().getTime() - computePnlStart,
   );
   return newTicksToCreate;
 }

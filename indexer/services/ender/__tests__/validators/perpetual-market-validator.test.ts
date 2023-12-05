@@ -32,6 +32,7 @@ describe('perpetual-market-validator', () => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
         defaultPerpetualMarketCreateEvent,
         createBlock(defaultPerpetualMarketCreateEvent),
+        0,
       );
 
       validator.validate();
@@ -43,6 +44,7 @@ describe('perpetual-market-validator', () => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
         defaultPerpetualMarketCreateEvent,
         createBlock(defaultPerpetualMarketCreateEvent),
+        0,
       );
       const message: string = 'PerpetualMarketCreateEvent id already exists';
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));
@@ -77,6 +79,7 @@ describe('perpetual-market-validator', () => {
       const validator: PerpetualMarketValidator = new PerpetualMarketValidator(
         event,
         createBlock(event),
+        0,
       );
       expect(() => validator.validate()).toThrow(new ParseMessageError(expectedMessage));
     });

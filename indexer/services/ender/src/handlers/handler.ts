@@ -19,6 +19,7 @@ import {
   SubaccountId,
 } from '@dydxprotocol-indexer/v4-protos';
 import { DateTime } from 'luxon';
+import * as pg from 'pg';
 
 import config from '../config';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
@@ -28,6 +29,7 @@ import {
 
 export type HandlerInitializer = new (
   block: IndexerTendermintBlock,
+  blockEventIndex: number,
   indexerTendermintEvent: IndexerTendermintEvent,
   txId: number,
   event: EventMessage,
@@ -43,16 +45,20 @@ export abstract class Handler<T> {
   indexerTendermintEvent: IndexerTendermintEvent;
   timestamp: DateTime;
   txId: number;
+  // The index of the event in the block.
+  blockEventIndex: number;
   event: T;
   abstract eventType: string;
 
   constructor(
     block: IndexerTendermintBlock,
+    blockEventIndex: number,
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
     event: T,
   ) {
     this.block = block;
+    this.blockEventIndex = blockEventIndex;
     this.indexerTendermintEvent = indexerTendermintEvent;
     this.timestamp = DateTime.fromJSDate(block.time!);
     this.txId = txId;
@@ -66,19 +72,21 @@ export abstract class Handler<T> {
   public abstract getParallelizationIds(): string[];
 
   /**
-   * Processes the event and updates Postgres in the transaction specified by
-   * txId provided in the constructor, then returns all consolidated kafka events to be
-   * written to Kafka.
+   * Performs side effects based upon the results returned from the SQL based handler
+   * implementations and then returns all consolidated Kafka events to be written to Kafka.
    */
-  public abstract internalHandle(): Promise<ConsolidatedKafkaEvent[]>;
+  public abstract internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]>;
 
   /**
-   * Handle the event and export timing stats
+   * Performs side effects based upon the results returned from the SQL based handler
+   * implementations and then returns all consolidated Kafka events to be written to Kafka.
+   *
+   * Wraps internalHandle with timing information.
    */
-  public async handle(): Promise<ConsolidatedKafkaEvent[]> {
+  public async handle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const start: number = Date.now();
     try {
-      return await this.internalHandle();
+      return await this.internalHandle(resultRow);
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.handle_event.timing`,

@@ -1,11 +1,9 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   LiquidityTiersFromDatabase,
   LiquidityTiersModel,
   PerpetualMarketFromDatabase,
   liquidityTierRefresher,
   perpetualMarketRefresher,
-  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { LiquidityTierUpsertEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
@@ -23,25 +21,9 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_liquidity_tier_handler(
-        '${JSON.stringify(LiquidityTierUpsertEventV1.decode(eventDataBinary))}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'LiquidityTierHandler#internalHandle',
-        message: 'Failed to handle LiquidityTierUpsertEventV1',
-        error,
-      });
-
-      throw error;
-    });
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const liquidityTier: LiquidityTiersFromDatabase = LiquidityTiersModel.fromJson(
-      result.rows[0].result.liquidity_tier) as LiquidityTiersFromDatabase;
+      resultRow.liquidity_tier) as LiquidityTiersFromDatabase;
     liquidityTierRefresher.upsertLiquidityTier(liquidityTier);
     return this.generateWebsocketEventsForLiquidityTier(liquidityTier);
   }

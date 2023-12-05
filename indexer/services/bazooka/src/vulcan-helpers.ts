@@ -24,6 +24,7 @@ import { Long } from '@dydxprotocol-indexer/v4-protos/build/codegen/helpers';
 import Big from 'big.js';
 import _ from 'lodash';
 
+import config from './config';
 import { ZERO } from './constants';
 
 interface VulcanMessage {
@@ -134,6 +135,7 @@ export async function sendStatefulOrderMessages() {
     const batchProducer: BatchKafkaProducer = new BatchKafkaProducer(
       KafkaTopics.TO_VULCAN,
       producer,
+      config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES,
     );
     for (const message of messages) {
       batchProducer.addMessageAndMaybeFlush(message);

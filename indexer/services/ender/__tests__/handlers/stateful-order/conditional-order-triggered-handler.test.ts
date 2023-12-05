@@ -94,6 +94,7 @@ describe('conditionalOrderTriggeredHandler', () => {
 
       const handler: ConditionalOrderTriggeredHandler = new ConditionalOrderTriggeredHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultStatefulOrderEvent,

@@ -37,6 +37,7 @@ describe('market-validator', () => {
       const validator: MarketValidator = new MarketValidator(
         event,
         createBlock(event),
+        0,
       );
 
       validator.validate();
@@ -153,6 +154,7 @@ describe('market-validator', () => {
       const validator: MarketValidator = new MarketValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

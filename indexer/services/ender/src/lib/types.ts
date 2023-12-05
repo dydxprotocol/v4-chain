@@ -60,66 +60,79 @@ export type EventProtoWithTypeAndVersion = {
   eventProto: EventMessage,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } & ({
   type: DydxIndexerSubtypes.ORDER_FILL,
   eventProto: OrderFillEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
   eventProto: SubaccountUpdateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.TRANSFER,
   eventProto: TransferEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.MARKET,
   eventProto: MarketEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.STATEFUL_ORDER,
   eventProto: StatefulOrderEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.FUNDING,
   eventProto: FundingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.ASSET,
   eventProto: AssetCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.PERPETUAL_MARKET,
   eventProto: PerpetualMarketCreateEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.LIQUIDITY_TIER,
   eventProto: LiquidityTierUpsertEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.UPDATE_PERPETUAL,
   eventProto: UpdatePerpetualEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
   eventProto: UpdateClobPairEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 } | {
   type: DydxIndexerSubtypes.DELEVERAGING,
   eventProto: DeleveragingEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
+  blockEventIndex: number,
 });
 
 // Events grouped into events block events and events for each transactionIndex

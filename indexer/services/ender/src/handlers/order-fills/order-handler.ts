@@ -1,4 +1,3 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
@@ -10,15 +9,13 @@ import {
   PerpetualMarketModel,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
-  storeHelpers,
   SubaccountTable,
-  USDC_ASSET_ID,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
-import { CanceledOrderStatus, CanceledOrdersCache, StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
+import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  OrderFillEventV1, IndexerOrderId, IndexerSubaccountId, IndexerOrder,
+  IndexerOrderId, IndexerSubaccountId, IndexerOrder,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
@@ -27,7 +24,6 @@ import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE 
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
-import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import { ConsolidatedKafkaEvent, OrderFillEventWithOrder } from '../../lib/types';
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
@@ -58,17 +54,7 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     ];
   }
 
-  protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithOrder): Long {
-    return this.event.liquidity === Liquidity.TAKER
-      ? castedOrderFillEventMessage.totalFilledTaker
-      : castedOrderFillEventMessage.totalFilledMaker;
-  }
-
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
-      this.indexerTendermintEvent,
-    );
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const castedOrderFillEventMessage:
@@ -78,44 +64,14 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
       castedOrderFillEventMessage,
       this.event.liquidity,
     );
-    const orderUuid = OrderTable.orderIdToUuid(orderProto.orderId!);
-    const canceledOrderStatus:
-    CanceledOrderStatus = await CanceledOrdersCache.getOrderCanceledStatus(
-      orderUuid,
-      redisClient,
-    );
-
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_order_fill_handler_per_order(
-        '${field}', 
-        ${this.block.height}, 
-        '${this.block.time?.toISOString()}', 
-        '${JSON.stringify(OrderFillEventV1.decode(eventDataBinary))}', 
-        ${this.indexerTendermintEvent.eventIndex}, 
-        ${transactionIndex}, 
-        '${this.block.txHashes[transactionIndex]}', 
-        '${this.event.liquidity}', 
-        'LIMIT',
-        '${USDC_ASSET_ID}',
-        '${canceledOrderStatus}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'orderHandler#internalHandle',
-        message: 'Failed to handle OrderFillEventV1',
-        error,
-      });
-      throw error;
-    });
     const order: OrderFromDatabase = OrderModel.fromJson(
-      result.rows[0].result.order) as OrderFromDatabase;
+      resultRow[field].order) as OrderFromDatabase;
     const fill: FillFromDatabase = FillModel.fromJson(
-      result.rows[0].result.fill) as FillFromDatabase;
+      resultRow[field].fill) as FillFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
-      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+      resultRow[field].perpetual_market) as PerpetualMarketFromDatabase;
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
-      result.rows[0].result.perpetual_position) as PerpetualPositionFromDatabase;
+      resultRow[field].perpetual_position) as PerpetualPositionFromDatabase;
 
     let subaccountId: IndexerSubaccountId;
     if (this.event.liquidity === Liquidity.MAKER) {
@@ -161,5 +117,11 @@ export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidit
     }
 
     return kafkaEvents;
+  }
+
+  protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithOrder): Long {
+    return this.event.liquidity === Liquidity.TAKER
+      ? castedOrderFillEventMessage.totalFilledTaker
+      : castedOrderFillEventMessage.totalFilledMaker;
   }
 }

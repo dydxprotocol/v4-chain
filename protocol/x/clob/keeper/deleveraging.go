@@ -3,10 +3,11 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math/big"
 	"time"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -241,6 +242,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				*offsettingSubaccount.Id,
 				perpetualId,
 				deltaQuantums,
+				false,
 			); err == nil {
 				// Update the remaining liquidatable quantums.
 				deltaQuantumsRemaining = new(big.Int).Sub(
@@ -323,6 +325,7 @@ func (k Keeper) ProcessDeleveraging(
 	offsettingSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantums *big.Int,
+	fillPriceIsOraclePrice bool,
 ) (
 	err error,
 ) {
@@ -354,20 +357,29 @@ func (k Keeper) ProcessDeleveraging(
 		)
 	}
 
-	// Calculate the bankruptcy price of the liquidated position. This is the price at which both positions
-	// are closed.
-	bankruptcyPriceQuoteQuantums, err := k.GetBankruptcyPriceInQuoteQuantums(
-		ctx,
-		liquidatedSubaccountId,
-		perpetualId,
-		deltaQuantums,
-	)
-	if err != nil {
-		return err
+	fillPriceDeltaQuoteQuantums := new(big.Int)
+	if fillPriceIsOraclePrice { // Flow used for final settlement deleveraging events
+		fillPriceDeltaQuoteQuantums, err = k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+		fillPriceDeltaQuoteQuantums.Neg(fillPriceDeltaQuoteQuantums)
+		if err != nil {
+			return err
+		}
+	} else { // Regular deleveraging flow
+		// Calculate the bankruptcy price of the liquidated position. This is the price at which both positions
+		// are closed.
+		fillPriceDeltaQuoteQuantums, err = k.GetBankruptcyPriceInQuoteQuantums(
+			ctx,
+			liquidatedSubaccountId,
+			perpetualId,
+			deltaQuantums,
+		)
+		if err != nil {
+			return err
+		}
 	}
 
-	deleveragedSubaccountQuoteBalanceDelta := bankruptcyPriceQuoteQuantums
-	offsettingSubaccountQuoteBalanceDelta := new(big.Int).Neg(bankruptcyPriceQuoteQuantums)
+	deleveragedSubaccountQuoteBalanceDelta := fillPriceDeltaQuoteQuantums
+	offsettingSubaccountQuoteBalanceDelta := new(big.Int).Neg(fillPriceDeltaQuoteQuantums)
 	deleveragedSubaccountPerpetualQuantumsDelta := deltaQuantums
 	offsettingSubaccountPerpetualQuantumsDelta := new(big.Int).Neg(deltaQuantums)
 
@@ -465,7 +477,7 @@ func (k Keeper) ProcessDeleveraging(
 				offsettingSubaccountId,
 				perpetualId,
 				satypes.BaseQuantums(new(big.Int).Abs(deltaQuantums).Uint64()),
-				satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
+				satypes.BaseQuantums(fillPriceDeltaQuoteQuantums.Uint64()),
 				deltaQuantums.Sign() > 0,
 			),
 		),

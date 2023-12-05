@@ -47,6 +47,7 @@ describe('update-clob-pair-validator', () => {
       const validator: UpdateClobPairValidator = new UpdateClobPairValidator(
         defaultUpdateClobPairEvent,
         createBlock(defaultUpdateClobPairEvent),
+        0,
       );
 
       validator.validate();
@@ -60,6 +61,7 @@ describe('update-clob-pair-validator', () => {
           clobPairId: 20,
         },
         createBlock(defaultUpdateClobPairEvent),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(
