@@ -88,6 +88,7 @@ describe('statefulOrderRemovalHandler', () => {
 
       const handler: StatefulOrderRemovalHandler = new StatefulOrderRemovalHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultStatefulOrderEvent,

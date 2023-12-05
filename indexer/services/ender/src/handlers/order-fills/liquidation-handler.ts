@@ -1,4 +1,3 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   FillFromDatabase,
   FillModel,
@@ -10,15 +9,13 @@ import {
   PerpetualMarketModel,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
-  storeHelpers,
   SubaccountTable,
-  USDC_ASSET_ID,
-  OrderStatus, FillType,
+  OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  LiquidationOrderV1, IndexerOrderId, OrderFillEventV1,
+  LiquidationOrderV1, IndexerOrderId,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
@@ -29,7 +26,6 @@ import { redisClient } from '../../helpers/redis/redis-controller';
 import {
   orderFillWithLiquidityToOrderFillEventWithLiquidation,
 } from '../../helpers/translation-helper';
-import { indexerTendermintEventToTransactionIndex } from '../../lib/helper';
 import { OrderFillWithLiquidity } from '../../lib/translated-types';
 import {
   ConsolidatedKafkaEvent,
@@ -84,56 +80,26 @@ export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLi
       : castedOrderFillEventMessage.totalFilledMaker;
   }
 
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const transactionIndex: number = indexerTendermintEventToTransactionIndex(
-      this.indexerTendermintEvent,
-    );
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const castedLiquidationFillEventMessage:
     OrderFillEventWithLiquidation = orderFillWithLiquidityToOrderFillEventWithLiquidation(
       this.event,
     );
     const field: string = this.event.liquidity === Liquidity.MAKER
       ? 'makerOrder' : 'liquidationOrder';
-    const fillType: string = this.event.liquidity === Liquidity.MAKER
-      ? FillType.LIQUIDATION : FillType.LIQUIDATED;
-
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_liquidation_fill_handler_per_order(
-        '${field}', 
-        ${this.block.height}, 
-        '${this.block.time?.toISOString()}', 
-        '${JSON.stringify(OrderFillEventV1.decode(eventDataBinary))}', 
-        ${this.indexerTendermintEvent.eventIndex}, 
-        ${transactionIndex}, 
-        '${this.block.txHashes[transactionIndex]}', 
-        '${this.event.liquidity}', 
-        '${fillType}',
-        '${USDC_ASSET_ID}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'liquidationHandler#internalHandle',
-        message: 'Failed to handle OrderFillEventV1',
-        error,
-      });
-      throw error;
-    });
 
     const fill: FillFromDatabase = FillModel.fromJson(
-      result.rows[0].result.fill) as FillFromDatabase;
+      resultRow[field].fill) as FillFromDatabase;
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
-      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+      resultRow[field].perpetual_market) as PerpetualMarketFromDatabase;
     const position: PerpetualPositionFromDatabase = PerpetualPositionModel.fromJson(
-      result.rows[0].result.perpetual_position) as PerpetualPositionFromDatabase;
+      resultRow[field].perpetual_position) as PerpetualPositionFromDatabase;
 
     if (this.event.liquidity === Liquidity.MAKER) {
       // Must be done in this order, because fills refer to an order
       // We do not create a taker order for liquidations.
       const makerOrder: OrderFromDatabase = OrderModel.fromJson(
-        result.rows[0].result.order) as OrderFromDatabase;
+        resultRow[field].order) as OrderFromDatabase;
 
       // Update the cache tracking the state-filled amount per order for use in vulcan
       await StateFilledQuantumsCache.updateStateFilledQuantums(

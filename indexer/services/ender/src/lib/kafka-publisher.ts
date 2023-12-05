@@ -186,6 +186,7 @@ export class KafkaPublisher {
           const batchProducer: BatchKafkaProducer = new BatchKafkaProducer(
             topicKafkaMessages.topic,
             producer,
+            config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES,
           );
           for (const message of topicKafkaMessages.messages) {
             batchProducer.addMessageAndMaybeFlush(message);

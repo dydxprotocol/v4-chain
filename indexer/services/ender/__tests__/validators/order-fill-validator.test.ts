@@ -46,6 +46,7 @@ describe('order-fill-validator', () => {
       const validator: OrderFillValidator = new OrderFillValidator(
         event,
         createBlock(event),
+        0,
       );
 
       validator.validate();
@@ -173,6 +174,7 @@ describe('order-fill-validator', () => {
       const validator: OrderFillValidator = new OrderFillValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

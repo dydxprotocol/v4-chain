@@ -8,6 +8,7 @@ import {
   IndexerOrder,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
@@ -30,9 +31,7 @@ export class StatefulOrderPlacementHandler extends
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    await this.handleEventViaSqlFunction();
-
+  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
