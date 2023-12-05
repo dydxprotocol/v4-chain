@@ -2052,10 +2052,10 @@ func (m *TradingRewardEventV1) GetTradingRewards() []*AddressTradingReward {
 }
 
 type AddressTradingReward struct {
-	// The address of the wallet that will receive the trading reward
+	// The address of the wallet that will receive the trading reward.
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// The total number of denoms earned by the address above. 1e18 denoms is
-	// equivalent to a single coin
+	// The trading rewards earned by the address above in denoms. 1e18 denoms is
+	// equivalent to a single coin.
 	Denoms uint64 `protobuf:"varint,2,opt,name=denoms,proto3" json:"denoms,omitempty"`
 }
 
