@@ -345,6 +345,8 @@ func (k Keeper) RecordMevMetrics(
 				MevNodeToNode: types.MevNodeToNodeMetrics{
 					ValidatorMevMatches: validatorMevMatches,
 					ClobMidPrices:       mevClobMidPrices,
+					BpMevMatches:        blockProposerMevMatches,
+					ProposalReceiveTime: uint64(time.Now().Second()),
 				},
 			},
 		)
