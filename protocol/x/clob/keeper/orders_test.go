@@ -1670,6 +1670,27 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 				TimeInForce:  types.Order_TIME_IN_FORCE_POST_ONLY,
 			},
 		},
+		"Fails with short-term order and ClobPair_Status of FINAL_SETTLEMENT": {
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			order:       constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15,
+			expectedErr: "trading is disabled for clob pair",
+		},
+		"Fails with long-term order and ClobPair_Status of FINAL_SETTLEMENT": {
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			order:       constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+			expectedErr: "trading is disabled for clob pair",
+		},
+		"Fails with conditional order and ClobPair_Status of FINAL_SETTLEMENT": {
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			order:       constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
+			expectedErr: "trading is disabled for clob pair",
+		},
 	}
 
 	for name, tc := range tests {
