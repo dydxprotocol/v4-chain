@@ -1,5 +1,5 @@
 import { PageRequest, PageRequestSDKType, PageResponse, PageResponseSDKType } from "../../cosmos/base/query/v1beta1/pagination";
-import { Perpetual, PerpetualSDKType, PremiumStore, PremiumStoreSDKType } from "./perpetual";
+import { Perpetual, PerpetualSDKType, LiquidityTier, LiquidityTierSDKType, PremiumStore, PremiumStoreSDKType } from "./perpetual";
 import { Params, ParamsSDKType } from "./params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
@@ -45,6 +45,34 @@ export interface QueryAllPerpetualsResponse {
 
 export interface QueryAllPerpetualsResponseSDKType {
   perpetual: PerpetualSDKType[];
+  pagination?: PageResponseSDKType;
+}
+/** Queries a list of LiquidityTier items. */
+
+export interface QueryAllLiquidityTiersRequest {
+  pagination?: PageRequest;
+}
+/** Queries a list of LiquidityTier items. */
+
+export interface QueryAllLiquidityTiersRequestSDKType {
+  pagination?: PageRequestSDKType;
+}
+/**
+ * QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers RPC
+ * method.
+ */
+
+export interface QueryAllLiquidityTiersResponse {
+  liquidityTiers: LiquidityTier[];
+  pagination?: PageResponse;
+}
+/**
+ * QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers RPC
+ * method.
+ */
+
+export interface QueryAllLiquidityTiersResponseSDKType {
+  liquidity_tiers: LiquidityTierSDKType[];
   pagination?: PageResponseSDKType;
 }
 /** QueryPremiumVotesRequest is the request type for the PremiumVotes RPC method. */
@@ -298,6 +326,106 @@ export const QueryAllPerpetualsResponse = {
   fromPartial(object: DeepPartial<QueryAllPerpetualsResponse>): QueryAllPerpetualsResponse {
     const message = createBaseQueryAllPerpetualsResponse();
     message.perpetual = object.perpetual?.map(e => Perpetual.fromPartial(e)) || [];
+    message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryAllLiquidityTiersRequest(): QueryAllLiquidityTiersRequest {
+  return {
+    pagination: undefined
+  };
+}
+
+export const QueryAllLiquidityTiersRequest = {
+  encode(message: QueryAllLiquidityTiersRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.pagination !== undefined) {
+      PageRequest.encode(message.pagination, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllLiquidityTiersRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllLiquidityTiersRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.pagination = PageRequest.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryAllLiquidityTiersRequest>): QueryAllLiquidityTiersRequest {
+    const message = createBaseQueryAllLiquidityTiersRequest();
+    message.pagination = object.pagination !== undefined && object.pagination !== null ? PageRequest.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryAllLiquidityTiersResponse(): QueryAllLiquidityTiersResponse {
+  return {
+    liquidityTiers: [],
+    pagination: undefined
+  };
+}
+
+export const QueryAllLiquidityTiersResponse = {
+  encode(message: QueryAllLiquidityTiersResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.liquidityTiers) {
+      LiquidityTier.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.pagination !== undefined) {
+      PageResponse.encode(message.pagination, writer.uint32(18).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryAllLiquidityTiersResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryAllLiquidityTiersResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidityTiers.push(LiquidityTier.decode(reader, reader.uint32()));
+          break;
+
+        case 2:
+          message.pagination = PageResponse.decode(reader, reader.uint32());
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryAllLiquidityTiersResponse>): QueryAllLiquidityTiersResponse {
+    const message = createBaseQueryAllLiquidityTiersResponse();
+    message.liquidityTiers = object.liquidityTiers?.map(e => LiquidityTier.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
     return message;
   }
