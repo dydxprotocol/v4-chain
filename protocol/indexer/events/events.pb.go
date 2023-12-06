@@ -2004,10 +2004,10 @@ func (m *UpdatePerpetualEventV1) GetLiquidityTier() uint32 {
 	return 0
 }
 
-// TradingRewardEventV1 is to communicate all trading rewards for all accounts
+// TradingRewardEventV1 is communicates all trading rewards for all accounts
 // that receive trade rewards in the block.
 type TradingRewardEventV1 struct {
-	// The list of all trading rewards for each address.
+	// The list of all trading rewards in the block.
 	TradingRewards []*AddressTradingReward `protobuf:"bytes,1,rep,name=trading_rewards,json=tradingRewards,proto3" json:"trading_rewards,omitempty"`
 }
 
@@ -2051,6 +2051,8 @@ func (m *TradingRewardEventV1) GetTradingRewards() []*AddressTradingReward {
 	return nil
 }
 
+// AddressTradingReward contains info on an instance of an address receiving a
+// reward
 type AddressTradingReward struct {
 	// The address of the wallet that will receive the trading reward.
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`

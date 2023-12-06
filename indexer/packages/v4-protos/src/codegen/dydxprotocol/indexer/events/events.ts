@@ -1131,23 +1131,28 @@ export interface UpdatePerpetualEventV1SDKType {
   liquidity_tier: number;
 }
 /**
- * TradingRewardEventV1 is to communicate all trading rewards for all accounts
+ * TradingRewardEventV1 is communicates all trading rewards for all accounts
  * that receive trade rewards in the block.
  */
 
 export interface TradingRewardEventV1 {
-  /** The list of all trading rewards for each address. */
+  /** The list of all trading rewards in the block. */
   tradingRewards: AddressTradingReward[];
 }
 /**
- * TradingRewardEventV1 is to communicate all trading rewards for all accounts
+ * TradingRewardEventV1 is communicates all trading rewards for all accounts
  * that receive trade rewards in the block.
  */
 
 export interface TradingRewardEventV1SDKType {
-  /** The list of all trading rewards for each address. */
+  /** The list of all trading rewards in the block. */
   trading_rewards: AddressTradingRewardSDKType[];
 }
+/**
+ * AddressTradingReward contains info on an instance of an address receiving a
+ * reward
+ */
+
 export interface AddressTradingReward {
   /** The address of the wallet that will receive the trading reward. */
   owner: string;
@@ -1158,6 +1163,11 @@ export interface AddressTradingReward {
 
   denoms: Uint8Array;
 }
+/**
+ * AddressTradingReward contains info on an instance of an address receiving a
+ * reward
+ */
+
 export interface AddressTradingRewardSDKType {
   /** The address of the wallet that will receive the trading reward. */
   owner: string;
