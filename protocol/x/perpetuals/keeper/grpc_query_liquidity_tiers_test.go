@@ -40,7 +40,7 @@ func TestAllLiquidityTiers(
 		LiquidityTiers: constants.LiquidityTiers,
 		Pagination: &query.PageResponse{
 			NextKey: nil,
-			Total:   10,
+			Total:   uint64(len(constants.LiquidityTiers)),
 		},
 	}
 	require.Equal(t, expected, actual)
