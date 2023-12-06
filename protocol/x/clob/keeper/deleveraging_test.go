@@ -1104,15 +1104,16 @@ func TestProcessDeleveraging(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
-			bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
-				ks.Ctx,
-				*tc.liquidatedSubaccount.GetId(),
-				uint32(0),
-				tc.deltaQuantums,
-			)
-			require.NoError(t, err)
-
+			bankruptcyPriceQuoteQuantums := new(big.Int)
 			if tc.expectedErr == nil {
+				bankruptcyPriceQuoteQuantums, err = ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+					ks.Ctx,
+					*tc.liquidatedSubaccount.GetId(),
+					uint32(0),
+					tc.deltaQuantums,
+				)
+				require.NoError(t, err)
+
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
