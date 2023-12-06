@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	subaccounttypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -198,7 +199,14 @@ func PrepareCheckState(
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
-	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
+	numDeleveragingAttempts, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds)
+	if err != nil {
+		panic(err)
+	}
+
+	// 7. Deleverage subaccounts with open positions in final settlement markets.
+	subaccountOpenPositionInfo := make(map[uint32]map[bool]map[subaccounttypes.SubaccountId]struct{})
+	if err := keeper.DeleverageSubaccountsInFinalSettlementMarkets(ctx, subaccountOpenPositionInfo, numDeleveragingAttempts); err != nil {
 		panic(err)
 	}
 

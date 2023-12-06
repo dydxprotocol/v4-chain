@@ -33,13 +33,21 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+	if err != nil {
+		return new(big.Int), err
+	}
+	clobPair := k.mustGetClobPair(ctx, clobPairId)
+
 	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
 	if err != nil {
 		return new(big.Int), err
 	}
 
-	// Early return to skip deleveraging if the subaccount can't be deleveraged.
-	if !canPerformDeleveraging {
+	// Early return to skip deleveraging if the subaccount can't be deleveraged. Make an exception
+	// for markets in final settlement, since final settlement deleveraging is allowed even for
+	// subaccounts with non-negative TNC.
+	if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT && !canPerformDeleveraging {
 		metrics.IncrCounter(
 			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
 			1,
@@ -516,6 +524,51 @@ func (k Keeper) ProcessDeleveraging(
 			),
 		),
 	)
+
+	return nil
+}
+
+// DeleverageSubaccountsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
+// liquidations daemon to deleverage subaccounts with open positions in final settlement markets. Note
+// this function will deleverage both negative TNC and non-negative TNC subaccounts. The deleveraging code
+// uses the bankruptcy price for the former and the oracle price for the latter.
+func (k Keeper) DeleverageSubaccountsInFinalSettlementMarkets(
+	ctx sdk.Context,
+	subaccountOpenPositionInfo map[uint32]map[bool]map[satypes.SubaccountId]struct{},
+	numDeleveragingAttempts int,
+) error {
+	// Gather perpetualIds for perpetuals whose clob pairs are in final settlement.
+	finalSettlementPerpetualIds := make(map[uint32]struct{})
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
+		if clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			perpetualId := clobPair.MustGetPerpetualId()
+			finalSettlementPerpetualIds[perpetualId] = struct{}{}
+		}
+	}
+
+	// Deleverage subaccounts with open positions in final settlement markets.
+	for perpetualId := range finalSettlementPerpetualIds {
+		for isBuy := range subaccountOpenPositionInfo[perpetualId] {
+			for subaccountId := range subaccountOpenPositionInfo[perpetualId][isBuy] {
+				if numDeleveragingAttempts >= int(k.Flags.MaxDeleveragingAttemptsPerBlock) {
+					return nil
+				}
+
+				if _, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId); err != nil {
+					if err != nil {
+						k.Logger(ctx).Error(
+							"DeleverageSubaccountsInFinalSettlementMarkets: Failed to deleverage subaccount.",
+							"subaccount", subaccountId,
+							"perpetualId", perpetualId,
+							"error", err,
+						)
+						return err
+					}
+				}
+				numDeleveragingAttempts++
+			}
+		}
+	}
 
 	return nil
 }

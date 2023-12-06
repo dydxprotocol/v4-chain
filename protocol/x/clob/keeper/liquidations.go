@@ -24,7 +24,7 @@ import (
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
-) error {
+) (numDeleveragingAttempts int, err error) {
 	lib.AssertCheckTxMode(ctx)
 
 	metrics.AddSample(
@@ -35,7 +35,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// Early return if there are 0 subaccounts to liquidate.
 	numSubaccounts := len(subaccountIds)
 	if numSubaccounts == 0 {
-		return nil
+		return 0, nil
 	}
 
 	defer telemetry.MeasureSince(
@@ -53,6 +53,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
 	indexOffset := pseudoRand.Intn(numSubaccounts)
 
+	clobPairStatuses := make(map[types.ClobPairId]types.ClobPair_Status)
 	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
 		index := (i + indexOffset) % numSubaccounts
@@ -68,7 +69,17 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return 0, err
+		}
+
+		// Skip liquidation if the ClobPair for the liquidation order is in final settlement. There is a separate flow
+		// for triggering deleveraging/final settlement for positions in closed markets.
+		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
+			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
+			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
+		}
+		if clobPairStatuses[liquidationOrder.GetClobPairId()] == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			continue
 		}
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
@@ -105,7 +116,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return 0, err
 		}
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
@@ -115,7 +126,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 				"liquidationOrder", *liquidationOrder,
 				"error", err,
 			)
-			return err
+			return 0, err
 		}
 
 		if optimisticallyFilledQuantums == 0 {
@@ -131,7 +142,8 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
 	startDeleverageSubaccounts := time.Now()
-	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
+	var i int
+	for i = 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
 		liquidationOrder := unfilledLiquidations[i]
 
 		subaccountId := liquidationOrder.GetSubaccountId()
@@ -145,9 +157,10 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 				"perpetualId", perpetualId,
 				"error", err,
 			)
-			return err
+			return i, err
 		}
 	}
+
 	telemetry.MeasureSince(
 		startDeleverageSubaccounts,
 		types.ModuleName,
@@ -155,7 +168,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
-	return nil
+	return i, nil
 }
 
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
