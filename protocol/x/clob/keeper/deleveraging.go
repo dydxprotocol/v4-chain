@@ -331,7 +331,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 // getDeleveragingQuoteQuantums returns the quote quantums delta to apply to a deleveraging operation.
 // This returns the bankruptcy price for standard deleveraging operations, and the oracle price for
 // final settlement deleveraging operations. The type of deleveraging event is determined by the
-// clob pair status of the clob pair associated with the provided perpetual.
+// collaterlization status of the subaccount (negative/non-negative TNC) as well as the clob pair
+// status for the specified perpetual.
 func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	ctx sdk.Context,
 	perpetualId uint32,
@@ -341,10 +342,19 @@ func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	isFinalSettlement := clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
 
+	// If market is in final settlement and the subaccount has non-negative TNC, use the oracle price.
 	if isFinalSettlement {
-		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+		hasNegativeTnc, err := k.CanDeleverageSubaccount(ctx, subaccountId)
+		if err != nil {
+			return new(big.Int), err
+		}
+
+		if !hasNegativeTnc {
+			return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+		}
 	}
 
+	// For standard deleveraging, use the bankruptcy price.
 	return k.GetBankruptcyPriceInQuoteQuantums(
 		ctx,
 		subaccountId,
