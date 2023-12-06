@@ -2088,10 +2088,12 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 ) (
-	subticks types.Subticks,
+	midPrice types.Subticks,
+	bestBid types.Subticks,
+	bestAsk types.Subticks,
 	exists bool,
 ) {
-	subticks, exists = m.openOrders.orderbooksMap[clobPairId].GetMidPrice()
+	midPrice, bestBid, bestAsk, exists = m.openOrders.orderbooksMap[clobPairId].GetMidPrice()
 	if !exists {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.MissingMidPrice, metrics.Count},
@@ -2104,7 +2106,7 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 			},
 		)
 	}
-	return subticks, exists
+	return midPrice, bestBid, bestAsk, exists
 }
 
 // getImpactPriceSubticks returns the impact ask or bid price (in subticks), given the clob pair

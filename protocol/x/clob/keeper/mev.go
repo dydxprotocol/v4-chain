@@ -16,6 +16,8 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+var MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
+
 type MevTelemetryConfig struct {
 	Enabled    bool
 	Host       string
@@ -366,12 +368,15 @@ func (k Keeper) GetClobMetadata(
 
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
-		var midPriceSubticks types.Subticks
 
-		// Get the mid price if it exists, otherwise get the oracle price.
-		if midPrice, exist := k.MemClob.GetMidPrice(ctx, clobPairId); exist {
-			midPriceSubticks = midPrice
-		} else {
+		// Use the mid price if it exists, and if (BestAsk - BestBid) / BestBid < MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE.
+		// Otherwise fallback to the oracle price.
+		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
+
+		if !exist || new(big.Rat).SetFrac(
+			new(big.Int).SetUint64(uint64(bestAsk-bestBid)),
+			new(big.Int).SetUint64(uint64(bestBid)),
+		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
 			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 			// Consistently round down here.
 			oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
