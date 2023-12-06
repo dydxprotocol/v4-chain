@@ -120,6 +120,10 @@ func GetClobFlagValuesFromOptions(
 
 	if v, ok := appOpts.Get(MevTelemetryHosts).(string); ok {
 		result.MevTelemetryHosts = strings.Split(v, ",")
+		if len(result.MevTelemetryHosts) > 1 && result.MevTelemetryHosts[0] == "" {
+			fmt.Printf("MevTelemetryHosts: %v\n", result.MevTelemetryHosts)
+			panic("Mev Telemetry hosts is invalid")
+		}
 	}
 
 	if option := appOpts.Get(MevTelemetryIdentifier); option != nil {
