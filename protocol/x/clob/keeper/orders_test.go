@@ -1674,7 +1674,7 @@ func TestPerformStatefulOrderValidation(t *testing.T) {
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc_Final_Settlement,
 			},
-			order:       constants.Order_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB15,
+			order:       constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
 			expectedErr: "trading is disabled for clob pair",
 		},
 		"Fails with long-term order and ClobPair_Status of FINAL_SETTLEMENT": {
