@@ -619,6 +619,18 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
+	perpetualId := matchDeleveraging.GetPerpetualId()
+	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
+
+	// If `IsFinalSettlement` flag on deleveraging match is set to true, verify that the market is in final settlement.
+	if matchDeleveraging.GetIsFinalSettlement() && clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
+		return errorsmod.Wrapf(
+			types.ErrFinalSettlementDeleveragingMatchForActiveMarket,
+			"MatchPerpetualDeleveraging %+v is a final settlement match, but the clob pair %+v is not in final settlement",
+			matchDeleveraging,
+			clobPair,
+		)
+	}
 
 	// Validate that the provided subaccount can be deleveraged.
 	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
@@ -630,7 +642,8 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			),
 		)
-	} else if !canDeleverageSubaccount {
+	} else if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT && !canDeleverageSubaccount {
+		// If the clob pair is in final settlement, we automatically consider the subaccount deleveragable.
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
@@ -638,8 +651,6 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			liquidatedSubaccountId,
 		)
 	}
-
-	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
