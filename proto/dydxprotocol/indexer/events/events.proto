@@ -180,10 +180,15 @@ message DeleveragingEventV1 {
   // The amount filled between the liquidated and offsetting position, in
   // base quantums.
   uint64 fill_amount = 4;
-  // Bankruptcy price of liquidated subaccount, in USDC quote quantums.
+  // Fill price of deleveraging event, in USDC quote quantums.
   uint64 price = 5;
   // `true` if liquidating a short position, `false` otherwise.
   bool is_buy = 6;
+  // `true` if the deleveraging event is for final settlement, indicating
+  // the match occurred at the oracle price rather than bankruptcy price.
+  // When this flag is `false`, the fill price is the bankruptcy price
+  // of the liquidated subaccount.
+  bool is_final_settlement = 7;
 }
 
 // LiquidationOrder represents the liquidation taker order to be included in a
