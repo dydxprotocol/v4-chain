@@ -66,11 +66,15 @@ message QueryAllPerpetualsResponse {
 }
 
 // Queries a list of LiquidityTier items.
-message QueryAllLiquidityTiersRequest {}
+message QueryAllLiquidityTiersRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
 
-// QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers RPC method.
+// QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers RPC
+// method.
 message QueryAllLiquidityTiersResponse {
   repeated LiquidityTier liquidity_tiers = 1 [ (gogoproto.nullable) = false ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
 }
 
 // QueryPremiumVotesRequest is the request type for the PremiumVotes RPC method.

@@ -5,6 +5,7 @@ import (
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -37,6 +38,10 @@ func TestAllLiquidityTiers(
 
 	expected := perptypes.QueryAllLiquidityTiersResponse{
 		LiquidityTiers: constants.LiquidityTiers,
+		Pagination: &query.PageResponse{
+			NextKey: nil,
+			Total:   10,
+		},
 	}
 	require.Equal(t, expected, actual)
 }
