@@ -22,7 +22,7 @@ proto-export:
 
 proto-export-deps:
 	@rm -rf ./.proto-export-deps
-	@cd proto && buf export --config ./buf.yaml --output ../.proto-export-deps --exclude-imports && buf export buf.build/cosmos/cosmos-sdk:v0.47.0 --output ../.proto-export-deps
+	@cd proto && buf export --config ./buf.yaml --output ../.proto-export-deps --exclude-imports && buf export buf.build/cosmos/cosmos-sdk:v0.50.0 --output ../.proto-export-deps
 
 PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 
