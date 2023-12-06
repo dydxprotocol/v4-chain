@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -119,6 +120,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 			bankKeeper,
 			ks.FeeTiersKeeper,
 			ks.PricesKeeper,
+			indexerEventManager,
 			db,
 			cdc,
 		)
