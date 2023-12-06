@@ -152,7 +152,7 @@ func TestFunding(t *testing.T) {
 		expectedFundingIndex          int64
 	}{
 		"Index price below impact bid, positive funding, longs pay shorts": {
-			testHumanOrders: []TestHumanOrder{
+			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
 					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
@@ -224,7 +224,7 @@ func TestFunding(t *testing.T) {
 			},
 		},
 		"Index price above impact ask, negative funding, final funding rate clamped": {
-			testHumanOrders: []TestHumanOrder{
+			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
 					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
@@ -298,7 +298,7 @@ func TestFunding(t *testing.T) {
 			},
 		},
 		"Index price between impact bid and ask, zero funding": {
-			testHumanOrders: []TestHumanOrder{
+			testHumanOrders: []clobtest.TestHumanOrder{
 				// Unmatched orders to generate funding premiums.
 				{
 					Order:      OrderTemplate_Bob_Num0_Id0_Clob0_Sell_LongTerm,
