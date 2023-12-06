@@ -829,7 +829,7 @@ func New(
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed CLOB flags", "Flags", clobFlags, "AppOpts", appOpts)
+	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 

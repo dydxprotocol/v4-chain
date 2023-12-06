@@ -321,9 +321,6 @@ func (k Keeper) RecordMevMetrics(
 	}
 
 	if len(k.mevTelemetryConfig.Hosts) != 0 {
-		if k.Flags.MevTelemetryHosts[0] == "" {
-			panic(fmt.Sprintf("mev telemetry hosts are not set: %v", k.Flags.MevTelemetryHosts))
-		}
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
 		for _, clobPair := range clobPairs {
 			mevClobMidPrices = append(
