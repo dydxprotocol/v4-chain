@@ -54,8 +54,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 		)
 	}
 
-	blockHeightValue := gogotypes.UInt32Value{Value: 0}
-	blockHeightValue.Value = blockHeight
+	blockHeightValue := gogotypes.UInt32Value{Value: blockHeight}
 	store.Set(
 		[]byte(types.NegativeTncSubaccountSeenAtBlockKey),
 		k.cdc.MustMarshal(&blockHeightValue),
