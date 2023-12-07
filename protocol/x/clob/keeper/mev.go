@@ -16,10 +16,20 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+var MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
+
 type MevTelemetryConfig struct {
 	Enabled    bool
 	Hosts      []string
 	Identifier string
+}
+
+type ClobMetadata struct {
+	ClobPair    types.ClobPair
+	MidPrice    types.Subticks
+	OraclePrice types.Subticks
+	BestBid     types.Order
+	BestAsk     types.Order
 }
 
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
@@ -34,8 +44,7 @@ type CumulativePnL struct {
 
 	// Cached fields used in the calculation of PnL.
 	// These should not be modified after initialization.
-	ClobPair              types.ClobPair
-	MidPriceSubticks      types.Subticks
+	Metadata              ClobMetadata
 	PerpetualFundingIndex *big.Int
 }
 
@@ -77,21 +86,19 @@ func (k Keeper) RecordMevMetrics(
 		}
 	}()
 
-	clobMidPrices, clobPairs := k.GetClobMetadata(ctx)
+	clobMetadata := k.GetClobMetadata(ctx)
 
 	// Initialize cumulative PnL for block proposer and validator.
 	blockProposerPnL, validatorPnL := k.InitializeCumulativePnLs(
 		ctx,
 		perpetualKeeper,
-		clobMidPrices,
-		clobPairs,
+		clobMetadata,
 	)
 
 	// Calculate the block proposer's PnL from regular and liquidation matches.
 	blockProposerMevMatches, err := k.GetMEVDataFromOperations(
 		ctx,
 		msgProposedOperations.GetOperationsQueue(),
-		clobPairs,
 	)
 	if err != nil {
 		k.Logger(ctx).Error(
@@ -130,7 +137,6 @@ func (k Keeper) RecordMevMetrics(
 	validatorMevMatches, err := k.GetMEVDataFromOperations(
 		ctx,
 		k.GetOperations(ctx).GetOperationsQueue(),
-		clobPairs,
 	)
 	if err != nil {
 		k.Logger(ctx).Error(
@@ -284,7 +290,13 @@ func (k Keeper) RecordMevMetrics(
 			metrics.ClobPairId,
 			clobPairId.ToUint32(),
 			metrics.MidPrice,
-			validatorPnL[clobPairId].MidPriceSubticks.ToUint64(),
+			validatorPnL[clobPairId].Metadata.MidPrice.ToUint64(),
+			metrics.OraclePrice,
+			validatorPnL[clobPairId].Metadata.OraclePrice.ToUint64(),
+			metrics.BestBid,
+			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestBid),
+			metrics.BestAsk,
+			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestAsk),
 			// Validator stats.
 			metrics.ValidatorNumFills,
 			validatorPnL[clobPairId].NumFills,
@@ -321,13 +333,13 @@ func (k Keeper) RecordMevMetrics(
 	}
 
 	if len(k.mevTelemetryConfig.Hosts) != 0 {
-		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
-		for _, clobPair := range clobPairs {
+		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobMetadata))
+		for _, metadata := range clobMetadata {
 			mevClobMidPrices = append(
 				mevClobMidPrices,
 				types.ClobMidPrice{
-					ClobPair: clobPair,
-					Subticks: clobMidPrices[types.ClobPairId(clobPair.Id)].ToUint64(),
+					ClobPair: metadata.ClobPair,
+					Subticks: metadata.MidPrice.ToUint64(),
 				},
 			)
 		}
@@ -354,45 +366,58 @@ func (k Keeper) RecordMevMetrics(
 }
 
 // GetClobMetadata fetches the mid prices for all CLOB pairs and the CLOB pairs themselves.
-// This function falls back to use the oracle price if any of the mid prices are missing.
+// This function falls back to use the oracle price if any of the mid prices are missing
+// or if the spread is greater-than-or-equal-to the max spread.
 func (k Keeper) GetClobMetadata(
 	ctx sdk.Context,
 ) (
-	clobMidPrices map[types.ClobPairId]types.Subticks,
-	clobPairs map[types.ClobPairId]types.ClobPair,
+	clobMetadata map[types.ClobPairId]ClobMetadata,
 ) {
-	clobMidPrices = make(map[types.ClobPairId]types.Subticks)
-	clobPairs = make(map[types.ClobPairId]types.ClobPair)
+	clobMetadata = make(map[types.ClobPairId]ClobMetadata)
 
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
-		var midPriceSubticks types.Subticks
 
-		// Get the mid price if it exists, otherwise get the oracle price.
-		if midPrice, exist := k.MemClob.GetMidPrice(ctx, clobPairId); exist {
-			midPriceSubticks = midPrice
-		} else {
-			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-			// Consistently round down here.
-			oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
-			if !oraclePriceSubticksInt.IsUint64() {
-				panic(
-					fmt.Sprintf(
-						"GetAllMidPrices: invalid oracle price %+v for clob pair %+v",
-						oraclePriceSubticksInt,
-						clobPair,
-					),
-				)
-			}
-			midPriceSubticks = types.Subticks(oraclePriceSubticksInt.Uint64())
+		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
+		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		// Consistently round down here.
+		oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
+		if !oraclePriceSubticksInt.IsUint64() {
+			panic(
+				fmt.Sprintf(
+					"GetAllMidPrices: invalid oracle price %+v for clob pair %+v",
+					oraclePriceSubticksInt,
+					clobPair,
+				),
+			)
+		}
+		oraclePriceSubticks := types.Subticks(oraclePriceSubticksInt.Uint64())
+
+		// Use the oracle price instead of the mid price if the mid price doesn't exist or
+		// the spread is greater-than-or-equal-to the max spread.
+		if !exist || new(big.Rat).SetFrac(
+			new(big.Int).SetUint64(uint64(bestAsk.Subticks-bestBid.Subticks)),
+			new(big.Int).SetUint64(uint64(bestBid.Subticks)), // Note that bestBid cannot be 0 if exist is true.
+		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
+			metrics.IncrCounterWithLabels(
+				metrics.MevFallbackToOracle,
+				1,
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId.ToUint32())),
+			)
+			midPriceSubticks = oraclePriceSubticks
 		}
 
-		// Set the CLOB mid price and CLOB pair.
-		clobMidPrices[clobPairId] = midPriceSubticks
-		clobPairs[types.ClobPairId(clobPairId)] = clobPair
+		// Set the CLOB metadata.
+		clobMetadata[clobPairId] = ClobMetadata{
+			ClobPair:    clobPair,
+			MidPrice:    midPriceSubticks,
+			OraclePrice: oraclePriceSubticks,
+			BestBid:     bestBid,
+			BestAsk:     bestAsk,
+		}
 	}
 
-	return clobMidPrices, clobPairs
+	return clobMetadata
 }
 
 // InitializeCumulativePnLs initializes the cumulative PnLs for the block proposer and the
@@ -400,8 +425,7 @@ func (k Keeper) GetClobMetadata(
 func (k Keeper) InitializeCumulativePnLs(
 	ctx sdk.Context,
 	perpetualKeeper process.ProcessPerpetualKeeper,
-	clobMidPrices map[types.ClobPairId]types.Subticks,
-	clobPairs map[types.ClobPairId]types.ClobPair,
+	clobMetadata map[types.ClobPairId]ClobMetadata,
 ) (
 	blockProposerPnL map[types.ClobPairId]*CumulativePnL,
 	validatorPnL map[types.ClobPairId]*CumulativePnL,
@@ -409,30 +433,8 @@ func (k Keeper) InitializeCumulativePnLs(
 	blockProposerPnL = make(map[types.ClobPairId]*CumulativePnL)
 	validatorPnL = make(map[types.ClobPairId]*CumulativePnL)
 
-	if len(clobMidPrices) != len(clobPairs) {
-		panic(
-			fmt.Sprintf(
-				"InitializeCumulativePnLs: clob mid prices %+v and clob pairs %+v have different lengths",
-				clobMidPrices,
-				clobPairs,
-			),
-		)
-	}
-
-	for clobPairId, clobPair := range clobPairs {
-		var midPriceSubticks types.Subticks
-
-		// Panic if the mid price does not exist
-		midPriceSubticks, exists := clobMidPrices[clobPairId]
-		if !exists {
-			panic(
-				fmt.Sprintf(
-					"InitializeCumulativePnLs: mid price does not exist for clob pair %+v",
-					clobPair,
-				),
-			)
-		}
-
+	for clobPairId, metadata := range clobMetadata {
+		clobPair := metadata.ClobPair
 		// Get a mapping from perpetual Id to current perpetual funding index.
 		perpetual, err := perpetualKeeper.GetPerpetual(ctx, clobPair.MustGetPerpetualId())
 		if err != nil {
@@ -448,8 +450,7 @@ func (k Keeper) InitializeCumulativePnLs(
 				SubaccountPositionSizeDelta: make(map[satypes.SubaccountId]*big.Int),
 				NumFills:                    0,
 				VolumeQuoteQuantums:         big.NewInt(0),
-				ClobPair:                    clobPair,
-				MidPriceSubticks:            midPriceSubticks,
+				Metadata:                    metadata,
 				PerpetualFundingIndex:       perpetual.FundingIndex.BigInt(),
 			}
 		}
@@ -463,7 +464,6 @@ func (k Keeper) InitializeCumulativePnLs(
 func (k Keeper) GetMEVDataFromOperations(
 	ctx sdk.Context,
 	operations []types.OperationRaw,
-	clobPairs map[types.ClobPairId]types.ClobPair,
 ) (
 	validatorMevMatches *types.ValidatorMevMatches,
 	err error,
@@ -773,7 +773,7 @@ func (k Keeper) AddSettlementForPositionDelta(
 	clobPairToPnLs map[types.ClobPairId]*CumulativePnL,
 ) (err error) {
 	for _, cumulativePnL := range clobPairToPnLs {
-		perpetualId := cumulativePnL.ClobPair.MustGetPerpetualId()
+		perpetualId := cumulativePnL.Metadata.ClobPair.MustGetPerpetualId()
 		for subaccountId, deltaQuantums := range cumulativePnL.SubaccountPositionSizeDelta {
 			// Get the subaccount and its perpetual positions.
 			subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
@@ -819,7 +819,11 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledSubticks(
 	feePpm int32,
 ) (err error) {
 	// Get the fill quote quantums using the filled subticks and filled quantums.
-	filledQuoteQuantums, err := getFillQuoteQuantums(c.ClobPair, filledSubticks, filledQuantums)
+	filledQuoteQuantums, err := getFillQuoteQuantums(
+		c.Metadata.ClobPair,
+		filledSubticks,
+		filledQuantums,
+	)
 	if err != nil {
 		return err
 	}
@@ -852,7 +856,11 @@ func (c *CumulativePnL) AddPnLForTradeWithFilledQuoteQuantums(
 	feePpm int32,
 ) (err error) {
 	// Get the fill quote quantums using the mid price subticks and filled quantums.
-	filledQuoteQuantumsUsingMidPrice, err := getFillQuoteQuantums(c.ClobPair, c.MidPriceSubticks, filledQuantums)
+	filledQuoteQuantumsUsingMidPrice, err := getFillQuoteQuantums(
+		c.Metadata.ClobPair,
+		c.Metadata.MidPrice,
+		filledQuantums,
+	)
 	if err != nil {
 		return err
 	}

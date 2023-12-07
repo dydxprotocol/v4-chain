@@ -2084,14 +2084,18 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 
 // GetMidPrice returns the mid price of the orderbook for the given clob pair
 // and whether or not it exists.
+// This function also returns the best bid and best ask orders, if they exist.
 func (m *MemClobPriceTimePriority) GetMidPrice(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 ) (
-	subticks types.Subticks,
+	midPrice types.Subticks,
+	bestBid types.Order,
+	bestAsk types.Order,
 	exists bool,
 ) {
-	subticks, exists = m.openOrders.orderbooksMap[clobPairId].GetMidPrice()
+	orderbook := m.openOrders.orderbooksMap[clobPairId]
+	midPrice, exists = orderbook.GetMidPrice()
 	if !exists {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.MissingMidPrice, metrics.Count},
@@ -2104,7 +2108,14 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 			},
 		)
 	}
-	return subticks, exists
+
+	if levelOrder, found := m.openOrders.getBestOrderOnSide(orderbook, true); found {
+		bestBid = levelOrder.Value.Order
+	}
+	if levelOrder, found := m.openOrders.getBestOrderOnSide(orderbook, false); found {
+		bestAsk = levelOrder.Value.Order
+	}
+	return midPrice, bestBid, bestAsk, exists
 }
 
 // getImpactPriceSubticks returns the impact ask or bid price (in subticks), given the clob pair
