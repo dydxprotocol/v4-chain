@@ -1,3 +1,6 @@
+CREATE OR REPLACE FUNCTION dydx_transfer_handler(
+    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
+    transaction_hash text) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -11,10 +14,9 @@
   Returns: JSON object containing fields:
     - asset: The existing asset in asset-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/asset-model.ts).
     - transfer: The new transfer in transfer-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/transfer-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_transfer_handler(
-    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
-    transaction_hash text) RETURNS jsonb AS $$
 DECLARE
     asset_record assets%ROWTYPE;
     recipient_subaccount_record subaccounts%ROWTYPE;
@@ -54,6 +56,7 @@ BEGIN
         transfer_record."recipientWalletAddress" = event_data->'recipient'->>'address';
 
         recipient_wallet_record."address" = transfer_record."recipientWalletAddress";
+        recipient_wallet_record."totalTradingRewards" = '0';
         INSERT INTO wallets VALUES (recipient_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 
@@ -61,6 +64,7 @@ BEGIN
         transfer_record."senderWalletAddress" = event_data->'sender'->>'address';
 
         sender_wallet_record."address" = transfer_record."senderWalletAddress";
+        sender_wallet_record."totalTradingRewards" = '0';
         INSERT INTO wallets VALUES (sender_wallet_record.*) ON CONFLICT DO NOTHING;
     END IF;
 

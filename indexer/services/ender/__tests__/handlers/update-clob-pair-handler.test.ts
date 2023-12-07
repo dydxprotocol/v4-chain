@@ -78,6 +78,7 @@ describe('update-clob-pair-handler', () => {
 
       const handler: UpdateClobPairHandler = new UpdateClobPairHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultUpdateClobPairEvent,

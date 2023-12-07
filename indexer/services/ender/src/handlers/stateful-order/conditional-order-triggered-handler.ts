@@ -3,8 +3,9 @@ import {
   OrderTable,
   PerpetualMarketFromDatabase,
   orderTranslations,
-  SubaccountFromDatabase,
+  SubaccountFromDatabase, OrderModel, PerpetualMarketModel,
 } from '@dydxprotocol-indexer/postgres';
+import SubaccountModel from '@dydxprotocol-indexer/postgres/build/src/models/subaccount-model';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   IndexerOrder,
@@ -12,6 +13,7 @@ import {
   OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
+import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
 import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
@@ -28,15 +30,16 @@ export class ConditionalOrderTriggeredHandler extends
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const result:
-    [OrderFromDatabase,
-      PerpetualMarketFromDatabase,
-      SubaccountFromDatabase | undefined] = await this.handleEventViaSqlFunction();
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+    const order: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
+    const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
+      resultRow.perpetual_market) as PerpetualMarketFromDatabase;
+    const subaccount: SubaccountFromDatabase = SubaccountModel.fromJson(
+      resultRow.subaccount) as SubaccountFromDatabase;
 
-    const order: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
-      result[0], result[1], result[2]!);
-    return this.createKafkaEvents(order);
+    const indexerOrder: IndexerOrder = orderTranslations.convertToIndexerOrderWithSubaccount(
+      order, perpetualMarket, subaccount);
+    return this.createKafkaEvents(indexerOrder);
   }
 
   private createKafkaEvents(order: IndexerOrder): ConsolidatedKafkaEvent[] {

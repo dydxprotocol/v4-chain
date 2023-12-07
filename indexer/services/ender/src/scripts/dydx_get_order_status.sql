@@ -1,3 +1,5 @@
+CREATE OR REPLACE FUNCTION dydx_get_order_status(total_filled numeric, size numeric, order_canceled_status text, order_flags bigint, time_in_force text)
+RETURNS text AS $$
 /**
   Computes the order status given a set of order parameters.
 
@@ -21,9 +23,9 @@
     - order_canceled_status - The status of the order.
     - order_flags - The flags of the order.
   Returns the order status.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_get_order_status(total_filled numeric, size numeric, order_canceled_status text, order_flags bigint, time_in_force text)
-RETURNS text AS $$
 BEGIN
     IF total_filled >= size THEN
         RETURN 'FILLED';

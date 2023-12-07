@@ -22,6 +22,7 @@ describe('deleveraging-validator', () => {
       const validator: DeleveragingValidator = new DeleveragingValidator(
         defaultDeleveragingEvent,
         createBlock(defaultDeleveragingEvent),
+        0,
       );
 
       validator.validate();
@@ -49,6 +50,7 @@ describe('deleveraging-validator', () => {
       const validator: DeleveragingValidator = new DeleveragingValidator(
         event,
         createBlock(event),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(message));

@@ -6,8 +6,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -20,7 +18,7 @@ import (
 
 type MevTelemetryConfig struct {
 	Enabled    bool
-	Host       string
+	Hosts      []string
 	Identifier string
 }
 
@@ -60,7 +58,11 @@ func (k Keeper) RecordMevMetrics(
 	perpetualKeeper process.ProcessPerpetualKeeper,
 	msgProposedOperations *types.MsgProposedOperations,
 ) {
-	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.Mev, metrics.Latency)
+	defer metrics.ModuleMeasureSince(
+		types.ModuleName,
+		metrics.MevLatency,
+		time.Now(),
+	)
 
 	// Recover from any panics that occur during MEV calculation.
 	defer func() {
@@ -99,7 +101,10 @@ func (k Keeper) RecordMevMetrics(
 				msgProposedOperations.GetOperationsQueue(),
 			),
 		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 	if err := k.CalculateSubaccountPnLForMevMatches(
@@ -114,7 +119,10 @@ func (k Keeper) RecordMevMetrics(
 				blockProposerMevMatches,
 			),
 		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 
@@ -132,7 +140,10 @@ func (k Keeper) RecordMevMetrics(
 				k.GetOperations(ctx).GetOperationsQueue(),
 			),
 		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 	if err := k.CalculateSubaccountPnLForMevMatches(
@@ -147,7 +158,10 @@ func (k Keeper) RecordMevMetrics(
 				validatorMevMatches,
 			),
 		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 
@@ -220,7 +234,10 @@ func (k Keeper) RecordMevMetrics(
 	consensusRound, ok := ctx.Value(process.ConsensusRound).(int64)
 	if !ok {
 		k.Logger(ctx).Error("Failed to get consensus round")
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 
@@ -233,7 +250,10 @@ func (k Keeper) RecordMevMetrics(
 			"proposer",
 			proposerConsAddress.String(),
 		)
-		telemetry.IncrCounter(1, types.ModuleName, metrics.Mev, metrics.Error, metrics.Count)
+		metrics.IncrCounter(
+			metrics.ClobMevErrorCount,
+			1,
+		)
 		return
 	}
 
@@ -280,19 +300,17 @@ func (k Keeper) RecordMevMetrics(
 			).String(),
 		)
 
-		telemetry.SetGaugeWithLabels(
-			[]string{types.ModuleName, metrics.Mev},
+		metrics.SetGaugeWithLabels(
+			metrics.ClobMev,
 			mev,
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(
-					metrics.Proposer,
-					proposer.Description.Moniker,
-				),
-				metrics.GetLabelForIntValue(
-					metrics.ClobPairId,
-					int(clobPairId.ToUint32()),
-				),
-			},
+			metrics.GetLabelForStringValue(
+				metrics.Proposer,
+				proposer.Description.Moniker,
+			),
+			metrics.GetLabelForIntValue(
+				metrics.ClobPairId,
+				int(clobPairId.ToUint32()),
+			),
 		)
 
 		validatorVolumeQuoteQuantumsPerMarket[clobPairId] = new(big.Int).Div(
@@ -302,7 +320,7 @@ func (k Keeper) RecordMevMetrics(
 		mevPerMarket[clobPairId] = mev
 	}
 
-	if k.mevTelemetryConfig.Host != "" {
+	if len(k.mevTelemetryConfig.Hosts) != 0 {
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobPairs))
 		for _, clobPair := range clobPairs {
 			mevClobMidPrices = append(
@@ -315,7 +333,7 @@ func (k Keeper) RecordMevMetrics(
 		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
-			k.mevTelemetryConfig.Host,
+			k.mevTelemetryConfig.Hosts,
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
@@ -327,6 +345,8 @@ func (k Keeper) RecordMevMetrics(
 				MevNodeToNode: types.MevNodeToNodeMetrics{
 					ValidatorMevMatches: validatorMevMatches,
 					ClobMidPrices:       mevClobMidPrices,
+					BpMevMatches:        blockProposerMevMatches,
+					ProposalReceiveTime: uint64(time.Now().Second()),
 				},
 			},
 		)

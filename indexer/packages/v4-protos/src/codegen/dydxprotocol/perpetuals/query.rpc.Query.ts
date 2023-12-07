@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryPerpetualRequest, QueryPerpetualResponse, QueryAllPerpetualsRequest, QueryAllPerpetualsResponse, QueryPremiumVotesRequest, QueryPremiumVotesResponse, QueryPremiumSamplesRequest, QueryPremiumSamplesResponse, QueryParamsRequest, QueryParamsResponse } from "./query";
+import { QueryPerpetualRequest, QueryPerpetualResponse, QueryAllPerpetualsRequest, QueryAllPerpetualsResponse, QueryAllLiquidityTiersRequest, QueryAllLiquidityTiersResponse, QueryPremiumVotesRequest, QueryPremiumVotesResponse, QueryPremiumSamplesRequest, QueryPremiumSamplesResponse, QueryParamsRequest, QueryParamsResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -10,6 +10,9 @@ export interface Query {
   /** Queries a list of Perpetual items. */
 
   allPerpetuals(request?: QueryAllPerpetualsRequest): Promise<QueryAllPerpetualsResponse>;
+  /** Queries a list of LiquidityTiers. */
+
+  allLiquidityTiers(request?: QueryAllLiquidityTiersRequest): Promise<QueryAllLiquidityTiersResponse>;
   /** Queries a list of premium votes. */
 
   premiumVotes(request?: QueryPremiumVotesRequest): Promise<QueryPremiumVotesResponse>;
@@ -27,6 +30,7 @@ export class QueryClientImpl implements Query {
     this.rpc = rpc;
     this.perpetual = this.perpetual.bind(this);
     this.allPerpetuals = this.allPerpetuals.bind(this);
+    this.allLiquidityTiers = this.allLiquidityTiers.bind(this);
     this.premiumVotes = this.premiumVotes.bind(this);
     this.premiumSamples = this.premiumSamples.bind(this);
     this.params = this.params.bind(this);
@@ -44,6 +48,14 @@ export class QueryClientImpl implements Query {
     const data = QueryAllPerpetualsRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.perpetuals.Query", "AllPerpetuals", data);
     return promise.then(data => QueryAllPerpetualsResponse.decode(new _m0.Reader(data)));
+  }
+
+  allLiquidityTiers(request: QueryAllLiquidityTiersRequest = {
+    pagination: undefined
+  }): Promise<QueryAllLiquidityTiersResponse> {
+    const data = QueryAllLiquidityTiersRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.perpetuals.Query", "AllLiquidityTiers", data);
+    return promise.then(data => QueryAllLiquidityTiersResponse.decode(new _m0.Reader(data)));
   }
 
   premiumVotes(request: QueryPremiumVotesRequest = {}): Promise<QueryPremiumVotesResponse> {
@@ -75,6 +87,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     allPerpetuals(request?: QueryAllPerpetualsRequest): Promise<QueryAllPerpetualsResponse> {
       return queryService.allPerpetuals(request);
+    },
+
+    allLiquidityTiers(request?: QueryAllLiquidityTiersRequest): Promise<QueryAllLiquidityTiersResponse> {
+      return queryService.allLiquidityTiers(request);
     },
 
     premiumVotes(request?: QueryPremiumVotesRequest): Promise<QueryPremiumVotesResponse> {

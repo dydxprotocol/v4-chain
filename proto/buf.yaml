@@ -3,12 +3,12 @@ version: v1
 name: buf.build/dydxprotocol/v4
 deps:
   # Use version recommended in https://github.com/cosmos/cosmos-sdk/blob/main/proto/README.md
-  - buf.build/cosmos/cosmos-sdk:v0.47.0
+  - buf.build/cosmos/cosmos-sdk:v0.50.0
   # Latest release was in Dec 2021, https://buf.build/cosmos/cosmos-proto/commits/main
   - buf.build/cosmos/cosmos-proto:1935555c206d4afb9e94615dfd0fad31
   # Latest release was in Oct 2022, https://buf.build/cosmos/gogo-proto/commits/main
-  - buf.build/cosmos/gogo-proto:34d970b699f84aa382f3c29773a60836
-  - buf.build/googleapis/googleapis:75b4300737fb4efca0831636be94e517
+  - buf.build/cosmos/gogo-proto:5e5b9fdd01804356895f8f79a6f1ddc1
+  - buf.build/googleapis/googleapis:cc916c31859748a68fd229a3c8d7a2e8
 breaking:
   use:
     - FILE

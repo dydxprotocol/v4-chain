@@ -39,6 +39,7 @@ describe('transfers-controller#V4', () => {
       };
       await WalletTable.create({
         address: testConstants.defaultWalletAddress,
+        totalTradingRewards: '0',
       });
       await Promise.all([
         TransferTable.create(testConstants.defaultTransfer),

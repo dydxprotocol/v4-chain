@@ -1,11 +1,13 @@
+CREATE OR REPLACE FUNCTION dydx_tendermint_event_to_transaction_index(event jsonb) RETURNS int AS $$
 /**
   Gets the transaction index from the IndexerTendermint event.
 
   Parameters:
     - event: The JSON.stringify of a IndexerTendermintEvent object (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25).
   Returns: int.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_tendermint_event_to_transaction_index(event jsonb) RETURNS int AS $$
 BEGIN
     IF event->'transactionIndex' IS NOT NULL THEN
         RETURN (event->'transactionIndex')::int;

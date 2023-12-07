@@ -1,11 +1,13 @@
+CREATE OR REPLACE FUNCTION dydx_liquidity_tier_handler(event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - event_data: The 'data' field of the IndexerTendermintEvent (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/proto/dydxprotocol/indexer/indexer_manager/event.proto#L25)
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
   Returns: JSON object containing fields:
     - liquidy_tier: The upserted liquidity tier in liquidity-tiers-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/liquidity-tiers-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_liquidity_tier_handler(event_data jsonb) RETURNS jsonb AS $$
 DECLARE
     liquidity_tier_record liquidity_tiers%ROWTYPE;
 BEGIN

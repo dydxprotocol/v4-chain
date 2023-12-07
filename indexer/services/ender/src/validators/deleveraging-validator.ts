@@ -29,6 +29,7 @@ export class DeleveragingValidator extends Validator<DeleveragingEventV1> {
     return [
       new DeleveragingHandler(
         this.block,
+        this.blockEventIndex,
         indexerTendermintEvent,
         txId,
         this.event,

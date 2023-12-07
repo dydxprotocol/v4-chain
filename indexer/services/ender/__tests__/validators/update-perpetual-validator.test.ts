@@ -47,6 +47,7 @@ describe('update-perpetual-validator', () => {
       const validator: UpdatePerpetualValidator = new UpdatePerpetualValidator(
         defaultUpdatePerpetualEvent,
         createBlock(defaultUpdatePerpetualEvent),
+        0,
       );
 
       validator.validate();
@@ -60,6 +61,7 @@ describe('update-perpetual-validator', () => {
           id: 20,
         },
         createBlock(defaultUpdatePerpetualEvent),
+        0,
       );
 
       expect(() => validator.validate()).toThrow(new ParseMessageError(

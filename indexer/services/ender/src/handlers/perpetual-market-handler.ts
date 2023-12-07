@@ -1,8 +1,6 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import {
   PerpetualMarketFromDatabase, PerpetualMarketModel,
   perpetualMarketRefresher,
-  storeHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { PerpetualMarketCreateEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import * as pg from 'pg';
@@ -19,25 +17,9 @@ export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreat
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(): Promise<ConsolidatedKafkaEvent[]> {
-    const eventDataBinary: Uint8Array = this.indexerTendermintEvent.dataBytes;
-    const result: pg.QueryResult = await storeHelpers.rawQuery(
-      `SELECT dydx_perpetual_market_handler(
-        '${JSON.stringify(PerpetualMarketCreateEventV1.decode(eventDataBinary))}'
-      ) AS result;`,
-      { txId: this.txId },
-    ).catch((error: Error) => {
-      logger.error({
-        at: 'PerpetualMarketCreationHandler#internalHandle',
-        message: 'Failed to handle PerpetualMarketCreateEventV1',
-        error,
-      });
-
-      throw error;
-    });
-
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
-      result.rows[0].result.perpetual_market) as PerpetualMarketFromDatabase;
+      resultRow.perpetual_market) as PerpetualMarketFromDatabase;
 
     perpetualMarketRefresher.upsertPerpetualMarket(perpetualMarket);
     return [

@@ -1,3 +1,6 @@
+CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
+    field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
+    transaction_hash text, fill_liquidity text, fill_type text, usdc_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
 /**
   Parameters:
     - field: the field storing the order to process.
@@ -18,10 +21,9 @@
     - fill: The updated fill in fill-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/fill-model.ts).
     - perpetual_market: The perpetual market for the order in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
     - perpetual_position: The updated perpetual position in perpetual-position-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-position-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_order_fill_handler_per_order(
-    field text, block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int,
-    transaction_hash text, fill_liquidity text, fill_type text, usdc_asset_id text, order_canceled_status text) RETURNS jsonb AS $$
 DECLARE
     order_ jsonb;
     maker_order jsonb;

@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryPerpetualRequest, QueryPerpetualResponseSDKType, QueryAllPerpetualsRequest, QueryAllPerpetualsResponseSDKType, QueryPremiumVotesRequest, QueryPremiumVotesResponseSDKType, QueryPremiumSamplesRequest, QueryPremiumSamplesResponseSDKType, QueryParamsRequest, QueryParamsResponseSDKType } from "./query";
+import { QueryPerpetualRequest, QueryPerpetualResponseSDKType, QueryAllPerpetualsRequest, QueryAllPerpetualsResponseSDKType, QueryAllLiquidityTiersRequest, QueryAllLiquidityTiersResponseSDKType, QueryPremiumVotesRequest, QueryPremiumVotesResponseSDKType, QueryPremiumSamplesRequest, QueryPremiumSamplesResponseSDKType, QueryParamsRequest, QueryParamsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.perpetual = this.perpetual.bind(this);
     this.allPerpetuals = this.allPerpetuals.bind(this);
+    this.allLiquidityTiers = this.allLiquidityTiers.bind(this);
     this.premiumVotes = this.premiumVotes.bind(this);
     this.premiumSamples = this.premiumSamples.bind(this);
     this.params = this.params.bind(this);
@@ -39,6 +40,23 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/perpetuals/perpetual`;
     return await this.req.get<QueryAllPerpetualsResponseSDKType>(endpoint, options);
+  }
+  /* Queries a list of LiquidityTiers. */
+
+
+  async allLiquidityTiers(params: QueryAllLiquidityTiersRequest = {
+    pagination: undefined
+  }): Promise<QueryAllLiquidityTiersResponseSDKType> {
+    const options: any = {
+      params: {}
+    };
+
+    if (typeof params?.pagination !== "undefined") {
+      setPaginationParams(options, params.pagination);
+    }
+
+    const endpoint = `dydxprotocol/perpetuals/liquidity_tiers`;
+    return await this.req.get<QueryAllLiquidityTiersResponseSDKType>(endpoint, options);
   }
   /* Queries a list of premium votes. */
 

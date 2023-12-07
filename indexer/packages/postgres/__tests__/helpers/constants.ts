@@ -13,6 +13,7 @@ import * as OrderTable from '../../src/stores/order-table';
 import * as PerpetualPositionTable from '../../src/stores/perpetual-position-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
+import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-aggregation-table';
 import * as TransactionTable from '../../src/stores/transaction-table';
 import * as TransferTable from '../../src/stores/transfer-table';
 import {
@@ -43,6 +44,9 @@ import {
   SubaccountCreateObject,
   TendermintEventCreateObject,
   TimeInForce,
+  TradingRewardAggregationCreateObject,
+  TradingRewardAggregationPeriod,
+  TradingRewardCreateObject,
   TransactionCreateObject,
   TransferCreateObject,
   WalletCreateObject,
@@ -96,6 +100,7 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
 // ============== Wallets ==============
 export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
+  totalTradingRewards: '0',
 };
 
 // ============== Assets ==============
@@ -580,3 +585,27 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   riskScore: '10.00',
   updatedAt: createdDateTime.plus(1).toISO(),
 };
+
+// ========= Trading Reward Data ==========
+
+export const defaultTradingReward: TradingRewardCreateObject = {
+  address: defaultAddress,
+  blockHeight: createdHeight,
+  blockTime: createdDateTime.toISO(),
+  amount: '1.00',
+};
+
+// ========= Trading Reward Aggregation Data ==========
+
+export const defaultTradingRewardAggregation: TradingRewardAggregationCreateObject = {
+  address: defaultAddress,
+  startedAtHeight: createdHeight,
+  startedAt: createdDateTime.toISO(),
+  period: TradingRewardAggregationPeriod.DAILY,
+  amount: '1.00',
+};
+export const defaultTradingRewardAggregationId: string = TradingRewardAggregationTable.uuid(
+  defaultTradingRewardAggregation.address,
+  defaultTradingRewardAggregation.period,
+  defaultTradingRewardAggregation.startedAtHeight,
+);

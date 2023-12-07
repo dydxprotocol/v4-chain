@@ -1,4 +1,4 @@
-import { logger, ParseMessageError } from '@dydxprotocol-indexer/base';
+import { logger } from '@dydxprotocol-indexer/base';
 import {
   dbHelpers, MarketFromDatabase, MarketTable, testMocks,
 } from '@dydxprotocol-indexer/postgres';
@@ -40,7 +40,6 @@ describe('marketModifyHandler', () => {
   });
 
   const loggerCrit = jest.spyOn(logger, 'crit');
-  const loggerError = jest.spyOn(logger, 'error');
   const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
 
   describe('getParallelizationIds', () => {
@@ -69,6 +68,7 @@ describe('marketModifyHandler', () => {
 
       const handler: MarketModifyHandler = new MarketModifyHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         marketEvent,
@@ -115,16 +115,11 @@ describe('marketModifyHandler', () => {
     });
 
     await expect(onMessage(kafkaMessage)).rejects.toThrowError(
-      new ParseMessageError('Market in MarketModify doesn\'t exist'),
+      'Market in MarketModify doesn\'t exist',
     );
-
-    expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'MarketModifyHandler#logAndThrowParseMessageError',
-      message: 'Market in MarketModify doesn\'t exist',
-    }));
     expect(loggerCrit).toHaveBeenCalledWith(expect.objectContaining({
-      at: 'onMessage#onMessage',
-      message: 'Error: Unable to parse message, this must be due to a bug in V4 node',
+      at: expect.stringContaining('PL/pgSQL function dydx_market_modify_handler('),
+      message: expect.stringContaining('Market in MarketModify doesn\'t exist'),
     }));
     expect(producerSendMock.mock.calls.length).toEqual(0);
   });

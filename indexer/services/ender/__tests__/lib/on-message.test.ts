@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import {
   assetRefresher,
+  AssetTable,
   BlockFromDatabase,
   BlockTable,
   dbHelpers,
@@ -17,7 +18,6 @@ import {
   TransactionTable,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  DeleveragingEventV1,
   FundingEventV1,
   IndexerTendermintBlock,
   IndexerTendermintEvent,
@@ -30,16 +30,14 @@ import {
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { onMessage } from '../../src/lib/on-message';
 import { KafkaMessage } from 'kafkajs';
-import { createKafkaMessage, KafkaTopics, producer } from '@dydxprotocol-indexer/kafka';
+import {
+  createKafkaMessage, KafkaTopics, producer,
+} from '@dydxprotocol-indexer/kafka';
 import { MILLIS_IN_NANOS, SECONDS_IN_MILLIS } from '../../src/constants';
 import { ConsolidatedKafkaEvent, DydxIndexerSubtypes } from '../../src/lib/types';
-import { SubaccountUpdateHandler } from '../../src/handlers/subaccount-update-handler';
 import config from '../../src/config';
 import { logger, stats } from '@dydxprotocol-indexer/base';
-import { TransferHandler } from '../../src/handlers/transfer-handler';
-import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
-  defaultDeleveragingEvent,
   defaultFundingUpdateSampleEvent,
   defaultHeight,
   defaultMarketModify,
@@ -47,47 +45,14 @@ import {
   defaultSubaccountMessage,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { MarketModifyHandler } from '../../src/handlers/markets/market-modify-handler';
 import Long from 'long';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
-import { DeleveragingHandler } from '../../src/handlers/order-fills/deleveraging-handler';
-
-jest.mock('../../src/handlers/subaccount-update-handler');
-jest.mock('../../src/handlers/transfer-handler');
-jest.mock('../../src/handlers/funding-handler');
-jest.mock('../../src/handlers/order-fills/deleveraging-handler');
-jest.mock('../../src/handlers/markets/market-modify-handler');
 
 describe('on-message', () => {
   let producerSendMock: jest.SpyInstance;
   const loggerError = jest.spyOn(logger, 'error');
 
   beforeEach(() => {
-    (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
-      handle: () => [],
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
-    (TransferHandler as jest.Mock).mockReturnValue({
-      handle: () => [],
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
-    (MarketModifyHandler as jest.Mock).mockReturnValue({
-      handle: () => [],
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
-    (FundingHandler as jest.Mock).mockReturnValue({
-      handle: () => [],
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
-    (DeleveragingHandler as jest.Mock).mockReturnValue({
-      handle: () => [],
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
     producerSendMock = jest.spyOn(producer, 'send');
     producerSendMock.mockImplementation(() => {
     });
@@ -161,10 +126,6 @@ describe('on-message', () => {
     defaultMarketModify,
   ).finish());
 
-  const defaultDeleveragingEventBinary: Uint8Array = Uint8Array.from(DeleveragingEventV1.encode(
-    defaultDeleveragingEvent,
-  ).finish());
-
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
@@ -193,14 +154,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -209,16 +162,7 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('successfully processes block with transaction event with unset version', async () => {
+  it('successfully processes block with transaction event with unset version', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -247,14 +191,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -264,6 +200,10 @@ describe('on-message', () => {
   });
 
   it('successfully processes block with transfer event', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      AssetTable.create(testConstants.defaultAsset),
+    ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -291,14 +231,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((TransferHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((TransferHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultTransferEvent,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -348,71 +280,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((FundingHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((FundingHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultFundingUpdateSampleEvent,
-    );
-    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
-    expect(stats.timing).toHaveBeenCalledWith(
-      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
-    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
-    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
-      expect.any(Number), 1, { success: 'true' });
-  });
-
-  it('successfully processes block with deleveraging event', async () => {
-    await Promise.all([
-      MarketTable.create(testConstants.defaultMarket),
-      MarketTable.create(testConstants.defaultMarket2),
-    ]);
-    await Promise.all([
-      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
-      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
-    ]);
-    await Promise.all([
-      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
-      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
-    ]);
-    await perpetualMarketRefresher.updatePerpetualMarkets();
-
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
-    const events: IndexerTendermintEvent[] = [
-      createIndexerTendermintEvent(
-        DydxIndexerSubtypes.DELEVERAGING,
-        defaultDeleveragingEventBinary,
-        transactionIndex,
-        eventIndex,
-      ),
-    ];
-
-    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-      defaultHeight,
-      defaultTime,
-      events,
-      [defaultTxHash],
-    );
-    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
-    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
-
-    await onMessage(kafkaMessage);
-    await Promise.all([
-      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
-      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
-    ]);
-
-    expect((DeleveragingHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((DeleveragingHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultDeleveragingEvent,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -448,6 +315,10 @@ describe('on-message', () => {
   });
 
   it('skips over unknown events while processing', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      AssetTable.create(testConstants.defaultAsset),
+    ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const eventIndex1: number = 1;
@@ -482,14 +353,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((TransferHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((TransferHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultTransferEvent,
-    );
     expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
       at: 'helpers#indexerTendermintEventToEventWithType',
       message: 'Unable to parse event subtype: unknown',
@@ -500,6 +363,9 @@ describe('on-message', () => {
   });
 
   it('successfully processes block with market event', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+    ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
@@ -527,14 +393,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((MarketModifyHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((MarketModifyHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultMarketModify,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -544,13 +402,26 @@ describe('on-message', () => {
   });
 
   it('successfully processes block with block event', async () => {
-    // -1 so that createIndexerTendermintEvent creates a block event
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      MarketTable.create(testConstants.defaultMarket2),
+    ]);
+    await Promise.all([
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
+    ]);
+    await Promise.all([
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+    ]);
+    await perpetualMarketRefresher.updatePerpetualMarkets();
+
     const transactionIndex: number = -1;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        DydxIndexerSubtypes.FUNDING,
+        defaultFundingEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -571,12 +442,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    const transactions: TransactionFromDatabase[] = await
-    TransactionTable.findAll({}, [], { readReplica: true });
-
-    expect(transactions.length).toEqual(0);
-
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(0);
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -586,20 +451,35 @@ describe('on-message', () => {
   });
 
   it('successfully processes block with transaction event and block event', async () => {
-    const transactionIndex: number = 0;
-    const eventIndex: number = 0;
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      MarketTable.create(testConstants.defaultMarket2),
+    ]);
+    await Promise.all([
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
+    ]);
+    await Promise.all([
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+    ]);
+    await perpetualMarketRefresher.updatePerpetualMarkets();
 
     const blockTransactionIndex: number = -1;
+    const transactionIndex: number = 0;
+    const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
+      // MARKET is a transaction event.
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        DydxIndexerSubtypes.MARKET,
+        defaultMarketEventBinary,
         transactionIndex,
         eventIndex,
       ),
+      // FUNDING is a block event.
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        DydxIndexerSubtypes.FUNDING,
+        defaultFundingEventBinary,
         blockTransactionIndex,
         eventIndex,
       ),
@@ -621,21 +501,6 @@ describe('on-message', () => {
       expectTransactionWithHash([defaultTxHash]),
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
-
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(1);
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
-    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
-    expect(stats.timing).toHaveBeenCalledWith(
-      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
-    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
-    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
-      expect.any(Number), 1, { success: 'true' });
   });
 
   it('successfully processes block with multiple transactions', async () => {
@@ -686,28 +551,6 @@ describe('on-message', () => {
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
 
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenCalledTimes(3);
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      1,
-      block,
-      events[0],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      2,
-      block,
-      events[1],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
-    expect((SubaccountUpdateHandler as jest.Mock)).toHaveBeenNthCalledWith(
-      3,
-      block,
-      events[2],
-      expect.any(Number),
-      defaultSubaccountUpdateEvent,
-    );
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
@@ -715,14 +558,17 @@ describe('on-message', () => {
     expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
       expect.any(Number), 1, { success: 'true' });
   });
-
   it('successfully batches up kafka messages', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      AssetTable.create(testConstants.defaultAsset),
+    ]);
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const events: IndexerTendermintEvent[] = [
       createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        defaultSubaccountUpdateEventBinary,
+        DydxIndexerSubtypes.TRANSFER,
+        defaultTransferEventBinary,
         transactionIndex,
         eventIndex,
       ),
@@ -737,26 +583,7 @@ describe('on-message', () => {
     const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
     const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
 
-    // Mock the return of kafka messages that in total have size > max message size in bytes
-    const kafkaMessages: ConsolidatedKafkaEvent[] = [];
-    let totalSizeBytes: number = 0;
-    const subaccountByteChange: number = Buffer.from(
-      Uint8Array.from(SubaccountMessage.encode(defaultSubaccountMessage).finish()),
-    ).byteLength;
-    while (totalSizeBytes <= config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES) {
-      kafkaMessages.push({
-        topic: KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS,
-        message: defaultSubaccountMessage,
-      });
-      totalSizeBytes += subaccountByteChange;
-    }
-
-    (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
-      handle: () => kafkaMessages,
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
-
+    config.KAFKA_MAX_BATCH_WEBSOCKET_MESSAGE_SIZE_BYTES = 1;
     await onMessage(kafkaMessage);
     await Promise.all([
       expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex),
@@ -765,9 +592,9 @@ describe('on-message', () => {
     ]);
 
     expect(producerSendMock).toHaveBeenCalledTimes(2);
-    // First message sent should contain all but 1 of the message buffers
-    expect(producerSendMock.mock.calls[0][0].messages).toHaveLength(kafkaMessages.length - 1);
-    // Second message sent should contain just a single message buffer
+    // First message batch sent should contain the first message
+    expect(producerSendMock.mock.calls[0][0].messages).toHaveLength(1);
+    // Second message batch should contain the second message
     expect(producerSendMock.mock.calls[1][0].messages).toHaveLength(1);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
@@ -809,12 +636,6 @@ describe('on-message', () => {
       });
       totalSizeBytes += subaccountByteChange;
     }
-
-    (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
-      handle: () => kafkaMessages,
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
 
     config.SEND_WEBSOCKET_MESSAGES = false;
     await onMessage(kafkaMessage);
@@ -892,16 +713,6 @@ describe('on-message', () => {
     // Initialize assetRefresher
     await assetRefresher.updateAssets();
     await perpetualMarketRefresher.updatePerpetualMarkets();
-    (SubaccountUpdateHandler as jest.Mock).mockReturnValue({
-      handle: () => {
-        // clear cache so we can confirm that the cache is updated after the error
-        assetRefresher.clear();
-        perpetualMarketRefresher.clear();
-        throw new Error();
-      },
-      validate: () => null,
-      getParallelizationIds: () => [],
-    });
     await onMessage(kafkaMessage);
 
     expect(assetRefresher.getAssetsMap()).not.toEqual({});

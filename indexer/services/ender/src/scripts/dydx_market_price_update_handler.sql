@@ -1,3 +1,4 @@
+CREATE OR REPLACE FUNCTION dydx_market_price_update_handler(block_height int, block_time timestamp, event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -7,8 +8,9 @@
   Returns: JSON object containing fields:
     - market: The updated market in market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/market-model.ts).
     - oracle_price: The created oracle price in oracle-price-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/oracle-price-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_market_price_update_handler(block_height int, block_time timestamp, event_data jsonb) RETURNS jsonb AS $$
 DECLARE
     market_record_id integer;
     market_record markets%ROWTYPE;

@@ -22,4 +22,6 @@ export * from './funding-index-updates-types';
 export * from './liquidity-tiers-types';
 export * from './wallet-types';
 export * from './compliance-data-types';
+export * from './trading-reward-types';
+export * from './trading-reward-aggregation-types';
 export { PositionSide } from './position-types';

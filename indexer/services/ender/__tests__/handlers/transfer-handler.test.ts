@@ -120,6 +120,7 @@ describe('transferHandler', () => {
 
       const handler: TransferHandler = new TransferHandler(
         block,
+        0,
         indexerTendermintEvent,
         0,
         defaultTransferEvent,
@@ -301,7 +302,10 @@ describe('transferHandler', () => {
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
       defaultWalletAddress,
     );
-    expect(wallet).toBeDefined();
+    expect(wallet).toEqual({
+      address: defaultWalletAddress,
+      totalTradingRewards: '0',
+    });
   });
 
   it('creates new deposit for previously non-existent subaccount', async () => {
@@ -350,7 +354,10 @@ describe('transferHandler', () => {
       defaultRecipientSubaccountId,
     );
     expect(newRecipientSubaccount).toBeDefined();
-    expect(wallet).toBeDefined();
+    expect(wallet).toEqual({
+      address: defaultWalletAddress,
+      totalTradingRewards: '0',
+    });
   });
 
   it('creates new withdrawal for existing subaccount', async () => {
@@ -400,7 +407,10 @@ describe('transferHandler', () => {
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
       defaultWalletAddress,
     );
-    expect(wallet).toBeDefined();
+    expect(wallet).toEqual({
+      address: defaultWalletAddress,
+      totalTradingRewards: '0',
+    });
   });
 
   it('creates new transfer and the recipient subaccount', async () => {

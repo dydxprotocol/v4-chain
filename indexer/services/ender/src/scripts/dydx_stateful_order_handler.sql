@@ -1,3 +1,5 @@
+CREATE OR REPLACE FUNCTION dydx_stateful_order_handler(
+    block_height int, block_time timestamp, event_data jsonb) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -6,9 +8,9 @@
         converted to JSON format. Conversion to JSON is expected to be done by JSON.stringify.
   Returns: JSON object containing fields:
     - order: The upserted order in order-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/order-model.ts).
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_stateful_order_handler(
-    block_height int, block_time timestamp, event_data jsonb) RETURNS jsonb AS $$
 DECLARE
     QUOTE_CURRENCY_ATOMIC_RESOLUTION constant numeric = -6;
 
@@ -22,7 +24,7 @@ DECLARE
 BEGIN
     /** TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent. */
     IF event_data->'orderPlace' IS NOT NULL OR event_data->'longTermOrderPlacement' IS NOT NULL OR event_data->'conditionalOrderPlacement' IS NOT NULL THEN
-        order_ = COALESCE(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
+        order_ = coalesce(event_data->'orderPlace'->'order', event_data->'longTermOrderPlacement'->'order', event_data->'conditionalOrderPlacement'->'order');
         clob_pair_id = (order_->'orderId'->'clobPairId')::bigint;
 
         perpetual_market_record = dydx_get_perpetual_market_for_clob_pair(clob_pair_id);

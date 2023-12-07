@@ -47,6 +47,14 @@ export default class BlockModel extends Model {
         to: 'oracle_prices.effectiveAtHeight',
       },
     },
+    tradingRewardAggregations: {
+      relation: Model.HasManyRelation,
+      modelClass: path.join(__dirname, 'trading-reward-aggregation-model'),
+      join: {
+        from: 'blocks.blockHeight',
+        to: 'trading_reward_aggregations.startedAtHeight',
+      },
+    },
   };
 
   static get jsonSchema() {

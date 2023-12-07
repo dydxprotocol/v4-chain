@@ -1,3 +1,5 @@
+CREATE OR REPLACE FUNCTION dydx_funding_handler(
+    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int) RETURNS jsonb AS $$
 /**
   Parameters:
     - block_height: the height of the block being processing.
@@ -10,9 +12,9 @@
   Returns: JSON object containing fields:
     - perpetual_markets: A mapping from perpetual market id to the associated perpetual market in perpetual-market-model format (https://github.com/dydxprotocol/v4-chain/blob/9ed26bd/indexer/packages/postgres/src/models/perpetual-market-model.ts).
     - errors: An array containing an error string (or NULL if no error occurred) for each FundingEventUpdate.
+
+  (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
-CREATE OR REPLACE FUNCTION dydx_funding_handler(
-    block_height int, block_time timestamp, event_data jsonb, event_index int, transaction_index int) RETURNS jsonb AS $$
 DECLARE
     PPM_EXPONENT constant numeric = -6;
     FUNDING_RATE_FROM_PROTOCOL_IN_HOURS constant numeric = 8;

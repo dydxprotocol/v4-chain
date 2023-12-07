@@ -686,7 +686,8 @@
           "PAUSED",
           "CANCEL_ONLY",
           "POST_ONLY",
-          "INITIALIZING"
+          "INITIALIZING",
+          "FINAL_SETTLEMENT"
         ],
         "type": "string"
       },
@@ -1869,7 +1870,7 @@
   },
   "servers": [
     {
-      "url": "https://indexer.v4testnet.dydx.exchange/v4",
+      "url": "https://dydx-testnet.imperator.co/v4",
       "description": "Public Testnet"
     }
   ]
