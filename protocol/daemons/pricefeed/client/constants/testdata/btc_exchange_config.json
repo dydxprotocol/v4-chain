@@ -37,6 +37,10 @@
       "exchangeName": "Okx",
       "ticker": "BTC-USDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "TestFixedPriceExchange",
+      "ticker": "BTC-USD"
     }
   ]
 }

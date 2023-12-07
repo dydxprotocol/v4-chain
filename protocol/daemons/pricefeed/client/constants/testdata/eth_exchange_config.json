@@ -37,6 +37,10 @@
       "exchangeName": "Okx",
       "ticker": "ETH-USDT",
       "adjustByMarket": "USDT-USD"
+    },
+    {
+      "exchangeName": "TestFixedPriceExchange",
+      "ticker": "ETH-USD"
     }
   ]
 }

@@ -2,6 +2,7 @@ package constants
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
+	"os"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
@@ -177,11 +178,11 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 			configs := GenerateExchangeConfigJson(exchange_config.TestnetExchangeMarketConfig)
 
 			// Uncomment to update testnet exchange data after changing the TestnetExchangeMarketConfig.
-			//f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-			//require.NoError(t, err)
-			//defer f.Close()
-			//_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
-			//require.NoError(t, err)
+			f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+			require.NoError(t, err)
+			defer f.Close()
+			_, err = f.WriteString(configs[tc.id] + "\n") // Final newline added manually.
+			require.NoError(t, err)
 
 			actualExchangeConfigJson := json.CompactJsonString(t, configs[tc.id])
 			expectedExchangeConfigJson := pricefeed.ReadJsonTestFile(t, tc.expectedExchangeConfigJsonFile)
