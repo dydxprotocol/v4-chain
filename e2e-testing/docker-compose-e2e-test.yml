@@ -68,6 +68,8 @@ services:
       - "9090:9090"
       - "1317:1317"
   
+  # This is the Indexer connected node.
+  # TODO: remove stake and make this a full node.
   dydxprotocold1:
     image: local:e2etest-dydxprotocol
     entrypoint:
@@ -165,9 +167,7 @@ services:
       dockerfile: ../indexer/Dockerfile.service.local
       args:
         service: comlink
-        NPM_TOKEN: ${NPM_TOKEN}
     environment:
-      - TENDERMINT_WS_URL=host.docker.internal:26657 # connects to localhost:26657 on host machine
       - PORT=3002
       - REDIS_URL=redis://redis:6379
       - RATE_LIMIT_REDIS_URL=redis://redis:6379
