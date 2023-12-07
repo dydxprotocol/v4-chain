@@ -2112,7 +2112,7 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 		bestBid = levelOrder.Value.Order
 	}
 	if levelOrder, found := m.openOrders.getBestOrderOnSide(orderbook, false); found {
-		bestBid = levelOrder.Value.Order
+		bestAsk = levelOrder.Value.Order
 	}
 	return midPrice, bestBid, bestAsk, exists
 }
