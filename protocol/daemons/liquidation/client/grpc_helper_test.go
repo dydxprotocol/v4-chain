@@ -13,10 +13,69 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetPreviousBlockInfo(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(
+			ctx context.Context,
+			mck *mocks.QueryClient,
+		)
+
+		// expectations
+		expectedBlockHeight uint32
+		expectedError       error
+	}{
+		"Success": {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+			) {
+				response := &blocktimetypes.QueryPreviousBlockInfoResponse{
+					Info: &blocktimetypes.BlockInfo{
+						Height:    uint32(50),
+						Timestamp: constants.TimeTen,
+					},
+				}
+				mck.On("PreviousBlockInfo", ctx, mock.Anything).Return(response, nil)
+			},
+			expectedBlockHeight: 50,
+		},
+		"Errors are propagated": {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+			) {
+				mck.On("PreviousBlockInfo", ctx, mock.Anything).Return(nil, errors.New("test error"))
+			},
+			expectedBlockHeight: 0,
+			expectedError:       errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.BlocktimeQueryClient = queryClientMock
+			actualBlockHeight, err := client.GetPreviousBlockInfo(grpc.Ctx, daemon)
+
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedBlockHeight, actualBlockHeight)
+			}
+		})
+	}
+}
 
 func TestGetAllSubaccounts(t *testing.T) {
 	df := flags.GetDefaultDaemonFlags()
@@ -101,11 +160,11 @@ func TestGetAllSubaccounts(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
-			daemonClient := client.NewClient(log.NewNopLogger())
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.SubaccountQueryClient = queryClientMock
 			actual, err := client.GetAllSubaccounts(
-				daemonClient,
 				grpc.Ctx,
-				queryClientMock,
+				daemon,
 				df.Liquidation.SubaccountPageLimit,
 			)
 			if err != nil {
@@ -203,10 +262,10 @@ func TestCheckCollateralizationForSubaccounts(t *testing.T) {
 			tc.setupMocks(grpc.Ctx, queryClientMock, tc.expectedResults)
 
 			daemon := client.NewClient(log.NewNopLogger())
+			daemon.ClobQueryClient = queryClientMock
 			actual, err := client.CheckCollateralizationForSubaccounts(
-				daemon,
 				grpc.Ctx,
-				queryClientMock,
+				daemon,
 				tc.subaccountIds,
 			)
 
@@ -268,7 +327,10 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock, tc.subaccountIds)
 
-			err := client.SendLiquidatableSubaccountIds(grpc.Ctx, queryClientMock, tc.subaccountIds)
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.LiquidationServiceClient = queryClientMock
+
+			err := client.SendLiquidatableSubaccountIds(grpc.Ctx, daemon, tc.subaccountIds)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}

@@ -9,16 +9,41 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// GetPreviousBlockInfo queries a gRPC server using `QueryPreviousBlockInfoRequest`
+// and returns the previous block height.
+func GetPreviousBlockInfo(
+	ctx context.Context,
+	daemon *Client,
+) (
+	blockHeight uint32,
+	err error,
+) {
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.GetPreviousBlockInfo,
+		metrics.Latency,
+	)
+
+	query := &blocktimetypes.QueryPreviousBlockInfoRequest{}
+	response, err := daemon.BlocktimeQueryClient.PreviousBlockInfo(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+
+	return response.Info.Height, nil
+}
+
 // GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
 // their balances and open positions.
 func GetAllSubaccounts(
-	daemon *Client,
 	ctx context.Context,
-	client satypes.QueryClient,
+	daemon *Client,
 	limit uint64,
 ) (
 	subaccounts []satypes.Subaccount,
@@ -31,7 +56,7 @@ func GetAllSubaccounts(
 	for {
 		subaccountsFromKey, next, err := getSubaccountsFromKey(
 			ctx,
-			client,
+			daemon.SubaccountQueryClient,
 			limit,
 			nextKey,
 		)
@@ -61,9 +86,8 @@ func GetAllSubaccounts(
 // CheckCollateralizationForSubaccounts queries a gRPC server using `AreSubaccountsLiquidatable`
 // and returns a list of collateralization statuses for the given list of subaccount ids.
 func CheckCollateralizationForSubaccounts(
-	daemon *Client,
 	ctx context.Context,
-	client clobtypes.QueryClient,
+	daemon *Client,
 	subaccountIds []satypes.SubaccountId,
 ) (
 	results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
@@ -79,7 +103,7 @@ func CheckCollateralizationForSubaccounts(
 	query := &clobtypes.AreSubaccountsLiquidatableRequest{
 		SubaccountIds: subaccountIds,
 	}
-	response, err := client.AreSubaccountsLiquidatable(ctx, query)
+	response, err := daemon.ClobQueryClient.AreSubaccountsLiquidatable(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +115,7 @@ func CheckCollateralizationForSubaccounts(
 // subaccount ids to a gRPC server via `LiquidateSubaccounts`.
 func SendLiquidatableSubaccountIds(
 	ctx context.Context,
-	client api.LiquidationServiceClient,
+	daemon *Client,
 	subaccountIds []satypes.SubaccountId,
 ) error {
 	defer telemetry.ModuleMeasureSince(
@@ -112,7 +136,7 @@ func SendLiquidatableSubaccountIds(
 		SubaccountIds: subaccountIds,
 	}
 
-	if _, err := client.LiquidateSubaccounts(ctx, request); err != nil {
+	if _, err := daemon.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {
 		return err
 	}
 	return nil
