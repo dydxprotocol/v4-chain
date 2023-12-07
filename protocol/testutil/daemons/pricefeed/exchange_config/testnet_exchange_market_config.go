@@ -1085,11 +1085,8 @@ var (
 				MARKET_ETH_USD: {
 					Ticker: "ETH-USD",
 				},
-				MARKET_LINK_USD: {
-					Ticker: "LINK-USD",
-				},
-				MARKET_USDT_USD: {
-					Ticker: "USDT-USD",
+				MARKET_SOL_USD: {
+					Ticker: "SOL-USD",
 				},
 			},
 		},
