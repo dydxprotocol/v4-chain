@@ -308,10 +308,10 @@ var (
 		1020,
 		"Position cannot be fully offset",
 	)
-	ErrFinalSettlementDeleveragingMatchForActiveMarket = errorsmod.Register(
+	ErrInvalidFinalSettlementDeleveragingMatch = errorsmod.Register(
 		ModuleName,
 		1021,
-		"Deleveraging match has final settlement flag, but market is active",
+		"Deleveraging match has final settlement flag, but market is not in final settlement",
 	)
 
 	// Advanced order type errors.

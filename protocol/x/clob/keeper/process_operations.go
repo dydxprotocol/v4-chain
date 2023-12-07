@@ -625,7 +625,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// If `IsFinalSettlement` flag on deleveraging match is set to true, verify that the market is in final settlement.
 	if matchDeleveraging.IsFinalSettlement && clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
 		return errorsmod.Wrapf(
-			types.ErrFinalSettlementDeleveragingMatchForActiveMarket,
+			types.ErrInvalidFinalSettlementDeleveragingMatch,
 			"MatchPerpetualDeleveraging %+v is a final settlement match, but the clob pair %+v is not in final settlement",
 			matchDeleveraging,
 			clobPair,
