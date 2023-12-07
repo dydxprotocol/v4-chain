@@ -646,7 +646,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				),
 			)
 		} else if !canDeleverageSubaccount {
-			// If the deleverage is a final settlement match, skip this validation as the subaccount does 
+			// If the deleverage is a final settlement match, skip this validation as the subaccount does
 			// not need to have negative TNC to be considered deleveragable.
 			// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 			return errorsmod.Wrapf(

@@ -53,7 +53,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	numLiqOrders := lib.Min(numSubaccounts, int(k.Flags.MaxLiquidationAttemptsPerBlock))
 	indexOffset := pseudoRand.Intn(numSubaccounts)
 
-	clobPairStatuses := make(map[types.ClobPairId]types.ClobPair_Status)
 	startGetLiquidationOrders := time.Now()
 	for i := 0; i < numLiqOrders; i++ {
 		index := (i + indexOffset) % numSubaccounts
@@ -70,16 +69,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 			// Return unexpected errors.
 			return 0, err
-		}
-
-		// Skip liquidation if the ClobPair for the liquidation order is in final settlement. There is a separate flow
-		// for triggering deleveraging/final settlement for positions in closed markets.
-		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
-			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
-			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
-		}
-		if clobPairStatuses[liquidationOrder.GetClobPairId()] == types.ClobPair_STATUS_FINAL_SETTLEMENT {
-			continue
 		}
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
@@ -105,6 +94,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	startPlaceLiquidationOrders := time.Now()
 	unfilledLiquidations := make([]types.LiquidationOrder, 0)
+	clobPairStatuses := make(map[types.ClobPairId]types.ClobPair_Status)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
@@ -117,6 +107,17 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 			// Return unexpected errors.
 			return 0, err
+		}
+
+		// Skip liquidation if the ClobPair for the liquidation order is in final settlement. There is a separate flow
+		// for triggering deleveraging/final settlement for positions in closed markets.
+		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
+			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
+			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
+		}
+		if clobPairStatuses[liquidationOrder.GetClobPairId()] == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			unfilledLiquidations = append(unfilledLiquidations, *liquidationOrder)
+			continue
 		}
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
