@@ -645,6 +645,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
 		liquidatableSubaccountIds []satypes.SubaccountId
+		subaccountPositionInfo    map[uint32]map[bool]map[satypes.SubaccountId]struct{}
 
 		// Configuration.
 		liquidationConfig clobtypes.LiquidationsConfig
@@ -1163,6 +1164,95 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						{
 							AssetId:  0,
 							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
+						},
+					},
+				},
+			},
+		},
+		`Deleveraging occurs for negative TNC subaccount with open position in final settlement market`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			subaccountPositionInfo: map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
+					false: {
+						constants.Carl_Num0: {},
+					},
+					true: {
+						constants.Dave_Num0: {},
+					},
+				},
+			},
+
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			// Account should be deleveraged regardless of whether or not the liquidations engine returns this subaccount
+			// in the list of liquidatable subaccounts. Pass empty list to confirm this.
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidityTiers:            constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
+						},
+					},
+				},
+			},
+		},
+		`Deleveraging occurs for non-negative TNC subaccounts with open positions in final settlement market`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			subaccountPositionInfo: map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
+					false: {
+						constants.Carl_Num0: {},
+					},
+					true: {
+						constants.Dave_Num0: {},
+					},
+				},
+			},
+			// Account should be deleveraged regardless of whether or not the liquidations engine returns this subaccount
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidityTiers:            constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000),
 						},
 					},
 				},

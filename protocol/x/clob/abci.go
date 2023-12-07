@@ -12,6 +12,7 @@ import (
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -205,10 +206,19 @@ func PrepareCheckState(
 	}
 
 	// 7. Deleverage subaccounts with open positions in final settlement markets.
-	subaccountOpenPositionInfo := make(map[uint32]map[bool]map[satypes.SubaccountId]struct{})
+	subaccountPositionInfo := map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
+		0: {
+			false: {
+				constants.Carl_Num0: {},
+			},
+			true: {
+				constants.Dave_Num0: {},
+			},
+		},
+	}
 	if err := keeper.DeleverageSubaccountsInFinalSettlementMarkets(
 		ctx,
-		subaccountOpenPositionInfo,
+		subaccountPositionInfo,
 		numDeleveragingAttempts,
 	); err != nil {
 		panic(err)
