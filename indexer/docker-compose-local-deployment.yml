@@ -114,14 +114,12 @@ services:
       dockerfile: Dockerfile.service.local
       args:
         service: comlink
-        NPM_TOKEN: ${NPM_TOKEN}
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/nodejs/ for DD_ specific environment variables.
       # Note that DD_SERVICE and DD_VERSION are read by default from package.json
       - DD_PROFILING_ENABLED=true
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
-      - TENDERMINT_WS_URL=host.docker.internal:26657 # connects to localhost:26657 on host machine
       - REDIS_URL=redis://redis:6379
       - RATE_LIMIT_REDIS_URL=redis://redis:6379
       - PORT=3002
