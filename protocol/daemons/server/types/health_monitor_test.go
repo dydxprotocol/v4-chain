@@ -129,7 +129,7 @@ func TestRegisterServiceWithCallback_Mixed(t *testing.T) {
 
 func TestHealthMonitor_DisablePanics_DoesNotPanic(t *testing.T) {
 	logger := &mocks.Logger{}
-	logger.On("With", "module", "health-monitor").Return(logger).Once()
+	logger.On("With", "module", "daemon-health-monitor").Return(logger).Once()
 	logger.On(
 		"Error",
 		"health-checked service is unhealthy",
