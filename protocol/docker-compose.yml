@@ -10,13 +10,15 @@ services:
       - --log_level
       # Note that only this validator has a log-level of `info`; other validators use `error` by default.
       # Change to `debug` for more verbose log-level.
-      - info 
+      - info
       - --home
       - /dydxprotocol/chain/.alice
-      - --p2p.persistent_peers 
+      - --p2p.persistent_peers
       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
       - --bridge-daemon-eth-rpc-endpoint
       - "${ETH_RPC_ENDPOINT}"
+      - --max-daemon-unhealthy-seconds
+      - "4294967295" # Effectively disable the daemon monitor because bridge daemon is flaky in localnet.
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
@@ -28,7 +30,7 @@ services:
       - "26657:26657"
       - "9090:9090"
       - "1317:1317"
-  
+
   dydxprotocold1:
     image: local:dydxprotocol
     entrypoint:
@@ -39,10 +41,12 @@ services:
        - error
        - --home
        - /dydxprotocol/chain/.bob
-       - --p2p.persistent_peers 
+       - --p2p.persistent_peers
        - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
        - --bridge-daemon-eth-rpc-endpoint
        - "${ETH_RPC_ENDPOINT}"
+       - --max-daemon-unhealthy-seconds
+       - "4294967295"
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
@@ -52,7 +56,7 @@ services:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
     ports:
       - "26658:26657"
- 
+
   dydxprotocold2:
     image: local:dydxprotocol
     entrypoint:
@@ -67,6 +71,8 @@ services:
        - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
        - --bridge-daemon-eth-rpc-endpoint
        - "${ETH_RPC_ENDPOINT}"
+       - --max-daemon-unhealthy-seconds
+       - "4294967295"
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
@@ -74,7 +80,7 @@ services:
       - DAEMON_HOME=/dydxprotocol/chain/.carl
     volumes:
       - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
-  
+
   dydxprotocold3:
     image: local:dydxprotocol
     entrypoint:
@@ -85,10 +91,12 @@ services:
        - error
        - --home
        - /dydxprotocol/chain/.dave
-       - --p2p.persistent_peers 
+       - --p2p.persistent_peers
        - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
        - --bridge-daemon-eth-rpc-endpoint
        - "${ETH_RPC_ENDPOINT}"
+       - --max-daemon-unhealthy-seconds
+       - "4294967295"
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}

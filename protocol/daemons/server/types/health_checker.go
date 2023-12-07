@@ -145,10 +145,10 @@ type healthChecker struct {
 	// pollFrequency is the frequency at which the health-checkable service is polled.
 	pollFrequency time.Duration
 
-	// maxAcceptableUnhealthyDuration is the maximum acceptable duration for a health-checkable service to
+	// maxUnhealthyDuration is the maximum acceptable duration for a health-checkable service to
 	// remain unhealthy. If the service remains unhealthy for this duration, the monitor will execute the
 	// specified callback function.
-	maxAcceptableUnhealthyDuration time.Duration
+	maxUnhealthyDuration time.Duration
 
 	// unhealthyCallback is the callback function to be executed if the health-checkable service remains
 	// unhealthy for a period of time greater than or equal to the maximum acceptable unhealthy duration.
@@ -174,7 +174,7 @@ func (hc *healthChecker) Poll() {
 		streakDuration := hc.mutableState.ReportFailure(now, err)
 		// If the service has been unhealthy for longer than the maximum acceptable unhealthy duration, execute the
 		// callback function.
-		if streakDuration >= hc.maxAcceptableUnhealthyDuration {
+		if streakDuration >= hc.maxUnhealthyDuration {
 			hc.unhealthyCallback(err)
 		}
 	}
@@ -197,17 +197,18 @@ func StartNewHealthChecker(
 	pollFrequency time.Duration,
 	unhealthyCallback func(error),
 	timeProvider libtime.TimeProvider,
-	maximumAcceptableUnhealthyDuration time.Duration,
+	maxUnhealthyDuration time.Duration,
 	startupGracePeriod time.Duration,
 	logger log.Logger,
 ) *healthChecker {
 	checker := &healthChecker{
-		healthCheckable:                healthCheckable,
-		pollFrequency:                  pollFrequency,
-		unhealthyCallback:              unhealthyCallback,
-		timeProvider:                   timeProvider,
-		maxAcceptableUnhealthyDuration: maximumAcceptableUnhealthyDuration,
-		logger:                         logger,
+		healthCheckable:      healthCheckable,
+		pollFrequency:        pollFrequency,
+		unhealthyCallback:    unhealthyCallback,
+		timeProvider:         timeProvider,
+		maxUnhealthyDuration: maxUnhealthyDuration,
+		logger:               logger,
+		mutableState:         &healthCheckerMutableState{},
 	}
 
 	// The first poll is scheduled after the startup grace period to allow the service to initialize.

@@ -5,7 +5,6 @@ package client_test
 import (
 	"fmt"
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
@@ -285,6 +284,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		servertypes.DaemonStartupGracePeriod,
 		servertypes.HealthCheckPollFrequency,
 		log.TestingLogger(),
+		flags.GetDefaultDaemonFlags().Shared.PanicOnDaemonFailureEnabled, // Use default behavior for testing
 	)
 
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
@@ -337,7 +337,10 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},
 	)
-	err := s.healthMonitor.RegisterService(s.pricefeedDaemon, app.MaximumDaemonUnhealthyDuration)
+	err := s.healthMonitor.RegisterService(
+		s.pricefeedDaemon,
+		time.Duration(s.daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
+	)
 	s.Require().NoError(err)
 }
 

@@ -183,10 +183,6 @@ import (
 var (
 	// DefaultNodeHome default home directories for the application daemon
 	DefaultNodeHome string
-
-	// MaximumDaemonUnhealthyDuration is the maximum amount of time that a daemon can be unhealthy before the
-	// application panics.
-	MaximumDaemonUnhealthyDuration = 5 * time.Minute
 )
 
 var (
@@ -599,6 +595,7 @@ func New(
 		daemonservertypes.DaemonStartupGracePeriod,
 		daemonservertypes.HealthCheckPollFrequency,
 		app.Logger(),
+		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
 	)
 	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
@@ -606,6 +603,7 @@ func New(
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
 	app.startDaemons = func() {
+		maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 		// Start server for handling gRPC messages from daemons.
 		go app.Server.Start()
 
@@ -613,7 +611,7 @@ func New(
 		if daemonFlags.Liquidation.Enabled {
 			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
-				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, maxDaemonUnhealthyDuration)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -645,17 +643,15 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, MaximumDaemonUnhealthyDuration)
+			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 		}
 
 		// Start Bridge Daemon.
 		// Non-validating full-nodes have no need to run the bridge daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
-			// environments.
 			app.BridgeClient = bridgeclient.NewClient(logger)
 			go func() {
-				app.RegisterDaemonWithHealthMonitor(app.BridgeClient, MaximumDaemonUnhealthyDuration)
+				app.RegisterDaemonWithHealthMonitor(app.BridgeClient, maxDaemonUnhealthyDuration)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -1234,17 +1230,17 @@ func New(
 // the health of the daemon. If the daemon does not register, the method will panic.
 func (app *App) RegisterDaemonWithHealthMonitor(
 	healthCheckableDaemon daemontypes.HealthCheckable,
-	maximumAcceptableUpdateDelay time.Duration,
+	maxDaemonUnhealthyDuration time.Duration,
 ) {
-	if err := app.DaemonHealthMonitor.RegisterService(healthCheckableDaemon, maximumAcceptableUpdateDelay); err != nil {
+	if err := app.DaemonHealthMonitor.RegisterService(healthCheckableDaemon, maxDaemonUnhealthyDuration); err != nil {
 		app.Logger().Error(
 			"Failed to register daemon service with update monitor",
 			"error",
 			err,
 			"service",
 			healthCheckableDaemon.ServiceName(),
-			"maximumAcceptableUpdateDelay",
-			maximumAcceptableUpdateDelay,
+			"maxDaemonUnhealthyDuration",
+			maxDaemonUnhealthyDuration,
 		)
 		panic(err)
 	}

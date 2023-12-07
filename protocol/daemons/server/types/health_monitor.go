@@ -122,9 +122,14 @@ type HealthMonitor struct {
 	mutableState *healthMonitorMutableState
 
 	// These fields are initialized in NewHealthMonitor and are not modified after initialization.
-	logger             log.Logger
+	logger log.Logger
+	// startupGracePeriod is the grace period before the monitor starts polling the health-checkable services.
 	startupGracePeriod time.Duration
-	pollingFrequency   time.Duration
+	// pollingFrequency is the frequency at which the health-checkable services are polled.
+	pollingFrequency time.Duration
+	// enablePanics is used to toggle between panics or error logs when a daemon sustains an unhealthy state past the
+	// maximum allowable duration.
+	enablePanics bool
 }
 
 // NewHealthMonitor creates a new health monitor.
@@ -132,12 +137,14 @@ func NewHealthMonitor(
 	startupGracePeriod time.Duration,
 	pollingFrequency time.Duration,
 	logger log.Logger,
+	enablePanics bool,
 ) *HealthMonitor {
 	return &HealthMonitor{
 		mutableState:       newHealthMonitorMutableState(),
 		logger:             logger.With(cosmoslog.ModuleKey, HealthMonitorLogModuleName),
 		startupGracePeriod: startupGracePeriod,
 		pollingFrequency:   pollingFrequency,
+		enablePanics:       enablePanics,
 	}
 }
 
@@ -153,15 +160,15 @@ func (hm *HealthMonitor) DisableForTesting() {
 // health-checkable service before returning.
 func (hm *HealthMonitor) RegisterServiceWithCallback(
 	hc types.HealthCheckable,
-	maximumAcceptableUnhealthyDuration time.Duration,
+	maxUnhealthyDuration time.Duration,
 	callback func(error),
 ) error {
-	if maximumAcceptableUnhealthyDuration <= 0 {
+	if maxUnhealthyDuration <= 0 {
 		return fmt.Errorf(
 			"health check registration failure for service %v: "+
-				"maximum acceptable unhealthy duration %v must be positive",
+				"maximum unhealthy duration %v must be positive",
 			hc.ServiceName(),
-			maximumAcceptableUnhealthyDuration,
+			maxUnhealthyDuration,
 		)
 	}
 
@@ -171,7 +178,7 @@ func (hm *HealthMonitor) RegisterServiceWithCallback(
 			hm.pollingFrequency,
 			callback,
 			&libtime.TimeProviderImpl{},
-			maximumAcceptableUnhealthyDuration,
+			maxUnhealthyDuration,
 			hm.startupGracePeriod,
 			hm.logger,
 		)
@@ -202,18 +209,26 @@ func LogErrorServiceNotResponding(hc types.HealthCheckable, logger log.Logger) f
 
 // RegisterService registers a new health-checkable service with the health check monitor. If the service
 // is unhealthy every time it is polled for a duration greater than or equal to the maximum acceptable unhealthy
-// duration, the monitor will panic.
+// duration, the monitor will panic or log an error, depending on the app configuration via the
+// `panic-on-daemon-failure-enabled` flag.
 // This method is synchronized. It returns an error if the service was already registered or the monitor has
 // already been stopped. If the monitor has been stopped, this method will proactively stop the health-checkable
 // service before returning.
 func (hm *HealthMonitor) RegisterService(
 	hc types.HealthCheckable,
-	maximumAcceptableUnhealthyDuration time.Duration,
+	maxDaemonUnhealthyDuration time.Duration,
 ) error {
+	// If the monitor is configured to panic, use the panic callback. Otherwise, use the error log callback.
+	// This behavior is configured via flag and defaults to panicking on daemon failure.
+	callback := LogErrorServiceNotResponding(hc, hm.logger)
+	if hm.enablePanics {
+		callback = PanicServiceNotResponding(hc)
+	}
+
 	return hm.RegisterServiceWithCallback(
 		hc,
-		maximumAcceptableUnhealthyDuration,
-		PanicServiceNotResponding(hc),
+		maxDaemonUnhealthyDuration,
+		callback,
 	)
 }
 
