@@ -6,6 +6,8 @@ import (
 	"runtime/debug"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -383,6 +385,13 @@ func (k Keeper) GetClobMetadata(
 			new(big.Int).SetUint64(uint64(bestAsk.Subticks-bestBid.Subticks)),
 			new(big.Int).SetUint64(uint64(bestBid.Subticks)), // Note that bestBid cannot be 0 if exist is true.
 		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
+			telemetry.IncrCounterWithLabels(
+				[]string{types.ModuleName, metrics.FallbackToOracle, metrics.Count},
+				1,
+				[]gometrics.Label{
+					metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId.ToUint32())),
+				},
+			)
 			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 			// Consistently round down here.
 			oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)

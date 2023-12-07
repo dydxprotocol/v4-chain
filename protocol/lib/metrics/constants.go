@@ -379,6 +379,7 @@ const (
 	TotalNumIndexerTxnEvents   = "total_num_txn_events"
 
 	// Mev.
+	FallbackToOracle               = "fallback_to_oracle"
 	Mev                            = "mev"
 	MevSentDatapoints              = "mev_num_sent_datapoints"
 	MidPrice                       = "mid_price"
