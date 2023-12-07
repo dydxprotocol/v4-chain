@@ -34,7 +34,7 @@ var (
 // createTestMonitor creates a health monitor with a poll frequency of 10ms and a zero duration grace period.
 func createTestMonitor() (*types.HealthMonitor, *mocks.Logger) {
 	logger := &mocks.Logger{}
-	logger.On("With", "module", "health-monitor").Return(logger).Once()
+	logger.On("With", "module", "daemon-health-monitor").Return(logger).Once()
 	return types.NewHealthMonitor(
 		ZeroDuration,
 		10*time.Millisecond,
