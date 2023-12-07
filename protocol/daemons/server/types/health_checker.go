@@ -170,11 +170,9 @@ func (hc *healthChecker) Poll() {
 	err := hc.healthCheckable.HealthCheck()
 	now := hc.timeProvider.Now()
 
-	// Capture healthy response.
-
-	if err == nil {
+	if err == nil { // Capture healthy response.
 		hc.mutableState.ReportSuccess(now)
-	} else {
+	} else { // Capture unhealthy response.
 		streakDuration := hc.mutableState.ReportFailure(now, err)
 		// If the service has been unhealthy for longer than the maximum acceptable unhealthy duration, execute the
 		// callback function.
