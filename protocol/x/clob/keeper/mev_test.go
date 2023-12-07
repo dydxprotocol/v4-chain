@@ -27,6 +27,9 @@ import (
 )
 
 func TestRecordMevMetrics(t *testing.T) {
+	// Set the maximum spread to 10%.
+	keeper.MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 10)
+
 	tests := map[string]struct {
 		// Setup.
 		subaccounts       []satypes.Subaccount
@@ -993,6 +996,10 @@ func TestRecordMevMetrics(t *testing.T) {
 				uint32(0),
 				metrics.MidPrice,
 				tc.expectedMidPrice,
+				metrics.BestBid,
+				mock.Anything,
+				metrics.BestAsk,
+				mock.Anything,
 				// Validator stats.
 				metrics.ValidatorNumFills,
 				tc.expectedValidatorNumFills,
@@ -1014,6 +1021,9 @@ func TestRecordMevMetrics(t *testing.T) {
 }
 
 func TestGetMidPrices(t *testing.T) {
+	// Set the maximum spread to 1%.
+	keeper.MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
+
 	tests := map[string]struct {
 		// Setup.
 		perpetuals  []perptypes.Perpetual
