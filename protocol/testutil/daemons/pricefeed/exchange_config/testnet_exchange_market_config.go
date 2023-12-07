@@ -1076,6 +1076,20 @@ var (
 				},
 			},
 		},
+		exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: {
+			Id: exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE,
+			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_BTC_USD: {
+					Ticker: "BTC-USD",
+				},
+				MARKET_ETH_USD: {
+					Ticker: "ETH-USD",
+				},
+				MARKET_SOL_USD: {
+					Ticker: "SOL-USD",
+				},
+			},
+		},
 	}
 )
 
