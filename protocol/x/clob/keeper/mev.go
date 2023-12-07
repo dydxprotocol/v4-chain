@@ -356,7 +356,8 @@ func (k Keeper) RecordMevMetrics(
 }
 
 // GetClobMetadata fetches the mid prices for all CLOB pairs and the CLOB pairs themselves.
-// This function falls back to use the oracle price if any of the mid prices are missing.
+// This function falls back to use the oracle price if any of the mid prices are missing
+// or if the spread is greater-than-or-equal-to the max spread.
 func (k Keeper) GetClobMetadata(
 	ctx sdk.Context,
 ) (
@@ -371,10 +372,11 @@ func (k Keeper) GetClobMetadata(
 
 		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
 
-                // Use the oracle price instead of the mid price if the mid price doesn't exist or the spread is greater-than-or-equal-to the max spread.
+		// Use the oracle price instead of the mid price if the mid price doesn't exist or
+		// the spread is greater-than-or-equal-to the max spread.
 		if !exist || new(big.Rat).SetFrac(
 			new(big.Int).SetUint64(uint64(bestAsk-bestBid)),
-			new(big.Int).SetUint64(uint64(bestBid)),
+			new(big.Int).SetUint64(uint64(bestBid)), // Note that bestBid cannot be 0 if exist is true.
 		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
 			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 			// Consistently round down here.
