@@ -44,22 +44,34 @@ export interface DecCoinSDKType {
   denom: string;
   amount: string;
 }
-/** IntProto defines a Protobuf wrapper around an Int object. */
+/**
+ * IntProto defines a Protobuf wrapper around an Int object.
+ * Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
+ */
 
 export interface IntProto {
   int: string;
 }
-/** IntProto defines a Protobuf wrapper around an Int object. */
+/**
+ * IntProto defines a Protobuf wrapper around an Int object.
+ * Deprecated: Prefer to use math.Int directly. It supports binary Marshal and Unmarshal.
+ */
 
 export interface IntProtoSDKType {
   int: string;
 }
-/** DecProto defines a Protobuf wrapper around a Dec object. */
+/**
+ * DecProto defines a Protobuf wrapper around a Dec object.
+ * Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
+ */
 
 export interface DecProto {
   dec: string;
 }
-/** DecProto defines a Protobuf wrapper around a Dec object. */
+/**
+ * DecProto defines a Protobuf wrapper around a Dec object.
+ * Deprecated: Prefer to use math.LegacyDec directly. It supports binary Marshal and Unmarshal.
+ */
 
 export interface DecProtoSDKType {
   dec: string;

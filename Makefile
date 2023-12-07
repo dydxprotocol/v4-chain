@@ -18,11 +18,11 @@ proto-check-bc-breaking:
 	@$(protoImage) buf breaking --against .git#branch=$$(git merge-base HEAD origin/main)
 
 proto-export:
-	@rm -rf proto/.proto-export && cd proto && buf export --config ./buf.yaml --output ../.proto-export
+	@rm -rf ./.proto-export && cd proto && buf export --config ./buf.yaml --output ../.proto-export
 
 proto-export-deps:
 	@rm -rf ./.proto-export-deps
-	@cd proto && buf export --config ./buf.yaml --output ../.proto-export-deps --exclude-imports && buf export buf.build/cosmos/cosmos-sdk:v0.47.0 --output ../.proto-export-deps
+	@cd proto && buf export --config ./buf.yaml --output ../.proto-export-deps --exclude-imports && buf export buf.build/cosmos/cosmos-sdk:v0.50.0 --output ../.proto-export-deps
 
 PROTO_DIRS=$(shell find .proto-export-deps -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 

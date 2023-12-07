@@ -20,7 +20,7 @@ var MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
 
 type MevTelemetryConfig struct {
 	Enabled    bool
-	Host       string
+	Hosts      []string
 	Identifier string
 }
 
@@ -329,7 +329,7 @@ func (k Keeper) RecordMevMetrics(
 		mevPerMarket[clobPairId] = mev
 	}
 
-	if k.mevTelemetryConfig.Host != "" {
+	if len(k.mevTelemetryConfig.Hosts) != 0 {
 		mevClobMidPrices := make([]types.ClobMidPrice, 0, len(clobMetadata))
 		for _, metadata := range clobMetadata {
 			mevClobMidPrices = append(
@@ -342,7 +342,7 @@ func (k Keeper) RecordMevMetrics(
 		}
 		go mev_telemetry.SendDatapoints(
 			ctx,
-			k.mevTelemetryConfig.Host,
+			k.mevTelemetryConfig.Hosts,
 			types.MevMetrics{
 				MevDatapoint: types.MEVDatapoint{
 					Height:              lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
