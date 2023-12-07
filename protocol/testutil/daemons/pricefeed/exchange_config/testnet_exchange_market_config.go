@@ -1076,6 +1076,23 @@ var (
 				},
 			},
 		},
+		exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: {
+			Id: exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE,
+			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_BTC_USD: {
+					Ticker: "BTC-USD",
+				},
+				MARKET_ETH_USD: {
+					Ticker: "ETH-USD",
+				},
+				MARKET_LINK_USD: {
+					Ticker: "LINK-USD",
+				},
+				MARKET_USDT_USD: {
+					Ticker: "USDT-USD",
+				},
+			},
+		},
 	}
 )
 
