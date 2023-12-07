@@ -40,8 +40,13 @@ export function getMaintenanceMarginPpm(
  * Computes the unsettled funding for a position.
  *
  * To compute the net USDC balance for a subaccount, sum the result of this function for all
- * open perpetual positions, and subtract the sum from the latest USDC asset position for
+ * open perpetual positions, and add it to the latest USDC asset position for
  * this subaccount.
+ *
+ * When funding index is increasing, shorts get paid & unsettled funding for shorts should
+ * be positive, vice versa for longs.
+ * When funding index is decreasing, longs get paid & unsettled funding for longs should
+ * be positive, vice versa for shorts.
  *
  * @param position
  * @param latestFundingIndex
@@ -53,8 +58,8 @@ export function getUnsettledFunding(
   lastUpdateFundingIndexMap: FundingIndexMap,
 ): Big {
   return Big(position.size).times(
-    latestFundingIndexMap[position.perpetualId].minus(
-      lastUpdateFundingIndexMap[position.perpetualId],
+    lastUpdateFundingIndexMap[position.perpetualId].minus(
+      latestFundingIndexMap[position.perpetualId],
     ),
   );
 }

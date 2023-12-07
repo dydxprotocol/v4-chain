@@ -337,7 +337,7 @@ export function calculateEquity(
     ZERO,
   );
 
-  return signedPositionNotional.plus(usdcPositionSize).minus(totalUnsettledFundingPayment);
+  return signedPositionNotional.plus(usdcPositionSize).plus(totalUnsettledFundingPayment);
 }
 
 /**

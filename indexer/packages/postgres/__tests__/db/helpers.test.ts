@@ -45,7 +45,7 @@ describe('helpers', () => {
             [defaultFundingIndexUpdate.perpetualId]: Big('10050'),
           },
         ),
-      ).toEqual(Big('20000'));  // 10 * (12050-10050)
+      ).toEqual(Big('-20000'));  // 10 * (10050-12050). longs pay shorts when funding index is increasing.
     });
 
     it('compute unsettled funding for short position', () => {
@@ -64,7 +64,7 @@ describe('helpers', () => {
             [defaultFundingIndexUpdate.perpetualId]: Big('10050'),
           },
         ),
-      ).toEqual(Big('-20000'));  // -10 * (12050-10050)
+      ).toEqual(Big('20000'));  // -10 * (10050-12050). longs pay shorts when funding index is increasing.
     });
 
     it('compute unsettled funding for decimal position', () => {
@@ -82,7 +82,7 @@ describe('helpers', () => {
             [defaultFundingIndexUpdate.perpetualId]: Big('10050'),
           },
         ),
-      ).toEqual(Big('2700.1674'));  // 1.35 * (12050.124-10050)
+      ).toEqual(Big('-2700.1674'));  // 1.35 * (10050-12050.124). longs pay shorts when funding index is increasing.
     });
   });
 

@@ -405,8 +405,8 @@ describe('helpers', () => {
       );
 
       expect(unsettledFunding).toEqual(
-        Big(perpetualPosition.size).times('100').plus(
-          Big(perpetualPosition2.size).times('1000'),
+        Big(perpetualPosition.size).times('-100').plus(
+          Big(perpetualPosition2.size).times('-1000'),
         ),
       );
     });
@@ -414,8 +414,8 @@ describe('helpers', () => {
 
   describe('adjustUSDCAssetPosition', () => {
     it.each([
-      ['long', PositionSide.LONG, '700', '700'],
-      ['short', PositionSide.SHORT, '1300', '-1300'],
+      ['long', PositionSide.LONG, '1300', '1300'],
+      ['short', PositionSide.SHORT, '700', '-700'],
     ])('adjusts USDC position size in returned map, size: [%s]', (
       _name: string,
       side: PositionSide,
@@ -476,8 +476,8 @@ describe('helpers', () => {
     });
 
     it.each([
-      ['long', 'short', PositionSide.LONG, PositionSide.SHORT, '300', '500', '200', '-200'],
-      ['short', 'long', PositionSide.SHORT, PositionSide.LONG, '300', '-500', '200', '200'],
+      ['long', 'short', PositionSide.LONG, PositionSide.LONG, '300', '500', '800', '800'],
+      ['short', 'long', PositionSide.SHORT, PositionSide.SHORT, '300', '-500', '800', '-800'],
     ])('flips USDC position side, original side [%s], flipped side [%s]', (
       _name: string,
       _secondName: string,
@@ -541,13 +541,12 @@ describe('helpers', () => {
     });
 
     it.each([
-      ['long', PositionSide.LONG, '300', '300'],
-      ['short', PositionSide.SHORT, '300', '-300'],
+      ['long', '300', PositionSide.LONG],
+      ['short', '-300', PositionSide.SHORT],
     ])('adjusts USDC position when USDC position doesn\'t exist, side [%s]', (
       _name: string,
+      funding: string,
       expectedSide: PositionSide,
-      expectedPositionSize: string,
-      expectedAdjustedPositionSize: string,
     ) => {
       const assetPositions: AssetPositionsMap = {
         BTC: {
@@ -564,7 +563,7 @@ describe('helpers', () => {
       }: {
         assetPositionsMap: AssetPositionsMap,
         adjustedUSDCAssetPositionSize: string
-      } = adjustUSDCAssetPosition(assetPositions, Big(-expectedAdjustedPositionSize));
+      } = adjustUSDCAssetPosition(assetPositions, Big(funding));
 
       // Original asset positions object should be unchanged
       expect(assetPositions).toEqual({
@@ -579,7 +578,7 @@ describe('helpers', () => {
         [USDC_SYMBOL]: {
           ...ZERO_USDC_POSITION,
           side: expectedSide,
-          size: expectedPositionSize,
+          size: Big(funding).abs().toString(),
         },
         BTC: {
           symbol: 'BTC',
@@ -588,12 +587,12 @@ describe('helpers', () => {
           size: '1',
         },
       });
-      expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
+      expect(adjustedUSDCAssetPositionSize).toEqual(funding);
     });
 
     it.each([
-      ['long', PositionSide.LONG, '300', '300'],
-      ['short', PositionSide.SHORT, '300', '-300'],
+      ['long', PositionSide.LONG, '300', '-300'],
+      ['short', PositionSide.SHORT, '300', '300'],
     ])('removes USDC position when resulting USDC position size is 0, side [%s]', (
       _name: string,
       side: PositionSide,
