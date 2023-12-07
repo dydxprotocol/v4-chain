@@ -463,6 +463,7 @@ func (f *FakeMemClobKeeper) OffsetSubaccountPerpetualPosition(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantumsTotal *big.Int,
+	isFinalSettlement bool,
 ) (
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,

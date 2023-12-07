@@ -722,6 +722,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				tc.liquidatedSubaccountId,
 				tc.perpetualId,
 				tc.deltaQuantums,
+				false, // TODO, add tests where final settlement is true
 			)
 			require.Equal(t, tc.expectedFills, fills)
 			require.True(t, tc.expectedQuantumsRemaining.Cmp(deltaQuantumsRemaining) == 0)

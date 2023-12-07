@@ -43,10 +43,13 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), err
 	}
 
-	// Early return to skip deleveraging if the subaccount can't be deleveraged. Make an exception
-	// for markets in final settlement, since final settlement deleveraging is allowed even for
-	// subaccounts with non-negative TNC.
-	if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT && !canPerformDeleveraging {
+	// Generate final settlement deleveraging matches (at oracle price) if subaccount has non-negative TNC and
+	// the market is in final settlement. This means we will regularly deleverage subaccounts with negative TNC
+	// in markets that are in final settlement.
+	isFinalSettlement := clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT && !canPerformDeleveraging
+
+	// Early return to skip deleveraging if the subaccount can't be deleveraged. Final settlement deleveraging.
+	if !isFinalSettlement && !canPerformDeleveraging {
 		metrics.IncrCounter(
 			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
 			1,
@@ -69,7 +72,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement)
 
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -201,6 +204,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantumsTotal *big.Int,
+	isFinalSettlement bool,
 ) (
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
@@ -245,11 +249,12 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 
 			// Fetch delta quote quantums. Calculated at bankruptcy price for standard
 			// deleveraging and at oracle price for final settlement deleveraging.
-			deltaQuoteQuantums, isFinalSettlement, err := k.getDeleveragingQuoteQuantumsDelta(
+			deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
 				ctx,
 				perpetualId,
 				liquidatedSubaccountId,
 				deltaBaseQuantums,
+				isFinalSettlement,
 			)
 			if err != nil {
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
@@ -358,39 +363,26 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 
 // getDeleveragingQuoteQuantums returns the quote quantums delta to apply to a deleveraging operation.
 // This returns the bankruptcy price for standard deleveraging operations, and the oracle price for
-// final settlement deleveraging operations. The type of deleveraging event is determined by the
-// collaterlization status of the subaccount (negative/non-negative TNC) as well as the clob pair
-// status for the specified perpetual.
+// final settlement deleveraging operations.
 func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	ctx sdk.Context,
 	perpetualId uint32,
 	subaccountId satypes.SubaccountId,
 	deltaQuantums *big.Int,
-) (deltaQuoteQuantums *big.Int, isFinalSettlementDeleverage bool, err error) {
-	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
-	isFinalSettlement := clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
-
+	isFinalSettlement bool,
+) (deltaQuoteQuantums *big.Int, err error) {
 	// If market is in final settlement and the subaccount has non-negative TNC, use the oracle price.
 	if isFinalSettlement {
-		hasNegativeTnc, err := k.CanDeleverageSubaccount(ctx, subaccountId)
-		if err != nil {
-			return new(big.Int), false, err
-		}
-
-		if !hasNegativeTnc {
-			quantums, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
-			return quantums, true, err
-		}
+		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
 	}
 
 	// For standard deleveraging, use the bankruptcy price.
-	quantums, err := k.GetBankruptcyPriceInQuoteQuantums(
+	return k.GetBankruptcyPriceInQuoteQuantums(
 		ctx,
 		subaccountId,
 		perpetualId,
 		deltaQuantums,
 	)
-	return quantums, false, err
 }
 
 // ProcessDeleveraging processes a deleveraging operation by closing both the liquidated subaccount's

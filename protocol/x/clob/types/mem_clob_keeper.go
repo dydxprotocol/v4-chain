@@ -90,6 +90,7 @@ type MemClobKeeper interface {
 		liquidatedSubaccountId satypes.SubaccountId,
 		perpetualId uint32,
 		deltaQuantumsTotal *big.Int,
+		isFinalSettlement bool,
 	) (
 		fills []MatchPerpetualDeleveraging_Fill,
 		deltaQuantumsRemaining *big.Int,
