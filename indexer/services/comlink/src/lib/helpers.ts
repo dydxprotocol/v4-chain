@@ -456,7 +456,7 @@ export function adjustUSDCAssetPosition(
   } else {
     signedUsdcPositionSize = ZERO;
   }
-  const adjustedSize: Big = signedUsdcPositionSize.minus(unsettledFunding);
+  const adjustedSize: Big = signedUsdcPositionSize.plus(unsettledFunding);
   // Update the USDC position in the map if the adjusted size is non-zero
   if (!adjustedSize.eq(ZERO)) {
     _.set(

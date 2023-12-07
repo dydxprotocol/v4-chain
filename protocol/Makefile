@@ -373,8 +373,14 @@ localnet-compose-upd:
 	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache
 	@docker-compose -f docker-compose.yml up --force-recreate -d $(ARGS)
 
+build-e2etest-image:
+	@echo "Build e2e test image at commit ${GIT_COMMIT_HASH}"
+	@docker build . -t local:e2etest-dydxprotocol -f testing/e2etest-local/Dockerfile --no-cache
+
 localnet-start: localnet-init localnet-compose-up
 localnet-startd: localnet-init localnet-compose-upd
+
+e2etest-build-image: localnet-init build-e2etest-image
 
 # Continue the localnet with the same chain state.
 localnet-continue:

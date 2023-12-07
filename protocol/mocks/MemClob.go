@@ -107,7 +107,7 @@ func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) 
 }
 
 // GetMidPrice provides a mock function with given fields: ctx, clobPairId
-func (_m *MemClob) GetMidPrice(ctx types.Context, clobPairId clobtypes.ClobPairId) (clobtypes.Subticks, bool) {
+func (_m *MemClob) GetMidPrice(ctx types.Context, clobPairId clobtypes.ClobPairId) (clobtypes.Subticks, clobtypes.Order, clobtypes.Order, bool) {
 	ret := _m.Called(ctx, clobPairId)
 
 	var r0 clobtypes.Subticks
@@ -117,14 +117,28 @@ func (_m *MemClob) GetMidPrice(ctx types.Context, clobPairId clobtypes.ClobPairI
 		r0 = ret.Get(0).(clobtypes.Subticks)
 	}
 
-	var r1 bool
-	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId) bool); ok {
+	var r1 clobtypes.Order
+	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId) clobtypes.Order); ok {
 		r1 = rf(ctx, clobPairId)
 	} else {
-		r1 = ret.Get(1).(bool)
+		r1 = ret.Get(1).(clobtypes.Order)
 	}
 
-	return r0, r1
+	var r2 clobtypes.Order
+	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.ClobPairId) clobtypes.Order); ok {
+		r2 = rf(ctx, clobPairId)
+	} else {
+		r2 = ret.Get(2).(clobtypes.Order)
+	}
+
+	var r3 bool
+	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.ClobPairId) bool); ok {
+		r3 = rf(ctx, clobPairId)
+	} else {
+		r3 = ret.Get(3).(bool)
+	}
+
+	return r0, r1, r2, r3
 }
 
 // GetOperationsRaw provides a mock function with given fields: ctx
