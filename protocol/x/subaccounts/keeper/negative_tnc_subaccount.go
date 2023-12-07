@@ -35,7 +35,7 @@ func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
 
 // SetNegativeTncSubaccountSeenAtBlock sets a block number in state where a negative TNC subaccount
 // was seen. This function will overwrite previous values at this key.
-// This function will panic if the old block heigh is greater than the new block height.
+// This function will panic if the old block height is greater than the new block height.
 func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
 	blockHeight uint32,

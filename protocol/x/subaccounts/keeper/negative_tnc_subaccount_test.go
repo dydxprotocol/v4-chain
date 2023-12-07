@@ -7,6 +7,7 @@ import (
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,7 +22,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		"Block height defaults to zero if not set": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				require.Equal(
-
 					t,
 					uint32(0),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -34,7 +34,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 1)
 				require.Equal(
-
 					t,
 					uint32(1),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -42,14 +41,13 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: []string{
-				"NegSA:",
+				types.NegativeTncSubaccountSeenAtBlockKey,
 			},
 		},
 		"Block height can be updated more than once": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 1)
 				require.Equal(
-
 					t,
 					uint32(1),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -57,7 +55,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 2)
 				require.Equal(
-
 					t,
 					uint32(2),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -65,7 +62,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 3)
 				require.Equal(
-
 					t,
 					uint32(3),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -73,7 +69,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 10)
 				require.Equal(
-
 					t,
 					uint32(10),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -81,17 +76,16 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: []string{
-				"NegSA:",
-				"NegSA:",
-				"NegSA:",
-				"NegSA:",
+				types.NegativeTncSubaccountSeenAtBlockKey,
+				types.NegativeTncSubaccountSeenAtBlockKey,
+				types.NegativeTncSubaccountSeenAtBlockKey,
+				types.NegativeTncSubaccountSeenAtBlockKey,
 			},
 		},
 		"Block height can be updated to same block height": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 0)
 				require.Equal(
-
 					t,
 					uint32(0),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -99,7 +93,6 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 0)
 				require.Equal(
-
 					t,
 					uint32(0),
 					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
@@ -107,8 +100,8 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: []string{
-				"NegSA:",
-				"NegSA:",
+				types.NegativeTncSubaccountSeenAtBlockKey,
+				types.NegativeTncSubaccountSeenAtBlockKey,
 			},
 		},
 	}
