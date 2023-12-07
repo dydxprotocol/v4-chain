@@ -1572,6 +1572,37 @@ function update_genesis_use_test_volatile_market() {
 	dasel put -t int -f "$GENESIS" '.app_state.clob.clob_pairs.last().quantum_conversion_exponent' -v '-8'
 }
 
+# Modify the genesis file to only use fixed price exchange.
+function update_all_markets_with_fixed_price_exchange() {
+    GENESIS=$1/genesis.json
+
+    # Read the number of markets
+    NUM_MARKETS=$(jq -c '.app_state.prices.market_params | length' < "${GENESIS}")
+
+    # Loop through each market and update the parameters
+    for ((j = 0; j < NUM_MARKETS; j++)); do
+        # Get the current ticker
+        TICKER=$(jq -r ".app_state.prices.market_params[$j].pair" < "${GENESIS}")
+
+        # Update the exchange_config_json using the EOF syntax
+        exchange_config_json=$(cat <<-EOF
+{
+    "exchanges": [
+        {
+            "exchangeName": "TestFixedPriceExchange",
+            "ticker": "${TICKER}"
+        }
+    ]
+}
+EOF
+        )
+        dasel put -t string -f "$GENESIS" ".app_state.prices.market_params.[$j].exchange_config_json" -v "$exchange_config_json"
+
+        # Update the min_exchanges
+        dasel put -t int -f "$GENESIS" ".app_state.prices.market_params.[$j].min_exchanges" -v "1"
+    done
+}
+
 # Modify the genesis file with reduced complete bridge delay (for testing in non-prod envs).
 update_genesis_complete_bridge_delay() {
 	GENESIS=$1/genesis.json
