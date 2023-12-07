@@ -2,7 +2,7 @@
 set -eo pipefail
 
 # This file initializes muliple validators for local and CI testing purposes.
-# This file should be run as part of `docker-compose.yml`.
+# This file should be run as part of `docker-compose-e2e-test.yml`.
 
 source "./genesis.sh"
 
