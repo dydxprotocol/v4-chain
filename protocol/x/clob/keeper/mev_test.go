@@ -1275,24 +1275,23 @@ func TestGetMidPrices(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			clobMidPrices, clobPairs := ks.ClobKeeper.GetClobMetadata(ctx)
+			clobMetadata := ks.ClobKeeper.GetClobMetadata(ctx)
 			blockProposerPnL, validatorPnL := ks.ClobKeeper.InitializeCumulativePnLs(
 				ctx,
 				ks.PerpetualsKeeper,
-				clobMidPrices,
-				clobPairs,
+				clobMetadata,
 			)
 
 			for clobPairId, expectedMidPrice := range tc.expectedMidPrices {
 				require.Equal(
 					t,
 					expectedMidPrice,
-					blockProposerPnL[clobPairId].MidPriceSubticks,
+					blockProposerPnL[clobPairId].Metadata.MidPrice,
 				)
 				require.Equal(
 					t,
 					expectedMidPrice,
-					validatorPnL[clobPairId].MidPriceSubticks,
+					validatorPnL[clobPairId].Metadata.MidPrice,
 				)
 			}
 		})
