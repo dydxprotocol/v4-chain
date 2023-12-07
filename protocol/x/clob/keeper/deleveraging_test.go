@@ -711,6 +711,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							satypes.BaseQuantums(fill.FillAmount),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -1126,6 +1127,7 @@ func TestProcessDeleveraging(t *testing.T) {
 							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -1334,6 +1336,7 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
 							satypes.BaseQuantums(fillPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -1493,6 +1496,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()

@@ -670,12 +670,18 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			deltaBaseQuantums.Neg(deltaBaseQuantums)
 		}
 
-		deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
-			ctx,
-			perpetualId,
-			liquidatedSubaccountId,
-			deltaBaseQuantums,
-		)
+		deltaQuoteQuantums := new(big.Int)
+		var err error
+		if matchDeleveraging.IsFinalSettlement {
+			deltaQuoteQuantums, err = k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaBaseQuantums)
+		} else {
+			deltaQuoteQuantums, err = k.GetBankruptcyPriceInQuoteQuantums(
+				ctx,
+				liquidatedSubaccountId,
+				perpetualId,
+				deltaBaseQuantums,
+			)
+		}
 		if err != nil {
 			return err
 		}
@@ -700,6 +706,25 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			)
 		}
+
+		// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+		// if the branched state is discarded, so batching is not necessary.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeDeleveraging,
+			indexerevents.DeleveragingEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewDeleveragingEvent(
+					liquidatedSubaccountId,
+					fill.OffsettingSubaccountId,
+					perpetualId,
+					satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+					satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
+					deltaBaseQuantums.Sign() > 0,
+					matchDeleveraging.IsFinalSettlement,
+				),
+			),
+		)
 	}
 
 	return nil

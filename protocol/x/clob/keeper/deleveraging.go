@@ -6,12 +6,11 @@ import (
 	"math/big"
 	"time"
 
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -237,20 +236,20 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 
 			// TODO(DEC-1495): Determine max amount to offset per offsetting subaccount.
-			var deltaQuantums *big.Int
+			var deltaBaseQuantums *big.Int
 			if deltaQuantumsRemaining.CmpAbs(bigOffsettingPositionQuantums) > 0 {
-				deltaQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
+				deltaBaseQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
 			} else {
-				deltaQuantums = new(big.Int).Set(deltaQuantumsRemaining)
+				deltaBaseQuantums = new(big.Int).Set(deltaQuantumsRemaining)
 			}
 
 			// Fetch delta quote quantums. Calculated at bankruptcy price for standard
 			// deleveraging and at oracle price for final settlement deleveraging.
-			deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
+			deltaQuoteQuantums, isFinalSettlement, err := k.getDeleveragingQuoteQuantumsDelta(
 				ctx,
 				perpetualId,
 				liquidatedSubaccountId,
-				deltaQuantums,
+				deltaBaseQuantums,
 			)
 			if err != nil {
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
@@ -259,9 +258,10 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"error", err,
 					"blockHeight", ctx.BlockHeight(),
 					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
+					"deltaBaseQuantums", deltaBaseQuantums,
 					"liquidatedSubaccount", liquidatedSubaccount,
 					"offsettingSubaccount", offsettingSubaccount,
+					"isFinalSettlement", isFinalSettlement,
 				)
 				return false
 			}
@@ -272,18 +272,37 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				liquidatedSubaccountId,
 				*offsettingSubaccount.Id,
 				perpetualId,
-				deltaQuantums,
+				deltaBaseQuantums,
 				deltaQuoteQuantums,
 			); err == nil {
 				// Update the remaining liquidatable quantums.
 				deltaQuantumsRemaining = new(big.Int).Sub(
 					deltaQuantumsRemaining,
-					deltaQuantums,
+					deltaBaseQuantums,
 				)
 				fills = append(fills, types.MatchPerpetualDeleveraging_Fill{
 					OffsettingSubaccountId: *offsettingSubaccount.Id,
-					FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
+					FillAmount:             new(big.Int).Abs(deltaBaseQuantums).Uint64(),
 				})
+
+				// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+				// if the branched state is discarded, so batching is not necessary.
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							liquidatedSubaccountId,
+							*offsettingSubaccount.Id,
+							perpetualId,
+							satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+							satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
+							deltaBaseQuantums.Sign() > 0,
+							isFinalSettlement,
+						),
+					),
+				)
 			} else if errors.Is(err, types.ErrInvalidPerpetualPositionSizeDelta) {
 				panic(
 					fmt.Sprintf(
@@ -302,12 +321,13 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"blockHeight", ctx.BlockHeight(),
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
+					"deltaQuantums", deltaBaseQuantums,
 					"liquidatedSubaccount", liquidatedSubaccount,
 					"offsettingSubaccount", offsettingSubaccount,
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
+
 			return deltaQuantumsRemaining.Sign() == 0
 		},
 		k.GetPseudoRand(ctx),
@@ -346,7 +366,7 @@ func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	perpetualId uint32,
 	subaccountId satypes.SubaccountId,
 	deltaQuantums *big.Int,
-) (*big.Int, error) {
+) (deltaQuoteQuantums *big.Int, isFinalSettlementDeleverage bool, err error) {
 	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 	isFinalSettlement := clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
 
@@ -354,21 +374,23 @@ func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	if isFinalSettlement {
 		hasNegativeTnc, err := k.CanDeleverageSubaccount(ctx, subaccountId)
 		if err != nil {
-			return new(big.Int), err
+			return new(big.Int), false, err
 		}
 
 		if !hasNegativeTnc {
-			return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+			quantums, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+			return quantums, true, err
 		}
 	}
 
 	// For standard deleveraging, use the bankruptcy price.
-	return k.GetBankruptcyPriceInQuoteQuantums(
+	quantums, err := k.GetBankruptcyPriceInQuoteQuantums(
 		ctx,
 		subaccountId,
 		perpetualId,
 		deltaQuantums,
 	)
+	return quantums, false, err
 }
 
 // ProcessDeleveraging processes a deleveraging operation by closing both the liquidated subaccount's
@@ -504,24 +526,6 @@ func (k Keeper) ProcessDeleveraging(
 			false, // IsLiquidation is false since this isn't a liquidation match.
 			true,  // IsDeleverage is true since this is a deleveraging match.
 			perpetualId,
-		),
-	)
-
-	// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
-	// if the branched state is discarded, so batching is not necessary.
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeDeleveraging,
-		indexerevents.DeleveragingEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewDeleveragingEvent(
-				liquidatedSubaccountId,
-				offsettingSubaccountId,
-				perpetualId,
-				satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
-				satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
-				deltaBaseQuantums.Sign() > 0,
-			),
 		),
 	)
 

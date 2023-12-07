@@ -14,15 +14,17 @@ func NewDeleveragingEvent(
 	fillAmount satypes.BaseQuantums,
 	price satypes.BaseQuantums,
 	isBuy bool,
+	isFinalSettlement bool,
 ) *DeleveragingEventV1 {
 	indexerLiquidatedSubaccountId := v1.SubaccountIdToIndexerSubaccountId(liquidatedSubaccountId)
 	indexerOffsettingSubaccountId := v1.SubaccountIdToIndexerSubaccountId(offsettingSubaccountId)
 	return &DeleveragingEventV1{
-		Liquidated:  indexerLiquidatedSubaccountId,
-		Offsetting:  indexerOffsettingSubaccountId,
-		PerpetualId: perpetualId,
-		FillAmount:  fillAmount.ToUint64(),
-		Price:       price.ToUint64(),
-		IsBuy:       isBuy,
+		Liquidated:        indexerLiquidatedSubaccountId,
+		Offsetting:        indexerOffsettingSubaccountId,
+		PerpetualId:       perpetualId,
+		FillAmount:        fillAmount.ToUint64(),
+		Price:             price.ToUint64(),
+		IsBuy:             isBuy,
+		IsFinalSettlement: isFinalSettlement,
 	}
 }
