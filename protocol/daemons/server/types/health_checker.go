@@ -8,47 +8,44 @@ import (
 	"time"
 )
 
-// timestampWithError couples a timestamp and error to make it easier to update them in tandem. The
-// timestampWithError will track the timestamp of the first error in a streak of errors, but keeps a record of the
-// most recent error. This is useful for determining how long a service has been unhealthy, as well as the current
-// state of the service.
-type timestampWithError struct {
-	timestamp time.Time
-	err       error
+// errorStreak tracks two relevant statistics for an error streak returned by a HealthCheckable - the timestamp of the
+// beginning of the error streak, and the most recent error. This is useful for determining how long a service has been
+// unhealthy, as well as the current state of the service.
+type errorStreak struct {
+	startOfStreak   time.Time
+	mostRecentError error
 }
 
-// Update updates the timeStampWithError to reflect the current error. If the timestamp is zero, this is the first
-// update, so set the timestamp.
-func (u *timestampWithError) Update(timestamp time.Time, err error) {
-	// If the timestamp is zero, this is the first update, so set the timestamp.
-	if u.timestamp.IsZero() {
-		u.timestamp = timestamp
+// UpdateLastError updates the errorStreak to reflect the current error. If the startOfStreak timestamp is zero, this
+// error the first error in a new error streak, so the startOfStreak timestamp is set to the current timestamp.
+func (u *errorStreak) UpdateLastError(timestamp time.Time, err error) {
+	// If the startOfStreak is zero, this is the first update, so set the startOfStreak.
+	if u.startOfStreak.IsZero() {
+		u.startOfStreak = timestamp
 	}
 
-	u.err = err
+	u.mostRecentError = err
 }
 
-// Reset resets the timestampWithError to its zero value, indicating that the service is healthy.
-func (u *timestampWithError) Reset() {
-	u.timestamp = time.Time{}
-	u.err = nil
+// Reset resets the errorStreak to its zero value, indicating that the service has no active error streak.
+func (u *errorStreak) Reset() {
+	u.startOfStreak = time.Time{}
+	u.mostRecentError = nil
 }
 
-// IsZero returns true if the timestampWithError is zero, indicating that the service is healthy.
-func (u *timestampWithError) IsZero() bool {
-	return u.timestamp.IsZero() && u.err == nil
+// IsUnset returns true if the errorStreak is unset, indicating that the service has no active error streak.
+func (u *errorStreak) IsUnset() bool {
+	return u.startOfStreak.IsZero() && u.mostRecentError == nil
 }
 
-// Timestamp returns the timestamp associated with the timestampWithError, which is the timestamp of the first error
-// in the current error streak.
-func (u *timestampWithError) Timestamp() time.Time {
-	return u.timestamp
+// StartOfStreak returns the timestamp of th start of the most recent error streak.
+func (u *errorStreak) StartOfStreak() time.Time {
+	return u.startOfStreak
 }
 
-// Error returns the error associated with the timestampWithError, which is the most recent error in the current error
-// streak.
-func (u *timestampWithError) Error() error {
-	return u.err
+// MostRecentError returns the most recent error associated with the current error streak.
+func (u *errorStreak) MostRecentError() error {
+	return u.mostRecentError
 }
 
 // healthCheckerMutableState tracks the current health state of the HealthCheckable, encapsulating all mutable state
@@ -57,16 +54,17 @@ type healthCheckerMutableState struct {
 	// lock is used to synchronize access to mutable state fields.
 	lock sync.Mutex
 
-	// lastSuccessTimestamp is the timestamp of the most recent successful health check.
+	// lastSuccessTimestamp is the startOfStreak of the most recent successful health check.
 	// Access to lastSuccessTimestamp is synchronized.
 	lastSuccessTimestamp time.Time
 
-	// mostRecentFailureStreakError tracks the timestamp of the first error in the most recent streak of errors, as well
-	// as the most recent error. It is updated on every error and reset every time the service sees a healthy response.
-	// This field is used to determine how long the daemon has been unhealthy. If this timestamp is nil, then either
-	// the service has never been unhealthy, or the most recent error streak ended before it could trigger a callback.
-	// Access to mostRecentFailureStreakError is synchronized.
-	mostRecentFailureStreakError timestampWithError
+	// mostRecentErrorStreak tracks the beginning of the most recent streak, as well as the current error in the streak.
+	// It is updated on every error and reset every time the service sees a healthy response.
+	// This field is used to determine how long the daemon has been unhealthy. If the mostRecentErrorStreak is unset,
+	// then either the service has never been unhealthy, or the most recent error streak ended before it could trigger
+	// a callback.
+	// Access to mostRecentErrorStreak is synchronized.
+	mostRecentErrorStreak errorStreak
 
 	// timer triggers a health check poll for a health-checkable service.
 	timer *time.Timer
@@ -92,8 +90,8 @@ func (u *healthCheckerMutableState) ReportSuccess(now time.Time) {
 
 	u.lastSuccessTimestamp = now
 
-	// Whenever the service is healthy, reset the first failure in streak timestamp.
-	u.mostRecentFailureStreakError.Reset()
+	// Whenever the service is healthy, reset the first failure in streak startOfStreak.
+	u.mostRecentErrorStreak.Reset()
 }
 
 // ReportFailure updates the health checker's mutable state to reflect a failed health check and schedules the next
@@ -102,9 +100,9 @@ func (u *healthCheckerMutableState) ReportFailure(now time.Time, err error) time
 	u.lock.Lock()
 	defer u.lock.Unlock()
 
-	u.mostRecentFailureStreakError.Update(now, err)
+	u.mostRecentErrorStreak.UpdateLastError(now, err)
 
-	return now.Sub(u.mostRecentFailureStreakError.Timestamp())
+	return now.Sub(u.mostRecentErrorStreak.StartOfStreak())
 }
 
 // SchedulePoll schedules the next poll for the health-checkable service. If the service is stopped, the next poll
@@ -181,7 +179,10 @@ func (hc *healthChecker) Poll() {
 		}
 	}
 
-	// Schedule next poll.
+	// Schedule next poll. We schedule another poll whether the callback was invoked or not, as callbacks are not
+	// guaranteed to panic or otherwise halt the daemon. In such cases, we may end up invoking the callback several
+	// times once the service exceeds the maximum unhealthy duration. For example, a callback that emits error logs
+	// will continue to emit error logs every 5s until the service becomes healthy again.
 	hc.mutableState.SchedulePoll(hc.pollFrequency)
 }
 
