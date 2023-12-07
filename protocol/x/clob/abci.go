@@ -206,7 +206,11 @@ func PrepareCheckState(
 
 	// 7. Deleverage subaccounts with open positions in final settlement markets.
 	subaccountOpenPositionInfo := make(map[uint32]map[bool]map[satypes.SubaccountId]struct{})
-	if err := keeper.DeleverageSubaccountsInFinalSettlementMarkets(ctx, subaccountOpenPositionInfo, numDeleveragingAttempts); err != nil {
+	if err := keeper.DeleverageSubaccountsInFinalSettlementMarkets(
+		ctx,
+		subaccountOpenPositionInfo,
+		numDeleveragingAttempts,
+	); err != nil {
 		panic(err)
 	}
 
