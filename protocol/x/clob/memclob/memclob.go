@@ -2089,11 +2089,12 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 	clobPairId types.ClobPairId,
 ) (
 	midPrice types.Subticks,
-	bestBid types.Subticks,
-	bestAsk types.Subticks,
+	bestBid types.Order,
+	bestAsk types.Order,
 	exists bool,
 ) {
-	midPrice, bestBid, bestAsk, exists = m.openOrders.orderbooksMap[clobPairId].GetMidPrice()
+	orderbook := m.openOrders.orderbooksMap[clobPairId]
+	midPrice, exists = orderbook.GetMidPrice()
 	if !exists {
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.MissingMidPrice, metrics.Count},
@@ -2105,6 +2106,13 @@ func (m *MemClobPriceTimePriority) GetMidPrice(
 				),
 			},
 		)
+	}
+
+	if levelOrder, found := m.openOrders.getBestOrderOnSide(orderbook, true); found {
+		bestBid = levelOrder.Value.Order
+	}
+	if levelOrder, found := m.openOrders.getBestOrderOnSide(orderbook, false); found {
+		bestBid = levelOrder.Value.Order
 	}
 	return midPrice, bestBid, bestAsk, exists
 }

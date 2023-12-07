@@ -132,8 +132,8 @@ type MemClob interface {
 		clobPairId ClobPairId,
 	) (
 		midPrice Subticks,
-		bestBid Subticks,
-		bestAsk Subticks,
+		bestBid Order,
+		bestAsk Order,
 		exists bool,
 	)
 }

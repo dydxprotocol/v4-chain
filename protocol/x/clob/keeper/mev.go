@@ -27,8 +27,8 @@ type MevTelemetryConfig struct {
 type ClobMetadata struct {
 	ClobPair types.ClobPair
 	MidPrice types.Subticks
-	BestBid  types.Subticks
-	BestAsk  types.Subticks
+	BestBid  types.Order
+	BestAsk  types.Order
 }
 
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
@@ -291,9 +291,13 @@ func (k Keeper) RecordMevMetrics(
 			metrics.MidPrice,
 			validatorPnL[clobPairId].Metadata.MidPrice.ToUint64(),
 			metrics.BestBid,
-			validatorPnL[clobPairId].Metadata.BestBid.ToUint64(),
+			validatorPnL[clobPairId].Metadata.BestBid.Subticks,
+			metrics.BestBidOrderId,
+			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestBid.OrderId),
 			metrics.BestAsk,
-			validatorPnL[clobPairId].Metadata.BestAsk.ToUint64(),
+			validatorPnL[clobPairId].Metadata.BestAsk.Subticks,
+			metrics.BestAskOrderId,
+			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestAsk.OrderId),
 			// Validator stats.
 			metrics.ValidatorNumFills,
 			validatorPnL[clobPairId].NumFills,
@@ -380,8 +384,8 @@ func (k Keeper) GetClobMetadata(
 		// Use the oracle price instead of the mid price if the mid price doesn't exist or
 		// the spread is greater-than-or-equal-to the max spread.
 		if !exist || new(big.Rat).SetFrac(
-			new(big.Int).SetUint64(uint64(bestAsk-bestBid)),
-			new(big.Int).SetUint64(uint64(bestBid)), // Note that bestBid cannot be 0 if exist is true.
+			new(big.Int).SetUint64(uint64(bestAsk.Subticks-bestBid.Subticks)),
+			new(big.Int).SetUint64(uint64(bestBid.Subticks)), // Note that bestBid cannot be 0 if exist is true.
 		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
 			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 			// Consistently round down here.

@@ -96,14 +96,12 @@ func (ob *Orderbook) GetSide(isBuy bool) map[Subticks]*Level {
 // GetMidPrice returns the mid price of the orderbook and whether or not it exists.
 func (ob *Orderbook) GetMidPrice() (
 	midPrice Subticks,
-	bestBid Subticks,
-	bestAsk Subticks,
 	exists bool,
 ) {
 	if ob.BestBid == 0 || ob.BestAsk == math.MaxUint64 {
-		return 0, ob.BestBid, ob.BestAsk, false
+		return 0, false
 	}
-	return ob.BestBid + (ob.BestAsk-ob.BestBid)/2, ob.BestBid, ob.BestAsk, true
+	return ob.BestBid + (ob.BestAsk-ob.BestBid)/2, true
 }
 
 // PendingOpenOrder is a utility struct used for representing an order a subaccount will open. This is
