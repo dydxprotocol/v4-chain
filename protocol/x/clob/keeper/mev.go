@@ -369,10 +369,9 @@ func (k Keeper) GetClobMetadata(
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		clobPairId := clobPair.GetClobPairId()
 
-		// Use the mid price if it exists, and if (BestAsk - BestBid) / BestBid < MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE.
-		// Otherwise fallback to the oracle price.
 		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
 
+                // Use the oracle price instead of the mid price if the mid price doesn't exist or the spread is greater-than-or-equal-to the max spread.
 		if !exist || new(big.Rat).SetFrac(
 			new(big.Int).SetUint64(uint64(bestAsk-bestBid)),
 			new(big.Int).SetUint64(uint64(bestBid)),
