@@ -1130,6 +1130,54 @@ export interface UpdatePerpetualEventV1SDKType {
 
   liquidity_tier: number;
 }
+/**
+ * TradingRewardEventV1 is communicates all trading rewards for all accounts
+ * that receive trade rewards in the block.
+ */
+
+export interface TradingRewardEventV1 {
+  /** The list of all trading rewards in the block. */
+  tradingRewards: AddressTradingReward[];
+}
+/**
+ * TradingRewardEventV1 is communicates all trading rewards for all accounts
+ * that receive trade rewards in the block.
+ */
+
+export interface TradingRewardEventV1SDKType {
+  /** The list of all trading rewards in the block. */
+  trading_rewards: AddressTradingRewardSDKType[];
+}
+/**
+ * AddressTradingReward contains info on an instance of an address receiving a
+ * reward
+ */
+
+export interface AddressTradingReward {
+  /** The address of the wallet that will receive the trading reward. */
+  owner: string;
+  /**
+   * The trading rewards earned by the address above in denoms. 1e18 denoms is
+   * equivalent to a single coin.
+   */
+
+  denoms: Uint8Array;
+}
+/**
+ * AddressTradingReward contains info on an instance of an address receiving a
+ * reward
+ */
+
+export interface AddressTradingRewardSDKType {
+  /** The address of the wallet that will receive the trading reward. */
+  owner: string;
+  /**
+   * The trading rewards earned by the address above in denoms. 1e18 denoms is
+   * equivalent to a single coin.
+   */
+
+  denoms: Uint8Array;
+}
 
 function createBaseFundingUpdateV1(): FundingUpdateV1 {
   return {
@@ -2846,6 +2894,106 @@ export const UpdatePerpetualEventV1 = {
     message.marketId = object.marketId ?? 0;
     message.atomicResolution = object.atomicResolution ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseTradingRewardEventV1(): TradingRewardEventV1 {
+  return {
+    tradingRewards: []
+  };
+}
+
+export const TradingRewardEventV1 = {
+  encode(message: TradingRewardEventV1, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.tradingRewards) {
+      AddressTradingReward.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): TradingRewardEventV1 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseTradingRewardEventV1();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.tradingRewards.push(AddressTradingReward.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<TradingRewardEventV1>): TradingRewardEventV1 {
+    const message = createBaseTradingRewardEventV1();
+    message.tradingRewards = object.tradingRewards?.map(e => AddressTradingReward.fromPartial(e)) || [];
+    return message;
+  }
+
+};
+
+function createBaseAddressTradingReward(): AddressTradingReward {
+  return {
+    owner: "",
+    denoms: new Uint8Array()
+  };
+}
+
+export const AddressTradingReward = {
+  encode(message: AddressTradingReward, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.owner !== "") {
+      writer.uint32(10).string(message.owner);
+    }
+
+    if (message.denoms.length !== 0) {
+      writer.uint32(18).bytes(message.denoms);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): AddressTradingReward {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseAddressTradingReward();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.owner = reader.string();
+          break;
+
+        case 2:
+          message.denoms = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<AddressTradingReward>): AddressTradingReward {
+    const message = createBaseAddressTradingReward();
+    message.owner = object.owner ?? "";
+    message.denoms = object.denoms ?? new Uint8Array();
     return message;
   }
 
