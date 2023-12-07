@@ -651,12 +651,22 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 		)
 	}
-	deltaQuantumsIsNegative := position.GetIsLong()
+	deltaBaseQuantumsIsNegative := position.GetIsLong()
 
 	for _, fill := range matchDeleveraging.GetFills() {
-		deltaQuantums := new(big.Int).SetUint64(fill.FillAmount)
-		if deltaQuantumsIsNegative {
-			deltaQuantums.Neg(deltaQuantums)
+		deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
+		if deltaBaseQuantumsIsNegative {
+			deltaBaseQuantums.Neg(deltaBaseQuantums)
+		}
+
+		deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
+			ctx,
+			perpetualId,
+			liquidatedSubaccountId,
+			deltaBaseQuantums,
+		)
+		if err != nil {
+			return err
 		}
 
 		if err := k.ProcessDeleveraging(
@@ -664,16 +674,18 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			liquidatedSubaccountId,
 			fill.OffsettingSubaccountId,
 			perpetualId,
-			deltaQuantums,
+			deltaBaseQuantums,
+			deltaQuoteQuantums,
 		); err != nil {
 			return errorsmod.Wrapf(
 				types.ErrInvalidDeleveragingFill,
 				"Failed to process deleveraging fill: %+v. liquidatedSubaccountId: %+v, "+
-					"perpetualId: %v, deltaQuantums: %v, error: %v",
+					"perpetualId: %v, deltaBaseQuantums: %v, deltaQuoteQuantums: %v, error: %v",
 				fill,
 				liquidatedSubaccountId,
 				perpetualId,
-				deltaQuantums,
+				deltaBaseQuantums,
+				deltaQuoteQuantums,
 				err,
 			)
 		}
