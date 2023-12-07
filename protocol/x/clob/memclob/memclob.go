@@ -2084,6 +2084,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 
 // GetMidPrice returns the mid price of the orderbook for the given clob pair
 // and whether or not it exists.
+// This function also returns the best bid and best ask orders, if they exist.
 func (m *MemClobPriceTimePriority) GetMidPrice(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,

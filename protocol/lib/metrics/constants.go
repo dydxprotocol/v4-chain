@@ -379,11 +379,12 @@ const (
 	TotalNumIndexerTxnEvents   = "total_num_txn_events"
 
 	// Mev.
-	FallbackToOracle               = "fallback_to_oracle"
+	MevFallbackToOracle            = "mev_fallback_to_oracle"
 	Mev                            = "mev"
 	MevSentDatapoints              = "mev_num_sent_datapoints"
 	MidPrice                       = "mid_price"
 	MissingMidPrice                = "missing_mid_price"
+	OraclePrice                    = "oracle_price"
 	ProposerNumFills               = "proposer_num_fills"
 	ProposerNumMatchedTakerOrders  = "proposer_num_matched_taker_orders"
 	ProposerVolumeQuoteQuantums    = "proposer_volume_quote_quantums"

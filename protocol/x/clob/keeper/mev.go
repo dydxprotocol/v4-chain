@@ -6,8 +6,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -27,10 +25,11 @@ type MevTelemetryConfig struct {
 }
 
 type ClobMetadata struct {
-	ClobPair types.ClobPair
-	MidPrice types.Subticks
-	BestBid  types.Order
-	BestAsk  types.Order
+	ClobPair    types.ClobPair
+	MidPrice    types.Subticks
+	OraclePrice types.Subticks
+	BestBid     types.Order
+	BestAsk     types.Order
 }
 
 // CumulativePnL keeps track of the cumulative PnL for each subaccount per market.
@@ -292,6 +291,8 @@ func (k Keeper) RecordMevMetrics(
 			clobPairId.ToUint32(),
 			metrics.MidPrice,
 			validatorPnL[clobPairId].Metadata.MidPrice.ToUint64(),
+			metrics.OraclePrice,
+			validatorPnL[clobPairId].Metadata.OraclePrice.ToUint64(),
 			metrics.BestBid,
 			fmt.Sprintf("%+v", validatorPnL[clobPairId].Metadata.BestBid),
 			metrics.BestAsk,
@@ -378,6 +379,19 @@ func (k Keeper) GetClobMetadata(
 		clobPairId := clobPair.GetClobPairId()
 
 		midPriceSubticks, bestBid, bestAsk, exist := k.MemClob.GetMidPrice(ctx, clobPairId)
+		oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		// Consistently round down here.
+		oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
+		if !oraclePriceSubticksInt.IsUint64() {
+			panic(
+				fmt.Sprintf(
+					"GetAllMidPrices: invalid oracle price %+v for clob pair %+v",
+					oraclePriceSubticksInt,
+					clobPair,
+				),
+			)
+		}
+		oraclePriceSubticks := types.Subticks(oraclePriceSubticksInt.Uint64())
 
 		// Use the oracle price instead of the mid price if the mid price doesn't exist or
 		// the spread is greater-than-or-equal-to the max spread.
@@ -385,34 +399,21 @@ func (k Keeper) GetClobMetadata(
 			new(big.Int).SetUint64(uint64(bestAsk.Subticks-bestBid.Subticks)),
 			new(big.Int).SetUint64(uint64(bestBid.Subticks)), // Note that bestBid cannot be 0 if exist is true.
 		).Cmp(MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE) >= 0 {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.FallbackToOracle, metrics.Count},
+			metrics.IncrCounterWithLabels(
+				metrics.MevFallbackToOracle,
 				1,
-				[]gometrics.Label{
-					metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId.ToUint32())),
-				},
+				metrics.GetLabelForIntValue(metrics.ClobPairId, int(clobPairId.ToUint32())),
 			)
-			oraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-			// Consistently round down here.
-			oraclePriceSubticksInt := lib.BigRatRound(oraclePriceSubticksRat, false)
-			if !oraclePriceSubticksInt.IsUint64() {
-				panic(
-					fmt.Sprintf(
-						"GetAllMidPrices: invalid oracle price %+v for clob pair %+v",
-						oraclePriceSubticksInt,
-						clobPair,
-					),
-				)
-			}
-			midPriceSubticks = types.Subticks(oraclePriceSubticksInt.Uint64())
+			midPriceSubticks = oraclePriceSubticks
 		}
 
 		// Set the CLOB metadata.
 		clobMetadata[clobPairId] = ClobMetadata{
-			ClobPair: clobPair,
-			MidPrice: midPriceSubticks,
-			BestBid:  bestBid,
-			BestAsk:  bestAsk,
+			ClobPair:    clobPair,
+			MidPrice:    midPriceSubticks,
+			OraclePrice: oraclePriceSubticks,
+			BestBid:     bestBid,
+			BestAsk:     bestAsk,
 		}
 	}
 

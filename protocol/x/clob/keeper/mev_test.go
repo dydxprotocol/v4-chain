@@ -996,6 +996,8 @@ func TestRecordMevMetrics(t *testing.T) {
 				uint32(0),
 				metrics.MidPrice,
 				tc.expectedMidPrice,
+				metrics.OraclePrice,
+				uint64(100_000_000),
 				metrics.BestBid,
 				mock.Anything,
 				metrics.BestAsk,
