@@ -2,15 +2,17 @@ package client
 
 import (
 	"context"
+	"time"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
-	"time"
 
 	"github.com/cometbft/cometbft/libs/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -18,9 +20,14 @@ import (
 // Client implements a daemon service client that periodically calculates and reports liquidatable subaccounts
 // to the protocol.
 type Client struct {
+	// Query clients
+	BlocktimeQueryClient     blocktimetypes.QueryClient
+	SubaccountQueryClient    satypes.QueryClient
+	ClobQueryClient          clobtypes.QueryClient
+	LiquidationServiceClient api.LiquidationServiceClient
+
 	// include HealthCheckable to track the health of the daemon.
 	daemontypes.HealthCheckable
-
 	// logger is the logger for the daemon.
 	logger log.Logger
 }
@@ -79,9 +86,11 @@ func (c *Client) Start(
 		}
 	}()
 
-	subaccountQueryClient := satypes.NewQueryClient(queryConn)
-	clobQueryClient := clobtypes.NewQueryClient(queryConn)
-	liquidationServiceClient := api.NewLiquidationServiceClient(daemonConn)
+	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
+	c.BlocktimeQueryClient = blocktimetypes.NewQueryClient(queryConn)
+	c.SubaccountQueryClient = satypes.NewQueryClient(queryConn)
+	c.ClobQueryClient = clobtypes.NewQueryClient(queryConn)
+	c.LiquidationServiceClient = api.NewLiquidationServiceClient(daemonConn)
 
 	ticker := time.NewTicker(time.Duration(flags.Liquidation.LoopDelayMs) * time.Millisecond)
 	stop := make(chan bool)
@@ -94,9 +103,6 @@ func (c *Client) Start(
 		flags,
 		ticker,
 		stop,
-		subaccountQueryClient,
-		clobQueryClient,
-		liquidationServiceClient,
 	)
 
 	return nil
@@ -110,20 +116,14 @@ func StartLiquidationsDaemonTaskLoop(
 	flags flags.DaemonFlags,
 	ticker *time.Ticker,
 	stop <-chan bool,
-	subaccountQueryClient satypes.QueryClient,
-	clobQueryClient clobtypes.QueryClient,
-	liquidationServiceClient api.LiquidationServiceClient,
 ) {
 	for {
 		select {
 		case <-ticker.C:
 			if err := s.RunLiquidationDaemonTaskLoop(
-				client,
 				ctx,
+				client,
 				flags.Liquidation,
-				subaccountQueryClient,
-				clobQueryClient,
-				liquidationServiceClient,
 			); err != nil {
 				// TODO(DEC-947): Move daemon shutdown to application.
 				client.logger.Error("Liquidations daemon returned error", "error", err)

@@ -6,10 +6,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -17,12 +15,9 @@ import (
 // potentially liquidatable subaccount ids. This interface is used to mock the daemon logic in tests.
 type SubTaskRunner interface {
 	RunLiquidationDaemonTaskLoop(
-		client *Client,
 		ctx context.Context,
+		client *Client,
 		liqFlags flags.LiquidationFlags,
-		subaccountQueryClient satypes.QueryClient,
-		clobQueryClient clobtypes.QueryClient,
-		liquidationServiceClient api.LiquidationServiceClient,
 	) error
 }
 
@@ -34,12 +29,9 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // RunLiquidationDaemonTaskLoop contains the logic to communicate with various gRPC services
 // to find the liquidatable subaccount ids.
 func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
-	client *Client,
 	ctx context.Context,
+	daemonClient *Client,
 	liqFlags flags.LiquidationFlags,
-	subaccountQueryClient satypes.QueryClient,
-	clobQueryClient clobtypes.QueryClient,
-	liquidationServiceClient api.LiquidationServiceClient,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -49,16 +41,14 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	)
 
 	// 1. Fetch all subaccounts from query service.
-	subaccounts, err := GetAllSubaccounts(client, ctx, subaccountQueryClient, liqFlags.SubaccountPageLimit)
+	subaccounts, err := daemonClient.GetAllSubaccounts(ctx, liqFlags.SubaccountPageLimit)
 	if err != nil {
 		return err
 	}
 
 	// 2. Check collateralization statuses of subaccounts with at least one open position.
-	liquidatableSubaccountIds, err := GetLiquidatableSubaccountIds(
-		client,
+	liquidatableSubaccountIds, err := daemonClient.GetLiquidatableSubaccountIds(
 		ctx,
-		clobQueryClient,
 		liqFlags,
 		subaccounts,
 	)
@@ -67,11 +57,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	}
 
 	// 3. Send the list of liquidatable subaccount ids to the daemon server.
-	err = SendLiquidatableSubaccountIds(
-		ctx,
-		liquidationServiceClient,
-		liquidatableSubaccountIds,
-	)
+	err = daemonClient.SendLiquidatableSubaccountIds(ctx, liquidatableSubaccountIds)
 	if err != nil {
 		return err
 	}
@@ -81,10 +67,8 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
-func GetLiquidatableSubaccountIds(
-	daemon *Client,
+func (c *Client) GetLiquidatableSubaccountIds(
 	ctx context.Context,
-	client clobtypes.QueryClient,
 	liqFlags flags.LiquidationFlags,
 	subaccounts []satypes.Subaccount,
 ) (
@@ -118,10 +102,8 @@ func GetLiquidatableSubaccountIds(
 	for start := 0; start < len(subaccountsToCheck); start += int(liqFlags.RequestChunkSize) {
 		end := lib.Min(start+int(liqFlags.RequestChunkSize), len(subaccountsToCheck))
 
-		results, err := CheckCollateralizationForSubaccounts(
-			daemon,
+		results, err := c.CheckCollateralizationForSubaccounts(
 			ctx,
-			client,
 			subaccountsToCheck[start:end],
 		)
 		if err != nil {

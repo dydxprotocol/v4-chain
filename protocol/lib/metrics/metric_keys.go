@@ -38,5 +38,6 @@ const (
 
 	// Measure Since
 	ClobOffsettingSubaccountPerpetualPosition = "clob_offsetting_subaccount_perpetual_position"
+	DaemonGetPreviousBlockInfoLatency         = "daemon_get_previous_block_info_latency"
 	MevLatency                                = "mev_latency"
 )
