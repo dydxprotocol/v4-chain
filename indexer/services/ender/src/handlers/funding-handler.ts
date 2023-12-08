@@ -82,6 +82,7 @@ export class FundingHandler extends Handler<FundingEventMessage> {
           message: resultRow.errors[i],
           update,
         });
+        stats.increment(`${config.SERVICE_NAME}.handle_funding_event.failure`, 1);
         continue;
       }
 
@@ -93,6 +94,7 @@ export class FundingHandler extends Handler<FundingEventMessage> {
           message: 'Received FundingUpdate with unknown perpetualId.',
           update,
         });
+        stats.increment(`${config.SERVICE_NAME}.handle_funding_event.failure`, 1);
         continue;
       }
 
@@ -137,6 +139,7 @@ export class FundingHandler extends Handler<FundingEventMessage> {
             message: 'Received unknown FundingEvent type.',
             event: this.event,
           });
+          stats.increment(`${config.SERVICE_NAME}.handle_funding_event.failure`, 1);
       }
     }
 
