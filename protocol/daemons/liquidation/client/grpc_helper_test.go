@@ -3,6 +3,8 @@ package client_test
 import (
 	"context"
 	"errors"
+	"testing"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -11,11 +13,70 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
+
+func TestGetPreviousBlockInfo(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(
+			ctx context.Context,
+			mck *mocks.QueryClient,
+		)
+
+		// expectations
+		expectedBlockHeight uint32
+		expectedError       error
+	}{
+		"Success": {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+			) {
+				response := &blocktimetypes.QueryPreviousBlockInfoResponse{
+					Info: &blocktimetypes.BlockInfo{
+						Height:    uint32(50),
+						Timestamp: constants.TimeTen,
+					},
+				}
+				mck.On("PreviousBlockInfo", ctx, mock.Anything).Return(response, nil)
+			},
+			expectedBlockHeight: 50,
+		},
+		"Errors are propagated": {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+			) {
+				mck.On("PreviousBlockInfo", ctx, mock.Anything).Return(nil, errors.New("test error"))
+			},
+			expectedBlockHeight: 0,
+			expectedError:       errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.BlocktimeQueryClient = queryClientMock
+			actualBlockHeight, err := daemon.GetPreviousBlockInfo(grpc.Ctx)
+
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedBlockHeight, actualBlockHeight)
+			}
+		})
+	}
+}
 
 func TestGetAllSubaccounts(t *testing.T) {
 	df := flags.GetDefaultDaemonFlags()
@@ -100,17 +161,110 @@ func TestGetAllSubaccounts(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock)
 
-			daemonClient := client.NewClient(log.NewNopLogger())
-			actual, err := client.GetAllSubaccounts(
-				daemonClient,
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.SubaccountQueryClient = queryClientMock
+			actual, err := daemon.GetAllSubaccounts(
 				grpc.Ctx,
-				queryClientMock,
 				df.Liquidation.SubaccountPageLimit,
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.Equal(t, tc.expectedSubaccounts, actual)
+			}
+		})
+	}
+}
+
+func TestGetAllMarketPrices(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
+		limit      uint64
+
+		// expectations
+		expectedMarketPrices []pricestypes.MarketPrice
+		expectedError        error
+	}{
+		"Success": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				response := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: constants.TestMarketPrices,
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
+			},
+			limit:                1_000,
+			expectedMarketPrices: constants.TestMarketPrices,
+		},
+		"Success Paginated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 2,
+					},
+				}
+				nextKey := []byte("next key")
+				response := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: []pricestypes.MarketPrice{
+						constants.TestMarketPrices[0],
+						constants.TestMarketPrices[1],
+					},
+					Pagination: &query.PageResponse{
+						NextKey: nextKey,
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
+				req2 := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Key:   nextKey,
+						Limit: 2,
+					},
+				}
+				response2 := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: []pricestypes.MarketPrice{
+						constants.TestMarketPrices[2],
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req2).Return(response2, nil)
+			},
+			limit:                2,
+			expectedMarketPrices: constants.TestMarketPrices,
+		},
+		"Errors are propagated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(nil, errors.New("test error"))
+			},
+			limit:         1_000,
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.PricesQueryClient = queryClientMock
+			actual, err := daemon.GetAllMarketPrices(
+				grpc.Ctx,
+				uint32(50),
+				tc.limit,
+			)
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedMarketPrices, actual)
 			}
 		})
 	}
@@ -202,10 +356,9 @@ func TestCheckCollateralizationForSubaccounts(t *testing.T) {
 			tc.setupMocks(grpc.Ctx, queryClientMock, tc.expectedResults)
 
 			daemon := client.NewClient(log.NewNopLogger())
-			actual, err := client.CheckCollateralizationForSubaccounts(
-				daemon,
+			daemon.ClobQueryClient = queryClientMock
+			actual, err := daemon.CheckCollateralizationForSubaccounts(
 				grpc.Ctx,
-				queryClientMock,
 				tc.subaccountIds,
 			)
 
@@ -267,7 +420,10 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
 			tc.setupMocks(grpc.Ctx, queryClientMock, tc.subaccountIds)
 
-			err := client.SendLiquidatableSubaccountIds(grpc.Ctx, queryClientMock, tc.subaccountIds)
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.LiquidationServiceClient = queryClientMock
+
+			err := daemon.SendLiquidatableSubaccountIds(grpc.Ctx, tc.subaccountIds)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}
