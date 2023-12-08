@@ -17,6 +17,8 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 	flags.AddDaemonFlagsToCmd(&cmd)
 	tests := []string{
 		flags.FlagUnixSocketAddress,
+		flags.FlagPanicOnDaemonFailureEnabled,
+		flags.FlagMaxDaemonUnhealthySeconds,
 
 		flags.FlagBridgeDaemonEnabled,
 		flags.FlagBridgeDaemonLoopDelayMs,
@@ -41,6 +43,8 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap := make(map[string]interface{})
 
 	optsMap[flags.FlagUnixSocketAddress] = "test-socket-address"
+	optsMap[flags.FlagPanicOnDaemonFailureEnabled] = false
+	optsMap[flags.FlagMaxDaemonUnhealthySeconds] = uint32(1234)
 
 	optsMap[flags.FlagBridgeDaemonEnabled] = true
 	optsMap[flags.FlagBridgeDaemonLoopDelayMs] = uint32(1111)
@@ -64,6 +68,12 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 
 	// Shared.
 	require.Equal(t, optsMap[flags.FlagUnixSocketAddress], r.Shared.SocketAddress)
+	require.Equal(t, optsMap[flags.FlagPanicOnDaemonFailureEnabled], r.Shared.PanicOnDaemonFailureEnabled)
+	require.Equal(
+		t,
+		optsMap[flags.FlagMaxDaemonUnhealthySeconds],
+		r.Shared.MaxDaemonUnhealthySeconds,
+	)
 
 	// Bridge Daemon.
 	require.Equal(t, optsMap[flags.FlagBridgeDaemonEnabled], r.Bridge.Enabled)
@@ -81,7 +91,7 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	require.Equal(t, optsMap[flags.FlagPriceDaemonLoopDelayMs], r.Price.LoopDelayMs)
 }
 
-func TestGetDaemonFlagValuesFromOptions_Defaul(t *testing.T) {
+func TestGetDaemonFlagValuesFromOptions_Default(t *testing.T) {
 	mockOpts := mocks.AppOptions{}
 	mockOpts.On("Get", mock.Anything).
 		Return(func(key string) interface{} {

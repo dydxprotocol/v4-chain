@@ -219,6 +219,7 @@ type PriceDaemonIntegrationTestSuite struct {
 	exchangeServer     *pricefeed.ExchangeServer
 	daemonServer       *daemonserver.Server
 	exchangePriceCache *pricefeedserver_types.MarketToExchangePrices
+	healthMonitor      *servertypes.HealthMonitor
 
 	pricesMockQueryServer *mocks.QueryServer
 	pricesGrpcServer      *grpc.Server
@@ -278,7 +279,14 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
 	)
-	s.daemonServer.ExpectPricefeedDaemon(servertypes.MaximumAcceptableUpdateDelay(s.daemonFlags.Price.LoopDelayMs))
+
+	s.healthMonitor = servertypes.NewHealthMonitor(
+		servertypes.DaemonStartupGracePeriod,
+		servertypes.HealthCheckPollFrequency,
+		log.TestingLogger(),
+		flags.GetDefaultDaemonFlags().Shared.PanicOnDaemonFailureEnabled, // Use default behavior for testing
+	)
+
 	s.exchangePriceCache = pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
 	s.daemonServer.WithPriceFeedMarketToExchangePrices(s.exchangePriceCache)
 
@@ -329,6 +337,11 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		testExchangeToQueryDetails,
 		&client.SubTaskRunnerImpl{},
 	)
+	err := s.healthMonitor.RegisterService(
+		s.pricefeedDaemon,
+		time.Duration(s.daemonFlags.Shared.MaxDaemonUnhealthySeconds)*time.Second,
+	)
+	s.Require().NoError(err)
 }
 
 // expectPricesWithTimeout waits for the exchange price cache to contain the expected prices, with a timeout.
