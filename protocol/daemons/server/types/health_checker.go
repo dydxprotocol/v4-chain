@@ -74,14 +74,6 @@ type healthCheckerMutableState struct {
 	stopped bool
 }
 
-// newHealthCheckerMutableState creates a new health checker mutable state scheduled to trigger a poll after the
-// initial poll delay.
-func newHealthCheckerMutableState(initialPollDelay time.Duration, pollFunc func()) *healthCheckerMutableState {
-	return &healthCheckerMutableState{
-		timer: time.AfterFunc(initialPollDelay, pollFunc),
-	}
-}
-
 // ReportSuccess updates the health checker's mutable state to reflect a successful health check and schedules the next
 // poll as an atomic operation.
 func (u *healthCheckerMutableState) ReportSuccess(now time.Time) {
@@ -208,10 +200,11 @@ func StartNewHealthChecker(
 		timeProvider:         timeProvider,
 		maxUnhealthyDuration: maxUnhealthyDuration,
 		logger:               logger,
+		mutableState:         &healthCheckerMutableState{},
 	}
 
 	// The first poll is scheduled after the startup grace period to allow the service to initialize.
-	checker.mutableState = newHealthCheckerMutableState(startupGracePeriod, checker.Poll)
+	checker.mutableState.timer = time.AfterFunc(startupGracePeriod, checker.Poll)
 
 	return checker
 }
