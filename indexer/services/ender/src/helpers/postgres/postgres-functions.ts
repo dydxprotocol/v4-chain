@@ -44,9 +44,12 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_update_perpetual_handler.sql',
 ];
 
-const HELPER_SCRIPTS: string[] = [
+const DB_SETUP_SCRIPTS: string[] = [
   'create_extension_pg_stat_statements.sql',
   'create_extension_uuid_ossp.sql',
+];
+
+const HELPER_SCRIPTS: string[] = [
   'dydx_clob_pair_status_to_market_status.sql',
   'dydx_create_initial_rows_for_tendermint_block.sql',
   'dydx_create_tendermint_event.sql',
@@ -89,6 +92,7 @@ const MAIN_SCRIPTS: string[] = [
 const SCRIPTS: string[] = [
   ...HANDLER_SCRIPTS.map((script: string) => `handlers/${script}`),
   ...HELPER_SCRIPTS.map((script: string) => `helpers/${script}`),
+  ...DB_SETUP_SCRIPTS.map((script: string) => `setup/${script}`),
   ...MAIN_SCRIPTS,
 ];
 
