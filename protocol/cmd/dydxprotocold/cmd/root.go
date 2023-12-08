@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -32,8 +33,14 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	errorspkg "github.com/pkg/errors"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -88,7 +95,8 @@ func NewRootCmdWithInterceptors(
 	rootCmd := &cobra.Command{
 		Use:   dydxapp.AppDaemonName,
 		Short: "Start dydxprotocol app",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Println("the args", args)
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
@@ -119,7 +127,33 @@ func NewRootCmdWithInterceptors(
 				return err
 			}
 
-			serverCtxInterceptor(server.GetServerContextFromCmd(cmd))
+			serverCtx := server.GetServerContextFromCmd(cmd)
+			if ddErrorTrackingFormatterEnabled :=
+				serverCtx.Viper.Get(protocolflags.DdErrorTrackingFormat); ddErrorTrackingFormatterEnabled != nil {
+				if enabled, err := cast.ToBoolE(ddErrorTrackingFormatterEnabled); err == nil && enabled {
+					fmt.Println("it is enabled")
+					// Error fields should be set under error object
+					zerolog.ErrorFieldName = "error"
+
+					// Add the kind and message field
+					zerolog.ErrorMarshalFunc = func(err error) interface{} {
+						stackArr, ok := pkgerrors.MarshalStack(errorspkg.WithStack(err)).([]map[string]string)
+						if !ok {
+							return struct{}{}
+						}
+						objectToReturn := app.DatadogErrorTrackingObject{
+							// TODO figure out what prefix to discard
+							Stack:   stackArr[:],
+							Kind:    "Exception",
+							Message: err.Error(),
+						}
+						return objectToReturn
+					}
+				} else {
+					fmt.Println("ERROR_CASTING", err, enabled)
+				}
+			}
+			serverCtxInterceptor(serverCtx)
 
 			return nil
 		},

@@ -365,7 +365,7 @@ localnet-init:
 
 localnet-compose-up:
 	@echo "Launching localnet at commit ${GIT_COMMIT_HASH}"
-	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache
+	@docker build . -t local:dydxprotocol -f testing/testnet-local/Dockerfile --no-cache --progress=plain
 	@docker-compose -f docker-compose.yml up --force-recreate $(ARGS)
 
 localnet-compose-upd:

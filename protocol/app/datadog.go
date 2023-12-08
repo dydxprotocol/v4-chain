@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/rs/zerolog"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 )
 
@@ -110,4 +111,16 @@ func initDatadogProfiler(logger log.Logger, ddAgentHost string, ddAgentPort uint
 	if err != nil {
 		panic(err)
 	}
+}
+
+type DatadogErrorTrackingObject struct {
+	Stack   []map[string]string
+	Message string
+	Kind    string
+}
+
+func (obj DatadogErrorTrackingObject) MarshalZerologObject(e *zerolog.Event) {
+	e.Interface("stack", obj.Stack).
+		Str("message", obj.Message).
+		Str("kind", obj.Kind)
 }
