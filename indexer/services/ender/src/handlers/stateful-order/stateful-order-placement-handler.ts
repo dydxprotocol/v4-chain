@@ -27,7 +27,7 @@ export class StatefulOrderPlacementHandler extends Handler<StatefulOrderEventV1>
   }
 
   private createKafkaEvents(order: IndexerOrder): ConsolidatedKafkaEvent[] {
-    const kafakEvents: ConsolidatedKafkaEvent[] = [];
+    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderPlace: {
@@ -35,11 +35,11 @@ export class StatefulOrderPlacementHandler extends Handler<StatefulOrderEventV1>
         placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     });
-    kafakEvents.push(this.generateConsolidatedVulcanKafkaEvent(
+    kafkaEvents.push(this.generateConsolidatedVulcanKafkaEvent(
       getOrderIdHash(order.orderId!),
       offChainUpdate,
     ));
 
-    return kafakEvents;
+    return kafkaEvents;
   }
 }
