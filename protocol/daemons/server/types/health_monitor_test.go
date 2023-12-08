@@ -28,7 +28,7 @@ var (
 	// TestLargeDuration is used to ensure that the health checker does not trigger a callback through the timer.
 	TestLargeDuration = 5 * time.Minute
 
-	ZeroDuration = 0 * time.Second
+	SmallDuration = 10 * time.Millisecond
 )
 
 // createTestMonitor creates a health monitor with a poll frequency of 10ms and a zero duration grace period.
@@ -36,7 +36,7 @@ func createTestMonitor() (*types.HealthMonitor, *mocks.Logger) {
 	logger := &mocks.Logger{}
 	logger.On("With", "module", "daemon-health-monitor").Return(logger).Once()
 	return types.NewHealthMonitor(
-		ZeroDuration,
+		SmallDuration,
 		10*time.Millisecond,
 		logger,
 		true, // enable panics here for stricter testing - a panic will definitely cause a test failure.
@@ -140,7 +140,7 @@ func TestHealthMonitor_DisablePanics_DoesNotPanic(t *testing.T) {
 	).Return()
 
 	hm := types.NewHealthMonitor(
-		ZeroDuration,
+		SmallDuration,
 		10*time.Millisecond,
 		logger,
 		false,
