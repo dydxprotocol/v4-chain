@@ -13,8 +13,6 @@ import {
   TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   OffChainUpdateV1,
   IndexerOrder,
   OrderPlaceV1_OrderPlacementStatus,
@@ -22,25 +20,18 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
-  defaultTime,
-  defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { StatefulOrderPlacementHandler } from '../../../src/handlers/stateful-order/stateful-order-placement-handler';
 import { getPrice, getSize } from '../../../src/lib/helper';
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
@@ -91,47 +82,6 @@ describe('statefulOrderPlacementHandler', () => {
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
   let producerSendMock: jest.SpyInstance;
-
-  describe('getParallelizationIds', () => {
-    it.each([
-      // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-      ['stateful order placement', defaultStatefulOrderEvent],
-      ['stateful long term order placement', defaultStatefulOrderLongTermEvent],
-    ])('returns the correct parallelization ids for %s', (
-      _name: string,
-      statefulOrderEvent: StatefulOrderEventV1,
-    ) => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
-        StatefulOrderEventV1.encode(statefulOrderEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: StatefulOrderPlacementHandler = new StatefulOrderPlacementHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        statefulOrderEvent,
-      );
-
-      const orderUuid: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${orderUuid}`,
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-      ]);
-    });
-  });
 
   it.each([
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent

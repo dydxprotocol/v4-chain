@@ -11,7 +11,7 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes, MarketPriceUpdateEventMessage } from '../../../src/lib/types';
+import { MarketPriceUpdateEventMessage } from '../../../src/lib/types';
 import {
   defaultHeight,
   defaultMarketPriceUpdate,
@@ -22,14 +22,11 @@ import {
 import { createKafkaMessageFromMarketEvent } from '../../helpers/kafka-helpers';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectMarketKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { generateOraclePriceContents } from '../../../src/helpers/kafka-helper';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
-import { MarketPriceUpdateHandler } from '../../../src/handlers/markets/market-price-update-handler';
+import { MarketEventV1 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
@@ -55,44 +52,6 @@ describe('marketPriceUpdateHandler', () => {
   });
   const loggerCrit = jest.spyOn(logger, 'crit');
   const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const marketEvent: MarketEventV1 = {
-        marketId: 0,
-        priceUpdate: {
-          priceWithExponent: Long.fromValue(1, true),
-        },
-      };
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.MARKET,
-        MarketEventV1.encode(marketEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: MarketPriceUpdateHandler = new MarketPriceUpdateHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        marketEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_0`,
-      ]);
-    });
-  });
 
   it('fails when no market exists', async () => {
     const transactionIndex: number = 0;

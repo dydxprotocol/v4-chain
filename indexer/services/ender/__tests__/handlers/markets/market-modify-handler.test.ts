@@ -4,17 +4,13 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes, MarketModifyEventMessage } from '../../../src/lib/types';
+import { MarketModifyEventMessage } from '../../../src/lib/types';
 import {
   defaultHeight, defaultMarketModify, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromMarketEvent } from '../../helpers/kafka-helpers';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { MarketEventV1, IndexerTendermintBlock, IndexerTendermintEvent } from '@dydxprotocol-indexer/v4-protos';
-import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../../helpers/indexer-proto-helpers';
-import { MarketModifyHandler } from '../../../src/handlers/markets/market-modify-handler';
-import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('marketModifyHandler', () => {
@@ -41,44 +37,6 @@ describe('marketModifyHandler', () => {
 
   const loggerCrit = jest.spyOn(logger, 'crit');
   const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const marketEvent: MarketEventV1 = {
-        marketId: 0,
-        priceUpdate: {
-          priceWithExponent: Long.fromValue(1, true),
-        },
-      };
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.MARKET,
-        MarketEventV1.encode(marketEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: MarketModifyHandler = new MarketModifyHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        marketEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_0`,
-      ]);
-    });
-  });
 
   it('modifies existing market', async () => {
     const transactionIndex: number = 0;

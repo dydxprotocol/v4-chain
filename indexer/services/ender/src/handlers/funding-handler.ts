@@ -1,6 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  FundingIndexUpdatesTable,
   PerpetualMarketFromDatabase,
   TendermintEventTable,
   protocolTranslations,
@@ -12,7 +11,6 @@ import {
   FundingUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
-import _ from 'lodash';
 import * as pg from 'pg';
 
 import { redisClient } from '../helpers/redis/redis-controller';
@@ -32,19 +30,6 @@ export class FundingHandler extends Handler<FundingEventMessage> {
     indexerTendermintEventToTransactionIndex(this.indexerTendermintEvent),
     this.indexerTendermintEvent.eventIndex,
   );
-
-  public getParallelizationIds(): string[] {
-    const ids: string[] = [];
-    _.forEach(this.event.updates, (fundingIndexUpdate: FundingUpdateV1) => {
-      const id: string = FundingIndexUpdatesTable.uuid(
-        this.transactionHash,
-        this.eventId,
-        fundingIndexUpdate.perpetualId.toString(),
-      );
-      ids.push(`${this.eventType}_${id}`);
-    });
-    return ids;
-  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {

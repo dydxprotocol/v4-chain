@@ -1,6 +1,5 @@
 import {
   OrderFromDatabase, OrderModel,
-  OrderTable,
   PerpetualMarketFromDatabase, PerpetualMarketModel,
   SubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
@@ -12,18 +11,10 @@ import * as pg from 'pg';
 
 import { generateOrderSubaccountMessage } from '../../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../../lib/types';
-import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { Handler } from '../handler';
 
-export class ConditionalOrderPlacementHandler extends
-  AbstractStatefulOrderHandler<StatefulOrderEventV1> {
+export class ConditionalOrderPlacementHandler extends Handler<StatefulOrderEventV1> {
   eventType: string = 'StatefulOrderEvent';
-
-  public getParallelizationIds(): string[] {
-    const orderId: string = OrderTable.orderIdToUuid(
-      this.event.conditionalOrderPlacement!.order!.orderId!,
-    );
-    return this.getParallelizationIdsFromOrderId(orderId);
-  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {

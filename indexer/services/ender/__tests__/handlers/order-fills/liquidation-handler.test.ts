@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  IndexerTendermintBlock, IndexerTendermintEvent, Timestamp,
+  Timestamp,
   LiquidationOrderV1,
   IndexerOrder,
   IndexerOrder_Side,
@@ -8,7 +8,8 @@ import {
   IndexerSubaccountId,
   IndexerOrder_TimeInForce,
   OffChainUpdateV1,
-  OrderRemovalReason, OrderRemoveV1_OrderRemovalStatus,
+  OrderRemovalReason,
+  OrderRemoveV1_OrderRemovalStatus,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
   assetRefresher,
@@ -29,7 +30,6 @@ import {
   PerpetualPositionTable,
   PositionSide,
   protocolTranslations,
-  SubaccountTable,
   TendermintEventTable,
   testConstants,
   testMocks,
@@ -40,8 +40,6 @@ import { DateTime } from 'luxon';
 import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
-  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
 } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../../src/lib/on-message';
@@ -57,17 +55,13 @@ import {
   expectPerpetualPosition,
   expectDefaultTradeKafkaMessageFromTakerFillId,
   liquidationOrderToOrderSide,
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import Big from 'big.js';
 import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_SHORT_TERM, ORDER_FLAG_LONG_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
-import { defaultLiquidation, defaultLiquidationEvent, defaultPreviousHeight } from '../../helpers/constants';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
-import { LiquidationHandler } from '../../../src/handlers/order-fills/liquidation-handler';
+import { defaultPreviousHeight } from '../../helpers/constants';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
@@ -139,64 +133,6 @@ describe('LiquidationHandler', () => {
     lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
-
-  describe('getParallelizationIds', () => {
-    it.each([
-      [
-        'maker',
-        Liquidity.MAKER,
-        OrderTable.orderIdToUuid(defaultLiquidationEvent.makerOrder!.orderId!),
-        defaultLiquidationEvent.makerOrder!.orderId!.subaccountId!,
-      ],
-      [
-        'taker',
-        Liquidity.TAKER,
-        undefined,
-        defaultSubaccountId,
-      ],
-    ])('returns the correct %s parallelization ids', (
-      _name: string,
-      liquidity: Liquidity,
-      orderId: string | undefined,
-      subaccountId: IndexerSubaccountId,
-    ) => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ORDER_FILL,
-        Uint8Array.from(OrderFillEventV1.encode(defaultLiquidationEvent).finish()),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: LiquidationHandler = new LiquidationHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        {
-          ...defaultLiquidation,
-          liquidity,
-        },
-      );
-
-      const parallelizationIds: string[] = [
-        `${handler.eventType}_${SubaccountTable.subaccountIdToUuid(subaccountId)}_${defaultLiquidationEvent.makerOrder!.orderId!.clobPairId}`,
-        `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(subaccountId)}`,
-      ];
-      if (orderId !== undefined) {
-        parallelizationIds.push(`${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderId}`);
-      }
-      expect(handler.getParallelizationIds()).toEqual(parallelizationIds);
-    });
-  });
 
   it.each([
     [

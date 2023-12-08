@@ -12,10 +12,6 @@ import { Handler } from './handler';
 export class PerpetualMarketCreationHandler extends Handler<PerpetualMarketCreateEventV1> {
   eventType: string = 'PerpetualMarketCreateEvent';
 
-  public getParallelizationIds(): string[] {
-    return [];
-  }
-
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(

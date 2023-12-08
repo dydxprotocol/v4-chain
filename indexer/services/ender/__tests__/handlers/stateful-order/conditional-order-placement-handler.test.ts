@@ -13,36 +13,27 @@ import {
   TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   IndexerOrder,
   StatefulOrderEventV1,
   IndexerOrder_ConditionType,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
   defaultMakerOrder,
   defaultPreviousHeight,
-  defaultTime,
-  defaultTxHash,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectOrderSubaccountKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
 import { getPrice, getSize, getTriggerPrice } from '../../../src/lib/helper';
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import Long from 'long';
 import { producer } from '@dydxprotocol-indexer/kafka';
-import { ConditionalOrderPlacementHandler } from '../../../src/handlers/stateful-order/conditional-order-placement-handler';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
 describe('conditionalOrderPlacementHandler', () => {
@@ -87,40 +78,6 @@ describe('conditionalOrderPlacementHandler', () => {
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
   let producerSendMock: jest.SpyInstance;
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
-        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: ConditionalOrderPlacementHandler = new ConditionalOrderPlacementHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultStatefulOrderEvent,
-      );
-
-      const orderUuid: string = OrderTable.orderIdToUuid(defaultOrder.orderId!);
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${orderUuid}`,
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-      ]);
-    });
-  });
 
   it('successfully places order', async () => {
     const kafkaMessage: KafkaMessage = createKafkaMessageFromStatefulOrderEvent(

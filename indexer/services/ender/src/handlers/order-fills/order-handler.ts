@@ -4,23 +4,20 @@ import {
   Liquidity,
   OrderFromDatabase,
   OrderModel,
-  OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
-  SubaccountTable,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  IndexerOrderId, IndexerSubaccountId, IndexerOrder,
+  IndexerSubaccountId, IndexerOrder,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import { orderFillWithLiquidityToOrderFillEventWithOrder } from '../../helpers/translation-helper';
@@ -30,29 +27,6 @@ import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class OrderHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'OrderFillEvent';
-
-  /**
-   * @returns the parallelizationIds for the this.event.liquidity order
-   */
-  public getParallelizationIds(): string[] {
-    // OrderFillEvents with the same subaccountId and clobPairId cannot be processed in parallel.
-    const castedOrderFillEventMessage:
-    OrderFillEventWithOrder = orderFillWithLiquidityToOrderFillEventWithOrder(this.event);
-    const orderId: IndexerOrderId = this.event.liquidity === Liquidity.MAKER
-      ? castedOrderFillEventMessage.makerOrder!.orderId!
-      : castedOrderFillEventMessage.order!.orderId!;
-    const orderUuid: string = OrderTable.orderIdToUuid(orderId);
-    const subaccountUuid: string = SubaccountTable.subaccountIdToUuid(orderId.subaccountId!);
-    return [
-      `${this.eventType}_${subaccountUuid}_${orderId!.clobPairId}`,
-      // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-      // processed in parallel
-      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${subaccountUuid}`,
-      // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
-      // processed in parallel
-      `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-    ];
-  }
 
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const kafkaEvents: ConsolidatedKafkaEvent[] = [];

@@ -27,27 +27,20 @@ import { redisClient } from '../../../src/helpers/redis/redis-controller';
 import {
   DeleveragingEventV1,
   IndexerSubaccountId,
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   Timestamp,
 } from '@dydxprotocol-indexer/v4-protos';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   createKafkaMessageFromDeleveragingEvent,
   expectDefaultTradeKafkaMessageFromTakerFillId,
   expectFillInDatabase,
   expectFillSubaccountKafkaMessageFromLiquidationEvent, expectPerpetualPosition,
 } from '../../helpers/indexer-proto-helpers';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
 } from '../../../src/constants';
 import { DateTime } from 'luxon';
 import Long from 'long';
-import { DeleveragingHandler } from '../../../src/handlers/order-fills/deleveraging-handler';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
 import { producer } from '@dydxprotocol-indexer/kafka';
@@ -123,54 +116,6 @@ describe('DeleveragingHandler', () => {
     ...offsettingPerpetualPosition,
     subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
   };
-
-  it('getParallelizationIds', () => {
-    const offsettingSubaccountId: IndexerSubaccountId = defaultDeleveragingEvent.offsetting!;
-    const deleveragedSubaccountId: IndexerSubaccountId = defaultDeleveragingEvent.liquidated!;
-
-    const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-      DydxIndexerSubtypes.DELEVERAGING,
-      DeleveragingEventV1.encode(defaultDeleveragingEvent).finish(),
-      transactionIndex,
-      eventIndex,
-    );
-    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-      0,
-      defaultTime,
-      [indexerTendermintEvent],
-      [defaultTxHash],
-    );
-
-    const handler: DeleveragingHandler = new DeleveragingHandler(
-      block,
-      0,
-      indexerTendermintEvent,
-      0,
-      defaultDeleveragingEvent,
-    );
-
-    const offsettingSubaccountUuid: string = SubaccountTable.subaccountIdToUuid(
-      offsettingSubaccountId,
-    );
-    const deleveragedSubaccountUuid: string = SubaccountTable.subaccountIdToUuid(
-      deleveragedSubaccountId,
-    );
-
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromId(
-        defaultDeleveragingEvent.perpetualId.toString(),
-      );
-    expect(perpetualMarket).toBeDefined();
-
-    expect(handler.getParallelizationIds()).toEqual([
-      `${handler.eventType}_${offsettingSubaccountUuid}_${perpetualMarket!.clobPairId}`,
-      `${handler.eventType}_${deleveragedSubaccountUuid}_${perpetualMarket!.clobPairId}`,
-      // To ensure that SubaccountUpdateEvents, OrderFillEvents, and DeleveragingEvents for
-      // the same subaccount are not processed in parallel
-      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${offsettingSubaccountUuid}`,
-      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${deleveragedSubaccountUuid}`,
-    ]);
-  });
 
   it('DeleveragingEvent fails validation', async () => {
     const deleveragingEvent: DeleveragingEventV1 = DeleveragingEventV1
