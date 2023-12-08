@@ -138,3 +138,39 @@ func TestUpdateResultIsSuccess(t *testing.T) {
 		})
 	}
 }
+
+func TestUpdateTypeString(t *testing.T) {
+	tests := map[string]struct {
+		value          types.UpdateType
+		expectedResult string
+	}{
+		"Withdrawal": {
+			value:          types.Withdrawal,
+			expectedResult: "Withdrawal",
+		},
+		"Transfer": {
+			value:          types.Transfer,
+			expectedResult: "Transfer",
+		},
+		"Deposit": {
+			value:          types.Deposit,
+			expectedResult: "Deposit",
+		},
+		"Match": {
+			value:          types.Match,
+			expectedResult: "Match",
+		},
+		"UnexpectedError": {
+			value:          types.UpdateType(999),
+			expectedResult: "UnexpectedError",
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := tc.value.String()
+			require.Equal(t, result, tc.expectedResult)
+		})
+	}
+}

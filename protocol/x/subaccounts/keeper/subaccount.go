@@ -212,6 +212,7 @@ func (k Keeper) getSettledUpdates(
 func (k Keeper) UpdateSubaccounts(
 	ctx sdk.Context,
 	updates []types.Update,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -229,7 +230,7 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
@@ -304,6 +305,7 @@ func (k Keeper) UpdateSubaccounts(
 func (k Keeper) CanUpdateSubaccounts(
 	ctx sdk.Context,
 	updates []types.Update,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -314,6 +316,7 @@ func (k Keeper) CanUpdateSubaccounts(
 		time.Now(),
 		metrics.CanUpdateSubaccounts,
 		metrics.Latency,
+		// TODO: Add UpdateType as label
 	)
 
 	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
@@ -321,7 +324,7 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -464,6 +467,7 @@ func checkPositionUpdatable(
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -471,6 +475,32 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+
+	// Block all withdrawals and transfers if there was a negative TNC subaccount seen within the
+	// last `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`.
+	if updateType == types.Withdrawal || updateType == types.Transfer {
+		lastBlockNegativeTncSubaccountSeen := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		currentBlock := uint32(ctx.BlockHeight())
+
+		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
+		if currentBlock < lastBlockNegativeTncSubaccountSeen {
+			panic(
+				fmt.Sprintf(
+					"internalCanUpdateSubaccounts: current block (%d) is less than the last block a negative TNC subaccount was seen (%d)",
+					currentBlock,
+					lastBlockNegativeTncSubaccountSeen,
+				),
+			)
+		}
+
+		if currentBlock-lastBlockNegativeTncSubaccountSeen < types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
+			success = false
+			for i := range settledUpdates {
+				successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
+			}
+			return false, successPerUpdate, nil
+		}
+	}
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
