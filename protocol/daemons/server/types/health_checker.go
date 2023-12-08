@@ -208,7 +208,6 @@ func StartNewHealthChecker(
 		timeProvider:         timeProvider,
 		maxUnhealthyDuration: maxUnhealthyDuration,
 		logger:               logger,
-		mutableState:         &healthCheckerMutableState{},
 	}
 
 	// The first poll is scheduled after the startup grace period to allow the service to initialize.
