@@ -16,6 +16,7 @@ export const createRPCQueryClient = async ({
       delaymsg: (await import("./delaymsg/query.rpc.Query")).createRpcQueryExtension(client),
       epochs: (await import("./epochs/query.rpc.Query")).createRpcQueryExtension(client),
       feetiers: (await import("./feetiers/query.rpc.Query")).createRpcQueryExtension(client),
+      ibcratelimit: (await import("./ibcratelimit/query.rpc.Query")).createRpcQueryExtension(client),
       perpetuals: (await import("./perpetuals/query.rpc.Query")).createRpcQueryExtension(client),
       prices: (await import("./prices/query.rpc.Query")).createRpcQueryExtension(client),
       rewards: (await import("./rewards/query.rpc.Query")).createRpcQueryExtension(client),
