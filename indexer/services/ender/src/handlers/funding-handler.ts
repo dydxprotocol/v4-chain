@@ -1,12 +1,15 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   FundingIndexUpdatesTable,
   PerpetualMarketFromDatabase,
   TendermintEventTable,
   protocolTranslations,
   PerpetualMarketModel,
+  FundingIndexUpdatesFromDatabase,
+  FundingIndexUpdatesModel,
 } from '@dydxprotocol-indexer/postgres';
 import { NextFundingCache } from '@dydxprotocol-indexer/redis';
+import { bytesToBigInt } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   FundingEventV1_Type,
   FundingUpdateV1,
@@ -15,6 +18,7 @@ import Big from 'big.js';
 import _ from 'lodash';
 import * as pg from 'pg';
 
+import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { indexerTendermintEventToTransactionIndex } from '../lib/helper';
 import { ConsolidatedKafkaEvent, FundingEventMessage } from '../lib/types';
@@ -56,6 +60,17 @@ export class FundingHandler extends Handler<FundingEventMessage> {
         PerpetualMarketModel.fromJson(perpetualMarket as object) as PerpetualMarketFromDatabase,
       );
     }
+    const fundingIndices:
+    Map<string, FundingIndexUpdatesFromDatabase> = new
+    Map<string, FundingIndexUpdatesFromDatabase>();
+    for (const [key, fundingIndex] of Object.entries(resultRow.funding_index_updates)) {
+      fundingIndices.set(
+        key,
+        FundingIndexUpdatesModel.fromJson(
+          fundingIndex as object,
+        ) as FundingIndexUpdatesFromDatabase,
+      );
+    }
 
     const promises: Promise<number>[] = new Array<Promise<number>>(this.event.updates.length);
 
@@ -92,6 +107,29 @@ export class FundingHandler extends Handler<FundingEventMessage> {
         case FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX:
           // clear the cache for the predicted next funding rate
           promises[i] = NextFundingCache.clearFundingSamples(perpetualMarket.ticker, redisClient);
+          stats.gauge(
+            `${config.SERVICE_NAME}.funding_index_update_event`,
+            Number(
+              protocolTranslations.fundingIndexToHumanFixedString(
+                bytesToBigInt(update.fundingIndex).toString(),
+                perpetualMarket,
+              ),
+            ),
+            {
+              ticker: perpetualMarket.ticker,
+            },
+          );
+          // eslint-disable-next-line no-case-declarations
+          const fundingIndexUpdate: FundingIndexUpdatesFromDatabase = fundingIndices.get(
+            update.perpetualId.toString(),
+          )!;
+          stats.gauge(
+            `${config.SERVICE_NAME}.funding_index_update`,
+            Number(fundingIndexUpdate.fundingIndex),
+            {
+              ticker: perpetualMarket.ticker,
+            },
+          );
           break;
         default:
           logger.error({
