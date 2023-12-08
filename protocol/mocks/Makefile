@@ -21,6 +21,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=AppOptions --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/server/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=Logger --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cometbft@$(COMETBFT_VERSION)/libs/log --filename=logger.go --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=MsgRouter --dir=./lib --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=HealthCheckable --dir=./daemons/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PrepareBridgeKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PrepareClobKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PreparePerpetualsKeeper --dir=./app/prepare --recursive --output=./mocks

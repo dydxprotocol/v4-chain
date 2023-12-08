@@ -490,7 +490,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 	}
 
 	if tApp.builder.usesDefaultAppConfig {
-		tApp.App.Server.DisableUpdateMonitoringForTesting()
+		tApp.App.DisableHealthMonitorForTesting()
 	}
 
 	if tApp.builder.enableNonDeterminismChecks {

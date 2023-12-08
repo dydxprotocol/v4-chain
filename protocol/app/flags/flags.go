@@ -2,7 +2,6 @@ package flags
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
