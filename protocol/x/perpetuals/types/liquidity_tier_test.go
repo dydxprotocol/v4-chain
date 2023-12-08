@@ -224,16 +224,16 @@ func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 		"initial margin 10%, quote quantums = 1, should round up to 1": {
 			initialMarginPpm: uint32(100_000), // 10%
 			bigQuoteQuantums: big.NewInt(1),
-			// initial margin * margin adjustment * quote quantums
-			// = 10% * 100% * 1
+			// initial margin * quote quantums
+			// = 10% * 1
 			// = 0.1 -> round up to 1
 			expectedInitialMarginQuoteQuantums: big.NewInt(1),
 		},
 		"initial margin 56.7243%, quote quantums = 123_456, should round up to 70_030": {
 			initialMarginPpm: uint32(567_243), // 56.7243%
 			bigQuoteQuantums: big.NewInt(123_456),
-			// initial margin * margin adjustment * quote quantums
-			// = 56.7243% * 100% * 123_456
+			// initial margin * quote quantums
+			// = 56.7243% * 123_456
 			// ~= 70029.5518 -> round up to 70030
 			expectedInitialMarginQuoteQuantums: big.NewInt(70_030),
 		},

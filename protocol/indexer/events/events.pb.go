@@ -1751,6 +1751,8 @@ type LiquidityTierUpsertEventV1 struct {
 	// The maximum position size at which the margin requirements are
 	// not increased over the default values. Above this position size,
 	// the margin requirements increase at a rate of sqrt(size).
+	//
+	// Deprecated since v3.x.
 	BasePositionNotional uint64 `protobuf:"varint,5,opt,name=base_position_notional,json=basePositionNotional,proto3" json:"base_position_notional,omitempty"` // Deprecated: Do not use.
 }
 
