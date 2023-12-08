@@ -10,9 +10,10 @@ import "dydxprotocol/ibcratelimit/limit_params.proto";
 service Msg {
   // SetLimitParams sets a `LimitParams` object in state.
   rpc SetLimitParams(MsgSetLimitParams) returns (MsgSetLimitParamsResponse);
-  
+
   // DeleteLimitParams removes a `LimitParams` object in state.
-  rpc DeleteLimitParams(MsgDeleteLimitParams) returns (MsgDeleteLimitParamsResponse);
+  rpc DeleteLimitParams(MsgDeleteLimitParams)
+      returns (MsgDeleteLimitParamsResponse);
 }
 
 // MsgSetLimitParams is the Msg/SetLimitParams request type.
@@ -22,7 +23,7 @@ message MsgSetLimitParams {
   string authority = 1;
 
   // Defines the parameters to set. All parameters must be supplied.
-	LimitParams limit_params = 2;
+  LimitParams limit_params = 2;
 }
 
 // MsgSetLimitParamsResponse is the Msg/SetLimitParams response type.
@@ -35,7 +36,7 @@ message MsgDeleteLimitParams {
   string authority = 1;
 
   // The denom for which the `LimitParams` should be deleted.
-	string denom = 2;
+  string denom = 2;
 }
 
 // MsgDeleteLimitParamsResponse is the Msg/DeleteLimitParams response type.

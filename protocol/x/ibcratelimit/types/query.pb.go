@@ -111,7 +111,8 @@ func (m *ListLimitParamsResponse) GetLimitParamsList() []*LimitParams {
 	return nil
 }
 
-// QueryCapacityByDenomRequest is a request type for the CapacityByDenom RPC method.
+// QueryCapacityByDenomRequest is a request type for the CapacityByDenom RPC
+// method.
 type QueryCapacityByDenomRequest struct {
 	Denom string `protobuf:"bytes,1,opt,name=denom,proto3" json:"denom,omitempty"`
 }
@@ -202,7 +203,8 @@ func (m *CapacityResult) GetPeriodSec() uint32 {
 	return 0
 }
 
-// QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC method.
+// QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
+// method.
 type QueryCapacityByDenomResponse struct {
 	Results []*CapacityResult `protobuf:"bytes,1,rep,name=results,proto3" json:"results,omitempty"`
 }
