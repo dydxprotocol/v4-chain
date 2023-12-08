@@ -673,18 +673,13 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			deltaBaseQuantums.Neg(deltaBaseQuantums)
 		}
 
-		deltaQuoteQuantums := new(big.Int)
-		var err error
-		if matchDeleveraging.IsFinalSettlement {
-			deltaQuoteQuantums, err = k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaBaseQuantums)
-		} else {
-			deltaQuoteQuantums, err = k.GetBankruptcyPriceInQuoteQuantums(
-				ctx,
-				liquidatedSubaccountId,
-				perpetualId,
-				deltaBaseQuantums,
-			)
-		}
+		deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
+			ctx,
+			perpetualId,
+			liquidatedSubaccountId,
+			deltaBaseQuantums,
+			matchDeleveraging.IsFinalSettlement,
+		)
 		if err != nil {
 			return err
 		}

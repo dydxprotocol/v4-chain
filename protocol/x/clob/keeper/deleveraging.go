@@ -373,7 +373,7 @@ func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 ) (deltaQuoteQuantums *big.Int, err error) {
 	// If market is in final settlement and the subaccount has non-negative TNC, use the oracle price.
 	if isFinalSettlement {
-		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
+		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, new(big.Int).Neg(deltaQuantums))
 	}
 
 	// For standard deleveraging, use the bankruptcy price.
