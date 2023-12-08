@@ -2,16 +2,20 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	"github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"google.golang.org/grpc/metadata"
 )
 
 // GetPreviousBlockInfo queries a gRPC server using `QueryPreviousBlockInfoRequest`
@@ -37,11 +41,60 @@ func (c *Client) GetPreviousBlockInfo(
 	return response.Info.Height, nil
 }
 
+// GetAllMarketPrices queries gRPC server and returns a list of market prices.
+func (c *Client) GetAllMarketPrices(
+	ctx context.Context,
+	blockHeight uint32,
+	pageLimit uint64,
+) (
+	marketPrices []pricestypes.MarketPrice,
+	err error,
+) {
+	defer metrics.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		metrics.DaemonGetAllMarketPricesLatency,
+		time.Now(),
+	)
+
+	marketPrices = make([]pricestypes.MarketPrice, 0)
+
+	// Set the block height header to the block height of the previous block.
+	ctx = metadata.NewOutgoingContext(
+		ctx,
+		metadata.Pairs(
+			grpc.GRPCBlockHeightHeader,
+			fmt.Sprintf("%d", blockHeight),
+		),
+	)
+
+	var nextKey []byte
+	for {
+		marketPricesFromKey, next, err := getMarketPricesFromKey(
+			ctx,
+			c.PricesQueryClient,
+			nextKey,
+			pageLimit,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		marketPrices = append(marketPrices, marketPricesFromKey...)
+		nextKey = next
+
+		if len(nextKey) == 0 {
+			break
+		}
+	}
+	return marketPrices, nil
+}
+
 // GetAllSubaccounts queries a gRPC server and returns a list of subaccounts and
 // their balances and open positions.
 func (c *Client) GetAllSubaccounts(
 	ctx context.Context,
-	limit uint64,
+	pageLimit uint64,
 ) (
 	subaccounts []satypes.Subaccount,
 	err error,
@@ -54,8 +107,8 @@ func (c *Client) GetAllSubaccounts(
 		subaccountsFromKey, next, err := getSubaccountsFromKey(
 			ctx,
 			c.SubaccountQueryClient,
-			limit,
 			nextKey,
+			pageLimit,
 		)
 
 		if err != nil {
@@ -140,8 +193,8 @@ func (c *Client) SendLiquidatableSubaccountIds(
 func getSubaccountsFromKey(
 	ctx context.Context,
 	client satypes.QueryClient,
-	limit uint64,
 	pageRequestKey []byte,
+	limit uint64,
 ) (
 	subaccounts []satypes.Subaccount,
 	nextKey []byte,
@@ -171,4 +224,37 @@ func getSubaccountsFromKey(
 		nextKey = response.Pagination.NextKey
 	}
 	return response.Subaccount, nextKey, nil
+}
+
+func getMarketPricesFromKey(
+	ctx context.Context,
+	client pricestypes.QueryClient,
+	pageRequestKey []byte,
+	limit uint64,
+) (
+	marketPrices []pricestypes.MarketPrice,
+	nextKey []byte,
+	err error,
+) {
+	defer metrics.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		metrics.DaemonGetMarketPricesPaginatedLatency,
+		time.Now(),
+	)
+
+	query := &pricestypes.QueryAllMarketPricesRequest{
+		Pagination: &query.PageRequest{
+			Key:   pageRequestKey,
+			Limit: limit,
+		},
+	}
+
+	response, err := client.AllMarketPrices(ctx, query)
+	if err != nil {
+		return nil, nil, err
+	}
+	if response.Pagination != nil {
+		nextKey = response.Pagination.NextKey
+	}
+	return response.MarketPrices, nextKey, nil
 }
