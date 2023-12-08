@@ -100,6 +100,7 @@ services:
       - DD_PROFILING_ENABLED=true
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - REDIS_URL=redis://redis:6379
     labels:
       com.datadoghq.ad.logs: '[{"source": "indexer", "service": "ender"}]'
     depends_on:
@@ -113,15 +114,18 @@ services:
       dockerfile: Dockerfile.service.local
       args:
         service: comlink
-        NPM_TOKEN: ${NPM_TOKEN}
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/nodejs/ for DD_ specific environment variables.
       # Note that DD_SERVICE and DD_VERSION are read by default from package.json
       - DD_PROFILING_ENABLED=true
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
-      - TENDERMINT_WS_URL=host.docker.internal:26657 # connects to localhost:26657 on host machine
+      - REDIS_URL=redis://redis:6379
+      - RATE_LIMIT_REDIS_URL=redis://redis:6379
       - PORT=3002
+      - RATE_LIMIT_ENABLED=false
+      - INDEXER_LEVEL_GEOBLOCKING_ENABLED=false
+      - COMPLIANCE_DATA_CLIENT=PLACEHOLDER
     labels:
       com.datadoghq.ad.logs: '[{"source": "indexer", "service": "comlink"}]'
     ports:
@@ -191,6 +195,7 @@ services:
       - DD_PROFILING_ENABLED=true
       - DD_ENV=localnet_${USER}
       - DD_AGENT_HOST=datadog-agent
+      - REDIS_URL=redis://redis:6379
     labels:
       com.datadoghq.ad.logs: '[{"source": "indexer", "service": "vulcan"}]'
     ports:

@@ -430,3 +430,25 @@ message UpdatePerpetualEventV1 {
   // Defined in perpetuals.perpetual
   uint32 liquidity_tier = 5;
 }
+
+// TradingRewardEventV1 is communicates all trading rewards for all accounts
+// that receive trade rewards in the block.
+message TradingRewardEventV1 {
+  // The list of all trading rewards in the block.
+  repeated AddressTradingReward trading_rewards = 1;
+}
+
+// AddressTradingReward contains info on an instance of an address receiving a
+// reward
+message AddressTradingReward {
+  // The address of the wallet that will receive the trading reward.
+  string owner = 1;
+
+  // The trading rewards earned by the address above in denoms. 1e18 denoms is
+  // equivalent to a single coin.
+  bytes denoms = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}

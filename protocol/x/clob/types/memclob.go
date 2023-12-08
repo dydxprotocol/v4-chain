@@ -131,7 +131,9 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPairId ClobPairId,
 	) (
-		subticks Subticks,
+		midPrice Subticks,
+		bestBid Order,
+		bestAsk Order,
 		exists bool,
 	)
 }

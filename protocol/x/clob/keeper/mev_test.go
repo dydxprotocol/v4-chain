@@ -27,6 +27,9 @@ import (
 )
 
 func TestRecordMevMetrics(t *testing.T) {
+	// Set the maximum spread to 10%.
+	keeper.MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 10)
+
 	tests := map[string]struct {
 		// Setup.
 		subaccounts       []satypes.Subaccount
@@ -993,6 +996,12 @@ func TestRecordMevMetrics(t *testing.T) {
 				uint32(0),
 				metrics.MidPrice,
 				tc.expectedMidPrice,
+				metrics.OraclePrice,
+				uint64(100_000_000),
+				metrics.BestBid,
+				mock.Anything,
+				metrics.BestAsk,
+				mock.Anything,
 				// Validator stats.
 				metrics.ValidatorNumFills,
 				tc.expectedValidatorNumFills,
@@ -1014,6 +1023,9 @@ func TestRecordMevMetrics(t *testing.T) {
 }
 
 func TestGetMidPrices(t *testing.T) {
+	// Set the maximum spread to 1%.
+	keeper.MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 100)
+
 	tests := map[string]struct {
 		// Setup.
 		perpetuals  []perptypes.Perpetual
@@ -1037,13 +1049,13 @@ func TestGetMidPrices(t *testing.T) {
 			},
 			orders: []types.Order{
 				// Bid
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49800_GTB10,
 				// Ask
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
 			},
 
 			expectedMidPrices: map[types.ClobPairId]types.Subticks{
-				constants.ClobPair_Btc.GetClobPairId(): 49_750_000_000, // 49500 + (50000 - 49500) / 2
+				constants.ClobPair_Btc.GetClobPairId(): 49_900_000_000, // 49800 + (50000 - 49800) / 2
 			},
 		},
 		"can get mid prices from one orderbook when there are multiple orders on the same level": {
@@ -1059,15 +1071,15 @@ func TestGetMidPrices(t *testing.T) {
 			},
 			orders: []types.Order{
 				// Bid
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
-				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price49500,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49800_GTB10,
+				constants.Order_Carl_Num0_Id3_Clob0_Buy025BTC_Price49800,
 				// Ask
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50000_GTB11,
 			},
 
 			expectedMidPrices: map[types.ClobPairId]types.Subticks{
-				constants.ClobPair_Btc.GetClobPairId(): 49_750_000_000, // 49500 + (50000 - 49500) / 2
+				constants.ClobPair_Btc.GetClobPairId(): 49_900_000_000, // 49800 + (50000 - 49800) / 2
 			},
 		},
 		"can get mid prices from one orderbook when there are multiple price levels": {
@@ -1084,14 +1096,14 @@ func TestGetMidPrices(t *testing.T) {
 			orders: []types.Order{
 				// Bid
 				constants.Order_Carl_Num0_Id4_Clob0_Buy05BTC_Price40000,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49800_GTB10,
 				// Ask
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10,
 				constants.Order_Dave_Num0_Id1_Clob0_Sell025BTC_Price50500_GTB11,
 			},
 
 			expectedMidPrices: map[types.ClobPairId]types.Subticks{
-				constants.ClobPair_Btc.GetClobPairId(): 49_750_000_000, // 49500 + (50000 - 49500) / 2
+				constants.ClobPair_Btc.GetClobPairId(): 49_900_000_000, // 49800 + (50000 - 49800) / 2
 			},
 		},
 		"can get mid prices from multiple orderbooks": {
@@ -1109,19 +1121,19 @@ func TestGetMidPrices(t *testing.T) {
 			},
 			orders: []types.Order{
 				// Bid
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49800_GTB10,
 				constants.Order_Carl_Num0_Id4_Clob1_Buy01ETH_Price3000,
 				// Ask
 				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000,
-				constants.Order_Dave_Num0_Id4_Clob1_Sell1ETH_Price3030,
+				constants.Order_Dave_Num0_Id4_Clob1_Sell1ETH_Price3020,
 			},
 
 			expectedMidPrices: map[types.ClobPairId]types.Subticks{
-				constants.ClobPair_Btc.GetClobPairId(): 49_750_000_000, // 49500 + (50000 - 49500) / 2
-				constants.ClobPair_Eth.GetClobPairId(): 3_015_000_000,  // 3000 + (3030 - 3000) / 2
+				constants.ClobPair_Btc.GetClobPairId(): 49_900_000_000, // 49800 + (50000 - 49800) / 2
+				constants.ClobPair_Eth.GetClobPairId(): 3_010_000_000,  // 3000 + (3020 - 3000) / 2
 			},
 		},
-		"skips orderbooks that are empty": {
+		"fallback to oracle price for orderbooks that are empty": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
@@ -1136,7 +1148,7 @@ func TestGetMidPrices(t *testing.T) {
 				constants.ClobPair_Btc.GetClobPairId(): 50_000_000_000,
 			},
 		},
-		"skips orderbooks with missing best bid": {
+		"fallback to oracle price for orderbooks with missing best bid": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -1158,7 +1170,7 @@ func TestGetMidPrices(t *testing.T) {
 				constants.ClobPair_Btc.GetClobPairId(): 50_000_000_000,
 			},
 		},
-		"skips orderbooks with missing best ask": {
+		"fallback to oracle price for orderbooks with missing best ask": {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
@@ -1178,6 +1190,33 @@ func TestGetMidPrices(t *testing.T) {
 
 			expectedMidPrices: map[types.ClobPairId]types.Subticks{
 				constants.ClobPair_Btc.GetClobPairId(): 50_000_000_000,
+			},
+		},
+		"fallback to oracle price for orderbooks with spread >= 1%": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				constants.Dave_Num0_500000USD,
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			},
+			orders: []types.Order{
+				// Bid
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price49500_GTB10,
+				constants.Order_Carl_Num0_Id4_Clob1_Buy01ETH_Price3000,
+				// Ask
+				constants.Order_Dave_Num0_Id0_Clob0_Sell1BTC_Price50000, // Spread > 1%
+				constants.Order_Dave_Num0_Id4_Clob1_Sell1ETH_Price3030,  // Spread == 1%
+			},
+
+			expectedMidPrices: map[types.ClobPairId]types.Subticks{
+				constants.ClobPair_Btc.GetClobPairId(): 50_000_000_000,
+				constants.ClobPair_Eth.GetClobPairId(): 3_000_000_000,
 			},
 		},
 	}
@@ -1248,24 +1287,23 @@ func TestGetMidPrices(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			clobMidPrices, clobPairs := ks.ClobKeeper.GetClobMetadata(ctx)
+			clobMetadata := ks.ClobKeeper.GetClobMetadata(ctx)
 			blockProposerPnL, validatorPnL := ks.ClobKeeper.InitializeCumulativePnLs(
 				ctx,
 				ks.PerpetualsKeeper,
-				clobMidPrices,
-				clobPairs,
+				clobMetadata,
 			)
 
 			for clobPairId, expectedMidPrice := range tc.expectedMidPrices {
 				require.Equal(
 					t,
 					expectedMidPrice,
-					blockProposerPnL[clobPairId].MidPriceSubticks,
+					blockProposerPnL[clobPairId].Metadata.MidPrice,
 				)
 				require.Equal(
 					t,
 					expectedMidPrice,
-					validatorPnL[clobPairId].MidPriceSubticks,
+					validatorPnL[clobPairId].Metadata.MidPrice,
 				)
 			}
 		})

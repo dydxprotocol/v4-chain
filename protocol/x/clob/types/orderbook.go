@@ -94,7 +94,10 @@ func (ob *Orderbook) GetSide(isBuy bool) map[Subticks]*Level {
 }
 
 // GetMidPrice returns the mid price of the orderbook and whether or not it exists.
-func (ob *Orderbook) GetMidPrice() (Subticks, bool) {
+func (ob *Orderbook) GetMidPrice() (
+	midPrice Subticks,
+	exists bool,
+) {
 	if ob.BestBid == 0 || ob.BestAsk == math.MaxUint64 {
 		return 0, false
 	}
