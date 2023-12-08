@@ -233,8 +233,8 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			c.LiquidationServiceClient = queryClientMock
 
 			err := s.RunLiquidationDaemonTaskLoop(
-				c,
 				grpc.Ctx,
+				c,
 				flags.GetDefaultDaemonFlags().Liquidation,
 			)
 			if tc.expectedError != nil {
@@ -262,8 +262,8 @@ func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
 // RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
 // call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
 func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
-	_ *client.Client,
 	_ context.Context,
+	_ *client.Client,
 	_ flags.LiquidationFlags,
 ) error {
 	f.called = true

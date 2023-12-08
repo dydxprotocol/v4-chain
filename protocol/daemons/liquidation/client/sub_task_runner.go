@@ -15,8 +15,8 @@ import (
 // potentially liquidatable subaccount ids. This interface is used to mock the daemon logic in tests.
 type SubTaskRunner interface {
 	RunLiquidationDaemonTaskLoop(
-		client *Client,
 		ctx context.Context,
+		client *Client,
 		liqFlags flags.LiquidationFlags,
 	) error
 }
@@ -29,8 +29,8 @@ var _ SubTaskRunner = (*SubTaskRunnerImpl)(nil)
 // RunLiquidationDaemonTaskLoop contains the logic to communicate with various gRPC services
 // to find the liquidatable subaccount ids.
 func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
-	client *Client,
 	ctx context.Context,
+	daemonClient *Client,
 	liqFlags flags.LiquidationFlags,
 ) error {
 	defer telemetry.ModuleMeasureSince(
@@ -41,15 +41,14 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	)
 
 	// 1. Fetch all subaccounts from query service.
-	subaccounts, err := GetAllSubaccounts(ctx, client, liqFlags.SubaccountPageLimit)
+	subaccounts, err := daemonClient.GetAllSubaccounts(ctx, liqFlags.SubaccountPageLimit)
 	if err != nil {
 		return err
 	}
 
 	// 2. Check collateralization statuses of subaccounts with at least one open position.
-	liquidatableSubaccountIds, err := GetLiquidatableSubaccountIds(
+	liquidatableSubaccountIds, err := daemonClient.GetLiquidatableSubaccountIds(
 		ctx,
-		client,
 		liqFlags,
 		subaccounts,
 	)
@@ -58,7 +57,7 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	}
 
 	// 3. Send the list of liquidatable subaccount ids to the daemon server.
-	err = SendLiquidatableSubaccountIds(ctx, client, liquidatableSubaccountIds)
+	err = daemonClient.SendLiquidatableSubaccountIds(ctx, liquidatableSubaccountIds)
 	if err != nil {
 		return err
 	}
@@ -68,9 +67,8 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 
 // GetLiquidatableSubaccountIds verifies collateralization statuses of subaccounts with
 // at least one open position and returns a list of unique and potentially liquidatable subaccount ids.
-func GetLiquidatableSubaccountIds(
+func (c *Client) GetLiquidatableSubaccountIds(
 	ctx context.Context,
-	daemon *Client,
 	liqFlags flags.LiquidationFlags,
 	subaccounts []satypes.Subaccount,
 ) (
@@ -104,9 +102,8 @@ func GetLiquidatableSubaccountIds(
 	for start := 0; start < len(subaccountsToCheck); start += int(liqFlags.RequestChunkSize) {
 		end := lib.Min(start+int(liqFlags.RequestChunkSize), len(subaccountsToCheck))
 
-		results, err := CheckCollateralizationForSubaccounts(
+		results, err := c.CheckCollateralizationForSubaccounts(
 			ctx,
-			daemon,
 			subaccountsToCheck[start:end],
 		)
 		if err != nil {

@@ -295,7 +295,6 @@ const (
 	CheckCollateralizationForSubaccounts = "check_collateralization_for_subaccounts"
 	GetAllSubaccounts                    = "get_all_subaccounts"
 	GetLiquidatableSubaccountIds         = "get_liquidatable_subaccount_ids"
-	GetPreviousBlockInfo                 = "get_previous_block_info"
 	GetSubaccountsFromKey                = "get_subaccounts_from_key"
 	LiquidatableSubaccountIds            = "liquidatable_subaccount_ids"
 	LiquidationDaemon                    = "liquidation_daemon"

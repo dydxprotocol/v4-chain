@@ -66,7 +66,7 @@ func TestGetPreviousBlockInfo(t *testing.T) {
 
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.BlocktimeQueryClient = queryClientMock
-			actualBlockHeight, err := client.GetPreviousBlockInfo(grpc.Ctx, daemon)
+			actualBlockHeight, err := daemon.GetPreviousBlockInfo(grpc.Ctx)
 
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -162,9 +162,8 @@ func TestGetAllSubaccounts(t *testing.T) {
 
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.SubaccountQueryClient = queryClientMock
-			actual, err := client.GetAllSubaccounts(
+			actual, err := daemon.GetAllSubaccounts(
 				grpc.Ctx,
-				daemon,
 				df.Liquidation.SubaccountPageLimit,
 			)
 			if err != nil {
@@ -263,9 +262,8 @@ func TestCheckCollateralizationForSubaccounts(t *testing.T) {
 
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.ClobQueryClient = queryClientMock
-			actual, err := client.CheckCollateralizationForSubaccounts(
+			actual, err := daemon.CheckCollateralizationForSubaccounts(
 				grpc.Ctx,
-				daemon,
 				tc.subaccountIds,
 			)
 
@@ -330,7 +328,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.LiquidationServiceClient = queryClientMock
 
-			err := client.SendLiquidatableSubaccountIds(grpc.Ctx, daemon, tc.subaccountIds)
+			err := daemon.SendLiquidatableSubaccountIds(grpc.Ctx, tc.subaccountIds)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}

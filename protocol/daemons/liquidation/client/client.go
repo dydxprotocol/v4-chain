@@ -121,8 +121,8 @@ func StartLiquidationsDaemonTaskLoop(
 		select {
 		case <-ticker.C:
 			if err := s.RunLiquidationDaemonTaskLoop(
-				client,
 				ctx,
+				client,
 				flags.Liquidation,
 			); err != nil {
 				// TODO(DEC-947): Move daemon shutdown to application.
