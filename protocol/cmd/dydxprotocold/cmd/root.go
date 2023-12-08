@@ -142,8 +142,8 @@ func NewRootCmdWithInterceptors(
 							return struct{}{}
 						}
 						objectToReturn := app.DatadogErrorTrackingObject{
-							// TODO figure out what prefix to discard
-							Stack:   stackArr[:],
+							// Discard common stack prefixes
+							Stack:   stackArr[5:],
 							Kind:    "Exception",
 							Message: err.Error(),
 						}
