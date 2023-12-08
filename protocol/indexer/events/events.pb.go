@@ -2056,8 +2056,8 @@ func (m *TradingRewardsEventV1) GetTradingRewards() []*AddressTradingReward {
 type AddressTradingReward struct {
 	// The address of the wallet that will receive the trading reward.
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
-	// The amount of trading rewards earned by the address above in denoms. 1e18 denoms is
-	// equivalent to a single coin.
+	// The amount of trading rewards earned by the address above in denoms. 1e18
+	// denoms is equivalent to a single coin.
 	DenomAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=denom_amount,json=denomAmount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"denom_amount"`
 }
 

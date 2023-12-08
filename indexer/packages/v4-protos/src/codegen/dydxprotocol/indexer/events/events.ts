@@ -1157,8 +1157,8 @@ export interface AddressTradingReward {
   /** The address of the wallet that will receive the trading reward. */
   owner: string;
   /**
-   * The amount of trading rewards earned by the address above in denoms. 1e18 denoms is
-   * equivalent to a single coin.
+   * The amount of trading rewards earned by the address above in denoms. 1e18
+   * denoms is equivalent to a single coin.
    */
 
   denomAmount: Uint8Array;
@@ -1172,8 +1172,8 @@ export interface AddressTradingRewardSDKType {
   /** The address of the wallet that will receive the trading reward. */
   owner: string;
   /**
-   * The amount of trading rewards earned by the address above in denoms. 1e18 denoms is
-   * equivalent to a single coin.
+   * The amount of trading rewards earned by the address above in denoms. 1e18
+   * denoms is equivalent to a single coin.
    */
 
   denom_amount: Uint8Array;
