@@ -37,10 +37,6 @@
       "exchangeName": "Okx",
       "ticker": "SOL-USDT",
       "adjustByMarket": "USDT-USD"
-    },
-    {
-      "exchangeName": "TestFixedPriceExchange",
-      "ticker": "SOL-USD"
     }
   ]
 }
