@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -170,6 +171,100 @@ func TestGetAllSubaccounts(t *testing.T) {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.Equal(t, tc.expectedSubaccounts, actual)
+			}
+		})
+	}
+}
+
+func TestGetAllMarketPrices(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
+		limit      uint64
+
+		// expectations
+		expectedMarketPrices []pricestypes.MarketPrice
+		expectedError        error
+	}{
+		"Success": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				response := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: constants.TestMarketPrices,
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
+			},
+			limit:                1_000,
+			expectedMarketPrices: constants.TestMarketPrices,
+		},
+		"Success Paginated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 2,
+					},
+				}
+				nextKey := []byte("next key")
+				response := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: []pricestypes.MarketPrice{
+						constants.TestMarketPrices[0],
+						constants.TestMarketPrices[1],
+					},
+					Pagination: &query.PageResponse{
+						NextKey: nextKey,
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(response, nil)
+				req2 := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Key:   nextKey,
+						Limit: 2,
+					},
+				}
+				response2 := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: []pricestypes.MarketPrice{
+						constants.TestMarketPrices[2],
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req2).Return(response2, nil)
+			},
+			limit:                2,
+			expectedMarketPrices: constants.TestMarketPrices,
+		},
+		"Errors are propagated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &pricestypes.QueryAllMarketPricesRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				mck.On("AllMarketPrices", mock.Anything, req).Return(nil, errors.New("test error"))
+			},
+			limit:         1_000,
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.PricesQueryClient = queryClientMock
+			actual, err := daemon.GetAllMarketPrices(
+				grpc.Ctx,
+				uint32(50),
+				tc.limit,
+			)
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedMarketPrices, actual)
 			}
 		})
 	}
