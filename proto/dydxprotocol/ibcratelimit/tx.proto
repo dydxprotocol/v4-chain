@@ -11,7 +11,7 @@ service Msg {
   // SetLimitParams sets a `LimitParams` object in state.
   rpc SetLimitParams(MsgSetLimitParams) returns (MsgSetLimitParamsResponse);
 
-  // DeleteLimitParams removes a `LimitParams` object in state.
+  // DeleteLimitParams removes a `LimitParams` object from state.
   rpc DeleteLimitParams(MsgDeleteLimitParams)
       returns (MsgDeleteLimitParamsResponse);
 }

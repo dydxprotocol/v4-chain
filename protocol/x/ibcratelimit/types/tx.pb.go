@@ -260,7 +260,7 @@ const _ = grpc.SupportPackageIsVersion4
 type MsgClient interface {
 	// SetLimitParams sets a `LimitParams` object in state.
 	SetLimitParams(ctx context.Context, in *MsgSetLimitParams, opts ...grpc.CallOption) (*MsgSetLimitParamsResponse, error)
-	// DeleteLimitParams removes a `LimitParams` object in state.
+	// DeleteLimitParams removes a `LimitParams` object from state.
 	DeleteLimitParams(ctx context.Context, in *MsgDeleteLimitParams, opts ...grpc.CallOption) (*MsgDeleteLimitParamsResponse, error)
 }
 
@@ -294,7 +294,7 @@ func (c *msgClient) DeleteLimitParams(ctx context.Context, in *MsgDeleteLimitPar
 type MsgServer interface {
 	// SetLimitParams sets a `LimitParams` object in state.
 	SetLimitParams(context.Context, *MsgSetLimitParams) (*MsgSetLimitParamsResponse, error)
-	// DeleteLimitParams removes a `LimitParams` object in state.
+	// DeleteLimitParams removes a `LimitParams` object from state.
 	DeleteLimitParams(context.Context, *MsgDeleteLimitParams) (*MsgDeleteLimitParamsResponse, error)
 }
 
