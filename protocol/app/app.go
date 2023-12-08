@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"io"
 	"math/big"
 	"net/http"
@@ -627,7 +628,7 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := constants.StaticExchangeQueryConfig
+			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
