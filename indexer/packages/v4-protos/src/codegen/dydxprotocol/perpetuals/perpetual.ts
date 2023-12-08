@@ -198,6 +198,8 @@ export interface LiquidityTier {
    * The maximum position size at which the margin requirements are
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
    */
 
   /** @deprecated */
@@ -239,6 +241,8 @@ export interface LiquidityTierSDKType {
    * The maximum position size at which the margin requirements are
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
    */
 
   /** @deprecated */
