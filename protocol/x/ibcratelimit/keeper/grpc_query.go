@@ -10,11 +10,17 @@ import (
 
 var _ types.QueryServer = Keeper{}
 
-func (k Keeper) ListLimitParams(ctx context.Context, req *types.ListLimitParamsRequest) (*types.ListLimitParamsResponse, error) {
+func (k Keeper) ListLimitParams(
+	ctx context.Context,
+	req *types.ListLimitParamsRequest,
+) (*types.ListLimitParamsResponse, error) {
 	// 	// TODO(CORE-823): implement query for `x/ibcratelimit`
 	return nil, status.Errorf(codes.Unimplemented, "method ListLimitParams not implemented")
 }
-func (k Keeper) CapacityByDenom(ctx context.Context, req *types.QueryCapacityByDenomRequest) (*types.QueryCapacityByDenomResponse, error) {
+func (k Keeper) CapacityByDenom(
+	ctx context.Context,
+	req *types.QueryCapacityByDenomRequest,
+) (*types.QueryCapacityByDenomResponse, error) {
 	// 	// TODO(CORE-823): implement query for `x/ibcratelimit`
 	return nil, status.Errorf(codes.Unimplemented, "method CapacityByDenom not implemented")
 }
