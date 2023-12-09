@@ -11,6 +11,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -21,6 +22,11 @@ func BeginBlocker(
 	ctx sdk.Context,
 	keeper types.ClobKeeper,
 ) {
+	log.AddPersistentTagsToLogger(ctx,
+		log.Handler, log.BeginBlocker,
+		log.BlockHeight, ctx.BlockHeight(),
+	)
+
 	// Initialize the set of process proposer match events for the next block effectively
 	// removing any events that occurred in the last block.
 	keeper.MustSetProcessProposerMatchesEvents(
@@ -36,6 +42,11 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	log.AddPersistentTagsToLogger(ctx,
+		log.Handler, log.EndBlocker,
+		log.BlockHeight, ctx.BlockHeight(),
+	)
+
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
@@ -119,6 +130,11 @@ func PrepareCheckState(
 	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
+	log.AddPersistentTagsToLogger(ctx,
+		log.Handler, log.PrepareCheckState,
+		log.BlockHeight, ctx.BlockHeight(),
+	)
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -133,12 +149,9 @@ func PrepareCheckState(
 
 	// 1. Remove all operations in the local validators operations queue from the memclob.
 	localValidatorOperationsQueue, shortTermOrderTxBytes := keeper.MemClob.GetOperationsToReplay(ctx)
-	keeper.Logger(ctx).Debug(
-		"Clearing local operations queue",
-		"localValidatorOperationsQueue",
-		types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
-		"block",
-		ctx.BlockHeight(),
+
+	log.DebugLog(ctx, "Clearing local operations queue",
+		log.LocalValidatorOperationsQueue, types.GetInternalOperationsQueueTextString(localValidatorOperationsQueue),
 	)
 
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
@@ -206,12 +219,10 @@ func PrepareCheckState(
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
 	newLocalValidatorOperationsQueue, _ := keeper.MemClob.GetOperationsToReplay(ctx)
-	keeper.Logger(ctx).Debug(
-		"Local operations queue after PrepareCheckState",
-		"newLocalValidatorOperationsQueue",
+
+	log.DebugLog(ctx, "Local operations queue after PrepareCheckState",
+		log.NewLocalValidatorOperationsQueue,
 		types.GetInternalOperationsQueueTextString(newLocalValidatorOperationsQueue),
-		"block",
-		ctx.BlockHeight(),
 	)
 
 	// Set per-orderbook gauges.

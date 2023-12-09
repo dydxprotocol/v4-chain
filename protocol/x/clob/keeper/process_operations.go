@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -37,13 +38,8 @@ func (k Keeper) ProcessProposerOperations(
 		return errorsmod.Wrapf(types.ErrInvalidMsgProposedOperations, "Error: %+v", err)
 	}
 
-	k.Logger(ctx).Debug(
-		"Processing operations queue",
-		"operationsQueue",
-		types.GetInternalOperationsQueueTextString(operations),
-		"block",
-		ctx.BlockHeight(),
-	)
+	log.DebugLog(ctx, "Processing operations queue",
+		log.OperationsQueue, types.GetInternalOperationsQueueTextString(operations))
 
 	// Write results of the operations queue to state. Performs stateful validation as well.
 	if err := k.ProcessInternalOperations(ctx, operations); err != nil {

@@ -12,7 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -23,6 +23,16 @@ func (k msgServer) CancelOrder(
 	msg *types.MsgCancelOrder,
 ) (resp *types.MsgCancelOrderResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Attach various logging tags relative to this request. These should be static with no changes.
+	log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight(),
+		log.Handler, log.CancelOrder,
+		log.Msg, msg,
+	)
 
 	defer func() {
 		metrics.IncrSuccessOrErrorCounter(
@@ -56,17 +66,11 @@ func (k msgServer) CancelOrder(
 						"Error: %s",
 						err.Error(),
 					)
-					k.Keeper.Logger(ctx).Info(
-						err.Error(),
-						metrics.BlockHeight, ctx.BlockHeight(),
-						metrics.Handler, "CancelOrder",
-						metrics.Callback, metrics.DeliverTx,
-						metrics.Msg, msg,
-					)
+					log.InfoLog(ctx, "Cancel Order Expected Error", log.Error, err)
 					return
 				}
 			}
-			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "CancelOrder", msg)
+			log.ErrorLog(ctx, "Error cancelling order", err)
 		}
 	}()
 
