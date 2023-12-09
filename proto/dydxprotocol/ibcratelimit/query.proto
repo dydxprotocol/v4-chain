@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.ibcratelimit;
 
 import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
 import "dydxprotocol/ibcratelimit/limit_params.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ibcratelimit/types";
@@ -9,11 +10,15 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ibcratelimit/ty
 // Query defines the gRPC querier service.
 service Query {
   // List all limit params.
-  rpc ListLimitParams(ListLimitParamsRequest) returns (ListLimitParamsResponse);
+  rpc ListLimitParams(ListLimitParamsRequest) returns (ListLimitParamsResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/ibcratelimit/list_limit_params";
+  }
 
   // Query capacity by denom.
   rpc CapacityByDenom(QueryCapacityByDenomRequest)
-      returns (QueryCapacityByDenomResponse);
+    returns (QueryCapacityByDenomResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/ibcratelimit/capacity_by_denom";
+  }
 }
 
 // ListLimitParamsRequest is a request type of the ListLimitParams RPC method.
