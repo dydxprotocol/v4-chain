@@ -14,7 +14,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -93,7 +92,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -113,7 +112,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				nextKey := []byte("next key")
@@ -129,7 +128,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 				req2 := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
 						Key:   nextKey,
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				response2 := &satypes.QuerySubaccountAllResponse{
@@ -148,7 +147,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(nil, errors.New("test error"))
@@ -166,7 +165,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			daemon.SubaccountQueryClient = queryClientMock
 			actual, err := daemon.GetAllSubaccounts(
 				grpc.Ctx,
-				df.Liquidation.SubaccountPageLimit,
+				df.Liquidation.QueryPageLimit,
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -258,7 +257,6 @@ func TestGetAllPerpetuals(t *testing.T) {
 			daemon.PerpetualsQueryClient = queryClientMock
 			actual, err := daemon.GetAllPerpetuals(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
@@ -347,7 +345,6 @@ func TestGetAllLiquidityTiers(t *testing.T) {
 			daemon.PerpetualsQueryClient = queryClientMock
 			actual, err := daemon.GetAllLiquidityTiers(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
@@ -441,114 +438,12 @@ func TestGetAllMarketPrices(t *testing.T) {
 			daemon.PricesQueryClient = queryClientMock
 			actual, err := daemon.GetAllMarketPrices(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.Equal(t, tc.expectedMarketPrices, actual)
-			}
-		})
-	}
-}
-
-func TestCheckCollateralizationForSubaccounts(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(
-			ctx context.Context,
-			mck *mocks.QueryClient,
-			results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-		)
-		subaccountIds []satypes.SubaccountId
-
-		// expectations
-		expectedResults []clobtypes.AreSubaccountsLiquidatableResponse_Result
-		expectedError   error
-	}{
-		"Success": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{
-						constants.Alice_Num0,
-						constants.Bob_Num0,
-					},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds: []satypes.SubaccountId{
-				constants.Alice_Num0,
-				constants.Bob_Num0,
-			},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{
-				{
-					SubaccountId:   constants.Alice_Num0,
-					IsLiquidatable: true,
-				},
-				{
-					SubaccountId:   constants.Bob_Num0,
-					IsLiquidatable: false,
-				},
-			},
-		},
-		"Success - Empty": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-		},
-		"Errors are propagated": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(nil, errors.New("test error"))
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-			expectedError:   errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.expectedResults)
-
-			daemon := client.NewClient(log.NewNopLogger())
-			daemon.ClobQueryClient = queryClientMock
-			actual, err := daemon.CheckCollateralizationForSubaccounts(
-				grpc.Ctx,
-				tc.subaccountIds,
-			)
-
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedResults, actual)
 			}
 		})
 	}

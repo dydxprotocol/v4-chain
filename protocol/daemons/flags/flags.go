@@ -20,10 +20,9 @@ const (
 	FlagBridgeDaemonLoopDelayMs    = "bridge-daemon-loop-delay-ms"
 	FlagBridgeDaemonEthRpcEndpoint = "bridge-daemon-eth-rpc-endpoint"
 
-	FlagLiquidationDaemonEnabled             = "liquidation-daemon-enabled"
-	FlagLiquidationDaemonLoopDelayMs         = "liquidation-daemon-loop-delay-ms"
-	FlagLiquidationDaemonSubaccountPageLimit = "liquidation-daemon-subaccount-page-limit"
-	FlagLiquidationDaemonRequestChunkSize    = "liquidation-daemon-request-chunk-size"
+	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
+	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
+	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -52,9 +51,8 @@ type LiquidationFlags struct {
 	Enabled bool
 	// LoopDelayMs configures the update frequency of the liquidation daemon.
 	LoopDelayMs uint32
-	// SubaccountPageLimit configures the pagination limit for fetching subaccounts.
-	SubaccountPageLimit uint64
-	RequestChunkSize    uint64
+	// QueryPageLimit configures the pagination limit for fetching subaccounts.
+	QueryPageLimit uint64
 }
 
 // PriceFlags contains configuration flags for the Price Daemon.
@@ -90,10 +88,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
-				Enabled:             true,
-				LoopDelayMs:         1_600,
-				SubaccountPageLimit: 1_000,
-				RequestChunkSize:    50,
+				Enabled:        true,
+				LoopDelayMs:    1_600,
+				QueryPageLimit: 1_000,
 			},
 			Price: PriceFlags{
 				Enabled:     true,
@@ -160,14 +157,9 @@ func AddDaemonFlagsToCmd(
 		"Delay in milliseconds between running the Liquidation Daemon task loop.",
 	)
 	cmd.Flags().Uint64(
-		FlagLiquidationDaemonSubaccountPageLimit,
-		df.Liquidation.SubaccountPageLimit,
-		"Limit on the number of subaccounts to fetch per query in the Liquidation Daemon task loop.",
-	)
-	cmd.Flags().Uint64(
-		FlagLiquidationDaemonRequestChunkSize,
-		df.Liquidation.RequestChunkSize,
-		"Limit on the number of subaccounts per collateralization check in the Liquidation Daemon task loop.",
+		FlagLiquidationDaemonQueryPageLimit,
+		df.Liquidation.QueryPageLimit,
+		"Limit on the number of items to fetch per query in the Liquidation Daemon task loop.",
 	)
 
 	// Price Daemon.
@@ -235,14 +227,9 @@ func GetDaemonFlagValuesFromOptions(
 			result.Liquidation.LoopDelayMs = v
 		}
 	}
-	if option := appOpts.Get(FlagLiquidationDaemonSubaccountPageLimit); option != nil {
+	if option := appOpts.Get(FlagLiquidationDaemonQueryPageLimit); option != nil {
 		if v, err := cast.ToUint64E(option); err == nil {
-			result.Liquidation.SubaccountPageLimit = v
-		}
-	}
-	if option := appOpts.Get(FlagLiquidationDaemonRequestChunkSize); option != nil {
-		if v, err := cast.ToUint64E(option); err == nil {
-			result.Liquidation.RequestChunkSize = v
+			result.Liquidation.QueryPageLimit = v
 		}
 	}
 

@@ -768,6 +768,16 @@ func (k Keeper) GetNetNotional(
 		return new(big.Int), err
 	}
 
+	return GetNetNotional(perpetual, marketPrice, bigQuantums), nil
+}
+
+func GetNetNotional(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	bigQuantums *big.Int,
+) (
+	bigNetNotionalQuoteQuantums *big.Int,
+) {
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigQuantums,
 		perpetual.Params.AtomicResolution,
@@ -775,7 +785,7 @@ func (k Keeper) GetNetNotional(
 		marketPrice.Exponent,
 	)
 
-	return bigQuoteQuantums, nil
+	return bigQuoteQuantums
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -881,6 +891,25 @@ func (k Keeper) GetMarginRequirements(
 		return nil, nil, err
 	}
 
+	bigInitialMarginQuoteQuantums,
+		bigMaintenanceMarginQuoteQuantums = GetMarginRequirements(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		bigQuantums,
+	)
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+}
+
+func GetMarginRequirements(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	liquidityTier types.LiquidityTier,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+) {
 	// Always consider the magnitude of the position regardless of whether it is long/short.
 	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
 
@@ -902,8 +931,7 @@ func (k Keeper) GetMarginRequirements(
 		),
 		true,
 	)
-
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
 
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
