@@ -1,0 +1,5 @@
+[[exchanges]]
+ExchangeId = "Binance"
+IntervalMs = 2_500
+TimeoutMs = 3_000
+MaxQueries = 1

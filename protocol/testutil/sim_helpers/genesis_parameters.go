@@ -133,15 +133,6 @@ var (
 		Valid:      MaxNumPerpetuals.Valid,
 	}
 
-	MinBasePositionNotional = GenesisParameters[int]{
-		Reasonable: 10_000_000_000, // 10_000 USDC
-		Valid:      50_000_000_000, // 50_000 USDC
-	}
-	MaxBasePositionNotional = GenesisParameters[int]{
-		Reasonable: MinBasePositionNotional.Reasonable * 100,
-		Valid:      MinBasePositionNotional.Valid * 100,
-	}
-
 	MinFundingRateClampFactorPpm = GenesisParameters[int]{
 		Reasonable: 4_000_000, // 400%
 		Valid:      1_000_000, // 100%

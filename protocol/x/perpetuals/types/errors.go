@@ -62,11 +62,6 @@ var (
 		12,
 		"Liquidity Tier does not exist",
 	)
-	ErrBasePositionNotionalIsZero = errorsmod.Register(
-		ModuleName,
-		13,
-		"Base position notional is zero",
-	)
 	ErrFundingRateClampFactorPpmIsZero = errorsmod.Register(
 		ModuleName,
 		14,
