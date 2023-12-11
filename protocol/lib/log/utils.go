@@ -16,6 +16,8 @@ func ErrorLog(ctx sdk.Context, msg string, err error, keyvals ...interface{}) {
 	ctx.Logger().Error(msg, append(keyvals, Error, err))
 }
 
-func AddPersistentTagsToLogger(ctx sdk.Context, keyvals ...interface{}) {
-	ctx.WithLogger(ctx.Logger().With(keyvals))
+// AddPersistentTagsToLogger returns a new sdk.Context with a logger that has new persistent
+// tags that are added to all logs emitted.
+func AddPersistentTagsToLogger(ctx sdk.Context, keyvals ...interface{}) sdk.Context {
+	return ctx.WithLogger(ctx.Logger().With(keyvals))
 }

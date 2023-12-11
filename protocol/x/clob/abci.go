@@ -22,7 +22,7 @@ func BeginBlocker(
 	ctx sdk.Context,
 	keeper types.ClobKeeper,
 ) {
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.BeginBlocker,
 		log.BlockHeight, ctx.BlockHeight(),
 	)
@@ -42,7 +42,7 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.EndBlocker,
 		log.BlockHeight, ctx.BlockHeight(),
 	)
@@ -130,7 +130,7 @@ func PrepareCheckState(
 	keeper *keeper.Keeper,
 	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) {
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.PrepareCheckState,
 		log.BlockHeight, ctx.BlockHeight(),
 	)

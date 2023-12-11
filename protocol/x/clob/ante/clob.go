@@ -64,7 +64,7 @@ func (cd ClobDecorator) AnteHandle(
 	var msg = msgs[0]
 
 	// Set request-level logging tags
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Module, log.Clob,
 		log.Callback, lib.TxMode(ctx),
 		log.BlockHeight, ctx.BlockHeight(),
@@ -73,7 +73,7 @@ func (cd ClobDecorator) AnteHandle(
 
 	switch msg := msg.(type) {
 	case *types.MsgCancelOrder:
-		log.AddPersistentTagsToLogger(ctx,
+		ctx = log.AddPersistentTagsToLogger(ctx,
 			log.Handler, log.CancelOrder,
 		)
 
@@ -96,7 +96,7 @@ func (cd ClobDecorator) AnteHandle(
 		)
 
 	case *types.MsgPlaceOrder:
-		log.AddPersistentTagsToLogger(ctx,
+		ctx = log.AddPersistentTagsToLogger(ctx,
 			log.Handler, log.PlaceOrder,
 		)
 		if msg.Order.OrderId.IsStatefulOrder() {

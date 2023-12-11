@@ -17,7 +17,7 @@ func (k msgServer) ProposedOperations(
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	// Attach various logging tags relative to this request. These should be static with no changes.
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Module, log.Clob,
 		log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
 		log.Callback, lib.TxMode(ctx),

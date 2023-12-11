@@ -34,7 +34,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	log.AddPersistentTagsToLogger(ctx,
+	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.PerpetualId, perpetualId,
 		log.Subaccount, subaccountId,
 	)
