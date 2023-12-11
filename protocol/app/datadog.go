@@ -146,6 +146,7 @@ func SetZerologDatadogErrorTrackingFormat() {
 			}
 			objectToReturn := DatadogErrorTrackingObject{
 				// Discard common stack prefixes
+				// TODO(CLOB-1049) Write test for common stack prefix truncation
 				Stack:   stackArr[5:],
 				Kind:    "Exception",
 				Message: err.Error(),
