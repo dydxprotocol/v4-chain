@@ -3,7 +3,8 @@ package types
 // Module name and store keys
 const (
 	// ModuleName defines the module name
-	ModuleName = "ibcratelimit"
+	// Use `ratelimit` instead of `ibcratelimit` to prevent potential key space conflicts with the IBC module.
+	ModuleName = "ratelimit"
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName

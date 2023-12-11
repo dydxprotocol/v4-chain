@@ -12,7 +12,9 @@ message LimitParams {
   string denom = 1;
   // limiters is a list of rate-limiters on this denom. All limiters
   // must be satified for a withdrawal to proceed.
-  repeated Limiter limiters = 2;
+  repeated Limiter limiters = 2 [
+    (gogoproto.nullable) = false
+  ];
 }
 
 // Limiter defines one rate-limiter on a specfic denom.
