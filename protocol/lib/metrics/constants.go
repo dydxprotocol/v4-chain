@@ -211,6 +211,11 @@ const (
 	EpochNumber   = "epoch_number"
 	IsEpochOne    = "is_epoch_one"
 
+	// Health Monitor
+	HealthMonitor    = "health_monitor"
+	ServiceIsHealthy = "service_is_healthy"
+	ServiceName      = "service_name"
+
 	// Perpetuals.
 	AddPremiumSamples            = "add_premium_samples"
 	AddPremiumVotes              = "add_premium_votes"

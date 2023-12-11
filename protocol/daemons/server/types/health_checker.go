@@ -2,7 +2,9 @@ package types
 
 import (
 	"github.com/cometbft/cometbft/libs/log"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"sync"
 	"time"
@@ -175,6 +177,20 @@ func (hc *healthChecker) Poll() {
 	err := hc.healthCheckable.HealthCheck()
 	now := hc.timeProvider.Now()
 
+	// Emit health metrics for the monitored service.
+	healthy := float32(1)
+	if err != nil {
+		healthy = 0
+	}
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.HealthMonitor, metrics.ServiceIsHealthy},
+		healthy,
+		[]metrics.Label{
+			telemetry.NewLabel(metrics.ServiceName, hc.healthCheckable.ServiceName()),
+		},
+	)
+
+	// Record service health and trigger the callback if necessary.
 	if err == nil { // Capture healthy response.
 		hc.mutableState.ReportSuccess(now)
 	} else { // Capture unhealthy response.
