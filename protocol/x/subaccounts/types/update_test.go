@@ -120,6 +120,10 @@ func TestUpdateResultIsSuccess(t *testing.T) {
 			value:          types.StillUndercollateralized,
 			expectedResult: false,
 		},
+		"WithdrawalsAndTransfersBlocked": {
+			value:          types.WithdrawalsAndTransfersBlocked,
+			expectedResult: false,
+		},
 		"UpdateCausedError": {
 			value:          types.UpdateCausedError,
 			expectedResult: false,
