@@ -34,6 +34,8 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
@@ -88,7 +90,7 @@ func NewRootCmdWithInterceptors(
 	rootCmd := &cobra.Command{
 		Use:   dydxapp.AppDaemonName,
 		Short: "Start dydxprotocol app",
-		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
@@ -119,7 +121,16 @@ func NewRootCmdWithInterceptors(
 				return err
 			}
 
-			serverCtxInterceptor(server.GetServerContextFromCmd(cmd))
+			serverCtx := server.GetServerContextFromCmd(cmd)
+
+			// Format logs for error tracking if it is enabled via flags.
+			if ddErrorTrackingFormatterEnabled :=
+				serverCtx.Viper.Get(protocolflags.DdErrorTrackingFormat); ddErrorTrackingFormatterEnabled != nil {
+				if enabled, err := cast.ToBoolE(ddErrorTrackingFormatterEnabled); err == nil && enabled {
+					dydxapp.SetZerologDatadogErrorTrackingFormat()
+				}
+			}
+			serverCtxInterceptor(serverCtx)
 
 			return nil
 		},
