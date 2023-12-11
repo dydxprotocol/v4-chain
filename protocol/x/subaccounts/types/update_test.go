@@ -162,7 +162,7 @@ func TestUpdateTypeString(t *testing.T) {
 		},
 		"UnexpectedError": {
 			value:          types.UpdateType(999),
-			expectedResult: "UnexpectedError",
+			expectedResult: "UnexpectedUpdateTypeError",
 		},
 	}
 
@@ -170,7 +170,7 @@ func TestUpdateTypeString(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			result := tc.value.String()
-			require.Equal(t, result, tc.expectedResult)
+			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }
