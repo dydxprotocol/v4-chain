@@ -90,7 +90,7 @@ func (cd ClobDecorator) AnteHandle(
 			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
 		}
 
-		log.DebugLog(ctx, "Recieved new order cancellation",
+		log.DebugLog(ctx, "Received new order cancellation",
 			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			log.Error, err,
 		)
@@ -123,7 +123,7 @@ func (cd ClobDecorator) AnteHandle(
 				msg,
 			)
 
-			log.DebugLog(ctx, "Recieved new short term order",
+			log.DebugLog(ctx, "Received new short term order",
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				log.OrderStatus, status,
