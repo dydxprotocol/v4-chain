@@ -83,28 +83,26 @@ export interface SubaccountLiquidationInfoSDKType {
 
   quantums_insurance_lost: Long;
 }
-/** SubaccountOpenPositionInfo holds information about open positions for a perpetual. */
+/**
+ * SubaccountOpenPositionInfo holds information about open positions for a
+ * perpetual.
+ */
 
 export interface SubaccountOpenPositionInfo {
   /** The id of the perpetual. */
   perpetualId: number;
-  /** The ids of the subaccounts with long positions. */
-
   subaccountsWithLongPosition: SubaccountId[];
-  /** The ids of the subaccounts with short positions. */
-
   subaccountsWithShortPosition: SubaccountId[];
 }
-/** SubaccountOpenPositionInfo holds information about open positions for a perpetual. */
+/**
+ * SubaccountOpenPositionInfo holds information about open positions for a
+ * perpetual.
+ */
 
 export interface SubaccountOpenPositionInfoSDKType {
   /** The id of the perpetual. */
   perpetual_id: number;
-  /** The ids of the subaccounts with long positions. */
-
   subaccounts_with_long_position: SubaccountIdSDKType[];
-  /** The ids of the subaccounts with short positions. */
-
   subaccounts_with_short_position: SubaccountIdSDKType[];
 }
 

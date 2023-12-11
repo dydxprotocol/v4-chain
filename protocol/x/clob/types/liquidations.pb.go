@@ -151,7 +151,8 @@ func (m *SubaccountLiquidationInfo) GetQuantumsInsuranceLost() uint64 {
 	return 0
 }
 
-// SubaccountOpenPositionInfo holds information about open positions for a perpetual.
+// SubaccountOpenPositionInfo holds information about open positions for a
+// perpetual.
 type SubaccountOpenPositionInfo struct {
 	// The id of the perpetual.
 	PerpetualId uint32 `protobuf:"varint,1,opt,name=perpetual_id,json=perpetualId,proto3" json:"perpetual_id,omitempty"`
