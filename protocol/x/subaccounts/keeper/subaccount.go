@@ -479,11 +479,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// Block all withdrawals and transfers if there was a negative TNC subaccount seen within the
 	// last `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		lastBlockNegativeTncSubaccountSeen, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
-		if currentBlock < lastBlockNegativeTncSubaccountSeen {
+		if exists && currentBlock < lastBlockNegativeTncSubaccountSeen {
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
