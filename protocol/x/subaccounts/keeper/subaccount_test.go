@@ -2144,7 +2144,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates)
+			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, types.Match)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
@@ -2758,7 +2758,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates)
+			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates, types.Match)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {

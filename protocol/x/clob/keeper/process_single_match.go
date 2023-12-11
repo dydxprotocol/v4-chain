@@ -400,6 +400,7 @@ func (k Keeper) persistMatchedOrders(
 	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(
 		ctx,
 		updates,
+		satypes.Match,
 	)
 	if err != nil {
 		return satypes.UpdateCausedError, satypes.UpdateCausedError, err

@@ -486,19 +486,21 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		if currentBlock < lastBlockNegativeTncSubaccountSeen {
 			panic(
 				fmt.Sprintf(
-					"internalCanUpdateSubaccounts: current block (%d) is less than the last block a negative TNC subaccount was seen (%d)",
+					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
+						"block a negative TNC subaccount was seen (%d)",
 					currentBlock,
 					lastBlockNegativeTncSubaccountSeen,
 				),
 			)
 		}
 
-		if currentBlock-lastBlockNegativeTncSubaccountSeen < types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
+		if currentBlock-lastBlockNegativeTncSubaccountSeen <
+			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
 			success = false
 			for i := range settledUpdates {
 				successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
 			}
-			return false, successPerUpdate, nil
+			return success, successPerUpdate, nil
 		}
 	}
 
