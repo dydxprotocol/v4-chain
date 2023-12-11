@@ -53,7 +53,6 @@ func networkWithLiquidityTierAndPerpetualObjects(
 			Name:                   fmt.Sprintf("test_liquidity_tier_name_%d", i),
 			InitialMarginPpm:       uint32(1_000_000 / (i + 1)),
 			MaintenanceFractionPpm: uint32(1_000_000 / (i + 1)),
-			BasePositionNotional:   uint64(1_000_000_000 * (i + 1)),
 			ImpactNotional:         uint64(500_000_000 * (i + 1)),
 		}
 		nullify.Fill(&liquidityTier) //nolint:staticcheck
