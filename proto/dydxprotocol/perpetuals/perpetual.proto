@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.perpetuals;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
 
@@ -108,4 +109,19 @@ message LiquidityTier {
   // - Impact ask price = average execution price for a market buy of the
   // impact notional value.
   uint64 impact_notional = 6;
+
+  // This duration specifies how fast volatility bounds recover.
+  // A longer duration leads to a longer (slower) recovery time.
+  google.protobuf.Duration volatility_bounds_period = 7
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
+}
+
+// VolatilityBounds stores lower and upper bounds of volatility for a perpeutal.
+// A perpetual's variable margin fraction is computed with
+// `VolatilityBounds.Min` and `VolatilityBounds.Max` as (let `o` be oracle price
+// of the corresponding market and `mmf` be margin maintenance fraction):
+// max((VolatilityBounds.Max - o) / o, (o - VolatilityBounds.Min) / o) + mmf
+message VolatilityBounds {
+  uint64 min = 1;
+  uint64 max = 2;
 }
