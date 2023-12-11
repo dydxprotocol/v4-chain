@@ -20,6 +20,8 @@ const (
 	Tx                  = "tx"
 	OrderHash           = "order_hash"
 	OrderStatus         = "order_status"
+	Subaccount          = "subaccount"
+	PerpetualId         = "perpetual_id"
 
 	OrderSizeOptimisticallyFilledFromMatchingQuantums = "order_size_optimistically_filled_from_matching_quantums"
 	NewLocalValidatorOperationsQueue                  = "new_local_validator_operations_queue"

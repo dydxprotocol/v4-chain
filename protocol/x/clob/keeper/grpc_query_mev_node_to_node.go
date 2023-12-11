@@ -2,10 +2,10 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,12 +22,8 @@ func (k Keeper) MevNodeToNodeCalculation(
 
 	// Validate that the request is valid.
 	if err := validateMevNodeToNodeRequest(req); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to validate MEV node to node calculation request: Error: %+v, request: %+v",
-				err.Error(),
-				req,
-			),
+		log.ErrorLog(ctx, "Failed to validate MEV node to node calculation request", err,
+			"mev_calculation_request", req,
 		)
 		return nil, err
 	}
@@ -39,12 +35,8 @@ func (k Keeper) MevNodeToNodeCalculation(
 		blockProposerPnL,
 		req.BlockProposerMatches,
 	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate match PnL for block proposer: Error: %+v, MEV matches: %+v",
-				err.Error(),
-				req.BlockProposerMatches,
-			),
+		log.ErrorLog(ctx, "Failed to calculate match PnL for block proposer", err,
+			"mev_matches", req.BlockProposerMatches,
 		)
 		return nil, err
 	}
@@ -54,12 +46,8 @@ func (k Keeper) MevNodeToNodeCalculation(
 		validatorPnL,
 		req.ValidatorMevMetrics.ValidatorMevMatches,
 	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate match PnL for validator: Error: %+v, MEV matches: %+v",
-				err.Error(),
-				req.ValidatorMevMetrics.ValidatorMevMatches,
-			),
+		log.ErrorLog(ctx, "Failed to calculate match PnL for validator", err,
+			"mev_matches", req.ValidatorMevMetrics.ValidatorMevMatches,
 		)
 		return nil, err
 	}
