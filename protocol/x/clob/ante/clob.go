@@ -107,7 +107,6 @@ func (cd ClobDecorator) AnteHandle(
 				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				log.Error, err,
 			)
-
 		} else {
 			// No need to process short term orders on `ReCheckTx`.
 			if ctx.IsReCheckTx() {
