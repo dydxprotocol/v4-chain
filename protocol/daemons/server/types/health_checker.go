@@ -112,7 +112,8 @@ func (u *healthCheckerMutableState) SchedulePoll(nextPollDelay time.Duration) {
 	u.timer.Reset(nextPollDelay)
 }
 
-// InitializePolling schedules the first poll for the health-checkable service. This method is synchronized.
+// InitializePolling schedules the first poll for the health-checkable service. This method is meant to be called
+// immediately after initializing the health checker mutable state. This method is synchronized.
 func (u *healthCheckerMutableState) InitializePolling(firstPollDelay time.Duration, pollFunc func()) {
 	u.lock.Lock()
 	defer u.lock.Unlock()
@@ -218,6 +219,8 @@ func StartNewHealthChecker(
 	}
 
 	// The first poll is scheduled after the startup grace period to allow the service to initialize.
+	// We initialize the timer and schedule a poll outside of object creation in order to avoid data races for
+	// extremely short startup grace periods.
 	checker.mutableState.InitializePolling(startupGracePeriod, checker.Poll)
 
 	return checker
