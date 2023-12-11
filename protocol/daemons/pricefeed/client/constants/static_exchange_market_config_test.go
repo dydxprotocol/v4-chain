@@ -176,7 +176,8 @@ func TestGenerateExchangeConfigJson(t *testing.T) {
 
 			configs := GenerateExchangeConfigJson(exchange_config.TestnetExchangeMarketConfig)
 
-			// Uncomment to update testnet exchange data after changing the TestnetExchangeMarketConfig.
+			// Uncomment to update the exchange data used for various testnet deploys after changing the
+			// TestnetExchangeMarketConfig.
 			//f, err := os.OpenFile("testdata/"+tc.expectedExchangeConfigJsonFile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 			//require.NoError(t, err)
 			//defer f.Close()

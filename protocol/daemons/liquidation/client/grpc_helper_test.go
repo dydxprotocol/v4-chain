@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
@@ -171,6 +172,188 @@ func TestGetAllSubaccounts(t *testing.T) {
 				require.EqualError(t, err, tc.expectedError.Error())
 			} else {
 				require.Equal(t, tc.expectedSubaccounts, actual)
+			}
+		})
+	}
+}
+
+func TestGetAllPerpetuals(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
+		limit      uint64
+
+		// expectations
+		expectedPerpetuals []perptypes.Perpetual
+		expectedError      error
+	}{
+		"Success": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllPerpetualsRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				response := &perptypes.QueryAllPerpetualsResponse{
+					Perpetual: constants.Perpetuals_DefaultGenesisState.Perpetuals,
+				}
+				mck.On("AllPerpetuals", mock.Anything, req).Return(response, nil)
+			},
+			limit:              1_000,
+			expectedPerpetuals: constants.Perpetuals_DefaultGenesisState.Perpetuals,
+		},
+		"Success Paginated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllPerpetualsRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1,
+					},
+				}
+				nextKey := []byte("next key")
+				response := &perptypes.QueryAllPerpetualsResponse{
+					Perpetual: []perptypes.Perpetual{
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[0],
+					},
+					Pagination: &query.PageResponse{
+						NextKey: nextKey,
+					},
+				}
+				mck.On("AllPerpetuals", mock.Anything, req).Return(response, nil)
+				req2 := &perptypes.QueryAllPerpetualsRequest{
+					Pagination: &query.PageRequest{
+						Key:   nextKey,
+						Limit: 1,
+					},
+				}
+				response2 := &perptypes.QueryAllPerpetualsResponse{
+					Perpetual: []perptypes.Perpetual{
+						constants.Perpetuals_DefaultGenesisState.Perpetuals[1],
+					},
+				}
+				mck.On("AllPerpetuals", mock.Anything, req2).Return(response2, nil)
+			},
+			limit:              1,
+			expectedPerpetuals: constants.Perpetuals_DefaultGenesisState.Perpetuals,
+		},
+		"Errors are propagated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllPerpetualsRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				mck.On("AllPerpetuals", mock.Anything, req).Return(nil, errors.New("test error"))
+			},
+			limit:         1_000,
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.PerpetualsQueryClient = queryClientMock
+			actual, err := daemon.GetAllPerpetuals(
+				grpc.Ctx,
+				uint32(50),
+				tc.limit,
+			)
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedPerpetuals, actual)
+			}
+		})
+	}
+}
+
+func TestGetAllLiquidityTiers(t *testing.T) {
+	tests := map[string]struct {
+		// mocks
+		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
+		limit      uint64
+
+		// expectations
+		expectedLiquidityTiers []perptypes.LiquidityTier
+		expectedError          error
+	}{
+		"Success": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllLiquidityTiersRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				response := &perptypes.QueryAllLiquidityTiersResponse{
+					LiquidityTiers: constants.LiquidityTiers,
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, req).Return(response, nil)
+			},
+			limit:                  1_000,
+			expectedLiquidityTiers: constants.LiquidityTiers,
+		},
+		"Success Paginated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllLiquidityTiersRequest{
+					Pagination: &query.PageRequest{
+						Limit: 5,
+					},
+				}
+				nextKey := []byte("next key")
+				response := &perptypes.QueryAllLiquidityTiersResponse{
+					LiquidityTiers: constants.LiquidityTiers[0:5],
+					Pagination: &query.PageResponse{
+						NextKey: nextKey,
+					},
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, req).Return(response, nil)
+				req2 := &perptypes.QueryAllLiquidityTiersRequest{
+					Pagination: &query.PageRequest{
+						Key:   nextKey,
+						Limit: 5,
+					},
+				}
+				response2 := &perptypes.QueryAllLiquidityTiersResponse{
+					LiquidityTiers: constants.LiquidityTiers[5:],
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, req2).Return(response2, nil)
+			},
+			limit:                  5,
+			expectedLiquidityTiers: constants.LiquidityTiers,
+		},
+		"Errors are propagated": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				req := &perptypes.QueryAllLiquidityTiersRequest{
+					Pagination: &query.PageRequest{
+						Limit: 1_000,
+					},
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, req).Return(nil, errors.New("test error"))
+			},
+			limit:         1_000,
+			expectedError: errors.New("test error"),
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			queryClientMock := &mocks.QueryClient{}
+			tc.setupMocks(grpc.Ctx, queryClientMock)
+
+			daemon := client.NewClient(log.NewNopLogger())
+			daemon.PerpetualsQueryClient = queryClientMock
+			actual, err := daemon.GetAllLiquidityTiers(
+				grpc.Ctx,
+				uint32(50),
+				tc.limit,
+			)
+			if err != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.Equal(t, tc.expectedLiquidityTiers, actual)
 			}
 		})
 	}

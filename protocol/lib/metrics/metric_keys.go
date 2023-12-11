@@ -41,5 +41,9 @@ const (
 	DaemonGetPreviousBlockInfoLatency         = "daemon_get_previous_block_info_latency"
 	DaemonGetAllMarketPricesLatency           = "daemon_get_all_market_prices_latency"
 	DaemonGetMarketPricesPaginatedLatency     = "daemon_get_market_prices_paginated_latency"
+	DaemonGetAllLiquidityTiersLatency         = "daemon_get_all_liquidity_tiers_latency"
+	DaemonGetLiquidityTiersPaginatedLatency   = "daemon_get_liquidity_tiers_paginated_latency"
+	DaemonGetAllPerpetualsLatency             = "daemon_get_all_perpetuals_latency"
+	DaemonGetPerpetualsPaginatedLatency       = "daemon_get_perpetuals_paginated_latency"
 	MevLatency                                = "mev_latency"
 )
