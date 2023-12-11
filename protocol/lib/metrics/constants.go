@@ -293,6 +293,7 @@ const (
 
 	// Liquidation Daemon.
 	CheckCollateralizationForSubaccounts = "check_collateralization_for_subaccounts"
+	FetchApplicationStateAtBlockHeight   = "fetch_application_state_at_block_height"
 	GetAllSubaccounts                    = "get_all_subaccounts"
 	GetLiquidatableSubaccountIds         = "get_liquidatable_subaccount_ids"
 	GetSubaccountsFromKey                = "get_subaccounts_from_key"

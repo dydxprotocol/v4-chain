@@ -768,10 +768,15 @@ func (k Keeper) GetNetNotional(
 		return new(big.Int), err
 	}
 
-	return GetNetNotional(perpetual, marketPrice, bigQuantums), nil
+	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
 }
 
-func GetNetNotional(
+// GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be represented by the following equation:
+// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
+// Note that longs are positive, and shorts are negative.
+//
+// Also note that this is a stateless function.
+func GetNetNotionalInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	bigQuantums *big.Int,
@@ -890,7 +895,7 @@ func (k Keeper) GetMarginRequirements(
 	}
 
 	bigInitialMarginQuoteQuantums,
-		bigMaintenanceMarginQuoteQuantums = GetMarginRequirements(
+		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
 		perpetual,
 		marketPrice,
 		liquidityTier,
@@ -899,7 +904,11 @@ func (k Keeper) GetMarginRequirements(
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
 
-func GetMarginRequirements(
+// GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements in quote quantums, given the position
+// size in base quantums.
+//
+// Note that this is a statelss function.
+func GetMarginRequirementsInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,

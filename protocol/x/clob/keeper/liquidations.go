@@ -360,16 +360,18 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	return IsLiquidatable(bigNetCollateral, bigMaintenanceMargin), nil
+	return CanLiquidate(bigNetCollateral, bigMaintenanceMargin), nil
 }
 
-// IsLiquidatable returns true if the subaccount is able to be liquidated given the total net collateral
+// CanLiquidate returns true if the subaccount is able to be liquidated given the total net collateral
 // and maintenance margin requirement of the subaccount.
 //
 // The subaccount is liquidatable if both of the following are true:
 // - The maintenance margin requirements are greater than zero (note that they can never be negative).
 // - The maintenance margin requirements are greater than the subaccount's net collateral.
-func IsLiquidatable(
+//
+// Note that this is a stateless function.
+func CanLiquidate(
 	bigNetCollateral *big.Int,
 	bigMaintenanceMargin *big.Int,
 ) bool {

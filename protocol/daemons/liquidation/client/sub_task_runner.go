@@ -103,6 +103,13 @@ func (c *Client) FetchApplicationStateAtBlockHeight(
 	liquidityTiersMap map[uint32]perptypes.LiquidityTier,
 	err error,
 ) {
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.FetchApplicationStateAtBlockHeight,
+		metrics.Latency,
+	)
+
 	// Execute all queries at the given block height.
 	queryCtx := newContextWithQueryBlockHeight(ctx, blockHeight)
 
@@ -252,8 +259,8 @@ func (c *Client) CheckSubaccountCollateralization(
 		bigQuantums := perpetualPosition.GetBigQuantums()
 
 		// Get the net collateral for the position.
-		bigNetCollateral := perpkeeper.GetNetNotional(perpetual, marketPrice, bigQuantums)
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateral)
+		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
+		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
 
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
 		if !ok {
@@ -266,14 +273,14 @@ func (c *Client) CheckSubaccountCollateralization(
 		}
 
 		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMargin := perpkeeper.GetMarginRequirements(
+		_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
 			perpetual,
 			marketPrice,
 			liquidityTier,
 			bigQuantums,
 		)
-		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMargin)
+		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 	}
 
-	return clobkeeper.IsLiquidatable(bigTotalNetCollateral, bigTotalMaintenanceMargin), nil
+	return clobkeeper.CanLiquidate(bigTotalNetCollateral, bigTotalMaintenanceMargin), nil
 }
