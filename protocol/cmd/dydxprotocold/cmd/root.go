@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -92,7 +91,6 @@ func NewRootCmdWithInterceptors(
 		Use:   dydxapp.AppDaemonName,
 		Short: "Start dydxprotocol app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("the args", args)
 			// set the default command outputs
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
