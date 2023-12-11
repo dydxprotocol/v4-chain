@@ -1,16 +1,19 @@
 package keeper
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"testing"
 
 	tmdb "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
@@ -28,6 +31,7 @@ func RewardsKeepers(
 	bankKeeper bankkeeper.Keeper,
 	assetsKeeper *assetskeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 	storeKey storetypes.StoreKey,
 ) {
 	ctx = initKeepers(t, func(
@@ -67,6 +71,7 @@ func RewardsKeepers(
 			bankKeeper,
 			feetiersKeeper,
 			pricesKeeper,
+			indexerEventManager,
 			db,
 			cdc,
 		)
@@ -78,7 +83,7 @@ func RewardsKeepers(
 			statsKeeper,
 		}
 	})
-	return ctx, rewardsKeeper, feetiersKeeper, bankKeeper, assetsKeeper, pricesKeeper, storeKey
+	return ctx, rewardsKeeper, feetiersKeeper, bankKeeper, assetsKeeper, pricesKeeper, indexerEventManager, storeKey
 }
 
 func createRewardsKeeper(
@@ -87,6 +92,7 @@ func createRewardsKeeper(
 	bankKeeper bankkeeper.Keeper,
 	feeTiersKeeper *feetierskeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 	db *tmdb.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*rewardskeeper.Keeper, storetypes.StoreKey) {
@@ -111,8 +117,28 @@ func createRewardsKeeper(
 		bankKeeper,
 		feeTiersKeeper,
 		pricesKeeper,
+		indexerEventManager,
 		authorities,
 	)
 
 	return k, storeKey
+}
+
+func GetTradingRewardEventsFromIndexerTendermintBlock(
+	block indexer_manager.IndexerTendermintBlock,
+) []*indexerevents.TradingRewardsEventV1 {
+	var rewardEvents []*indexerevents.TradingRewardsEventV1
+	for _, event := range block.Events {
+		if event.Subtype != indexerevents.SubtypeTradingReward {
+			continue
+		}
+		unmarshaler := common.UnmarshalerImpl{}
+		var rewardEvent indexerevents.TradingRewardsEventV1
+		err := unmarshaler.Unmarshal(event.DataBytes, &rewardEvent)
+		if err != nil {
+			panic(err)
+		}
+		rewardEvents = append(rewardEvents, &rewardEvent)
+	}
+	return rewardEvents
 }
