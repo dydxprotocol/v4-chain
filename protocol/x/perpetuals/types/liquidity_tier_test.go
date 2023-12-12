@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
@@ -14,43 +13,31 @@ func TestLiquidityTierValidate(t *testing.T) {
 	tests := map[string]struct {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
-		BasePositionNotional   uint64
 		ImpactNotional         uint64
 		expectedError          error
 	}{
 		"Validates successfully": {
-			initialMarginPpm:       150_000,           // 15%
-			maintenanceFractionPpm: 800_000,           // 80% of IM
-			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
-			ImpactNotional:         3_333_000_000,     // 3_333 USDC
+			initialMarginPpm:       150_000,       // 15%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         3_333_000_000, // 3_333 USDC
 			expectedError:          nil,
 		},
 		"Failure: initial margin ppm exceeds max": {
-			initialMarginPpm:       1_000_001,         // above 100%
-			maintenanceFractionPpm: 800_000,           // 80% of IM
-			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
-			ImpactNotional:         1_000_000_000,     // 1_000 USDC
+			initialMarginPpm:       1_000_001,     // above 100%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         1_000_000_000, // 1_000 USDC
 			expectedError:          types.ErrInitialMarginPpmExceedsMax,
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
-			initialMarginPpm:       1_000_000,         // 100%
-			maintenanceFractionPpm: 1_000_001,         // above 100%
-			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
-			ImpactNotional:         1_000_000_000,     // 1_000 USDC
+			initialMarginPpm:       1_000_000,     // 100%
+			maintenanceFractionPpm: 1_000_001,     // above 100%
+			ImpactNotional:         1_000_000_000, // 1_000 USDC
 			expectedError:          types.ErrMaintenanceFractionPpmExceedsMax,
 		},
-		"Failure: base position notional is zero": {
-			initialMarginPpm:       1_000_000,   // 100%
-			maintenanceFractionPpm: 1_000_000,   // 100%
-			BasePositionNotional:   0,           // 0
-			ImpactNotional:         500_000_000, // 500 USDC
-			expectedError:          types.ErrBasePositionNotionalIsZero,
-		},
 		"Failure: impact notional is zero": {
-			initialMarginPpm:       1_000_000,         // 100%
-			maintenanceFractionPpm: 1_000_000,         // 100%
-			BasePositionNotional:   1_000_000_000_000, // 1 million USDC
-			ImpactNotional:         0,                 // 0
+			initialMarginPpm:       1_000_000, // 100%
+			maintenanceFractionPpm: 1_000_000, // 100%
+			ImpactNotional:         0,         // 0
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
@@ -61,7 +48,6 @@ func TestLiquidityTierValidate(t *testing.T) {
 			liquidityTier := &types.LiquidityTier{
 				InitialMarginPpm:       tc.initialMarginPpm,
 				MaintenanceFractionPpm: tc.maintenanceFractionPpm,
-				BasePositionNotional:   tc.BasePositionNotional,
 				ImpactNotional:         tc.ImpactNotional,
 			}
 
@@ -213,117 +199,41 @@ func TestLiquidityTierGetMaxAbsFundingClampPpm(t *testing.T) {
 	}
 }
 
-func TestGetMarginAdjustmentPpm(t *testing.T) {
-	tests := map[string]struct {
-		bigQuoteQuantums            *big.Int
-		basePositionNotional        uint64
-		expectedMarginAdjustmentPpm *big.Int
-	}{
-		"position size in quote quantums less than base position notional": {
-			bigQuoteQuantums:            big.NewInt(10),
-			basePositionNotional:        100,
-			expectedMarginAdjustmentPpm: lib.BigIntOneMillion(),
-		},
-		"position size in quote quantums equal to base position notional": {
-			bigQuoteQuantums:            big.NewInt(1000),
-			basePositionNotional:        1000,
-			expectedMarginAdjustmentPpm: lib.BigIntOneMillion(),
-		},
-		"position size in quote quantums larger than base position notional": {
-			bigQuoteQuantums:     big.NewInt(500_000),
-			basePositionNotional: 350_000,
-			// sqrt(500_000 * 1_000_000 * 1_000_000 / 350_000) ~= 1_195_228.609
-			// floored integer value is 1_195_228.
-			expectedMarginAdjustmentPpm: big.NewInt(1_195_228),
-		},
-		"position size in quote quantums is 0": {
-			bigQuoteQuantums:            big.NewInt(0),
-			basePositionNotional:        350_000,
-			expectedMarginAdjustmentPpm: lib.BigIntOneMillion(),
-		},
-		"position size in quote quantums and base position notional are both max": {
-			bigQuoteQuantums:            new(big.Int).SetUint64(math.MaxUint64),
-			basePositionNotional:        math.MaxUint64,
-			expectedMarginAdjustmentPpm: lib.BigIntOneMillion(),
-		},
-	}
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			liquidityTier := &types.LiquidityTier{
-				BasePositionNotional: tc.basePositionNotional,
-			}
-			marginAdjustmentPpm := liquidityTier.GetMarginAdjustmentPpm(tc.bigQuoteQuantums)
-
-			require.Equal(t, tc.expectedMarginAdjustmentPpm, marginAdjustmentPpm)
-		})
-	}
-}
-
-func TestGetAdjustedInitialMarginQuoteQuantums(t *testing.T) {
+func TestGetInitialMarginQuoteQuantums(t *testing.T) {
 	tests := map[string]struct {
 		initialMarginPpm                   uint32
 		bigQuoteQuantums                   *big.Int
-		basePositionNotional               uint64
 		expectedInitialMarginQuoteQuantums *big.Int
 	}{
-		"initial margin 20%, quote quantums < base position notional": {
-			initialMarginPpm:     uint32(200_000), // 20%
-			bigQuoteQuantums:     big.NewInt(500_000),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
+		"initial margin 20%": {
+			initialMarginPpm: uint32(200_000), // 20%
+			bigQuoteQuantums: big.NewInt(500_000),
+			// initial margin * quote quantums
 			// = 20% * 100% * 500_000
 			// = 100_000
 			expectedInitialMarginQuoteQuantums: big.NewInt(100_000),
 		},
-		"initial margin 50%, quote quantums == base position notional": {
-			initialMarginPpm:     uint32(500_000), // 50%
-			bigQuoteQuantums:     big.NewInt(1_000_000),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
+		"initial margin 50%": {
+			initialMarginPpm: uint32(500_000), // 50%
+			bigQuoteQuantums: big.NewInt(1_000_000),
+			// initial margin * quote quantums
 			// = 50% * 100% * 1_000_000
 			// = 500_000
 			expectedInitialMarginQuoteQuantums: big.NewInt(500_000),
 		},
-		"initial margin 40%, quote quantums > base position notional": {
-			initialMarginPpm:     uint32(400_000), // 40%
-			bigQuoteQuantums:     big.NewInt(4_000_000),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
-			// = 40% * sqrt(4) * 4_000_000
-			// = 3_200_000
-			expectedInitialMarginQuoteQuantums: big.NewInt(3_200_000),
-		},
-		"initial margin 60%, quote quantums > base position notional, adjusted margin capped at 100%": {
-			initialMarginPpm:     uint32(600_000), // 60%
-			bigQuoteQuantums:     big.NewInt(4_000_000),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
-			// = 60% * sqrt(4) * 4_000_000
-			// = 100% * 4_000_000 (adjusted margin capped at 100%)
-			// = 4_000_000
-			expectedInitialMarginQuoteQuantums: big.NewInt(4_000_000),
-		},
-		"initial margin 0%, quote quantums > base position notional": {
-			initialMarginPpm:                   uint32(0), // 0%
-			bigQuoteQuantums:                   big.NewInt(1_000_000_000_000),
-			basePositionNotional:               uint64(1_000_000),
-			expectedInitialMarginQuoteQuantums: big.NewInt(0),
-		},
 		"initial margin 10%, quote quantums = 1, should round up to 1": {
-			initialMarginPpm:     uint32(100_000), // 10%
-			bigQuoteQuantums:     big.NewInt(1),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
-			// = 10% * 100% * 1
+			initialMarginPpm: uint32(100_000), // 10%
+			bigQuoteQuantums: big.NewInt(1),
+			// initial margin * quote quantums
+			// = 10% * 1
 			// = 0.1 -> round up to 1
 			expectedInitialMarginQuoteQuantums: big.NewInt(1),
 		},
 		"initial margin 56.7243%, quote quantums = 123_456, should round up to 70_030": {
-			initialMarginPpm:     uint32(567_243), // 56.7243%
-			bigQuoteQuantums:     big.NewInt(123_456),
-			basePositionNotional: uint64(1_000_000),
-			// initial margin * margin adjustment * quote quantums
-			// = 56.7243% * 100% * 123_456
+			initialMarginPpm: uint32(567_243), // 56.7243%
+			bigQuoteQuantums: big.NewInt(123_456),
+			// initial margin * quote quantums
+			// = 56.7243% * 123_456
 			// ~= 70029.5518 -> round up to 70030
 			expectedInitialMarginQuoteQuantums: big.NewInt(70_030),
 		},
@@ -331,10 +241,9 @@ func TestGetAdjustedInitialMarginQuoteQuantums(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			liquidityTier := &types.LiquidityTier{
-				InitialMarginPpm:     tc.initialMarginPpm,
-				BasePositionNotional: tc.basePositionNotional,
+				InitialMarginPpm: tc.initialMarginPpm,
 			}
-			adjustedIMQuoteQuantums := liquidityTier.GetAdjustedInitialMarginQuoteQuantums(tc.bigQuoteQuantums)
+			adjustedIMQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(tc.bigQuoteQuantums)
 
 			require.Equal(t, tc.expectedInitialMarginQuoteQuantums, adjustedIMQuoteQuantums)
 		})

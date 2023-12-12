@@ -442,7 +442,6 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 
 func TestGetMarginRequirements_Success(t *testing.T) {
 	oneBip := math.Pow10(2)
-	oneTrillion := 1_000_000_000_000
 	tests := map[string]struct {
 		price                           uint64
 		exponent                        int32
@@ -450,7 +449,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 		bigBaseQuantums                 *big.Int
 		initialMarginPpm                uint32
 		maintenanceFractionPpm          uint32
-		basePositionNotional            uint64
 		bigExpectedInitialMarginPpm     *big.Int
 		bigExpectedMaintenanceMarginPpm *big.Int
 	}{
@@ -461,7 +459,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(7_000),
 			initialMarginPpm:                uint32(oneBip * 2),
 			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(7_777),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(3_889),
 		},
@@ -472,7 +469,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(7_000),
 			initialMarginPpm:                uint32(oneBip * 100),
 			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(38_885_000),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(19_442_500),
 		},
@@ -482,8 +478,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			baseCurrencyAtomicResolution:    -0,
 			bigBaseQuantums:                 big.NewInt(88),
 			initialMarginPpm:                uint32(oneBip * 100),
-			maintenanceFractionPpm:          uint32(500_000),             // 50% of IM
-			basePositionNotional:            uint64(369_600_000_000_000), // same as quote quantums
+			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
 			bigExpectedInitialMarginPpm:     big.NewInt(3_696_000_000_000),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(1_848_000_000_000),
 		},
@@ -494,7 +489,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(-5_000),
 			initialMarginPpm:                uint32(oneBip * 100),
 			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(21_000_000),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(10_500_000),
 		},
@@ -505,7 +499,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(7_000),
 			initialMarginPpm:                uint32(oneBip * 10_000),
 			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(38_885_000),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(38_885_000),
 		},
@@ -516,7 +509,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(7_000),
 			initialMarginPpm:                uint32(oneBip * 100),
 			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(388_850),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(388_850),
 		},
@@ -527,7 +519,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(-7_000),
 			initialMarginPpm:                uint32(oneBip * 0.02),
 			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(77_770),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(38_885),
 		},
@@ -538,7 +529,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(7_000),
 			initialMarginPpm:                uint32(oneBip * 0),
 			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM,
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(0),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(0),
 		},
@@ -549,7 +539,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:                 big.NewInt(-7_000),
 			initialMarginPpm:                uint32(oneBip * 1),
 			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM,
-			basePositionNotional:            uint64(oneTrillion),
 			bigExpectedInitialMarginPpm:     big.NewInt(0),
 			bigExpectedMaintenanceMarginPpm: big.NewInt(0),
 		},
@@ -560,103 +549,61 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
 			initialMarginPpm:             uint32(oneBip * 1),
 			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
-			basePositionNotional:         math.MaxUint64,
-			// As both `price` and `bigBaseQuantums` are `MaxUint64`, `bigQuoteQuantums` (`= price * bigBaseQuantums`)
-			// has a value much higher than `MaxUint64` (3402823669209384634264811192843491082250).
-			// Now that `bigQuoteQuantums` has a much higher value than `basePositionNotional`, which is
-			// only the max value of a `uint64`, `marginAdjustmentPpm` is a very big value (13_581_879_131_294_591).
-			// Thus, adjusted initial margin (initial margin * margin adjustment) is capped at 100%,
-			// so adjusted initial margin in quote quantums = `100% * bigQuoteQuantums` = `bigQuoteQuantums`.
 			bigExpectedInitialMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				new(big.Int).SetString("340282366920938463426481119284349109", 10),
 			),
 			bigExpectedMaintenanceMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				new(big.Int).SetString("340282366920938463426481119284349109", 10),
 			),
 		},
-		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6, margin adjusted": {
+		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6": {
 			price:                        5_555,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
 			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
-			basePositionNotional:         uint64(1_000_000),
-			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
-			// = sqrt(38_885_000 * 1_000_000) ~= 6235783
-			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
-			// = 10_000 * 38_885_000 * 6235783 / 1_000_000 / 1_000_000 ~= 2_424_785 (rounded up).
-			bigExpectedInitialMarginPpm:     big.NewInt(2_424_785),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(1_212_393),
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = 10_000 * 38_885_000 / 1_000_000 ~= 388_850.
+			bigExpectedInitialMarginPpm:     big.NewInt(388_850),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(388_850 / 2),
 		},
-		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6, margin adjusted": {
+		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
 			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
-			basePositionNotional:         uint64(100_000_000),
 			// quoteQuantums = 36_750 * 12_000 = 441_000_000
-			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
-			// = sqrt(441_000_000 * (OneMillion * OneMillion) / 100_000_000) ~= 2_100_000
-			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
-			// = 200_000 * 441_000_000 * 2_100_000 / 1_000_000 / 1_000_000 ~= 185_220_000
-			bigExpectedInitialMarginPpm:     big.NewInt(185_220_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(92_610_000),
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
+			bigExpectedInitialMarginPpm:     big.NewInt(88_200_000),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
 		},
-		"InitialMargin 5%, MaintenanceMargin 3%, atomic resolution 6, margin adjusted": {
+		"InitialMargin 5%, MaintenanceMargin 3%, atomic resolution 6": {
 			price:                        123_456,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(50_000),
 			maintenanceFractionPpm:       uint32(600_000), // 60% of IM
-			basePositionNotional:         uint64(100_000_000),
 			// quoteQuantums = 123_456 * 74_523 = 9_200_311_488
-			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
-			// = sqrt(9_200_311_488 * (OneMillion * OneMillion) / 100_000_000) ~= 9_591_825
-			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums * marginAdjustmentPpm / 1_000_000 / 1_000_000
-			// = 50_000 * 9_200_311_488 * 9_591_825 / 1_000_000 / 1_000_000 ~= 4_412_388_887 (rounded up)
-			bigExpectedInitialMarginPpm:     big.NewInt(4_412_388_887),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(2_647_433_333),
+			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+			// = 50_000 * 9_200_311_488 / 1_000_000 ~= 460_015_575
+			bigExpectedInitialMarginPpm:     big.NewInt(460_015_575),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(276_009_345),
 		},
-		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6, margin adjusted and IM capped at 100% of notional": {
+		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6": {
 			price:                        123_456,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
 			bigBaseQuantums:              big.NewInt(74_523),
 			initialMarginPpm:             uint32(250_000),
 			maintenanceFractionPpm:       uint32(600_000), // 60% of IM
-			basePositionNotional:         uint64(100_000_000),
 			// quoteQuantums = 123_456 * 74_523 = 9_200_311_488
-			// marginAdjustmentPpm = sqrt(quoteQuantums * (OneMillion * OneMillion) / basePositionNotional)
-			// = sqrt(9_200_311_488 * (OneMillion * OneMillion) / 100_000_000) ~= 9_591_825
-			// After adjustment, initial margin is capped at 100% of notional (quote quantums).
-			bigExpectedInitialMarginPpm:     big.NewInt(9_200_311_488),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(5_520_186_893),
-		},
-		"InitialMargin 10_000 BIPs (max), MaintenanceMargin 10_000 BIPs (max), atomic resolution 6, margin adjusted": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 10_000),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM
-			basePositionNotional:            uint64(oneTrillion),
-			bigExpectedInitialMarginPpm:     big.NewInt(38_885_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(38_885_000),
-		},
-		"InitialMargin 0 BIPs (min), MaintenanceMargin 0 BIPs (min), atomic resolution 6, margin adjusted": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 0),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM,
-			basePositionNotional:            uint64(1_000_000),
-			bigExpectedInitialMarginPpm:     big.NewInt(0),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(0),
+			bigExpectedInitialMarginPpm:     big.NewInt(2_300_077_872),
+			bigExpectedMaintenanceMarginPpm: big.NewInt(1_380_046_724), // Rounded up
 		},
 	}
 
@@ -703,7 +650,6 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				"name",
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
-				tc.basePositionNotional,
 				1, // dummy impact notional value
 			)
 			require.NoError(t, err)
@@ -2845,7 +2791,6 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
-			lt.BasePositionNotional,
 			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
@@ -2884,7 +2829,6 @@ func TestHasLiquidityTier(t *testing.T) {
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
-			lt.BasePositionNotional,
 			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
@@ -2909,7 +2853,6 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
-			lt.BasePositionNotional,
 			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
@@ -2924,7 +2867,6 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 		require.Equal(t, lt.Name, liquidityTier.Name)
 		require.Equal(t, lt.InitialMarginPpm, liquidityTier.InitialMarginPpm)
 		require.Equal(t, lt.MaintenanceFractionPpm, liquidityTier.MaintenanceFractionPpm)
-		require.Equal(t, lt.BasePositionNotional, liquidityTier.BasePositionNotional)
 		require.Equal(t, lt.ImpactNotional, liquidityTier.ImpactNotional)
 	}
 }
@@ -2935,7 +2877,6 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 		name                   string
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
-		basePositionNotional   uint64
 		impactNotional         uint64
 		expectedError          error
 	}{
@@ -2944,7 +2885,6 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			name:                   "Large-Cap",
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
@@ -2953,25 +2893,14 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			name:                   "Medium-Cap",
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
-		},
-		"Base Position Notional is zero": {
-			id:                     1,
-			name:                   "Small-Cap",
-			initialMarginPpm:       500_000,
-			maintenanceFractionPpm: lib.OneMillion,
-			basePositionNotional:   uint64(0),
-			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
 			name:                   "Small-Cap",
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
@@ -2989,7 +2918,6 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 				tc.name,
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
-				tc.basePositionNotional,
 				tc.impactNotional,
 			)
 
@@ -3008,7 +2936,6 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			lt.Name,
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
-			lt.BasePositionNotional,
 			lt.ImpactNotional,
 		)
 		require.NoError(t, err)
@@ -3020,7 +2947,6 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		name := fmt.Sprintf("foo_%v", i)
 		initialMarginPpm := uint32(i * 2)
 		maintenanceFractionPpm := uint32(i * 2)
-		basePositionNotional := uint64((i + 1) * 1_000_000)
 		impactNotional := uint64((i + 1) * 500_000_000)
 		modifiedLt, err := pc.PerpetualsKeeper.SetLiquidityTier(
 			pc.Ctx,
@@ -3028,7 +2954,6 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			name,
 			initialMarginPpm,
 			maintenanceFractionPpm,
-			basePositionNotional,
 			impactNotional,
 		)
 		require.NoError(t, err)
@@ -3056,11 +2981,6 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		)
 		require.Equal(
 			t,
-			basePositionNotional,
-			obtainedLt.BasePositionNotional,
-		)
-		require.Equal(
-			t,
 			impactNotional,
 			obtainedLt.ImpactNotional,
 		)
@@ -3075,7 +2995,6 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 		name                   string
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
-		basePositionNotional   uint64
 		impactNotional         uint64
 		expectedError          error
 	}{
@@ -3084,7 +3003,6 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			name:                   "Large-Cap",
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
@@ -3093,25 +3011,14 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			name:                   "Medium-Cap",
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(lib.OneMillion),
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
-		},
-		"Base Position Notional is zero": {
-			id:                     1,
-			name:                   "Small-Cap",
-			initialMarginPpm:       500_000,
-			maintenanceFractionPpm: lib.OneMillion,
-			basePositionNotional:   uint64(0),
-			impactNotional:         uint64(lib.OneMillion),
-			expectedError:          types.ErrBasePositionNotionalIsZero,
 		},
 		"Impact Notional is zero": {
 			id:                     1,
 			name:                   "Small-Cap",
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
-			basePositionNotional:   uint64(lib.OneMillion),
 			impactNotional:         uint64(0),
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
@@ -3130,7 +3037,6 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 				tc.name,
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
-				tc.basePositionNotional,
 				tc.impactNotional,
 			)
 

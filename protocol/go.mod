@@ -49,6 +49,7 @@ require (
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/ory/dockertest/v3 v3.10.0
+	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.29.1
 	github.com/shopspring/decimal v1.3.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529

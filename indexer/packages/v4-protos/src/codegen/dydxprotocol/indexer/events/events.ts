@@ -943,7 +943,11 @@ export interface LiquidityTierUpsertEventV1 {
    * The maximum position size at which the margin requirements are
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
    */
+
+  /** @deprecated */
 
   basePositionNotional: Long;
 }
@@ -974,7 +978,11 @@ export interface LiquidityTierUpsertEventV1SDKType {
    * The maximum position size at which the margin requirements are
    * not increased over the default values. Above this position size,
    * the margin requirements increase at a rate of sqrt(size).
+   * 
+   * Deprecated since v3.x.
    */
+
+  /** @deprecated */
 
   base_position_notional: Long;
 }

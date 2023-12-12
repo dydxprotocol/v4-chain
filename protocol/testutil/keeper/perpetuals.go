@@ -2,8 +2,9 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -174,7 +175,6 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			l.Name,
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
-			l.BasePositionNotional,
 			l.ImpactNotional,
 		)
 

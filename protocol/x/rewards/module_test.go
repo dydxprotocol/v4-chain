@@ -3,6 +3,10 @@ package rewards_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
@@ -13,9 +17,6 @@ import (
 	rewards_keeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/require"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 // Returns the keeper and context along with the AppModule.
@@ -25,7 +26,7 @@ func createAppModuleWithKeeper(t *testing.T) (rewards.AppModule, *rewards_keeper
 	interfaceRegistry := types.NewInterfaceRegistry()
 	appCodec := codec.NewProtoCodec(interfaceRegistry)
 
-	ctx, keeper, _, _, _, _, _ := keepertest.RewardsKeepers(t)
+	ctx, keeper, _, _, _, _, _, _ := keepertest.RewardsKeepers(t)
 
 	return rewards.NewAppModule(
 		appCodec,
