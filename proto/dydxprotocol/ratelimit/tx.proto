@@ -1,0 +1,43 @@
+syntax = "proto3";
+package dydxprotocol.ratelimit;
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+
+import "cosmos/msg/v1/msg.proto";
+import "dydxprotocol/ratelimit/limit_params.proto";
+
+// Msg defines the Msg service.
+service Msg {
+  // SetLimitParams sets a `LimitParams` object in state.
+  rpc SetLimitParams(MsgSetLimitParams) returns (MsgSetLimitParamsResponse);
+
+  // DeleteLimitParams removes a `LimitParams` object from state.
+  rpc DeleteLimitParams(MsgDeleteLimitParams)
+      returns (MsgDeleteLimitParamsResponse);
+}
+
+// MsgSetLimitParams is the Msg/SetLimitParams request type.
+message MsgSetLimitParams {
+  // The address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1;
+
+  // Defines the parameters to set. All parameters must be supplied.
+  LimitParams limit_params = 2;
+}
+
+// MsgSetLimitParamsResponse is the Msg/SetLimitParams response type.
+message MsgSetLimitParamsResponse {}
+
+// MsgDeleteLimitParams is the Msg/SetLimitParams request type.
+message MsgDeleteLimitParams {
+  // The address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1;
+
+  // The denom for which the `LimitParams` should be deleted.
+  string denom = 2;
+}
+
+// MsgDeleteLimitParamsResponse is the Msg/DeleteLimitParams response type.
+message MsgDeleteLimitParamsResponse {}

@@ -90,6 +90,7 @@ type MemClob interface {
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 		deltaQuantums *big.Int,
+		isFinalSettlement bool,
 	) (
 		quantumsDeleveraged *big.Int,
 		err error,
@@ -131,7 +132,9 @@ type MemClob interface {
 		ctx sdk.Context,
 		clobPairId ClobPairId,
 	) (
-		subticks Subticks,
+		midPrice Subticks,
+		bestBid Order,
+		bestAsk Order,
 		exists bool,
 	)
 }

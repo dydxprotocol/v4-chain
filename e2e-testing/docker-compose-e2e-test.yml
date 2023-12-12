@@ -1,0 +1,229 @@
+version: '3'
+services:
+  kafka:
+    image: blacktop/kafka:2.6
+    ports:
+      - 9092:9092
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_CREATE_TOPICS:
+        "to-ender:1:1,\
+        to-vulcan:1:1,\
+        to-websockets-orderbooks:1:1,\
+        to-websockets-subaccounts:1:1,\
+        to-websockets-trades:1:1,\
+        to-websockets-markets:1:1,\
+        to-websockets-candles:1:1"
+      KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL_SAME_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      DD_AGENT_HOST: datadog-agent
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --topic to-websockets-candles --describe"]
+      interval: 5s
+      timeout: 20s
+      retries: 50
+  postgres:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.postgres.local
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_PASSWORD: dydxserver123
+      POSTGRES_USER: dydx_dev
+      DATADOG_POSTGRES_PASSWORD: dydxserver123
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dydx_dev"]
+      interval: 5s
+      timeout: 20s
+      retries: 10
+  redis:
+    image: redis:5.0.6-alpine
+    ports:
+      - 6382:6379
+  dydxprotocold0:
+    image: local:e2etest-dydxprotocol
+    entrypoint:
+      - cosmovisor
+      - run
+      - start
+      - --log_level
+      # Note that only this validator has a log-level of `info`; other validators use `error` by default.
+      # Change to `debug` for more verbose log-level.
+      - info 
+      - --home
+      - /dydxprotocol/chain/.alice
+      - --p2p.persistent_peers 
+      - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+      - --bridge-daemon-eth-rpc-endpoint
+      - "${ETH_RPC_ENDPOINT}"
+    environment:
+      - DAEMON_HOME=/dydxprotocol/chain/.alice
+    volumes:
+      - ../protocol/localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
+    ports:
+      - "26657:26657"
+      - "9090:9090"
+      - "1317:1317"
+  
+  # This is the Indexer connected node.
+  # TODO: remove stake and make this a full node.
+  dydxprotocold1:
+    image: local:e2etest-dydxprotocol
+    entrypoint:
+       - cosmovisor
+       - run
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.bob
+       - --p2p.persistent_peers 
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,b69182310be02559483e42c77b7b104352713166@dydxprotocold1:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - --non-validating-full-node=true
+       - --bridge-daemon-eth-rpc-endpoint
+       - "${ETH_RPC_ENDPOINT}"
+       - --indexer-kafka-conn-str
+       - "kafka:9092"
+    environment:
+      - DAEMON_HOME=/dydxprotocol/chain/.bob
+    volumes:
+      - ../protocol/localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
+    ports:
+      - "26658:26657"
+    depends_on:
+      kafka:
+        condition: service_healthy
+ 
+  dydxprotocold2:
+    image: local:e2etest-dydxprotocol
+    entrypoint:
+       - cosmovisor
+       - run
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.carl
+       - --p2p.persistent_peers
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - --bridge-daemon-eth-rpc-endpoint
+       - "${ETH_RPC_ENDPOINT}"
+    environment:
+      - DAEMON_HOME=/dydxprotocol/chain/.carl
+    volumes:
+      - ../protocol/localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
+  
+  dydxprotocold3:
+    image: local:e2etest-dydxprotocol
+    entrypoint:
+       - cosmovisor
+       - run
+       - start
+       - --log_level
+       - error
+       - --home
+       - /dydxprotocol/chain/.dave
+       - --p2p.persistent_peers 
+       - "17e5e45691f0d01449c84fd4ae87279578cdd7ec@dydxprotocold0:26656,47539956aaa8e624e0f1d926040e54908ad0eb44@dydxprotocold2:26656,5882428984d83b03d0c907c1f0af343534987052@dydxprotocold3:26656"
+       - --bridge-daemon-eth-rpc-endpoint
+       - "${ETH_RPC_ENDPOINT}"
+    environment:
+      - DAEMON_HOME=/dydxprotocol/chain/.dave
+    volumes:
+      - ../protocol/localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
+
+  postgres-package:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.postgres-package.local
+    links:
+      - postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+  ender:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.service.local
+      args:
+        service: ender
+    ports:
+      - 3001:3001
+    links:
+      - postgres
+    environment:
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres-package:
+        condition: service_completed_successfully
+  comlink:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.service.local
+      args:
+        service: comlink
+    environment:
+      - PORT=3002
+      - REDIS_URL=redis://redis:6379
+      - RATE_LIMIT_REDIS_URL=redis://redis:6379
+      - RATE_LIMIT_ENABLED=false
+      - INDEXER_LEVEL_GEOBLOCKING_ENABLED=false
+      - COMPLIANCE_DATA_CLIENT=PLACEHOLDER
+    ports:
+      - 3002:3002
+    links:
+      - postgres
+    depends_on:
+      postgres-package:
+        condition: service_completed_successfully
+  socks:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.service.local
+      args:
+        service: socks
+    ports:
+      - 3003:3003
+    links:
+      - postgres
+    environment:
+      - WS_PORT=3003
+      - COMLINK_URL=host.docker.internal:3002
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres-package:
+        condition: service_completed_successfully
+  roundtable:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.service.local
+      args:
+        service: roundtable
+    ports:
+      - 3004:3004
+    links:
+      - postgres
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres-package:
+        condition: service_completed_successfully
+  vulcan:
+    build:
+      context: ../indexer
+      dockerfile: ../indexer/Dockerfile.service.local
+      args:
+        service: vulcan
+    environment:
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - 3005:3005
+    depends_on:
+      kafka:
+        condition: service_healthy

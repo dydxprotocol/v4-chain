@@ -308,6 +308,11 @@ var (
 		1020,
 		"Position cannot be fully offset",
 	)
+	ErrDeleveragingIsFinalSettlementFlagMismatch = errorsmod.Register(
+		ModuleName,
+		1021,
+		"Deleveraging match has incorrect value for isFinalSettlement flag",
+	)
 
 	// Advanced order type errors.
 	ErrFokOrderCouldNotBeFullyFilled = errorsmod.Register(

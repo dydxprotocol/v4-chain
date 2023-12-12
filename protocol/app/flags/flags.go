@@ -2,7 +2,6 @@ package flags
 
 import (
 	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
@@ -14,6 +13,7 @@ type Flags struct {
 	DdAgentHost           string
 	DdTraceAgentPort      uint16
 	NonValidatingFullNode bool
+	DdErrorTrackingFormat bool
 
 	// Existing flags
 	GrpcAddress string
@@ -25,6 +25,7 @@ const (
 	DdAgentHost               = "dd-agent-host"
 	DdTraceAgentPort          = "dd-trace-agent-port"
 	NonValidatingFullNodeFlag = "non-validating-full-node"
+	DdErrorTrackingFormat     = "dd-error-tracking-format"
 
 	// Cosmos flags below. These config values can be set as flags or in config.toml.
 	GrpcAddress = "grpc.address"
@@ -36,6 +37,7 @@ const (
 	DefaultDdAgentHost           = ""
 	DefaultDdTraceAgentPort      = 8126
 	DefaultNonValidatingFullNode = false
+	DefaultDdErrorTrackingFormat = false
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -59,6 +61,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultDdTraceAgentPort,
 		"Sets the Datadog Agent port.",
 	)
+	cmd.Flags().Bool(
+		DdErrorTrackingFormat,
+		DefaultDdErrorTrackingFormat,
+		"Enable formatting of log error tags to datadog error tracking format",
+	)
 }
 
 // Validate checks that the flags are valid.
@@ -80,6 +87,7 @@ func GetFlagValuesFromOptions(
 		NonValidatingFullNode: DefaultNonValidatingFullNode,
 		DdAgentHost:           DefaultDdAgentHost,
 		DdTraceAgentPort:      DefaultDdTraceAgentPort,
+		DdErrorTrackingFormat: DefaultDdErrorTrackingFormat,
 
 		// These are the default values from the Cosmos flags.
 		GrpcAddress: config.DefaultGRPCAddress,
@@ -102,6 +110,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(DdTraceAgentPort); option != nil {
 		if v, err := cast.ToUint16E(option); err == nil {
 			result.DdTraceAgentPort = v
+		}
+	}
+
+	if option := appOpts.Get(DdErrorTrackingFormat); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.DdErrorTrackingFormat = v
 		}
 	}
 

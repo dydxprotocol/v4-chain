@@ -49,6 +49,8 @@ require (
 	github.com/deckarep/golang-set/v2 v2.3.0
 	github.com/ethereum/go-ethereum v1.12.0
 	github.com/ory/dockertest/v3 v3.10.0
+	github.com/pelletier/go-toml v1.9.5
+	github.com/rs/zerolog v1.29.1
 	github.com/shopspring/decimal v1.3.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20230629202037-9506855d4529
 )
@@ -285,7 +287,6 @@ require (
 	github.com/richardartoul/molecule v1.0.1-0.20221107223329-32cfee06a052 // indirect
 	github.com/rivo/uniseg v0.2.0 // indirect
 	github.com/rs/cors v1.8.3 // indirect
-	github.com/rs/zerolog v1.29.1 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
 	github.com/ryanrolds/sqlclosecheck v0.4.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect

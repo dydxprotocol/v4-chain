@@ -36,6 +36,9 @@ export const createLCDClient = async ({
       prices: new (await import("./prices/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      ratelimit: new (await import("./ratelimit/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       rewards: new (await import("./rewards/query.lcd")).LCDQueryClient({
         requestClient
       }),

@@ -35,4 +35,6 @@ const (
 	EXCHANGE_ID_TEST_EXCHANGE types.ExchangeId = "TestExchange"
 	// EXCHANGE_ID_TEST_VOLATILE_EXCHANGE is the id for test volatile exchange.
 	EXCHANGE_ID_TEST_VOLATILE_EXCHANGE types.ExchangeId = "TestVolatileExchange"
+	// EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE is the id for test fixed price exchange.
+	EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE types.ExchangeId = "TestFixedPriceExchange"
 )

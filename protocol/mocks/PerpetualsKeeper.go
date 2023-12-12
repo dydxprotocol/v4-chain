@@ -227,20 +227,20 @@ func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Cont
 	return r0
 }
 
-// SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional
-func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, basePositionNotional uint64, impactNotional uint64) (perpetualstypes.LiquidityTier, error) {
-	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+// SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional
+func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, impactNotional uint64) (perpetualstypes.LiquidityTier, error) {
+	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
 
 	var r0 perpetualstypes.LiquidityTier
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64) perpetualstypes.LiquidityTier); ok {
-		r0 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64) perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
 	} else {
 		r0 = ret.Get(0).(perpetualstypes.LiquidityTier)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64) error); ok {
-		r1 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, basePositionNotional, impactNotional)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, uint32, uint64) error); ok {
+		r1 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
 	} else {
 		r1 = ret.Error(1)
 	}

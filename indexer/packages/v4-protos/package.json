@@ -18,7 +18,7 @@
     "build:watch": "pnpm run build -- --watch",
     "test": "echo \"Error: no test specified\"",
     "build:proto": "(cd ../../.. && make proto-export) && rm -rf src/codegen && telescope transpile --protoDirs ../../../.proto-export --outPath ./src/codegen --no-includeAminos --includeLCDClients --includeRPCClients",
-    "build:verify-proto": "pnpm run build:proto && git diff --exit-code src/codegen/dydxprotocol"
+    "build:verify-proto": "pnpm run build:proto && git diff --exit-code src/codegen"
   },
   "repository": {
     "type": "git",

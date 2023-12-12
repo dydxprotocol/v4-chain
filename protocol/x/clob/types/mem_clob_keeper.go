@@ -40,7 +40,8 @@ type MemClobKeeper interface {
 	CanDeleverageSubaccount(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
-	) (bool, error)
+		perpetualId uint32,
+	) (bool, bool, error)
 	GetStatePosition(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
@@ -90,6 +91,7 @@ type MemClobKeeper interface {
 		liquidatedSubaccountId satypes.SubaccountId,
 		perpetualId uint32,
 		deltaQuantumsTotal *big.Int,
+		isFinalSettlement bool,
 	) (
 		fills []MatchPerpetualDeleveraging_Fill,
 		deltaQuantumsRemaining *big.Int,

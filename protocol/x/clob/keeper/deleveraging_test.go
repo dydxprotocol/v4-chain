@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	"errors"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"math"
 	"math/big"
 	"testing"
 	"time"
+
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -217,9 +218,11 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 		insuranceFundBalance          *big.Int
 		subaccount                    satypes.Subaccount
 		marketIdToOraclePriceOverride map[uint32]uint64
+		clobPairs                     []types.ClobPair
 
 		// Expectations.
-		expectedCanDeleverageSubaccount bool
+		expectedCanDeleverageSubaccount   bool
+		expectedShouldFinalSettlePosition bool
 	}{
 		`Cannot deleverage when subaccount has positive TNC`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -227,6 +230,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_000_000_000, // $50,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 
 			expectedCanDeleverageSubaccount: false,
@@ -238,6 +244,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
 			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
 
 			expectedCanDeleverageSubaccount: false,
 		},
@@ -248,8 +257,39 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
 			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
 
 			expectedCanDeleverageSubaccount: true,
+		},
+		`Can deleverage when subaccount has negative TNC and clob pair has status FINAL_SETTLEMENT`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
+			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+
+			expectedCanDeleverageSubaccount:   true,
+			expectedShouldFinalSettlePosition: false,
+		},
+		`Can final settle deleverage when subaccount has positive TNC and clob pair has status FINAL_SETTLEMENT`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
+			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_000_000_000, // $50,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+
+			expectedCanDeleverageSubaccount:   true,
+			expectedShouldFinalSettlePosition: true,
 		},
 	}
 
@@ -258,7 +298,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, mockIndexerEventManager)
 
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
@@ -312,17 +353,56 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			for i, clobPair := range tc.clobPairs {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							clobPair.MustGetPerpetualId(),
+							clobPair.Id,
+							perpetuals[i].Params.Ticker,
+							perpetuals[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perpetuals[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perpetuals[i].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobPair.Id,
+					clobPair.MustGetPerpetualId(),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+				require.NoError(t, err)
+			}
+
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.subaccount)
 
-			canDeleverageSubaccount, err := ks.ClobKeeper.CanDeleverageSubaccount(
+			canDeleverageSubaccount, shouldFinalSettlePosition, err := ks.ClobKeeper.CanDeleverageSubaccount(
 				ks.Ctx,
 				*tc.subaccount.Id,
+				0,
 			)
 			require.NoError(t, err)
 			require.Equal(
 				t,
 				tc.expectedCanDeleverageSubaccount,
 				canDeleverageSubaccount,
+			)
+			require.Equal(
+				t,
+				tc.expectedShouldFinalSettlePosition,
+				shouldFinalSettlePosition,
 			)
 		})
 	}
@@ -624,10 +704,11 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			perps := []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
-			} {
+			}
+			for _, p := range perps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -636,6 +717,43 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			clobPairs := []types.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+			}
+			for i, clobPair := range clobPairs {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							clobPair.MustGetPerpetualId(),
+							clobPair.Id,
+							perps[i].Params.Ticker,
+							perps[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perps[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perps[i].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobPair.Id,
+					clobPair.MustGetPerpetualId(),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
 				)
 				require.NoError(t, err)
 			}
@@ -672,6 +790,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 							satypes.BaseQuantums(fill.FillAmount),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -682,6 +801,7 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				tc.liquidatedSubaccountId,
 				tc.perpetualId,
 				tc.deltaQuantums,
+				false, // TODO, add tests where final settlement is true
 			)
 			require.Equal(t, tc.expectedFills, fills)
 			require.True(t, tc.expectedQuantumsRemaining.Cmp(deltaQuantumsRemaining) == 0)
@@ -1065,14 +1185,16 @@ func TestProcessDeleveraging(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
+			bankruptcyPriceQuoteQuantums := new(big.Int)
 			if tc.expectedErr == nil {
-				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+				bankruptcyPriceQuoteQuantums, err = ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
 					ks.Ctx,
 					*tc.liquidatedSubaccount.GetId(),
 					uint32(0),
 					tc.deltaQuantums,
 				)
 				require.NoError(t, err)
+
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
@@ -1085,6 +1207,7 @@ func TestProcessDeleveraging(t *testing.T) {
 							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -1095,6 +1218,216 @@ func TestProcessDeleveraging(t *testing.T) {
 				*tc.offsettingSubaccount.GetId(),
 				uint32(0),
 				tc.deltaQuantums,
+				bankruptcyPriceQuoteQuantums,
+			)
+			if tc.expectedErr == nil {
+				require.NoError(t, err)
+
+				actualLiquidated := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.liquidatedSubaccount.GetId())
+				require.Equal(
+					t,
+					tc.expectedLiquidatedSubaccount,
+					actualLiquidated,
+				)
+
+				actualOffsetting := ks.SubaccountsKeeper.GetSubaccount(ks.Ctx, *tc.offsettingSubaccount.GetId())
+				require.Equal(
+					t,
+					tc.expectedOffsettingSubaccount,
+					actualOffsetting,
+				)
+			} else {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			}
+		})
+	}
+}
+
+// Note that final settlement matches piggyback off of the deleveraging operation. Because of this
+// the pair of subaccounts offsetting each other are still referred to as "liquidated subaccount" and
+// "offsetting subaccount" in the test cases below.
+func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
+	tests := map[string]struct {
+		// Setup.
+		liquidatedSubaccount satypes.Subaccount
+		offsettingSubaccount satypes.Subaccount
+		deltaQuantums        *big.Int
+
+		// Expectations.
+		expectedLiquidatedSubaccount satypes.Subaccount
+		expectedOffsettingSubaccount satypes.Subaccount
+		expectedErr                  error
+	}{
+		"Liquidated: well-collateralized, offsetting: well-collateralized": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			expectedLiquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Carl_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(100_000_000_000 - 50_000_000_000),
+				),
+			},
+			expectedOffsettingSubaccount: satypes.Subaccount{
+				Id: &constants.Dave_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(50_000_000_000 + 50_000_000_000),
+				),
+			},
+		},
+		"Liquidated: well-collateralized, offsetting: under-collateralized, TNC > 0": {
+			liquidatedSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			offsettingSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+			deltaQuantums:        big.NewInt(-100_000_000), // 1 BTC
+
+			expectedLiquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Dave_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(50_000_000_000 + 50_000_000_000),
+				),
+			},
+			expectedOffsettingSubaccount: satypes.Subaccount{
+				Id: &constants.Carl_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(54_999_000_000 - 50_000_000_000),
+				),
+			},
+		},
+		"Liquidated: well-collateralized, offsetting: under-collateralized, TNC == 0": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD_Short,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			expectedLiquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Carl_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(100_000_000_000 - 50_000_000_000),
+				),
+			},
+			expectedOffsettingSubaccount: satypes.Subaccount{
+				Id: &constants.Dave_Num0,
+			},
+		},
+		"Liquidated: well-collateralized, offsetting: under-collateralized, TNC < 0": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_100000USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			// Negative TNC account closing at oracle price is an invalid state transition.
+			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		},
+		"Liquidated: under-collateralized, TNC > 0, offsetting: well-collateralized": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_54999USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			expectedLiquidatedSubaccount: satypes.Subaccount{
+				Id: &constants.Carl_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(54_999_000_000 - 50_000_000_000),
+				),
+			},
+			expectedOffsettingSubaccount: satypes.Subaccount{
+				Id: &constants.Dave_Num0,
+				AssetPositions: keepertest.CreateUsdcAssetPosition(
+					big.NewInt(50_000_000_000 + 50_000_000_000),
+				),
+			},
+		},
+		"Liquidated: under-collateralized, TNC == 0, offsetting: under-collateralized, TNC < 0": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_50000USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50001USD_Short,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			// Negative TNC account closing at oracle price is an invalid state transition.
+			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		},
+		"Liquidated: under-collateralized, TNC < 0, offsetting: under-collateralized, TNC > 0": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_45001USD_Short,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			// Negative TNC account closing at oracle price is an invalid state transition.
+			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		},
+		"Liquidated: under-collateralized, TNC < 0, offsetting: well-collateralized": {
+			liquidatedSubaccount: constants.Carl_Num0_1BTC_Short_49999USD,
+			offsettingSubaccount: constants.Dave_Num0_1BTC_Long_50000USD,
+			deltaQuantums:        big.NewInt(100_000_000), // 1 BTC
+
+			// Negative TNC account closing at oracle price is an invalid state transition.
+			expectedErr: satypes.ErrFailedToUpdateSubaccounts,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, mockIndexerEventManager)
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			for _, p := range []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			} {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ks.Ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
+
+			fillPriceQuoteQuantums, err := ks.PerpetualsKeeper.GetNetNotional(
+				ks.Ctx,
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			fillPriceQuoteQuantums.Neg(fillPriceQuoteQuantums)
+			require.NoError(t, err)
+
+			if tc.expectedErr == nil {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							*tc.liquidatedSubaccount.GetId(),
+							*tc.offsettingSubaccount.GetId(),
+							uint32(0),
+							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
+							satypes.BaseQuantums(fillPriceQuoteQuantums.Uint64()),
+							tc.deltaQuantums.Sign() > 0,
+							false,
+						),
+					),
+				).Return()
+			}
+			err = ks.ClobKeeper.ProcessDeleveraging(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				*tc.offsettingSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+				fillPriceQuoteQuantums,
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)
@@ -1222,14 +1555,15 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
+			bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
+				ks.Ctx,
+				*tc.liquidatedSubaccount.GetId(),
+				uint32(0),
+				tc.deltaQuantums,
+			)
+			require.NoError(t, err)
+
 			if tc.expectedErr == nil {
-				bankruptcyPriceQuoteQuantums, err := ks.ClobKeeper.GetBankruptcyPriceInQuoteQuantums(
-					ks.Ctx,
-					*tc.liquidatedSubaccount.GetId(),
-					uint32(0),
-					tc.deltaQuantums,
-				)
-				require.NoError(t, err)
 				mockIndexerEventManager.On("AddTxnEvent",
 					ks.Ctx,
 					indexerevents.SubtypeDeleveraging,
@@ -1242,6 +1576,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 							satypes.BaseQuantums(new(big.Int).Abs(tc.deltaQuantums).Uint64()),
 							satypes.BaseQuantums(bankruptcyPriceQuoteQuantums.Uint64()),
 							tc.deltaQuantums.Sign() > 0,
+							false,
 						),
 					),
 				).Return()
@@ -1252,6 +1587,7 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 				*tc.offsettingSubaccount.GetId(),
 				uint32(0),
 				tc.deltaQuantums,
+				bankruptcyPriceQuoteQuantums,
 			)
 			if tc.expectedErr == nil {
 				require.NoError(t, err)

@@ -90,7 +90,9 @@ const (
 	// CLOB.
 	AddPerpetualFillAmount                       = "add_perpetual_fill_amount"
 	BaseQuantums                                 = "base_quantums"
+	BestAsk                                      = "best_ask"
 	BestAskClobPair                              = "best_ask_clob_pair"
+	BestBid                                      = "best_bid"
 	BestBidClobPair                              = "best_bid_clob_pair"
 	Buy                                          = "buy"
 	CancelOrder                                  = "cancel_order"
@@ -377,10 +379,12 @@ const (
 	TotalNumIndexerTxnEvents   = "total_num_txn_events"
 
 	// Mev.
+	MevFallbackToOracle            = "mev_fallback_to_oracle"
 	Mev                            = "mev"
 	MevSentDatapoints              = "mev_num_sent_datapoints"
 	MidPrice                       = "mid_price"
 	MissingMidPrice                = "missing_mid_price"
+	OraclePrice                    = "oracle_price"
 	ProposerNumFills               = "proposer_num_fills"
 	ProposerNumMatchedTakerOrders  = "proposer_num_matched_taker_orders"
 	ProposerVolumeQuoteQuantums    = "proposer_volume_quote_quantums"

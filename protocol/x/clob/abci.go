@@ -117,7 +117,7 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) {
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
@@ -197,8 +197,24 @@ func PrepareCheckState(
 	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
-	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
+	liquidatableSubaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
+	if err != nil {
+		panic(err)
+	}
+	subaccountPositionInfo := daemonLiquidationInfo.GetSubaccountsWithPositions()
+	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
+	// to be deleveraged.
+	subaccountsToDeleverage = append(
+		subaccountsToDeleverage,
+		keeper.GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
+			ctx,
+			subaccountPositionInfo,
+		)...,
+	)
+
+	// 7. Deleverage subaccounts.
+	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}
 

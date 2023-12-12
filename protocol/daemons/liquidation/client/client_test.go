@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -20,7 +22,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestStart_TcpConnectionFails(t *testing.T) {
@@ -227,14 +228,14 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 			s := client.SubTaskRunnerImpl{}
 
 			c := client.NewClient(log.NewNopLogger())
+			c.SubaccountQueryClient = queryClientMock
+			c.ClobQueryClient = queryClientMock
+			c.LiquidationServiceClient = queryClientMock
 
 			err := s.RunLiquidationDaemonTaskLoop(
-				c,
 				grpc.Ctx,
+				c,
 				flags.GetDefaultDaemonFlags().Liquidation,
-				queryClientMock,
-				queryClientMock,
-				queryClientMock,
 			)
 			if tc.expectedError != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -261,12 +262,9 @@ func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
 // RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
 // call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
 func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
-	_ *client.Client,
 	_ context.Context,
+	_ *client.Client,
 	_ flags.LiquidationFlags,
-	_ satypes.QueryClient,
-	_ clobtypes.QueryClient,
-	_ api.LiquidationServiceClient,
 ) error {
 	f.called = true
 	return f.err
@@ -314,6 +312,11 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			// Run the sequence of task loop responses.
 			for _, taskLoopError := range tc.taskLoopResponses {
 				ticker, stop := daemontestutils.SingleTickTickerAndStop()
+
+				c.SubaccountQueryClient = &mocks.QueryClient{}
+				c.ClobQueryClient = &mocks.QueryClient{}
+				c.LiquidationServiceClient = &mocks.QueryClient{}
+
 				// Start the daemon task loop. Since we created a single-tick ticker, this will run for one iteration and
 				// return.
 				client.StartLiquidationsDaemonTaskLoop(
@@ -323,9 +326,6 @@ func TestHealthCheck_Mixed(t *testing.T) {
 					flags.GetDefaultDaemonFlags(),
 					ticker,
 					stop,
-					&mocks.QueryClient{},
-					&mocks.QueryClient{},
-					&mocks.QueryClient{},
 				)
 			}
 

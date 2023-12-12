@@ -18,13 +18,21 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+type subaccountToDeleverage struct {
+	SubaccountId satypes.SubaccountId
+	PerpetualId  uint32
+}
+
 // LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
 // the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
 // liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
-) error {
+) (
+	subaccountsToDeleverage []subaccountToDeleverage,
+	err error,
+) {
 	lib.AssertCheckTxMode(ctx)
 
 	metrics.AddSample(
@@ -35,7 +43,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// Early return if there are 0 subaccounts to liquidate.
 	numSubaccounts := len(subaccountIds)
 	if numSubaccounts == 0 {
-		return nil
+		return nil, nil
 	}
 
 	defer telemetry.MeasureSince(
@@ -68,7 +76,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return nil, err
 		}
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
@@ -93,7 +101,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	startPlaceLiquidationOrders := time.Now()
-	unfilledLiquidations := make([]types.LiquidationOrder, 0)
+	clobPairStatuses := make(map[types.ClobPairId]types.ClobPair_Status)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
@@ -105,7 +113,20 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return nil, err
+		}
+
+		// Skip liquidation if the ClobPair for the liquidation order is in final settlement.
+		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
+			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
+			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
+		}
+		if clobPairStatuses[liquidationOrder.GetClobPairId()] == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: liquidationOrder.GetSubaccountId(),
+				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
+			})
+			continue
 		}
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
@@ -115,11 +136,14 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 				"liquidationOrder", *liquidationOrder,
 				"error", err,
 			)
-			return err
+			return nil, err
 		}
 
 		if optimisticallyFilledQuantums == 0 {
-			unfilledLiquidations = append(unfilledLiquidations, *liquidationOrder)
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: liquidationOrder.GetSubaccountId(),
+				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
+			})
 		}
 	}
 	telemetry.MeasureSince(
@@ -129,33 +153,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
-	// For each unfilled liquidation, attempt to deleverage the subaccount.
-	startDeleverageSubaccounts := time.Now()
-	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
-		liquidationOrder := unfilledLiquidations[i]
-
-		subaccountId := liquidationOrder.GetSubaccountId()
-		perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
-
-		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
-		if err != nil {
-			k.Logger(ctx).Error(
-				"Failed to deleverage subaccount.",
-				"subaccount", subaccountId,
-				"perpetualId", perpetualId,
-				"error", err,
-			)
-			return err
-		}
-	}
-	telemetry.MeasureSince(
-		startDeleverageSubaccounts,
-		types.ModuleName,
-		metrics.LiquidateSubaccounts_Deleverage,
-		metrics.Latency,
-	)
-
-	return nil
+	return subaccountsToDeleverage, nil
 }
 
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to

@@ -22,6 +22,8 @@ type HealthCheckable interface {
 	ReportFailure(err error)
 	// ReportSuccess records a successful update.
 	ReportSuccess()
+	// ServiceName returns the name of the service being monitored. This name is expected to be unique.
+	ServiceName() string
 }
 
 // timestampWithError couples a timestamp and error to make it easier to update them in tandem.
@@ -65,6 +67,9 @@ type timeBoundedHealthCheckable struct {
 
 	// logger is the logger used to log errors.
 	logger log.Logger
+
+	// serviceName is the name of the service being monitored. This field is read-only and not synchronized.
+	serviceName string
 }
 
 // NewTimeBoundedHealthCheckable creates a new HealthCheckable instance.
@@ -76,10 +81,16 @@ func NewTimeBoundedHealthCheckable(
 	hc := &timeBoundedHealthCheckable{
 		timeProvider: timeProvider,
 		logger:       logger,
+		serviceName:  serviceName,
 	}
 	// Initialize the timeBoudnedHealthCheckable to an unhealthy state by reporting an error.
 	hc.ReportFailure(fmt.Errorf("%v is initializing", serviceName))
 	return hc
+}
+
+// ServiceName returns the name of the service being monitored.
+func (hc *timeBoundedHealthCheckable) ServiceName() string {
+	return hc.serviceName
 }
 
 // ReportSuccess records a successful update. This method is thread-safe.

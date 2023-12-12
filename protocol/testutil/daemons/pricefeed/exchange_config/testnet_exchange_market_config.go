@@ -7,7 +7,8 @@ import (
 
 var (
 	// TestnetExchangeMarketConfig maps exchange feed ids to exchange market config. This map is used to generate
-	// the exchange config json used by the genesis state for testnet deploys.
+	// the exchange config json used to construct the genesis file for various testnet deploys defined in the testing
+	// package - namely, localnet, dev, and staging. Note that public testnet is not affected by this map.
 	TestnetExchangeMarketConfig = map[types.ExchangeId]*types.MutableExchangeMarketConfig{
 		exchange_common.EXCHANGE_ID_BINANCE: {
 			Id: exchange_common.EXCHANGE_ID_BINANCE,
@@ -1073,6 +1074,20 @@ var (
 			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
 				MARKET_TEST_USD: {
 					Ticker: "TEST-USD",
+				},
+			},
+		},
+		exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: {
+			Id: exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE,
+			MarketToMarketConfig: map[types.MarketId]types.MarketConfig{
+				MARKET_BTC_USD: {
+					Ticker: "BTC-USD",
+				},
+				MARKET_ETH_USD: {
+					Ticker: "ETH-USD",
+				},
+				MARKET_SOL_USD: {
+					Ticker: "SOL-USD",
 				},
 			},
 		},

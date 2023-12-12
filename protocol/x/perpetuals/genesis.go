@@ -25,7 +25,6 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			elem.Name,
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,
-			elem.BasePositionNotional,
 			elem.ImpactNotional,
 		)
 

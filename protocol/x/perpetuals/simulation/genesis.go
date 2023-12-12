@@ -91,17 +91,6 @@ func genInitialAndMaintenanceFraction(r *rand.Rand) (uint32, uint32) {
 	return uint32(initialMargin), uint32(maintenanceFraction)
 }
 
-// genBasePositionNotional returns a randomized notional value of base position.
-func genBasePositionNotional(r *rand.Rand, isReasonableGenesis bool) uint64 {
-	return uint64(
-		simtypes.RandIntBetween(
-			r,
-			sim_helpers.PickGenesisParameter(sim_helpers.MinBasePositionNotional, isReasonableGenesis),
-			sim_helpers.PickGenesisParameter(sim_helpers.MaxBasePositionNotional, isReasonableGenesis)+1,
-		),
-	)
-}
-
 // calculateImpactNotional calculates impact notional as 500 USDC / initial margin fraction.
 func calculateImpactNotional(initialMarginPpm uint32) uint64 {
 	// If initial margin is 0, return max uint64.
@@ -167,14 +156,12 @@ func RandomizedGenState(simState *module.SimulationState) {
 	liquidityTiers := make([]types.LiquidityTier, numLiquidityTiers)
 	for i := 0; i < numLiquidityTiers; i++ {
 		initialMarginPpm, maintenanceFractionPpm := genInitialAndMaintenanceFraction(r)
-		basePositionNotional := genBasePositionNotional(r, isReasonableGenesis)
 		impactNotional := calculateImpactNotional(initialMarginPpm)
 		liquidityTiers[i] = types.LiquidityTier{
 			Id:                     uint32(i),
 			Name:                   fmt.Sprintf("%d", i),
 			InitialMarginPpm:       initialMarginPpm,
 			MaintenanceFractionPpm: maintenanceFractionPpm,
-			BasePositionNotional:   basePositionNotional,
 			ImpactNotional:         impactNotional,
 		}
 	}

@@ -19,6 +19,9 @@ var (
 
 // Start begins a job that periodically:
 // 1) Emits metrics about app version and git commit.
+// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
+// for this service. The task loop does not produce any errors because the telemetry calls themselves are
+// not error-returning, so in effect this daemon would never become unhealthy.
 func Start(
 	ctx context.Context,
 	logger log.Logger,

@@ -30,12 +30,6 @@ func WithMaintenanceFractionPpm(maintenanceFractionPpm uint32) LtModifierOption 
 	}
 }
 
-func WithBasePositionNotional(basePositionNotional uint64) LtModifierOption {
-	return func(lt *perptypes.LiquidityTier) {
-		lt.BasePositionNotional = basePositionNotional
-	}
-}
-
 func WithImpactNotional(impactNotional uint64) LtModifierOption {
 	return func(lt *perptypes.LiquidityTier) {
 		lt.ImpactNotional = impactNotional
@@ -57,7 +51,6 @@ func GenerateLiquidityTier(optionalModifications ...LtModifierOption) *perptypes
 		Name:                   "Large-Cap",
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 1_000_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         500_000_000,
 	}
 
