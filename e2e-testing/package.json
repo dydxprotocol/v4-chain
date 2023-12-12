@@ -45,10 +45,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/dydxprotocol/indexer.git"
+    "url": "git+https://github.com/dydxprotocol/v4-chain.git"
   },
   "bugs": {
-    "url": "https://github.com/dydxprotocol/indexer/issues"
+    "url": "https://github.com/dydxprotocol/v4-chain/issues"
   },
-  "homepage": "https://github.com/dydxprotocol/indexer#readme"
+  "homepage": "https://github.com/dydxprotocol/v4-chain#readme"
 }
