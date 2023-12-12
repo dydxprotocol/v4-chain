@@ -30,13 +30,13 @@ export const createLCDClient = async ({
       feetiers: new (await import("./feetiers/query.lcd")).LCDQueryClient({
         requestClient
       }),
-      ratelimit: new (await import("./ratelimit/query.lcd")).LCDQueryClient({
-        requestClient
-      }),
       perpetuals: new (await import("./perpetuals/query.lcd")).LCDQueryClient({
         requestClient
       }),
       prices: new (await import("./prices/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
+      ratelimit: new (await import("./ratelimit/query.lcd")).LCDQueryClient({
         requestClient
       }),
       rewards: new (await import("./rewards/query.lcd")).LCDQueryClient({
