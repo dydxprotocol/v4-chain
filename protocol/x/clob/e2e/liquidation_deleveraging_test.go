@@ -645,7 +645,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
 		liquidatableSubaccountIds []satypes.SubaccountId
-		subaccountPositionInfo    map[uint32]map[bool]map[satypes.SubaccountId]struct{}
+		subaccountPositionInfo    map[uint32]*clobtypes.SubaccountOpenPositionInfo
 
 		// Configuration.
 		liquidationConfig clobtypes.LiquidationsConfig
@@ -1041,18 +1041,19 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
-		`Deleveraging occurs for negative TNC subaccount with open position in final settlement market`: {
+		`Deleveraging occurs at bankruptcy price for negative TNC subaccount with open position in final settlement market`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			subaccountPositionInfo: map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
+			subaccountPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
-					false: {
-						constants.Carl_Num0: {},
+					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
+					SubaccountsWithLongPosition: []satypes.SubaccountId{
+						constants.Dave_Num0,
 					},
-					true: {
-						constants.Dave_Num0: {},
+					SubaccountsWithShortPosition: []satypes.SubaccountId{
+						constants.Carl_Num0,
 					},
 				},
 			},
@@ -1085,18 +1086,19 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
-		`Deleveraging occurs for non-negative TNC subaccounts with open positions in final settlement market`: {
+		`Deleveraging occurs at oracle price for non-negative TNC subaccounts with open positions in final settlement market`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_100000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			subaccountPositionInfo: map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
+			subaccountPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
-					false: {
-						constants.Carl_Num0: {},
+					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
+					SubaccountsWithLongPosition: []satypes.SubaccountId{
+						constants.Dave_Num0,
 					},
-					true: {
-						constants.Dave_Num0: {},
+					SubaccountsWithShortPosition: []satypes.SubaccountId{
+						constants.Carl_Num0,
 					},
 				},
 			},

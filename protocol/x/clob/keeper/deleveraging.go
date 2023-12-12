@@ -523,13 +523,13 @@ func (k Keeper) ProcessDeleveraging(
 	return nil
 }
 
-// DeleverageSubaccountsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
-// liquidations daemon to deleverage subaccounts with open positions in final settlement markets. Note
-// this function will deleverage both negative TNC and non-negative TNC subaccounts. The deleveraging code
-// uses the bankruptcy price for the former and the oracle price for the latter.
+// GetSubaccountsWithOpenPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
+// liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
+// will be deleveraged either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC during
+// PrepareCheckState.
 func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
-	subaccountOpenPositionInfo map[uint32]map[bool]map[satypes.SubaccountId]struct{},
+	subaccountOpenPositionInfo map[uint32]*types.SubaccountOpenPositionInfo,
 ) (subaccountsToDeleverage []subaccountToDeleverage) {
 	// Gather perpetualIds for perpetuals whose clob pairs are in final settlement.
 	finalSettlementPerpetualIds := make(map[uint32]struct{})
@@ -542,13 +542,17 @@ func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 
 	// Fetch subaccounts with open positions in final settlement markets.
 	for perpetualId := range finalSettlementPerpetualIds {
-		for isBuy := range subaccountOpenPositionInfo[perpetualId] {
-			for subaccountId := range subaccountOpenPositionInfo[perpetualId][isBuy] {
-				subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
-					SubaccountId: subaccountId,
-					PerpetualId:  perpetualId,
-				})
-			}
+		for _, subaccountId := range subaccountOpenPositionInfo[perpetualId].SubaccountsWithLongPosition {
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: subaccountId,
+				PerpetualId:  perpetualId,
+			})
+		}
+		for _, subaccountId := range subaccountOpenPositionInfo[perpetualId].SubaccountsWithShortPosition {
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: subaccountId,
+				PerpetualId:  perpetualId,
+			})
 		}
 	}
 
