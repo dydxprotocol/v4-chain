@@ -5,6 +5,7 @@ package cli_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -54,6 +55,7 @@ func networkWithLiquidityTierAndPerpetualObjects(
 			InitialMarginPpm:       uint32(1_000_000 / (i + 1)),
 			MaintenanceFractionPpm: uint32(1_000_000 / (i + 1)),
 			ImpactNotional:         uint64(500_000_000 * (i + 1)),
+			VolatilityBoundsPeriod: time.Hour * time.Duration(i+1),
 		}
 		nullify.Fill(&liquidityTier) //nolint:staticcheck
 		state.LiquidityTiers = append(state.LiquidityTiers, liquidityTier)

@@ -874,7 +874,8 @@ const GenesisState = `{
           "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "name": "Large-Cap"
+          "name": "Large-Cap",
+          "volatility_bounds_period": "1h"
         }
       ],
       "params": {

@@ -1,6 +1,8 @@
 package constants
 
 import (
+	"time"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
@@ -24,6 +26,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 1_000_000,
 		ImpactNotional:         500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     1,
@@ -31,6 +34,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 750_000,
 		ImpactNotional:         500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     2,
@@ -38,6 +42,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 0,
 		ImpactNotional:         500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     3,
@@ -45,6 +50,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
 		ImpactNotional:         2_500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     4,
@@ -52,6 +58,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 800_000,
 		ImpactNotional:         1_000_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     5,
@@ -59,6 +66,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 600_000,
 		ImpactNotional:         1_000_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     6,
@@ -66,6 +74,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 900_000,
 		ImpactNotional:         2_500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     7,
@@ -73,6 +82,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       0,
 		MaintenanceFractionPpm: 0,
 		ImpactNotional:         1_000_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     8,
@@ -80,6 +90,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       9_910, // 0.9910%
 		MaintenanceFractionPpm: 1_000_000,
 		ImpactNotional:         50_454_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 	{
 		Id:                     101,
@@ -87,6 +98,7 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
 		ImpactNotional:         2_500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	},
 }
 
@@ -322,6 +334,7 @@ var (
 				InitialMarginPpm:       200_000,
 				MaintenanceFractionPpm: 500_000,
 				ImpactNotional:         2_500_000_000,
+				VolatilityBoundsPeriod: time.Hour,
 			},
 			{
 				Id:                     uint32(1),
@@ -329,6 +342,7 @@ var (
 				InitialMarginPpm:       300_000,
 				MaintenanceFractionPpm: 600_000,
 				ImpactNotional:         1_667_000_000,
+				VolatilityBoundsPeriod: 2 * time.Hour,
 			},
 			{
 				Id:                     uint32(2),
@@ -336,6 +350,7 @@ var (
 				InitialMarginPpm:       400_000,
 				MaintenanceFractionPpm: 700_000,
 				ImpactNotional:         1_250_000_000,
+				VolatilityBoundsPeriod: 3 * time.Hour,
 			},
 		},
 		Params: PerpetualsGenesisParams,

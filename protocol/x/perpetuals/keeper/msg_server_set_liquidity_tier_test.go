@@ -2,10 +2,10 @@ package keeper_test
 
 import (
 	"testing"
-
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
@@ -21,6 +21,7 @@ func TestSetLiquidityTier(t *testing.T) {
 		lttest.WithInitialMarginPpm(1_000),
 		lttest.WithMaintenanceFractionPpm(2_000),
 		lttest.WithImpactNotional(4_000),
+		lttest.WithVolatilityBoundsPeriod(time.Hour),
 	)
 
 	tests := map[string]struct {
@@ -36,6 +37,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       123_432,
 					MaintenanceFractionPpm: testLt.MaintenanceFractionPpm,
 					ImpactNotional:         testLt.ImpactNotional,
+					VolatilityBoundsPeriod: testLt.VolatilityBoundsPeriod,
 				},
 			},
 		},
@@ -48,6 +50,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 		},
@@ -60,6 +63,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 		},
@@ -72,6 +76,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       1_000_001,
 					MaintenanceFractionPpm: 500_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 			expectedErr: "InitialMarginPpm exceeds maximum value",
@@ -85,9 +90,24 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       500_001,
 					MaintenanceFractionPpm: 1_000_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 			expectedErr: "MaintenanceFractionPpm exceeds maximum value",
+		},
+		"Failure: volatility bounds period is non-positive": {
+			msg: &types.MsgSetLiquidityTier{
+				Authority: lib.GovModuleAddress.String(),
+				LiquidityTier: types.LiquidityTier{
+					Id:                     testLt.Id,
+					Name:                   "medium-cap",
+					InitialMarginPpm:       567_123,
+					MaintenanceFractionPpm: 500_001,
+					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: -time.Hour,
+				},
+			},
+			expectedErr: "Volatility bounds period is non-positive",
 		},
 		"Failure: invalid authority": {
 			msg: &types.MsgSetLiquidityTier{
@@ -98,6 +118,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 			expectedErr: "invalid authority",
@@ -111,6 +132,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
 					ImpactNotional:         1_300_303,
+					VolatilityBoundsPeriod: time.Minute * 30,
 				},
 			},
 			expectedErr: "invalid authority",
@@ -127,6 +149,7 @@ func TestSetLiquidityTier(t *testing.T) {
 				testLt.InitialMarginPpm,
 				testLt.MaintenanceFractionPpm,
 				testLt.ImpactNotional,
+				testLt.VolatilityBoundsPeriod,
 			)
 			require.NoError(t, err)
 

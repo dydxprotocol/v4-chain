@@ -2,6 +2,7 @@ package gov_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -32,6 +33,7 @@ var (
 		InitialMarginPpm:       765_432,
 		MaintenanceFractionPpm: 345_678,
 		ImpactNotional:         654_321,
+		VolatilityBoundsPeriod: time.Hour,
 	}
 )
 
@@ -355,6 +357,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
 					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
 					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: TEST_LIQUIDITY_TIER.VolatilityBoundsPeriod,
 				},
 			},
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -368,6 +371,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
 					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
 					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: TEST_LIQUIDITY_TIER.VolatilityBoundsPeriod,
 				},
 			},
 			genesisLiquidityTierIds: []uint32{5678},
@@ -382,6 +386,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       1_000_001,
 					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
 					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: TEST_LIQUIDITY_TIER.VolatilityBoundsPeriod,
 				},
 			},
 			expectCheckTxFails: true,
@@ -395,6 +400,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
 					MaintenanceFractionPpm: 1_000_001,
 					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: TEST_LIQUIDITY_TIER.VolatilityBoundsPeriod,
 				},
 			},
 			expectCheckTxFails: true,
@@ -408,6 +414,35 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
 					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
 					ImpactNotional:         0,
+					VolatilityBoundsPeriod: TEST_LIQUIDITY_TIER.VolatilityBoundsPeriod,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: volatility bounds period is zero": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: 0,
+				},
+			},
+			expectCheckTxFails: true,
+		},
+		"Failure: volatility bounds period is negative": {
+			msg: &perptypes.MsgSetLiquidityTier{
+				Authority: authtypes.NewModuleAddress(perptypes.ModuleName).String(),
+				LiquidityTier: perptypes.LiquidityTier{
+					Id:                     5678,
+					Name:                   TEST_LIQUIDITY_TIER.Name,
+					InitialMarginPpm:       TEST_LIQUIDITY_TIER.InitialMarginPpm,
+					MaintenanceFractionPpm: TEST_LIQUIDITY_TIER.MaintenanceFractionPpm,
+					ImpactNotional:         TEST_LIQUIDITY_TIER.ImpactNotional,
+					VolatilityBoundsPeriod: -time.Hour,
 				},
 			},
 			expectCheckTxFails: true,
@@ -421,6 +456,7 @@ func TestSetLiquidityTier(t *testing.T) {
 					InitialMarginPpm:       765_432,
 					MaintenanceFractionPpm: 345_678,
 					ImpactNotional:         654_321,
+					VolatilityBoundsPeriod: time.Hour,
 				},
 			},
 			expectSubmitProposalFails: true,

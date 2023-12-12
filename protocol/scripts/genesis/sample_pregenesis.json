@@ -816,7 +816,8 @@
           "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "name": "Large-Cap"
+          "name": "Large-Cap",
+          "volatility_bounds_period": "1h"
         },
         {
           "base_position_notional": 250000000000,
@@ -824,7 +825,8 @@
           "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
-          "name": "Mid-Cap"
+          "name": "Mid-Cap",
+          "volatility_bounds_period": "1h"
         },
         {
           "base_position_notional": 100000000000,
@@ -832,7 +834,8 @@
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
-          "name": "Long-Tail"
+          "name": "Long-Tail",
+          "volatility_bounds_period": "1h"
         },
         {
           "base_position_notional": 1000000000,
@@ -840,7 +843,8 @@
           "impact_notional": 2500000000,
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
-          "name": "Safety"
+          "name": "Safety",
+          "volatility_bounds_period": "1h"
         }
       ],
       "params": {

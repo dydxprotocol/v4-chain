@@ -30,6 +30,7 @@ func (k msgServer) SetLiquidityTier(
 		msg.LiquidityTier.InitialMarginPpm,
 		msg.LiquidityTier.MaintenanceFractionPpm,
 		msg.LiquidityTier.ImpactNotional,
+		msg.LiquidityTier.VolatilityBoundsPeriod,
 	); err != nil {
 		return nil, err
 	}

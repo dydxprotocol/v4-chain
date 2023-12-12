@@ -3,6 +3,7 @@ package types_test
 import (
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -37,6 +38,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       500_000,
 						MaintenanceFractionPpm: 750_000,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -74,6 +76,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       500_000,
 						MaintenanceFractionPpm: 750_000,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -111,6 +114,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       500_000,
 						MaintenanceFractionPpm: 750_000,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -140,6 +144,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       500_000,
 						MaintenanceFractionPpm: 750_000,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -169,6 +174,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       1_000_001,
 						MaintenanceFractionPpm: 750_000,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -198,6 +204,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       1_000,
 						MaintenanceFractionPpm: 1_000_001,
 						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -227,6 +234,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       200_000,
 						MaintenanceFractionPpm: 1_000_000,
 						ImpactNotional:         2_500_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -256,6 +264,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       200_000,
 						MaintenanceFractionPpm: 1_000_000,
 						ImpactNotional:         2_500_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -285,6 +294,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       200_000,
 						MaintenanceFractionPpm: 1_000_000,
 						ImpactNotional:         2_500_000_000,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -314,6 +324,7 @@ func TestGenesisState_Validate(t *testing.T) {
 						InitialMarginPpm:       200_000,
 						MaintenanceFractionPpm: 1_000_000,
 						ImpactNotional:         0,
+						VolatilityBoundsPeriod: time.Hour,
 					},
 				},
 				Params: types.Params{
@@ -323,6 +334,66 @@ func TestGenesisState_Validate(t *testing.T) {
 				},
 			},
 			expectedError: errors.New("Impact notional is zero"),
+		},
+		"invalid: volatility bounds period is zero": {
+			genState: &types.GenesisState{
+				Perpetuals: []types.Perpetual{
+					{
+						Params: types.PerpetualParams{
+							Id:            0,
+							Ticker:        "EXAM-USD",
+							LiquidityTier: 0,
+						},
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+				LiquidityTiers: []types.LiquidityTier{
+					{
+						Id:                     0,
+						Name:                   "Large-Cap",
+						InitialMarginPpm:       500_000,
+						MaintenanceFractionPpm: 750_000,
+						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: 0,
+					},
+				},
+				Params: types.Params{
+					FundingRateClampFactorPpm: 3_000_000,
+					PremiumVoteClampFactorPpm: 30_000_000,
+					MinNumVotesPerSample:      15,
+				},
+			},
+			expectedError: types.ErrVolatilityBoundsPeriodIsNonPositive,
+		},
+		"invalid: volatility bounds period is negative": {
+			genState: &types.GenesisState{
+				Perpetuals: []types.Perpetual{
+					{
+						Params: types.PerpetualParams{
+							Id:            0,
+							Ticker:        "EXAM-USD",
+							LiquidityTier: 0,
+						},
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+				LiquidityTiers: []types.LiquidityTier{
+					{
+						Id:                     0,
+						Name:                   "Large-Cap",
+						InitialMarginPpm:       500_000,
+						MaintenanceFractionPpm: 750_000,
+						ImpactNotional:         1_000_000_000,
+						VolatilityBoundsPeriod: -time.Hour,
+					},
+				},
+				Params: types.Params{
+					FundingRateClampFactorPpm: 3_000_000,
+					PremiumVoteClampFactorPpm: 30_000_000,
+					MinNumVotesPerSample:      15,
+				},
+			},
+			expectedError: types.ErrVolatilityBoundsPeriodIsNonPositive,
 		},
 	}
 

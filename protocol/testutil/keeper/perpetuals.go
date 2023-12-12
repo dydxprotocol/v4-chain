@@ -176,6 +176,7 @@ func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 			l.InitialMarginPpm,
 			l.MaintenanceFractionPpm,
 			l.ImpactNotional,
+			l.VolatilityBoundsPeriod,
 		)
 
 		require.NoError(t, err)

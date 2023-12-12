@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/big"
 	"math/rand"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -103,6 +104,12 @@ func calculateImpactNotional(initialMarginPpm uint32) uint64 {
 	return impactNotional.Uint64()
 }
 
+// genVolatilityBoundsPeriod returns a randomized duration for volatility bounds period.
+func genVolatilityBoundsPeriod(r *rand.Rand) time.Duration {
+	numSeconds := simtypes.RandIntBetween(r, 1, 1_000_000)
+	return time.Duration(numSeconds) * time.Second
+}
+
 func genParams(r *rand.Rand, isReasonableGenesis bool) types.Params {
 	return types.Params{
 		FundingRateClampFactorPpm: genFundingRateClampFactorPpm(r, isReasonableGenesis),
@@ -157,12 +164,14 @@ func RandomizedGenState(simState *module.SimulationState) {
 	for i := 0; i < numLiquidityTiers; i++ {
 		initialMarginPpm, maintenanceFractionPpm := genInitialAndMaintenanceFraction(r)
 		impactNotional := calculateImpactNotional(initialMarginPpm)
+		volatilityBoundsPeriod := genVolatilityBoundsPeriod(r)
 		liquidityTiers[i] = types.LiquidityTier{
 			Id:                     uint32(i),
 			Name:                   fmt.Sprintf("%d", i),
 			InitialMarginPpm:       initialMarginPpm,
 			MaintenanceFractionPpm: maintenanceFractionPpm,
 			ImpactNotional:         impactNotional,
+			VolatilityBoundsPeriod: volatilityBoundsPeriod,
 		}
 	}
 
