@@ -29,10 +29,10 @@ message LiquidateSubaccountsRequest {
   // The list of subaccount ids with negative total net collateral.
   repeated dydxprotocol.subaccounts.SubaccountId negative_tnc_subaccount_ids = 3
       [ (gogoproto.nullable) = false ];
-  
+
   // A map of perpetual id to subaccount open position info.
-  map<uint32, dydxprotocol.clob.SubaccountOpenPositionInfo> subaccount_open_position_info = 4
-      [ (gogoproto.nullable) = false ];
+  map<uint32, dydxprotocol.clob.SubaccountOpenPositionInfo>
+      subaccount_open_position_info = 4 [ (gogoproto.nullable) = false ];
 }
 
 // LiquidateSubaccountsResponse is a response message for

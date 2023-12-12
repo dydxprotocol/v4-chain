@@ -26,8 +26,6 @@ export interface LiquidateSubaccountsRequest {
   /** The list of subaccount ids with negative total net collateral. */
 
   negativeTncSubaccountIds: SubaccountId[];
-  /** A map of perpetual id to subaccount open position info. */
-
   subaccountOpenPositionInfo?: {
     [key: number]: SubaccountOpenPositionInfo;
   };
@@ -48,8 +46,6 @@ export interface LiquidateSubaccountsRequestSDKType {
   /** The list of subaccount ids with negative total net collateral. */
 
   negative_tnc_subaccount_ids: SubaccountIdSDKType[];
-  /** A map of perpetual id to subaccount open position info. */
-
   subaccount_open_position_info?: {
     [key: number]: SubaccountOpenPositionInfoSDKType;
   };
