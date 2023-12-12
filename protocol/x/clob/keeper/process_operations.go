@@ -620,39 +620,35 @@ func (k Keeper) PersistMatchDeleveragingToState(
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
 	perpetualId := matchDeleveraging.GetPerpetualId()
-	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
 
-	// If `IsFinalSettlement` flag on deleveraging match is set to true, verify that the market is in final settlement.
-	if matchDeleveraging.IsFinalSettlement && clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
-		return errorsmod.Wrapf(
-			types.ErrInvalidFinalSettlementDeleveragingMatch,
-			"MatchPerpetualDeleveraging %+v is a final settlement match, but the clob pair %+v is not in final settlement",
-			matchDeleveraging,
-			clobPair,
-		)
-	}
-
-	// Skip the below validation for final settlement deleveraging matches. Final settlement matches do
-	// not require the subaccount to have negative TNC to be considered deleveragable.
-	if !matchDeleveraging.IsFinalSettlement {
-		// Validate that the provided subaccount can be deleveraged.
-		if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
-			panic(
-				fmt.Sprintf(
-					"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
-						"SubaccountId %+v, error %+v",
-					liquidatedSubaccountId,
-					err,
-				),
-			)
-		} else if !canDeleverageSubaccount {
-			// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
-			return errorsmod.Wrapf(
-				types.ErrInvalidDeleveragedSubaccount,
-				"Subaccount %+v failed deleveraging validation",
+	// Validate that the provided subaccount can be deleveraged.
+	if canDeleverageSubaccount, shouldFinalSettlePosition, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId, perpetualId); err != nil {
+		panic(
+			fmt.Sprintf(
+				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
+					"SubaccountId %+v, error %+v",
 				liquidatedSubaccountId,
-			)
-		}
+				err,
+			),
+		)
+	} else if !canDeleverageSubaccount {
+		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
+		return errorsmod.Wrapf(
+			types.ErrInvalidDeleveragedSubaccount,
+			"Subaccount %+v failed deleveraging validation",
+			liquidatedSubaccountId,
+		)
+	} else if matchDeleveraging.IsFinalSettlement != shouldFinalSettlePosition {
+		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
+		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
+		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
+		return errorsmod.Wrapf(
+			types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
+			matchDeleveraging,
+			matchDeleveraging.IsFinalSettlement,
+			shouldFinalSettlePosition,
+		)
 	}
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)

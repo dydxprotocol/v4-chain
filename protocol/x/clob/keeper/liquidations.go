@@ -109,8 +109,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return 0, err
 		}
 
-		// Skip liquidation if the ClobPair for the liquidation order is in final settlement. There is a separate flow
-		// for triggering deleveraging/final settlement for positions in closed markets.
+		// Skip liquidation if the ClobPair for the liquidation order is in final settlement.
 		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
 			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
 			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
