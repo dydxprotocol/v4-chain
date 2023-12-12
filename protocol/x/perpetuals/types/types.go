@@ -91,7 +91,6 @@ type PerpetualsKeeper interface {
 		name string,
 		initialMarginPpm uint32,
 		maintenanceFractionPpm uint32,
-		basePositionNotional uint64,
 		impactNotional uint64,
 	) (
 		liquidityTier LiquidityTier,

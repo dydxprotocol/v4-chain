@@ -1,3 +1,4 @@
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   FundingEventV1,
   FundingEventV1_Type,
@@ -45,6 +46,9 @@ describe('fundingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
+    jest.spyOn(stats, 'increment');
+    jest.spyOn(stats, 'timing');
+    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -200,6 +204,8 @@ describe('fundingHandler', () => {
       oraclePrice: '10000',
       fundingIndex: '0.1',
     }));
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update_event', 0.1, { ticker: 'BTC-USD' });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update', 0.1, { ticker: 'BTC-USD' });
   });
 
   it('successfully processes and clears cache for multiple new funding rates', async () => {
@@ -297,6 +303,10 @@ describe('fundingHandler', () => {
       // 1e2 * 1e-6 * 1e-6 / 1e-18 = 1e8
       fundingIndex: '100000000',
     }));
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update_event', 0.1, { ticker: 'BTC-USD' });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update', 0.1, { ticker: 'BTC-USD' });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update_event', 100000000, { ticker: 'ETH-USD' });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update', 100000000, { ticker: 'ETH-USD' });
   });
 });
 

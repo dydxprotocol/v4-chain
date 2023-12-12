@@ -9,7 +9,9 @@ import (
 // List of CLI flags for Server and Client.
 const (
 	// Flag names
-	FlagUnixSocketAddress = "unix-socket-address"
+	FlagUnixSocketAddress           = "unix-socket-address"
+	FlagPanicOnDaemonFailureEnabled = "panic-on-daemon-failure-enabled"
+	FlagMaxDaemonUnhealthySeconds   = "max-daemon-unhealthy-seconds"
 
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
@@ -28,6 +30,10 @@ const (
 type SharedFlags struct {
 	// SocketAddress is the location of the unix socket to communicate with the daemon gRPC service.
 	SocketAddress string
+	// PanicOnDaemonFailureEnabled toggles whether the daemon should panic on failure.
+	PanicOnDaemonFailureEnabled bool
+	// MaxDaemonUnhealthySeconds is the maximum allowable duration for which a daemon can be unhealthy.
+	MaxDaemonUnhealthySeconds uint32
 }
 
 // BridgeFlags contains configuration flags for the Bridge Daemon.
@@ -74,7 +80,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 	if defaultDaemonFlags == nil {
 		defaultDaemonFlags = &DaemonFlags{
 			Shared: SharedFlags{
-				SocketAddress: "/tmp/daemons.sock",
+				SocketAddress:               "/tmp/daemons.sock",
+				PanicOnDaemonFailureEnabled: true,
+				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
 			},
 			Bridge: BridgeFlags{
 				Enabled:        true,
@@ -109,8 +117,18 @@ func AddDaemonFlagsToCmd(
 	cmd.Flags().String(
 		FlagUnixSocketAddress,
 		df.Shared.SocketAddress,
-		"Socket address for the price daemon to send updates to, if not set "+
-			"will establish default location to ingest price updates from",
+		"Socket address for the daemons to send updates to, if not set "+
+			"will establish default location to ingest daemon updates from",
+	)
+	cmd.Flags().Bool(
+		FlagPanicOnDaemonFailureEnabled,
+		df.Shared.PanicOnDaemonFailureEnabled,
+		"Enables panicking when a daemon fails.",
+	)
+	cmd.Flags().Uint32(
+		FlagMaxDaemonUnhealthySeconds,
+		df.Shared.MaxDaemonUnhealthySeconds,
+		"Maximum allowable duration for which a daemon can be unhealthy.",
 	)
 
 	// Bridge Daemon.
@@ -176,6 +194,16 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagUnixSocketAddress); option != nil {
 		if v, err := cast.ToStringE(option); err == nil {
 			result.Shared.SocketAddress = v
+		}
+	}
+	if option := appOpts.Get(FlagPanicOnDaemonFailureEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Shared.PanicOnDaemonFailureEnabled = v
+		}
+	}
+	if option := appOpts.Get(FlagMaxDaemonUnhealthySeconds); option != nil {
+		if v, err := cast.ToUint32E(option); err == nil {
+			result.Shared.MaxDaemonUnhealthySeconds = v
 		}
 	}
 

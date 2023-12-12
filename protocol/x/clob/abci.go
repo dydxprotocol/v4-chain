@@ -119,7 +119,7 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) {
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
@@ -199,7 +199,7 @@ func PrepareCheckState(
 	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
+	subaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
 	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds)
 	if err != nil {
 		panic(err)

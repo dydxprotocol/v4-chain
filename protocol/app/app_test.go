@@ -1,10 +1,12 @@
 package app_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"gopkg.in/typ.v4/slices"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
@@ -221,4 +223,19 @@ func TestModuleBasics(t *testing.T) {
 	expectedFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(defaultAppModuleBasics))
 	actualFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(basic_manager.ModuleBasics))
 	require.Equal(t, expectedFieldTypes, actualFieldTypes, "Module basics does not match expected")
+}
+
+func TestRegisterDaemonWithHealthMonitor_Panics(t *testing.T) {
+	app := testapp.DefaultTestApp(nil)
+	hc := &mocks.HealthCheckable{}
+	hc.On("ServiceName").Return("test-service")
+	hc.On("HealthCheck").Return(nil)
+
+	app.RegisterDaemonWithHealthMonitor(hc, 5*time.Minute)
+	// The second registration should fail, causing a panic.
+	require.PanicsWithError(
+		t,
+		"service test-service already registered",
+		func() { app.RegisterDaemonWithHealthMonitor(hc, 5*time.Minute) },
+	)
 }

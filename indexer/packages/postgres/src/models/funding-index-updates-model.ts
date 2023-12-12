@@ -66,6 +66,25 @@ export default class FundingIndexUpdatesModel extends Model {
     };
   }
 
+  /**
+   * A mapping from column name to JSON conversion expected.
+   * See getSqlConversionForDydxModelTypes for valid conversions.
+   *
+   * TODO(IND-239): Ensure that jsonSchema() / sqlToJsonConversions() / model fields match.
+   */
+  static get sqlToJsonConversions() {
+    return {
+      id: 'string',
+      perpetualId: 'string',
+      eventId: 'hex-string',
+      rate: 'string',
+      oraclePrice: 'string',
+      fundingIndex: 'string',
+      effectiveAt: 'date-time',
+      effectiveAtHeight: 'string',
+    };
+  }
+
   id!: string;
 
   perpetualId!: string;

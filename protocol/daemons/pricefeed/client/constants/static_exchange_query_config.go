@@ -127,5 +127,11 @@ var (
 			TimeoutMs:  defaultTimeoutMs,
 			MaxQueries: defaultMaxQueries,
 		},
+		exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE: {
+			ExchangeId: exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE,
+			IntervalMs: defaultIntervalMs,
+			TimeoutMs:  defaultTimeoutMs,
+			MaxQueries: defaultMaxQueries,
+		},
 	}
 )
