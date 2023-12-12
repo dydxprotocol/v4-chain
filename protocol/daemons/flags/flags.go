@@ -192,7 +192,7 @@ func GetDaemonFlagValuesFromOptions(
 
 	// Shared Flags
 	if option := appOpts.Get(FlagUnixSocketAddress); option != nil {
-		if v, err := cast.ToStringE(option); err == nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
 			result.Shared.SocketAddress = v
 		}
 	}
@@ -219,7 +219,7 @@ func GetDaemonFlagValuesFromOptions(
 		}
 	}
 	if option := appOpts.Get(FlagBridgeDaemonEthRpcEndpoint); option != nil {
-		if v, err := cast.ToStringE(option); err == nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
 			result.Bridge.EthRpcEndpoint = v
 		}
 	}

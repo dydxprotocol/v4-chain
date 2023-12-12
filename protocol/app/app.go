@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"io"
 	"math/big"
 	"net/http"
@@ -13,6 +12,8 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -835,7 +836,7 @@ func New(
 	)
 
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
-	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
+	logger.Info("Parsed CLOB flags", "Flags", clobFlags, "NumHosts", len(clobFlags.MevTelemetryHosts))
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
 
