@@ -4,14 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"io"
-	"math"
 	"math/big"
 	"net/http"
 	"os"
 	"path/filepath"
 	"runtime/debug"
 	"sync"
+	"time"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -149,6 +150,8 @@ import (
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	pricesmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimitmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
+	ratelimitmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	rewardsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -237,6 +240,7 @@ type App struct {
 	IBCKeeper             *ibckeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
+	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
@@ -290,6 +294,8 @@ type App struct {
 	PriceFeedClient    *pricefeedclient.Client
 	LiquidationsClient *liquidationclient.Client
 	BridgeClient       *bridgeclient.Client
+
+	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -341,6 +347,7 @@ func New(
 		distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
+		ratelimitmoduletypes.StoreKey,
 		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		pricesmoduletypes.StoreKey,
@@ -531,6 +538,18 @@ func New(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
+	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
+		appCodec,
+		keys[ratelimitmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+
+	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
@@ -581,30 +600,35 @@ func New(
 	// potentially liquidatable subaccounts and then encode them into an in-memory slice shared by
 	// the liquidations module.
 	// The in-memory data structure is shared by the x/clob module and liquidations daemon.
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
-	app.Server.WithLiquidatableSubaccountIds(liquidatableSubaccountIds)
+	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
+	app.Server.WithDaemonLiquidationInfo(daemonLiquidationInfo)
 
 	// Setup server for bridge messages.
 	// The in-memory data structure is shared by the x/bridge module and bridge daemon.
 	bridgeEventManager := bridgedaemontypes.NewBridgeEventManager(timeProvider)
 	app.Server.WithBridgeEventManager(bridgeEventManager)
 
+	app.DaemonHealthMonitor = daemonservertypes.NewHealthMonitor(
+		daemonservertypes.DaemonStartupGracePeriod,
+		daemonservertypes.HealthCheckPollFrequency,
+		app.Logger(),
+		daemonFlags.Shared.PanicOnDaemonFailureEnabled,
+	)
 	// Create a closure for starting daemons and daemon server. Daemon services are delayed until after the gRPC
 	// service is started because daemons depend on the gRPC service being available. If a node is initialized
 	// with a genesis time in the future, then the gRPC service will not be available until the genesis time, the
 	// daemons will not be able to connect to the cosmos gRPC query service and finish initialization, and the daemon
 	// monitoring service will panic.
 	app.startDaemons = func() {
+		maxDaemonUnhealthyDuration := time.Duration(daemonFlags.Shared.MaxDaemonUnhealthySeconds) * time.Second
 		// Start server for handling gRPC messages from daemons.
 		go app.Server.Start()
 
 		// Start liquidations client for sending potentially liquidatable subaccounts to the application.
 		if daemonFlags.Liquidation.Enabled {
-			app.Server.ExpectLiquidationsDaemon(
-				daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Liquidation.LoopDelayMs),
-			)
 			app.LiquidationsClient = liquidationclient.NewClient(logger)
 			go func() {
+				app.RegisterDaemonWithHealthMonitor(app.LiquidationsClient, maxDaemonUnhealthyDuration)
 				if err := app.LiquidationsClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -620,8 +644,7 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := constants.StaticExchangeQueryConfig
-			app.Server.ExpectPricefeedDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Price.LoopDelayMs))
+			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
@@ -637,16 +660,15 @@ func New(
 				constants.StaticExchangeDetails,
 				&pricefeedclient.SubTaskRunnerImpl{},
 			)
+			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 		}
 
 		// Start Bridge Daemon.
 		// Non-validating full-nodes have no need to run the bridge daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Bridge.Enabled {
-			// TODO(CORE-582): Re-enable bridge daemon registration once the bridge daemon is fixed in local / CI
-			// environments.
-			// app.Server.ExpectBridgeDaemon(daemonservertypes.MaximumAcceptableUpdateDelay(daemonFlags.Bridge.LoopDelayMs))
+			app.BridgeClient = bridgeclient.NewClient(logger)
 			go func() {
-				app.BridgeClient = bridgeclient.NewClient(logger)
+				app.RegisterDaemonWithHealthMonitor(app.BridgeClient, maxDaemonUnhealthyDuration)
 				if err := app.BridgeClient.Start(
 					// The client will use `context.Background` so that it can have a different context from
 					// the main application.
@@ -663,6 +685,9 @@ func New(
 		// Start the Metrics Daemon.
 		// The metrics daemon is purely used for observability. It should never bring the app down.
 		// TODO(CLOB-960) Don't start this goroutine if telemetry is disabled
+		// Note: the metrics daemon is such a simple go-routine that we don't bother implementing a health-check
+		// for this service. The task loop does not produce any errors because the telemetry calls themselves are
+		// not error-returning, so in effect this daemon would never become unhealthy.
 		go func() {
 			defer func() {
 				if r := recover(); r != nil {
@@ -675,10 +700,6 @@ func New(
 					)
 				}
 			}()
-			// Don't panic if metrics daemon loops are delayed. Use maximum value.
-			app.Server.ExpectMetricsDaemon(
-				daemonservertypes.MaximumAcceptableUpdateDelay(math.MaxUint32),
-			)
 			metricsclient.Start(
 				// The client will use `context.Background` so that it can have a different context from
 				// the main application.
@@ -807,6 +828,7 @@ func New(
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PricesKeeper,
+		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -864,7 +886,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		liquidatableSubaccountIds,
+		daemonLiquidationInfo,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 
@@ -968,6 +990,7 @@ func New(
 		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -1010,6 +1033,7 @@ func New(
 		upgradetypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
@@ -1048,6 +1072,7 @@ func New(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
@@ -1083,6 +1108,7 @@ func New(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
@@ -1220,6 +1246,31 @@ func New(
 	)
 
 	return app
+}
+
+// RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
+// the health of the daemon. If the daemon does not register, the method will panic.
+func (app *App) RegisterDaemonWithHealthMonitor(
+	healthCheckableDaemon daemontypes.HealthCheckable,
+	maxDaemonUnhealthyDuration time.Duration,
+) {
+	if err := app.DaemonHealthMonitor.RegisterService(healthCheckableDaemon, maxDaemonUnhealthyDuration); err != nil {
+		app.Logger().Error(
+			"Failed to register daemon service with update monitor",
+			"error",
+			err,
+			"service",
+			healthCheckableDaemon.ServiceName(),
+			"maxDaemonUnhealthyDuration",
+			maxDaemonUnhealthyDuration,
+		)
+		panic(err)
+	}
+}
+
+// DisableHealthMonitorForTesting disables the health monitor for testing.
+func (app *App) DisableHealthMonitorForTesting() {
+	app.DaemonHealthMonitor.DisableForTesting()
 }
 
 // hydrateMemStores hydrates the memStores used for caching state.

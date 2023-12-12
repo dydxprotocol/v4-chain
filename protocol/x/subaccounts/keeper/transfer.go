@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -80,125 +79,6 @@ func (k Keeper) applyValidSubaccountUpdateForTransfer(
 	}
 
 	return types.GetErrorFromUpdateResults(success, successPerUpdate, updates)
-}
-
-// TransferFundsFromSubaccountToModule returns an error if the call to `k.CanUpdateSubaccounts()`
-// fails. Otherwise, deducts the asset quantums from the subaccount, translates the
-// `assetId` and `quantums` into a `sdk.Coin`, and calls
-// `bankKeeper.SendCoinsFromModuleToModule()`.
-func (k Keeper) TransferFundsFromSubaccountToModule(
-	ctx sdk.Context,
-	fromSubaccountId types.SubaccountId,
-	toModule string,
-	assetId uint32,
-	quantums *big.Int,
-) error {
-	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != assettypes.AssetUsdc.Id {
-		return types.ErrAssetTransferThroughBankNotImplemented
-	}
-
-	if quantums.Sign() <= 0 {
-		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.UintToString(assetId))
-	}
-
-	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-		ctx,
-		assetId,
-		quantums,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Generate subaccount updates and check whether updates can be applied.
-	updates, err := k.getValidSubaccountUpdatesForTransfer(
-		ctx,
-		fromSubaccountId,
-		assetId,
-		convertedQuantums,
-		false, // isToSubaccount
-	)
-	if err != nil {
-		return err
-	}
-
-	// Send coins from the `subaccounts` module account to `toModule`.
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(
-		ctx,
-		types.ModuleName, // senderModule
-		toModule,         // recipientModule
-		[]sdk.Coin{coinToTransfer},
-	); err != nil {
-		return err
-	}
-
-	// Apply subaccount updates.
-	if err := k.applyValidSubaccountUpdateForTransfer(
-		ctx,
-		updates,
-	); err != nil {
-		panic(fmt.Sprintf("SendCoinsFromModuleToModule() succeeded but UpdateSubaccounts() failed: %v", err))
-	}
-
-	return nil
-}
-
-// TransferFundsFromModuleToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`
-// fails. Otherwise, increases the asset quantums in the subaccount, translates the
-// `assetId` and `quantums` into a `sdk.Coin`, and calls `bankKeeper.SendCoinsFromModuleToModule()`.
-func (k Keeper) TransferFundsFromModuleToSubaccount(
-	ctx sdk.Context,
-	fromModule string,
-	toSubaccountId types.SubaccountId,
-	assetId uint32,
-	quantums *big.Int,
-) error {
-	// TODO(DEC-715): Support non-USDC assets.
-	if assetId != assettypes.AssetUsdc.Id {
-		return types.ErrAssetTransferThroughBankNotImplemented
-	}
-
-	if quantums.Sign() <= 0 {
-		return errorsmod.Wrap(types.ErrAssetTransferQuantumsNotPositive, lib.UintToString(assetId))
-	}
-
-	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-		ctx,
-		assetId,
-		quantums,
-	)
-	if err != nil {
-		return err
-	}
-
-	// Generate subaccount updates and check whether updates can be applied.
-	updates, err := k.getValidSubaccountUpdatesForTransfer(
-		ctx,
-		toSubaccountId,
-		assetId,
-		convertedQuantums,
-		true, // isToSubaccount
-	)
-	if err != nil {
-		return err
-	}
-
-	// Send coins from `fromModule` to the `subaccounts` module account.
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(
-		ctx,
-		fromModule,       // senderModule
-		types.ModuleName, // recipientModule
-		[]sdk.Coin{coinToTransfer},
-	); err != nil {
-		return err
-	}
-
-	// Apply subaccount updates.
-	return k.applyValidSubaccountUpdateForTransfer(
-		ctx,
-		updates,
-	)
 }
 
 // DepositFundsFromAccountToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`

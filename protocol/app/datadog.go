@@ -6,10 +6,14 @@ import (
 	"net"
 	"os"
 	"strconv"
+	"sync"
 
 	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	errorspkg "github.com/pkg/errors"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/pkgerrors"
 	"gopkg.in/DataDog/dd-trace-go.v1/profiler"
 )
 
@@ -110,4 +114,44 @@ func initDatadogProfiler(logger log.Logger, ddAgentHost string, ddAgentPort uint
 	if err != nil {
 		panic(err)
 	}
+}
+
+type DatadogErrorTrackingObject struct {
+	Stack   []map[string]string
+	Message string
+	Kind    string
+}
+
+func (obj DatadogErrorTrackingObject) MarshalZerologObject(e *zerolog.Event) {
+	e.Interface("stack", obj.Stack).
+		Str("message", obj.Message).
+		Str("kind", obj.Kind)
+}
+
+var (
+	zerologFormatterOnce sync.Once
+)
+
+// SetZerologDatadogErrorTrackingFormat sets custom error formatting for log tag
+// values that are errors for the zerolog library. Converts them to a format that
+// is compatible with datadog error tracking.
+func SetZerologDatadogErrorTrackingFormat() {
+	zerologFormatterOnce.Do(func() {
+		// Error fields are default set under `error`
+		// Extract + add the kind and message field
+		zerolog.ErrorMarshalFunc = func(err error) interface{} {
+			stackArr, ok := pkgerrors.MarshalStack(errorspkg.WithStack(err)).([]map[string]string)
+			if !ok {
+				return struct{}{}
+			}
+			objectToReturn := DatadogErrorTrackingObject{
+				// Discard common stack prefixes
+				// TODO(CLOB-1049) Write test for common stack prefix truncation
+				Stack:   stackArr[5:],
+				Kind:    "Exception",
+				Message: err.Error(),
+			}
+			return objectToReturn
+		}
+	})
 }

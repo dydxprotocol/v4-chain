@@ -104,11 +104,11 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper                    *keeper.Keeper
-	accountKeeper             types.AccountKeeper
-	bankKeeper                types.BankKeeper
-	subaccountsKeeper         types.SubaccountsKeeper
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds
+	keeper                *keeper.Keeper
+	accountKeeper         types.AccountKeeper
+	bankKeeper            types.BankKeeper
+	subaccountsKeeper     types.SubaccountsKeeper
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 }
 
 func NewAppModule(
@@ -117,15 +117,15 @@ func NewAppModule(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic:            NewAppModuleBasic(cdc),
-		keeper:                    keeper,
-		accountKeeper:             accountKeeper,
-		bankKeeper:                bankKeeper,
-		subaccountsKeeper:         subaccountsKeeper,
-		liquidatableSubaccountIds: liquidatableSubaccountIds,
+		AppModuleBasic:        NewAppModuleBasic(cdc),
+		keeper:                keeper,
+		accountKeeper:         accountKeeper,
+		bankKeeper:            bankKeeper,
+		subaccountsKeeper:     subaccountsKeeper,
+		daemonLiquidationInfo: daemonLiquidationInfo,
 	}
 }
 
@@ -194,6 +194,6 @@ func (am AppModule) Commit(ctx sdk.Context) {
 	PrepareCheckState(
 		ctx,
 		am.keeper,
-		am.liquidatableSubaccountIds,
+		am.daemonLiquidationInfo,
 	)
 }

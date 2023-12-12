@@ -320,7 +320,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "name":"Large-Cap",
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
-			  "base_position_notional":1000000000,
 			  "impact_notional":10000000000
 		   }
 		],
@@ -362,7 +361,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "name":"Large-Cap",
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
-			  "base_position_notional":"1000000000",
+			  "base_position_notional":"0",
 			  "impact_notional":"10000000000"
 		   }
 		],

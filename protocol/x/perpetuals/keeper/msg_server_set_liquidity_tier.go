@@ -29,7 +29,6 @@ func (k msgServer) SetLiquidityTier(
 		msg.LiquidityTier.Name,
 		msg.LiquidityTier.InitialMarginPpm,
 		msg.LiquidityTier.MaintenanceFractionPpm,
-		msg.LiquidityTier.BasePositionNotional,
 		msg.LiquidityTier.ImpactNotional,
 	); err != nil {
 		return nil, err

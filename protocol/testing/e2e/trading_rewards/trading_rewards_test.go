@@ -9,11 +9,18 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -69,9 +76,10 @@ var (
 	TestAccountStartingTokenBalance = big_testutil.Int64MulPow10(5, 23)
 )
 
-type expectedBalancesAtBlock struct {
-	Height           int64
-	ExpectedBalances []expectedBalance
+type expectedStateAtBlock struct {
+	Height                      int64
+	ExpectedBalances            []expectedBalance
+	ExpectedTradingRewardEvents []*indexerevents.TradingRewardsEventV1
 }
 
 type expectedBalance struct {
@@ -94,7 +102,7 @@ func TestTradingRewards(t *testing.T) {
 		humanOraclePrices        []TestHumanOraclePrice
 		initRewardsVesterBalance *big.Int
 		// nth block after vesting starts -> expectedBalance
-		expectedBalances []expectedBalancesAtBlock
+		expectedState []expectedStateAtBlock
 		// // nth block after vesting starts -> expected balance of rewards treasury
 		// expectedRewardsTreasuryBalances map[int]*big.Int
 	}{
@@ -169,7 +177,7 @@ func TestTradingRewards(t *testing.T) {
 				MarketId:         TestRewardsTokenMarketId,
 				FeeMultiplierPpm: 990_000, // 99%
 			},
-			expectedBalances: []expectedBalancesAtBlock{
+			expectedState: []expectedStateAtBlock{
 				{
 					Height: 0,
 					ExpectedBalances: []expectedBalance{
@@ -243,6 +251,16 @@ func TestTradingRewards(t *testing.T) {
 							Balance: TestAccountStartingTokenBalance,
 						},
 					},
+					ExpectedTradingRewardEvents: []*indexerevents.TradingRewardsEventV1{
+						{
+							TradingRewards: []*indexerevents.AddressTradingReward{
+								{
+									Owner:       constants.AliceAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(5068012730847979890),
+								},
+							},
+						},
+					},
 				},
 				{
 					Height: 12,
@@ -299,6 +317,16 @@ func TestTradingRewards(t *testing.T) {
 								"22329476019663889395",
 								10,
 							)),
+						},
+					},
+					ExpectedTradingRewardEvents: []*indexerevents.TradingRewardsEventV1{
+						{
+							TradingRewards: []*indexerevents.AddressTradingReward{
+								{
+									Owner:       constants.BobAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(5544594000000000000),
+								},
+							},
 						},
 					},
 				},
@@ -429,7 +457,7 @@ func TestTradingRewards(t *testing.T) {
 				MarketId:         TestRewardsTokenMarketId,
 				FeeMultiplierPpm: 990_000, // 99%
 			},
-			expectedBalances: []expectedBalancesAtBlock{
+			expectedState: []expectedStateAtBlock{
 				{
 					Height: 0,
 					ExpectedBalances: []expectedBalance{
@@ -512,6 +540,28 @@ func TestTradingRewards(t *testing.T) {
 							),
 						},
 					},
+					ExpectedTradingRewardEvents: []*indexerevents.TradingRewardsEventV1{
+						{
+							TradingRewards: []*indexerevents.AddressTradingReward{
+								{
+									Owner:       constants.BobAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(8053910091363583686),
+								},
+								{
+									Owner:       constants.AliceAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(8053910091363583686),
+								},
+								{
+									Owner:       constants.CarlAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(4616121735756366038),
+								},
+								{
+									Owner:       constants.DaveAccAddress.String(),
+									DenomAmount: dtypes.NewIntFromUint64(4616121735756366038),
+								},
+							},
+						},
+					},
 				},
 			},
 			initRewardsVesterBalance: big_testutil.Int64MulPow10(200_000_000, 18), // 200 million full coins
@@ -591,7 +641,7 @@ func TestTradingRewards(t *testing.T) {
 				MarketId:         TestRewardsTokenMarketId,
 				FeeMultiplierPpm: 0, // 0%
 			},
-			expectedBalances: []expectedBalancesAtBlock{
+			expectedState: []expectedStateAtBlock{
 				{
 					Height: 0,
 					ExpectedBalances: []expectedBalance{
@@ -651,6 +701,10 @@ func TestTradingRewards(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
 			tApp := testapp.NewTestAppBuilder(t).
 				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the
 				// other App instances in TestApp used for non-determinism checking.
@@ -691,7 +745,9 @@ func TestTradingRewards(t *testing.T) {
 						},
 					)
 					return genesis
-				}).Build()
+				}).
+				WithAppOptions(appOpts).
+				Build()
 			ctx := tApp.InitChain()
 
 			for _, humanOraclePrice := range tc.humanOraclePrices {
@@ -711,8 +767,8 @@ func TestTradingRewards(t *testing.T) {
 			}
 
 			// Iterate through blocks that have expected states.
-			for _, expectedBalancesAtBlock := range tc.expectedBalances {
-				nthBlockAfterVest := expectedBalancesAtBlock.Height
+			for _, expectedStateAtBlock := range tc.expectedState {
+				nthBlockAfterVest := expectedStateAtBlock.Height
 				// If there are orders for this block, place them.
 				if orders, exists := tc.testHumanOrders[nthBlockAfterVest]; exists {
 					// Advance to the block before the block we want to place orders on,
@@ -743,6 +799,7 @@ func TestTradingRewards(t *testing.T) {
 				}
 
 				// Advance to target `nthBlockSinceVest` after vesting starts.
+				msgSender.Clear()
 				ctx = tApp.AdvanceToBlock(testapp.EstimatedHeightForBlockTime(
 					GenesisTime,
 					TestRewardsVestStartTime.Add(
@@ -756,7 +813,7 @@ func TestTradingRewards(t *testing.T) {
 					LinearBlockTimeInterpolation: true,
 				})
 
-				for _, expectedBalance := range expectedBalancesAtBlock.ExpectedBalances {
+				for _, expectedBalance := range expectedStateAtBlock.ExpectedBalances {
 					gotBalance := tApp.App.BankKeeper.GetBalance(
 						ctx,
 						expectedBalance.AccAddress,
@@ -772,6 +829,12 @@ func TestTradingRewards(t *testing.T) {
 						gotBalance,
 					)
 				}
+
+				unmarshaler := common.UnmarshalerImpl{}
+				var block indexer_manager.IndexerTendermintBlock
+				_ = unmarshaler.Unmarshal(msgSender.GetOnchainMessages()[0].Value, &block)
+				rewards := keepertest.GetTradingRewardEventsFromIndexerTendermintBlock(block)
+				require.ElementsMatch(t, expectedStateAtBlock.ExpectedTradingRewardEvents, rewards)
 			}
 		})
 	}

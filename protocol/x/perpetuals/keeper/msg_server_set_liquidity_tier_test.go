@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -19,7 +20,6 @@ func TestSetLiquidityTier(t *testing.T) {
 		lttest.WithName("test"),
 		lttest.WithInitialMarginPpm(1_000),
 		lttest.WithMaintenanceFractionPpm(2_000),
-		lttest.WithBasePositionNotional(3_000),
 		lttest.WithImpactNotional(4_000),
 	)
 
@@ -35,7 +35,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "large-cap",
 					InitialMarginPpm:       123_432,
 					MaintenanceFractionPpm: testLt.MaintenanceFractionPpm,
-					BasePositionNotional:   testLt.BasePositionNotional,
 					ImpactNotional:         testLt.ImpactNotional,
 				},
 			},
@@ -48,7 +47,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -61,7 +59,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -74,7 +71,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       1_000_001,
 					MaintenanceFractionPpm: 500_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -88,7 +84,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       500_001,
 					MaintenanceFractionPpm: 1_000_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -102,7 +97,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -116,7 +110,6 @@ func TestSetLiquidityTier(t *testing.T) {
 					Name:                   "medium-cap",
 					InitialMarginPpm:       567_123,
 					MaintenanceFractionPpm: 500_001,
-					BasePositionNotional:   400_202,
 					ImpactNotional:         1_300_303,
 				},
 			},
@@ -133,7 +126,6 @@ func TestSetLiquidityTier(t *testing.T) {
 				testLt.Name,
 				testLt.InitialMarginPpm,
 				testLt.MaintenanceFractionPpm,
-				testLt.BasePositionNotional,
 				testLt.ImpactNotional,
 			)
 			require.NoError(t, err)
