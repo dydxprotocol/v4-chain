@@ -6,6 +6,7 @@ export { postgresConfigSchema } from './config';
 export { default as AssetModel } from './models/asset-model';
 export { default as AssetPositionModel } from './models/asset-position-model';
 export { default as FillModel } from './models/fill-model';
+export { default as FundingIndexUpdatesModel } from './models/funding-index-updates-model';
 export { default as LiquidityTiersModel } from './models/liquidity-tiers-model';
 export { default as MarketModel } from './models/market-model';
 export { default as OraclePriceModel } from './models/oracle-price-model';

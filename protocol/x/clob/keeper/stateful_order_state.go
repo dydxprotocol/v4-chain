@@ -202,7 +202,7 @@ func (k Keeper) GetStatefulOrdersTimeSlice(ctx sdk.Context, goodTilBlockTime tim
 }
 
 // GetNextStatefulOrderTransactionIndex returns the next stateful order block transaction index
-// to be used, defeaulting to zero if not set. It then increments the transaction index by one.
+// to be used, defaulting to zero if not set. It then increments the transaction index by one.
 func (k Keeper) GetNextStatefulOrderTransactionIndex(ctx sdk.Context) uint32 {
 	// Get the existing value
 	nextTransactionIndexTransientStore := k.getTransientStore(ctx)

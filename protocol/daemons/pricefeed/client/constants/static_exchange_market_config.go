@@ -39,6 +39,9 @@ func GenerateExchangeConfigJson(
 		if id == exchange_common.EXCHANGE_ID_TEST_EXCHANGE {
 			continue
 		}
+		if id == exchange_common.EXCHANGE_ID_TEST_FIXED_PRICE_EXCHANGE {
+			continue
+		}
 		for marketId, config := range exchangeConfig.MarketToMarketConfig {
 			marketExchangeConfigs, ok := marketToExchangeMarketConfigs[marketId]
 			if !ok {

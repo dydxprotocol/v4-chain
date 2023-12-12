@@ -14,6 +14,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -88,6 +90,36 @@ func (_m *QueryClient) AllDowntimeInfo(ctx context.Context, in *types.QueryAllDo
 	return r0, r1
 }
 
+// AllLiquidityTiers provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) AllLiquidityTiers(ctx context.Context, in *perpetualstypes.QueryAllLiquidityTiersRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryAllLiquidityTiersResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryAllLiquidityTiersResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryAllLiquidityTiersRequest, ...grpc.CallOption) *perpetualstypes.QueryAllLiquidityTiersResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryAllLiquidityTiersResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryAllLiquidityTiersRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // AllMarketParams provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) AllMarketParams(ctx context.Context, in *pricestypes.QueryAllMarketParamsRequest, opts ...grpc.CallOption) (*pricestypes.QueryAllMarketParamsResponse, error) {
 	_va := make([]interface{}, len(opts))
@@ -140,6 +172,36 @@ func (_m *QueryClient) AllMarketPrices(ctx context.Context, in *pricestypes.Quer
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *pricestypes.QueryAllMarketPricesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// AllPerpetuals provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) AllPerpetuals(ctx context.Context, in *perpetualstypes.QueryAllPerpetualsRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryAllPerpetualsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryAllPerpetualsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryAllPerpetualsRequest, ...grpc.CallOption) *perpetualstypes.QueryAllPerpetualsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryAllPerpetualsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryAllPerpetualsRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)
@@ -470,6 +532,126 @@ func (_m *QueryClient) MevNodeToNodeCalculation(ctx context.Context, in *clobtyp
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.MevNodeToNodeCalculationRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Params provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) Params(ctx context.Context, in *perpetualstypes.QueryParamsRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryParamsResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryParamsResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryParamsRequest, ...grpc.CallOption) *perpetualstypes.QueryParamsResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryParamsResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryParamsRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Perpetual provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) Perpetual(ctx context.Context, in *perpetualstypes.QueryPerpetualRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryPerpetualResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryPerpetualResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryPerpetualRequest, ...grpc.CallOption) *perpetualstypes.QueryPerpetualResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryPerpetualResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryPerpetualRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PremiumSamples provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) PremiumSamples(ctx context.Context, in *perpetualstypes.QueryPremiumSamplesRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryPremiumSamplesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryPremiumSamplesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryPremiumSamplesRequest, ...grpc.CallOption) *perpetualstypes.QueryPremiumSamplesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryPremiumSamplesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryPremiumSamplesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// PremiumVotes provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) PremiumVotes(ctx context.Context, in *perpetualstypes.QueryPremiumVotesRequest, opts ...grpc.CallOption) (*perpetualstypes.QueryPremiumVotesResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *perpetualstypes.QueryPremiumVotesResponse
+	if rf, ok := ret.Get(0).(func(context.Context, *perpetualstypes.QueryPremiumVotesRequest, ...grpc.CallOption) *perpetualstypes.QueryPremiumVotesResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*perpetualstypes.QueryPremiumVotesResponse)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, *perpetualstypes.QueryPremiumVotesRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {
 		r1 = ret.Error(1)

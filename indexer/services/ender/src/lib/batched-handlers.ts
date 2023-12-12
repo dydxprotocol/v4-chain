@@ -76,7 +76,8 @@ export class BatchedHandlers {
    */
   public async process(
     kafkaPublisher: KafkaPublisher,
-    resultRow: pg.QueryResultRow): Promise<void> {
+    resultRow: pg.QueryResultRow,
+  ): Promise<void> {
     for (let batchIndex = 0; batchIndex < this.batchedHandlers.length; batchIndex++) {
       const start: number = Date.now();
       const handlerCountMapping: { [key: string]: number } = {};

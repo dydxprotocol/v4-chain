@@ -17,6 +17,7 @@ const (
 	SubtypeUpdatePerpetual  = "update_perpetual"
 	SubtypeUpdateClobPair   = "update_clob_pair"
 	SubtypeDeleveraging     = "deleveraging"
+	SubtypeTradingReward    = "trading_reward"
 )
 
 const (
@@ -33,6 +34,7 @@ const (
 	UpdatePerpetualEventVersion  uint32 = 1
 	UpdateClobPairEventVersion   uint32 = 1
 	DeleveragingEventVersion     uint32 = 1
+	TradingRewardVersion         uint32 = 1
 )
 
 var OnChainEventSubtypes = []string{
@@ -48,4 +50,5 @@ var OnChainEventSubtypes = []string{
 	SubtypeUpdatePerpetual,
 	SubtypeUpdateClobPair,
 	SubtypeDeleveraging,
+	SubtypeTradingReward,
 }

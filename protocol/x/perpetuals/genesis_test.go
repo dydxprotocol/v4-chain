@@ -41,7 +41,6 @@ func TestGenesis_Failure(t *testing.T) {
 		ticker                    string
 		initialMarginPpm          uint32
 		maintenanceFractionPpm    uint32
-		basePositionNotional      uint64
 		impactNotional            uint64
 		fundingRateClampFactorPpm uint32
 		premiumVoteClampFactorPpm uint32
@@ -52,7 +51,6 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
@@ -63,7 +61,6 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
@@ -74,7 +71,6 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          lib.OneMillion + 1,
 			maintenanceFractionPpm:    0,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
@@ -85,28 +81,16 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
-		},
-		"Base Position Notional is zero": {
-			marketId:                  0,
-			ticker:                    "genesis_ticker",
-			initialMarginPpm:          0,
-			maintenanceFractionPpm:    lib.OneMillion + 1,
-			basePositionNotional:      0,
-			impactNotional:            1,
-			fundingRateClampFactorPpm: 1,
-			premiumVoteClampFactorPpm: 1,
 		},
 		"Impact Notional is zero": {
 			marketId:                  0,
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
-			basePositionNotional:      1,
 			impactNotional:            0,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
@@ -117,7 +101,6 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 0,
 			premiumVoteClampFactorPpm: 1,
@@ -128,7 +111,6 @@ func TestGenesis_Failure(t *testing.T) {
 			ticker:                    "genesis_ticker",
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
-			basePositionNotional:      1,
 			impactNotional:            1,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 0,
@@ -151,7 +133,6 @@ func TestGenesis_Failure(t *testing.T) {
 						Name:                   "",
 						InitialMarginPpm:       tc.initialMarginPpm,
 						MaintenanceFractionPpm: tc.maintenanceFractionPpm,
-						BasePositionNotional:   tc.basePositionNotional,
 						ImpactNotional:         tc.impactNotional,
 					},
 				},
@@ -228,15 +209,6 @@ func assertLiquidityTierUpsertEventsInIndexerBlock(
 				"Expected LiquidityTierUpsertEvent with MaintenanceFractionPpm %d, but got %d at index %d",
 				liquidityTiers[i].MaintenanceFractionPpm,
 				event.MaintenanceFractionPpm,
-				i,
-			)
-		}
-
-		if event.BasePositionNotional != liquidityTiers[i].BasePositionNotional {
-			t.Fatalf(
-				"Expected LiquidityTierUpsertEvent with BasePositionNotional %d, but got %d at index %d",
-				liquidityTiers[i].BasePositionNotional,
-				event.BasePositionNotional,
 				i,
 			)
 		}

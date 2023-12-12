@@ -14,6 +14,7 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -24,6 +25,7 @@ type Client struct {
 	// Query clients
 	BlocktimeQueryClient     blocktimetypes.QueryClient
 	SubaccountQueryClient    satypes.QueryClient
+	PerpetualsQueryClient    perptypes.QueryClient
 	PricesQueryClient        pricestypes.QueryClient
 	ClobQueryClient          clobtypes.QueryClient
 	LiquidationServiceClient api.LiquidationServiceClient
@@ -91,6 +93,7 @@ func (c *Client) Start(
 	// Initialize the query clients. These are used to query the Cosmos gRPC query services.
 	c.BlocktimeQueryClient = blocktimetypes.NewQueryClient(queryConn)
 	c.SubaccountQueryClient = satypes.NewQueryClient(queryConn)
+	c.PerpetualsQueryClient = perptypes.NewQueryClient(queryConn)
 	c.PricesQueryClient = pricestypes.NewQueryClient(queryConn)
 	c.ClobQueryClient = clobtypes.NewQueryClient(queryConn)
 	c.LiquidationServiceClient = api.NewLiquidationServiceClient(daemonConn)

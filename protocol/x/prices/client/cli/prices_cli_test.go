@@ -5,6 +5,8 @@ package cli_test
 import (
 	"fmt"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
+	"path/filepath"
 	"time"
 
 	"testing"
@@ -94,6 +96,9 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 			// Enable the Price daemon.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
 			appOptions.Set(daemonflags.FlagPriceDaemonLoopDelayMs, 1_000)
+
+			homeDir := filepath.Join(testval.Dir, "simd")
+			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.
 
 			// Make sure the daemon is using the correct GRPC address.
 			appOptions.Set(appflags.GrpcAddress, testval.AppConfig.GRPC.Address)

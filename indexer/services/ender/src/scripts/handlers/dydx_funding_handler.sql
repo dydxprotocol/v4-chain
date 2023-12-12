@@ -30,6 +30,7 @@ DECLARE
 
     funding_update jsonb;
     perpetual_markets_response jsonb = jsonb_build_object();
+    funding_update_response jsonb = jsonb_build_object();
     errors_response jsonb[];
     event_id bytea;
 BEGIN
@@ -77,6 +78,8 @@ BEGIN
                 funding_index_updates_record."effectiveAtHeight" = block_height;
 
                 INSERT INTO funding_index_updates VALUES (funding_index_updates_record.*);
+                funding_update_response = jsonb_set(funding_update_response, ARRAY[(funding_index_updates_record."perpetualId")::text], dydx_to_jsonb(funding_index_updates_record));
+
             ELSE
                 errors_response = array_append(errors_response, 'Received unknown FundingEvent type.');
                 CONTINUE;
@@ -88,6 +91,8 @@ BEGIN
     RETURN jsonb_build_object(
         'perpetual_markets',
         perpetual_markets_response,
+        'funding_index_updates',
+        funding_update_response,
         'errors',
         to_jsonb(errors_response)
     );
