@@ -12,10 +12,8 @@ import (
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -204,19 +202,7 @@ func PrepareCheckState(
 	if err != nil {
 		panic(err)
 	}
-	// subaccountPositionInfo := daemonLiquidationInfo.GetSubaccountsWithPositions()
-	subaccountPositionInfo := map[uint32]*types.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Dave_Num0,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Carl_Num0,
-			},
-		},
-	}
-
+	subaccountPositionInfo := daemonLiquidationInfo.GetSubaccountsWithPositions()
 	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
 	// to be deleveraged.
 	subaccountsToDeleverage = append(

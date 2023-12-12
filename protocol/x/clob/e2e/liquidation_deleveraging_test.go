@@ -1214,6 +1214,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
+			tApp.App.Server.SetSubaccountOpenPositions(ctx, tc.subaccountPositionInfo)
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
 				SubaccountIds: tc.liquidatableSubaccountIds,
 			})

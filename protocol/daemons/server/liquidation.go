@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // LiquidationServer defines the fields required for liquidation updates.
@@ -23,6 +24,15 @@ func (server *Server) WithDaemonLiquidationInfo(
 ) *Server {
 	server.daemonLiquidationInfo = daemonLiquidationInfo
 	return server
+}
+
+// SetSubaccountOpenPositions stores the list of subaccount open positions in a go-routine safe map.
+// Placeholder to allow for testing.
+func (s *Server) SetSubaccountOpenPositions(
+	ctx context.Context,
+	subaccountsWithPositions map[uint32]*clobtypes.SubaccountOpenPositionInfo,
+) {
+	s.daemonLiquidationInfo.UpdateSubaccountsWithPositions(subaccountsWithPositions)
 }
 
 // LiquidateSubaccounts stores the list of potentially liquidatable subaccount ids

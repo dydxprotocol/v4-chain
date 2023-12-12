@@ -542,13 +542,19 @@ func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 
 	// Fetch subaccounts with open positions in final settlement markets.
 	for perpetualId := range finalSettlementPerpetualIds {
-		for _, subaccountId := range subaccountOpenPositionInfo[perpetualId].SubaccountsWithLongPosition {
+		positionInfo, found := subaccountOpenPositionInfo[perpetualId]
+		if !found {
+			// No open positions in the market.
+			continue
+		}
+
+		for _, subaccountId := range positionInfo.SubaccountsWithLongPosition {
 			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
 				SubaccountId: subaccountId,
 				PerpetualId:  perpetualId,
 			})
 		}
-		for _, subaccountId := range subaccountOpenPositionInfo[perpetualId].SubaccountsWithShortPosition {
+		for _, subaccountId := range positionInfo.SubaccountsWithShortPosition {
 			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
 				SubaccountId: subaccountId,
 				PerpetualId:  perpetualId,
