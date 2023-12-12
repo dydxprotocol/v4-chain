@@ -231,7 +231,11 @@ func (c *Client) CheckSubaccountCollateralization(
 	// Note that we only expect USDC before multi-collateral support is added.
 	for _, assetPosition := range subaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			panic("liquidation daemon only supports USDC collateral")
+			return false, errorsmod.Wrapf(
+				assetstypes.ErrNotImplementedMulticollateral,
+				"Asset %d is not supported",
+				assetPosition.AssetId,
+			)
 		}
 		// Net collateral for USDC is the quantums of the position.
 		// Margin requirements for USDC are zero.
