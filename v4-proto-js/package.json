@@ -35,7 +35,7 @@
     "url": "https://github.com/dydxprotocol/v4-chain/issues"
   },
   "devDependencies": {
-    "@cosmjs/stargate": "^0.30.1",
+    "@cosmjs/stargate": "^0.32.1",
     "@dydxprotocol/node-service-base-dev": "^0.3.2",
     "@osmonauts/lcd": "^0.6.0",
     "@osmonauts/telescope": "0.86.0",
