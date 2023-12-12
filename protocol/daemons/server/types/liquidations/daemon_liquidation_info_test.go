@@ -49,7 +49,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Reads(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetNegativeTncSubaccountIds())
 
-	expected := map[uint32]clobtypes.SubaccountOpenPositionInfo{
+	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 		0: {
 			PerpetualId: 0,
 			SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -116,7 +116,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 
-	expected := map[uint32]clobtypes.SubaccountOpenPositionInfo{
+	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 		0: {
 			PerpetualId: 0,
 			SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -130,7 +130,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	ls.UpdateSubaccountsWithPositions(expected)
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]clobtypes.SubaccountOpenPositionInfo{
+	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 		0: {
 			PerpetualId: 0,
 			SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -144,7 +144,7 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	ls.UpdateSubaccountsWithPositions(expected)
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]clobtypes.SubaccountOpenPositionInfo{
+	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 		0: {
 			PerpetualId: 0,
 			SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -193,7 +193,7 @@ func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 
-	expected := map[uint32]clobtypes.SubaccountOpenPositionInfo{
+	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 		0: {
 			PerpetualId: 0,
 			SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -207,7 +207,7 @@ func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
 	ls.UpdateSubaccountsWithPositions(expected)
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]clobtypes.SubaccountOpenPositionInfo{}
+	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{}
 	ls.UpdateSubaccountsWithPositions(expected)
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 }

@@ -14,15 +14,15 @@ type DaemonLiquidationInfo struct {
 	blockHeight               uint32                 // block height of the last update
 	liquidatableSubaccountIds []satypes.SubaccountId // liquidatable subaccount ids
 	negativeTncSubaccountIds  []satypes.SubaccountId // negative total net collateral subaccount ids
-	subaccountsWithPositions  map[uint32]clobtypes.SubaccountOpenPositionInfo
+	subaccountsWithPositions  map[uint32]*clobtypes.SubaccountOpenPositionInfo
 }
 
-// NewDaemonLiquidationInfo creates a new `LiquidatableSubaccountIds` struct.
+// NewDaemonLiquidationInfo creates a new `NewDaemonLiquidationInfo` struct.
 func NewDaemonLiquidationInfo() *DaemonLiquidationInfo {
 	return &DaemonLiquidationInfo{
 		liquidatableSubaccountIds: make([]satypes.SubaccountId, 0),
 		negativeTncSubaccountIds:  make([]satypes.SubaccountId, 0),
-		subaccountsWithPositions:  make(map[uint32]clobtypes.SubaccountOpenPositionInfo),
+		subaccountsWithPositions:  make(map[uint32]*clobtypes.SubaccountOpenPositionInfo),
 	}
 }
 
@@ -80,13 +80,13 @@ func (ls *DaemonLiquidationInfo) GetNegativeTncSubaccountIds() []satypes.Subacco
 
 // UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
 func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
-	subaccountsWithPositions map[uint32]clobtypes.SubaccountOpenPositionInfo,
+	subaccountsWithPositions map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) {
 	ls.Lock()
 	defer ls.Unlock()
-	ls.subaccountsWithPositions = make(map[uint32]clobtypes.SubaccountOpenPositionInfo)
+	ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
 	for perpetualId, info := range subaccountsWithPositions {
-		clone := clobtypes.SubaccountOpenPositionInfo{
+		clone := &clobtypes.SubaccountOpenPositionInfo{
 			PerpetualId:                  perpetualId,
 			SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
 			SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
@@ -98,13 +98,13 @@ func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
 }
 
 // GetSubaccountsWithPositions returns the list of subaccount ids with open positions.
-func (ls *DaemonLiquidationInfo) GetSubaccountsWithPositions() map[uint32]clobtypes.SubaccountOpenPositionInfo {
+func (ls *DaemonLiquidationInfo) GetSubaccountsWithPositions() map[uint32]*clobtypes.SubaccountOpenPositionInfo {
 	ls.Lock()
 	defer ls.Unlock()
 
-	result := make(map[uint32]clobtypes.SubaccountOpenPositionInfo)
+	result := make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
 	for perpetualId, info := range ls.subaccountsWithPositions {
-		clone := clobtypes.SubaccountOpenPositionInfo{
+		clone := &clobtypes.SubaccountOpenPositionInfo{
 			PerpetualId:                  perpetualId,
 			SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
 			SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
