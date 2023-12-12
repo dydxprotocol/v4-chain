@@ -125,3 +125,33 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 
 	return marketIdToMedianPrice
 }
+
+// ReportIndexPrices emits metrics reporting the current index prices as they are stored in the MarketToExchangePrices
+// cache. These are reported as a gauge metric with the market ID as a label every time the pricefeed daemon updates
+// the cache.
+func (mte *MarketToExchangePrices) ReportIndexPrices() {
+	mte.Lock()
+	defer mte.Unlock()
+
+	// Construct an argument list for the GetValidMedianPrices method to extract all valid index prices defined
+	// at this time. The MarketParams we are building are only vehicles to specify the market IDs we want to
+	// extract prices for.
+	readTime := time.Now()
+	marketParams := make([]types.MarketParam, 0, len(mte.marketToExchangePrices))
+	for marketId := range mte.marketToExchangePrices {
+		marketParams = append(marketParams, types.MarketParam{Id: marketId})
+	}
+	validMedianPrices := mte.GetValidMedianPrices(marketParams, readTime)
+	for marketId, medianPrice := range validMedianPrices {
+		telemetry.SetGaugeWithLabels(
+			[]string{
+				metrics.PricefeedServer,
+				metrics.MedianPrice,
+			},
+			float32(medianPrice),
+			[]gometrics.Label{
+				pricefeedmetrics.GetLabelForMarketId(marketId),
+			},
+		)
+	}
+}

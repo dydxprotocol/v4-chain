@@ -3,6 +3,10 @@ package keeper
 import (
 	"errors"
 	"fmt"
+	gometrics "github.com/armon/go-metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -48,6 +52,15 @@ func (k Keeper) UpdateSmoothedPrices(
 		}
 
 		k.marketToSmoothedPrices.PushSmoothedPrice(marketParam.Id, update)
+
+		// Emit metric tracking the smoothed price for each market after every smoothed price update.
+		telemetry.SetGaugeWithLabels(
+			[]string{types.ModuleName, metrics.SmoothedPrice},
+			float32(update),
+			[]gometrics.Label{ // To track per market, include the id as a label.
+				pricefeedmetrics.GetLabelForMarketId(marketParam.Id),
+			},
+		)
 	}
 
 	return errors.Join(updateErrors...)
