@@ -7,16 +7,18 @@ specifiers:
   '@dydxprotocol-indexer/postgres': file:../indexer/packages/postgres
   '@dydxprotocol-indexer/v4-proto-parser': file:../indexer/packages/v4-proto-parser
   '@dydxprotocol-indexer/v4-protos': file:../indexer/packages/v4-protos
-  '@dydxprotocol/v4-client-js': ^1.0.9
+  '@dydxprotocol/v4-client-js': ^1.0.11
   '@types/jest': ^28.1.4
+  '@types/long': 4.0.2
   '@types/node': ^18.0.3
+  '@types/ws': 8.5.4
   '@types/yargs': ^16.0.0
   big.js: ^6.0.2
   dotenv-flow: ^3.2.0
   jest: ^28.1.2
   kafkajs: ^2.1.0
   lodash: ^4.17.21
-  long: ^5.2.1
+  long: 5.2.3
   ts-node: ^10.8.2
   tsconfig-paths: ^4.0.0
   typescript: 4.7.4
@@ -28,7 +30,7 @@ dependencies:
   '@dydxprotocol-indexer/postgres': link:../indexer/packages/postgres
   '@dydxprotocol-indexer/v4-proto-parser': link:../indexer/packages/v4-proto-parser
   '@dydxprotocol-indexer/v4-protos': link:../indexer/packages/v4-protos
-  '@dydxprotocol/v4-client-js': 1.0.9
+  '@dydxprotocol/v4-client-js': 1.0.11
   big.js: 6.2.1
   dotenv-flow: 3.3.0
   kafkajs: 2.2.4
@@ -39,7 +41,9 @@ dependencies:
 devDependencies:
   '@dydxprotocol-indexer/dev': link:../indexer/packages/dev
   '@types/jest': 28.1.8
+  '@types/long': 4.0.2
   '@types/node': 18.19.3
+  '@types/ws': 8.5.4
   '@types/yargs': 16.0.9
   jest: 28.1.3_6eacb3d67bb3fa1950b9668fa11d58c0
   ts-node: 10.9.2_bbec3377f80f3ddf22c6f710fa1a8b05
@@ -534,8 +538,8 @@ packages:
       '@jridgewell/trace-mapping': 0.3.9
     dev: true
 
-  /@dydxprotocol/v4-client-js/1.0.9:
-    resolution: {integrity: sha512-f7T6nEkVcvLLWqA45slxGa/gOh/cpiYgL//wwQq8BAOX1TUNeFOyVhrlfaNCiB6Jk7oPBRYR4xvTGSiQ16YVWQ==}
+  /@dydxprotocol/v4-client-js/1.0.11:
+    resolution: {integrity: sha512-rJNFGTO+HU1GQppXeRLKXNk4HWx/h+DjU2sUCieEv5mnRIMQpLw8dH/L+Uyhxx2oovccY1MaKB4Fr9IngdrF0A==}
     dependencies:
       '@cosmjs/amino': 0.30.1
       '@cosmjs/encoding': 0.31.3
@@ -917,7 +921,7 @@ packages:
     resolution: {integrity: sha512-osvveYtyzdEVbt3OfwwXFr4P2iVBL5u1Q3q4ONBfDY/UpOuXmOlbgwc1xECEboY8wIays8Yt6onaWMUdUbfl0A==}
     dependencies:
       '@noble/curves': 1.1.0
-      '@noble/hashes': 1.3.1
+      '@noble/hashes': 1.3.2
       '@scure/base': 1.1.3
     dev: false
 
@@ -1028,7 +1032,6 @@ packages:
 
   /@types/long/4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
-    dev: false
 
   /@types/node/18.15.13:
     resolution: {integrity: sha512-N+0kuo9KgrUQ1Sn/ifDXsvg0TTleP7rIy4zOBGECxAljqvqfqpTfzx0Q1NUedOixRMBfe2Whhb056a42cWs26Q==}
@@ -1045,6 +1048,12 @@ packages:
 
   /@types/stack-utils/2.0.3:
     resolution: {integrity: sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw==}
+    dev: true
+
+  /@types/ws/8.5.4:
+    resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
+    dependencies:
+      '@types/node': 18.19.3
     dev: true
 
   /@types/yargs-parser/21.0.3:
