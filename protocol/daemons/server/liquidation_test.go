@@ -25,7 +25,7 @@ func TestLiquidateSubaccounts_Empty_Update(t *testing.T) {
 		daemonLiquidationInfo,
 	)
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		SubaccountIds: []satypes.SubaccountId{},
+		LiquidatableSubaccountIds: []satypes.SubaccountId{},
 	})
 	require.NoError(t, err)
 	require.Empty(t, daemonLiquidationInfo.GetLiquidatableSubaccountIds())
@@ -50,7 +50,7 @@ func TestLiquidateSubaccounts_Multiple_Subaccount_Ids(t *testing.T) {
 		constants.Carl_Num0,
 	}
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		SubaccountIds: expectedSubaccountIds,
+		LiquidatableSubaccountIds: expectedSubaccountIds,
 	})
 	require.NoError(t, err)
 

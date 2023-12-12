@@ -253,7 +253,7 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	)
 
 	request := &api.LiquidateSubaccountsRequest{
-		SubaccountIds: subaccountIds,
+		LiquidatableSubaccountIds: subaccountIds,
 	}
 
 	if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {

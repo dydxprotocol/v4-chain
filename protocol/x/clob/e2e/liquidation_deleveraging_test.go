@@ -619,7 +619,7 @@ func TestLiquidationConfig(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
 			})
 			require.NoError(t, err)
 
@@ -1123,7 +1123,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
 			})
 			require.NoError(t, err)
 

@@ -566,7 +566,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Success": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
+					LiquidatableSubaccountIds: ids,
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
@@ -579,7 +579,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Success Empty": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
+					LiquidatableSubaccountIds: ids,
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
@@ -589,7 +589,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: ids,
+					LiquidatableSubaccountIds: ids,
 				}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
