@@ -584,8 +584,8 @@ func New(
 	// potentially liquidatable subaccounts and then encode them into an in-memory slice shared by
 	// the liquidations module.
 	// The in-memory data structure is shared by the x/clob module and liquidations daemon.
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
-	app.Server.WithLiquidatableSubaccountIds(liquidatableSubaccountIds)
+	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
+	app.Server.WithDaemonLiquidationInfo(daemonLiquidationInfo)
 
 	// Setup server for bridge messages.
 	// The in-memory data structure is shared by the x/bridge module and bridge daemon.
@@ -870,7 +870,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		liquidatableSubaccountIds,
+		daemonLiquidationInfo,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 
