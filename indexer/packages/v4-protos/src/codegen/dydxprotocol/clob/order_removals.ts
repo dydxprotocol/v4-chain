@@ -1,5 +1,6 @@
-import { OrderId, OrderIdAmino, OrderIdSDKType } from "./order";
-import { BinaryReader, BinaryWriter } from "../../binary";
+import { OrderId, OrderIdSDKType } from "./order";
+import * as _m0 from "protobufjs/minimal";
+import { DeepPartial } from "../../helpers";
 export enum OrderRemoval_RemovalReason {
   /**
    * REMOVAL_REASON_UNSPECIFIED - REMOVAL_REASON_UNSPECIFIED represents an unspecified removal reason. This
@@ -7,12 +8,14 @@ export enum OrderRemoval_RemovalReason {
    * OrderRemoval in the operations queue.
    */
   REMOVAL_REASON_UNSPECIFIED = 0,
+
   /**
    * REMOVAL_REASON_UNDERCOLLATERALIZED - REMOVAL_REASON_UNDERCOLLATERALIZED represents a removal of an order which
    * if filled in isolation with respect to the current state of the
    * subaccount would leave the subaccount undercollateralized.
    */
   REMOVAL_REASON_UNDERCOLLATERALIZED = 1,
+
   /**
    * REMOVAL_REASON_INVALID_REDUCE_ONLY - REMOVAL_REASON_INVALID_REDUCE_ONLY represents a removal of a reduce-only
    * order which if filled in isolation with respect to the current state of
@@ -20,18 +23,21 @@ export enum OrderRemoval_RemovalReason {
    * or change sides.
    */
   REMOVAL_REASON_INVALID_REDUCE_ONLY = 2,
+
   /**
    * REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER - REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER represents a removal of
    * a stateful post-only order that was deemed invalid because it crossed
    * maker orders on the book of the proposer.
    */
   REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER = 3,
+
   /**
    * REMOVAL_REASON_INVALID_SELF_TRADE - REMOVAL_REASON_INVALID_SELF_TRADE represents a removal of a stateful
    * order that was deemed invalid because it constituted a self trade on the
    * proposers orderbook.
    */
   REMOVAL_REASON_INVALID_SELF_TRADE = 4,
+
   /**
    * REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED - REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED represents a
    * removal of a conditional FOK order that was deemed invalid because it
@@ -39,6 +45,7 @@ export enum OrderRemoval_RemovalReason {
    * fully-filled or removed in the block after they are triggered.
    */
   REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED = 5,
+
   /**
    * REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK - REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK represents a removal
    * of a conditional IOC order.
@@ -46,6 +53,7 @@ export enum OrderRemoval_RemovalReason {
    * in the block after they are triggered.
    */
   REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK = 6,
+
   /**
    * REMOVAL_REASON_FULLY_FILLED - REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
    * was fully filled and should therefore be removed from state.
@@ -53,34 +61,100 @@ export enum OrderRemoval_RemovalReason {
   REMOVAL_REASON_FULLY_FILLED = 7,
   UNRECOGNIZED = -1,
 }
-export const OrderRemoval_RemovalReasonSDKType = OrderRemoval_RemovalReason;
-export const OrderRemoval_RemovalReasonAmino = OrderRemoval_RemovalReason;
+export enum OrderRemoval_RemovalReasonSDKType {
+  /**
+   * REMOVAL_REASON_UNSPECIFIED - REMOVAL_REASON_UNSPECIFIED represents an unspecified removal reason. This
+   * removal reason is used as a catchall and should never appear on an
+   * OrderRemoval in the operations queue.
+   */
+  REMOVAL_REASON_UNSPECIFIED = 0,
+
+  /**
+   * REMOVAL_REASON_UNDERCOLLATERALIZED - REMOVAL_REASON_UNDERCOLLATERALIZED represents a removal of an order which
+   * if filled in isolation with respect to the current state of the
+   * subaccount would leave the subaccount undercollateralized.
+   */
+  REMOVAL_REASON_UNDERCOLLATERALIZED = 1,
+
+  /**
+   * REMOVAL_REASON_INVALID_REDUCE_ONLY - REMOVAL_REASON_INVALID_REDUCE_ONLY represents a removal of a reduce-only
+   * order which if filled in isolation with respect to the current state of
+   * the subaccount would cause the subaccount's existing position to increase
+   * or change sides.
+   */
+  REMOVAL_REASON_INVALID_REDUCE_ONLY = 2,
+
+  /**
+   * REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER - REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER represents a removal of
+   * a stateful post-only order that was deemed invalid because it crossed
+   * maker orders on the book of the proposer.
+   */
+  REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER = 3,
+
+  /**
+   * REMOVAL_REASON_INVALID_SELF_TRADE - REMOVAL_REASON_INVALID_SELF_TRADE represents a removal of a stateful
+   * order that was deemed invalid because it constituted a self trade on the
+   * proposers orderbook.
+   */
+  REMOVAL_REASON_INVALID_SELF_TRADE = 4,
+
+  /**
+   * REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED - REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED represents a
+   * removal of a conditional FOK order that was deemed invalid because it
+   * could not be completely filled. Conditional FOK orders should always be
+   * fully-filled or removed in the block after they are triggered.
+   */
+  REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED = 5,
+
+  /**
+   * REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK - REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK represents a removal
+   * of a conditional IOC order.
+   * Conditional IOC orders should always have their remaining size removed
+   * in the block after they are triggered.
+   */
+  REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK = 6,
+
+  /**
+   * REMOVAL_REASON_FULLY_FILLED - REMOVAL_REASON_FULLY_FILLED represents a removal of an order that
+   * was fully filled and should therefore be removed from state.
+   */
+  REMOVAL_REASON_FULLY_FILLED = 7,
+  UNRECOGNIZED = -1,
+}
 export function orderRemoval_RemovalReasonFromJSON(object: any): OrderRemoval_RemovalReason {
   switch (object) {
     case 0:
     case "REMOVAL_REASON_UNSPECIFIED":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_UNSPECIFIED;
+
     case 1:
     case "REMOVAL_REASON_UNDERCOLLATERALIZED":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_UNDERCOLLATERALIZED;
+
     case 2:
     case "REMOVAL_REASON_INVALID_REDUCE_ONLY":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_INVALID_REDUCE_ONLY;
+
     case 3:
     case "REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER;
+
     case 4:
     case "REMOVAL_REASON_INVALID_SELF_TRADE":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_INVALID_SELF_TRADE;
+
     case 5:
     case "REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED;
+
     case 6:
     case "REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK;
+
     case 7:
     case "REMOVAL_REASON_FULLY_FILLED":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_FULLY_FILLED;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -91,120 +165,97 @@ export function orderRemoval_RemovalReasonToJSON(object: OrderRemoval_RemovalRea
   switch (object) {
     case OrderRemoval_RemovalReason.REMOVAL_REASON_UNSPECIFIED:
       return "REMOVAL_REASON_UNSPECIFIED";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_UNDERCOLLATERALIZED:
       return "REMOVAL_REASON_UNDERCOLLATERALIZED";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_INVALID_REDUCE_ONLY:
       return "REMOVAL_REASON_INVALID_REDUCE_ONLY";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER:
       return "REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_INVALID_SELF_TRADE:
       return "REMOVAL_REASON_INVALID_SELF_TRADE";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED:
       return "REMOVAL_REASON_CONDITIONAL_FOK_COULD_NOT_BE_FULLY_FILLED";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK:
       return "REMOVAL_REASON_CONDITIONAL_IOC_WOULD_REST_ON_BOOK";
+
     case OrderRemoval_RemovalReason.REMOVAL_REASON_FULLY_FILLED:
       return "REMOVAL_REASON_FULLY_FILLED";
+
     case OrderRemoval_RemovalReason.UNRECOGNIZED:
     default:
       return "UNRECOGNIZED";
   }
 }
 /** OrderRemoval is a request type used for forced removal of stateful orders. */
+
 export interface OrderRemoval {
-  orderId: OrderId;
+  orderId?: OrderId;
   removalReason: OrderRemoval_RemovalReason;
 }
-export interface OrderRemovalProtoMsg {
-  typeUrl: "/dydxprotocol.clob.OrderRemoval";
-  value: Uint8Array;
-}
 /** OrderRemoval is a request type used for forced removal of stateful orders. */
-export interface OrderRemovalAmino {
-  order_id?: OrderIdAmino;
-  removal_reason?: OrderRemoval_RemovalReason;
-}
-export interface OrderRemovalAminoMsg {
-  type: "/dydxprotocol.clob.OrderRemoval";
-  value: OrderRemovalAmino;
-}
-/** OrderRemoval is a request type used for forced removal of stateful orders. */
+
 export interface OrderRemovalSDKType {
-  order_id: OrderIdSDKType;
-  removal_reason: OrderRemoval_RemovalReason;
+  order_id?: OrderIdSDKType;
+  removal_reason: OrderRemoval_RemovalReasonSDKType;
 }
+
 function createBaseOrderRemoval(): OrderRemoval {
   return {
-    orderId: OrderId.fromPartial({}),
+    orderId: undefined,
     removalReason: 0
   };
 }
+
 export const OrderRemoval = {
-  typeUrl: "/dydxprotocol.clob.OrderRemoval",
-  encode(message: OrderRemoval, writer: BinaryWriter = BinaryWriter.create()): BinaryWriter {
+  encode(message: OrderRemoval, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.orderId !== undefined) {
       OrderId.encode(message.orderId, writer.uint32(10).fork()).ldelim();
     }
+
     if (message.removalReason !== 0) {
       writer.uint32(16).int32(message.removalReason);
     }
+
     return writer;
   },
-  decode(input: BinaryReader | Uint8Array, length?: number): OrderRemoval {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OrderRemoval {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
     const message = createBaseOrderRemoval();
+
     while (reader.pos < end) {
       const tag = reader.uint32();
+
       switch (tag >>> 3) {
         case 1:
           message.orderId = OrderId.decode(reader, reader.uint32());
           break;
+
         case 2:
           message.removalReason = (reader.int32() as any);
           break;
+
         default:
           reader.skipType(tag & 7);
           break;
       }
     }
+
     return message;
   },
-  fromPartial(object: Partial<OrderRemoval>): OrderRemoval {
+
+  fromPartial(object: DeepPartial<OrderRemoval>): OrderRemoval {
     const message = createBaseOrderRemoval();
     message.orderId = object.orderId !== undefined && object.orderId !== null ? OrderId.fromPartial(object.orderId) : undefined;
     message.removalReason = object.removalReason ?? 0;
     return message;
-  },
-  fromAmino(object: OrderRemovalAmino): OrderRemoval {
-    const message = createBaseOrderRemoval();
-    if (object.order_id !== undefined && object.order_id !== null) {
-      message.orderId = OrderId.fromAmino(object.order_id);
-    }
-    if (object.removal_reason !== undefined && object.removal_reason !== null) {
-      message.removalReason = orderRemoval_RemovalReasonFromJSON(object.removal_reason);
-    }
-    return message;
-  },
-  toAmino(message: OrderRemoval): OrderRemovalAmino {
-    const obj: any = {};
-    obj.order_id = message.orderId ? OrderId.toAmino(message.orderId) : undefined;
-    obj.removal_reason = orderRemoval_RemovalReasonToJSON(message.removalReason);
-    return obj;
-  },
-  fromAminoMsg(object: OrderRemovalAminoMsg): OrderRemoval {
-    return OrderRemoval.fromAmino(object.value);
-  },
-  fromProtoMsg(message: OrderRemovalProtoMsg): OrderRemoval {
-    return OrderRemoval.decode(message.value);
-  },
-  toProto(message: OrderRemoval): Uint8Array {
-    return OrderRemoval.encode(message).finish();
-  },
-  toProtoMsg(message: OrderRemoval): OrderRemovalProtoMsg {
-    return {
-      typeUrl: "/dydxprotocol.clob.OrderRemoval",
-      value: OrderRemoval.encode(message).finish()
-    };
   }
+
 };

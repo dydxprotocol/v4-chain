@@ -1,7 +1,8 @@
 import { Rpc } from "../../helpers";
-import { BinaryReader } from "../../binary";
+import * as _m0 from "protobufjs/minimal";
 import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse } from "./tx";
 /** Msg defines the Msg service. */
+
 export interface Msg {
   /**
    * ProposedOperations is a temporary message used by block proposers
@@ -9,10 +10,13 @@ export interface Msg {
    */
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse>;
   /** PlaceOrder allows accounts to place orders on the orderbook. */
+
   placeOrder(request: MsgPlaceOrder): Promise<MsgPlaceOrderResponse>;
   /** CancelOrder allows accounts to cancel existing orders on the orderbook. */
+
   cancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse>;
   /** CreateClobPair creates a new clob pair. */
+
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
   /**
    * UpdateClobPair sets the status of a clob pair. Should return an error
@@ -20,22 +24,27 @@ export interface Msg {
    * if the ClobPair id is not found in state, or if the update includes
    * an unsupported status transition.
    */
+
   updateClobPair(request: MsgUpdateClobPair): Promise<MsgUpdateClobPairResponse>;
   /**
    * UpdateEquityTierLimitConfiguration updates the equity tier limit
    * configuration in state.
    */
+
   updateEquityTierLimitConfiguration(request: MsgUpdateEquityTierLimitConfiguration): Promise<MsgUpdateEquityTierLimitConfigurationResponse>;
   /**
    * UpdateBlockRateLimitConfiguration updates the block rate limit
    * configuration in state.
    */
+
   updateBlockRateLimitConfiguration(request: MsgUpdateBlockRateLimitConfiguration): Promise<MsgUpdateBlockRateLimitConfigurationResponse>;
   /** UpdateLiquidationsConfig updates the liquidations configuration in state. */
+
   updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse>;
 }
 export class MsgClientImpl implements Msg {
   private readonly rpc: Rpc;
+
   constructor(rpc: Rpc) {
     this.rpc = rpc;
     this.proposedOperations = this.proposedOperations.bind(this);
@@ -47,44 +56,53 @@ export class MsgClientImpl implements Msg {
     this.updateBlockRateLimitConfiguration = this.updateBlockRateLimitConfiguration.bind(this);
     this.updateLiquidationsConfig = this.updateLiquidationsConfig.bind(this);
   }
+
   proposedOperations(request: MsgProposedOperations): Promise<MsgProposedOperationsResponse> {
     const data = MsgProposedOperations.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "ProposedOperations", data);
-    return promise.then(data => MsgProposedOperationsResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgProposedOperationsResponse.decode(new _m0.Reader(data)));
   }
+
   placeOrder(request: MsgPlaceOrder): Promise<MsgPlaceOrderResponse> {
     const data = MsgPlaceOrder.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "PlaceOrder", data);
-    return promise.then(data => MsgPlaceOrderResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgPlaceOrderResponse.decode(new _m0.Reader(data)));
   }
+
   cancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse> {
     const data = MsgCancelOrder.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "CancelOrder", data);
-    return promise.then(data => MsgCancelOrderResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgCancelOrderResponse.decode(new _m0.Reader(data)));
   }
+
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse> {
     const data = MsgCreateClobPair.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "CreateClobPair", data);
-    return promise.then(data => MsgCreateClobPairResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgCreateClobPairResponse.decode(new _m0.Reader(data)));
   }
+
   updateClobPair(request: MsgUpdateClobPair): Promise<MsgUpdateClobPairResponse> {
     const data = MsgUpdateClobPair.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateClobPair", data);
-    return promise.then(data => MsgUpdateClobPairResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgUpdateClobPairResponse.decode(new _m0.Reader(data)));
   }
+
   updateEquityTierLimitConfiguration(request: MsgUpdateEquityTierLimitConfiguration): Promise<MsgUpdateEquityTierLimitConfigurationResponse> {
     const data = MsgUpdateEquityTierLimitConfiguration.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateEquityTierLimitConfiguration", data);
-    return promise.then(data => MsgUpdateEquityTierLimitConfigurationResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgUpdateEquityTierLimitConfigurationResponse.decode(new _m0.Reader(data)));
   }
+
   updateBlockRateLimitConfiguration(request: MsgUpdateBlockRateLimitConfiguration): Promise<MsgUpdateBlockRateLimitConfigurationResponse> {
     const data = MsgUpdateBlockRateLimitConfiguration.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateBlockRateLimitConfiguration", data);
-    return promise.then(data => MsgUpdateBlockRateLimitConfigurationResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgUpdateBlockRateLimitConfigurationResponse.decode(new _m0.Reader(data)));
   }
+
   updateLiquidationsConfig(request: MsgUpdateLiquidationsConfig): Promise<MsgUpdateLiquidationsConfigResponse> {
     const data = MsgUpdateLiquidationsConfig.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "UpdateLiquidationsConfig", data);
-    return promise.then(data => MsgUpdateLiquidationsConfigResponse.decode(new BinaryReader(data)));
+    return promise.then(data => MsgUpdateLiquidationsConfigResponse.decode(new _m0.Reader(data)));
   }
+
 }

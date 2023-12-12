@@ -1,4 +1,4 @@
-import { LCDClient } from "@cosmology/lcd";
+import { LCDClient } from "@osmonauts/lcd";
 export const createLCDClient = async ({
   restEndpoint
 }: {

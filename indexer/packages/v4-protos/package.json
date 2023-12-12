@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "workspace:^0.0.1",
-    "@cosmology/telescope": "1.0.0",
+    "@osmonauts/telescope": "0.80.0",
     "@protobufs/cosmos": "^0.0.11",
     "@protobufs/gogoproto": "^0.0.10",
     "typescript": "^4.7.4"
@@ -36,6 +36,7 @@
     "@cosmjs/proto-signing": "^0.32.1",
     "@cosmjs/stargate": "^0.32.1",
     "@cosmjs/tendermint-rpc": "^0.32.1",
+    "@osmonauts/lcd": "^0.6.0",
     "bech32": "^2.0.0",
     "dotenv-flow": "^3.2.0",
     "long": "^5.2.1",
