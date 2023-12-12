@@ -116,7 +116,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				mck.On("AreSubaccountsLiquidatable", ctx, req2).Return(response2, nil)
 
 				req3 := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
 				}
@@ -139,7 +139,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("SubaccountAll", ctx, req).Return(response, nil)
 				req2 := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response2 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req2).Return(response2, nil)
@@ -180,7 +180,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 				}
 				mck.On("AreSubaccountsLiquidatable", ctx, req2).Return(response2, nil)
 				req3 := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req3).Return(response3, nil)

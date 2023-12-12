@@ -15,33 +15,33 @@ import (
 func TestLiquidateSubaccounts_Empty_Update(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
+	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
 
 	s := createServerWithMocks(
 		t,
 		mockGrpcServer,
 		mockFileHandler,
-	).WithLiquidatableSubaccountIds(
-		liquidatableSubaccountIds,
+	).WithDaemonLiquidationInfo(
+		daemonLiquidationInfo,
 	)
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		SubaccountIds: []satypes.SubaccountId{},
+		LiquidatableSubaccountIds: []satypes.SubaccountId{},
 	})
 	require.NoError(t, err)
-	require.Empty(t, liquidatableSubaccountIds.GetSubaccountIds())
+	require.Empty(t, daemonLiquidationInfo.GetLiquidatableSubaccountIds())
 }
 
 func TestLiquidateSubaccounts_Multiple_Subaccount_Ids(t *testing.T) {
 	mockGrpcServer := &mocks.GrpcServer{}
 	mockFileHandler := &mocks.FileHandler{}
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
+	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
 
 	s := createServerWithMocks(
 		t,
 		mockGrpcServer,
 		mockFileHandler,
-	).WithLiquidatableSubaccountIds(
-		liquidatableSubaccountIds,
+	).WithDaemonLiquidationInfo(
+		daemonLiquidationInfo,
 	)
 
 	expectedSubaccountIds := []satypes.SubaccountId{
@@ -50,10 +50,10 @@ func TestLiquidateSubaccounts_Multiple_Subaccount_Ids(t *testing.T) {
 		constants.Carl_Num0,
 	}
 	_, err := s.LiquidateSubaccounts(grpc.Ctx, &api.LiquidateSubaccountsRequest{
-		SubaccountIds: expectedSubaccountIds,
+		LiquidatableSubaccountIds: expectedSubaccountIds,
 	})
 	require.NoError(t, err)
 
-	actualSubaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
+	actualSubaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
 	require.Equal(t, expectedSubaccountIds, actualSubaccountIds)
 }

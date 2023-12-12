@@ -1,0 +1,49 @@
+syntax = "proto3";
+package dydxprotocol.ratelimit;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "dydxprotocol/ratelimit/limit_params.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+
+// Query defines the gRPC querier service.
+service Query {
+  // List all limit params.
+  rpc ListLimitParams(ListLimitParamsRequest)
+      returns (ListLimitParamsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/ratelimit/list_limit_params";
+  }
+
+  // Query capacity by denom.
+  rpc CapacityByDenom(QueryCapacityByDenomRequest)
+      returns (QueryCapacityByDenomResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/ratelimit/capacity_by_denom";
+  }
+}
+
+// ListLimitParamsRequest is a request type of the ListLimitParams RPC method.
+message ListLimitParamsRequest {}
+
+// ListLimitParamsResponse is a response type of the ListLimitParams RPC method.
+message ListLimitParamsResponse { repeated LimitParams limit_params_list = 1; }
+
+// QueryCapacityByDenomRequest is a request type for the CapacityByDenom RPC
+// method.
+message QueryCapacityByDenomRequest { string denom = 1; }
+
+// CapacityResult is a specific rate limit for a denom.
+message CapacityResult {
+  uint32 period_sec = 1;
+  bytes capacity = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
+// method.
+message QueryCapacityByDenomResponse { repeated CapacityResult results = 1; }

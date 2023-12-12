@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"io"
 	"math/big"
 	"net/http"
@@ -149,6 +150,8 @@ import (
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	pricesmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimitmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
+	ratelimitmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	rewardsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -237,6 +240,7 @@ type App struct {
 	IBCKeeper             *ibckeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
+	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 
@@ -343,6 +347,7 @@ func New(
 		distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
+		ratelimitmoduletypes.StoreKey,
 		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
 		pricesmoduletypes.StoreKey,
@@ -533,6 +538,18 @@ func New(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
+	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
+		appCodec,
+		keys[ratelimitmoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+
+	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
+
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
@@ -583,8 +600,8 @@ func New(
 	// potentially liquidatable subaccounts and then encode them into an in-memory slice shared by
 	// the liquidations module.
 	// The in-memory data structure is shared by the x/clob module and liquidations daemon.
-	liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
-	app.Server.WithLiquidatableSubaccountIds(liquidatableSubaccountIds)
+	daemonLiquidationInfo := liquidationtypes.NewDaemonLiquidationInfo()
+	app.Server.WithDaemonLiquidationInfo(daemonLiquidationInfo)
 
 	// Setup server for bridge messages.
 	// The in-memory data structure is shared by the x/bridge module and bridge daemon.
@@ -627,7 +644,7 @@ func New(
 
 		// Non-validating full-nodes have no need to run the price daemon.
 		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := constants.StaticExchangeQueryConfig
+			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
 			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
 			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
 			// periodically sent via gRPC to a shared socket with the server.
@@ -811,6 +828,7 @@ func New(
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PricesKeeper,
+		app.IndexerEventManager,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -868,7 +886,7 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		liquidatableSubaccountIds,
+		daemonLiquidationInfo,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 
@@ -972,6 +990,7 @@ func New(
 		stakingtypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -1014,6 +1033,7 @@ func New(
 		upgradetypes.ModuleName,
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
@@ -1052,6 +1072,7 @@ func New(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,
@@ -1087,6 +1108,7 @@ func New(
 		paramstypes.ModuleName,
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
+		ratelimitmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
 		pricesmoduletypes.ModuleName,

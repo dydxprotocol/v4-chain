@@ -23,7 +23,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "0",
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 1_000_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         500_000_000,
 	},
 	{
@@ -31,7 +30,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "1",
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 750_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         500_000_000,
 	},
 	{
@@ -39,7 +37,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "2",
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 0,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         500_000_000,
 	},
 	{
@@ -47,7 +44,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "3",
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
-		BasePositionNotional:   100_000_000_000,
 		ImpactNotional:         2_500_000_000,
 	},
 	{
@@ -55,7 +51,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "4",
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 800_000,
-		BasePositionNotional:   100_000_000_000,
 		ImpactNotional:         1_000_000_000,
 	},
 	{
@@ -63,7 +58,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "5",
 		InitialMarginPpm:       500_000,
 		MaintenanceFractionPpm: 600_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         1_000_000_000,
 	},
 	{
@@ -71,7 +65,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "6",
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 900_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         2_500_000_000,
 	},
 	{
@@ -79,7 +72,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "7",
 		InitialMarginPpm:       0,
 		MaintenanceFractionPpm: 0,
-		BasePositionNotional:   100_000_000_000,
 		ImpactNotional:         1_000_000_000,
 	},
 	{
@@ -87,7 +79,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "8",
 		InitialMarginPpm:       9_910, // 0.9910%
 		MaintenanceFractionPpm: 1_000_000,
-		BasePositionNotional:   100_000_000_000,
 		ImpactNotional:         50_454_000_000,
 	},
 	{
@@ -95,7 +86,6 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 		Name:                   "101",
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
-		BasePositionNotional:   1_000_000,
 		ImpactNotional:         2_500_000_000,
 	},
 }
@@ -331,7 +321,6 @@ var (
 				Name:                   "Large-Cap",
 				InitialMarginPpm:       200_000,
 				MaintenanceFractionPpm: 500_000,
-				BasePositionNotional:   1000_000_000,
 				ImpactNotional:         2_500_000_000,
 			},
 			{
@@ -339,7 +328,6 @@ var (
 				Name:                   "Mid-Cap",
 				InitialMarginPpm:       300_000,
 				MaintenanceFractionPpm: 600_000,
-				BasePositionNotional:   500_000_000,
 				ImpactNotional:         1_667_000_000,
 			},
 			{
@@ -347,7 +335,6 @@ var (
 				Name:                   "Small-Cap",
 				InitialMarginPpm:       400_000,
 				MaintenanceFractionPpm: 700_000,
-				BasePositionNotional:   250_000_000,
 				ImpactNotional:         1_250_000_000,
 			},
 		},

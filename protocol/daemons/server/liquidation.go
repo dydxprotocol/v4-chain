@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
@@ -11,16 +12,16 @@ import (
 
 // LiquidationServer defines the fields required for liquidation updates.
 type LiquidationServer struct {
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 }
 
-// WithLiquidatableSubaccountIds sets the `liquidatableSubaccountIds` field.
+// WithDaemonLiquidationInfo sets the `daemonLiquidationInfo` field.
 // This is updated by the liquidation service with a list of potentially liquidatable
 // subaccount ids to be processed by the `PerpetualLiquidationsKeeper`.
-func (server *Server) WithLiquidatableSubaccountIds(
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
+func (server *Server) WithDaemonLiquidationInfo(
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) *Server {
-	server.liquidatableSubaccountIds = liquidatableSubaccountIds
+	server.daemonLiquidationInfo = daemonLiquidationInfo
 	return server
 }
 
@@ -35,13 +36,13 @@ func (s *Server) LiquidateSubaccounts(
 ) {
 	telemetry.ModuleSetGauge(
 		metrics.LiquidationDaemon,
-		float32(len(req.SubaccountIds)),
+		float32(len(req.LiquidatableSubaccountIds)),
 		metrics.LiquidatableSubaccountIds,
 		metrics.Received,
 		metrics.Count,
 	)
 
-	s.liquidatableSubaccountIds.UpdateSubaccountIds(req.SubaccountIds)
+	s.daemonLiquidationInfo.UpdateLiquidatableSubaccountIds(req.LiquidatableSubaccountIds)
 
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.LiquidationsDaemonServiceName)

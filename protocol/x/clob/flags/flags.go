@@ -118,8 +118,10 @@ func GetClobFlagValuesFromOptions(
 		}
 	}
 
-	if v, ok := appOpts.Get(MevTelemetryHosts).(string); ok {
-		result.MevTelemetryHosts = strings.Split(v, ",")
+	if option := appOpts.Get(MevTelemetryHosts); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.MevTelemetryHosts = strings.Split(v, ",")
+		}
 	}
 
 	if option := appOpts.Get(MevTelemetryIdentifier); option != nil {

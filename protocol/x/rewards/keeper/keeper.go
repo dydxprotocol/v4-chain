@@ -16,6 +16,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -36,7 +38,8 @@ type (
 		// Needed for getting lowest maker fee.
 		feeTiersKeeper types.FeeTiersKeeper
 		// Neeeded for retrieve market price of rewards token.
-		pricesKeeper types.PricesKeeper
+		pricesKeeper        types.PricesKeeper
+		indexerEventManager indexer_manager.IndexerEventManager
 
 		// the addresses capable of executing a MsgUpdateParams message.
 		authorities map[string]struct{}
@@ -51,23 +54,29 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	pricesKeeper types.PricesKeeper,
+	indexerEventManager indexer_manager.IndexerEventManager,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:               cdc,
-		storeKey:          storeKey,
-		transientStoreKey: transientStoreKey,
-		assetsKeeper:      assetsKeeper,
-		bankKeeper:        bankKeeper,
-		feeTiersKeeper:    feeTiersKeeper,
-		pricesKeeper:      pricesKeeper,
-		authorities:       lib.UniqueSliceToSet(authorities),
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		transientStoreKey:   transientStoreKey,
+		assetsKeeper:        assetsKeeper,
+		bankKeeper:          bankKeeper,
+		feeTiersKeeper:      feeTiersKeeper,
+		pricesKeeper:        pricesKeeper,
+		indexerEventManager: indexerEventManager,
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
 }
 
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
+}
+
+func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
+	return k.indexerEventManager
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
@@ -300,6 +309,8 @@ func (k Keeper) ProcessRewardsForBlock(
 		return nil
 	}
 
+	rewardIndexerEvent := indexerevents.TradingRewardsEventV1{}
+
 	// Go through each address with reward and distribute tokens.
 	for _, share := range allRewardShares {
 		// Calculate `tokensToDistribute` * `share.Weight` / `totalRewardWeight`.
@@ -339,8 +350,23 @@ func (k Keeper) ProcessRewardsForBlock(
 				constants.ErrorLogKey,
 				err,
 			)
+		} else {
+			rewardIndexerEvent.TradingRewards = append(rewardIndexerEvent.TradingRewards,
+				&indexerevents.AddressTradingReward{
+					Owner:       share.Address,
+					DenomAmount: dtypes.NewIntFromBigInt(rewardAmountForAddress),
+				},
+			)
 		}
 	}
+
+	k.indexerEventManager.AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeTradingReward,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.TradingRewardVersion,
+		indexer_manager.GetBytes(&rewardIndexerEvent),
+	)
 
 	// Measure treasury balance after distribution.
 	remainingTreasuryBalance := k.bankKeeper.GetBalance(ctx, types.TreasuryModuleAddress, params.Denom)

@@ -96,7 +96,9 @@ message LiquidityTier {
   // The maximum position size at which the margin requirements are
   // not increased over the default values. Above this position size,
   // the margin requirements increase at a rate of sqrt(size).
-  uint64 base_position_notional = 5;
+  //
+  // Deprecated since v3.x.
+  uint64 base_position_notional = 5 [ deprecated = true ];
 
   // The impact notional amount (in quote quantums) is used to determine impact
   // bid/ask prices and its recommended value is 500 USDC / initial margin

@@ -310,10 +310,10 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 		panic("t must not be nil")
 	}
 	return TestAppBuilder{
-		genesisDocFn:               DefaultGenesis,
-		usesDefaultAppConfig:       true,
-		appOptions:                 make(map[string]interface{}),
-		enableNonDeterminismChecks: true,
+		genesisDocFn:                   DefaultGenesis,
+		disableHealthMonitorForTesting: true,
+		appOptions:                     make(map[string]interface{}),
+		enableNonDeterminismChecks:     true,
 		enableCrashingAppCheckTxNonDeterminismChecks: true,
 		executeCheckTxs: func(ctx sdk.Context, app *app.App) (stop bool) {
 			return true
@@ -328,7 +328,7 @@ func NewTestAppBuilder(t testing.TB) TestAppBuilder {
 // immutable.
 type TestAppBuilder struct {
 	genesisDocFn                                 GenesisDocCreatorFn
-	usesDefaultAppConfig                         bool
+	disableHealthMonitorForTesting               bool
 	appOptions                                   map[string]interface{}
 	executeCheckTxs                              ExecuteCheckTxs
 	enableNonDeterminismChecks                   bool
@@ -340,6 +340,12 @@ type TestAppBuilder struct {
 // the genesis doc.
 func (tApp TestAppBuilder) WithGenesisDocFn(fn GenesisDocCreatorFn) TestAppBuilder {
 	tApp.genesisDocFn = fn
+	return tApp
+}
+
+// WithHealthMonitorDisabledForTesting controls whether the daemon server health monitor is disabled for testing.
+func (tApp TestAppBuilder) WithHealthMonitorDisabledForTesting(disableHealthMonitorForTesting bool) TestAppBuilder {
+	tApp.disableHealthMonitorForTesting = disableHealthMonitorForTesting
 	return tApp
 }
 
@@ -375,7 +381,6 @@ func (tApp TestAppBuilder) WithAppOptions(
 	appOptions map[string]interface{},
 ) TestAppBuilder {
 	tApp.appOptions = appOptions
-	tApp.usesDefaultAppConfig = false
 	return tApp
 }
 
@@ -489,7 +494,7 @@ func (tApp *TestApp) initChainIfNeeded() {
 		})
 	}
 
-	if tApp.builder.usesDefaultAppConfig {
+	if tApp.builder.disableHealthMonitorForTesting {
 		tApp.App.DisableHealthMonitorForTesting()
 	}
 

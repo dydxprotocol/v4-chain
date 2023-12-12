@@ -619,7 +619,7 @@ func TestLiquidationConfig(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
 			})
 			require.NoError(t, err)
 
@@ -692,134 +692,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 						},
 					},
 				},
-			},
-		},
-		`Can place and match liquidation order for subaccount with non-linear margin requirement`: {
-			liquidityTiers: []perptypes.LiquidityTier{
-				{
-					Id:                     3,
-					Name:                   "3",
-					InitialMarginPpm:       200_000,        // 20% IMF
-					MaintenanceFractionPpm: 500_000,        // 10% MMF
-					BasePositionNotional:   12_500_000_000, // $12.5k
-					ImpactNotional:         2_500_000_000,
-				},
-			},
-			perpetuals: []perptypes.Perpetual{
-				// Uses liquidity tier id 3
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{
-				// When below basePositionNotional, marginAdjustmentPpm is 1e^6 but at 1 BTC is 1e^6 * sqrt(50k/12.25k) = 2e^6
-				// This means maintenanceMarginPpm is 1e^5 * 2 = 2e^5. Maintenance margin is now 20%.
-				// A subaccount with a 1 BTC position must then have .20*50k = $10k in TNC to be well collateralized.
-				{ // TNC = $9,999, undercollateralized
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(-40_001_000_000), // $-40,001
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-						},
-					},
-				},
-				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			placedMatchableOrders: []clobtypes.MatchableOrder{
-				&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-			},
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
-			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
-			clobPairs:                 []clobtypes.ClobPair{constants.ClobPair_Btc},
-
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId: 0,
-							// Asset position + fill price - liquidation insurance fund fee
-							Quantums: dtypes.NewInt(-40_001_000_000 + 50_000_000_000 - 250_000_000),
-						},
-					},
-				},
-				{
-					Id: &constants.Dave_Num0,
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(200_000_000),
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-			},
-		},
-		`Skip liquidating subaccount when TNC equals MMR with non-linear margin requirement`: {
-			liquidityTiers: []perptypes.LiquidityTier{
-				{
-					Id:                     3,
-					Name:                   "3",
-					InitialMarginPpm:       200_000,        // 20% IMF
-					MaintenanceFractionPpm: 500_000,        // 10% MMF
-					BasePositionNotional:   12_500_000_000, // $12.5k
-					ImpactNotional:         2_500_000_000,
-				},
-			},
-			perpetuals: []perptypes.Perpetual{
-				// Uses liquidity tier id 3
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{
-				{ // TNC = $10k, MMR = $10k
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(-40_000_000_000), // $-40,000
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
-						},
-					},
-				},
-				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			placedMatchableOrders: []clobtypes.MatchableOrder{
-				&constants.LongTermOrder_Dave_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10,
-			},
-			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
-			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
-			clobPairs:                 []clobtypes.ClobPair{constants.ClobPair_Btc},
-
-			// Provided liquidatable subaccount should be skipped in PrepareCheckState for not being liquidatable.
-			// This means no liquidation order placement / match will occur.
-			expectedSubaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Carl_Num0,
-					AssetPositions: []*satypes.AssetPosition{
-						{
-							AssetId:  0,
-							Quantums: dtypes.NewInt(-40_000_000_000), // $-40,000
-						},
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId:  0,
-							Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
-							FundingIndex: dtypes.NewInt(0),
-						},
-					},
-				},
-				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 		},
 		`Can place a liquidation order that is partially filled and does not require deleveraging`: {
@@ -1251,7 +1123,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
 			})
 			require.NoError(t, err)
 

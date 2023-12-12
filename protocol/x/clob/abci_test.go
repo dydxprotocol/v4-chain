@@ -1063,7 +1063,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 
 			// Update the liquidatable subaccount IDs.
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccounts,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
 			})
 			require.NoError(t, err)
 
@@ -1099,7 +1099,7 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
-			liquidationtypes.NewLiquidatableSubaccountIds(),
+			liquidationtypes.NewDaemonLiquidationInfo(),
 		)
 	})
 }
@@ -1126,7 +1126,7 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
-			liquidationtypes.NewLiquidatableSubaccountIds(),
+			liquidationtypes.NewDaemonLiquidationInfo(),
 		)
 	})
 }
@@ -1475,8 +1475,8 @@ func TestPrepareCheckState(t *testing.T) {
 			}
 
 			// Set the liquidatable subaccount IDs.
-			liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
-			liquidatableSubaccountIds.UpdateSubaccountIds(tc.liquidatableSubaccounts)
+			liquidatableSubaccountIds := liquidationtypes.NewDaemonLiquidationInfo()
+			liquidatableSubaccountIds.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
 
 			// Run the test.
 			clob.PrepareCheckState(
