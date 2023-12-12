@@ -15,6 +15,7 @@ import (
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -209,7 +210,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 // Note that current implementation assumes that the only asset is USDC and multi-collateral support
 // is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
-	subaccount satypes.Subaccount,
+	unsettledSubaccount satypes.Subaccount,
 	marketPrices map[uint32]pricestypes.MarketPrice,
 	perpetuals map[uint32]perptypes.Perpetual,
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
@@ -224,12 +225,22 @@ func (c *Client) CheckSubaccountCollateralization(
 		metrics.Latency,
 	)
 
+	// Funding payments are lazily settled, so get the settled subaccount
+	// to ensure that the funding payments are included in the net collateral calculation.
+	settledSubaccount, _, err := sakeeper.GetSettledSubaccountWithPerpetuals(
+		unsettledSubaccount,
+		perpetuals,
+	)
+	if err != nil {
+		return false, err
+	}
+
 	bigTotalNetCollateral := big.NewInt(0)
 	bigTotalMaintenanceMargin := big.NewInt(0)
 
 	// Calculate the net collateral and maintenance margin for each of the asset positions.
 	// Note that we only expect USDC before multi-collateral support is added.
-	for _, assetPosition := range subaccount.AssetPositions {
+	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
 			return false, errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
@@ -243,7 +254,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	}
 
 	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
-	for _, perpetualPosition := range subaccount.PerpetualPositions {
+	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
 		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
 		if !ok {
 			return false, errorsmod.Wrapf(

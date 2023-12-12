@@ -969,11 +969,31 @@ func (k Keeper) GetSettlementPpm(
 		return big.NewInt(0), big.NewInt(0), err
 	}
 
+	bigNetSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
+		perpetual,
+		quantums,
+		index,
+	)
+	return bigNetSettlementPpm, newFundingIndex, nil
+}
+
+// GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
+// the perpetual and position size (in base quantums).
+//
+// Note that this function is a stateless utility function.
+func GetSettlementPpmWithPerpetual(
+	perpetual types.Perpetual,
+	quantums *big.Int,
+	index *big.Int,
+) (
+	bigNetSettlementPpm *big.Int,
+	newFundingIndex *big.Int,
+) {
 	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
 
 	// if indexDelta is zero, then net settlement is zero.
 	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt(), nil
+		return big.NewInt(0), perpetual.FundingIndex.BigInt()
 	}
 
 	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
@@ -983,7 +1003,7 @@ func (k Keeper) GetSettlementPpm(
 	// Thus, always negate `bigNetSettlementPpm` here.
 	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt(), nil
+	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
