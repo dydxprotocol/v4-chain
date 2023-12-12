@@ -1554,7 +1554,161 @@ func TestProcessProposerOperations(t *testing.T) {
 		// Deleveraging is allowed for markets in final settlement to close out all open positions. A deleveraging
 		// event with IsFinalSettlement set to true represents a non-negative TNC subaccount having its position closed
 		// at the oracle price against other subaccounts with open positions on the opposing side of the book.
-		// "Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {},
+		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			subaccounts: []satypes.Subaccount{
+				// both well-collateralized
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: true,
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Usdc_Asset_50_000.GetBigQuantums().Int64(),
+				constants.Dave_Num0: constants.Usdc_Asset_100_000.GetBigQuantums().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: {},
+				constants.Dave_Num0: {},
+			},
+		},
+		// This throws an error because the CanDeleverageSubaccount function will return false for
+		// shouldFinalSettlePosition, but the IsFinalSettlement flag is set to true.
+		`Fails with ClobMatch_MatchPerpetualDeleveraging for negative TNC subaccount,
+			IsFinalSettlement is true for market not in final settlement`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				// liquidatable: MMR = $5000, TNC = $499
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: true,
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedError: types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+		},
+		// This test will fail because the CanDeleverageSubaccount function will return false for
+		// shouldFinalSettlePosition, but the IsFinalSettlement flag is set to true. Negative TNC subaccounts
+		// should never be deleveraged using final settlement (oracle price), and instead should be deleveraged
+		// using the bankruptcy price.
+		`Fails with ClobMatch_MatchPerpetualDeleveraging for negative TNC subaccount,
+			IsFinalSettlement is true for market in final settlement`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			subaccounts: []satypes.Subaccount{
+				// liquidatable: MMR = $5000, TNC = $499
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: true,
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedError: types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+		},
+		// This test will fail because the CanDeleverageSubaccount function will return false for
+		// a non-negative TNC subaccount in a market not in final settlement.
+		`Fails with ClobMatch_MatchPerpetualDeleveraging for non-negative TNC subaccount,
+			IsFinalSettlement is true for market not in final settlement`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: true,
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedError: types.ErrInvalidDeleveragedSubaccount,
+		},
 	}
 
 	for name, tc := range tests {
