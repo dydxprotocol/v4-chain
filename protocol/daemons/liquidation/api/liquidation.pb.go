@@ -9,6 +9,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	types1 "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -34,7 +35,14 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // ids should not contain duplicates. The application should re-verify these
 // subaccount ids against current state before liquidating their positions.
 type LiquidateSubaccountsRequest struct {
-	SubaccountIds []types.SubaccountId `protobuf:"bytes,1,rep,name=subaccount_ids,json=subaccountIds,proto3" json:"subaccount_ids"`
+	// The block height at which the liquidation daemon is processing.
+	BlockHeight uint32 `protobuf:"varint,1,opt,name=block_height,json=blockHeight,proto3" json:"block_height,omitempty"`
+	// The list of liquidatable subaccount ids.
+	LiquidatableSubaccountIds []types.SubaccountId `protobuf:"bytes,2,rep,name=liquidatable_subaccount_ids,json=liquidatableSubaccountIds,proto3" json:"liquidatable_subaccount_ids"`
+	// The list of subaccount ids with negative total net collateral.
+	NegativeTncSubaccountIds []types.SubaccountId `protobuf:"bytes,3,rep,name=negative_tnc_subaccount_ids,json=negativeTncSubaccountIds,proto3" json:"negative_tnc_subaccount_ids"`
+	// A map of perpetual id to subaccount open position info.
+	SubaccountOpenPositionInfo map[uint32]types1.SubaccountOpenPositionInfo `protobuf:"bytes,4,rep,name=subaccount_open_position_info,json=subaccountOpenPositionInfo,proto3" json:"subaccount_open_position_info" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 
 func (m *LiquidateSubaccountsRequest) Reset()         { *m = LiquidateSubaccountsRequest{} }
@@ -70,9 +78,30 @@ func (m *LiquidateSubaccountsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LiquidateSubaccountsRequest proto.InternalMessageInfo
 
-func (m *LiquidateSubaccountsRequest) GetSubaccountIds() []types.SubaccountId {
+func (m *LiquidateSubaccountsRequest) GetBlockHeight() uint32 {
 	if m != nil {
-		return m.SubaccountIds
+		return m.BlockHeight
+	}
+	return 0
+}
+
+func (m *LiquidateSubaccountsRequest) GetLiquidatableSubaccountIds() []types.SubaccountId {
+	if m != nil {
+		return m.LiquidatableSubaccountIds
+	}
+	return nil
+}
+
+func (m *LiquidateSubaccountsRequest) GetNegativeTncSubaccountIds() []types.SubaccountId {
+	if m != nil {
+		return m.NegativeTncSubaccountIds
+	}
+	return nil
+}
+
+func (m *LiquidateSubaccountsRequest) GetSubaccountOpenPositionInfo() map[uint32]types1.SubaccountOpenPositionInfo {
+	if m != nil {
+		return m.SubaccountOpenPositionInfo
 	}
 	return nil
 }
@@ -117,6 +146,7 @@ var xxx_messageInfo_LiquidateSubaccountsResponse proto.InternalMessageInfo
 
 func init() {
 	proto.RegisterType((*LiquidateSubaccountsRequest)(nil), "dydxprotocol.daemons.liquidation.LiquidateSubaccountsRequest")
+	proto.RegisterMapType((map[uint32]types1.SubaccountOpenPositionInfo)(nil), "dydxprotocol.daemons.liquidation.LiquidateSubaccountsRequest.SubaccountOpenPositionInfoEntry")
 	proto.RegisterType((*LiquidateSubaccountsResponse)(nil), "dydxprotocol.daemons.liquidation.LiquidateSubaccountsResponse")
 }
 
@@ -125,25 +155,36 @@ func init() {
 }
 
 var fileDescriptor_66068592911cfa5a = []byte{
-	// 278 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x32, 0x4a, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x4f, 0x49, 0x4c, 0xcd, 0xcd, 0xcf, 0x2b,
-	0xd6, 0xcf, 0xc9, 0x2c, 0x2c, 0xcd, 0x4c, 0x49, 0x2c, 0xc9, 0xcc, 0xcf, 0x43, 0x66, 0xeb, 0x81,
-	0x15, 0x0a, 0x29, 0x20, 0xeb, 0xd1, 0x83, 0xea, 0xd1, 0x43, 0x52, 0x27, 0x25, 0x92, 0x9e, 0x9f,
-	0x9e, 0x0f, 0x56, 0xa1, 0x0f, 0x62, 0x41, 0xf4, 0x49, 0x69, 0xa2, 0xd8, 0x55, 0x5c, 0x9a, 0x94,
-	0x98, 0x9c, 0x9c, 0x5f, 0x9a, 0x57, 0x52, 0x8c, 0xc4, 0x86, 0x28, 0x55, 0x2a, 0xe2, 0x92, 0xf6,
-	0x81, 0x9a, 0x97, 0x1a, 0x8c, 0x50, 0x18, 0x94, 0x5a, 0x58, 0x9a, 0x5a, 0x5c, 0x22, 0x14, 0xcc,
-	0xc5, 0x87, 0xd0, 0x12, 0x9f, 0x99, 0x52, 0x2c, 0xc1, 0xa8, 0xc0, 0xac, 0xc1, 0x6d, 0xa4, 0xa6,
-	0x87, 0xe2, 0x34, 0x24, 0x2b, 0xf4, 0x10, 0xa6, 0x78, 0xa6, 0x38, 0xb1, 0x9c, 0xb8, 0x27, 0xcf,
-	0x10, 0xc4, 0x5b, 0x8c, 0x24, 0x56, 0xac, 0x24, 0xc7, 0x25, 0x83, 0xdd, 0xce, 0xe2, 0x82, 0xfc,
-	0xbc, 0xe2, 0x54, 0xa3, 0x35, 0x8c, 0x5c, 0x42, 0x3e, 0x08, 0x4f, 0x06, 0xa7, 0x16, 0x95, 0x65,
-	0x26, 0xa7, 0x0a, 0x4d, 0x65, 0xe4, 0x12, 0xc1, 0xa6, 0x4f, 0xc8, 0x56, 0x8f, 0x50, 0x38, 0xe9,
-	0xe1, 0xf1, 0xa3, 0x94, 0x1d, 0xb9, 0xda, 0x21, 0xce, 0x75, 0x8a, 0x3e, 0xf1, 0x48, 0x8e, 0xf1,
-	0xc2, 0x23, 0x39, 0xc6, 0x07, 0x8f, 0xe4, 0x18, 0x27, 0x3c, 0x96, 0x63, 0xb8, 0xf0, 0x58, 0x8e,
-	0xe1, 0xc6, 0x63, 0x39, 0x86, 0x28, 0xc7, 0xf4, 0xcc, 0x92, 0x8c, 0xd2, 0x24, 0xbd, 0xe4, 0xfc,
-	0x5c, 0x7d, 0x94, 0x28, 0x29, 0x33, 0xd1, 0x4d, 0xce, 0x48, 0xcc, 0xcc, 0xd3, 0xc7, 0x9b, 0x20,
-	0x12, 0x0b, 0x32, 0x93, 0xd8, 0xc0, 0x2a, 0x8c, 0x01, 0x01, 0x00, 0x00, 0xff, 0xff, 0x1f, 0x71,
-	0x5f, 0x4e, 0x3f, 0x02, 0x00, 0x00,
+	// 455 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x54, 0x4f, 0x6b, 0xd4, 0x40,
+	0x14, 0xdf, 0xd9, 0x5d, 0x3d, 0xcc, 0x2a, 0xc8, 0xd0, 0x43, 0xcc, 0x6a, 0xba, 0x16, 0x91, 0xf5,
+	0xd0, 0x09, 0xac, 0x1e, 0x44, 0x50, 0xb0, 0x22, 0x58, 0x28, 0x28, 0x5b, 0x4f, 0x8a, 0x84, 0xc9,
+	0x64, 0x9a, 0x1d, 0x36, 0x9d, 0x97, 0xee, 0x4c, 0x82, 0x0b, 0x7e, 0x08, 0x2f, 0x7e, 0x05, 0x4f,
+	0x7e, 0x0a, 0x4f, 0x3d, 0xf6, 0xe8, 0x49, 0x64, 0xf7, 0x8b, 0x48, 0xfe, 0x94, 0x4c, 0xa4, 0x6e,
+	0xa1, 0xde, 0x1e, 0x2f, 0xbf, 0x7f, 0xef, 0xbd, 0x24, 0x78, 0x12, 0x2d, 0xa3, 0x4f, 0xe9, 0x02,
+	0x0c, 0x70, 0x48, 0xfc, 0x88, 0x89, 0x63, 0x50, 0xda, 0x4f, 0xe4, 0x49, 0x26, 0x23, 0x66, 0x24,
+	0x28, 0xbb, 0xa6, 0x25, 0x90, 0x8c, 0x6c, 0x0e, 0xad, 0x39, 0xd4, 0xc2, 0xb9, 0x5b, 0x31, 0xc4,
+	0x50, 0x22, 0xfc, 0xa2, 0xaa, 0x78, 0xee, 0xc3, 0x96, 0x97, 0xce, 0x42, 0xc6, 0x39, 0x64, 0xca,
+	0x68, 0xab, 0xae, 0xa1, 0xf7, 0x5b, 0x50, 0x9e, 0x40, 0x68, 0xe7, 0xd0, 0x15, 0x6a, 0xe7, 0x47,
+	0x1f, 0x0f, 0x0f, 0xea, 0xb6, 0x38, 0x6c, 0xf4, 0xa6, 0xe2, 0x24, 0x13, 0xda, 0x90, 0x7b, 0xf8,
+	0x46, 0x98, 0x00, 0x9f, 0x07, 0x33, 0x21, 0xe3, 0x99, 0x71, 0xd0, 0x08, 0x8d, 0x6f, 0x4e, 0x07,
+	0x65, 0xef, 0x75, 0xd9, 0x22, 0x09, 0x1e, 0x9e, 0x0b, 0xb3, 0x30, 0x11, 0x41, 0x93, 0x24, 0x90,
+	0x91, 0x76, 0xba, 0xa3, 0xde, 0x78, 0x30, 0x79, 0x40, 0x5b, 0x13, 0x5b, 0xc9, 0x69, 0xe3, 0xba,
+	0x1f, 0xed, 0xf5, 0x4f, 0x7f, 0x6d, 0x77, 0xa6, 0xb7, 0x6d, 0x41, 0xfb, 0xb9, 0x26, 0x73, 0x3c,
+	0x54, 0x22, 0x66, 0x46, 0xe6, 0x22, 0x30, 0x8a, 0xff, 0xed, 0xd6, 0xbb, 0x82, 0x9b, 0x73, 0x2e,
+	0xf8, 0x4e, 0xf1, 0xb6, 0xd9, 0x37, 0x84, 0xef, 0x5a, 0x06, 0x90, 0x0a, 0x15, 0xa4, 0xa0, 0x65,
+	0xb1, 0xc1, 0x40, 0xaa, 0x23, 0x70, 0xfa, 0xa5, 0xdf, 0x47, 0x7a, 0xd9, 0x3d, 0xe9, 0x86, 0x25,
+	0x5b, 0x99, 0xde, 0xa4, 0x42, 0xbd, 0xad, 0x0d, 0xf6, 0xd5, 0x11, 0xbc, 0x52, 0x66, 0xb1, 0xac,
+	0x63, 0xba, 0xfa, 0x9f, 0x30, 0xf7, 0x33, 0xde, 0xbe, 0x44, 0x84, 0xdc, 0xc2, 0xbd, 0xb9, 0x58,
+	0xd6, 0x07, 0x2c, 0x4a, 0xf2, 0x12, 0x5f, 0xcb, 0x59, 0x92, 0x09, 0xa7, 0x3b, 0x42, 0xe3, 0xc1,
+	0x64, 0xb7, 0x3d, 0x44, 0xf1, 0xc6, 0x6c, 0x48, 0x36, 0xad, 0xb8, 0x4f, 0xbb, 0x4f, 0xd0, 0x8e,
+	0x87, 0xef, 0x5c, 0x3c, 0x9e, 0x4e, 0x41, 0x69, 0x31, 0xf9, 0x8e, 0x30, 0x39, 0x68, 0x76, 0x71,
+	0x28, 0x16, 0xb9, 0xe4, 0x82, 0x7c, 0x45, 0x78, 0xeb, 0x22, 0x1e, 0x79, 0xf6, 0x5f, 0xeb, 0x74,
+	0x9f, 0x5f, 0x95, 0x5e, 0xc5, 0xdd, 0xfb, 0x70, 0xba, 0xf2, 0xd0, 0xd9, 0xca, 0x43, 0xbf, 0x57,
+	0x1e, 0xfa, 0xb2, 0xf6, 0x3a, 0x67, 0x6b, 0xaf, 0xf3, 0x73, 0xed, 0x75, 0xde, 0xbf, 0x88, 0xa5,
+	0x99, 0x65, 0x21, 0xe5, 0x70, 0xec, 0xb7, 0x3e, 0xaf, 0xfc, 0xf1, 0x2e, 0x9f, 0x31, 0xa9, 0xfc,
+	0x8d, 0xff, 0x01, 0x96, 0xca, 0xf0, 0x7a, 0x89, 0x78, 0xf4, 0x27, 0x00, 0x00, 0xff, 0xff, 0xc4,
+	0xd9, 0xd9, 0xf5, 0x36, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -248,10 +289,12 @@ func (m *LiquidateSubaccountsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
-	if len(m.SubaccountIds) > 0 {
-		for iNdEx := len(m.SubaccountIds) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.SubaccountOpenPositionInfo) > 0 {
+		for k := range m.SubaccountOpenPositionInfo {
+			v := m.SubaccountOpenPositionInfo[k]
+			baseI := i
 			{
-				size, err := m.SubaccountIds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := (&v).MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -259,8 +302,47 @@ func (m *LiquidateSubaccountsRequest) MarshalToSizedBuffer(dAtA []byte) (int, er
 				i = encodeVarintLiquidation(dAtA, i, uint64(size))
 			}
 			i--
-			dAtA[i] = 0xa
+			dAtA[i] = 0x12
+			i = encodeVarintLiquidation(dAtA, i, uint64(k))
+			i--
+			dAtA[i] = 0x8
+			i = encodeVarintLiquidation(dAtA, i, uint64(baseI-i))
+			i--
+			dAtA[i] = 0x22
 		}
+	}
+	if len(m.NegativeTncSubaccountIds) > 0 {
+		for iNdEx := len(m.NegativeTncSubaccountIds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.NegativeTncSubaccountIds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintLiquidation(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
+	if len(m.LiquidatableSubaccountIds) > 0 {
+		for iNdEx := len(m.LiquidatableSubaccountIds) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.LiquidatableSubaccountIds[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintLiquidation(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.BlockHeight != 0 {
+		i = encodeVarintLiquidation(dAtA, i, uint64(m.BlockHeight))
+		i--
+		dAtA[i] = 0x8
 	}
 	return len(dAtA) - i, nil
 }
@@ -305,10 +387,28 @@ func (m *LiquidateSubaccountsRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.SubaccountIds) > 0 {
-		for _, e := range m.SubaccountIds {
+	if m.BlockHeight != 0 {
+		n += 1 + sovLiquidation(uint64(m.BlockHeight))
+	}
+	if len(m.LiquidatableSubaccountIds) > 0 {
+		for _, e := range m.LiquidatableSubaccountIds {
 			l = e.Size()
 			n += 1 + l + sovLiquidation(uint64(l))
+		}
+	}
+	if len(m.NegativeTncSubaccountIds) > 0 {
+		for _, e := range m.NegativeTncSubaccountIds {
+			l = e.Size()
+			n += 1 + l + sovLiquidation(uint64(l))
+		}
+	}
+	if len(m.SubaccountOpenPositionInfo) > 0 {
+		for k, v := range m.SubaccountOpenPositionInfo {
+			_ = k
+			_ = v
+			l = v.Size()
+			mapEntrySize := 1 + sovLiquidation(uint64(k)) + 1 + l + sovLiquidation(uint64(l))
+			n += mapEntrySize + 1 + sovLiquidation(uint64(mapEntrySize))
 		}
 	}
 	return n
@@ -359,8 +459,27 @@ func (m *LiquidateSubaccountsRequest) Unmarshal(dAtA []byte) error {
 		}
 		switch fieldNum {
 		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field BlockHeight", wireType)
+			}
+			m.BlockHeight = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowLiquidation
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.BlockHeight |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountIds", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field LiquidatableSubaccountIds", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -387,10 +506,159 @@ func (m *LiquidateSubaccountsRequest) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.SubaccountIds = append(m.SubaccountIds, types.SubaccountId{})
-			if err := m.SubaccountIds[len(m.SubaccountIds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.LiquidatableSubaccountIds = append(m.LiquidatableSubaccountIds, types.SubaccountId{})
+			if err := m.LiquidatableSubaccountIds[len(m.LiquidatableSubaccountIds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field NegativeTncSubaccountIds", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowLiquidation
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthLiquidation
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthLiquidation
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.NegativeTncSubaccountIds = append(m.NegativeTncSubaccountIds, types.SubaccountId{})
+			if err := m.NegativeTncSubaccountIds[len(m.NegativeTncSubaccountIds)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountOpenPositionInfo", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowLiquidation
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthLiquidation
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthLiquidation
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.SubaccountOpenPositionInfo == nil {
+				m.SubaccountOpenPositionInfo = make(map[uint32]types1.SubaccountOpenPositionInfo)
+			}
+			var mapkey uint32
+			mapvalue := &types1.SubaccountOpenPositionInfo{}
+			for iNdEx < postIndex {
+				entryPreIndex := iNdEx
+				var wire uint64
+				for shift := uint(0); ; shift += 7 {
+					if shift >= 64 {
+						return ErrIntOverflowLiquidation
+					}
+					if iNdEx >= l {
+						return io.ErrUnexpectedEOF
+					}
+					b := dAtA[iNdEx]
+					iNdEx++
+					wire |= uint64(b&0x7F) << shift
+					if b < 0x80 {
+						break
+					}
+				}
+				fieldNum := int32(wire >> 3)
+				if fieldNum == 1 {
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowLiquidation
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapkey |= uint32(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+				} else if fieldNum == 2 {
+					var mapmsglen int
+					for shift := uint(0); ; shift += 7 {
+						if shift >= 64 {
+							return ErrIntOverflowLiquidation
+						}
+						if iNdEx >= l {
+							return io.ErrUnexpectedEOF
+						}
+						b := dAtA[iNdEx]
+						iNdEx++
+						mapmsglen |= int(b&0x7F) << shift
+						if b < 0x80 {
+							break
+						}
+					}
+					if mapmsglen < 0 {
+						return ErrInvalidLengthLiquidation
+					}
+					postmsgIndex := iNdEx + mapmsglen
+					if postmsgIndex < 0 {
+						return ErrInvalidLengthLiquidation
+					}
+					if postmsgIndex > l {
+						return io.ErrUnexpectedEOF
+					}
+					mapvalue = &types1.SubaccountOpenPositionInfo{}
+					if err := mapvalue.Unmarshal(dAtA[iNdEx:postmsgIndex]); err != nil {
+						return err
+					}
+					iNdEx = postmsgIndex
+				} else {
+					iNdEx = entryPreIndex
+					skippy, err := skipLiquidation(dAtA[iNdEx:])
+					if err != nil {
+						return err
+					}
+					if (skippy < 0) || (iNdEx+skippy) < 0 {
+						return ErrInvalidLengthLiquidation
+					}
+					if (iNdEx + skippy) > postIndex {
+						return io.ErrUnexpectedEOF
+					}
+					iNdEx += skippy
+				}
+			}
+			m.SubaccountOpenPositionInfo[mapkey] = *mapvalue
 			iNdEx = postIndex
 		default:
 			iNdEx = preIndex

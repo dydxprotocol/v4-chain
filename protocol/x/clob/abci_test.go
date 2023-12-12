@@ -1063,7 +1063,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 
 			// Update the liquidatable subaccount IDs.
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccounts,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
 			})
 			require.NoError(t, err)
 
