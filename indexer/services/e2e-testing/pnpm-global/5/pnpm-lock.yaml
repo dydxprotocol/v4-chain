@@ -1,7 +1,0 @@
-lockfileVersion: 5.3
-
-specifiers:
-  '@dydxprotocol/v4-client-js': ^1.0.9
-
-dependencies:
-  '@dydxprotocol/v4-client-js': link:../../../../../../../.nvm/versions/node/v18.19.0/pnpm-global/5/node_modules/@dydxprotocol/v4-client-js
