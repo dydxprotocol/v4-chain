@@ -22,13 +22,13 @@ export class QueryClientImpl implements Query {
 
   listLimitParams(request: ListLimitParamsRequest = {}): Promise<ListLimitParamsResponse> {
     const data = ListLimitParamsRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.ibcratelimit.Query", "ListLimitParams", data);
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Query", "ListLimitParams", data);
     return promise.then(data => ListLimitParamsResponse.decode(new _m0.Reader(data)));
   }
 
   capacityByDenom(request: QueryCapacityByDenomRequest): Promise<QueryCapacityByDenomResponse> {
     const data = QueryCapacityByDenomRequest.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.ibcratelimit.Query", "CapacityByDenom", data);
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Query", "CapacityByDenom", data);
     return promise.then(data => QueryCapacityByDenomResponse.decode(new _m0.Reader(data)));
   }
 

@@ -21,13 +21,13 @@ export class MsgClientImpl implements Msg {
 
   setLimitParams(request: MsgSetLimitParams): Promise<MsgSetLimitParamsResponse> {
     const data = MsgSetLimitParams.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.ibcratelimit.Msg", "SetLimitParams", data);
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Msg", "SetLimitParams", data);
     return promise.then(data => MsgSetLimitParamsResponse.decode(new _m0.Reader(data)));
   }
 
   deleteLimitParams(request: MsgDeleteLimitParams): Promise<MsgDeleteLimitParamsResponse> {
     const data = MsgDeleteLimitParams.encode(request).finish();
-    const promise = this.rpc.request("dydxprotocol.ibcratelimit.Msg", "DeleteLimitParams", data);
+    const promise = this.rpc.request("dydxprotocol.ratelimit.Msg", "DeleteLimitParams", data);
     return promise.then(data => MsgDeleteLimitParamsResponse.decode(new _m0.Reader(data)));
   }
 

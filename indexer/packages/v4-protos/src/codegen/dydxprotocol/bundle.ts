@@ -42,11 +42,11 @@ import * as _45 from "./feetiers/genesis";
 import * as _46 from "./feetiers/params";
 import * as _47 from "./feetiers/query";
 import * as _48 from "./feetiers/tx";
-import * as _49 from "./ibcratelimit/capacity";
-import * as _50 from "./ibcratelimit/genesis";
-import * as _51 from "./ibcratelimit/limit_params";
-import * as _52 from "./ibcratelimit/query";
-import * as _53 from "./ibcratelimit/tx";
+import * as _49 from "./ratelimit/capacity";
+import * as _50 from "./ratelimit/genesis";
+import * as _51 from "./ratelimit/limit_params";
+import * as _52 from "./ratelimit/query";
+import * as _53 from "./ratelimit/tx";
 import * as _54 from "./indexer/events/events";
 import * as _55 from "./indexer/indexer_manager/event";
 import * as _56 from "./indexer/off_chain_updates/off_chain_updates";
@@ -95,7 +95,7 @@ import * as _105 from "./clob/query.lcd";
 import * as _106 from "./delaymsg/query.lcd";
 import * as _107 from "./epochs/query.lcd";
 import * as _108 from "./feetiers/query.lcd";
-import * as _109 from "./ibcratelimit/query.lcd";
+import * as _109 from "./ratelimit/query.lcd";
 import * as _110 from "./perpetuals/query.lcd";
 import * as _111 from "./prices/query.lcd";
 import * as _112 from "./rewards/query.lcd";
@@ -109,7 +109,7 @@ import * as _119 from "./clob/query.rpc.Query";
 import * as _120 from "./delaymsg/query.rpc.Query";
 import * as _121 from "./epochs/query.rpc.Query";
 import * as _122 from "./feetiers/query.rpc.Query";
-import * as _123 from "./ibcratelimit/query.rpc.Query";
+import * as _123 from "./ratelimit/query.rpc.Query";
 import * as _124 from "./perpetuals/query.rpc.Query";
 import * as _125 from "./prices/query.rpc.Query";
 import * as _126 from "./rewards/query.rpc.Query";
@@ -122,7 +122,7 @@ import * as _132 from "./bridge/tx.rpc.msg";
 import * as _133 from "./clob/tx.rpc.msg";
 import * as _134 from "./delaymsg/tx.rpc.msg";
 import * as _135 from "./feetiers/tx.rpc.msg";
-import * as _136 from "./ibcratelimit/tx.rpc.msg";
+import * as _136 from "./ratelimit/tx.rpc.msg";
 import * as _137 from "./perpetuals/tx.rpc.msg";
 import * as _138 from "./prices/tx.rpc.msg";
 import * as _139 from "./rewards/tx.rpc.msg";
@@ -208,7 +208,7 @@ export namespace dydxprotocol {
     ..._122,
     ..._135
   };
-  export const ibcratelimit = { ..._49,
+  export const ratelimit = { ..._49,
     ..._50,
     ..._51,
     ..._52,

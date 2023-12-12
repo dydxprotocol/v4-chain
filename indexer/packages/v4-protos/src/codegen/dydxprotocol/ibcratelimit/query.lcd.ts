@@ -16,7 +16,7 @@ export class LCDQueryClient {
 
 
   async listLimitParams(_params: ListLimitParamsRequest = {}): Promise<ListLimitParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/v4/ibcratelimit/list_limit_params`;
+    const endpoint = `dydxprotocol/v4/ratelimit/list_limit_params`;
     return await this.req.get<ListLimitParamsResponseSDKType>(endpoint);
   }
   /* Query capacity by denom. */
@@ -31,7 +31,7 @@ export class LCDQueryClient {
       options.params.denom = params.denom;
     }
 
-    const endpoint = `dydxprotocol/v4/ibcratelimit/capacity_by_denom`;
+    const endpoint = `dydxprotocol/v4/ratelimit/capacity_by_denom`;
     return await this.req.get<QueryCapacityByDenomResponseSDKType>(endpoint, options);
   }
 
