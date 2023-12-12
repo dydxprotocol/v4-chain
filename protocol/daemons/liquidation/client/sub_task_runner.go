@@ -2,10 +2,10 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -172,7 +172,6 @@ func (c *Client) GetLiquidatableSubaccountIds(
 	for _, subaccount := range subaccounts {
 		// Skip subaccounts with no open positions.
 		if len(subaccount.PerpetualPositions) == 0 {
-			numSubaccountsWithOpenPositions++
 			continue
 		}
 
@@ -184,12 +183,14 @@ func (c *Client) GetLiquidatableSubaccountIds(
 			liquidityTiers,
 		)
 		if err != nil {
+			c.logger.Error("Error checking collateralization status", "error", err)
 			return nil, err
 		}
 
 		if isLiquidatable {
 			liquidatableSubaccountIds = append(liquidatableSubaccountIds, *subaccount.Id)
 		}
+		numSubaccountsWithOpenPositions++
 	}
 
 	telemetry.ModuleSetGauge(
@@ -202,8 +203,11 @@ func (c *Client) GetLiquidatableSubaccountIds(
 	return liquidatableSubaccountIds, nil
 }
 
-// CheckSubaccountCollateralization queries a gRPC server using `AreSubaccountsLiquidatable`
-// and returns a list of collateralization statuses for the given list of subaccount ids.
+// CheckSubaccountCollateralization performs the same collateralization check as the application
+// using the provided market prices, perpetuals, and liquidity tiers.
+//
+// Note that current implementation assumes that the only asset is USDC and multi-collateral support
+// is not yet implemented.
 func (c *Client) CheckSubaccountCollateralization(
 	subaccount satypes.Subaccount,
 	marketPrices map[uint32]pricestypes.MarketPrice,
@@ -238,21 +242,19 @@ func (c *Client) CheckSubaccountCollateralization(
 	for _, perpetualPosition := range subaccount.PerpetualPositions {
 		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
 		if !ok {
-			panic(
-				fmt.Sprintf(
-					"Perpetual not found for perpetual id %d",
-					perpetualPosition.PerpetualId,
-				),
+			return false, errorsmod.Wrapf(
+				perptypes.ErrPerpetualDoesNotExist,
+				"Perpetual not found for perpetual id %d",
+				perpetualPosition.PerpetualId,
 			)
 		}
 
 		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
 		if !ok {
-			panic(
-				fmt.Sprintf(
-					"MarketPrice not found for perpetual %+v",
-					perpetual,
-				),
+			return false, errorsmod.Wrapf(
+				pricestypes.ErrMarketPriceDoesNotExist,
+				"MarketPrice not found for perpetual %+v",
+				perpetual,
 			)
 		}
 
@@ -264,11 +266,10 @@ func (c *Client) CheckSubaccountCollateralization(
 
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
 		if !ok {
-			panic(
-				fmt.Sprintf(
-					"LiquidityTier not found for perpetual %+v",
-					perpetual,
-				),
+			return false, errorsmod.Wrapf(
+				perptypes.ErrLiquidityTierDoesNotExist,
+				"LiquidityTier not found for perpetual %+v",
+				perpetual,
 			)
 		}
 
@@ -282,5 +283,5 @@ func (c *Client) CheckSubaccountCollateralization(
 		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 	}
 
-	return clobkeeper.CanLiquidate(bigTotalNetCollateral, bigTotalMaintenanceMargin), nil
+	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin), nil
 }
