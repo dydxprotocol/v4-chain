@@ -200,12 +200,10 @@ func PrepareCheckState(
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
 	subaccountIds := liquidatableSubaccountIds.GetSubaccountIds()
-	numDeleveragingAttempts, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds)
+	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds)
 	if err != nil {
 		panic(err)
 	}
-
-	// 7. Deleverage subaccounts with open positions in final settlement markets.
 	subaccountPositionInfo := map[uint32]map[bool]map[satypes.SubaccountId]struct{}{
 		0: {
 			false: {
@@ -216,11 +214,18 @@ func PrepareCheckState(
 			},
 		},
 	}
-	if err := keeper.DeleverageSubaccountsInFinalSettlementMarkets(
-		ctx,
-		subaccountPositionInfo,
-		numDeleveragingAttempts,
-	); err != nil {
+	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
+	// to be deleveraged.
+	subaccountsToDeleverage = append(
+		subaccountsToDeleverage,
+		keeper.GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
+			ctx,
+			subaccountPositionInfo,
+		)...,
+	)
+
+	// 7. Deleverage subaccounts.
+	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}
 

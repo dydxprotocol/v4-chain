@@ -7,6 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -526,11 +527,10 @@ func (k Keeper) ProcessDeleveraging(
 // liquidations daemon to deleverage subaccounts with open positions in final settlement markets. Note
 // this function will deleverage both negative TNC and non-negative TNC subaccounts. The deleveraging code
 // uses the bankruptcy price for the former and the oracle price for the latter.
-func (k Keeper) DeleverageSubaccountsInFinalSettlementMarkets(
+func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
 	subaccountOpenPositionInfo map[uint32]map[bool]map[satypes.SubaccountId]struct{},
-	numDeleveragingAttempts int,
-) error {
+) (subaccountsToDeleverage []subaccountToDeleverage) {
 	// Gather perpetualIds for perpetuals whose clob pairs are in final settlement.
 	finalSettlementPerpetualIds := make(map[uint32]struct{})
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
@@ -540,29 +540,50 @@ func (k Keeper) DeleverageSubaccountsInFinalSettlementMarkets(
 		}
 	}
 
-	// Deleverage subaccounts with open positions in final settlement markets.
+	// Fetch subaccounts with open positions in final settlement markets.
 	for perpetualId := range finalSettlementPerpetualIds {
 		for isBuy := range subaccountOpenPositionInfo[perpetualId] {
 			for subaccountId := range subaccountOpenPositionInfo[perpetualId][isBuy] {
-				if numDeleveragingAttempts >= int(k.Flags.MaxDeleveragingAttemptsPerBlock) {
-					return nil
-				}
-
-				if _, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId); err != nil {
-					if err != nil {
-						k.Logger(ctx).Error(
-							"DeleverageSubaccountsInFinalSettlementMarkets: Failed to deleverage subaccount.",
-							"subaccount", subaccountId,
-							"perpetualId", perpetualId,
-							"error", err,
-						)
-						return err
-					}
-				}
-				numDeleveragingAttempts++
+				subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+					SubaccountId: subaccountId,
+					PerpetualId:  perpetualId,
+				})
 			}
 		}
 	}
+
+	return subaccountsToDeleverage
+}
+
+// DeleverageSubaccounts deleverages a slice of subaccounts paired with a perpetual position to deleverage with.
+func (k Keeper) DeleverageSubaccounts(
+	ctx sdk.Context,
+	subaccountsToDeleverage []subaccountToDeleverage,
+) error {
+	// For each unfilled liquidation, attempt to deleverage the subaccount.
+	startDeleverageSubaccounts := time.Now()
+	var i int
+	for i = 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
+		subaccountId := subaccountsToDeleverage[i].SubaccountId
+		perpetualId := subaccountsToDeleverage[i].PerpetualId
+		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
+		if err != nil {
+			k.Logger(ctx).Error(
+				"Failed to deleverage subaccount.",
+				"subaccount", subaccountId,
+				"perpetualId", perpetualId,
+				"error", err,
+			)
+			return err
+		}
+	}
+
+	telemetry.MeasureSince(
+		startDeleverageSubaccounts,
+		types.ModuleName,
+		metrics.LiquidateSubaccounts_Deleverage,
+		metrics.Latency,
+	)
 
 	return nil
 }
