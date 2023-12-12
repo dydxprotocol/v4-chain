@@ -83,6 +83,7 @@ func TestHealthChecker(t *testing.T) {
 			checkable := &mocks.HealthCheckable{}
 			for _, response := range test.healthCheckResponses {
 				checkable.On("HealthCheck").Return(response).Once()
+				checkable.On("ServiceName").Return("test-service")
 			}
 
 			// Set up time provider to return a sequence of timestamps one second apart starting at Time0.
