@@ -90,28 +90,35 @@ func (_m *MemClobKeeper) AddPreexistingStatefulOrder(ctx types.Context, order *c
 	return r0, r1, r2, r3
 }
 
-// CanDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId
-func (_m *MemClobKeeper) CanDeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
-	ret := _m.Called(ctx, subaccountId)
+// CanDeleverageSubaccount provides a mock function with given fields: ctx, subaccountId, perpetualId
+func (_m *MemClobKeeper) CanDeleverageSubaccount(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) (bool, bool, error) {
+	ret := _m.Called(ctx, subaccountId, perpetualId)
 
 	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) (bool, error)); ok {
-		return rf(ctx, subaccountId)
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) (bool, bool, error)); ok {
+		return rf(ctx, subaccountId, perpetualId)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId) bool); ok {
-		r0 = rf(ctx, subaccountId)
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32) bool); ok {
+		r0 = rf(ctx, subaccountId, perpetualId)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId) error); ok {
-		r1 = rf(ctx, subaccountId)
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32) bool); ok {
+		r1 = rf(ctx, subaccountId, perpetualId)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.SubaccountId, uint32) error); ok {
+		r2 = rf(ctx, subaccountId, perpetualId)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // CancelShortTermOrder provides a mock function with given fields: ctx, msgCancelOrder

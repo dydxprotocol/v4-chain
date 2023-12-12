@@ -218,9 +218,11 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 		insuranceFundBalance          *big.Int
 		subaccount                    satypes.Subaccount
 		marketIdToOraclePriceOverride map[uint32]uint64
+		clobPairs                     []types.ClobPair
 
 		// Expectations.
-		expectedCanDeleverageSubaccount bool
+		expectedCanDeleverageSubaccount   bool
+		expectedShouldFinalSettlePosition bool
 	}{
 		`Cannot deleverage when subaccount has positive TNC`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -228,6 +230,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_000_000_000, // $50,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
 			},
 
 			expectedCanDeleverageSubaccount: false,
@@ -239,6 +244,9 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_499_000_000, // $54,999 / BTC
 			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
 
 			expectedCanDeleverageSubaccount: false,
 		},
@@ -249,8 +257,39 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
 			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
 
 			expectedCanDeleverageSubaccount: true,
+		},
+		`Can deleverage when subaccount has negative TNC and clob pair has status FINAL_SETTLEMENT`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
+			insuranceFundBalance: big.NewInt(10_000_000_000), // $10,000
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_500_000_000, // $55,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+
+			expectedCanDeleverageSubaccount:   true,
+			expectedShouldFinalSettlePosition: false,
+		},
+		`Can final settle deleverage when subaccount has positive TNC and clob pair has status FINAL_SETTLEMENT`: {
+			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
+			insuranceFundBalance: big.NewInt(10_000_000_001), // $10,000.000001
+			subaccount:           constants.Carl_Num0_1BTC_Short_54999USD,
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_000_000_000, // $50,000 / BTC
+			},
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+
+			expectedCanDeleverageSubaccount:   true,
+			expectedShouldFinalSettlePosition: true,
 		},
 	}
 
@@ -259,7 +298,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+			mockIndexerEventManager := &mocks.IndexerEventManager{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, mockIndexerEventManager)
 
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
@@ -313,17 +353,56 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			for i, clobPair := range tc.clobPairs {
+				mockIndexerEventManager.On("AddTxnEvent",
+					ks.Ctx,
+					indexerevents.SubtypePerpetualMarket,
+					indexerevents.PerpetualMarketEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewPerpetualMarketCreateEvent(
+							clobPair.MustGetPerpetualId(),
+							clobPair.Id,
+							perpetuals[i].Params.Ticker,
+							perpetuals[i].Params.MarketId,
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							perpetuals[i].Params.AtomicResolution,
+							clobPair.SubticksPerTick,
+							clobPair.StepBaseQuantums,
+							perpetuals[i].Params.LiquidityTier,
+						),
+					),
+				).Once().Return()
+
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ks.Ctx,
+					clobPair.Id,
+					clobPair.MustGetPerpetualId(),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+				require.NoError(t, err)
+			}
+
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.subaccount)
 
-			canDeleverageSubaccount, err := ks.ClobKeeper.CanDeleverageSubaccount(
+			canDeleverageSubaccount, shouldFinalSettlePosition, err := ks.ClobKeeper.CanDeleverageSubaccount(
 				ks.Ctx,
 				*tc.subaccount.Id,
+				0,
 			)
 			require.NoError(t, err)
 			require.Equal(
 				t,
 				tc.expectedCanDeleverageSubaccount,
 				canDeleverageSubaccount,
+			)
+			require.Equal(
+				t,
+				tc.expectedShouldFinalSettlePosition,
+				shouldFinalSettlePosition,
 			)
 		})
 	}
