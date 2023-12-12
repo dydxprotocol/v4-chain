@@ -6,12 +6,13 @@ E2E testing framework for Indexer/protocol.
 
 Spin up a containerized environment running both the network and Indexer services:
 
-```
-cd indexer
-docker compose -f docker-compose-e2e-test.yml up
-```
+In one terminal, run
 
 ```
-cd indexer/services/e2e-testing
+./run-containerized-env.sh
+```
+
+In another terminal, run
+```
 pnpm build && pnpm test
 ```
