@@ -32,3 +32,16 @@ message SubaccountLiquidationInfo {
   // covering this subaccount.
   uint64 quantums_insurance_lost = 3;
 }
+
+// SubaccountOpenPositionInfo holds information about open positions for a
+// perpetual.
+message SubaccountOpenPositionInfo {
+  // The id of the perpetual.
+  uint32 perpetual_id = 1;
+  // The ids of the subaccounts with long positions.
+  repeated dydxprotocol.subaccounts.SubaccountId
+      subaccounts_with_long_position = 2 [ (gogoproto.nullable) = false ];
+  // The ids of the subaccounts with short positions.
+  repeated dydxprotocol.subaccounts.SubaccountId
+      subaccounts_with_short_position = 3 [ (gogoproto.nullable) = false ];
+}

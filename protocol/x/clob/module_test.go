@@ -103,7 +103,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-		liquidations_types.NewLiquidatableSubaccountIds(),
+		liquidations_types.NewDaemonLiquidationInfo(),
 	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
 }
 
