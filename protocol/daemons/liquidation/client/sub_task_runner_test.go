@@ -70,9 +70,11 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -119,9 +121,11 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Dave_Num0,
 					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -169,7 +173,9 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -216,7 +222,9 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -283,9 +291,11 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -352,9 +362,11 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Dave_Num0,
 					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -421,7 +433,9 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -488,7 +502,117 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
+				}
+				response3 := &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+			},
+		},
+		"Can get negative tnc subaccount with short position": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				// Block height.
+				res := &blocktimetypes.QueryPreviousBlockInfoResponse{
+					Info: &blocktimetypes.BlockInfo{
+						Height:    uint32(50),
+						Timestamp: constants.TimeTen,
+					},
+				}
+				mck.On("PreviousBlockInfo", mock.Anything, mock.Anything).Return(res, nil)
+
+				// Subaccount.
+				res2 := &satypes.QuerySubaccountAllResponse{
+					Subaccount: []satypes.Subaccount{
+						// Carl has TNC of -$1.
+						constants.Carl_Num0_1BTC_Short_49999USD,
+					},
+				}
+				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
+
+				// Market prices.
+				res3 := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: constants.TestMarketPrices,
+				}
+				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
+
+				// Perpetuals.
+				res4 := &perptypes.QueryAllPerpetualsResponse{
+					Perpetual: []perptypes.Perpetual{
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+					},
+				}
+				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
+
+				// Liquidity tiers.
+				res5 := &perptypes.QueryAllLiquidityTiersResponse{
+					LiquidityTiers: constants.LiquidityTiers,
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
+
+				// Sends liquidatable subaccount ids to the server.
+				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
+						constants.Carl_Num0,
+					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{
+						constants.Carl_Num0,
+					},
+				}
+				response3 := &api.LiquidateSubaccountsResponse{}
+				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
+			},
+		},
+		"Can get negative tnc subaccount with long position": {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
+				// Block height.
+				res := &blocktimetypes.QueryPreviousBlockInfoResponse{
+					Info: &blocktimetypes.BlockInfo{
+						Height:    uint32(50),
+						Timestamp: constants.TimeTen,
+					},
+				}
+				mck.On("PreviousBlockInfo", mock.Anything, mock.Anything).Return(res, nil)
+
+				// Subaccount.
+				res2 := &satypes.QuerySubaccountAllResponse{
+					Subaccount: []satypes.Subaccount{
+						// Dave has TNC of -$1.
+						constants.Dave_Num0_1BTC_Long_50001USD_Short,
+					},
+				}
+				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(res2, nil)
+
+				// Market prices.
+				res3 := &pricestypes.QueryAllMarketPricesResponse{
+					MarketPrices: constants.TestMarketPrices,
+				}
+				mck.On("AllMarketPrices", mock.Anything, mock.Anything).Return(res3, nil)
+
+				// Perpetuals.
+				res4 := &perptypes.QueryAllPerpetualsResponse{
+					Perpetual: []perptypes.Perpetual{
+						constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+					},
+				}
+				mck.On("AllPerpetuals", mock.Anything, mock.Anything).Return(res4, nil)
+
+				// Liquidity tiers.
+				res5 := &perptypes.QueryAllLiquidityTiersResponse{
+					LiquidityTiers: constants.LiquidityTiers,
+				}
+				mck.On("AllLiquidityTiers", mock.Anything, mock.Anything).Return(res5, nil)
+
+				// Sends liquidatable subaccount ids to the server.
+				req := &api.LiquidateSubaccountsRequest{
+					BlockHeight: uint32(50),
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
+						constants.Dave_Num0,
+					},
+					NegativeTncSubaccountIds: []satypes.SubaccountId{
+						constants.Dave_Num0,
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)

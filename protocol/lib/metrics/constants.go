@@ -299,6 +299,7 @@ const (
 	GetSubaccountsFromKey                = "get_subaccounts_from_key"
 	LiquidatableSubaccountIds            = "liquidatable_subaccount_ids"
 	LiquidationDaemon                    = "liquidation_daemon"
+	NegativeTncSubaccountIds             = "negative_tnc_subaccount_ids"
 	PageLimit                            = "page_limit"
 	SendLiquidatableSubaccountIds        = "send_liquidatable_subaccount_ids"
 	SubaccountsWithOpenPositions         = "subaccounts_with_open_positions"

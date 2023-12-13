@@ -42,7 +42,9 @@ func (s *Server) LiquidateSubaccounts(
 		metrics.Count,
 	)
 
+	s.daemonLiquidationInfo.UpdateBlockHeight(req.BlockHeight)
 	s.daemonLiquidationInfo.UpdateLiquidatableSubaccountIds(req.LiquidatableSubaccountIds)
+	s.daemonLiquidationInfo.UpdateNegativeTncSubaccountIds(req.NegativeTncSubaccountIds)
 
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.LiquidationsDaemonServiceName)

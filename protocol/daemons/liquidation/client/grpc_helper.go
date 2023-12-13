@@ -205,7 +205,9 @@ func (c *Client) GetAllSubaccounts(
 // subaccount ids to a gRPC server via `LiquidateSubaccounts`.
 func (c *Client) SendLiquidatableSubaccountIds(
 	ctx context.Context,
-	subaccountIds []satypes.SubaccountId,
+	blockHeight uint32,
+	liquidatableSubaccountIds []satypes.SubaccountId,
+	negativeTncSubaccountIds []satypes.SubaccountId,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -216,13 +218,21 @@ func (c *Client) SendLiquidatableSubaccountIds(
 
 	telemetry.ModuleSetGauge(
 		metrics.LiquidationDaemon,
-		float32(len(subaccountIds)),
+		float32(len(liquidatableSubaccountIds)),
 		metrics.LiquidatableSubaccountIds,
+		metrics.Count,
+	)
+	telemetry.ModuleSetGauge(
+		metrics.LiquidationDaemon,
+		float32(len(negativeTncSubaccountIds)),
+		metrics.NegativeTncSubaccountIds,
 		metrics.Count,
 	)
 
 	request := &api.LiquidateSubaccountsRequest{
-		LiquidatableSubaccountIds: subaccountIds,
+		BlockHeight:               blockHeight,
+		LiquidatableSubaccountIds: liquidatableSubaccountIds,
+		NegativeTncSubaccountIds:  negativeTncSubaccountIds,
 	}
 
 	if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {

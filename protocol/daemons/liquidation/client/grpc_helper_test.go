@@ -452,56 +452,102 @@ func TestGetAllMarketPrices(t *testing.T) {
 func TestSendLiquidatableSubaccountIds(t *testing.T) {
 	tests := map[string]struct {
 		// mocks
-		setupMocks    func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId)
-		subaccountIds []satypes.SubaccountId
+		setupMocks func(
+			context.Context,
+			*mocks.QueryClient,
+			uint32,
+			[]satypes.SubaccountId,
+			[]satypes.SubaccountId,
+		)
+		liquidatableSubaccountIds []satypes.SubaccountId
+		negativeTncSubaccountIds  []satypes.SubaccountId
 
 		// expectations
 		expectedError error
 	}{
 		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+				blockHeight uint32,
+				liquidatableSubaccountIds []satypes.SubaccountId,
+				negativeTncSubaccountIds []satypes.SubaccountId,
+			) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:               blockHeight,
+					LiquidatableSubaccountIds: liquidatableSubaccountIds,
+					NegativeTncSubaccountIds:  negativeTncSubaccountIds,
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
-			subaccountIds: []satypes.SubaccountId{
+			liquidatableSubaccountIds: []satypes.SubaccountId{
 				constants.Alice_Num0,
 				constants.Bob_Num0,
 			},
+			negativeTncSubaccountIds: []satypes.SubaccountId{
+				constants.Carl_Num0,
+				constants.Dave_Num0,
+			},
 		},
 		"Success Empty": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+				blockHeight uint32,
+				liquidatableSubaccountIds []satypes.SubaccountId,
+				negativeTncSubaccountIds []satypes.SubaccountId,
+			) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:               blockHeight,
+					LiquidatableSubaccountIds: liquidatableSubaccountIds,
+					NegativeTncSubaccountIds:  negativeTncSubaccountIds,
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
-			subaccountIds: []satypes.SubaccountId{},
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
 		},
 		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(
+				ctx context.Context,
+				mck *mocks.QueryClient,
+				blockHeight uint32,
+				liquidatableSubaccountIds []satypes.SubaccountId,
+				negativeTncSubaccountIds []satypes.SubaccountId,
+			) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:               blockHeight,
+					LiquidatableSubaccountIds: liquidatableSubaccountIds,
+					NegativeTncSubaccountIds:  negativeTncSubaccountIds,
 				}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
-			subaccountIds: []satypes.SubaccountId{},
-			expectedError: errors.New("test error"),
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
+			expectedError:             errors.New("test error"),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.subaccountIds)
+			tc.setupMocks(
+				grpc.Ctx,
+				queryClientMock,
+				uint32(50),
+				tc.liquidatableSubaccountIds,
+				tc.negativeTncSubaccountIds,
+			)
 
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.LiquidationServiceClient = queryClientMock
 
-			err := daemon.SendLiquidatableSubaccountIds(grpc.Ctx, tc.subaccountIds)
+			err := daemon.SendLiquidatableSubaccountIds(
+				grpc.Ctx,
+				uint32(50),
+				tc.liquidatableSubaccountIds,
+				tc.negativeTncSubaccountIds,
+			)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}
