@@ -6,10 +6,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
+// InfoLog reports msg as an info level log with key vals.
 func InfoLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
 	ctx.Logger().Info(msg, keyvals...)
 }
 
+// DebugLog reports msg as a debug level log with key vals.
 func DebugLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
 	ctx.Logger().Debug(msg, keyvals...)
 }

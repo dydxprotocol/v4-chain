@@ -12,7 +12,6 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/iavl/internal/logger"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -460,7 +459,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		)
 
 		if err != nil {
-			logger.Debug(ctx,
+			log.DebugLog(ctx,
 				fmt.Sprintf(
 					"MustPlaceStatefulOrdersFromLastBlock: PlaceOrder() returned an error %+v for order %+v",
 					err,
