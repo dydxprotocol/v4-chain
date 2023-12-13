@@ -68,6 +68,7 @@ func MustCreateOrderUpdateMessage(
 }
 
 // CreateOrderUpdateMessage creates an off-chain update message for an order being updated.
+// TODO(CLOB-1051) take in ctx, not logger
 func CreateOrderUpdateMessage(
 	logger log.Logger,
 	orderId clobtypes.OrderId,
@@ -186,6 +187,7 @@ func CreateOrderRemoveMessage(
 // removed with the resulting removal status of the removed order. It attempts to look up the removal
 // reason using the given orderStatus & orderError. If the reason cannot be found, it logs an error
 // and falls back to the defaultRemovalReason. If defaultRemovalReason is ...UNSPECIFIED, it panics.
+// TODO()
 func CreateOrderRemoveMessageWithDefaultReason(
 	logger log.Logger,
 	orderId clobtypes.OrderId,

@@ -57,7 +57,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 				log.InfoLog(ctx, "Place Order Expected Error", log.Error, err)
 				return
 			}
-			log.ErrorLog(ctx, "Error placing order", err)
+			log.ErrorLogWithError(ctx, "Error placing order", err)
 		}
 	}()
 

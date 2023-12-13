@@ -111,7 +111,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
 		if err != nil {
-			log.ErrorLog(ctx, "Failed to liquidate subaccount", err,
+			log.ErrorLogWithError(ctx, "Failed to liquidate subaccount", err,
 				"liquidationOrder", *liquidationOrder,
 			)
 			return err
@@ -138,7 +138,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
 		if err != nil {
-			log.ErrorLog(ctx, "Failed to deleverage subaccount", err)
+			log.ErrorLogWithError(ctx, "Failed to deleverage subaccount", err)
 			return err
 		}
 	}

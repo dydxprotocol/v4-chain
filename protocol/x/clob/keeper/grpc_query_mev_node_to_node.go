@@ -22,7 +22,7 @@ func (k Keeper) MevNodeToNodeCalculation(
 
 	// Validate that the request is valid.
 	if err := validateMevNodeToNodeRequest(req); err != nil {
-		log.ErrorLog(ctx, "Failed to validate MEV node to node calculation request", err,
+		log.ErrorLogWithError(ctx, "Failed to validate MEV node to node calculation request", err,
 			"mev_calculation_request", req,
 		)
 		return nil, err
@@ -35,7 +35,7 @@ func (k Keeper) MevNodeToNodeCalculation(
 		blockProposerPnL,
 		req.BlockProposerMatches,
 	); err != nil {
-		log.ErrorLog(ctx, "Failed to calculate match PnL for block proposer", err,
+		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for block proposer", err,
 			"mev_matches", req.BlockProposerMatches,
 		)
 		return nil, err
@@ -46,7 +46,7 @@ func (k Keeper) MevNodeToNodeCalculation(
 		validatorPnL,
 		req.ValidatorMevMetrics.ValidatorMevMatches,
 	); err != nil {
-		log.ErrorLog(ctx, "Failed to calculate match PnL for validator", err,
+		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for validator", err,
 			"mev_matches", req.ValidatorMevMetrics.ValidatorMevMatches,
 		)
 		return nil, err

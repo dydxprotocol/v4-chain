@@ -1,11 +1,10 @@
 package keeper
 
 import (
-	"fmt"
-
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -215,11 +214,10 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 			prunedOrderIds = append(prunedOrderIds, orderId)
 
 			if prunableBlockHeight < blockHeight {
-				k.Logger(ctx).Error(fmt.Sprintf(
-					"prunableBlockHeight %v is less than blockHeight %v in PruneOrdersForBlockHeight, this should never happen.",
+				log.ErrorLog(ctx, "prunableBlockHeight is less than blockHeight in PruneOrdersForBlockHeight, this should never happen.",
+					log.PrunableBlockHeight,
 					prunableBlockHeight,
-					blockHeight,
-				))
+				)
 			}
 		}
 	}

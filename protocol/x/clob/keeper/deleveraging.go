@@ -248,7 +248,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			)
 			if err != nil {
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-				log.ErrorLog(ctx, "Encountered error when getting quote quantums for deleveraging",
+				log.ErrorLogWithError(ctx, "Encountered error when getting quote quantums for deleveraging",
 					err,
 					"deltaQuantums", deltaQuantums,
 					"liquidatedSubaccount", liquidatedSubaccount,

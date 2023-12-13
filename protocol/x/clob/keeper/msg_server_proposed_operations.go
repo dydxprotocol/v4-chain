@@ -30,7 +30,7 @@ func (k msgServer) ProposedOperations(
 	defer func() {
 		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.ProposedOperations, metrics.DeliverTx)
 		if err != nil {
-			log.ErrorLog(ctx, "Error in Proposed Operations", err)
+			log.ErrorLogWithError(ctx, "Error in Proposed Operations", err)
 		}
 	}()
 

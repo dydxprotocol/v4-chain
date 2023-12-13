@@ -70,7 +70,7 @@ func (k msgServer) CancelOrder(
 					return
 				}
 			}
-			log.ErrorLog(ctx, "Error cancelling order", err)
+			log.ErrorLogWithError(ctx, "Error cancelling order", err)
 		}
 	}()
 

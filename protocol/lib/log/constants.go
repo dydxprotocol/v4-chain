@@ -1,5 +1,7 @@
 package log
 
+import "errors"
+
 const (
 	SourceModuleKey = "source_module"
 	Error           = "error"
@@ -22,6 +24,10 @@ const (
 	OrderStatus         = "order_status"
 	Subaccount          = "subaccount"
 	PerpetualId         = "perpetual_id"
+	MevMatches          = "mev_matches"
+	StackTrace          = "stack_trace"
+	Proposer            = "proposer"
+	PrunableBlockHeight = "prunable_block_height"
 
 	OrderSizeOptimisticallyFilledFromMatchingQuantums = "order_size_optimistically_filled_from_matching_quantums"
 	NewLocalValidatorOperationsQueue                  = "new_local_validator_operations_queue"
@@ -45,4 +51,11 @@ const (
 	BeginBlocker       = "BeginBlocker"
 	EndBlocker         = "EndBlocker"
 	PrepareCheckState  = "PrepareCheckState"
+)
+
+// Miscallaneous logging constants.
+var (
+	// ErrPanicRecoverDefaultValue represents an error that is default used for error tracking
+	// when a panic recover function returns a non-error object.
+	ErrPanicRecoverDefaultValue = errors.New("default error used for panic recovers not of type error")
 )
