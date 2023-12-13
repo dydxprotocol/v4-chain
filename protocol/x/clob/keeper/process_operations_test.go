@@ -1470,7 +1470,7 @@ func TestProcessProposerOperations(t *testing.T) {
 					&constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10,
 					[]types.MakerFill{
 						{
-							FillAmount: 10,
+							FillAmount:   10,
 							MakerOrderId: constants.LongTermOrder_Alice_Num0_Id1_Clob0_Sell20_Price10_GTBT10.OrderId,
 						},
 					},
@@ -1492,13 +1492,13 @@ func TestProcessProposerOperations(t *testing.T) {
 				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
 					types.MatchPerpetualLiquidation{
 						Liquidated:  constants.Alice_Num0,
-						ClobPairId: 0,
+						ClobPairId:  0,
 						PerpetualId: 0,
-						TotalSize: 10,
-						IsBuy: false,
+						TotalSize:   10,
+						IsBuy:       false,
 						Fills: []types.MakerFill{
 							{
-								FillAmount: 10,
+								FillAmount:   10,
 								MakerOrderId: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Buy25_Price30_GTBT10.OrderId,
 							},
 						},
@@ -1606,12 +1606,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 			subaccounts: []satypes.Subaccount{
-				// liquidatable: MMR = $5000, TNC = $499
-				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Carl_Num0_1BTC_Short_49999USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			marketIdToOraclePriceOverride: map[uint32]uint64{
-				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
@@ -1708,6 +1704,39 @@ func TestProcessProposerOperations(t *testing.T) {
 				BlockHeight: blockHeight,
 			},
 			expectedError: types.ErrInvalidDeleveragedSubaccount,
+		},
+		`Fails with ClobMatch_MatchPerpetualDeleveraging for non-negative TNC subaccount,
+			IsFinalSettlement is false for market in final settlement`: {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             100_000_000,
+							},
+						},
+						IsFinalSettlement: false,
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedError: types.ErrDeleveragingIsFinalSettlementFlagMismatch,
 		},
 	}
 
