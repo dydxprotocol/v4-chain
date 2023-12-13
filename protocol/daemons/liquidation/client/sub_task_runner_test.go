@@ -70,7 +70,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
 				}
@@ -119,7 +119,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Dave_Num0,
 					},
 				}
@@ -169,7 +169,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -216,7 +216,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -283,7 +283,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
 				}
@@ -352,7 +352,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{
+					LiquidatableSubaccountIds: []satypes.SubaccountId{
 						constants.Dave_Num0,
 					},
 				}
@@ -421,7 +421,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -488,7 +488,7 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					SubaccountIds: []satypes.SubaccountId{},
+					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
