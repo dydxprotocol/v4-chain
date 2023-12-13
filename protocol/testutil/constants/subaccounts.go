@@ -141,8 +141,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -171,8 +172,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -338,8 +340,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -353,8 +356,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
