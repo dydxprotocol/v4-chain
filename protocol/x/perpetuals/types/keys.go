@@ -27,6 +27,9 @@ const (
 	// LiquidityTierKeyPrefix is the prefix to retrieve all `LiquidityTier`s.
 	LiquidityTierKeyPrefix = "LiqTier:"
 
+	// VolatilityBoundsKeyPrefix is the prefix to retrieve all `VolatilityBounds`s.
+	VolatilityBoundsKeyPrefix = "VolBounds:"
+
 	// ParamsKey is the key to retrieve all params for the module.
 	ParamsKey = "Params"
 )

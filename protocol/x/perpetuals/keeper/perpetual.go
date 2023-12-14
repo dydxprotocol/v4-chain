@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math"
 	"math/big"
 	"math/rand"
 	"sort"
@@ -71,6 +72,15 @@ func (k Keeper) CreatePerpetual(
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
+	// Initialize volatility bounds for this perpetual.
+	k.SetVolatilityBounds(
+		ctx,
+		id,
+		types.VolatilityBounds{
+			Min: math.MaxUint64,
+			Max: 0,
+		},
+	)
 
 	return perpetual, nil
 }
@@ -1103,6 +1113,32 @@ func (k Keeper) setPerpetual(
 	b := k.cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
+}
+
+// GetVolatilityBounds retrieves volatility bounds for a given perpetual.
+func (k Keeper) GetVolatilityBounds(
+	ctx sdk.Context,
+	perpetualId uint32,
+) (volatilityBounds types.VolatilityBounds, err error) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VolatilityBoundsKeyPrefix))
+	b := store.Get(lib.Uint32ToKey(perpetualId))
+	if b == nil {
+		return types.VolatilityBounds{}, errorsmod.Wrap(types.ErrVolatilityBoundsDoesNotExist, lib.UintToString(perpetualId))
+	}
+
+	k.cdc.MustUnmarshal(b, &volatilityBounds)
+	return volatilityBounds, nil
+}
+
+// SetVolatilityBounds sets in state volatility bounds for a given perpetual.
+func (k Keeper) SetVolatilityBounds(
+	ctx sdk.Context,
+	perpetualId uint32,
+	volatilityBounds types.VolatilityBounds,
+) {
+	b := k.cdc.MustMarshal(&volatilityBounds)
+	volatilityBoundsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VolatilityBoundsKeyPrefix))
+	volatilityBoundsStore.Set(lib.Uint32ToKey(perpetualId), b)
 }
 
 // GetPerpetualAndMarketPrice retrieves a Perpetual by its id and its corresponding MarketPrice.

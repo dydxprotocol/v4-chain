@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
+	cometbfttypes "github.com/cometbft/cometbft/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -25,6 +26,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -33,6 +35,7 @@ import (
 	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -3228,4 +3231,78 @@ func TestIsPositionUpdatable(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetSetVolatilityBounds(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		// Initialize perpetuals module with only perpetual 0.
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *types.GenesisState) {
+				genesisState.Perpetuals = []types.Perpetual{
+					*perptest.GeneratePerpetual(
+						perptest.WithId(0),
+					),
+				}
+			},
+		)
+		// Initialize clob module with no clob pairs.
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *clobtypes.GenesisState) {
+				genesisState.ClobPairs = []clobtypes.ClobPair{}
+			},
+		)
+		return genesis
+	}).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.PerpetualsKeeper
+
+	bounds0 := types.VolatilityBounds{
+		Min: 101,
+		Max: 102,
+	}
+	bounds1 := types.VolatilityBounds{
+		Min: 104,
+		Max: 103,
+	}
+
+	// Verify volatility bounds for perpetual 0.
+	bounds, err := k.GetVolatilityBounds(ctx, 0)
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		types.VolatilityBounds{
+			Min: math.MaxUint64,
+			Max: 0,
+		},
+		bounds,
+	)
+
+	// Set volatility bounds for perpetual 0 as `bounds0`.
+	k.SetVolatilityBounds(ctx, 0, bounds0)
+	// Get volatility bounds for perpetual 0.
+	bounds, err = k.GetVolatilityBounds(ctx, 0)
+	require.NoError(t, err)
+	require.Equal(t, bounds0, bounds)
+
+	// Set volatility bounds for perpetual 0 as `bounds1`.
+	k.SetVolatilityBounds(ctx, 0, bounds1)
+	// Get volatility bounds for perpetual 0.
+	bounds, err = k.GetVolatilityBounds(ctx, 0)
+	require.NoError(t, err)
+	require.Equal(t, bounds1, bounds)
+
+	// Verify that volatility bounds for perpetual 1 does not exist.
+	bounds, err = k.GetVolatilityBounds(ctx, 1)
+	require.ErrorIs(t, err, types.ErrVolatilityBoundsDoesNotExist)
+	require.Equal(t, types.VolatilityBounds{}, bounds)
+
+	// Set volatility bounds for perpetual 123 as `bounds0`.
+	k.SetVolatilityBounds(ctx, 123, bounds0)
+	// Get volatility bounds for perpetual 123.
+	bounds, err = k.GetVolatilityBounds(ctx, 123)
+	require.NoError(t, err)
+	require.Equal(t, bounds0, bounds)
 }
