@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -80,12 +81,16 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		return err
 	}
 
+	// Build a map of perpetual id to subaccounts with open positions in that perpetual.
+	subaccountOpenPositionInfo := daemonClient.GetSubaccountOpenPositionInfo(subaccounts)
+
 	// 3. Send the list of liquidatable subaccount ids to the daemon server.
 	err = daemonClient.SendLiquidatableSubaccountIds(
 		ctx,
 		lastCommittedBlockHeight,
 		liquidatableSubaccountIds,
 		negativeTncSubaccountIds,
+		subaccountOpenPositionInfo,
 	)
 	if err != nil {
 		return err
@@ -176,7 +181,6 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		metrics.Latency,
 	)
 
-	numSubaccountsWithOpenPositions := 0
 	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
 	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	for _, subaccount := range subaccounts {
@@ -203,6 +207,49 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		if hasNegativeTnc {
 			negativeTncSubaccountIds = append(negativeTncSubaccountIds, *subaccount.Id)
 		}
+	}
+
+	return liquidatableSubaccountIds, negativeTncSubaccountIds, nil
+}
+
+// GetSubaccountOpenPositionInfo iterates over the given subaccounts and returns a map of
+// perpetual id to open position info.
+func (c *Client) GetSubaccountOpenPositionInfo(
+	subaccounts []satypes.Subaccount,
+) (
+	subaccountOpenPositionInfo map[uint32]clobtypes.SubaccountOpenPositionInfo,
+) {
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.GetSubaccountOpenPositionInfo,
+		metrics.Latency,
+	)
+
+	numSubaccountsWithOpenPositions := 0
+	subaccountOpenPositionInfo = make(map[uint32]clobtypes.SubaccountOpenPositionInfo)
+	for _, subaccount := range subaccounts {
+		// Skip subaccounts with no open positions.
+		if len(subaccount.PerpetualPositions) == 0 {
+			continue
+		}
+
+		for _, perpetualPosition := range subaccount.PerpetualPositions {
+			openPositionInfo := subaccountOpenPositionInfo[perpetualPosition.PerpetualId]
+			if perpetualPosition.GetIsLong() {
+				openPositionInfo.SubaccountsWithLongPosition = append(
+					openPositionInfo.SubaccountsWithLongPosition,
+					*subaccount.Id,
+				)
+			} else {
+				openPositionInfo.SubaccountsWithShortPosition = append(
+					openPositionInfo.SubaccountsWithShortPosition,
+					*subaccount.Id,
+				)
+			}
+			subaccountOpenPositionInfo[perpetualPosition.PerpetualId] = openPositionInfo
+		}
+
 		numSubaccountsWithOpenPositions++
 	}
 
@@ -213,7 +260,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		metrics.Count,
 	)
 
-	return liquidatableSubaccountIds, negativeTncSubaccountIds, nil
+	return subaccountOpenPositionInfo
 }
 
 // CheckSubaccountCollateralization performs the same collateralization check as the application

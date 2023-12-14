@@ -296,6 +296,7 @@ const (
 	FetchApplicationStateAtBlockHeight   = "fetch_application_state_at_block_height"
 	GetAllSubaccounts                    = "get_all_subaccounts"
 	GetLiquidatableSubaccountIds         = "get_liquidatable_subaccount_ids"
+	GetSubaccountOpenPositionInfo        = "get_subaccount_open_position_info"
 	GetSubaccountsFromKey                = "get_subaccounts_from_key"
 	LiquidatableSubaccountIds            = "liquidatable_subaccount_ids"
 	LiquidationDaemon                    = "liquidation_daemon"
