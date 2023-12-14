@@ -33,7 +33,11 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(ctx, subaccountId, perpetualId)
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+		ctx,
+		subaccountId,
+		perpetualId,
+	)
 	if err != nil {
 		return new(big.Int), err
 	}
@@ -62,7 +66,13 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums, shouldDeleverageAtOraclePrice)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(
+		ctx,
+		subaccountId,
+		perpetualId,
+		deltaQuantums,
+		shouldDeleverageAtOraclePrice,
+	)
 
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -169,9 +179,8 @@ func (k Keeper) CanDeleverageSubaccount(
 		return true, false, nil
 	}
 
-	// Should deleverage at oracle price if TNC is non-negative and the market is in final settlement.
-	shouldDeleverageAtOraclePrice = bigNetCollateral.Sign() >= 0 && clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
-	return false, shouldDeleverageAtOraclePrice, nil
+	// Non-negative TNC, deleverage at oracle price if market is in final settlement.
+	return false, clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT, nil
 }
 
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance

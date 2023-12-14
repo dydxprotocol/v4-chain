@@ -1086,7 +1086,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
-		`Deleveraging occurs at oracle price for non-negative TNC subaccounts with open positions in final settlement market`: {
+		`Deleveraging occurs at oracle price for non-negative TNC subaccounts 
+			with open positions in final settlement market`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_100000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
