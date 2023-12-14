@@ -201,6 +201,11 @@ var (
 		43,
 		"Order has remaining size",
 	)
+	ErrLiquidationConflictsWithClobPairStatus = errorsmod.Register(
+		ModuleName,
+		44,
+		"Liquidation conflicts with ClobPair status",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(

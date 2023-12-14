@@ -33,13 +33,13 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	canPerformDeleveraging, shouldFinalSettlePosition, err := k.CanDeleverageSubaccount(ctx, subaccountId, perpetualId)
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(ctx, subaccountId, perpetualId)
 	if err != nil {
 		return new(big.Int), err
 	}
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
-	if !canPerformDeleveraging {
+	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		metrics.IncrCounter(
 			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
 			1,
@@ -62,7 +62,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums, shouldFinalSettlePosition)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums, shouldDeleverageAtOraclePrice)
 
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -137,16 +137,16 @@ func (k Keeper) GetInsuranceFundBalance(
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
-// This function returns two booleans, canDeleverageSubaccount and shouldFinalSettlePosition.
-// - canDeleverageSubaccount is true if the subaccount can be deleveraged.
-// - shouldFinalSettlePosition is true if the position should be final settled (this occurs at oracle price)
+// This function returns two booleans, shouldDeleverageAtBankruptcyPrice and shouldDeleverageAtOraclePrice.
+// - shouldDeleverageAtBankruptcyPrice is true if the subaccount has negative TNC.
+// - shouldDeleverageAtOraclePrice is true if the subaccount has non-negative TNC and the market is in final settlement.
 // This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error or if there is
 // an error when fetching the clob pair for the provided perpetual.
 func (k Keeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
-) (canDeleverageSubaccount bool, shouldFinalSettlePosition bool, err error) {
+) (shouldDeleverageAtBankruptcyPrice bool, shouldDeleverageAtOraclePrice bool, err error) {
 	bigNetCollateral,
 		_,
 		_,
@@ -164,13 +164,14 @@ func (k Keeper) CanDeleverageSubaccount(
 	}
 	clobPair := k.mustGetClobPair(ctx, clobPairId)
 
-	// Can deleverage subaccount if net collateral is negative or if the market is in final settlement.
-	canDeleverageSubaccount = bigNetCollateral.Sign() == -1 || clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
+	// Negative TNC, deleverage at bankruptcy price.
+	if bigNetCollateral.Sign() == -1 {
+		return true, false, nil
+	}
 
-	// Should final settle position if net collateral is non-negative and the market is in final settlement.
-	shouldFinalSettlePosition = bigNetCollateral.Sign() >= 0 && clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
-
-	return canDeleverageSubaccount, shouldFinalSettlePosition, nil
+	// Should deleverage at oracle price if TNC is non-negative and the market is in final settlement.
+	shouldDeleverageAtOraclePrice = bigNetCollateral.Sign() >= 0 && clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
+	return false, shouldDeleverageAtOraclePrice, nil
 }
 
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
@@ -525,23 +526,17 @@ func (k Keeper) ProcessDeleveraging(
 
 // GetSubaccountsWithOpenPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
 // liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
-// will be deleveraged either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC during
-// PrepareCheckState.
+// will be deleveraged either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC.
 func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
 	subaccountOpenPositionInfo map[uint32]*types.SubaccountOpenPositionInfo,
 ) (subaccountsToDeleverage []subaccountToDeleverage) {
-	// Gather perpetualIds for perpetuals whose clob pairs are in final settlement.
-	finalSettlementPerpetualIds := make(map[uint32]struct{})
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
-		if clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT {
-			perpetualId := clobPair.MustGetPerpetualId()
-			finalSettlementPerpetualIds[perpetualId] = struct{}{}
+		if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			continue
 		}
-	}
 
-	// Fetch subaccounts with open positions in final settlement markets.
-	for perpetualId := range finalSettlementPerpetualIds {
+		perpetualId := clobPair.MustGetPerpetualId()
 		positionInfo, found := subaccountOpenPositionInfo[perpetualId]
 		if !found {
 			// No open positions in the market.

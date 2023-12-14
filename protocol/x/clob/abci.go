@@ -214,6 +214,8 @@ func PrepareCheckState(
 	)
 
 	// 7. Deleverage subaccounts.
+	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
+	// as the input for this function.
 	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}

@@ -622,7 +622,11 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	// Validate that the provided subaccount can be deleveraged.
-	if canDeleverageSubaccount, shouldFinalSettlePosition, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId, perpetualId); err != nil {
+	if shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+		ctx,
+		liquidatedSubaccountId,
+		perpetualId,
+	); err != nil {
 		panic(
 			fmt.Sprintf(
 				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
@@ -631,14 +635,14 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			),
 		)
-	} else if !canDeleverageSubaccount {
+	} else if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
 			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
-	} else if matchDeleveraging.IsFinalSettlement != shouldFinalSettlePosition {
+	} else if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
 		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
 		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
 		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
@@ -647,7 +651,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
 			matchDeleveraging,
 			matchDeleveraging.IsFinalSettlement,
-			shouldFinalSettlePosition,
+			shouldDeleverageAtOraclePrice,
 		)
 	}
 

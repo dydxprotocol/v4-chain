@@ -304,6 +304,42 @@ func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
 	return
 }
 
+// validateLiquidationAgainstClobPairStatus returns an error if placing the provided
+// liquidation order would conflict with the clob pair's current status.
+func (k Keeper) validateLiquidationAgainstClobPairStatus(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) error {
+	clobPair, found := k.GetClobPair(ctx, liquidationOrder.GetClobPairId())
+	if !found {
+		return errorsmod.Wrapf(
+			types.ErrInvalidClob,
+			"Clob %v is not a valid clob",
+			liquidationOrder.GetClobPairId(),
+		)
+	}
+
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
+		panic(
+			fmt.Sprintf(
+				"validateLiquidationAgainstClobPairStatus: clob pair status %v is not supported",
+				clobPair.Status,
+			),
+		)
+	}
+
+	if clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+		return errorsmod.Wrapf(
+			types.ErrLiquidationConflictsWithClobPairStatus,
+			"Liquidation order %+v cannot be placed for clob pair with status %+v",
+			liquidationOrder,
+			clobPair.Status,
+		)
+	}
+
+	return nil
+}
+
 // validateOrderAgainstClobPairStatus returns an error if placing the provided
 // order would conflict with the clob pair's current status.
 func (k Keeper) validateOrderAgainstClobPairStatus(

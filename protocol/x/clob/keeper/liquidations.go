@@ -101,7 +101,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	startPlaceLiquidationOrders := time.Now()
-	clobPairStatuses := make(map[types.ClobPairId]types.ClobPair_Status)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
@@ -116,21 +115,10 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			return nil, err
 		}
 
-		// Skip liquidation if the ClobPair for the liquidation order is in final settlement.
-		if _, found := clobPairStatuses[liquidationOrder.GetClobPairId()]; !found {
-			clobPair := k.mustGetClobPair(ctx, liquidationOrder.GetClobPairId())
-			clobPairStatuses[liquidationOrder.GetClobPairId()] = clobPair.Status
-		}
-		if clobPairStatuses[liquidationOrder.GetClobPairId()] == types.ClobPair_STATUS_FINAL_SETTLEMENT {
-			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
-				SubaccountId: liquidationOrder.GetSubaccountId(),
-				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
-			})
-			continue
-		}
-
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
-		if err != nil {
+		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
+		// for subaccounts with open positions in final settlement markets.
+		if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
 			k.Logger(ctx).Error(
 				"Failed to liquidate subaccount",
 				"liquidationOrder", *liquidationOrder,
@@ -255,6 +243,10 @@ func (k Keeper) PlacePerpetualLiquidation(
 		time.Now(),
 		metrics.PlacePerpetualLiquidation,
 	)
+
+	if err := k.validateLiquidationAgainstClobPairStatus(ctx, liquidationOrder); err != nil {
+		return 0, 0, err
+	}
 
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,

@@ -221,8 +221,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 		clobPairs                     []types.ClobPair
 
 		// Expectations.
-		expectedCanDeleverageSubaccount   bool
-		expectedShouldFinalSettlePosition bool
+		expectedShouldDeleverageAtBankruptcyPrice   bool
+		expectedShouldDeleverageAtOraclePrice bool
 	}{
 		`Cannot deleverage when subaccount has positive TNC`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -235,7 +235,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 
-			expectedCanDeleverageSubaccount: false,
+			expectedShouldDeleverageAtBankruptcyPrice: false,
+			expectedShouldDeleverageAtOraclePrice: false,
 		},
 		`Cannot deleverage when subaccount has zero TNC`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -248,7 +249,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 
-			expectedCanDeleverageSubaccount: false,
+			expectedShouldDeleverageAtBankruptcyPrice: false,
+			expectedShouldDeleverageAtOraclePrice: false,
 		},
 		`Can deleverage when subaccount has negative TNC`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -261,7 +263,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				constants.ClobPair_Btc,
 			},
 
-			expectedCanDeleverageSubaccount: true,
+			expectedShouldDeleverageAtBankruptcyPrice: true,
+			expectedShouldDeleverageAtOraclePrice: false,
 		},
 		`Can deleverage when subaccount has negative TNC and clob pair has status FINAL_SETTLEMENT`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -274,8 +277,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				constants.ClobPair_Btc_Final_Settlement,
 			},
 
-			expectedCanDeleverageSubaccount:   true,
-			expectedShouldFinalSettlePosition: false,
+			expectedShouldDeleverageAtBankruptcyPrice:   true,
+			expectedShouldDeleverageAtOraclePrice: false,
 		},
 		`Can final settle deleverage when subaccount has positive TNC and clob pair has status FINAL_SETTLEMENT`: {
 			liquidationConfig:    constants.LiquidationsConfig_No_Limit,
@@ -288,8 +291,8 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 				constants.ClobPair_Btc_Final_Settlement,
 			},
 
-			expectedCanDeleverageSubaccount:   true,
-			expectedShouldFinalSettlePosition: true,
+			expectedShouldDeleverageAtBankruptcyPrice:   false,
+			expectedShouldDeleverageAtOraclePrice: true,
 		},
 	}
 
@@ -388,7 +391,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.subaccount)
 
-			canDeleverageSubaccount, shouldFinalSettlePosition, err := ks.ClobKeeper.CanDeleverageSubaccount(
+			shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := ks.ClobKeeper.CanDeleverageSubaccount(
 				ks.Ctx,
 				*tc.subaccount.Id,
 				0,
@@ -396,13 +399,13 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			require.NoError(t, err)
 			require.Equal(
 				t,
-				tc.expectedCanDeleverageSubaccount,
-				canDeleverageSubaccount,
+				tc.expectedShouldDeleverageAtBankruptcyPrice,
+				shouldDeleverageAtBankruptcyPrice,
 			)
 			require.Equal(
 				t,
-				tc.expectedShouldFinalSettlePosition,
-				shouldFinalSettlePosition,
+				tc.expectedShouldDeleverageAtOraclePrice,
+				shouldDeleverageAtOraclePrice,
 			)
 		})
 	}
