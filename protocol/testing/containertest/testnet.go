@@ -24,6 +24,9 @@ const persistentPeers = "17e5e45691f0d01449c84fd4ae87279578cdd7ec@testnet-local-
 // Resources will expire in 10 minutes
 const resourceLifetimeSecs = 600
 
+// The version of that we're upgrading to (aka the current commit)
+const UpgradeToVersion = "v3.0.0"
+
 func monikers() map[string]string {
 	return map[string]string{
 		"alice": constants.AliceMnenomic,
@@ -36,10 +39,11 @@ func monikers() map[string]string {
 type Testnet struct {
 	Nodes map[string]*Node
 
-	keyring        keyring.Keyring
-	pool           *dockertest.Pool
-	network        *dockertest.Network
-	exchangeServer *pricefeed_testutil.ExchangeServer
+	isPreupgradeGenesis bool
+	keyring             keyring.Keyring
+	pool                *dockertest.Pool
+	network             *dockertest.Network
+	exchangeServer      *pricefeed_testutil.ExchangeServer
 }
 
 // NewTestnet returns a new Testnet. If creation fails, an error is returned.
@@ -67,6 +71,15 @@ func NewTestnet() (testnet *Testnet, err error) {
 
 	testnet.exchangeServer = pricefeed_testutil.NewExchangeServer()
 	return testnet, nil
+}
+
+func NewTestnetWithPreupgradeGenesis() (testnet *Testnet, err error) {
+	testnet, err = NewTestnet()
+	if err != nil {
+		return nil, err
+	}
+	testnet.isPreupgradeGenesis = true
+	return testnet, err
 }
 
 func (t *Testnet) Start() (err error) {
@@ -112,6 +125,13 @@ func (t *Testnet) initialize() (err error) {
 }
 
 func (t *Testnet) initializeNode(moniker string) (*Node, error) {
+	var entrypointCommand string
+	if t.isPreupgradeGenesis {
+		entrypointCommand = "/dydxprotocol/preupgrade_entrypoint.sh"
+	} else {
+		entrypointCommand = "dydxprotocold"
+	}
+
 	resource, err := t.pool.RunWithOptions(
 		&dockertest.RunOptions{
 			Name:       fmt.Sprintf("testnet-local-%s", moniker),
@@ -122,7 +142,7 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				"26657",
 			},
 			Entrypoint: []string{
-				"dydxprotocold",
+				entrypointCommand,
 				"start",
 				"--home",
 				fmt.Sprintf("/dydxprotocol/chain/.%s", moniker),
@@ -130,6 +150,11 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				persistentPeers,
 				"--bridge-daemon-eth-rpc-endpoint",
 				"https://eth-sepolia.g.alchemy.com/v2/demo",
+			},
+			Env: []string{
+				"DAEMON_NAME=dydxprotocold",
+				fmt.Sprintf("DAEMON_HOME=/dydxprotocol/chain/.%s", moniker),
+				fmt.Sprintf("UPGRADE_TO_VERSION=%s", UpgradeToVersion),
 			},
 			ExtraHosts: []string{
 				fmt.Sprintf("%s:host-gateway", testexchange.TestExchangeHost),
