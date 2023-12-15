@@ -7,7 +7,6 @@ import (
 	"math/rand"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -189,19 +188,18 @@ func (k Keeper) getRandomBytes(ctx sdk.Context, rand *rand.Rand) ([]byte, error)
 	return lib.RandomBytesBetween(firstKey, lastKey, rand), nil
 }
 
-// getSettledUpdates takes in a list of updates and for each update, retrieves
+// mustGetSettledUpdates takes in a list of updates and for each update, retrieves
 // the updated subaccount in its settled form, and returns a list of settledUpdate
 // structs and a map that indicates for each subaccount which perpetuals had funding
 // updates. If requireUniqueSubaccount is true, the SubaccountIds in the input updates
-// must be unique.
-func (k Keeper) getSettledUpdates(
+// must be unique or this function will panic.
+func (k Keeper) mustGetSettledUpdates(
 	ctx sdk.Context,
 	updates []types.Update,
 	requireUniqueSubaccount bool,
 ) (
 	settledUpdates []settledUpdate,
 	subaccountIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt,
-	err error,
 ) {
 	var idToSettledSubaccount = make(map[types.SubaccountId]types.Subaccount)
 	settledUpdates = make([]settledUpdate, len(updates))
@@ -213,17 +211,14 @@ func (k Keeper) getSettledUpdates(
 		var fundingPayments map[uint32]dtypes.SerializableInt
 
 		if exists && requireUniqueSubaccount {
-			return nil, nil, types.ErrNonUniqueUpdatesSubaccount
+			panic(fmt.Sprintf("getSettledUpdates: Non-unique updates for subaccount update: %+v", u))
 		}
 
 		// Get and store the settledSubaccount if SubaccountId doesn't exist in
 		// idToSettledSubaccount map.
 		if !exists {
 			subaccount := k.GetSubaccount(ctx, u.SubaccountId)
-			settledSubaccount, fundingPayments, err = k.getSettledSubaccount(ctx, subaccount)
-			if err != nil {
-				return nil, nil, err
-			}
+			settledSubaccount, fundingPayments = k.getSettledSubaccount(ctx, subaccount)
 
 			idToSettledSubaccount[u.SubaccountId] = settledSubaccount
 			subaccountIdToFundingPayments[u.SubaccountId] = fundingPayments
@@ -238,7 +233,7 @@ func (k Keeper) getSettledUpdates(
 		settledUpdates[i] = settledUpdate
 	}
 
-	return settledUpdates, subaccountIdToFundingPayments, nil
+	return settledUpdates, subaccountIdToFundingPayments
 }
 
 // UpdateSubaccounts validates and applies all `updates` to the relevant subaccounts as long as this is a
@@ -265,14 +260,11 @@ func (k Keeper) UpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, subaccountIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
-	if err != nil {
-		return false, nil, err
-	}
+	settledUpdates, subaccountIdToFundingPayments := k.mustGetSettledUpdates(ctx, updates, true)
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
-	if !success || err != nil {
-		return success, successPerUpdate, err
+	success, successPerUpdate = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	if !success {
+		return success, successPerUpdate, nil
 	}
 
 	// Get a mapping from perpetual Id to current perpetual funding index.
@@ -357,12 +349,10 @@ func (k Keeper) CanUpdateSubaccounts(
 		metrics.Latency,
 	)
 
-	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
-	if err != nil {
-		return false, nil, err
-	}
+	settledUpdates, _ := k.mustGetSettledUpdates(ctx, updates, false)
 
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	success, successPerUpdate = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	return success, successPerUpdate, nil
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -375,7 +365,6 @@ func (k Keeper) getSettledSubaccount(
 ) (
 	settledSubaccount types.Subaccount,
 	fundingPayments map[uint32]dtypes.SerializableInt,
-	err error,
 ) {
 	totalNetSettlementPpm := big.NewInt(0)
 
@@ -391,7 +380,15 @@ func (k Keeper) getSettledSubaccount(
 			p.FundingIndex.BigInt(),
 		)
 		if err != nil {
-			return types.Subaccount{}, nil, err
+			panic(
+				fmt.Sprintf(
+					"getSettledSubaccount: Error when getting settlement PPM: %s, PerpetualId: %d, Quantums: %s, FundingIndex: %s",
+					err,
+					p.PerpetualId,
+					p.GetBigQuantums().String(),
+					p.FundingIndex.BigInt().String(),
+				),
+			)
 		}
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
@@ -423,39 +420,44 @@ func (k Keeper) getSettledSubaccount(
 	}
 	newUsdcPosition := new(big.Int).Add(
 		subaccount.GetUsdcPosition(),
-		// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
+		// `Div` implements Euclidean division (unlike Go). When the divisor is positive,
 		// division result always rounds towards negative infinity.
 		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
 	)
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
-	return newSubaccount, fundingPayments, nil
+	return newSubaccount, fundingPayments
 }
 
-func checkPositionUpdatable(
+func mustBeUpdatablePosition(
 	ctx sdk.Context,
 	pk types.ProductKeeper,
 	p types.PositionSize,
-) (
-	err error,
 ) {
 	updatable, err := pk.IsPositionUpdatable(
 		ctx,
 		p.GetId(),
 	)
 	if err != nil {
-		return err
+		panic(
+			fmt.Sprintf(
+				"checkPositionUpdateable: Error when calling IsPositionUpdateable. Error: %v, Type: %v, id: %d",
+				err.Error(),
+				p.GetProductType(),
+				p.GetId(),
+			),
+		)
 	}
 
 	if !updatable {
-		return errorsmod.Wrapf(
-			types.ErrProductPositionNotUpdatable,
-			"type: %v, id: %d",
-			p.GetProductType(),
-			p.GetId(),
+		panic(
+			fmt.Sprintf(
+				"checkPositionUpdateable: Position is not updatable. Type: %v, id: %d",
+				p.GetProductType(),
+				p.GetId(),
+			),
 		)
 	}
-	return nil
 }
 
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
@@ -475,7 +477,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
-	err error,
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
@@ -484,28 +485,18 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
 		for _, perpUpdate := range u.PerpetualUpdates {
-			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
-			if err != nil {
-				return false, nil, err
-			}
+			mustBeUpdatablePosition(ctx, k.perpetualsKeeper, perpUpdate)
 		}
 
 		// Check all updated assets are updatable.
 		for _, assetUpdate := range u.AssetUpdates {
-			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
-			if err != nil {
-				return false, nil, err
-			}
+			mustBeUpdatablePosition(ctx, k.assetsKeeper, assetUpdate)
 		}
 
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
-			bigNewMaintenanceMargin,
-			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
-		if err != nil {
-			return false, nil, err
-		}
+			bigNewMaintenanceMargin := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
 
 		var result = types.Success
 
@@ -519,14 +510,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 			bigCurNetCollateral,
 				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
-				err := k.internalGetNetCollateralAndMarginRequirements(
+				bigCurMaintenanceMargin := k.internalGetNetCollateralAndMarginRequirements(
 				ctx,
 				emptyUpdate,
 			)
-			if err != nil {
-				return false, nil, err
-			}
 
 			// Determine whether the state transition is valid.
 			result = IsValidStateTransitionForUndercollateralizedSubaccount(
@@ -546,7 +533,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		successPerUpdate[i] = result
 	}
 
-	return success, successPerUpdate, nil
+	return success, successPerUpdate
 }
 
 // IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`
@@ -624,7 +611,7 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 // The provided update can also be "zeroed" in order to get information about
 // the current state of the subaccount (i.e. with no changes).
 //
-// If two position updates reference the same position, an error is returned.
+// This function panics if two position updates reference the same position.
 //
 // All return values are denoted in quote quantums.
 func (k Keeper) GetNetCollateralAndMarginRequirements(
@@ -638,10 +625,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 ) {
 	subaccount := k.GetSubaccount(ctx, update.SubaccountId)
 
-	settledSubaccount, _, err := k.getSettledSubaccount(ctx, subaccount)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	settledSubaccount, _ := k.getSettledSubaccount(ctx, subaccount)
 
 	settledUpdate := settledUpdate{
 		SettledSubaccount: settledSubaccount,
@@ -649,10 +633,13 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 		PerpetualUpdates:  update.PerpetualUpdates,
 	}
 
-	return k.internalGetNetCollateralAndMarginRequirements(
+	bigNetCollateral,
+		bigInitialMargin,
+		bigMaintenanceMargin = k.internalGetNetCollateralAndMarginRequirements(
 		ctx,
 		settledUpdate,
 	)
+	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
 }
 
 // internalGetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin
@@ -673,7 +660,6 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	bigNetCollateral *big.Int,
 	bigInitialMargin *big.Int,
 	bigMaintenanceMargin *big.Int,
-	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
 		types.ModuleName,
@@ -688,32 +674,36 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	bigMaintenanceMargin = big.NewInt(0)
 
 	// Merge updates and assets.
-	assetSizes, err := applyUpdatesToPositions(
+	assetSizes := applyUpdatesToPositions(
 		settledUpdate.SettledSubaccount.AssetPositions,
 		settledUpdate.AssetUpdates,
 	)
-	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
-	}
 
 	// Merge updates and perpetuals.
-	perpetualSizes, err := applyUpdatesToPositions(
+	perpetualSizes := applyUpdatesToPositions(
 		settledUpdate.SettledSubaccount.PerpetualPositions,
 		settledUpdate.PerpetualUpdates,
 	)
-	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
-	}
 
 	// The calculate function increments `netCollateral`, `initialMargin`, and `maintenanceMargin`
 	// given a `ProductKeeper` and a `PositionSize`.
-	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
+	calculate := func(pk types.ProductKeeper, size types.PositionSize) {
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
 
 		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
 		if err != nil {
-			return err
+			panic(
+				fmt.Sprintf(
+					"internalGetNetCollateralAndMarginRequirements: "+
+						"Error when getting net collateral: %s, "+
+						"id: %d, "+
+						"bigQuantums: %s",
+					err.Error(),
+					id,
+					bigQuantums.String(),
+				),
+			)
 		}
 
 		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
@@ -722,33 +712,35 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 			bigMaintenanceMarginRequirements,
 			err := pk.GetMarginRequirements(ctx, id, bigQuantums)
 		if err != nil {
-			return err
+			panic(
+				fmt.Sprintf(
+					"internalGetNetCollateralAndMarginRequirements: "+
+						"Error when getting margin requirements: %s, "+
+						"id: %d, "+
+						"bigQuantums: %s",
+					err.Error(),
+					id,
+					bigQuantums.String(),
+				),
+			)
 		}
 
 		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
 		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
-
-		return nil
 	}
 
 	// Iterate over all assets and updates and calculate change to net collateral and margin requirements.
 	for _, size := range assetSizes {
-		err := calculate(k.assetsKeeper, size)
-		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
-		}
+		calculate(k.assetsKeeper, size)
 	}
 
 	// Iterate over all perpetuals and updates and calculate change to net collateral and margin requirements.
 	// TODO(DEC-110): `perp.GetSettlement()`, factor in unsettled funding.
 	for _, size := range perpetualSizes {
-		err := calculate(k.perpetualsKeeper, size)
-		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
-		}
+		calculate(k.perpetualsKeeper, size)
 	}
 
-	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
+	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin
 }
 
 // applyUpdatesToPositions merges a slice of `types.UpdatablePositions` and `types.PositionSize`
@@ -756,7 +748,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 // If a given `PositionSize` shares an ID with an `UpdatablePositionSize`, the update and position are merged
 // into a single `PositionSize`.
 //
-// An error is returned if two updates share the same position id.
+// This function panics if two updates share the same position id.
 //
 // Note: There are probably performance implications here for allocating a new slice of PositionSize,
 // and for allocating new slices when converting the concrete types to interfaces. However, without doing
@@ -764,7 +756,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 func applyUpdatesToPositions[
 	P types.PositionSize,
 	U types.PositionSize,
-](positions []P, updates []U) ([]types.PositionSize, error) {
+](positions []P, updates []U) []types.PositionSize {
 	var result []types.PositionSize = make([]types.PositionSize, 0, len(positions)+len(updates))
 
 	updateMap := make(map[uint32]types.PositionSize)
@@ -774,8 +766,12 @@ func applyUpdatesToPositions[
 		id := update.GetId()
 		_, exists := updateMap[id]
 		if exists {
-			errMsg := fmt.Sprintf("Multiple updates exist for position %v", update.GetId())
-			return nil, errorsmod.Wrap(types.ErrNonUniqueUpdatesPosition, errMsg)
+			panic(
+				fmt.Sprintf(
+					"applyUpdatesToPositions: Multiple updates exist for position %v",
+					update.GetId(),
+				),
+			)
 		}
 
 		updateMap[id] = update
@@ -807,5 +803,5 @@ func applyUpdatesToPositions[
 		}
 	}
 
-	return result, nil
+	return result
 }
