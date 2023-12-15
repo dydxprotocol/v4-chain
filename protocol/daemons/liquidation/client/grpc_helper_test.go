@@ -456,7 +456,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 		setupMocks                 func(context.Context, *mocks.QueryClient)
 		liquidatableSubaccountIds  []satypes.SubaccountId
 		negativeTncSubaccountIds   []satypes.SubaccountId
-		subaccountOpenPositionInfo map[uint32]clobtypes.SubaccountOpenPositionInfo
+		subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo
 
 		// expectations
 		expectedError error
@@ -492,7 +492,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 				constants.Carl_Num0,
 				constants.Dave_Num0,
 			},
-			subaccountOpenPositionInfo: map[uint32]clobtypes.SubaccountOpenPositionInfo{
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
 				0: {
 					PerpetualId: 0,
 					SubaccountsWithLongPosition: []satypes.SubaccountId{
@@ -519,7 +519,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			},
 			liquidatableSubaccountIds:  []satypes.SubaccountId{},
 			negativeTncSubaccountIds:   []satypes.SubaccountId{},
-			subaccountOpenPositionInfo: map[uint32]clobtypes.SubaccountOpenPositionInfo{},
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 		},
 		"Errors are propagated": {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
@@ -533,7 +533,7 @@ func TestSendLiquidatableSubaccountIds(t *testing.T) {
 			},
 			liquidatableSubaccountIds:  []satypes.SubaccountId{},
 			negativeTncSubaccountIds:   []satypes.SubaccountId{},
-			subaccountOpenPositionInfo: map[uint32]clobtypes.SubaccountOpenPositionInfo{},
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 			expectedError:              errors.New("test error"),
 		},
 	}

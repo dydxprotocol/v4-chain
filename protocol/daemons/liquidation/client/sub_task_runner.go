@@ -217,7 +217,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 func (c *Client) GetSubaccountOpenPositionInfo(
 	subaccounts []satypes.Subaccount,
 ) (
-	subaccountOpenPositionInfo map[uint32]clobtypes.SubaccountOpenPositionInfo,
+	subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -227,7 +227,7 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 	)
 
 	numSubaccountsWithOpenPositions := 0
-	subaccountOpenPositionInfo = make(map[uint32]clobtypes.SubaccountOpenPositionInfo)
+	subaccountOpenPositionInfo = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
 	for _, subaccount := range subaccounts {
 		// Skip subaccounts with no open positions.
 		if len(subaccount.PerpetualPositions) == 0 {
@@ -235,7 +235,16 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 		}
 
 		for _, perpetualPosition := range subaccount.PerpetualPositions {
-			openPositionInfo := subaccountOpenPositionInfo[perpetualPosition.PerpetualId]
+			openPositionInfo, ok := subaccountOpenPositionInfo[perpetualPosition.PerpetualId]
+			if !ok {
+				openPositionInfo = &clobtypes.SubaccountOpenPositionInfo{
+					PerpetualId:                  perpetualPosition.PerpetualId,
+					SubaccountsWithLongPosition:  make([]satypes.SubaccountId, 0),
+					SubaccountsWithShortPosition: make([]satypes.SubaccountId, 0),
+				}
+				subaccountOpenPositionInfo[perpetualPosition.PerpetualId] = openPositionInfo
+			}
+
 			if perpetualPosition.GetIsLong() {
 				openPositionInfo.SubaccountsWithLongPosition = append(
 					openPositionInfo.SubaccountsWithLongPosition,
@@ -247,7 +256,6 @@ func (c *Client) GetSubaccountOpenPositionInfo(
 					*subaccount.Id,
 				)
 			}
-			subaccountOpenPositionInfo[perpetualPosition.PerpetualId] = openPositionInfo
 		}
 
 		numSubaccountsWithOpenPositions++

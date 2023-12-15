@@ -210,7 +210,7 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	blockHeight uint32,
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
-	openPositionInfoMap map[uint32]clobtypes.SubaccountOpenPositionInfo,
+	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -238,7 +238,7 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	sortedPerpetualIds := lib.GetSortedKeys[lib.Sortable[uint32]](openPositionInfoMap)
 	subaccountOpenPositionInfo := make([]clobtypes.SubaccountOpenPositionInfo, 0)
 	for _, perpetualId := range sortedPerpetualIds {
-		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, openPositionInfoMap[perpetualId])
+		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, *openPositionInfoMap[perpetualId])
 	}
 
 	request := &api.LiquidateSubaccountsRequest{
@@ -254,7 +254,6 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	return nil
 }
 
-// nolint:unused
 func newContextWithQueryBlockHeight(
 	ctx context.Context,
 	blockHeight uint32,
