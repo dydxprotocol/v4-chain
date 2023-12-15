@@ -29,7 +29,7 @@ func (k msgServer) CancelOrder(
 			err,
 			types.ModuleName,
 			metrics.CancelOrder,
-			metrics.DeliverTx,
+			metrics.StatefulCancellationMsgHandler,
 			msg.OrderId.GetOrderIdLabels()...,
 		)
 		if err != nil {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -189,23 +188,13 @@ func (k Keeper) CancelStatefulOrder(
 	msg *types.MsgCancelOrder,
 ) (err error) {
 	defer func() {
-		if err != nil {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Error, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		} else {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.CancelStatefulOrder, metrics.Success, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		}
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.CancelStatefulOrder,
+			metrics.GetCallbackMetricFromCtx(ctx),
+			msg.OrderId.GetOrderIdLabels()...,
+		)
 	}()
 
 	// 1. If this is a Short-Term order, panic.
@@ -257,23 +246,13 @@ func (k Keeper) PlaceStatefulOrder(
 	msg *types.MsgPlaceOrder,
 ) (err error) {
 	defer func() {
-		if err != nil {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		} else {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		}
+		metrics.IncrSuccessOrErrorCounter(
+			err,
+			types.ModuleName,
+			metrics.PlaceStatefulOrder,
+			metrics.GetCallbackMetricFromCtx(ctx),
+			msg.Order.OrderId.GetOrderIdLabels()...,
+		)
 	}()
 
 	// 1. Ensure the order is not a Short-Term order.

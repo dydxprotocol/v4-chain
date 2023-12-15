@@ -30,7 +30,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			err,
 			types.ModuleName,
 			metrics.PlaceOrder,
-			metrics.DeliverTx,
+			metrics.StatefulOrderMsgHandler,
 			msg.Order.GetOrderLabels()...,
 		)
 		if err != nil {
