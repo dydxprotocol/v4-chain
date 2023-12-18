@@ -1053,7 +1053,6 @@ func New(
 	// CanWithdrawInvariant invariant.
 	// NOTE: staking module is required if HistoricalEntries param > 0
 	app.ModuleManager.SetOrderBeginBlockers(
-		// TODO(CORE-538): Should blocktimemodule move to SetOrderPreBlockers before upgrade types?
 		blocktimemoduletypes.ModuleName, // Must be first
 		epochsmoduletypes.ModuleName,
 		capabilitytypes.ModuleName,
