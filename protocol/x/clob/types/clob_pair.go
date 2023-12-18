@@ -31,7 +31,12 @@ func IsSupportedClobPairStatus(clobPairStatus ClobPair_Status) bool {
 
 // IsSupportedClobPairStatusTransition returns true if it is considered valid to transition from
 // the first provided ClobPair_Status to the second provided ClobPair_Status. Else, returns false.
+// Transitions from a ClobPair_Status to itself are considered valid.
 func IsSupportedClobPairStatusTransition(from ClobPair_Status, to ClobPair_Status) bool {
+	if from == to {
+		return true
+	}
+
 	_, exists := SupportedClobPairStatusTransitions[from][to]
 	return exists
 }

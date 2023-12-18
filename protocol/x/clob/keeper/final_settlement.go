@@ -40,6 +40,7 @@ func (k Keeper) mustCancelStatefulOrdersForFinalSettlement(ctx sdk.Context, clob
 		k.MustRemoveStatefulOrder(ctx, orderId)
 	}
 
+	// TODO(CLOB-1053): Iterate over stateful orders for only specified clob pair
 	for _, order := range statefulOrders {
 		if order.GetClobPairId() == clobPairId {
 			// Remove from state, recovering from panic if necessary

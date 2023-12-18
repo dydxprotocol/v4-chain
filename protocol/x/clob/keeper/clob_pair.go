@@ -468,19 +468,13 @@ func (k Keeper) UpdateClobPair(
 
 	oldStatus := oldClobPair.Status
 	newStatus := clobPair.Status
-	if oldStatus != newStatus {
-		if !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
-			return errorsmod.Wrapf(
-				types.ErrInvalidClobPairStatusTransition,
-				"Cannot transition from status %+v to status %+v",
-				oldStatus,
-				newStatus,
-			)
-		}
-
-		if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT {
-			k.mustEnterFinalSettlement(ctx, clobPair.GetClobPairId())
-		}
+	if !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
+		return errorsmod.Wrapf(
+			types.ErrInvalidClobPairStatusTransition,
+			"Cannot transition from status %+v to status %+v",
+			oldStatus,
+			newStatus,
+		)
 	}
 
 	if err := k.validateClobPair(ctx, &clobPair); err != nil {
@@ -504,6 +498,11 @@ func (k Keeper) UpdateClobPair(
 			),
 		),
 	)
+
+	// If newly transitioning to final settlement, enter final settlement.
+	if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT && oldStatus != newStatus {
+		k.mustEnterFinalSettlement(ctx, clobPair.GetClobPairId())
+	}
 
 	return nil
 }
