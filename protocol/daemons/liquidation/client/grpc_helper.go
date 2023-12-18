@@ -10,8 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -208,6 +210,7 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	blockHeight uint32,
 	liquidatableSubaccountIds []satypes.SubaccountId,
 	negativeTncSubaccountIds []satypes.SubaccountId,
+	openPositionInfoMap map[uint32]*clobtypes.SubaccountOpenPositionInfo,
 ) error {
 	defer telemetry.ModuleMeasureSince(
 		metrics.LiquidationDaemon,
@@ -229,10 +232,20 @@ func (c *Client) SendLiquidatableSubaccountIds(
 		metrics.Count,
 	)
 
+	// Convert the map to a slice.
+	// Note that sorting here is not strictly necessary but is done for safety and to avoid making
+	// any assumptions on the server side.
+	sortedPerpetualIds := lib.GetSortedKeys[lib.Sortable[uint32]](openPositionInfoMap)
+	subaccountOpenPositionInfo := make([]clobtypes.SubaccountOpenPositionInfo, 0)
+	for _, perpetualId := range sortedPerpetualIds {
+		subaccountOpenPositionInfo = append(subaccountOpenPositionInfo, *openPositionInfoMap[perpetualId])
+	}
+
 	request := &api.LiquidateSubaccountsRequest{
-		BlockHeight:               blockHeight,
-		LiquidatableSubaccountIds: liquidatableSubaccountIds,
-		NegativeTncSubaccountIds:  negativeTncSubaccountIds,
+		BlockHeight:                blockHeight,
+		LiquidatableSubaccountIds:  liquidatableSubaccountIds,
+		NegativeTncSubaccountIds:   negativeTncSubaccountIds,
+		SubaccountOpenPositionInfo: subaccountOpenPositionInfo,
 	}
 
 	if _, err := c.LiquidationServiceClient.LiquidateSubaccounts(ctx, request); err != nil {
@@ -241,7 +254,6 @@ func (c *Client) SendLiquidatableSubaccountIds(
 	return nil
 }
 
-// nolint:unused
 func newContextWithQueryBlockHeight(
 	ctx context.Context,
 	blockHeight uint32,

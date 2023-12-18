@@ -13,6 +13,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -75,6 +76,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						constants.Carl_Num0,
 					},
 					NegativeTncSubaccountIds: []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId:                 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Carl_Num0,
+							},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -126,6 +136,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						constants.Dave_Num0,
 					},
 					NegativeTncSubaccountIds: []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Dave_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -176,6 +195,17 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Dave_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Carl_Num0,
+							},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -222,9 +252,10 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 
 				// Sends liquidatable subaccount ids to the server.
 				req := &api.LiquidateSubaccountsRequest{
-					BlockHeight:               uint32(50),
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
+					BlockHeight:                uint32(50),
+					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -296,6 +327,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						constants.Carl_Num0,
 					},
 					NegativeTncSubaccountIds: []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId:                 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Carl_Num0,
+							},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -367,6 +407,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 						constants.Dave_Num0,
 					},
 					NegativeTncSubaccountIds: []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Dave_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -436,6 +485,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId:                 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Carl_Num0,
+							},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -505,6 +563,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 					BlockHeight:               uint32(50),
 					LiquidatableSubaccountIds: []satypes.SubaccountId{},
 					NegativeTncSubaccountIds:  []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Dave_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -559,6 +626,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 					NegativeTncSubaccountIds: []satypes.SubaccountId{
 						constants.Carl_Num0,
 					},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId:                 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Carl_Num0,
+							},
+						},
+					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response3, nil)
@@ -612,6 +688,15 @@ func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
 					},
 					NegativeTncSubaccountIds: []satypes.SubaccountId{
 						constants.Dave_Num0,
+					},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Dave_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{},
+						},
 					},
 				}
 				response3 := &api.LiquidateSubaccountsResponse{}
