@@ -102,7 +102,7 @@ func CreateUpgradeHandler(
 		ctx.Logger().Info("Running %s Upgrade...", UpgradeName)
 		InitializeModuleAccs(ctx, ak)
 
-		// TODO: Initialize ratelimit module params to desired state.
+		// TODO(CORE-824): Initialize ratelimit module params to desired state.
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }

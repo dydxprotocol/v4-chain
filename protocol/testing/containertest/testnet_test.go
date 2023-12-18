@@ -34,6 +34,12 @@ const expectDirName = "expect"
 const govModuleAddress = "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
 
 var acceptFlag = flag.Bool("accept", false, "Accept new values for expect files")
+var nodeAddresses = []string{
+	constants.AliceAccAddress.String(),
+	constants.BobAccAddress.String(),
+	constants.CarlAccAddress.String(),
+	constants.DaveAccAddress.String(),
+}
 
 // Compare a message against an expected output. Use flag `-accept` to write or modify expected output.
 // Expected output will read/written from `expect/{testName}_{tag}.expect`.
@@ -84,6 +90,8 @@ func expectProto(t *testing.T, tag string, message proto.Message) bool {
 }
 
 func TestPlaceOrder(t *testing.T) {
+	// TODO(DEC-2198): Reenable these tests after fixing flakiness on CI.
+	// Seems to occur only because multiple container tests run.
 	if os.Getenv("SKIP_DISABLED") != "" {
 		t.Skip("Skipping disabled test")
 	}
@@ -310,14 +318,7 @@ func TestUpgrade(t *testing.T) {
 	err = node.Wait(2)
 	require.NoError(t, err)
 
-	addresses := []string{
-		constants.AliceAccAddress.String(),
-		constants.BobAccAddress.String(),
-		constants.CarlAccAddress.String(),
-		constants.DaveAccAddress.String(),
-	}
-
-	for _, address := range addresses {
+	for _, address := range nodeAddresses {
 		require.NoError(t, BroadcastTx(
 			node,
 			&gov.MsgVote{
