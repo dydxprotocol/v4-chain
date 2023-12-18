@@ -14,9 +14,12 @@ import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
+	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -28,8 +31,15 @@ import (
 )
 
 const expectDirName = "expect"
+const govModuleAddress = "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
 
 var acceptFlag = flag.Bool("accept", false, "Accept new values for expect files")
+var nodeAddresses = []string{
+	constants.AliceAccAddress.String(),
+	constants.BobAccAddress.String(),
+	constants.CarlAccAddress.String(),
+	constants.DaveAccAddress.String(),
+}
 
 // Compare a message against an expected output. Use flag `-accept` to write or modify expected output.
 // Expected output will read/written from `expect/{testName}_{tag}.expect`.
@@ -80,6 +90,11 @@ func expectProto(t *testing.T, tag string, message proto.Message) bool {
 }
 
 func TestPlaceOrder(t *testing.T) {
+	// TODO(DEC-2198): Reenable these tests after fixing flakiness on CI.
+	// Seems to occur only because multiple container tests run.
+	if os.Getenv("SKIP_DISABLED") != "" {
+		t.Skip("Skipping disabled test")
+	}
 	testnet, err := NewTestnet()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
 	err = testnet.Start()
@@ -113,6 +128,9 @@ func TestPlaceOrder(t *testing.T) {
 }
 
 func TestBankSend(t *testing.T) {
+	if os.Getenv("SKIP_DISABLED") != "" {
+		t.Skip("Skipping disabled test")
+	}
 	testnet, err := NewTestnet()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
 	err = testnet.Start()
@@ -244,6 +262,9 @@ func assertPricesWithTimeout(t *testing.T, node *Node, marketTags map[types.Mark
 }
 
 func TestMarketPrices(t *testing.T) {
+	if os.Getenv("SKIP_DISABLED") != "" {
+		t.Skip("Skipping disabled test")
+	}
 	testnet, err := NewTestnet()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
 	testnet.setPrice(exchange_config.MARKET_BTC_USD, 50001)
@@ -261,4 +282,54 @@ func TestMarketPrices(t *testing.T) {
 		exchange_config.MARKET_LINK_USD: "initialLINKPrice",
 	}
 	assertPricesWithTimeout(t, node, expectedPrices, 30*time.Second)
+}
+
+func TestUpgrade(t *testing.T) {
+	testnet, err := NewTestnetWithPreupgradeGenesis()
+	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
+	err = testnet.Start()
+	require.NoError(t, err)
+	defer testnet.MustCleanUp()
+	node := testnet.Nodes["alice"]
+
+	proposal, err := gov.NewMsgSubmitProposal(
+		[]sdk.Msg{
+			&upgrade.MsgSoftwareUpgrade{
+				Authority: govModuleAddress,
+				Plan: upgrade.Plan{
+					Name:   UpgradeToVersion,
+					Height: 10,
+				},
+			},
+		},
+		testapp.TestDeposit,
+		constants.AliceAccAddress.String(),
+		testapp.TestMetadata,
+		testapp.TestTitle,
+		testapp.TestSummary,
+	)
+	require.NoError(t, err)
+
+	require.NoError(t, BroadcastTx(
+		node,
+		proposal,
+		constants.AliceAccAddress.String(),
+	))
+	err = node.Wait(2)
+	require.NoError(t, err)
+
+	for _, address := range nodeAddresses {
+		require.NoError(t, BroadcastTx(
+			node,
+			&gov.MsgVote{
+				ProposalId: 1,
+				Voter:      address,
+				Option:     gov.VoteOption_VOTE_OPTION_YES,
+			},
+			address,
+		))
+	}
+
+	err = node.WaitUntilBlockHeight(12)
+	require.NoError(t, err)
 }
