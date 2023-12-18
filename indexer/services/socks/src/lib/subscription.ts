@@ -493,7 +493,7 @@ export class Subscriptions {
 
     // TODO(IND-508): Change this to match technical spec for persistent geo-blocking. This may
     // either have to replicate any blocking logic added on comlink, or re-direct to comlink to
-    // determine if subscribing to a specific subaccount is blocked. 
+    // determine if subscribing to a specific subaccount is blocked.
     if (country !== undefined && isRestrictedCountry(country)) {
       throw new BlockedError();
     }
