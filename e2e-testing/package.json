@@ -8,8 +8,6 @@
     "build": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
-    "validate-pnl": "ts-node src/validate-pnl.ts",
-    "print-block": "ts-node src/print-block.ts",
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",
