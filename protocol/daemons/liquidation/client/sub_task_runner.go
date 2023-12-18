@@ -12,6 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -68,7 +69,9 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 	}
 
 	// 2. Check collateralization statuses of subaccounts with at least one open position.
-	liquidatableSubaccountIds, err := daemonClient.GetLiquidatableSubaccountIds(
+	liquidatableSubaccountIds,
+		negativeTncSubaccountIds,
+		err := daemonClient.GetLiquidatableSubaccountIds(
 		subaccounts,
 		marketPrices,
 		perpetuals,
@@ -78,8 +81,17 @@ func (s *SubTaskRunnerImpl) RunLiquidationDaemonTaskLoop(
 		return err
 	}
 
+	// Build a map of perpetual id to subaccounts with open positions in that perpetual.
+	subaccountOpenPositionInfo := daemonClient.GetSubaccountOpenPositionInfo(subaccounts)
+
 	// 3. Send the list of liquidatable subaccount ids to the daemon server.
-	err = daemonClient.SendLiquidatableSubaccountIds(ctx, liquidatableSubaccountIds)
+	err = daemonClient.SendLiquidatableSubaccountIds(
+		ctx,
+		lastCommittedBlockHeight,
+		liquidatableSubaccountIds,
+		negativeTncSubaccountIds,
+		subaccountOpenPositionInfo,
+	)
 	if err != nil {
 		return err
 	}
@@ -159,6 +171,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
 ) (
 	liquidatableSubaccountIds []satypes.SubaccountId,
+	negativeTncSubaccountIds []satypes.SubaccountId,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -168,8 +181,8 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		metrics.Latency,
 	)
 
-	numSubaccountsWithOpenPositions := 0
 	liquidatableSubaccountIds = make([]satypes.SubaccountId, 0)
+	negativeTncSubaccountIds = make([]satypes.SubaccountId, 0)
 	for _, subaccount := range subaccounts {
 		// Skip subaccounts with no open positions.
 		if len(subaccount.PerpetualPositions) == 0 {
@@ -177,7 +190,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		}
 
 		// Check if the subaccount is liquidatable.
-		isLiquidatable, err := c.CheckSubaccountCollateralization(
+		isLiquidatable, hasNegativeTnc, err := c.CheckSubaccountCollateralization(
 			subaccount,
 			marketPrices,
 			perpetuals,
@@ -185,12 +198,66 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		)
 		if err != nil {
 			c.logger.Error("Error checking collateralization status", "error", err)
-			return nil, err
+			return nil, nil, err
 		}
 
 		if isLiquidatable {
 			liquidatableSubaccountIds = append(liquidatableSubaccountIds, *subaccount.Id)
 		}
+		if hasNegativeTnc {
+			negativeTncSubaccountIds = append(negativeTncSubaccountIds, *subaccount.Id)
+		}
+	}
+
+	return liquidatableSubaccountIds, negativeTncSubaccountIds, nil
+}
+
+// GetSubaccountOpenPositionInfo iterates over the given subaccounts and returns a map of
+// perpetual id to open position info.
+func (c *Client) GetSubaccountOpenPositionInfo(
+	subaccounts []satypes.Subaccount,
+) (
+	subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo,
+) {
+	defer telemetry.ModuleMeasureSince(
+		metrics.LiquidationDaemon,
+		time.Now(),
+		metrics.GetSubaccountOpenPositionInfo,
+		metrics.Latency,
+	)
+
+	numSubaccountsWithOpenPositions := 0
+	subaccountOpenPositionInfo = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
+	for _, subaccount := range subaccounts {
+		// Skip subaccounts with no open positions.
+		if len(subaccount.PerpetualPositions) == 0 {
+			continue
+		}
+
+		for _, perpetualPosition := range subaccount.PerpetualPositions {
+			openPositionInfo, ok := subaccountOpenPositionInfo[perpetualPosition.PerpetualId]
+			if !ok {
+				openPositionInfo = &clobtypes.SubaccountOpenPositionInfo{
+					PerpetualId:                  perpetualPosition.PerpetualId,
+					SubaccountsWithLongPosition:  make([]satypes.SubaccountId, 0),
+					SubaccountsWithShortPosition: make([]satypes.SubaccountId, 0),
+				}
+				subaccountOpenPositionInfo[perpetualPosition.PerpetualId] = openPositionInfo
+			}
+
+			if perpetualPosition.GetIsLong() {
+				openPositionInfo.SubaccountsWithLongPosition = append(
+					openPositionInfo.SubaccountsWithLongPosition,
+					*subaccount.Id,
+				)
+			} else {
+				openPositionInfo.SubaccountsWithShortPosition = append(
+					openPositionInfo.SubaccountsWithShortPosition,
+					*subaccount.Id,
+				)
+			}
+		}
+
 		numSubaccountsWithOpenPositions++
 	}
 
@@ -201,7 +268,7 @@ func (c *Client) GetLiquidatableSubaccountIds(
 		metrics.Count,
 	)
 
-	return liquidatableSubaccountIds, nil
+	return subaccountOpenPositionInfo
 }
 
 // CheckSubaccountCollateralization performs the same collateralization check as the application
@@ -216,6 +283,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	liquidityTiers map[uint32]perptypes.LiquidityTier,
 ) (
 	isLiquidatable bool,
+	hasNegativeTnc bool,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -232,7 +300,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		perpetuals,
 	)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
 	bigTotalNetCollateral := big.NewInt(0)
@@ -242,7 +310,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	// Note that we only expect USDC before multi-collateral support is added.
 	for _, assetPosition := range settledSubaccount.AssetPositions {
 		if assetPosition.AssetId != assetstypes.AssetUsdc.Id {
-			return false, errorsmod.Wrapf(
+			return false, false, errorsmod.Wrapf(
 				assetstypes.ErrNotImplementedMulticollateral,
 				"Asset %d is not supported",
 				assetPosition.AssetId,
@@ -257,7 +325,7 @@ func (c *Client) CheckSubaccountCollateralization(
 	for _, perpetualPosition := range settledSubaccount.PerpetualPositions {
 		perpetual, ok := perpetuals[perpetualPosition.PerpetualId]
 		if !ok {
-			return false, errorsmod.Wrapf(
+			return false, false, errorsmod.Wrapf(
 				perptypes.ErrPerpetualDoesNotExist,
 				"Perpetual not found for perpetual id %d",
 				perpetualPosition.PerpetualId,
@@ -266,7 +334,7 @@ func (c *Client) CheckSubaccountCollateralization(
 
 		marketPrice, ok := marketPrices[perpetual.Params.MarketId]
 		if !ok {
-			return false, errorsmod.Wrapf(
+			return false, false, errorsmod.Wrapf(
 				pricestypes.ErrMarketPriceDoesNotExist,
 				"MarketPrice not found for perpetual %+v",
 				perpetual,
@@ -281,7 +349,7 @@ func (c *Client) CheckSubaccountCollateralization(
 
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
 		if !ok {
-			return false, errorsmod.Wrapf(
+			return false, false, errorsmod.Wrapf(
 				perptypes.ErrLiquidityTierDoesNotExist,
 				"LiquidityTier not found for perpetual %+v",
 				perpetual,
@@ -298,5 +366,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
 	}
 
-	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin), nil
+	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),
+		bigTotalNetCollateral.Sign() == -1,
+		nil
 }
