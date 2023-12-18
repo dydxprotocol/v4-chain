@@ -13,6 +13,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
+
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
 	dbm "github.com/cometbft/cometbft-db"
@@ -561,6 +563,7 @@ func New(
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
+		app.BankKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
