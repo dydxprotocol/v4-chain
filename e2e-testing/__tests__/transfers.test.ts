@@ -38,6 +38,7 @@ describe('transfers', () => {
     const positions = assetPosResp.positions;
     const usdcPositionSizeBefore = positions.length !== undefined && positions.length > 0 ? positions[0].size : '0';
 
+    // Deposit
     const tx = await validatorClient.post.deposit(
       subaccount,
       0,
@@ -63,7 +64,7 @@ describe('transfers', () => {
       }),
     );
 
-    // Check API
+    // Check API /v4/transfers endpoint
     const response = await indexerClient.account.getSubaccountTransfers(DYDX_LOCAL_ADDRESS, 0);
     expect(response).not.toBeNull();
     const transfersFromApi = response.transfers;
@@ -83,7 +84,8 @@ describe('transfers', () => {
         type: 'DEPOSIT',
       }),
     );
-    // Check asset position size is incremented too
+    
+    // Check API /v4/assetPositions endpoint
     assetPosResp = await indexerClient.account.getSubaccountAssetPositions(DYDX_LOCAL_ADDRESS, 0);
     expect(assetPosResp).not.toBeNull();
     const usdcPositionSizeAfter = assetPosResp.positions[0].size;
