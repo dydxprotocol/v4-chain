@@ -26,16 +26,16 @@ import (
 const (
 	// When polling a node, poll every `pollFrequencyNs` and give up after `pollAttempts` attempts.
 	pollFrequencyNs = time.Second
-	pollAttempts    = 30
+	pollAttempts    = 60
 	cometPort       = "26657/tcp"
 	grpcPort        = "9090/tcp"
 )
 
 type Node struct {
-	keyring     *keyring.Keyring
-	cometClient *comethttp.HTTP
-	grpcConn    *grpc.ClientConn
-	resource    *dockertest.Resource
+	keyring   *keyring.Keyring
+	cometPort string
+	grpcPort  string
+	resource  *dockertest.Resource
 }
 
 func newNode(keyring *keyring.Keyring, resource *dockertest.Resource) (node *Node, err error) {
@@ -43,19 +43,17 @@ func newNode(keyring *keyring.Keyring, resource *dockertest.Resource) (node *Nod
 		keyring:  keyring,
 		resource: resource,
 	}
-	cometPort := resource.GetHostPort(cometPort)
-	node.cometClient, err = comethttp.New("tcp://"+cometPort, "/websocket")
-	if err != nil {
-		return nil, err
-	}
-
-	grpcPort := resource.GetHostPort(grpcPort)
-	node.grpcConn, err = grpc.Dial(grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		return nil, err
-	}
-
+	node.cometPort = resource.GetHostPort(cometPort)
+	node.grpcPort = resource.GetHostPort(grpcPort)
 	return node, err
+}
+
+func (n *Node) createCometClient() (*comethttp.HTTP, error) {
+	return comethttp.New("tcp://"+n.cometPort, "/websocket")
+}
+
+func (n *Node) createGrpcConn() (*grpc.ClientConn, error) {
+	return grpc.Dial(n.grpcPort, grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
 // Wait for current block height has advanced by at least `numBlocks`
@@ -71,11 +69,8 @@ func (n *Node) Wait(numBlocks int64) error {
 func (n *Node) WaitUntilBlockHeight(height int64) error {
 	for i := 0; i < pollAttempts; i++ {
 		latestHeight, err := n.LatestBlockHeight()
-		if err != nil {
-			return err
-		}
 
-		if latestHeight >= height {
+		if err == nil && latestHeight >= height {
 			return nil
 		}
 		time.Sleep(pollFrequencyNs)
@@ -84,7 +79,11 @@ func (n *Node) WaitUntilBlockHeight(height int64) error {
 }
 
 func (n *Node) LatestBlockHeight() (int64, error) {
-	status, err := n.cometClient.Status(context.Background())
+	cometClient, err := n.createCometClient()
+	if err != nil {
+		return 0, err
+	}
+	status, err := cometClient.Status(context.Background())
 	if err != nil {
 		return 0, err
 	}
@@ -171,6 +170,10 @@ func Query[Request proto.Message, Response proto.Message, Client interface{}](
 	clientConstructor func(gogogrpc.ClientConn) Client,
 	requestFn func(Client, context.Context, Request, ...grpc.CallOption) (Response, error),
 	request Request) (proto.Message, error) {
-	client := clientConstructor(n.grpcConn)
+	conn, err := n.createGrpcConn()
+	if err != nil {
+		return nil, err
+	}
+	client := clientConstructor(conn)
 	return requestFn(client, context.Background(), request)
 }
