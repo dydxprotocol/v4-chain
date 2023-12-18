@@ -85,7 +85,7 @@ func GenerateAndCheckTx(
 
 	// Workaround: cosmos-sdk Simulation hard-codes to a deliver context. Generate and use a new
 	// check context (with the same headers) specifically for CheckTx.
-	checkTxCtx := app.NewContext(true).WithBlockHeader(ctx.BlockHeader())
+	checkTxCtx := app.NewContextLegacy(true, ctx.BlockHeader())
 
 	simAccount := ak.GetAccount(checkTxCtx, account.Address)
 	spendable := bk.SpendableCoins(checkTxCtx, simAccount.GetAddress())
