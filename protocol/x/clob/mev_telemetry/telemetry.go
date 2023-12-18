@@ -54,7 +54,7 @@ func sendDatapointsToTelemetryService(ctx sdk.Context, address string, mevMetric
 
 	resp, err := client.Post(address, "application/json", bytes.NewBuffer(data))
 	if err != nil {
-		logger(ctx).Error("error sending mev metric", "error", address, "error", err)
+		logger(ctx).Error("error sending mev metric", "address", address, "error", err)
 		telemetry.IncrCounter(1, types.ModuleName, metrics.MevSentDatapoints, metrics.Error, metrics.Count)
 		return
 	}
