@@ -7,6 +7,7 @@ set -eo pipefail
 source "./genesis.sh"
 
 CHAIN_ID="localdydxprotocol"
+PREUPGRADE_VERSION="v2.0.0"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
@@ -66,7 +67,7 @@ FAUCET_ACCOUNTS=(
 # Define dependencies for this script.
 # `jq` and `dasel` are used to manipulate json and yaml files respectively.
 install_prerequisites() {
-	apk add dasel jq
+	apk add curl dasel jq
 }
 
 # Create all validators for the chain including a full-node.
@@ -143,6 +144,39 @@ create_validators() {
 	done
 }
 
+setup_cosmovisor() {
+	for i in "${!MONIKERS[@]}"; do
+		VAL_HOME_DIR="$HOME/chain/.${MONIKERS[$i]}"
+		export DAEMON_NAME=dydxprotocold
+		export DAEMON_HOME="$HOME/chain/.${MONIKERS[$i]}"
+
+		cosmovisor init /bin/dydxprotocold
+	done
+}
+
+download_preupgrade_binary() {
+	arch="$(apk --print-arch)"
+	url_arch=""
+	case "$arch" in
+		'x86_64')
+			url_arch='amd64'
+			;;
+		'aarch64')
+			url_arch='arm64'
+			;;
+		*)
+			echo >&2 "unexpected architecture '$arch'"
+			exit 1
+			;;
+	esac
+	tar_url="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2F$PREUPGRADE_VERSION/dydxprotocold-$PREUPGRADE_VERSION-linux-$url_arch.tar.gz"
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	cp /tmp/dydxprotocold/$dydxprotocold_path /bin/dydxprotocold_preupgrade
+}
+
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.
 # Note: DO NOT add more config modifications in this method. Use `cmd/config.go` to configure
 # the default config values.
@@ -158,4 +192,6 @@ edit_config() {
 }
 
 install_prerequisites
+setup_cosmovisor
+download_preupgrade_binary
 create_validators

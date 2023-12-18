@@ -1,9 +1,13 @@
 FROM dydxprotocol-base
 
 COPY ./testing/containertest/containertest.sh /dydxprotocol/containertest.sh
+COPY ./testing/containertest/preupgrade_entrypoint.sh /dydxprotocol/preupgrade_entrypoint.sh
+COPY ./testing/containertest/preupgrade_genesis.json /dydxprotocol/preupgrade_genesis.json
 COPY ./testing/genesis.sh /dydxprotocol/genesis.sh
 COPY ./daemons/pricefeed/client/constants/testdata /dydxprotocol/exchange_config
 COPY ./testing/delaymsg_config /dydxprotocol/delaymsg_config
+
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
 
 RUN /dydxprotocol/containertest.sh
 
