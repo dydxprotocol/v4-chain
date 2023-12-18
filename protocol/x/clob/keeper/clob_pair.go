@@ -501,7 +501,7 @@ func (k Keeper) UpdateClobPair(
 
 	// If newly transitioning to final settlement, enter final settlement.
 	if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT && oldStatus != newStatus {
-		k.mustEnterFinalSettlement(ctx, clobPair.GetClobPairId())
+		k.mustTransitionToFinalSettlement(ctx, clobPair.GetClobPairId())
 	}
 
 	return nil

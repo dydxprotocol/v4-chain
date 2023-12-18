@@ -49,9 +49,9 @@ const (
 	ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING ClobPairStatus = 5
 	// CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
 	// deactivated. Clob pairs in this state do not accept new orders and trading
-	// is blocked. All open positions are closed by the protocol when the clob
-	// pair gains this status. All open stateful orders are closed and short-term
-	// orders are left to expire.
+	// is blocked. All open positions are closed and open stateful orders canceled
+	// by the protocol when the clob pair transitions to this status. All
+	// short-term orders are left to expire.
 	ClobPairStatus_CLOB_PAIR_STATUS_FINAL_SETTLEMENT ClobPairStatus = 6
 )
 
