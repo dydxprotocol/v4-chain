@@ -631,6 +631,19 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 			clobPairId,
 			types.ClobPair_STATUS_INITIALIZING,
 		)
+	case types.ClobPair_STATUS_FINAL_SETTLEMENT:
+		// Only allow deleveraging events. This allows the protocol to close out open
+		// positions in the market. All trading is blocked.
+		if match := internalOperation.GetMatch(); match != nil && match.GetMatchPerpetualDeleveraging() != nil {
+			return nil
+		}
+		return errorsmod.Wrapf(
+			types.ErrOperationConflictsWithClobPairStatus,
+			"Operation %s invalid for ClobPair with id %d with status %s",
+			internalOperation.GetInternalOperationTextString(),
+			clobPairId,
+			types.ClobPair_STATUS_FINAL_SETTLEMENT,
+		)
 	}
 
 	return nil
