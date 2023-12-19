@@ -373,6 +373,13 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 				clobPair.Status,
 			)
 		}
+	case types.ClobPair_STATUS_FINAL_SETTLEMENT:
+		return errorsmod.Wrapf(
+			types.ErrOrderConflictsWithClobPairStatus,
+			"Order %+v disallowed, trading is disabled for clob pair with status %+v",
+			order,
+			clobPair.Status,
+		)
 	}
 
 	return nil
