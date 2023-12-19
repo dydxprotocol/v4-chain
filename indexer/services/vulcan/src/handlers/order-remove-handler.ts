@@ -23,7 +23,7 @@ import {
   removeOrder,
   CanceledOrdersCache,
 } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_SHORT_TERM, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { ORDER_FLAG_SHORT_TERM, isStatefulOrder, isIOC } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -231,7 +231,10 @@ export class OrderRemoveHandler extends Handler {
 
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
-    if (removeOrderResult.removed && removeOrderResult.restingOnBook === true) {
+    if (
+      removeOrderResult.removed &&
+      removeOrderResult.restingOnBook === true &&
+      !isIOC(removeOrderResult.removedOrder!.order!.timeInForce)) {
       await this.updateOrderbook(removeOrderResult, perpetualMarket);
     }
 
@@ -309,7 +312,10 @@ export class OrderRemoveHandler extends Handler {
     ));
     // Do not update orderbook if order being cancelled has no remaining quantums or is
     // resting on book
-    if (!remainingQuantums.eq('0') && removeOrderResult.restingOnBook !== false) {
+    if (
+      !remainingQuantums.eq('0') &&
+      removeOrderResult.restingOnBook !== false &&
+      !isIOC(removeOrderResult.removedOrder!.order!.timeInForce)) {
       await this.updateOrderbook(removeOrderResult, perpetualMarket);
     }
     // TODO: consolidate remove handler logic into a single lua script.

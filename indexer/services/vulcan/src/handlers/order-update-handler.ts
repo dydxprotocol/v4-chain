@@ -17,7 +17,7 @@ import {
   OpenOrdersCache,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
-import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { isStatefulOrder, isIOC } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   OrderUpdateV1,
@@ -145,27 +145,33 @@ export class OrderUpdateHandler extends Handler {
       stats.increment(`${config.SERVICE_NAME}.order_update_with_zero_delta.count`, 1);
       return;
     }
-    const updatedQuantums: number = await this.updatePriceLevel(updateResult, sizeDeltaInQuantums);
 
-    const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
-      .getPerpetualMarketFromTicker(updateResult.order!.ticker);
-    if (perpetualMarket === undefined) {
-      logger.error({
-        at: 'OrderUpdateHandler#handle',
-        message: `Received order update for order with unknown perpetual market, ticker ${
-          updateResult.order!.ticker}`,
-      });
-      return;
+    if (!isIOC(updateResult.order!.order!.timeInForce)) {
+      const updatedQuantums: number = await this.updatePriceLevel(
+        updateResult,
+        sizeDeltaInQuantums,
+      );
+
+      const perpetualMarket: PerpetualMarketFromDatabase | undefined = perpetualMarketRefresher
+        .getPerpetualMarketFromTicker(updateResult.order!.ticker);
+      if (perpetualMarket === undefined) {
+        logger.error({
+          at: 'OrderUpdateHandler#handle',
+          message: `Received order update for order with unknown perpetual market, ticker ${
+            updateResult.order!.ticker}`,
+        });
+        return;
+      }
+
+      const orderbookMessage: Message = {
+        value: this.createOrderbookWebsocketMessage(
+          updateResult.order!,
+          perpetualMarket,
+          updatedQuantums,
+        ),
+      };
+      sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
-
-    const orderbookMessage: Message = {
-      value: this.createOrderbookWebsocketMessage(
-        updateResult.order!,
-        perpetualMarket,
-        updatedQuantums,
-      ),
-    };
-    sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
 
   /**

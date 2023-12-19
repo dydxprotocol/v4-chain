@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 
-import { IndexerOrderId } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrderId, IndexerOrder_TimeInForce } from '@dydxprotocol-indexer/v4-protos';
 
 import { ORDER_FLAG_CONDITIONAL, ORDER_FLAG_LONG_TERM } from './constants';
 
@@ -22,4 +22,11 @@ export function isStatefulOrder(orderFlag: number | String): boolean {
     return false;
   }
   return numberOrderFlag === ORDER_FLAG_CONDITIONAL || numberOrderFlag === ORDER_FLAG_LONG_TERM;
+}
+
+export function isIOC(tif: IndexerOrder_TimeInForce): boolean {
+  return (
+    tif === IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL ||
+    tif === IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC
+  );
 }
