@@ -49,7 +49,7 @@ func getLegacyMsgSignerFn(path []string) func(msg proto.Message) ([][]byte, erro
 	}
 }
 
-// TODO(CORE-538): Consider having app injected messages return an error instead of empty signers list.
+// TODO(CORE-846): Consider having app injected messages return an error instead of empty signers list.
 func noSigners(_ proto.Message) ([][]byte, error) {
 	return [][]byte{}, nil
 }
