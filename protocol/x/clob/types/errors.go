@@ -201,11 +201,6 @@ var (
 		43,
 		"Order has remaining size",
 	)
-	ErrLiquidationConflictsWithClobPairStatus = errorsmod.Register(
-		ModuleName,
-		44,
-		"Liquidation conflicts with ClobPair status",
-	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
@@ -317,6 +312,11 @@ var (
 		ModuleName,
 		1021,
 		"Deleveraging match has incorrect value for isFinalSettlement flag",
+	)
+	ErrLiquidationConflictsWithClobPairStatus = errorsmod.Register(
+		ModuleName,
+		1022,
+		"Liquidation conflicts with ClobPair status",
 	)
 
 	// Advanced order type errors.

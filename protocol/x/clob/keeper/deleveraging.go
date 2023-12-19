@@ -179,7 +179,9 @@ func (k Keeper) CanDeleverageSubaccount(
 		return true, false, nil
 	}
 
-	// Non-negative TNC, deleverage at oracle price if market is in final settlement.
+	// Non-negative TNC, deleverage at oracle price if market is in final settlement. Deleveraging at oracle price
+	// is always a valid state transition when TNC is non-negative. This is because the TNC/TMMR ratio is improving;
+	// TNC is staying constant while TMMR is decreasing.
 	return false, clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT, nil
 }
 
@@ -574,10 +576,16 @@ func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 		}
 	}
 
+	metrics.AddSample(
+		metrics.ClobSubaccountsWithFinalSettlementPositionsCount,
+		float32(len(subaccountsToDeleverage)),
+	)
+
 	return subaccountsToDeleverage
 }
 
 // DeleverageSubaccounts deleverages a slice of subaccounts paired with a perpetual position to deleverage with.
+// Returns an error if a deleveraging attempt returns an error.
 func (k Keeper) DeleverageSubaccounts(
 	ctx sdk.Context,
 	subaccountsToDeleverage []subaccountToDeleverage,

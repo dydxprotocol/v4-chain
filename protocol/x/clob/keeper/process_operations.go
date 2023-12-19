@@ -610,7 +610,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
 // This function returns an error if:
-// - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
+// - CanDeleverageSubaccount returns false for both boolean return values, indicating the
+// subaccount failed deleveraging validation.
+// - The IsFinalSettlement flag on the operation does not match the expected value based on collateralization
+// and market status.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
 // TODO(CLOB-654) Verify deleveraging is triggered by unmatched liquidation orders and for the correct amount.
@@ -622,11 +625,12 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	// Validate that the provided subaccount can be deleveraged.
-	if shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
 		ctx,
 		liquidatedSubaccountId,
 		perpetualId,
-	); err != nil {
+	)
+	if err != nil {
 		panic(
 			fmt.Sprintf(
 				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
@@ -635,14 +639,18 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			),
 		)
-	} else if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
+	}
+
+	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
 			"Subaccount %+v failed deleveraging validation",
 			liquidatedSubaccountId,
 		)
-	} else if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
+	}
+
+	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
 		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
 		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
 		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.

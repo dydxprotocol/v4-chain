@@ -232,7 +232,8 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 }
 
 // PlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
-// `PerpetualLiquidation`.
+// `PerpetualLiquidation`. This function will return an error if attempting to place a liquidation order
+// in a non-active market.
 func (k Keeper) PlacePerpetualLiquidation(
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
