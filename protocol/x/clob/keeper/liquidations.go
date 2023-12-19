@@ -18,6 +18,9 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// subaccountToDeleverage is a struct containing a subaccount ID and perpetual ID to deleverage.
+// This struct is used as a return type for the LiquidateSubaccountsAgainstOrderbook and
+// GetSubaccountsWithOpenPositionsInFinalSettlementMarkets called in PrepareCheckState.
 type subaccountToDeleverage struct {
 	SubaccountId satypes.SubaccountId
 	PerpetualId  uint32
@@ -25,7 +28,9 @@ type subaccountToDeleverage struct {
 
 // LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
 // the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
-// liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset.
+// liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset. A slice
+// of subaccounts to deleverage is returned from this function, derived from liquidation orders that
+// failed to fill.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,

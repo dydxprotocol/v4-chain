@@ -535,18 +535,26 @@ func (k Keeper) ProcessDeleveraging(
 
 // GetSubaccountsWithOpenPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
 // liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
-// will be deleveraged either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC.
+// will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
+// function is called in PrepareCheckState during the deleveraging step.
 func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
 	subaccountOpenPositionInfo map[uint32]*types.SubaccountOpenPositionInfo,
 ) (subaccountsToDeleverage []subaccountToDeleverage) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobGetSubaccountsWithOpenPositionsInFinalSettlementMarkets,
+		metrics.Latency,
+	)
+
 	for _, clobPair := range k.GetAllClobPairs(ctx) {
 		if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
 			continue
 		}
 
-		perpetualId := clobPair.MustGetPerpetualId()
-		positionInfo, found := subaccountOpenPositionInfo[perpetualId]
+		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
+		positionInfo, found := subaccountOpenPositionInfo[finalSettlementPerpetualId]
 		if !found {
 			// No open positions in the market.
 			continue
@@ -555,13 +563,13 @@ func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
 		for _, subaccountId := range positionInfo.SubaccountsWithLongPosition {
 			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
 				SubaccountId: subaccountId,
-				PerpetualId:  perpetualId,
+				PerpetualId:  finalSettlementPerpetualId,
 			})
 		}
 		for _, subaccountId := range positionInfo.SubaccountsWithShortPosition {
 			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
 				SubaccountId: subaccountId,
-				PerpetualId:  perpetualId,
+				PerpetualId:  finalSettlementPerpetualId,
 			})
 		}
 	}
@@ -574,10 +582,17 @@ func (k Keeper) DeleverageSubaccounts(
 	ctx sdk.Context,
 	subaccountsToDeleverage []subaccountToDeleverage,
 ) error {
+	defer func() {
+		telemetry.MeasureSince(
+			time.Now(),
+			types.ModuleName,
+			metrics.LiquidateSubaccounts_Deleverage,
+			metrics.Latency,
+		)
+	}()
+
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
-	startDeleverageSubaccounts := time.Now()
-	var i int
-	for i = 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
+	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
 		subaccountId := subaccountsToDeleverage[i].SubaccountId
 		perpetualId := subaccountsToDeleverage[i].PerpetualId
 		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
@@ -591,13 +606,6 @@ func (k Keeper) DeleverageSubaccounts(
 			return err
 		}
 	}
-
-	telemetry.MeasureSince(
-		startDeleverageSubaccounts,
-		types.ModuleName,
-		metrics.LiquidateSubaccounts_Deleverage,
-		metrics.Latency,
-	)
 
 	return nil
 }

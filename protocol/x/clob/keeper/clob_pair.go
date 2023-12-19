@@ -328,7 +328,7 @@ func (k Keeper) validateLiquidationAgainstClobPairStatus(
 		)
 	}
 
-	if clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT {
+	if clobPair.Status != types.ClobPair_STATUS_ACTIVE {
 		return errorsmod.Wrapf(
 			types.ErrLiquidationConflictsWithClobPairStatus,
 			"Liquidation order %+v cannot be placed for clob pair with status %+v",
