@@ -809,7 +809,7 @@ func New(
 		},
 	)
 	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
-	txConfig.SigningContext()
+
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
 		keys[delaymsgmoduletypes.StoreKey],
@@ -1460,7 +1460,7 @@ func (app *App) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.
 	}
 	initResponse, err := app.ModuleManager.InitGenesis(ctx, app.appCodec, genesisState)
 	if err != nil {
-		return initResponse, err
+		panic(err)
 	}
 	block := app.IndexerEventManager.ProduceBlock(ctx)
 	app.IndexerEventManager.SendOnchainData(block)

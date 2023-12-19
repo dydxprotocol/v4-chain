@@ -52,7 +52,7 @@ func TestAppInjectedMsgSamples_GetSigners(t *testing.T) {
 		sigTx, ok := testTxBuilder.GetTx().(authsigning.SigVerifiableTx)
 		require.True(t, ok)
 		signers, err := sigTx.GetSigners()
-		require.Error(t, err)
+		require.NoError(t, err)
 		require.Empty(t, signers)
 	}
 }

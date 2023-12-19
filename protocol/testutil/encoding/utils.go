@@ -1,6 +1,7 @@
 package encoding
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
 
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -39,7 +40,7 @@ import (
 
 // GetTestEncodingCfg returns an encoding config for testing purposes.
 func GetTestEncodingCfg() testutil.TestEncodingConfig {
-	encodingCfg := testutil.MakeTestEncodingConfig(
+	encodingCfg := ante.MakeTestEncodingConfig(
 		auth.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},

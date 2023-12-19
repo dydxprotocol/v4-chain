@@ -289,7 +289,8 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
 			// Run.
-			resp, _ := handler(ctx, &req)
+			resp, err := handler(ctx, &req)
+			require.NoError(t, err)
 
 			// Validate.
 			require.Equal(t, tc.expectedResponse, *resp)
