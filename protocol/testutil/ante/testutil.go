@@ -122,7 +122,7 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 	for i := 0; i < numAccs; i++ {
 		priv, _, addr := testdata.KeyTestPubAddr()
 		acc := suite.AccountKeeper.NewAccountWithAddress(suite.Ctx, addr)
-		if err := acc.SetAccountNumber(uint64(i + 1000)); err != nil {
+		if err := acc.SetAccountNumber(uint64(i)); err != nil {
 			panic(err)
 		}
 		suite.AccountKeeper.SetAccount(suite.Ctx, acc)
