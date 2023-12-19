@@ -768,6 +768,23 @@ func (k Keeper) GetNetNotional(
 		return new(big.Int), err
 	}
 
+	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
+}
+
+// GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be
+// represented by the following equation:
+//
+// `quantums / 10^baseAtomicResolution * marketPrice * 10^marketExponent * 10^quoteAtomicResolution`.
+// Note that longs are positive, and shorts are negative.
+//
+// Also note that this is a stateless function.
+func GetNetNotionalInQuoteQuantums(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	bigQuantums *big.Int,
+) (
+	bigNetNotionalQuoteQuantums *big.Int,
+) {
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigQuantums,
 		perpetual.Params.AtomicResolution,
@@ -775,7 +792,7 @@ func (k Keeper) GetNetNotional(
 		marketPrice.Exponent,
 	)
 
-	return bigQuoteQuantums, nil
+	return bigQuoteQuantums
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -879,6 +896,29 @@ func (k Keeper) GetMarginRequirements(
 		return nil, nil, err
 	}
 
+	bigInitialMarginQuoteQuantums,
+		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		bigQuantums,
+	)
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+}
+
+// GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
+// in quote quantums, given the position size in base quantums.
+//
+// Note that this is a stateless function.
+func GetMarginRequirementsInQuoteQuantums(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	liquidityTier types.LiquidityTier,
+	bigQuantums *big.Int,
+) (
+	bigInitialMarginQuoteQuantums *big.Int,
+	bigMaintenanceMarginQuoteQuantums *big.Int,
+) {
 	// Always consider the magnitude of the position regardless of whether it is long/short.
 	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
 
@@ -900,8 +940,7 @@ func (k Keeper) GetMarginRequirements(
 		),
 		true,
 	)
-
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
 
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
@@ -930,11 +969,31 @@ func (k Keeper) GetSettlementPpm(
 		return big.NewInt(0), big.NewInt(0), err
 	}
 
+	bigNetSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
+		perpetual,
+		quantums,
+		index,
+	)
+	return bigNetSettlementPpm, newFundingIndex, nil
+}
+
+// GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
+// the perpetual and position size (in base quantums).
+//
+// Note that this function is a stateless utility function.
+func GetSettlementPpmWithPerpetual(
+	perpetual types.Perpetual,
+	quantums *big.Int,
+	index *big.Int,
+) (
+	bigNetSettlementPpm *big.Int,
+	newFundingIndex *big.Int,
+) {
 	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
 
 	// if indexDelta is zero, then net settlement is zero.
 	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt(), nil
+		return big.NewInt(0), perpetual.FundingIndex.BigInt()
 	}
 
 	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
@@ -944,7 +1003,7 @@ func (k Keeper) GetSettlementPpm(
 	// Thus, always negate `bigNetSettlementPpm` here.
 	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
 
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt(), nil
+	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,

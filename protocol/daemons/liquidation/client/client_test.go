@@ -7,20 +7,14 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/types/query"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,183 +62,6 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.AssertCalled(t, "NewTcpConnection", grpc.Ctx, d_constants.DefaultGrpcEndpoint)
 	mockGrpcClient.AssertCalled(t, "NewGrpcConnection", grpc.Ctx, grpc.SocketPath)
 	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 1)
-}
-
-func TestRunLiquidationDaemonTaskLoop(t *testing.T) {
-	df := flags.GetDefaultDaemonFlags()
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(ctx context.Context, mck *mocks.QueryClient)
-
-		// expectations
-		expectedLiquidatableSubaccountIds []satypes.SubaccountId
-		expectedError                     error
-	}{
-		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_1BTC_Short,
-						constants.Dave_Num0_1BTC_Long_50000USD,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-
-				req2 := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-						constants.Dave_Num0,
-					},
-				}
-				response2 := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: []clobtypes.AreSubaccountsLiquidatableResponse_Result{
-						{
-							SubaccountId:   constants.Carl_Num0,
-							IsLiquidatable: true,
-						},
-						{
-							SubaccountId:   constants.Dave_Num0,
-							IsLiquidatable: false,
-						},
-					},
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, req2).Return(response2, nil)
-
-				req3 := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req3).Return(response3, nil)
-			},
-		},
-		"Success - no open position": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_599USD, // no open positions
-						constants.Dave_Num0_599USD, // no open positions
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-				req2 := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-				}
-				response2 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req2).Return(response2, nil)
-			},
-		},
-		"Success - no liquidatable subaccounts": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				req := &satypes.QueryAllSubaccountRequest{
-					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
-					},
-				}
-				response := &satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_1BTC_Short,
-						constants.Dave_Num0_1BTC_Long_50000USD,
-					},
-				}
-				mck.On("SubaccountAll", ctx, req).Return(response, nil)
-
-				req2 := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{
-						constants.Carl_Num0,
-						constants.Dave_Num0,
-					},
-				}
-				response2 := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: []clobtypes.AreSubaccountsLiquidatableResponse_Result{
-						{
-							SubaccountId:   constants.Carl_Num0,
-							IsLiquidatable: false,
-						},
-						{
-							SubaccountId:   constants.Dave_Num0,
-							IsLiquidatable: false,
-						},
-					},
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, req2).Return(response2, nil)
-				req3 := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: []satypes.SubaccountId{},
-				}
-				response3 := &api.LiquidateSubaccountsResponse{}
-				mck.On("LiquidateSubaccounts", ctx, req3).Return(response3, nil)
-			},
-		},
-		"Panics on error - SubaccountAll": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(nil, errors.New("test error"))
-			},
-			expectedError: errors.New("test error"),
-		},
-		"Panics on error - AreSubaccountsLiquidatable": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(&satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_1BTC_Short,
-					},
-				}, nil)
-				mck.On("AreSubaccountsLiquidatable", mock.Anything, mock.Anything).Return(nil, errors.New("test error"))
-			},
-			expectedError: errors.New("test error"),
-		},
-		"Panics on error - LiquidateSubaccounts": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
-				mck.On("SubaccountAll", mock.Anything, mock.Anything).Return(&satypes.QuerySubaccountAllResponse{
-					Subaccount: []satypes.Subaccount{
-						constants.Carl_Num0_1BTC_Short,
-					},
-				}, nil,
-				)
-				mck.On("AreSubaccountsLiquidatable", mock.Anything, mock.Anything).Return(
-					&clobtypes.AreSubaccountsLiquidatableResponse{},
-					nil,
-				)
-				mck.On("LiquidateSubaccounts", mock.Anything, mock.Anything).Return(nil, errors.New("test error"))
-			},
-			expectedError: errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock)
-			s := client.SubTaskRunnerImpl{}
-
-			c := client.NewClient(log.NewNopLogger())
-			c.SubaccountQueryClient = queryClientMock
-			c.ClobQueryClient = queryClientMock
-			c.LiquidationServiceClient = queryClientMock
-
-			err := s.RunLiquidationDaemonTaskLoop(
-				grpc.Ctx,
-				c,
-				flags.GetDefaultDaemonFlags().Liquidation,
-			)
-			if tc.expectedError != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.NoError(t, err)
-				queryClientMock.AssertExpectations(t)
-			}
-		})
-	}
 }
 
 // FakeSubTaskRunner is a mock implementation of the SubTaskRunner interface for testing.
