@@ -243,17 +243,12 @@ type App struct {
 	ParamsKeeper     paramskeeper.Keeper
 	// IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCKeeper             *ibckeeper.Keeper
-	ICAHostKeeper         icahostkeeper.Keeper // TODO: pointer needed?
+	ICAHostKeeper         icahostkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
 	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
-
-	// make scoped keepers public for test purposes
-	ScopedIBCKeeper      capabilitykeeper.ScopedKeeper
-	ScopedICAHostKeeper  capabilitykeeper.ScopedKeeper
-	ScopedTransferKeeper capabilitykeeper.ScopedKeeper
 
 	PricesKeeper pricesmodulekeeper.Keeper
 
@@ -424,10 +419,6 @@ func New(
 		memKeys[capabilitytypes.MemStoreKey],
 	)
 
-	// grant capabilities for the ibc and ibc-transfer modules
-	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
-	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
-
 	// add keepers
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
 		appCodec,
@@ -527,6 +518,14 @@ func New(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
+	// grant capabilities for the ibc, ibc-transfer and ICAHostKeeper modules
+
+	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
+	scopedTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+
+	app.CapabilityKeeper.Seal()
+
 	// Create IBC Keeper
 	app.IBCKeeper = ibckeeper.NewKeeper(
 		appCodec,
@@ -546,11 +545,9 @@ func New(
 		app.IBCKeeper.ChannelKeeper,                 // channelKeeper
 		&app.IBCKeeper.PortKeeper,                   // portKeeper
 		app.AccountKeeper,                           // accountKeeper
-		app.ScopedICAHostKeeper,                     // scopedKeeper
+		scopedICAHostKeeper,                         // scopedKeeper
 		app.MsgServiceRouter(),                      // msgRouter
 	)
-
-	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 
 	// Create Transfer Keepers
 	app.TransferKeeper = ibctransferkeeper.NewKeeper(
@@ -573,9 +570,12 @@ func New(
 
 	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
 
+	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
+	// Ordering of `AddRoute` does not matter.
+	ibcRouter.
+		AddRoute(ibctransfertypes.ModuleName, transferIBCModule).
 		AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
@@ -1017,7 +1017,6 @@ func New(
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
-		icatypes.ModuleName,
 		authtypes.ModuleName,
 		banktypes.ModuleName,
 		govtypes.ModuleName,
@@ -1026,6 +1025,7 @@ func New(
 		feegrant.ModuleName,
 		paramstypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		icatypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
@@ -1061,8 +1061,8 @@ func New(
 		ibcexported.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
-		icatypes.ModuleName,
 		consensusparamtypes.ModuleName,
+		icatypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		bridgemoduletypes.ModuleName,
@@ -1101,9 +1101,9 @@ func New(
 		upgradetypes.ModuleName,
 		ibctransfertypes.ModuleName,
 		ratelimitmoduletypes.ModuleName,
-		icatypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
+		icatypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1140,6 +1140,7 @@ func New(
 		ratelimitmoduletypes.ModuleName,
 		feegrant.ModuleName,
 		consensusparamtypes.ModuleName,
+		icatypes.ModuleName,
 		pricesmoduletypes.ModuleName,
 		assetsmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName,
@@ -1260,10 +1261,6 @@ func New(
 		app.hydrateKeeperInMemoryDataStructures()
 	}
 	app.initializeRateLimiters()
-
-	app.ScopedIBCKeeper = scopedIBCKeeper
-	app.ScopedICAHostKeeper = app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
-	app.ScopedTransferKeeper = scopedTransferKeeper
 
 	// Report out app version and git commit. This will be run when validators restart.
 	version := version.NewInfo()

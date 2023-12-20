@@ -137,7 +137,7 @@ func IcaHostKeeperUpgradeHandler(
 
 			// Distribution messages
 			sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
-			sdk.MsgTypeURL(&distrtypes.MsgWithdrawValidatorCommission{}),
+			sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
 			sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
 
 			// Gov messages
