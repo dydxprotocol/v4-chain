@@ -15,13 +15,11 @@ import {
   TransferTable,
   SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
+import * as utils from './helpers/utils';
 
 export const DYDX_LOCAL_ADDRESS = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
 export const DYDX_LOCAL_MNEMONIC = 'merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small';
 
-function sleep(milliseconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, milliseconds));
-}
 
 describe('transfers', () => {
   it('test deposit', async () => {
@@ -45,7 +43,7 @@ describe('transfers', () => {
       new Long(10_000_000),
     );
 
-    await sleep(15000);  // wait 15s for deposit to complete
+    await utils.sleep(15000);  // wait 15s for deposit to complete
     const defaultSubaccountId: string = SubaccountTable.uuid(wallet.address!, 0);
 
     // Check DB
@@ -84,7 +82,7 @@ describe('transfers', () => {
         type: 'DEPOSIT',
       }),
     );
-    
+
     // Check API /v4/assetPositions endpoint
     assetPosResp = await indexerClient.account.getSubaccountAssetPositions(DYDX_LOCAL_ADDRESS, 0);
     expect(assetPosResp).not.toBeNull();
