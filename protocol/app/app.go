@@ -1170,32 +1170,16 @@ func New(
 	}
 
 	// ProcessProposal setup.
-	if appFlags.NonValidatingFullNode {
-		// Note: If the command-line flag `--non-validating-full-node` is enabled, this node will use
-		// an implementation of `ProcessProposal` which always returns `abci.ResponseProcessProposal_ACCEPT`.
-		// Full-nodes do not participate in consensus, and therefore should not participate in voting / `ProcessProposal`.
-		app.SetProcessProposal(
-			process.FullNodeProcessProposalHandler(
-				txConfig,
-				app.BridgeKeeper,
-				app.ClobKeeper,
-				app.StakingKeeper,
-				app.PerpetualsKeeper,
-				app.PricesKeeper,
-			),
-		)
-	} else {
-		app.SetProcessProposal(
-			process.ProcessProposalHandler(
-				txConfig,
-				app.BridgeKeeper,
-				app.ClobKeeper,
-				app.StakingKeeper,
-				app.PerpetualsKeeper,
-				app.PricesKeeper,
-			),
-		)
-	}
+	app.SetProcessProposal(
+		process.ProcessProposalHandler(
+			txConfig,
+			app.BridgeKeeper,
+			app.ClobKeeper,
+			app.StakingKeeper,
+			app.PerpetualsKeeper,
+			app.PricesKeeper,
+		),
+	)
 
 	// Note that panics from out of gas errors won't get logged, since the `OutOfGasMiddleware` is added in front of this,
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
