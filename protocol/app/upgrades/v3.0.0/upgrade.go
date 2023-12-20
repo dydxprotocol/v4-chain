@@ -25,6 +25,27 @@ import (
 )
 
 var (
+	ICAHostAllowMessages = []string{
+		// IBC transfer messages
+		sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
+
+		// Bank messages
+		sdk.MsgTypeURL(&banktypes.MsgSend{}),
+
+		// Staking messages
+		sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}),
+
+		// Distribution messages
+		sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
+		sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
+		sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
+
+		// Gov messages
+		sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
+	}
 	// List of module accounts to check in state.
 	// These include all dYdX custom module accounts.
 	ModuleAccsToInitialize = []string{
@@ -121,28 +142,8 @@ func IcaHostKeeperUpgradeHandler(
 
 	// host submodule params
 	hostParams := icahosttypes.Params{
-		HostEnabled: true,
-		AllowMessages: []string{
-			// IBC transfer messages
-			sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
-
-			// Bank messages
-			sdk.MsgTypeURL(&banktypes.MsgSend{}),
-
-			// Staking messages
-			sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
-			sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
-			sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
-			sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}),
-
-			// Distribution messages
-			sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
-			sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
-			sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
-
-			// Gov messages
-			sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
-		},
+		HostEnabled:   true,
+		AllowMessages: ICAHostAllowMessages,
 	}
 
 	icaAppModule.InitModule(ctx, controllerParams, hostParams)
