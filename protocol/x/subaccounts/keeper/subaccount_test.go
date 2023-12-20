@@ -2230,7 +2230,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		// Update type
 		updateType types.UpdateType
 	}{
-		"deposits are not blocked if current block is within WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS": {
+		`deposits are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
@@ -2285,8 +2286,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100 - types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 
 			updateType: types.Deposit,
 		},
@@ -2357,7 +2359,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
-		"withdrawals are blocked if negative TNC subaccount was seen within WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS": {
+		`withdrawals are blocked if negative TNC subaccount was seen within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
 			expectedQuoteBalance:     big.NewInt(-100),
 			expectedSuccess:          false,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.WithdrawalsAndTransfersBlocked},
@@ -2389,12 +2392,14 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100 - types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 
 			updateType: types.Withdrawal,
 		},
-		"withdrawals are not blocked if negative TNC subaccount was seen after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS": {
+		`withdrawals are not blocked if negative TNC subaccount was seen after
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
 			expectedQuoteBalance:     big.NewInt(-100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
@@ -2436,8 +2441,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100 - types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 
 			updateType: types.Withdrawal,
 		},
