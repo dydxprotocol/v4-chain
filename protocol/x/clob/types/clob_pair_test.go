@@ -86,10 +86,6 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 	// iterate over all permutations of clob pair statuses
 	for _, fromClobPairStatus := range types.ClobPair_Status_value {
 		for _, toClobPairStatus := range types.ClobPair_Status_value {
-			if toClobPairStatus == fromClobPairStatus {
-				continue
-			}
-
 			switch fromClobPairStatus {
 			case int32(types.ClobPair_STATUS_INITIALIZING):
 				{
@@ -99,8 +95,9 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 					case int32(types.ClobPair_STATUS_FINAL_SETTLEMENT):
 						continue
 					default:
-						require.False(
+						require.Equal(
 							t,
+							toClobPairStatus == fromClobPairStatus,
 							types.IsSupportedClobPairStatusTransition(
 								types.ClobPair_Status(fromClobPairStatus),
 								types.ClobPair_Status(toClobPairStatus),
@@ -114,8 +111,9 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 					case int32(types.ClobPair_STATUS_FINAL_SETTLEMENT):
 						continue
 					default:
-						require.False(
+						require.Equal(
 							t,
+							toClobPairStatus == fromClobPairStatus,
 							types.IsSupportedClobPairStatusTransition(
 								types.ClobPair_Status(fromClobPairStatus),
 								types.ClobPair_Status(toClobPairStatus),
@@ -129,8 +127,9 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 					case int32(types.ClobPair_STATUS_INITIALIZING):
 						continue
 					default:
-						require.False(
+						require.Equal(
 							t,
+							toClobPairStatus == fromClobPairStatus,
 							types.IsSupportedClobPairStatusTransition(
 								types.ClobPair_Status(fromClobPairStatus),
 								types.ClobPair_Status(toClobPairStatus),
