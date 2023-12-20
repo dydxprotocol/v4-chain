@@ -1,24 +1,22 @@
 import Long from 'long';
 import {
-  Network,
-  LocalWallet,
-  ValidatorClient,
   BECH32_PREFIX,
-  SubaccountInfo,
   IndexerClient,
+  LocalWallet,
+  Network,
   SocketClient,
+  SubaccountInfo,
+  ValidatorClient,
 } from '@dydxprotocol/v4-client-js';
 import {
   Ordering,
+  SubaccountTable,
   TransferColumns,
   TransferFromDatabase,
   TransferTable,
-  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import * as utils from './helpers/utils';
-
-export const DYDX_LOCAL_ADDRESS = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
-export const DYDX_LOCAL_MNEMONIC = 'merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small';
+import { DYDX_LOCAL_ADDRESS, DYDX_LOCAL_MNEMONIC } from './helpers/constants';
 
 describe('transfers', () => {
   it('test deposit', async () => {
@@ -97,8 +95,10 @@ describe('transfers', () => {
   function connectAndValidateSocketClient(): void {
     const mySocket = new SocketClient(
       Network.local().indexerConfig,
-      () => {},
-      () => {},
+      () => {
+      },
+      () => {
+      },
       (message) => {
         if (typeof message.data === 'string') {
           const data = JSON.parse(message.data as string);
