@@ -1,8 +1,9 @@
 package events_test
 
 import (
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
@@ -26,6 +27,7 @@ func TestNewDeleveragingEvent_Success(t *testing.T) {
 		fillAmount,
 		price,
 		isBuy,
+		false,
 	)
 	indexerLiquidatedSubaccountId := v1.SubaccountIdToIndexerSubaccountId(liquidatedSubaccountId)
 	indexerOffsettingSubaccountId := v1.SubaccountIdToIndexerSubaccountId(offsettingSubaccountId)

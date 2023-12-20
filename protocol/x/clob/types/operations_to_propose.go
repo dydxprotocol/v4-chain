@@ -247,6 +247,7 @@ func (o *OperationsToPropose) MustAddDeleveragingToOperationsQueue(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	fills []MatchPerpetualDeleveraging_Fill,
+	isFinalSettlement bool,
 ) {
 	if len(fills) == 0 {
 		panic(
@@ -306,6 +307,7 @@ func (o *OperationsToPropose) MustAddDeleveragingToOperationsQueue(
 			liquidatedSubaccountId,
 			perpetualId,
 			fills,
+			isFinalSettlement,
 		),
 	)
 }

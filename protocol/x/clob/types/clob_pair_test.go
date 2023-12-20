@@ -86,6 +86,10 @@ func TestIsSupportedClobPairStatusTransition_Unsupported(t *testing.T) {
 	// iterate over all permutations of clob pair statuses
 	for _, fromClobPairStatus := range types.ClobPair_Status_value {
 		for _, toClobPairStatus := range types.ClobPair_Status_value {
+			if toClobPairStatus == fromClobPairStatus {
+				continue
+			}
+
 			switch fromClobPairStatus {
 			case int32(types.ClobPair_STATUS_INITIALIZING):
 				{

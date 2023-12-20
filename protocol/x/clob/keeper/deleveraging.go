@@ -6,12 +6,12 @@ import (
 	"math/big"
 	"time"
 
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -33,13 +33,17 @@ func (k Keeper) MaybeDeleverageSubaccount(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	canPerformDeleveraging, err := k.CanDeleverageSubaccount(ctx, subaccountId)
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+		ctx,
+		subaccountId,
+		perpetualId,
+	)
 	if err != nil {
 		return new(big.Int), err
 	}
 
 	// Early return to skip deleveraging if the subaccount can't be deleveraged.
-	if !canPerformDeleveraging {
+	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		metrics.IncrCounter(
 			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
 			1,
@@ -62,7 +66,13 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	}
 
 	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
-	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(ctx, subaccountId, perpetualId, deltaQuantums)
+	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(
+		ctx,
+		subaccountId,
+		perpetualId,
+		deltaQuantums,
+		shouldDeleverageAtOraclePrice,
+	)
 
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
@@ -137,13 +147,16 @@ func (k Keeper) GetInsuranceFundBalance(
 }
 
 // CanDeleverageSubaccount returns true if a subaccount can be deleveraged.
-// Specifically, this function returns true if both of the following are true:
-// - The subaccount's total net collateral is negative.
-// This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error.
+// This function returns two booleans, shouldDeleverageAtBankruptcyPrice and shouldDeleverageAtOraclePrice.
+// - shouldDeleverageAtBankruptcyPrice is true if the subaccount has negative TNC.
+// - shouldDeleverageAtOraclePrice is true if the subaccount has non-negative TNC and the market is in final settlement.
+// This function returns an error if `GetNetCollateralAndMarginRequirements` returns an error or if there is
+// an error when fetching the clob pair for the provided perpetual.
 func (k Keeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	subaccountId satypes.SubaccountId,
-) (bool, error) {
+	perpetualId uint32,
+) (shouldDeleverageAtBankruptcyPrice bool, shouldDeleverageAtOraclePrice bool, err error) {
 	bigNetCollateral,
 		_,
 		_,
@@ -152,16 +165,24 @@ func (k Keeper) CanDeleverageSubaccount(
 		satypes.Update{SubaccountId: subaccountId},
 	)
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
-	// Deleveraging cannot be performed if the subaccounts net collateral is non-negative.
-	if bigNetCollateral.Sign() >= 0 {
-		return false, nil
+	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
+	if err != nil {
+		return false, false, err
+	}
+	clobPair := k.mustGetClobPair(ctx, clobPairId)
+
+	// Negative TNC, deleverage at bankruptcy price.
+	if bigNetCollateral.Sign() == -1 {
+		return true, false, nil
 	}
 
-	// The subaccount's total net collateral is negative, so deleveraging can be performed.
-	return true, nil
+	// Non-negative TNC, deleverage at oracle price if market is in final settlement. Deleveraging at oracle price
+	// is always a valid state transition when TNC is non-negative. This is because the TNC/TMMR ratio is improving;
+	// TNC is staying constant while TMMR is decreasing.
+	return false, clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT, nil
 }
 
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
@@ -194,6 +215,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantumsTotal *big.Int,
+	isFinalSettlement bool,
 ) (
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,
@@ -229,11 +251,11 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			}
 
 			// TODO(DEC-1495): Determine max amount to offset per offsetting subaccount.
-			var deltaQuantums *big.Int
+			var deltaBaseQuantums *big.Int
 			if deltaQuantumsRemaining.CmpAbs(bigOffsettingPositionQuantums) > 0 {
-				deltaQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
+				deltaBaseQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
 			} else {
-				deltaQuantums = new(big.Int).Set(deltaQuantumsRemaining)
+				deltaBaseQuantums = new(big.Int).Set(deltaQuantumsRemaining)
 			}
 
 			// Fetch delta quote quantums. Calculated at bankruptcy price for standard
@@ -242,7 +264,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				ctx,
 				perpetualId,
 				liquidatedSubaccountId,
-				deltaQuantums,
+				deltaBaseQuantums,
+				isFinalSettlement,
 			)
 			if err != nil {
 				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
@@ -251,9 +274,10 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"error", err,
 					"blockHeight", ctx.BlockHeight(),
 					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
+					"deltaBaseQuantums", deltaBaseQuantums,
 					"liquidatedSubaccount", liquidatedSubaccount,
 					"offsettingSubaccount", offsettingSubaccount,
+					"isFinalSettlement", isFinalSettlement,
 				)
 				return false
 			}
@@ -264,18 +288,37 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 				liquidatedSubaccountId,
 				*offsettingSubaccount.Id,
 				perpetualId,
-				deltaQuantums,
+				deltaBaseQuantums,
 				deltaQuoteQuantums,
 			); err == nil {
 				// Update the remaining liquidatable quantums.
 				deltaQuantumsRemaining = new(big.Int).Sub(
 					deltaQuantumsRemaining,
-					deltaQuantums,
+					deltaBaseQuantums,
 				)
 				fills = append(fills, types.MatchPerpetualDeleveraging_Fill{
 					OffsettingSubaccountId: *offsettingSubaccount.Id,
-					FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
+					FillAmount:             new(big.Int).Abs(deltaBaseQuantums).Uint64(),
 				})
+
+				// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+				// if the branched state is discarded, so batching is not necessary.
+				k.GetIndexerEventManager().AddTxnEvent(
+					ctx,
+					indexerevents.SubtypeDeleveraging,
+					indexerevents.DeleveragingEventVersion,
+					indexer_manager.GetBytes(
+						indexerevents.NewDeleveragingEvent(
+							liquidatedSubaccountId,
+							*offsettingSubaccount.Id,
+							perpetualId,
+							satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+							satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
+							deltaBaseQuantums.Sign() > 0,
+							isFinalSettlement,
+						),
+					),
+				)
 			} else if errors.Is(err, types.ErrInvalidPerpetualPositionSizeDelta) {
 				panic(
 					fmt.Sprintf(
@@ -294,12 +337,13 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 					"blockHeight", ctx.BlockHeight(),
 					"checkTx", ctx.IsCheckTx(),
 					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
+					"deltaQuantums", deltaBaseQuantums,
 					"liquidatedSubaccount", liquidatedSubaccount,
 					"offsettingSubaccount", offsettingSubaccount,
 				)
 				numSubaccountsWithNonOverlappingBankruptcyPrices++
 			}
+
 			return deltaQuantumsRemaining.Sign() == 0
 		},
 		k.GetPseudoRand(ctx),
@@ -330,28 +374,17 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 
 // getDeleveragingQuoteQuantums returns the quote quantums delta to apply to a deleveraging operation.
 // This returns the bankruptcy price for standard deleveraging operations, and the oracle price for
-// final settlement deleveraging operations. The type of deleveraging event is determined by the
-// collaterlization status of the subaccount (negative/non-negative TNC) as well as the clob pair
-// status for the specified perpetual.
+// final settlement deleveraging operations.
 func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 	ctx sdk.Context,
 	perpetualId uint32,
 	subaccountId satypes.SubaccountId,
 	deltaQuantums *big.Int,
-) (*big.Int, error) {
-	clobPair := k.mustGetClobPairForPerpetualId(ctx, perpetualId)
-	isFinalSettlement := clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT
-
+	isFinalSettlement bool,
+) (deltaQuoteQuantums *big.Int, err error) {
 	// If market is in final settlement and the subaccount has non-negative TNC, use the oracle price.
 	if isFinalSettlement {
-		hasNegativeTnc, err := k.CanDeleverageSubaccount(ctx, subaccountId)
-		if err != nil {
-			return new(big.Int), err
-		}
-
-		if !hasNegativeTnc {
-			return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantums)
-		}
+		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, new(big.Int).Neg(deltaQuantums))
 	}
 
 	// For standard deleveraging, use the bankruptcy price.
@@ -499,23 +532,88 @@ func (k Keeper) ProcessDeleveraging(
 		),
 	)
 
-	// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
-	// if the branched state is discarded, so batching is not necessary.
-	k.GetIndexerEventManager().AddTxnEvent(
-		ctx,
-		indexerevents.SubtypeDeleveraging,
-		indexerevents.DeleveragingEventVersion,
-		indexer_manager.GetBytes(
-			indexerevents.NewDeleveragingEvent(
-				liquidatedSubaccountId,
-				offsettingSubaccountId,
-				perpetualId,
-				satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
-				satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
-				deltaBaseQuantums.Sign() > 0,
-			),
-		),
+	return nil
+}
+
+// GetSubaccountsWithPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
+// liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
+// will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
+// function is called in PrepareCheckState during the deleveraging step.
+func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
+	ctx sdk.Context,
+	subaccountOpenPositionInfo map[uint32]*types.SubaccountOpenPositionInfo,
+) (subaccountsToDeleverage []subaccountToDeleverage) {
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.ClobGetSubaccountsWithPositionsInFinalSettlementMarkets,
+		metrics.Latency,
 	)
+
+	for _, clobPair := range k.GetAllClobPairs(ctx) {
+		if clobPair.Status != types.ClobPair_STATUS_FINAL_SETTLEMENT {
+			continue
+		}
+
+		finalSettlementPerpetualId := clobPair.MustGetPerpetualId()
+		positionInfo, found := subaccountOpenPositionInfo[finalSettlementPerpetualId]
+		if !found {
+			// No open positions in the market.
+			continue
+		}
+
+		for _, subaccountId := range positionInfo.SubaccountsWithLongPosition {
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: subaccountId,
+				PerpetualId:  finalSettlementPerpetualId,
+			})
+		}
+		for _, subaccountId := range positionInfo.SubaccountsWithShortPosition {
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: subaccountId,
+				PerpetualId:  finalSettlementPerpetualId,
+			})
+		}
+	}
+
+	metrics.AddSample(
+		metrics.ClobSubaccountsWithFinalSettlementPositionsCount,
+		float32(len(subaccountsToDeleverage)),
+	)
+
+	return subaccountsToDeleverage
+}
+
+// DeleverageSubaccounts deleverages a slice of subaccounts paired with a perpetual position to deleverage with.
+// Returns an error if a deleveraging attempt returns an error.
+func (k Keeper) DeleverageSubaccounts(
+	ctx sdk.Context,
+	subaccountsToDeleverage []subaccountToDeleverage,
+) error {
+	defer func() {
+		telemetry.MeasureSince(
+			time.Now(),
+			types.ModuleName,
+			metrics.LiquidateSubaccounts_Deleverage,
+			metrics.Latency,
+		)
+	}()
+
+	// For each unfilled liquidation, attempt to deleverage the subaccount.
+	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
+		subaccountId := subaccountsToDeleverage[i].SubaccountId
+		perpetualId := subaccountsToDeleverage[i].PerpetualId
+		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
+		if err != nil {
+			k.Logger(ctx).Error(
+				"Failed to deleverage subaccount.",
+				"subaccount", subaccountId,
+				"perpetualId", perpetualId,
+				"error", err,
+			)
+			return err
+		}
+	}
 
 	return nil
 }

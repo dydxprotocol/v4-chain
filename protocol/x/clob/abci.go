@@ -197,8 +197,26 @@ func PrepareCheckState(
 	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	subaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
-	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
+	liquidatableSubaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	subaccountsToDeleverage, err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, liquidatableSubaccountIds)
+	if err != nil {
+		panic(err)
+	}
+	subaccountPositionInfo := daemonLiquidationInfo.GetSubaccountsWithPositions()
+	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
+	// to be deleveraged.
+	subaccountsToDeleverage = append(
+		subaccountsToDeleverage,
+		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(
+			ctx,
+			subaccountPositionInfo,
+		)...,
+	)
+
+	// 7. Deleverage subaccounts.
+	// TODO(CLOB-1052) - decouple steps 6 and 7 by using DaemonLiquidationInfo.NegativeTncSubaccounts
+	// as the input for this function.
+	if err := keeper.DeleverageSubaccounts(ctx, subaccountsToDeleverage); err != nil {
 		panic(err)
 	}
 
