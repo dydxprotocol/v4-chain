@@ -1,6 +1,7 @@
 package process
 
 import (
+	"fmt"
 	"reflect"
 
 	gometrics "github.com/armon/go-metrics"
@@ -41,6 +42,7 @@ func DecodeAcknowledgeBridgesTx(
 	// Check msg length.
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
+		fmt.Printf("!!!!!!!! DecodeAcknowledgeBridgesTx, msgs: %+v\n", msgs)
 		return nil, getUnexpectedNumMsgsError(msgAcknowledgeBridgesType, 1, len(msgs))
 	}
 
