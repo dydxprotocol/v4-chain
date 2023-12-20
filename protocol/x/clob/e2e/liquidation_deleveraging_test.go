@@ -645,7 +645,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
 		liquidatableSubaccountIds []satypes.SubaccountId
-		subaccountPositionInfo    map[uint32]*clobtypes.SubaccountOpenPositionInfo
+		subaccountPositionInfo    []clobtypes.SubaccountOpenPositionInfo
 
 		// Configuration.
 		liquidationConfig clobtypes.LiquidationsConfig
@@ -1046,8 +1046,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			subaccountPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
+			subaccountPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+				{
 					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
 					SubaccountsWithLongPosition: []satypes.SubaccountId{
 						constants.Dave_Num0,
@@ -1092,8 +1092,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short_100000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			subaccountPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(): {
+			subaccountPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+				{
 					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
 					SubaccountsWithLongPosition: []satypes.SubaccountId{
 						constants.Dave_Num0,
@@ -1103,7 +1103,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 					},
 				},
 			},
-			// Account should be deleveraged regardless of whether or not the liquidations engine returns this subaccount
 			liquidatableSubaccountIds: []satypes.SubaccountId{},
 			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
 			liquidityTiers:            constants.LiquidityTiers,
@@ -1215,9 +1214,9 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 
-			tApp.App.Server.SetSubaccountOpenPositions(ctx, tc.subaccountPositionInfo)
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
+				SubaccountOpenPositionInfo: tc.subaccountPositionInfo,
 			})
 			require.NoError(t, err)
 
