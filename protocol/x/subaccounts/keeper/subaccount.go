@@ -494,7 +494,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			)
 		}
 
-		if currentBlock-lastBlockNegativeTncSubaccountSeen <
+		if exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
 			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
 			success = false
 			for i := range settledUpdates {
