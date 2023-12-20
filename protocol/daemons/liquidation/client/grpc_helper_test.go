@@ -93,7 +93,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				response := &satypes.QuerySubaccountAllResponse{
@@ -113,7 +113,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				nextKey := []byte("next key")
@@ -129,7 +129,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 				req2 := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
 						Key:   nextKey,
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				response2 := &satypes.QuerySubaccountAllResponse{
@@ -148,7 +148,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &satypes.QueryAllSubaccountRequest{
 					Pagination: &query.PageRequest{
-						Limit: df.Liquidation.SubaccountPageLimit,
+						Limit: df.Liquidation.QueryPageLimit,
 					},
 				}
 				mck.On("SubaccountAll", ctx, req).Return(nil, errors.New("test error"))
@@ -166,7 +166,7 @@ func TestGetAllSubaccounts(t *testing.T) {
 			daemon.SubaccountQueryClient = queryClientMock
 			actual, err := daemon.GetAllSubaccounts(
 				grpc.Ctx,
-				df.Liquidation.SubaccountPageLimit,
+				df.Liquidation.QueryPageLimit,
 			)
 			if err != nil {
 				require.EqualError(t, err, tc.expectedError.Error())
@@ -258,7 +258,6 @@ func TestGetAllPerpetuals(t *testing.T) {
 			daemon.PerpetualsQueryClient = queryClientMock
 			actual, err := daemon.GetAllPerpetuals(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
@@ -347,7 +346,6 @@ func TestGetAllLiquidityTiers(t *testing.T) {
 			daemon.PerpetualsQueryClient = queryClientMock
 			actual, err := daemon.GetAllLiquidityTiers(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
@@ -441,7 +439,6 @@ func TestGetAllMarketPrices(t *testing.T) {
 			daemon.PricesQueryClient = queryClientMock
 			actual, err := daemon.GetAllMarketPrices(
 				grpc.Ctx,
-				uint32(50),
 				tc.limit,
 			)
 			if err != nil {
@@ -453,160 +450,109 @@ func TestGetAllMarketPrices(t *testing.T) {
 	}
 }
 
-func TestCheckCollateralizationForSubaccounts(t *testing.T) {
-	tests := map[string]struct {
-		// mocks
-		setupMocks func(
-			ctx context.Context,
-			mck *mocks.QueryClient,
-			results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-		)
-		subaccountIds []satypes.SubaccountId
-
-		// expectations
-		expectedResults []clobtypes.AreSubaccountsLiquidatableResponse_Result
-		expectedError   error
-	}{
-		"Success": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{
-						constants.Alice_Num0,
-						constants.Bob_Num0,
-					},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds: []satypes.SubaccountId{
-				constants.Alice_Num0,
-				constants.Bob_Num0,
-			},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{
-				{
-					SubaccountId:   constants.Alice_Num0,
-					IsLiquidatable: true,
-				},
-				{
-					SubaccountId:   constants.Bob_Num0,
-					IsLiquidatable: false,
-				},
-			},
-		},
-		"Success - Empty": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				response := &clobtypes.AreSubaccountsLiquidatableResponse{
-					Results: results,
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(response, nil)
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-		},
-		"Errors are propagated": {
-			setupMocks: func(
-				ctx context.Context,
-				mck *mocks.QueryClient,
-				results []clobtypes.AreSubaccountsLiquidatableResponse_Result,
-			) {
-				query := &clobtypes.AreSubaccountsLiquidatableRequest{
-					SubaccountIds: []satypes.SubaccountId{},
-				}
-				mck.On("AreSubaccountsLiquidatable", ctx, query).Return(nil, errors.New("test error"))
-			},
-			subaccountIds:   []satypes.SubaccountId{},
-			expectedResults: []clobtypes.AreSubaccountsLiquidatableResponse_Result{},
-			expectedError:   errors.New("test error"),
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.expectedResults)
-
-			daemon := client.NewClient(log.NewNopLogger())
-			daemon.ClobQueryClient = queryClientMock
-			actual, err := daemon.CheckCollateralizationForSubaccounts(
-				grpc.Ctx,
-				tc.subaccountIds,
-			)
-
-			if err != nil {
-				require.EqualError(t, err, tc.expectedError.Error())
-			} else {
-				require.Equal(t, tc.expectedResults, actual)
-			}
-		})
-	}
-}
-
 func TestSendLiquidatableSubaccountIds(t *testing.T) {
 	tests := map[string]struct {
 		// mocks
-		setupMocks    func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId)
-		subaccountIds []satypes.SubaccountId
+		setupMocks                 func(context.Context, *mocks.QueryClient)
+		liquidatableSubaccountIds  []satypes.SubaccountId
+		negativeTncSubaccountIds   []satypes.SubaccountId
+		subaccountOpenPositionInfo map[uint32]*clobtypes.SubaccountOpenPositionInfo
 
 		// expectations
 		expectedError error
 	}{
 		"Success": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:               uint32(50),
+					LiquidatableSubaccountIds: []satypes.SubaccountId{constants.Alice_Num0, constants.Bob_Num0},
+					NegativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0, constants.Dave_Num0},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
+						{
+							PerpetualId: 0,
+							SubaccountsWithLongPosition: []satypes.SubaccountId{
+								constants.Alice_Num0,
+								constants.Carl_Num0,
+							},
+							SubaccountsWithShortPosition: []satypes.SubaccountId{
+								constants.Bob_Num0,
+								constants.Dave_Num0,
+							},
+						},
+					},
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
-			subaccountIds: []satypes.SubaccountId{
+			liquidatableSubaccountIds: []satypes.SubaccountId{
 				constants.Alice_Num0,
 				constants.Bob_Num0,
 			},
+			negativeTncSubaccountIds: []satypes.SubaccountId{
+				constants.Carl_Num0,
+				constants.Dave_Num0,
+			},
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{
+				0: {
+					PerpetualId: 0,
+					SubaccountsWithLongPosition: []satypes.SubaccountId{
+						constants.Alice_Num0,
+						constants.Carl_Num0,
+					},
+					SubaccountsWithShortPosition: []satypes.SubaccountId{
+						constants.Bob_Num0,
+						constants.Dave_Num0,
+					},
+				},
+			},
 		},
 		"Success Empty": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:                uint32(50),
+					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				response := &api.LiquidateSubaccountsResponse{}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(response, nil)
 			},
-			subaccountIds: []satypes.SubaccountId{},
+			liquidatableSubaccountIds:  []satypes.SubaccountId{},
+			negativeTncSubaccountIds:   []satypes.SubaccountId{},
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
 		},
 		"Errors are propagated": {
-			setupMocks: func(ctx context.Context, mck *mocks.QueryClient, ids []satypes.SubaccountId) {
+			setupMocks: func(ctx context.Context, mck *mocks.QueryClient) {
 				req := &api.LiquidateSubaccountsRequest{
-					LiquidatableSubaccountIds: ids,
+					BlockHeight:                uint32(50),
+					LiquidatableSubaccountIds:  []satypes.SubaccountId{},
+					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: []clobtypes.SubaccountOpenPositionInfo{},
 				}
 				mck.On("LiquidateSubaccounts", ctx, req).Return(nil, errors.New("test error"))
 			},
-			subaccountIds: []satypes.SubaccountId{},
-			expectedError: errors.New("test error"),
+			liquidatableSubaccountIds:  []satypes.SubaccountId{},
+			negativeTncSubaccountIds:   []satypes.SubaccountId{},
+			subaccountOpenPositionInfo: map[uint32]*clobtypes.SubaccountOpenPositionInfo{},
+			expectedError:              errors.New("test error"),
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			queryClientMock := &mocks.QueryClient{}
-			tc.setupMocks(grpc.Ctx, queryClientMock, tc.subaccountIds)
+			tc.setupMocks(grpc.Ctx, queryClientMock)
 
 			daemon := client.NewClient(log.NewNopLogger())
 			daemon.LiquidationServiceClient = queryClientMock
 
-			err := daemon.SendLiquidatableSubaccountIds(grpc.Ctx, tc.subaccountIds)
+			err := daemon.SendLiquidatableSubaccountIds(
+				grpc.Ctx,
+				uint32(50),
+				tc.liquidatableSubaccountIds,
+				tc.negativeTncSubaccountIds,
+				tc.subaccountOpenPositionInfo,
+			)
 			require.Equal(t, tc.expectedError, err)
 		})
 	}

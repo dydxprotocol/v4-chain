@@ -215,6 +215,7 @@ var (
 			DefaultFundingPpm: int32(0),
 			LiquidityTier:     uint32(3),
 		},
+		FundingIndex: dtypes.ZeroInt(),
 	}
 	BtcUsd_NoMarginRequirement = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{

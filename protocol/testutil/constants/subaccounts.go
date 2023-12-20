@@ -141,8 +141,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -171,8 +172,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(-100_000_000), // -1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -328,6 +330,22 @@ var (
 			},
 		},
 	}
+	Dave_Num0_1BTC_Long_45000USD_Short = satypes.Subaccount{
+		Id: &Dave_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(-45_000_000_000), // -$45,000
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}
 	Dave_Num0_1BTC_Long_45001USD_Short = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
@@ -338,8 +356,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}
@@ -384,8 +403,9 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{
 			{
-				PerpetualId: 0,
-				Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				PerpetualId:  0,
+				Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+				FundingIndex: dtypes.NewInt(0),
 			},
 		},
 	}

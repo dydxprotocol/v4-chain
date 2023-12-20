@@ -2,6 +2,7 @@ package flags
 
 import (
 	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/spf13/cast"
@@ -102,7 +103,7 @@ func GetFlagValuesFromOptions(
 	}
 
 	if option := appOpts.Get(DdAgentHost); option != nil {
-		if v, err := cast.ToStringE(option); err == nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
 			result.DdAgentHost = v
 		}
 	}
@@ -120,7 +121,7 @@ func GetFlagValuesFromOptions(
 	}
 
 	if option := appOpts.Get(GrpcAddress); option != nil {
-		if v, err := cast.ToStringE(option); err == nil {
+		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
 			result.GrpcAddress = v
 		}
 	}
