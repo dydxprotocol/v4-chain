@@ -1,5 +1,4 @@
 import Long from 'long';
-
 import {
   Network,
   LocalWallet,
@@ -21,7 +20,6 @@ import * as utils from './helpers/utils';
 export const DYDX_LOCAL_ADDRESS = 'dydx199tqg4wdlnu4qjlxchpd7seg454937hjrknju4';
 export const DYDX_LOCAL_MNEMONIC = 'merge panther lobster crazy road hollow amused security before critic about cliff exhibit cause coyote talent happy where lion river tobacco option coconut small';
 
-
 describe('transfers', () => {
   it('test deposit', async () => {
     connectAndValidateSocketClient();
@@ -33,13 +31,16 @@ describe('transfers', () => {
     const subaccount = new SubaccountInfo(wallet, 0);
 
     // Check USDC asset position before
-    let assetPosResp: any = await indexerClient.account.getSubaccountAssetPositions(DYDX_LOCAL_ADDRESS, 0);
+    let assetPosResp: any = await indexerClient.account.getSubaccountAssetPositions(
+      DYDX_LOCAL_ADDRESS,
+      0,
+    );
     expect(assetPosResp).not.toBeNull();
     const positions = assetPosResp.positions;
     const usdcPositionSizeBefore = positions.length !== undefined && positions.length > 0 ? positions[0].size : '0';
 
     // Deposit
-    const tx = await validatorClient.post.deposit(
+    await validatorClient.post.deposit(
       subaccount,
       0,
       new Long(10_000_000),
@@ -90,7 +91,7 @@ describe('transfers', () => {
     expect(assetPosResp).not.toBeNull();
     const usdcPositionSizeAfter = assetPosResp.positions[0].size;
     // expect usdcPositionSizeAfter to be usdcPositionSizeBefore + 10
-    expect(usdcPositionSizeAfter).toEqual((parseInt(usdcPositionSizeBefore) + 10).toString());
+    expect(usdcPositionSizeAfter).toEqual((parseInt(usdcPositionSizeBefore, 10) + 10).toString());
   });
 
   function connectAndValidateSocketClient(): void {
