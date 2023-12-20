@@ -23,6 +23,8 @@ case $env in
     "dev4") account=525975847385;;
     "dev5") account=917958511744;;
     "staging") account=677285201534;;
+    "public-testnet") account=013339450148;; # public testnet
+    "mainnet") account=332066407361;; # mainnet
     *) account=329916310755;;
 esac
 

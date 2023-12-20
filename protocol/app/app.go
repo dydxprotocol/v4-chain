@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"io"
 	"math/big"
 	"net/http"
@@ -107,6 +106,7 @@ import (
 
 	// Daemons
 	bridgeclient "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
 	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"

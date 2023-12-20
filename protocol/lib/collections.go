@@ -50,6 +50,24 @@ func UniqueSliceToSet[K comparable](values []K) map[K]struct{} {
 	return set
 }
 
+// UniqueSliceToMap converts a slice to a map using the provided keyFunc to generate the key.
+func UniqueSliceToMap[K comparable, V any](slice []V, keyFunc func(V) K) map[K]V {
+	m := make(map[K]V)
+	for _, v := range slice {
+		k := keyFunc(v)
+		if _, exists := m[k]; exists {
+			panic(
+				fmt.Sprintf(
+					"UniqueSliceToMap: duplicate value: %+v",
+					v,
+				),
+			)
+		}
+		m[k] = v
+	}
+	return m
+}
+
 // MapSlice takes a function and executes that function on each element of a slice, returning the result.
 // Note the function must return one result for each element of the slice.
 func MapSlice[V any, E any](values []V, mapFunc func(V) E) []E {

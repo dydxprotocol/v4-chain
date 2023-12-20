@@ -46,13 +46,16 @@ func (s *Server) LiquidateSubaccounts(
 ) {
 	telemetry.ModuleSetGauge(
 		metrics.LiquidationDaemon,
-		float32(len(req.SubaccountIds)),
+		float32(len(req.LiquidatableSubaccountIds)),
 		metrics.LiquidatableSubaccountIds,
 		metrics.Received,
 		metrics.Count,
 	)
 
-	s.daemonLiquidationInfo.UpdateLiquidatableSubaccountIds(req.SubaccountIds)
+	s.daemonLiquidationInfo.UpdateBlockHeight(req.BlockHeight)
+	s.daemonLiquidationInfo.UpdateLiquidatableSubaccountIds(req.LiquidatableSubaccountIds)
+	s.daemonLiquidationInfo.UpdateNegativeTncSubaccountIds(req.NegativeTncSubaccountIds)
+	s.daemonLiquidationInfo.UpdateSubaccountsWithPositions(req.SubaccountOpenPositionInfo)
 
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.LiquidationsDaemonServiceName)

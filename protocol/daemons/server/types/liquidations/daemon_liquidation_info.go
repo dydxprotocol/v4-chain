@@ -80,20 +80,20 @@ func (ls *DaemonLiquidationInfo) GetNegativeTncSubaccountIds() []satypes.Subacco
 
 // UpdateSubaccountsWithPositions updates the struct with the given a list of subaccount ids with open positions.
 func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
-	subaccountsWithPositions map[uint32]*clobtypes.SubaccountOpenPositionInfo,
+	subaccountsWithPositions []clobtypes.SubaccountOpenPositionInfo,
 ) {
 	ls.Lock()
 	defer ls.Unlock()
 	ls.subaccountsWithPositions = make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
-	for perpetualId, info := range subaccountsWithPositions {
+	for _, info := range subaccountsWithPositions {
 		clone := &clobtypes.SubaccountOpenPositionInfo{
-			PerpetualId:                  perpetualId,
+			PerpetualId:                  info.PerpetualId,
 			SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
 			SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
 		}
 		copy(clone.SubaccountsWithLongPosition, info.SubaccountsWithLongPosition)
 		copy(clone.SubaccountsWithShortPosition, info.SubaccountsWithShortPosition)
-		ls.subaccountsWithPositions[perpetualId] = clone
+		ls.subaccountsWithPositions[info.PerpetualId] = clone
 	}
 }
 
