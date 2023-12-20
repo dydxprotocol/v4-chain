@@ -194,6 +194,7 @@ services:
     environment:
       - WS_PORT=3003
       - COMLINK_URL=host.docker.internal:3002
+      - INDEXER_LEVEL_GEOBLOCKING_ENABLED=false
     depends_on:
       kafka:
         condition: service_healthy
