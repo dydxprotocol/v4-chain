@@ -408,7 +408,10 @@ func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *t
 			)
 			require.NoError(t, err)
 
-			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000)
+			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(
+				ctx,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			)
 			if tc.expectedError != nil {
 				require.ErrorIs(t, err, tc.expectedError)
 			}

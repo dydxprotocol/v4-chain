@@ -207,7 +207,7 @@ func PrepareCheckState(
 	// to be deleveraged.
 	subaccountsToDeleverage = append(
 		subaccountsToDeleverage,
-		keeper.GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
+		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(
 			ctx,
 			subaccountPositionInfo,
 		)...,

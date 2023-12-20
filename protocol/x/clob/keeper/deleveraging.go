@@ -535,18 +535,18 @@ func (k Keeper) ProcessDeleveraging(
 	return nil
 }
 
-// GetSubaccountsWithOpenPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
+// GetSubaccountsWithPositionsInFinalSettlementMarkets uses the subaccountOpenPositionInfo returned from the
 // liquidations daemon to fetch subaccounts with open positions in final settlement markets. These subaccounts
 // will be deleveraged in either at the oracle price if non-negative TNC or at bankruptcy price if negative TNC. This
 // function is called in PrepareCheckState during the deleveraging step.
-func (k Keeper) GetSubaccountsWithOpenPositionsInFinalSettlementMarkets(
+func (k Keeper) GetSubaccountsWithPositionsInFinalSettlementMarkets(
 	ctx sdk.Context,
 	subaccountOpenPositionInfo map[uint32]*types.SubaccountOpenPositionInfo,
 ) (subaccountsToDeleverage []subaccountToDeleverage) {
 	defer telemetry.MeasureSince(
 		time.Now(),
 		types.ModuleName,
-		metrics.ClobGetSubaccountsWithOpenPositionsInFinalSettlementMarkets,
+		metrics.ClobGetSubaccountsWithPositionsInFinalSettlementMarkets,
 		metrics.Latency,
 	)
 
