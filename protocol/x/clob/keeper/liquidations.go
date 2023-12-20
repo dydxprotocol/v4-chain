@@ -360,11 +360,22 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	// The subaccount is liquidatable if both of the following are true:
-	// - The maintenance margin requirements are greater than zero (note that they can never be negative).
-	// - The maintenance margin requirements are greater than the subaccount's net collateral.
-	isLiquidatable := bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
-	return isLiquidatable, nil
+	return CanLiquidateSubaccount(bigNetCollateral, bigMaintenanceMargin), nil
+}
+
+// CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
+// maintenance margin requirement.
+//
+// The subaccount is liquidatable if both of the following are true:
+// - The maintenance margin requirements are greater than zero (note that they can never be negative).
+// - The maintenance margin requirements are greater than the subaccount's net collateral.
+//
+// Note that this is a stateless function.
+func CanLiquidateSubaccount(
+	bigNetCollateral *big.Int,
+	bigMaintenanceMargin *big.Int,
+) bool {
+	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
 }
 
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.

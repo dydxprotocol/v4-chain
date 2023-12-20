@@ -49,18 +49,22 @@ func TestSubaccountsWithOpenPositions_Multiple_Reads(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetNegativeTncSubaccountIds())
 
-	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Alice_Num1,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Bob_Num0,
-			},
+	info := clobtypes.SubaccountOpenPositionInfo{
+		PerpetualId: 0,
+		SubaccountsWithLongPosition: []satypes.SubaccountId{
+			constants.Alice_Num1,
+		},
+		SubaccountsWithShortPosition: []satypes.SubaccountId{
+			constants.Bob_Num0,
 		},
 	}
-	ls.UpdateSubaccountsWithPositions(expected)
+
+	input := []clobtypes.SubaccountOpenPositionInfo{info}
+	ls.UpdateSubaccountsWithPositions(input)
+
+	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
+		0: &info,
+	}
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
@@ -116,46 +120,55 @@ func TestSubaccountsWithOpenPositions_Multiple_Writes(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 
+	info := clobtypes.SubaccountOpenPositionInfo{
+		PerpetualId: 0,
+		SubaccountsWithLongPosition: []satypes.SubaccountId{
+			constants.Alice_Num1,
+		},
+		SubaccountsWithShortPosition: []satypes.SubaccountId{
+			constants.Bob_Num0,
+		},
+	}
+
+	input := []clobtypes.SubaccountOpenPositionInfo{info}
+	ls.UpdateSubaccountsWithPositions(input)
 	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Alice_Num1,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Bob_Num0,
-			},
-		},
+		0: &info,
 	}
-	ls.UpdateSubaccountsWithPositions(expected)
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Carl_Num0,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Dave_Num0,
-			},
+	info2 := clobtypes.SubaccountOpenPositionInfo{
+		PerpetualId: 0,
+		SubaccountsWithLongPosition: []satypes.SubaccountId{
+			constants.Carl_Num0,
+		},
+		SubaccountsWithShortPosition: []satypes.SubaccountId{
+			constants.Dave_Num0,
 		},
 	}
-	ls.UpdateSubaccountsWithPositions(expected)
+
+	input2 := []clobtypes.SubaccountOpenPositionInfo{info2}
+	ls.UpdateSubaccountsWithPositions(input2)
+	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
+		0: &info2,
+	}
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Dave_Num1,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Alice_Num1,
-			},
+	info3 := clobtypes.SubaccountOpenPositionInfo{
+		PerpetualId: 0,
+		SubaccountsWithLongPosition: []satypes.SubaccountId{
+			constants.Dave_Num1,
+		},
+		SubaccountsWithShortPosition: []satypes.SubaccountId{
+			constants.Alice_Num1,
 		},
 	}
-	ls.UpdateSubaccountsWithPositions(expected)
+
+	input3 := []clobtypes.SubaccountOpenPositionInfo{info3}
+	ls.UpdateSubaccountsWithPositions(input3)
+	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{
+		0: &info3,
+	}
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 }
 
@@ -193,21 +206,23 @@ func TestSubaccountsWithOpenPosition_Empty_Update(t *testing.T) {
 	ls := liquidationstypes.NewDaemonLiquidationInfo()
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 
-	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
-		0: {
-			PerpetualId: 0,
-			SubaccountsWithLongPosition: []satypes.SubaccountId{
-				constants.Alice_Num1,
-			},
-			SubaccountsWithShortPosition: []satypes.SubaccountId{
-				constants.Bob_Num0,
-			},
+	info := clobtypes.SubaccountOpenPositionInfo{
+		PerpetualId: 0,
+		SubaccountsWithLongPosition: []satypes.SubaccountId{
+			constants.Alice_Num1,
+		},
+		SubaccountsWithShortPosition: []satypes.SubaccountId{
+			constants.Bob_Num0,
 		},
 	}
-	ls.UpdateSubaccountsWithPositions(expected)
+	input := []clobtypes.SubaccountOpenPositionInfo{info}
+	ls.UpdateSubaccountsWithPositions(input)
+	expected := map[uint32]*clobtypes.SubaccountOpenPositionInfo{
+		0: &info,
+	}
 	require.Equal(t, expected, ls.GetSubaccountsWithPositions())
 
-	expected = map[uint32]*clobtypes.SubaccountOpenPositionInfo{}
-	ls.UpdateSubaccountsWithPositions(expected)
+	input2 := []clobtypes.SubaccountOpenPositionInfo{}
+	ls.UpdateSubaccountsWithPositions(input2)
 	require.Empty(t, ls.GetSubaccountsWithPositions())
 }

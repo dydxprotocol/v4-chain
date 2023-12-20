@@ -101,6 +101,8 @@ func CreateUpgradeHandler(
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Running %s Upgrade...", UpgradeName)
 		InitializeModuleAccs(ctx, ak)
+
+		// TODO(CORE-824): Initialize ratelimit module params to desired state.
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }

@@ -62,6 +62,13 @@ type PerpetualsKeeper interface {
 		newFundingIndex *big.Int,
 		err error,
 	)
+	GetPerpetual(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (
+		perpetual perptypes.Perpetual,
+		err error,
+	)
 	GetAllPerpetuals(ctx sdk.Context) []perptypes.Perpetual
 }
 

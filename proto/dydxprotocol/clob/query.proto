@@ -9,7 +9,6 @@ import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
-import "dydxprotocol/subaccounts/subaccount.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -24,10 +23,6 @@ service Query {
   rpc ClobPairAll(QueryAllClobPairRequest) returns (QueryClobPairAllResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/clob_pair";
   }
-
-  // Returns whether a subaccount is liquidatable.
-  rpc AreSubaccountsLiquidatable(AreSubaccountsLiquidatableRequest)
-      returns (AreSubaccountsLiquidatableResponse);
 
   // Runs the MEV node <> node calculation with the provided parameters.
   rpc MevNodeToNodeCalculation(MevNodeToNodeCalculationRequest)
@@ -74,26 +69,6 @@ message QueryAllClobPairRequest {
 message QueryClobPairAllResponse {
   repeated ClobPair clob_pair = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// AreSubaccountsLiquidatableRequest is a request message used to check whether
-// the given subaccounts are liquidatable.
-// The subaccount ids should not contain duplicates.
-message AreSubaccountsLiquidatableRequest {
-  repeated dydxprotocol.subaccounts.SubaccountId subaccount_ids = 1
-      [ (gogoproto.nullable) = false ];
-}
-
-// AreSubaccountsLiquidatableResponse is a response message that contains the
-// liquidation status for each subaccount.
-message AreSubaccountsLiquidatableResponse {
-  // Result returns whether a subaccount should be liquidated.
-  message Result {
-    dydxprotocol.subaccounts.SubaccountId subaccount_id = 1
-        [ (gogoproto.nullable) = false ];
-    bool is_liquidatable = 2;
-  }
-  repeated Result results = 1 [ (gogoproto.nullable) = false ];
 }
 
 // MevNodeToNodeCalculationRequest is a request message used to run the
