@@ -7,6 +7,7 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -33,6 +34,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:            nil,
 		// -------- dYdX custom module accounts --------
 		// bridge module account mints tokens for bridged funds.
 		bridgemoduletypes.ModuleName: {authtypes.Minter},

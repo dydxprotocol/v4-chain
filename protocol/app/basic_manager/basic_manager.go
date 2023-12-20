@@ -36,6 +36,7 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
@@ -73,6 +74,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		ica.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
