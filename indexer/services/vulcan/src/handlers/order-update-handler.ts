@@ -17,7 +17,7 @@ import {
   OpenOrdersCache,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
-import { isStatefulOrder, isIOC } from '@dydxprotocol-indexer/v4-proto-parser';
+import { isStatefulOrder, requiresImmediateExecution } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   OrderUpdateV1,
@@ -146,7 +146,9 @@ export class OrderUpdateHandler extends Handler {
       return;
     }
 
-    if (!isIOC(updateResult.order!.order!.timeInForce)) {
+    // Orders that require immediate execution do not rest on the order book and will not lead to
+    // a change in the order book level for the order's price
+    if (!requiresImmediateExecution(updateResult.order!.order!.timeInForce)) {
       const updatedQuantums: number = await this.updatePriceLevel(
         updateResult,
         sizeDeltaInQuantums,

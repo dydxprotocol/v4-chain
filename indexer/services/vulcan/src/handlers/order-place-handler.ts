@@ -27,7 +27,7 @@ import {
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 import {
-  ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder, isIOC,
+  ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder, requiresImmediateExecution,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
@@ -191,7 +191,7 @@ export class OrderPlaceHandler extends Handler {
     if (
       result.replaced !== true ||
       result.restingOnBook !== true ||
-      isIOC(result.oldOrder!.order!.timeInForce)
+      requiresImmediateExecution(result.oldOrder!.order!.timeInForce)
     ) {
       return undefined;
     }
