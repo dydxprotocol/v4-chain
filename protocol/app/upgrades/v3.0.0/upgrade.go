@@ -12,8 +12,6 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-
-	// PR COMMENT: upgrade to ibc-go/v8?
 	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
@@ -155,12 +153,13 @@ func CreateUpgradeHandler(
 	configurator module.Configurator,
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
-
 	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		ctx.Logger().Info("Running %s Upgrade...", UpgradeName)
 		InitializeModuleAccs(ctx, ak)
 
 		// TODO(CORE-824): Initialize ratelimit module params to desired state.
+
+		// TODO(CORE-848): Any unit test after a v3.0.0 upgrade test is added.
 		IcaHostKeeperUpgradeHandler(ctx, vm, mm)
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
