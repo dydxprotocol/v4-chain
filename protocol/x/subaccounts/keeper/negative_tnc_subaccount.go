@@ -44,7 +44,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 ) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Panic if the new block height exists and is less than the current block height.
+	// Panic if the stored block height value exists and is greater than the new block height value.
 	currentValue, exists := k.getNegativeTncSubaccountSeenAtBlock(store)
 	if exists && blockHeight < currentValue {
 		panic(

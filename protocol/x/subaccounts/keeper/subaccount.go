@@ -218,11 +218,13 @@ func (k Keeper) UpdateSubaccounts(
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithLabels(
 		types.ModuleName,
+		[]string{metrics.UpdateSubaccounts, metrics.Latency},
 		time.Now(),
-		metrics.UpdateSubaccounts,
-		metrics.Latency,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+		},
 	)
 
 	settledUpdates, subaccountIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
@@ -311,12 +313,13 @@ func (k Keeper) CanUpdateSubaccounts(
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithLabels(
 		types.ModuleName,
+		[]string{metrics.CanUpdateSubaccounts, metrics.Latency},
 		time.Now(),
-		metrics.CanUpdateSubaccounts,
-		metrics.Latency,
-		// TODO: Add UpdateType as label
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+		},
 	)
 
 	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
@@ -500,6 +503,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			for i := range settledUpdates {
 				successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
 			}
+			metrics.IncrCounterWithLabels(
+				metrics.SubaccountWithdrawalsAndTransfersBlocked,
+				1,
+				metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+			)
 			return success, successPerUpdate, nil
 		}
 	}
