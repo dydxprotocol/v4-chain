@@ -27,6 +27,7 @@
     "kafkajs": "^2.1.0",
     "lodash": "^4.17.21",
     "long": "5.2.3",
+    "luxon": "3.0.1",
     "yargs": "^13.3.0"
   },
   "devDependencies": {
@@ -34,6 +35,7 @@
     "@types/big.js": "^6.1.5",
     "@types/jest": "^28.1.4",
     "@types/long": "4.0.2",
+    "@types/luxon": "3.0.0",
     "@types/node": "^18.0.3",
     "@types/ws": "8.5.4",
     "@types/yargs": "^16.0.0",

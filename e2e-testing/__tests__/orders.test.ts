@@ -18,9 +18,18 @@ import {
   DYDX_LOCAL_MNEMONIC,
   DYDX_LOCAL_MNEMONIC_2,
 } from './helpers/constants';
+import { DateTime } from 'luxon';
 import * as utils from './helpers/utils';
 import {
-  FillTable, FillType, Liquidity, OrderSide, OrderTable, SubaccountTable,
+  FillTable,
+  FillType,
+  Liquidity,
+  OrderSide,
+  OrderTable,
+  SubaccountTable,
+  helpers,
+  IsoString,
+  CandleResolution,
 } from '@dydxprotocol-indexer/postgres';
 
 const PERPETUAL_PAIR_BTC_USD: number = 0;
@@ -80,11 +89,11 @@ async function placeOrder(
   const subaccount = new SubaccountInfo(wallet, 0);
   const modifiedOrder: IPlaceOrder = order;
   if (order.orderFlags !== 0) {
-    // cancel the order 60 seconds from now
+    // cancel the order 30 seconds from now
     modifiedOrder.goodTilBlock = 0;
     const now = new Date();
     const millisecondsPerSecond = 1000;
-    const interval = 60 * millisecondsPerSecond;
+    const interval = 30 * millisecondsPerSecond;
     const future = new Date(now.valueOf() + interval);
     modifiedOrder.goodTilBlockTime = Math.round(future.getTime() / 1000);
   } else {
@@ -119,6 +128,10 @@ describe('orders', () => {
 
       await placeOrder(order.mnemonic, modifiedOrder);
     }
+    const candleStart: IsoString = helpers.calculateNormalizedCandleStartTime(
+      DateTime.utc(),
+      CandleResolution.ONE_MINUTE,
+    ).toISO();
 
     await utils.sleep(10000);  // wait 10s for orders to be placed & matched
     const [wallet, wallet2] = await Promise.all([
@@ -262,15 +275,7 @@ describe('orders', () => {
         market: 'BTC-USD',
         status: 'OPEN',
         side: 'LONG',
-        // size: '0.0005',
-        // maxSize: '0.0005',
         entryPrice: '50000',
-        exitPrice: null,
-        realizedPnl: '0',
-        unrealizedPnl: '0',
-        closedAt: null,
-        // sumOpen: '0.0005',
-        sumClose: '0',
       }),
     );
     expect(response2.positions.length).toEqual(1);
@@ -279,22 +284,12 @@ describe('orders', () => {
         market: 'BTC-USD',
         status: 'OPEN',
         side: 'SHORT',
-        // size: '-0.0005',
-        // maxSize: '-0.0005',
         entryPrice: '50000',
-        exitPrice: null,
-        realizedPnl: '0',
-        unrealizedPnl: '0',
-        closedAt: null,
-        // sumOpen: '0.0005',
-        sumClose: '0',
       }),
     );
 
-
     // Check API /v4/orderbooks endpoint
     const orderbooksResponse = await indexerClient.markets.getPerpetualMarketOrderbook('BTC-USD');
-    console.log(`orderbooksResponse: ${JSON.stringify(orderbooksResponse)}`);
     expect(orderbooksResponse).toEqual(
       expect.objectContaining({
         bids:[
@@ -304,6 +299,29 @@ describe('orders', () => {
           }
         ],
         asks:[]
+      }),
+    );
+
+    // Check API /v4/candles endpoint
+    const candlesResponse = await indexerClient.markets.getPerpetualMarketCandles(
+      'BTC-USD',
+      CandleResolution.ONE_MINUTE,
+      undefined,
+      undefined,
+      1,
+    );
+    expect(candlesResponse.candles[0]).toEqual(
+      expect.objectContaining({
+        startedAt: candleStart,
+        ticker: 'BTC-USD',
+        resolution: '1MIN',
+        low: '50000',
+        high: '50000',
+        open: '50000',
+        close: '50000',
+        baseTokenVolume: '0.0005',
+        usdVolume: '25',
+        trades: 1,
       }),
     );
   });
@@ -321,7 +339,6 @@ describe('orders', () => {
       (message) => {
         if (typeof message.data === 'string') {
           const data = JSON.parse(message.data as string);
-          console.log(`data: ${JSON.stringify(data)}`);
           if (data.type === 'connected') {
             mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
           } else if (data.type === 'subscribed') {
@@ -334,7 +351,6 @@ describe('orders', () => {
               }),
             );
           } else if (data.type === 'channel_data' && data.contents.perpetualPositions) {
-            console.log(`perpetualPositions data: ${JSON.stringify(data)}`);
             expect(data.contents.perpetualPositions[0]).toEqual(
               expect.objectContaining({
                 address: DYDX_LOCAL_ADDRESS,
@@ -347,7 +363,6 @@ describe('orders', () => {
               }),
             );
           } else if (data.type === 'channel_data' && data.contents.fills) {
-            console.log(`fills data: ${JSON.stringify(data)}`);
             expect(data.contents.fills[0]).toEqual(
               expect.objectContaining({
                 fee: '-0.00275',

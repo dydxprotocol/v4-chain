@@ -104,13 +104,14 @@ describe('transfers', () => {
     const mySocket = new SocketClient(
       Network.local().indexerConfig,
       () => {
+        console.log('open');
       },
       () => {
+        console.log('close');
       },
       (message) => {
         if (typeof message.data === 'string') {
           const data = JSON.parse(message.data as string);
-          console.log(`data: ${JSON.stringify(data)}`);
           if (data.type === 'connected') {
             mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
           } else if (data.type === 'subscribed') {
