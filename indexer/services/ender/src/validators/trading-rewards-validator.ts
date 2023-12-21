@@ -11,7 +11,6 @@ export class TradingRewardsValidator extends Validator<TradingRewardsEventV1> {
     _.forEach(this.event.tradingRewards, (reward: AddressTradingReward, index: number) => {
       this.validateTradingReward(reward, index);
     });
-    console.log('validated');
   }
 
   private validateTradingReward(

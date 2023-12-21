@@ -21,8 +21,6 @@ export class TradingRewardsHandler extends Handler<TradingRewardsEventV1> {
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
-    console.log('internalHandle');
-    console.log(resultRow.trading_rewards);
     const tradingRewards: TradingRewardFromDatabase[] = _.map(
       resultRow.trading_rewards,
       (tradingReward: object) => {

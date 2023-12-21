@@ -22,10 +22,9 @@ DECLARE
 BEGIN
     trading_rewards = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'trading_rewards'), 0)]::integer[]);
 
-    /** Note that arrays are 1-indexed in PostgreSQL and empty arrays return NULL for array_length. */
     FOR i IN 1..coalesce(array_length(trading_rewards, 1), 0) LOOP
         trading_rewards_array := dydx_process_trading_reward_event(
-            jsonb_array_element(event_data->'trading_rewards', i-1),
+            jsonb_array_element(event_data->'trading_rewards', i),
             block_height,
             block_time,
             transaction_index,
@@ -38,18 +37,20 @@ BEGIN
         'trading_rewards',
         dydx_to_jsonb(trading_rewards_from_database)
     );
+    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'trading_rewards'), 0)]::integer[]);
+    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[1]::integer[]);
 END;
 */
 DECLARE
     trading_rewards_array jsonb[];
     trading_rewards jsonb;
 BEGIN
-    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'trading_rewards'), 0)]::integer[]);
+    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'tradingRewards'), 0)]::integer[]);
 
     /** Note that arrays are 1-indexed in PostgreSQL and empty arrays return NULL for array_length. */
     FOR i IN 1..coalesce(array_length(trading_rewards_array, 1), 0) LOOP
         trading_rewards_array[i] = dydx_process_trading_reward_event(
-            jsonb_array_element(event_data->'trading_rewards', i-1),
+            jsonb_array_element(event_data->'tradingRewards', i-1),
             block_height,
             block_time,
             transaction_index,

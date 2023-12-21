@@ -34,6 +34,7 @@ import { updateBlockCache } from '../../src/caches/block-cache';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 import Big from 'big.js';
 import { TradingRewardsHandler } from '../../src/handlers/trading-rewards-handler';
+import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
 
 const defaultTransactionIndex: number = 0;
 
@@ -93,11 +94,11 @@ describe('tradingRewardHandler', () => {
       tradingRewards: [
         {
           owner: testConstants.defaultWallet.address,
-          denomAmount: intToUint8Array(1),
+          denomAmount: bigIntToBytes(BigInt(1)),
         },
         {
           owner: testConstants.defaultWallet2.address,
-          denomAmount: intToUint8Array(1_000_000_000),
+          denomAmount: bigIntToBytes(BigInt(1_000_000_000)),
         },
       ],
     });
@@ -109,9 +110,7 @@ describe('tradingRewardHandler', () => {
       txHash: defaultTxHash,
     });
 
-    console.log('before on message');
     await onMessage(kafkaMessage);
-    console.log('after message');
     const firstTradingRewardId: string = TradingRewardTable.uuid(
       testConstants.defaultWallet.address,
       defaultHeight.toString(),
@@ -134,14 +133,14 @@ describe('tradingRewardHandler', () => {
       address: testConstants.defaultWallet.address,
       blockTime: defaultDateTime.toISO(),
       blockHeight: defaultHeight.toString(),
-      amount: Big(1).times(1e-18).toString(),
+      amount: Big(1).times(1e-18).toFixed(18),
     });
     expect(secondTradingReward).toEqual({
       id: secondTradingRewardId,
       address: testConstants.defaultWallet2.address,
       blockTime: defaultDateTime.toISO(),
       blockHeight: defaultHeight.toString(),
-      amount: Big(1_000_000_000).times(1e-18).toString(),
+      amount: Big(1_000_000_000).times(1e-18).toFixed(18),
     });
   });
 
@@ -150,7 +149,7 @@ describe('tradingRewardHandler', () => {
       tradingRewards: [
         AddressTradingReward.fromPartial({
           owner: testConstants.defaultWallet.address,
-          denomAmount: intToUint8Array(1_000_000_000),
+          denomAmount: bigIntToBytes(BigInt(1_000_000_000)),
         }),
       ],
     });
@@ -168,7 +167,7 @@ describe('tradingRewardHandler', () => {
     );
     expect(wallet).toEqual({
       address: testConstants.defaultWallet.address,
-      totalTradingRewards: Big(1_000_000_000).times(1e-18).toString(),
+      totalTradingRewards: Big(1_000_000_000).times(1e-18).toFixed(18),
     });
   });
 
@@ -177,7 +176,7 @@ describe('tradingRewardHandler', () => {
       tradingRewards: [
         AddressTradingReward.fromPartial({
           owner: testConstants.defaultWallet.address,
-          denomAmount: intToUint8Array(1_000_000_000),
+          denomAmount: bigIntToBytes(BigInt(1_000_000_000)),
         }),
       ],
     });
@@ -191,7 +190,7 @@ describe('tradingRewardHandler', () => {
 
     await WalletTable.create({
       address: testConstants.defaultWallet.address,
-      totalTradingRewards: Big(1_000_000_000).times(1e-18).toString(),
+      totalTradingRewards: Big(1_000_000_000).times(1e-18).toFixed(18),
     });
 
     await onMessage(kafkaMessage);
@@ -200,7 +199,7 @@ describe('tradingRewardHandler', () => {
     );
     expect(wallet).toEqual({
       address: testConstants.defaultWallet.address,
-      totalTradingRewards: Big(2_000_000_000).times(1e-18).toString(),
+      totalTradingRewards: Big(2_000_000_000).times(1e-18).toFixed(18),
     });
   });
 });
@@ -236,11 +235,4 @@ function createKafkaMessageFromTradingRewardsEvent({
 
   const binaryBlock: Uint8Array = IndexerTendermintBlock.encode(block).finish();
   return createKafkaMessage(Buffer.from(binaryBlock));
-}
-
-function intToUint8Array(int: number): Uint8Array {
-  const buffer = new ArrayBuffer(4); // Create a buffer of 4 bytes (32 bits).
-  const view = new DataView(buffer); // Create a data view of the buffer.
-  view.setUint32(0, int); // Set the 32-bit integer at the beginning of the buffer.
-  return new Uint8Array(buffer); // Create and return a Uint8Array from the buffer.
 }

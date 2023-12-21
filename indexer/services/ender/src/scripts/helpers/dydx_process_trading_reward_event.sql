@@ -19,30 +19,28 @@ DECLARE
     wallet_record wallets%ROWTYPE;
     amount_in_human_readable numeric;
 BEGIN
-    amount_in_human_readable = dydx_from_serializable_int(trading_reward->>'denom_amount') * power(10, 18)::numeric;
+    amount_in_human_readable = dydx_trim_scale(dydx_from_serializable_int(trading_reward->'denomAmount') * power(10, -18)::numeric);
 
-    SELECT * INTO STRICT wallet_record FROM wallets WHERE "address" = trading_reward->>'owner';
-
-    IF NO_DATA_FOUND THEN
-        INSERT INTO wallets ("address", "totalTradingRewards") VALUES (
-            trading_reward->>'owner',
-            amount_in_human_readable);
-    ELSE
+    BEGIN
+        SELECT * INTO STRICT wallet_record FROM wallets WHERE "address" = trading_reward->>'owner';
         UPDATE wallets
         SET
             "totalTradingRewards" = wallet_record."totalTradingRewards" + amount_in_human_readable
         WHERE "address" = trading_reward->>'owner';
-    END IF;
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            INSERT INTO wallets ("address", "totalTradingRewards") VALUES (
+                trading_reward->>'owner',
+                amount_in_human_readable);
+    END;
 
-    INSERT INTO trading_rewards 
-        ("id", "address", "blockTime", "blockHeight", "amount")
-    VALUES (dydx_uuid_from_trading_rewards_parts(trading_reward->>'owner', block_height),
-            trading_reward->>'owner',
-            block_time,
-            block_height,
-            amount_in_human_readable)
-    RETURNING * INTO trading_reward_record;
+    trading_reward_record."id" = dydx_uuid_from_trading_rewards_parts(trading_reward->>'owner', block_height);
+    trading_reward_record."address" = trading_reward->>'owner';
+    trading_reward_record."blockTime" = block_time;
+    trading_reward_record."blockHeight" = block_height;
+    trading_reward_record."amount" = amount_in_human_readable;
+    INSERT INTO trading_rewards VALUES (trading_reward_record.*);
 
-    RETURN trading_reward_record;
+    RETURN dydx_to_jsonb(trading_reward_record);
 END;
 $$ LANGUAGE plpgsql;

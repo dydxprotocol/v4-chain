@@ -31,6 +31,7 @@ import {
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   DeleveragingEventV1,
+  TradingRewardsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 
@@ -131,6 +132,12 @@ export type EventProtoWithTypeAndVersion = {
 } | {
   type: DydxIndexerSubtypes.DELEVERAGING,
   eventProto: DeleveragingEventV1,
+  indexerTendermintEvent: IndexerTendermintEvent,
+  version: number,
+  blockEventIndex: number,
+} | {
+  type: DydxIndexerSubtypes.TRADING_REWARD,
+  eventProto: TradingRewardsEventV1,
   indexerTendermintEvent: IndexerTendermintEvent,
   version: number,
   blockEventIndex: number,
