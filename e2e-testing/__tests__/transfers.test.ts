@@ -1,6 +1,7 @@
 import Long from 'long';
 import {
   BECH32_PREFIX,
+  HeightResponse,
   IndexerClient,
   LocalWallet,
   Network,
@@ -16,6 +17,7 @@ import {
   TransferTable,
 } from '@dydxprotocol-indexer/postgres';
 import * as utils from './helpers/utils';
+import Big from 'big.js';
 import { DYDX_LOCAL_ADDRESS, DYDX_LOCAL_MNEMONIC } from './helpers/constants';
 
 describe('transfers', () => {
@@ -25,6 +27,8 @@ describe('transfers', () => {
 
     const validatorClient = await ValidatorClient.connect(Network.local().validatorConfig);
     const indexerClient = new IndexerClient(Network.local().indexerConfig);
+    const heightResp: HeightResponse = await indexerClient.utility.getHeight();
+    const height: number = heightResp.height;
 
     const subaccount = new SubaccountInfo(wallet, 0);
 
@@ -50,7 +54,10 @@ describe('transfers', () => {
 
     // Check DB
     const transfers: TransferFromDatabase[] = await TransferTable.findAllToOrFromSubaccountId(
-      { subaccountId: [defaultSubaccountId] },
+      {
+        subaccountId: [defaultSubaccountId],
+        createdAfterHeight: height.toString(),
+      },
       [], {
         orderBy: [[TransferColumns.id, Ordering.ASC]],
       });
@@ -90,7 +97,7 @@ describe('transfers', () => {
     expect(assetPosResp).not.toBeNull();
     const usdcPositionSizeAfter = assetPosResp.positions[0].size;
     // expect usdcPositionSizeAfter to be usdcPositionSizeBefore + 10
-    expect(usdcPositionSizeAfter).toEqual((parseInt(usdcPositionSizeBefore, 10) + 10).toString());
+    expect(usdcPositionSizeAfter).toEqual(new Big(usdcPositionSizeBefore).plus(10).toString());
   });
 
   function connectAndValidateSocketClient(): void {
@@ -103,6 +110,7 @@ describe('transfers', () => {
       (message) => {
         if (typeof message.data === 'string') {
           const data = JSON.parse(message.data as string);
+          console.log(`data: ${JSON.stringify(data)}`);
           if (data.type === 'connected') {
             mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
           } else if (data.type === 'subscribed') {

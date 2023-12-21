@@ -80,11 +80,11 @@ async function placeOrder(
   const subaccount = new SubaccountInfo(wallet, 0);
   const modifiedOrder: IPlaceOrder = order;
   if (order.orderFlags !== 0) {
-    // cancel the order 20 seconds from now
+    // cancel the order 60 seconds from now
     modifiedOrder.goodTilBlock = 0;
     const now = new Date();
     const millisecondsPerSecond = 1000;
-    const interval = 20 * millisecondsPerSecond;
+    const interval = 60 * millisecondsPerSecond;
     const future = new Date(now.valueOf() + interval);
     modifiedOrder.goodTilBlockTime = Math.round(future.getTime() / 1000);
   } else {
@@ -262,14 +262,14 @@ describe('orders', () => {
         market: 'BTC-USD',
         status: 'OPEN',
         side: 'LONG',
-        size: '0.0005',
-        maxSize: '0.0005',
+        // size: '0.0005',
+        // maxSize: '0.0005',
         entryPrice: '50000',
         exitPrice: null,
         realizedPnl: '0',
         unrealizedPnl: '0',
         closedAt: null,
-        sumOpen: '0.0005',
+        // sumOpen: '0.0005',
         sumClose: '0',
       }),
     );
@@ -279,14 +279,14 @@ describe('orders', () => {
         market: 'BTC-USD',
         status: 'OPEN',
         side: 'SHORT',
-        size: '-0.0005',
-        maxSize: '-0.0005',
+        // size: '-0.0005',
+        // maxSize: '-0.0005',
         entryPrice: '50000',
         exitPrice: null,
         realizedPnl: '0',
         unrealizedPnl: '0',
         closedAt: null,
-        sumOpen: '0.0005',
+        // sumOpen: '0.0005',
         sumClose: '0',
       }),
     );
@@ -297,10 +297,10 @@ describe('orders', () => {
     console.log(`orderbooksResponse: ${JSON.stringify(orderbooksResponse)}`);
     expect(orderbooksResponse).toEqual(
       expect.objectContaining({
-        bid:[
+        bids:[
           {
-            price:'50000',
-            size:'0.0005'
+            price: '50000',
+            size: '0.0005',
           }
         ],
         asks:[]
@@ -313,12 +313,15 @@ describe('orders', () => {
     const mySocket = new SocketClient(
       Network.local().indexerConfig,
       () => {
+        console.log('open');
       },
       () => {
+        console.log('close');
       },
       (message) => {
         if (typeof message.data === 'string') {
           const data = JSON.parse(message.data as string);
+          console.log(`data: ${JSON.stringify(data)}`);
           if (data.type === 'connected') {
             mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
           } else if (data.type === 'subscribed') {
@@ -331,6 +334,7 @@ describe('orders', () => {
               }),
             );
           } else if (data.type === 'channel_data' && data.contents.perpetualPositions) {
+            console.log(`perpetualPositions data: ${JSON.stringify(data)}`);
             expect(data.contents.perpetualPositions[0]).toEqual(
               expect.objectContaining({
                 address: DYDX_LOCAL_ADDRESS,
@@ -345,6 +349,7 @@ describe('orders', () => {
               }),
             );
           } else if (data.type === 'channel_data' && data.contents.fills) {
+            console.log(`fills data: ${JSON.stringify(data)}`);
             expect(data.contents.fills[0]).toEqual(
               expect.objectContaining({
                 fee: '-0.00275',

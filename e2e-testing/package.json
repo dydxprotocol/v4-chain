@@ -31,6 +31,7 @@
   },
   "devDependencies": {
     "@dydxprotocol-indexer/dev": "file:../indexer/packages/dev",
+    "@types/big.js": "^6.1.5",
     "@types/jest": "^28.1.4",
     "@types/long": "4.0.2",
     "@types/node": "^18.0.3",

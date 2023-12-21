@@ -8,6 +8,7 @@ specifiers:
   '@dydxprotocol-indexer/v4-proto-parser': file:../indexer/packages/v4-proto-parser
   '@dydxprotocol-indexer/v4-protos': file:../indexer/packages/v4-protos
   '@dydxprotocol/v4-client-js': ^1.0.12
+  '@types/big.js': ^6.1.5
   '@types/jest': ^28.1.4
   '@types/long': 4.0.2
   '@types/node': ^18.0.3
@@ -49,6 +50,7 @@ dependencies:
 
 devDependencies:
   '@dydxprotocol-indexer/dev': link:../indexer/packages/dev
+  '@types/big.js': 6.2.2
   '@types/jest': 28.1.8
   '@types/long': 4.0.2
   '@types/node': 18.19.3
@@ -1078,6 +1080,10 @@ packages:
     resolution: {integrity: sha512-mSM/iKUk5fDDrEV/e83qY+Cr3I1+Q3qqTuEn++HAWYjEa1+NxZr6CNrcJGf2ZTnq4HoFGC3zaTPZTobCzCFukA==}
     dependencies:
       '@babel/types': 7.23.6
+    dev: true
+
+  /@types/big.js/6.2.2:
+    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
     dev: true
 
   /@types/eslint-visitor-keys/1.0.0:
