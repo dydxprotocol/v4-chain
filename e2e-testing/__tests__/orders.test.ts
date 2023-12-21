@@ -7,7 +7,7 @@ import {
   Network,
   Order_Side,
   Order_TimeInForce,
-  OrderFlags,
+  OrderFlags, SocketClient,
   SubaccountInfo,
   ValidatorClient,
 } from '@dydxprotocol/v4-client-js';
@@ -114,7 +114,7 @@ describe('orders', () => {
     }
     const indexerClient = new IndexerClient(Network.local().indexerConfig);
 
-    await utils.sleep(5000);  // wait 5s for deposit to complete
+    await utils.sleep(5000);  // wait 5s for orders to be placed & matched
     const [wallet, wallet2] = await Promise.all([
       LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC, BECH32_PREFIX),
       LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC_2, BECH32_PREFIX),
@@ -225,6 +225,48 @@ describe('orders', () => {
         sumClose: '0',
       }),
     );
-
   });
+
+  function connectAndValidateSocketClient(): void {
+    const mySocket = new SocketClient(
+      Network.local().indexerConfig,
+      () => {
+      },
+      () => {
+      },
+      (message) => {
+        if (typeof message.data === 'string') {
+          const data = JSON.parse(message.data as string);
+          if (data.type === 'connected') {
+            mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
+          } else if (data.type === 'subscribed') {
+            expect(data.channel).toEqual('v4_subaccounts');
+            expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
+            expect(data.contents.subaccount).toEqual(
+              expect.objectContaining({
+                address: DYDX_LOCAL_ADDRESS,
+                subaccountNumber: 0,
+              }),
+            );
+          } else if (data.type === 'channel_data' && data.contents.transfers) {
+            expect(data.contents.transfers).toEqual(
+              expect.objectContaining({
+                sender: {
+                  address: DYDX_LOCAL_ADDRESS,
+                },
+                recipient: {
+                  address: DYDX_LOCAL_ADDRESS,
+                  subaccountNumber: 0,
+                },
+                size: '10',
+                symbol: 'USDC',
+                type: 'DEPOSIT',
+              }),
+            );
+          }
+        }
+      },
+    );
+    mySocket.connect();
+  }
 });
