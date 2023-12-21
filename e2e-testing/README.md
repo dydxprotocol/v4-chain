@@ -20,7 +20,9 @@ pnpm build && pnpm test
 #### Quickest way to reset the network without rebuilding from scratch
 
 Go to Docker Desktop
+
 Stop all containers
+
 Delete all dydxprotocold* containers
 
 Reset the protocol by doing the following:
@@ -30,6 +32,7 @@ make reset-chain
 ```
 
 Delete the postgres container.
+
 Restart the Kafka container.
 
 Clear all Kafka topics:
