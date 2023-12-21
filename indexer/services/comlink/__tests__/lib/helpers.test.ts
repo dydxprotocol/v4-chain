@@ -35,7 +35,7 @@ import {
   filterAssetPositions,
   filterPositionsByLatestEventIdPerPerpetual,
   getFundingIndexMaps,
-  getAdjustedMarginFraction,
+  getMarginFraction,
   getSignedNotionalAndRisk,
   getTotalUnsettledFunding,
   getPerpetualPositionsWithUpdatedFunding,
@@ -224,63 +224,22 @@ describe('helpers', () => {
     );
   });
 
-  it.each([
-    ['less than base', 20, 0.05],
-    ['base', 1_000_000, 0.05],
-    ['greater than base', 4_000_000, 0.1],
-    ['max', 400_000_000, 1],
-    ['greater than max', 4_000_000_000, 1],
-  ])('getAdjustedInitialMarginFraction: %s', async (
-    _name: string,
-    notionalValue: number,
-    expectedResult: number,
-  ) => {
+  it('maintenance fraction', async () => {
     const liquidityTierFromDatabase: LiquidityTiersFromDatabase = await
     LiquidityTiersTable.create(defaultLiquidityTier);
-    const positionNotional: Big = Big(notionalValue);
     expect(
-      getAdjustedMarginFraction(
-        { liquidityTier: liquidityTierFromDatabase, positionNotional, initial: true },
+      getMarginFraction(
+        { liquidityTier: liquidityTierFromDatabase, initial: true },
       ),
-    ).toEqual(Big(expectedResult));
+    ).toEqual(Big('0.05'));
+    expect(
+      getMarginFraction(
+        { liquidityTier: liquidityTierFromDatabase, initial: false },
+      ),
+    ).toEqual(Big('0.03'));
   });
 
-  it.each([
-    ['less than base', 20, 0.03],
-    ['base', 1_000_000, 0.03],
-    ['greater than base', 4_000_000, 0.06],
-    ['greater than max', 4_000_000_000, 1],
-  ])('getAdjustedMaintenanceMarginFraction: %s', async (
-    _name: string,
-    notionalValue: number,
-    expectedResult: number,
-  ) => {
-    const liquidityTierFromDatabase: LiquidityTiersFromDatabase = await
-    LiquidityTiersTable.create(defaultLiquidityTier);
-    const positionNotional: Big = Big(notionalValue);
-    expect(
-      getAdjustedMarginFraction(
-        { liquidityTier: liquidityTierFromDatabase, positionNotional, initial: false },
-      ),
-    ).toEqual(Big(expectedResult));
-  });
-
-  it.each([
-    ['less than base', 20, 200_000, 10_000, 6_000],
-    ['base', 100, 1_000_000, 50_000, 30_000],
-    ['greater than base', 400, 4_000_000, 400_000, 240_000],
-    ['max', 400_000, 4_000_000_000, 4_000_000_000, 4_000_000_000],
-    ['less than base SHORT', -20, -200_000, 10_000, 6_000],
-    ['base SHORT', -100, -1_000_000, 50_000, 30_000],
-    ['greater than base SHORT', -400, -4_000_000, 400_000, 240_000],
-    ['max SHORT', -400_000, -4_000_000_000, 4_000_000_000, 4_000_000_000],
-  ])('getSignedNotionalAndRisk: %s', async (
-    _name: string,
-    size: number,
-    signedNotional: number,
-    initial: number,
-    maintenance: number,
-  ) => {
+  it('getSignedNotionalAndRisk', async () => {
     await LiquidityTiersTable.create(defaultLiquidityTier);
     await liquidityTierRefresher.updateLiquidityTiers();
     const perpetualMarketFromDatabase: PerpetualMarketFromDatabase = {
@@ -291,17 +250,17 @@ describe('helpers', () => {
       ...defaultMarket,
       oraclePrice: '10000',
     };
-    const bigSize: Big = Big(size);
+    const bigSize: Big = Big('20');
     expect(
       getSignedNotionalAndRisk(
         { perpetualMarket: perpetualMarketFromDatabase, market, size: bigSize },
       ),
     ).toEqual(
       {
-        signedNotional: Big(signedNotional),
+        signedNotional: Big('200000'),
         individualRisk: {
-          initial: Big(initial),
-          maintenance: Big(maintenance),
+          initial: Big('10000'),
+          maintenance: Big('6000'),
         },
       },
     );
