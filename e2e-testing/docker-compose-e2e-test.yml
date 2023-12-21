@@ -172,7 +172,6 @@ services:
       - REDIS_URL=redis://redis:6379
       - RATE_LIMIT_REDIS_URL=redis://redis:6379
       - RATE_LIMIT_ENABLED=false
-      - INDEXER_LEVEL_GEOBLOCKING_ENABLED=false
       - COMPLIANCE_DATA_CLIENT=PLACEHOLDER
     ports:
       - 3002:3002
