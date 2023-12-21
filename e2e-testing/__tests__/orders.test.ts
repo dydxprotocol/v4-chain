@@ -1,6 +1,7 @@
 import Long from 'long';
 import {
   BECH32_PREFIX,
+  IndexerClient,
   IPlaceOrder,
   LocalWallet,
   Network,
@@ -10,10 +11,18 @@ import {
   SubaccountInfo,
   ValidatorClient,
 } from '@dydxprotocol/v4-client-js';
-import { DYDX_LOCAL_MNEMONIC, DYDX_LOCAL_MNEMONIC_2 } from './helpers/constants';
+import {
+  DYDX_LOCAL_ADDRESS,
+  DYDX_LOCAL_ADDRESS_2,
+  DYDX_LOCAL_MNEMONIC,
+  DYDX_LOCAL_MNEMONIC_2,
+} from './helpers/constants';
+import * as utils from './helpers/utils';
+import {
+  FillTable, FillType, Liquidity, OrderSide, OrderTable, SubaccountTable,
+} from '@dydxprotocol-indexer/postgres';
 
 const PERPETUAL_PAIR_BTC_USD: number = 0;
-const PERPETUAL_PAIR_ETH_USD: number = 1;
 const quantums: Long = new Long(1_000_000_000);
 const subticks: Long = new Long(1_000_000_000);
 
@@ -42,21 +51,21 @@ type OrderDetails = {
 const orderDetails: OrderDetails[] = [
   {
     mnemonic: DYDX_LOCAL_MNEMONIC,
-    timeInForce: 2,
+    timeInForce: 0,
     orderFlags: 64,
     side: 1,
     clobPairId: PERPETUAL_PAIR_BTC_USD,
     quantums: 10000000,
-    subticks: 40000000000,
+    subticks: 5000000000,
   },
   {
     mnemonic: DYDX_LOCAL_MNEMONIC_2,
-    timeInForce: 2,
+    timeInForce: 0,
     orderFlags: 64,
-    side: 1,
-    clobPairId: PERPETUAL_PAIR_ETH_USD,
-    quantums: 10000000,
-    subticks: 40000000000,
+    side: 2,
+    clobPairId: PERPETUAL_PAIR_BTC_USD,
+    quantums: 5000000,
+    subticks: 5000000000,
   },
 ];
 
@@ -65,7 +74,7 @@ async function placeOrder(
   order: IPlaceOrder,
 ): Promise<void> {
   const wallet = await LocalWallet.fromMnemonic(mnemonic, BECH32_PREFIX);
-  const client = await ValidatorClient.connect(Network.testnet().validatorConfig);
+  const client = await ValidatorClient.connect(Network.local().validatorConfig);
 
   const subaccount = new SubaccountInfo(wallet, 0);
   const modifiedOrder: IPlaceOrder = order;
@@ -103,6 +112,119 @@ describe('orders', () => {
 
       await placeOrder(order.mnemonic, modifiedOrder);
     }
+    const indexerClient = new IndexerClient(Network.local().indexerConfig);
+
+    await utils.sleep(5000);  // wait 5s for deposit to complete
+    const [wallet, wallet2] = await Promise.all([
+      LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC, BECH32_PREFIX),
+      LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC_2, BECH32_PREFIX),
+    ]);
+
+    const subaccountId = SubaccountTable.uuid(wallet.address!, 0);
+    const subaccountId2 = SubaccountTable.uuid(wallet2.address!, 0);
+    const [makerOrders, takerOrders] = await Promise.all([
+      OrderTable.findBySubaccountIdAndClobPair(subaccountId, PERPETUAL_PAIR_BTC_USD.toString()),
+      OrderTable.findBySubaccountIdAndClobPair(subaccountId2, PERPETUAL_PAIR_BTC_USD.toString()),
+    ]);
+    expect(makerOrders).toHaveLength(1);
+    expect(takerOrders).toHaveLength(1);
+
+    const [makerFills, takerFills] = await Promise.all([
+      FillTable.findAll(
+        {
+          subaccountId: [subaccountId],
+        },
+        [],
+        {},
+      ),
+      FillTable.findAll(
+        {
+          subaccountId: [subaccountId2],
+        },
+        [],
+        {},
+      ),
+    ]);
+
+    expect(makerFills.length).toEqual(1);
+    expect(makerFills[0]).toEqual(expect.objectContaining({
+      subaccountId,
+      side: OrderSide.BUY,
+      liquidity: Liquidity.MAKER,
+      type: FillType.LIMIT,
+      clobPairId: '0',
+      orderId: makerOrders[0].id,
+      size: '0.0005',
+      price: '50000',
+      quoteAmount: '25',
+      clientMetadata: '0',
+      fee: '-0.00275',
+    }));
+
+    expect(takerFills.length).toEqual(1);
+    expect(takerFills[0]).toEqual(expect.objectContaining({
+      subaccountId: subaccountId2,
+      side: OrderSide.SELL,
+      liquidity: Liquidity.TAKER,
+      type: FillType.LIMIT,
+      clobPairId: '0',
+      orderId: takerOrders[0].id,
+      size: '0.0005',
+      price: '50000',
+      quoteAmount: '25',
+      clientMetadata: '0',
+      fee: '0.0125',
+    }));
+
+    // Check API /v4/perpetualPositions endpoint
+    let response = await indexerClient.account.getSubaccountPerpetualPositions(
+      DYDX_LOCAL_ADDRESS,
+      0,
+    );
+    expect(response).not.toBeNull();
+    let positions = response.positions;
+    expect(positions.length).toEqual(1);
+    let position: any = positions[0];
+    expect(position).toEqual(
+      expect.objectContaining({
+        market: 'BTC-USD',
+        status: 'OPEN',
+        side: 'LONG',
+        size: '0.0005',
+        maxSize: '0.0005',
+        entryPrice: '50000',
+        exitPrice: null,
+        realizedPnl: '0',
+        unrealizedPnl: '0',
+        closedAt: null,
+        sumOpen: '0.0005',
+        sumClose: '0',
+      }),
+    );
+    response = await indexerClient.account.getSubaccountPerpetualPositions(
+      DYDX_LOCAL_ADDRESS_2,
+      0,
+    );
+    expect(response).not.toBeNull();
+    positions = response.positions;
+    expect(positions.length).toEqual(1);
+    position = positions[0];
+    expect(position).toEqual(
+      expect.objectContaining({
+        market: 'BTC-USD',
+        status: 'OPEN',
+        side: 'SHORT',
+        size: '-0.0005',
+        maxSize: '-0.0005',
+        entryPrice: '50000',
+        exitPrice: null,
+        realizedPnl: '0',
+        unrealizedPnl: '0',
+        closedAt: null,
+        sumOpen: '0.0005',
+        sumClose: '0',
+      }),
+    );
 
   });
 });
