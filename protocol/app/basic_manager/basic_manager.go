@@ -70,11 +70,11 @@ var (
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},
+		ica.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
-		ica.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},

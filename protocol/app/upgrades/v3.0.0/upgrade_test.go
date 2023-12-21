@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func TestAllowMessages(t *testing.T) {
+func TestICAHostAllowMessages(t *testing.T) {
 	require.Equal(
 		t,
 		[]string{
