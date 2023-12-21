@@ -32,7 +32,7 @@ import {
   PerpetualPositionWithFunding,
   Risk,
 } from '../types';
-import { ONE, ZERO, ZERO_USDC_POSITION } from './constants';
+import { ZERO, ZERO_USDC_POSITION } from './constants';
 import { NotFoundError } from './errors';
 
 /* ------- GENERIC HELPERS ------- */
@@ -237,71 +237,53 @@ export function getSignedNotionalAndRisk({
   // Used to calculate risk / margin fracitons, as risk of a position should always be positive
   const positionNotional: Big = signedNotional.abs();
   const {
-    adjustedInitialMarginFraction,
-    adjustedMaintenanceMarginFraction,
+    initialMarginFraction,
+    maintenanceMarginFraction,
   }: {
-    adjustedInitialMarginFraction: Big,
-    adjustedMaintenanceMarginFraction: Big,
-  } = getAdjustedMarginFractions({
-    liquidityTier,
-    positionNotional,
-  });
+    initialMarginFraction: Big,
+    maintenanceMarginFraction: Big,
+  } = getMarginFractions(liquidityTier);
   return {
     signedNotional,
     individualRisk: {
-      initial: positionNotional.times(adjustedInitialMarginFraction),
-      maintenance: positionNotional.times(adjustedMaintenanceMarginFraction),
+      initial: positionNotional.times(initialMarginFraction),
+      maintenance: positionNotional.times(maintenanceMarginFraction),
     },
   };
 }
 
-export function getAdjustedMarginFractions(
-  {
-    liquidityTier,
-    positionNotional,
-  }: {
-    liquidityTier: LiquidityTiersFromDatabase,
-    positionNotional: Big,
-  },
-): {
-  adjustedInitialMarginFraction: Big,
-  adjustedMaintenanceMarginFraction: Big,
+export function getMarginFractions(liquidityTier: LiquidityTiersFromDatabase): {
+  initialMarginFraction: Big,
+  maintenanceMarginFraction: Big,
 } {
-  const adjustedInitialMarginFraction: Big = getAdjustedMarginFraction({
+  const initialMarginFraction: Big = getMarginFraction({
     liquidityTier,
-    positionNotional,
     initial: true,
   });
-  const adjustedMaintenanceMarginFraction: Big = getAdjustedMarginFraction({
+  const maintenanceMarginFraction: Big = getMarginFraction({
     liquidityTier,
-    positionNotional,
     initial: false,
   });
   return {
-    adjustedInitialMarginFraction,
-    adjustedMaintenanceMarginFraction,
+    initialMarginFraction,
+    maintenanceMarginFraction,
   };
 }
 
 /**
- * Get the adjusted margin fraction for a position in a given perpetual market.
- * Uses the `positionNotional`, `initialMarginFraction`,  and `basePositionNotional`
- * of the associated liquidity tier to calculate the adjusted initial margin fraction.
+ * Get the margin fraction for a position in a given perpetual market.
  *
  * @param liquidityTier The liquidity tier of the position.
- * @param positionNotional The notional value of the position.
  * @param initial Whether to compute the initial margin fraction or the maintenance margin fraction.
  *
- * @returns The adjusted margin fraction for the position in human-readable form.
+ * @returns The margin fraction for the position in human-readable form.
  */
-export function getAdjustedMarginFraction(
+export function getMarginFraction(
   {
     liquidityTier,
-    positionNotional,
     initial,
   }: {
     liquidityTier: LiquidityTiersFromDatabase,
-    positionNotional: Big,
     initial: boolean,
   },
 ): Big {
@@ -313,17 +295,7 @@ export function getAdjustedMarginFraction(
         Number(liquidityTier.maintenanceFractionPpm),
       ),
     );
-
-  if (positionNotional.lte(liquidityTier.basePositionNotional)) {
-    return Big(margin);
-  }
-  const adjustedImf: Big = Big(
-    positionNotional.div(liquidityTier.basePositionNotional),
-  ).sqrt().times(margin);
-  if (adjustedImf.gte(ONE)) {
-    return ONE;
-  }
-  return adjustedImf;
+  return Big(margin);
 }
 
 /**
