@@ -44,6 +44,7 @@ describe('transfers', () => {
       new Long(10_000_000),
     );
 
+    // TODO(IND-547): investigate deterministically advancing network height
     await utils.sleep(5000);  // wait 5s for deposit to complete
     const defaultSubaccountId: string = SubaccountTable.uuid(wallet.address!, 0);
 
