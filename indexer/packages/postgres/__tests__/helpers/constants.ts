@@ -103,6 +103,11 @@ export const defaultWallet: WalletCreateObject = {
   totalTradingRewards: '0',
 };
 
+export const defaultWallet2: WalletCreateObject = {
+  address: defaultWalletAddress,
+  totalTradingRewards: '1',
+};
+
 // ============== Assets ==============
 
 export const defaultAsset: AssetCreateObject = {

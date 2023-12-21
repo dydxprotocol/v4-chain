@@ -54,6 +54,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   if (indexerTendermintBlock === undefined) {
     return;
   }
+  console.log('not undefined');
   stats.timing(
     `${config.SERVICE_NAME}.block_time_lag.timing`,
     DateTime.now().diff(dateToDateTime(indexerTendermintBlock.time!)).toMillis(),
@@ -65,12 +66,14 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   if (await shouldSkipBlock(blockHeight)) {
     return;
   }
+  console.log('not skipping');
 
   let success: boolean = false;
   const txId: number = await Transaction.start();
   await Transaction.setIsolationLevel(txId, IsolationLevel.READ_UNCOMMITTED);
   try {
     validateIndexerTendermintBlock(indexerTendermintBlock);
+    console.log('validated');
 
     const blockProcessor: BlockProcessor = new BlockProcessor(
       indexerTendermintBlock,
@@ -181,6 +184,7 @@ function getIndexerTendermintBlock(
 
     return block;
   } catch (error) {
+    console.log('error', error);
     stats.increment(`${config.SERVICE_NAME}.parse_kafka_message.failure`, 1);
     // Does not throw error, because we want to ack this message and skip retry
     logger.crit({

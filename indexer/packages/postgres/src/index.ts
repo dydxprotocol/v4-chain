@@ -14,6 +14,8 @@ export { default as OrderModel } from './models/order-model';
 export { default as PerpetualMarketModel } from './models/perpetual-market-model';
 export { default as PerpetualPositionModel } from './models/perpetual-position-model';
 export { default as TransferModel } from './models/transfer-model';
+export { default as TradingRewardModel } from './models/trading-reward-model';
+export { default as TradingRewardAggregationModel } from './models/trading-reward-aggregation-model';
 
 export * as AssetTable from './stores/asset-table';
 export * as AssetPositionTable from './stores/asset-position-table';

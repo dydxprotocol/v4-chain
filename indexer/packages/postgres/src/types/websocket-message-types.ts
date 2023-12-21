@@ -36,6 +36,7 @@ export interface SubaccountMessageContents {
   orders?: OrderSubaccountMessageContents[],
   fills?: FillSubaccountMessageContents[],
   transfers?: TransferSubaccountMessageContents,
+  tradingReward?: TradingRewardSubaccountMessageContents,
 }
 
 export interface PerpetualPositionSubaccountMessageContents {
@@ -161,6 +162,12 @@ export interface TransferSubaccountMessageContents {
   transactionHash: string,
   createdAt: IsoString;
   createdAtHeight: string;
+}
+
+export interface TradingRewardSubaccountMessageContents {
+  tradingReward: string;
+  createdAtHeight: string;
+  createdAt: string;
 }
 
 /* ------- TradeMessageContents ------- */

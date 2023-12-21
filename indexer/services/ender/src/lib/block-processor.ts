@@ -22,6 +22,7 @@ import { OrderFillValidator } from '../validators/order-fill-validator';
 import { PerpetualMarketValidator } from '../validators/perpetual-market-validator';
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
 import { SubaccountUpdateValidator } from '../validators/subaccount-update-validator';
+import { TradingRewardsValidator } from '../validators/trading-rewards-validator';
 import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
@@ -46,6 +47,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_PERPETUAL.toString(), 1)]: UpdatePerpetualValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.TRADING_REWARD.toString(), 1)]: TradingRewardsValidator,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {
@@ -106,7 +108,6 @@ export class BlockProcessor {
    * @returns the kafka publisher which contains all the events to be published to the kafka
    */
   public async process(): Promise<KafkaPublisher> {
-
     const groupedEvents: GroupedEvents = this.groupEvents();
     this.validateAndOrganizeEvents(groupedEvents);
     return this.processEvents();
