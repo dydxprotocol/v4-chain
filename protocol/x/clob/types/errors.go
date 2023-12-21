@@ -283,11 +283,7 @@ var (
 		1015,
 		"Invalid delta base and/or quote quantums for insurance fund delta calculation",
 	)
-	ErrEmptyDeleveragingFills = errorsmod.Register(
-		ModuleName,
-		1016,
-		"Deleveraging fills length must be greater than 0",
-	)
+	// TODO: Should the error code be skipped or re-assigned?
 	ErrDeleveragingAgainstSelf = errorsmod.Register(
 		ModuleName,
 		1017,

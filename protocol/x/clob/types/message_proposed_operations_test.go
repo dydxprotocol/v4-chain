@@ -474,7 +474,7 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrEmptyDeleveragingFills,
+			expectedError: nil,
 		},
 
 		// Tests for byte functionality
