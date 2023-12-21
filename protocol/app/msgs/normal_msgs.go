@@ -141,11 +141,9 @@ var (
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// ibc.applications
-		"/ibc.applications.transfer.v1.MsgTransfer":             &ibctransfer.MsgTransfer{},
-		"/ibc.applications.transfer.v1.MsgTransferResponse":     nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":         &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.transfer.v1.TransferAuthorization":   nil,
+		"/ibc.applications.transfer.v1.MsgTransfer":           &ibctransfer.MsgTransfer{},
+		"/ibc.applications.transfer.v1.MsgTransferResponse":   nil,
+		"/ibc.applications.transfer.v1.TransferAuthorization": nil,
 
 		// ibc.core.channel
 		"/ibc.core.channel.v1.Channel":                        nil,
@@ -185,8 +183,6 @@ var (
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse": nil,
 		"/ibc.core.client.v1.MsgUpdateClient":               &ibcclient.MsgUpdateClient{},
 		"/ibc.core.client.v1.MsgUpdateClientResponse":       nil,
-		"/ibc.core.client.v1.MsgUpdateParams":               &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":       nil,
 		"/ibc.core.client.v1.MsgUpgradeClient":              &ibcclient.MsgUpgradeClient{},
 		"/ibc.core.client.v1.MsgUpgradeClientResponse":      nil,
 		"/ibc.core.client.v1.UpgradeProposal":               nil,
@@ -208,8 +204,6 @@ var (
 		"/ibc.core.connection.v1.MsgConnectionOpenInitResponse":    nil,
 		"/ibc.core.connection.v1.MsgConnectionOpenTry":             &ibcconn.MsgConnectionOpenTry{},
 		"/ibc.core.connection.v1.MsgConnectionOpenTryResponse":     nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                  &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":          nil,
 
 		// ibc.lightclients
 		"/ibc.lightclients.localhost.v2.ClientState":     nil,

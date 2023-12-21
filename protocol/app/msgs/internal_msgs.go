@@ -11,6 +11,9 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -147,5 +150,13 @@ var (
 		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
 		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
+
+		// ibc
+		"/ibc.applications.transfer.v1.MsgUpdateParams":         &ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse": nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                   &ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":           nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":               &ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":       nil,
 	}
 )

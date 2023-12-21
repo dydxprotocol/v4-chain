@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"cosmossdk.io/log"
+	"cosmossdk.io/store/rootmulti"
 	storetypes "cosmossdk.io/store/types"
 	"encoding/json"
 	"errors"
@@ -14,6 +15,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -636,9 +638,9 @@ func (tApp *TestApp) initChainIfNeeded() {
 	_, err = tApp.App.Commit()
 	require.NoError(tApp.builder.t, err)
 	if tApp.builder.enableNonDeterminismChecks {
-		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App.LastCommitID())
-		finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App.LastCommitID())
-		finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App.LastCommitID())
+		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 	}
 
 	tApp.header = tmproto.Header{
@@ -814,10 +816,12 @@ func (tApp *TestApp) AdvanceToBlock(
 
 		// Finalize the block
 		finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
-			Txs:               deliverTxs,
-			DecidedLastCommit: abcitypes.CommitInfo{},
-			Height:            tApp.header.Height,
-			Time:              tApp.header.Time,
+			Txs:                deliverTxs,
+			Hash:               tApp.header.AppHash,
+			Height:             tApp.header.Height,
+			Time:               tApp.header.Time,
+			NextValidatorsHash: tApp.header.NextValidatorsHash,
+			ProposerAddress:    tApp.header.ProposerAddress,
 		}
 		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
 
@@ -856,9 +860,9 @@ func (tApp *TestApp) AdvanceToBlock(
 
 		// Finalize and commit all the blocks for the non-determinism checkers.
 		if tApp.builder.enableNonDeterminismChecks {
-			finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App.LastCommitID())
-			finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App.LastCommitID())
-			finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App.LastCommitID())
+			finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 		}
 
 		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
@@ -914,16 +918,111 @@ func finalizeBlockAndCommit(
 	t testing.TB,
 	app *app.App,
 	request abcitypes.RequestFinalizeBlock,
-	expectedLastCommitID storetypes.CommitID,
+	expectedApp *app.App,
 ) {
 	_, err := app.FinalizeBlock(&request)
 	require.NoError(t, err)
 	_, err = app.Commit()
 	require.NoError(t, err)
 
+	diffs := make([]string, 0)
+	if !bytes.Equal(app.LastCommitID().Hash, expectedApp.LastCommitID().Hash) {
+		rootMulti := app.CommitMultiStore().(*rootmulti.Store)
+		expectedRootMulti := expectedApp.CommitMultiStore().(*rootmulti.Store)
+
+		commitInfo, err := rootMulti.GetCommitInfo(app.LastBlockHeight())
+		require.NoError(t, err)
+		expectedCommitInfo, err := expectedRootMulti.GetCommitInfo(app.LastBlockHeight())
+		require.NoError(t, err)
+		storeInfos := make(map[string]storetypes.StoreInfo)
+		for _, storeInfo := range commitInfo.StoreInfos {
+			storeInfos[storeInfo.Name] = storeInfo
+		}
+
+		storeDiffs := make([]string, 0)
+		for _, storeInfo := range expectedCommitInfo.StoreInfos {
+			if !bytes.Equal(storeInfos[storeInfo.Name].GetHash(), storeInfo.GetHash()) {
+				diffs = append(
+					diffs,
+					fmt.Sprintf("Expected store '%s' hashes to match.", storeInfo.Name),
+				)
+				storeDiffs = append(storeDiffs, storeInfo.Name)
+			}
+		}
+
+		for _, storeName := range storeDiffs {
+			store := rootMulti.GetCommitKVStore(rootMulti.StoreKeysByName()[storeName])
+			expectedStore := expectedRootMulti.GetCommitKVStore(expectedRootMulti.StoreKeysByName()[storeName])
+
+			itr := store.Iterator(nil, nil)
+			defer itr.Close()
+			expectedItr := expectedStore.Iterator(nil, nil)
+			defer expectedItr.Close()
+
+			for ; itr.Valid(); itr.Next() {
+				if !expectedItr.Valid() {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Expected key/value ('%s', '%s') to exist in store '%s'.",
+							itr.Key(),
+							itr.Value(),
+							storeName,
+						),
+					)
+					continue
+				} else if !bytes.Equal(itr.Key(), expectedItr.Key()) {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Expected key '%s' to exist in store '%s'.",
+							itr.Key(),
+							storeName,
+						),
+					)
+				} else if !bytes.Equal(itr.Value(), expectedItr.Value()) {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Found key '%s' with different value '%s' which "+
+								"differs from original value '%s' in store '%s'.",
+							itr.Key(),
+							expectedItr.Value(),
+							itr.Value(),
+							storeName,
+						),
+					)
+				}
+
+				expectedItr.Next()
+			}
+
+			for ; expectedItr.Valid(); expectedItr.Next() {
+				diffs = append(
+					diffs,
+					fmt.Sprintf(
+						"Expected key/value (%s, %s) to not exist in store '%s'",
+						expectedItr.Key(),
+						expectedItr.Value(),
+						storeName,
+					),
+				)
+			}
+		}
+	}
+
+	if len(diffs) != 0 {
+		t.Errorf(
+			"Expected no differences in stores but found %d difference(s):\n  %s",
+			len(diffs),
+			strings.Join(diffs, "\n  "),
+		)
+		t.FailNow()
+	}
+
 	// Ensure that all instances after committing the block came to the same commit hash.
 	require.Equalf(t,
-		expectedLastCommitID,
+		expectedApp.LastCommitID(),
 		app.LastCommitID(),
 		"Non-determinism in state detected, expected LastCommitID to match.",
 	)

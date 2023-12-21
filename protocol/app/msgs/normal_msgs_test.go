@@ -135,8 +135,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer",
 		"/ibc.applications.transfer.v1.MsgTransferResponse",
-		"/ibc.applications.transfer.v1.MsgUpdateParams",
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse",
 		"/ibc.applications.transfer.v1.TransferAuthorization",
 
 		// ibc.core.channel
@@ -177,8 +175,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse",
 		"/ibc.core.client.v1.MsgUpdateClient",
 		"/ibc.core.client.v1.MsgUpdateClientResponse",
-		"/ibc.core.client.v1.MsgUpdateParams",
-		"/ibc.core.client.v1.MsgUpdateParamsResponse",
 		"/ibc.core.client.v1.MsgUpgradeClient",
 		"/ibc.core.client.v1.MsgUpgradeClientResponse",
 		"/ibc.core.client.v1.UpgradeProposal",
@@ -200,8 +196,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.connection.v1.MsgConnectionOpenInitResponse",
 		"/ibc.core.connection.v1.MsgConnectionOpenTry",
 		"/ibc.core.connection.v1.MsgConnectionOpenTryResponse",
-		"/ibc.core.connection.v1.MsgUpdateParams",
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
 
 		// ibc.lightclients
 		"/ibc.lightclients.localhost.v2.ClientState",
