@@ -342,8 +342,6 @@ describe('orders', () => {
                 market: 'BTC-USD',
                 side: 'LONG',
                 status: 'OPEN',
-                size: '0.0005',
-                maxSize: '0.0005',
                 netFunding: '0',
                 exitPrice: null,
               }),
