@@ -2003,6 +2003,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
 
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(
+				clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
+			)
+
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
 				err := ks.PricesKeeper.UpdateMarketPrices(
 					ctx,

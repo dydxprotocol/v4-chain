@@ -903,6 +903,7 @@ func New(
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
+		daemonLiquidationInfo,
 	)
 	clobModule := clobmodule.NewAppModule(
 		appCodec,
@@ -910,7 +911,6 @@ func New(
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.SubaccountsKeeper,
-		daemonLiquidationInfo,
 	)
 	app.PerpetualsKeeper.SetClobKeeper(app.ClobKeeper)
 

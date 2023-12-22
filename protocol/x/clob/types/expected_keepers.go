@@ -42,11 +42,6 @@ type SubaccountsKeeper interface {
 	) (
 		list []satypes.Subaccount,
 	)
-	ForEachSubaccountRandomStart(
-		ctx sdk.Context,
-		callback func(satypes.Subaccount) (finished bool),
-		rand *rand.Rand,
-	)
 	GetRandomSubaccount(
 		ctx sdk.Context,
 		rand *rand.Rand,
