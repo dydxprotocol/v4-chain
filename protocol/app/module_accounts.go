@@ -5,6 +5,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
@@ -33,6 +34,7 @@ var (
 		stakingtypes.NotBondedPoolName: {authtypes.Burner, authtypes.Staking},
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
+		icatypes.ModuleName:            nil,
 		// -------- dYdX custom module accounts --------
 		// bridge module account mints tokens for bridged funds.
 		bridgemoduletypes.ModuleName: {authtypes.Minter},
@@ -53,7 +55,7 @@ var (
 		delaymsgtypes.ModuleName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
-	// By default, all native SDK module accounts are blocked. This prevents
+	// By default, all non-custom modules (except for gov) are blocked. This prevents
 	// unexpected violation of invariants (for example, https://github.com/cosmos/cosmos-sdk/issues/4795)
 	blockedModuleAccounts = map[string]bool{
 		authtypes.FeeCollectorName:     true,
@@ -61,6 +63,7 @@ var (
 		stakingtypes.BondedPoolName:    true,
 		stakingtypes.NotBondedPoolName: true,
 		ibctransfertypes.ModuleName:    true,
+		icatypes.ModuleName:            true,
 	}
 )
 

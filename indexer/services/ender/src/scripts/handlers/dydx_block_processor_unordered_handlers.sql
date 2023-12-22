@@ -60,6 +60,8 @@ BEGIN
                 rval[i] = dydx_funding_handler(block_height, block_time, event_data, event_index, transaction_index);
             WHEN '"deleveraging"'::jsonb THEN
                 rval[i] = dydx_deleveraging_handler(block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index));
+            WHEN '"trading_reward"'::jsonb THEN
+                rval[i] = dydx_trading_rewards_handler(block_height, block_time, event_data, event_index, transaction_index, jsonb_array_element_text(block->'txHashes', transaction_index));
             ELSE
                 NULL;
             END CASE;

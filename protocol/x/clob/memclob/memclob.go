@@ -694,6 +694,7 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 	subaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantums *big.Int,
+	isFinalSettlement bool,
 ) (
 	quantumsDeleveraged *big.Int,
 	err error,
@@ -705,6 +706,7 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 		subaccountId,
 		perpetualId,
 		deltaQuantums,
+		isFinalSettlement,
 	)
 
 	if len(fills) > 0 {
@@ -712,6 +714,7 @@ func (m *MemClobPriceTimePriority) DeleverageSubaccount(
 			subaccountId,
 			perpetualId,
 			fills,
+			isFinalSettlement,
 		)
 	}
 

@@ -23,6 +23,7 @@ import {
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
+  TradingRewardsEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -202,6 +203,15 @@ export function indexerTendermintEventToEventProtoWithType(
       return {
         type: DydxIndexerSubtypes.DELEVERAGING,
         eventProto: DeleveragingEventV1.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
+    }
+    case (DydxIndexerSubtypes.TRADING_REWARD.toString()): {
+      return {
+        type: DydxIndexerSubtypes.TRADING_REWARD,
+        eventProto: TradingRewardsEventV1.decode(eventDataBinary),
         indexerTendermintEvent: event,
         version,
         blockEventIndex,
