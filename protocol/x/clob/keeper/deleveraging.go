@@ -590,14 +590,12 @@ func (k Keeper) DeleverageSubaccounts(
 	ctx sdk.Context,
 	subaccountsToDeleverage []subaccountToDeleverage,
 ) error {
-	defer func() {
-		telemetry.MeasureSince(
-			time.Now(),
-			types.ModuleName,
-			metrics.LiquidateSubaccounts_Deleverage,
-			metrics.Latency,
-		)
-	}()
+	defer telemetry.MeasureSince(
+		time.Now(),
+		types.ModuleName,
+		metrics.LiquidateSubaccounts_Deleverage,
+		metrics.Latency,
+	)
 
 	// For each unfilled liquidation, attempt to deleverage the subaccount.
 	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(subaccountsToDeleverage); i++ {
