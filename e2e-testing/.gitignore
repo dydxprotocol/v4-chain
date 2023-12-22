@@ -1,0 +1,11 @@
+# dependencies
+node_modules
+
+# build
+build
+
+# misc
+.DS_Store
+
+# IDE
+.idea/*

@@ -1,0 +1,61 @@
+{
+  "name": "e2e-testing",
+  "version": "0.0.1",
+  "description": "",
+  "main": "build/index",
+  "scripts": {
+    "start": "node --heapsnapshot-signal=SIGUSR2 -r dotenv-flow/config build/src/index.js",
+    "build": "rm -rf build/ && tsc",
+    "build:prod": "pnpm run build",
+    "build:watch": "pnpm run build -- --watch",
+    "coverage": "pnpm test -- --coverage",
+    "lint": "eslint --ext .ts,.js .",
+    "lint:fix": "eslint --ext .ts,.js . --fix",
+    "test": "NODE_ENV=test jest --runInBand --forceExit"
+  },
+  "author": "",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "@dydxprotocol-indexer/base": "file:../indexer/packages/base",
+    "@dydxprotocol-indexer/kafka": "file:../indexer/packages/kafka",
+    "@dydxprotocol-indexer/postgres": "file:../indexer/packages/postgres",
+    "@dydxprotocol-indexer/v4-proto-parser": "file:../indexer/packages/v4-proto-parser",
+    "@dydxprotocol-indexer/v4-protos": "file:../indexer/packages/v4-protos",
+    "@dydxprotocol/v4-client-js": "^1.0.12",
+    "big.js": "^6.0.2",
+    "dotenv-flow": "^3.2.0",
+    "kafkajs": "^2.1.0",
+    "lodash": "^4.17.21",
+    "long": "5.2.3",
+    "yargs": "^13.3.0"
+  },
+  "devDependencies": {
+    "@dydxprotocol-indexer/dev": "file:../indexer/packages/dev",
+    "@types/jest": "^28.1.4",
+    "@types/long": "4.0.2",
+    "@types/node": "^18.0.3",
+    "@types/ws": "8.5.4",
+    "@types/yargs": "^16.0.0",
+    "@typescript-eslint/eslint-plugin": "^5.30.5",
+    "@typescript-eslint/parser": "^5.30.5",
+    "eslint": "^8.0.1",
+    "eslint-config-airbnb-typescript": "^9.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-no-only-tests": "^2.6.0",
+    "eslint-plugin-react": "^7.21.5",
+    "eslint-plugin-react-hooks": "^4",
+    "jest": "^28.1.2",
+    "ts-node": "^10.8.2",
+    "tsconfig-paths": "^4.0.0",
+    "typescript": "4.7.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dydxprotocol/v4-chain.git"
+  },
+  "bugs": {
+    "url": "https://github.com/dydxprotocol/v4-chain/issues"
+  },
+  "homepage": "https://github.com/dydxprotocol/v4-chain#readme"
+}

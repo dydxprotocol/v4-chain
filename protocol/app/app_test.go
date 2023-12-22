@@ -1,12 +1,13 @@
 package app_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"gopkg.in/typ.v4/slices"
 	"reflect"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"gopkg.in/typ.v4/slices"
 
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
@@ -29,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v7/modules/core"
 	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
@@ -199,6 +201,7 @@ func TestModuleBasics(t *testing.T) {
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
 		ibctm.AppModuleBasic{},
+		ica.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
