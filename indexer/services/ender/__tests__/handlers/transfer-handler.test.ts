@@ -25,6 +25,7 @@ import {
   assetRefresher,
   WalletTable,
   WalletFromDatabase,
+  testConversionHelpers,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
@@ -304,7 +305,7 @@ describe('transferHandler', () => {
     );
     expect(wallet).toEqual({
       address: defaultWalletAddress,
-      totalTradingRewards: '0',
+      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
     });
   });
 
@@ -356,7 +357,7 @@ describe('transferHandler', () => {
     expect(newRecipientSubaccount).toBeDefined();
     expect(wallet).toEqual({
       address: defaultWalletAddress,
-      totalTradingRewards: '0',
+      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
     });
   });
 
@@ -409,7 +410,7 @@ describe('transferHandler', () => {
     );
     expect(wallet).toEqual({
       address: defaultWalletAddress,
-      totalTradingRewards: '0',
+      totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(0),
     });
   });
 

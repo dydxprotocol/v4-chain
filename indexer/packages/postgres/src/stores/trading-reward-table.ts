@@ -95,7 +95,7 @@ export async function create(
 }
 
 export async function findById(
-  address: string,
+  id: string,
   options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<TradingRewardFromDatabase | undefined> {
   const baseQuery: QueryBuilder<TradingRewardModel> = setupBaseQuery<TradingRewardModel>(
@@ -103,6 +103,6 @@ export async function findById(
     options,
   );
   return baseQuery
-    .findById(address)
+    .findById(id)
     .returning('*');
 }
