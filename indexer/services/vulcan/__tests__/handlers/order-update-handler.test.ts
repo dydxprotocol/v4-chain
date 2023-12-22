@@ -231,6 +231,65 @@ describe('OrderUpdateHandler', () => {
       },
     );
 
+    it.each([
+      [
+        'Fill-or-Kill',
+        redisTestConstants.defaultOrderFok,
+        redisTestConstants.defaultOrderId,
+        redisTestConstants.defaultRedisOrderFok,
+      ],
+      [
+        'Immediate-or-Cancel',
+        redisTestConstants.defaultOrderIoc,
+        redisTestConstants.defaultOrderId,
+        redisTestConstants.defaultRedisOrderIoc,
+      ],
+    ])(
+      'updates new order (with %s) (not resting on book) total filled but does not update order ' +
+      'book for IOC order',
+      async (
+        _name: string,
+        initialOrderToPlace: IndexerOrder,
+        updatedOrderId: IndexerOrderId,
+        updatedRedisOrder: RedisOrder,
+      ) => {
+        synchronizeWrapBackgroundTask(wrapBackgroundTask);
+        const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
+        const orderUpdate: redisTestConstants.OffChainUpdateOrderUpdateUpdateMessage = {
+          ...redisTestConstants.orderUpdate,
+          orderUpdate: {
+            ...redisTestConstants.orderUpdate.orderUpdate,
+            orderId: updatedOrderId,
+          },
+        };
+
+        // Create a new order by handling an order place message
+        await handleInitialOrderPlace({
+          ...redisTestConstants.orderPlace,
+          orderPlace: {
+            order: initialOrderToPlace,
+            placementStatus:
+              OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+          },
+        });
+        jest.runOnlyPendingTimers();
+        jest.clearAllMocks();
+        await handleOrderUpdate(orderUpdate);
+
+        // No order book update websocket messages should be sent
+        expectWebsocketMessagesNotSent(producerSendSpy);
+        await expectOrdersDataCache(orderUpdate);
+        // Price-level should be 0 as placing the order and updating the order should not have
+        // changed the order book
+        await expectOrderbookLevelCache(
+          testConstants.defaultPerpetualMarket.ticker,
+          protocolTranslations.protocolOrderSideToOrderSide(initialOrderToPlace.side),
+          updatedRedisOrder.price,
+          '0',
+        );
+      },
+    );
+
     it(
       'logs error, and caps price level update if new total filled quantums exceed order size',
       async () => {
