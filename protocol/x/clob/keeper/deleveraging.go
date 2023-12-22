@@ -210,10 +210,13 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
+	// Find subaccounts with open positions on the opposite side of the liquidated subaccount.
+	isDeleveragingLong := deltaQuantumsTotal.Sign() == -1
 	subaccountsWithOpenPositions := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositionsForPerpetual(
 		perpetualId,
-		deltaQuantumsTotal.Sign() == 1,
+		!isDeleveragingLong,
 	)
+
 	for _, subaccountId := range subaccountsWithOpenPositions {
 		// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
 		if numSubaccountsIterated >= k.Flags.MaxDeleveragingSubaccountsToIterate {
