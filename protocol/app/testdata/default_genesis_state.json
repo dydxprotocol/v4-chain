@@ -301,6 +301,27 @@
       "next_channel_sequence": "0"
     }
   },
+  "interchainaccounts": {
+    "controller_genesis_state": {
+      "active_channels": [],
+      "interchain_accounts": [],
+      "params": {
+        "controller_enabled": true
+      },
+      "ports": []
+    },
+    "host_genesis_state": {
+      "active_channels": [],
+      "interchain_accounts": [],
+      "params": {
+        "allow_messages": [
+          "*"
+        ],
+        "host_enabled": true
+      },
+      "port": "icahost"
+    }
+  },
   "params": null,
   "perpetuals": {
     "perpetuals": [],

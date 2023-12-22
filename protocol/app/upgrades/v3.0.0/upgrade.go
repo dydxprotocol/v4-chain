@@ -7,7 +7,16 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -16,6 +25,27 @@ import (
 )
 
 var (
+	ICAHostAllowMessages = []string{
+		// IBC transfer messages
+		sdk.MsgTypeURL(&ibctransfertypes.MsgTransfer{}),
+
+		// Bank messages
+		sdk.MsgTypeURL(&banktypes.MsgSend{}),
+
+		// Staking messages
+		sdk.MsgTypeURL(&stakingtypes.MsgDelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgBeginRedelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgUndelegate{}),
+		sdk.MsgTypeURL(&stakingtypes.MsgCancelUnbondingDelegation{}),
+
+		// Distribution messages
+		sdk.MsgTypeURL(&distrtypes.MsgSetWithdrawAddress{}),
+		sdk.MsgTypeURL(&distrtypes.MsgWithdrawDelegatorReward{}),
+		sdk.MsgTypeURL(&distrtypes.MsgFundCommunityPool{}),
+
+		// Gov messages
+		sdk.MsgTypeURL(&govtypesv1.MsgVote{}),
+	}
 	// List of module accounts to check in state.
 	// These include all dYdX custom module accounts.
 	ModuleAccsToInitialize = []string{
@@ -93,6 +123,32 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 	}
 }
 
+func IcaHostKeeperUpgradeHandler(
+	ctx sdk.Context,
+	vm module.VersionMap,
+	mm *module.Manager,
+) {
+	icaAppModule, ok := mm.Modules[icatypes.ModuleName].(ica.AppModule)
+	if !ok {
+		panic("Modules[icatypes.ModuleName] is not of type ica.AppModule")
+	}
+	// Add Interchain Accounts host module
+	// set the ICS27 consensus version so InitGenesis is not run
+	// initialize ICS27 module
+	vm[icatypes.ModuleName] = icaAppModule.ConsensusVersion()
+
+	// controller submodule is not enabled.
+	controllerParams := icacontrollertypes.Params{}
+
+	// host submodule params
+	hostParams := icahosttypes.Params{
+		HostEnabled:   true,
+		AllowMessages: ICAHostAllowMessages,
+	}
+
+	icaAppModule.InitModule(ctx, controllerParams, hostParams)
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -103,6 +159,9 @@ func CreateUpgradeHandler(
 		InitializeModuleAccs(ctx, ak)
 
 		// TODO(CORE-824): Initialize ratelimit module params to desired state.
+
+		// TODO(CORE-848): Any unit test after a v3.0.0 upgrade test is added.
+		IcaHostKeeperUpgradeHandler(ctx, vm, mm)
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
