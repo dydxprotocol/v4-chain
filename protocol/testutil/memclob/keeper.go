@@ -108,11 +108,13 @@ func (f *FakeMemClobKeeper) CancelShortTermOrder(
 func (f *FakeMemClobKeeper) CanDeleverageSubaccount(
 	ctx sdk.Context,
 	msg satypes.SubaccountId,
+	perpetualId uint32,
 ) (
+	bool,
 	bool,
 	error,
 ) {
-	return f.subaccountsToDeleverage[msg], nil
+	return f.subaccountsToDeleverage[msg], false, nil
 }
 
 // Commit simulates `checkState.Commit()`.
@@ -463,6 +465,7 @@ func (f *FakeMemClobKeeper) OffsetSubaccountPerpetualPosition(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	deltaQuantumsTotal *big.Int,
+	isFinalSettlement bool,
 ) (
 	fills []types.MatchPerpetualDeleveraging_Fill,
 	deltaQuantumsRemaining *big.Int,

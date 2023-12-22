@@ -611,6 +611,7 @@ func TestMustAddDeleveraingToOperationsQueue(t *testing.T) {
 				FillAmount:             5,
 			},
 		},
+		false,
 	)
 }
 
@@ -714,6 +715,7 @@ func TestMustAddDeleveragingToOperationsQueue_Panics(t *testing.T) {
 						tc.liquidatedSubaccountId,
 						tc.perpetualId,
 						tc.fills,
+						false,
 					)
 				},
 			)
@@ -915,6 +917,7 @@ func TestGetOperationsToReplay_Success(t *testing.T) {
 							FillAmount:             10,
 						},
 					},
+					false,
 				)
 			},
 			expectedOperations: []types.InternalOperation{
@@ -1103,6 +1106,7 @@ func TestGetOperationsToPropose_Success(t *testing.T) {
 							FillAmount:             10,
 						},
 					},
+					false,
 				)
 			},
 			expectedOperations: []types.OperationRaw{

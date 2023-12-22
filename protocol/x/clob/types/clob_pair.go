@@ -10,9 +10,15 @@ import (
 // may be transitioned to from this state. Note the keys of this map may be
 // a subset of the types defined in the proto for ClobPair_Status.
 var SupportedClobPairStatusTransitions = map[ClobPair_Status]map[ClobPair_Status]struct{}{
-	ClobPair_STATUS_ACTIVE: {},
+	ClobPair_STATUS_ACTIVE: {
+		ClobPair_STATUS_FINAL_SETTLEMENT: struct{}{},
+	},
 	ClobPair_STATUS_INITIALIZING: {
-		ClobPair_STATUS_ACTIVE: struct{}{},
+		ClobPair_STATUS_ACTIVE:           struct{}{},
+		ClobPair_STATUS_FINAL_SETTLEMENT: struct{}{},
+	},
+	ClobPair_STATUS_FINAL_SETTLEMENT: {
+		ClobPair_STATUS_INITIALIZING: struct{}{},
 	},
 }
 
@@ -25,7 +31,16 @@ func IsSupportedClobPairStatus(clobPairStatus ClobPair_Status) bool {
 
 // IsSupportedClobPairStatusTransition returns true if it is considered valid to transition from
 // the first provided ClobPair_Status to the second provided ClobPair_Status. Else, returns false.
+// Transitions from a ClobPair_Status to itself are considered valid.
 func IsSupportedClobPairStatusTransition(from ClobPair_Status, to ClobPair_Status) bool {
+	if !IsSupportedClobPairStatus(from) || !IsSupportedClobPairStatus(to) {
+		return false
+	}
+
+	if from == to {
+		return true
+	}
+
 	_, exists := SupportedClobPairStatusTransitions[from][to]
 	return exists
 }

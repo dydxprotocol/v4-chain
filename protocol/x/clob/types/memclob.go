@@ -90,6 +90,7 @@ type MemClob interface {
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 		deltaQuantums *big.Int,
+		isFinalSettlement bool,
 	) (
 		quantumsDeleveraged *big.Int,
 		err error,
