@@ -200,15 +200,11 @@ func PrepareCheckState(
 	if err != nil {
 		panic(err)
 	}
-	subaccountPositionInfo := keeper.DaemonLiquidationInfo.GetSubaccountsWithPositions()
 	// Add subaccounts with open positions in final settlement markets to the slice of subaccounts/perps
 	// to be deleveraged.
 	subaccountsToDeleverage = append(
 		subaccountsToDeleverage,
-		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(
-			ctx,
-			subaccountPositionInfo,
-		)...,
+		keeper.GetSubaccountsWithPositionsInFinalSettlementMarkets(ctx)...,
 	)
 
 	// 7. Deleverage subaccounts.

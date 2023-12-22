@@ -97,27 +97,24 @@ func (ls *DaemonLiquidationInfo) UpdateSubaccountsWithPositions(
 	}
 }
 
-// GetSubaccountsWithPositions returns the list of subaccount ids with open positions.
-func (ls *DaemonLiquidationInfo) GetSubaccountsWithPositions() map[uint32]*clobtypes.SubaccountOpenPositionInfo {
+// GetSubaccountsWithOpenPositions returns the list of subaccount ids with open positions for a perpetual.
+func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositions(
+	perpetualId uint32,
+) []satypes.SubaccountId {
 	ls.Lock()
 	defer ls.Unlock()
 
-	result := make(map[uint32]*clobtypes.SubaccountOpenPositionInfo)
-	for perpetualId, info := range ls.subaccountsWithPositions {
-		clone := &clobtypes.SubaccountOpenPositionInfo{
-			PerpetualId:                  perpetualId,
-			SubaccountsWithLongPosition:  make([]satypes.SubaccountId, len(info.SubaccountsWithLongPosition)),
-			SubaccountsWithShortPosition: make([]satypes.SubaccountId, len(info.SubaccountsWithShortPosition)),
-		}
-		copy(clone.SubaccountsWithLongPosition, info.SubaccountsWithLongPosition)
-		copy(clone.SubaccountsWithShortPosition, info.SubaccountsWithShortPosition)
-		result[perpetualId] = clone
+	result := make([]satypes.SubaccountId, 0)
+	if info, ok := ls.subaccountsWithPositions[perpetualId]; ok {
+		result = append(result, info.SubaccountsWithLongPosition...)
+		result = append(result, info.SubaccountsWithShortPosition...)
 	}
 	return result
 }
 
-// GetSubaccountsWithOpenPositionsForPerpetual returns the list of subaccount ids with open positions.
-func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositionsForPerpetual(
+// GetSubaccountsWithOpenPositionsOnSide returns the list of subaccount ids with open positions
+// on a specific side for a perpetual.
+func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositionsOnSide(
 	perpetualId uint32,
 	isLong bool,
 ) []satypes.SubaccountId {
