@@ -42,7 +42,8 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), err
 	}
 
-	// Early return to skip deleveraging if the subaccount can't be deleveraged.
+	// Early return to skip deleveraging if the subaccount doesn't have negative equity or a position in a final
+	// settlement market.
 	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		metrics.IncrCounter(
 			metrics.ClobPrepareCheckStateCannotDeleverageSubaccount,
@@ -168,16 +169,16 @@ func (k Keeper) CanDeleverageSubaccount(
 		return false, false, err
 	}
 
+	// Negative TNC, deleverage at bankruptcy price.
+	if bigNetCollateral.Sign() == -1 {
+		return true, false, nil
+	}
+
 	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
 	if err != nil {
 		return false, false, err
 	}
 	clobPair := k.mustGetClobPair(ctx, clobPairId)
-
-	// Negative TNC, deleverage at bankruptcy price.
-	if bigNetCollateral.Sign() == -1 {
-		return true, false, nil
-	}
 
 	// Non-negative TNC, deleverage at oracle price if market is in final settlement. Deleveraging at oracle price
 	// is always a valid state transition when TNC is non-negative. This is because the TNC/TMMR ratio is improving;

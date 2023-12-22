@@ -27,7 +27,7 @@ func (k Keeper) mustCancelStatefulOrdersForFinalSettlement(ctx sdk.Context, clob
 	// This logic is executed in EndBlocker and should not panic. This would be unexpected,
 	// but if it happens we would rather recover and continue if an order fails to be removed from state
 	// rather than halt the chain.
-	safelyRemoveStatefulOrder := func(ctx sdk.Context, orderId types.OrderId) {
+	removeStatefulOrderWithoutPanicing := func(ctx sdk.Context, orderId types.OrderId) {
 		defer func() {
 			if r := recover(); r != nil {
 				k.Logger(ctx).Error(
@@ -47,7 +47,7 @@ func (k Keeper) mustCancelStatefulOrdersForFinalSettlement(ctx sdk.Context, clob
 		}
 
 		// Remove from state, recovering from panic if necessary
-		safelyRemoveStatefulOrder(ctx, order.OrderId)
+		removeStatefulOrderWithoutPanicing(ctx, order.OrderId)
 
 		// Append to RemovedStatefulOrderIds so this order gets removed
 		// from the memclob in PrepareCheckState during the PurgeInvalidMemclobState step

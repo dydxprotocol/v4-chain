@@ -639,7 +639,7 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 		)
 	case types.ClobPair_STATUS_FINAL_SETTLEMENT:
 		// Only allow deleveraging events. This allows the protocol to close out open
-		// positions in the market. All trading is blocked.
+		// positions in the market. All other operations are not allowed.
 		if match := internalOperation.GetMatch(); match != nil && match.GetMatchPerpetualDeleveraging() != nil {
 			return nil
 		}

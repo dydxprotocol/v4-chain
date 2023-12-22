@@ -7,6 +7,10 @@ import (
 
 // NewDeleveragingEvent creates a DeleveragingEvent representing a deleveraging
 // where a liquidated subaccount's position is offset by another subaccount.
+// Due to the support of final settlement deleveraging matches, sometimes the
+// liquidatedSubaccountId is not actually an account that is liquidatable. More
+// specifically, it may be a well-collateralized subaccount with an open position
+// in a market with the final settlement status.
 func NewDeleveragingEvent(
 	liquidatedSubaccountId satypes.SubaccountId,
 	offsettingSubaccountId satypes.SubaccountId,
