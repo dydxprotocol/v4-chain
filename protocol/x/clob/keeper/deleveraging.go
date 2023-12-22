@@ -240,15 +240,17 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		!isDeleveragingLong,
 	)
 
-	for _, subaccountId := range subaccountsWithOpenPositions {
-		// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
-		if numSubaccountsIterated >= k.Flags.MaxDeleveragingSubaccountsToIterate {
-			break
-		}
+	// Start from a random subaccount.
+	pseudoRand := k.GetPseudoRand(ctx)
+	numSubaccounts := len(subaccountsWithOpenPositions)
+	indexOffset := pseudoRand.Intn(numSubaccounts)
 
-		if deltaQuantumsRemaining.Sign() == 0 {
-			break
-		}
+	// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
+	numSubaccountsToIterate := lib.Min(numSubaccounts, int(k.Flags.MaxDeleveragingSubaccountsToIterate))
+
+	for i := 0; i < numSubaccountsToIterate && deltaQuantumsRemaining.Sign() != 0; i++ {
+		index := (i + indexOffset) % numSubaccounts
+		subaccountId := subaccountsWithOpenPositions[index]
 
 		numSubaccountsIterated++
 		offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
