@@ -15,31 +15,6 @@ CREATE OR REPLACE FUNCTION dydx_trading_rewards_handler(
     - tradingRewards: A list of the trading rewards in the trading-reward-model format (indexer/packages/postgres/src/models/trading-reward-model.ts)
 
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
-DECLARE
-    trading_rewards_array trading_rewards%ROWTYPE;
-    trading_rewards_from_database jsonb;
-    trading_rewards jsonb[];
-BEGIN
-    trading_rewards = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'trading_rewards'), 0)]::integer[]);
-
-    FOR i IN 1..coalesce(array_length(trading_rewards, 1), 0) LOOP
-        trading_rewards_array := dydx_process_trading_reward_event(
-            jsonb_array_element(event_data->'trading_rewards', i),
-            block_height,
-            block_time,
-            transaction_index,
-            transaction_hash,
-            event_index
-        );
-    END LOOP;
-
-    RETURN jsonb_build_object(
-        'trading_rewards',
-        dydx_to_jsonb(trading_rewards_from_database)
-    );
-    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[coalesce(jsonb_array_length(event_data->'trading_rewards'), 0)]::integer[]);
-    trading_rewards_array = array_fill(NULL::jsonb, ARRAY[1]::integer[]);
-END;
 */
 DECLARE
     trading_rewards_array jsonb[];

@@ -18,7 +18,7 @@ export class TradingRewardsValidator extends Validator<TradingRewardsEventV1> {
     index: number,
   ): void {
     const denoms: bigint = bytesToBigInt(reward.denomAmount);
-    if (denoms === 0n) {
+    if (denoms === BigInt(0)) {
       return this.logAndThrowParseMessageError(
         `TradingReward in TradingRewardEvent at index ${index} is missing denoms.`,
         { event: this.event, denoms },

@@ -15,11 +15,14 @@ CREATE OR REPLACE FUNCTION dydx_process_trading_reward_event(
   (Note that no text should exist before the function declaration to ensure that exception line numbers are correct.)
 */
 DECLARE
+    DENOM_TO_COIN_EXPONENT constant double precision = -18;
     trading_reward_record trading_rewards%ROWTYPE;
     wallet_record wallets%ROWTYPE;
     amount_in_human_readable numeric;
 BEGIN
-    amount_in_human_readable = dydx_trim_scale(dydx_from_serializable_int(trading_reward->'denomAmount') * power(10, -18)::numeric);
+    amount_in_human_readable = dydx_trim_scale(
+      dydx_from_serializable_int(trading_reward->'denomAmount') * power(10, DENOM_TO_COIN_EXPONENT)::numeric
+    );
 
     BEGIN
         SELECT * INTO STRICT wallet_record FROM wallets WHERE "address" = trading_reward->>'owner';

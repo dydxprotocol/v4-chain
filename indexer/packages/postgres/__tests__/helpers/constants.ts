@@ -51,6 +51,7 @@ import {
   TransferCreateObject,
   WalletCreateObject,
 } from '../../src/types';
+import { denomToHumanReadableConversion } from './conversion-helpers';
 
 export const createdDateTime: DateTime = DateTime.utc();
 export const createdHeight: string = '2';
@@ -100,12 +101,12 @@ export const defaultSubaccountId3: string = SubaccountTable.uuid(
 // ============== Wallets ==============
 export const defaultWallet: WalletCreateObject = {
   address: defaultAddress,
-  totalTradingRewards: '0',
+  totalTradingRewards: denomToHumanReadableConversion(0),
 };
 
 export const defaultWallet2: WalletCreateObject = {
   address: defaultWalletAddress,
-  totalTradingRewards: '1',
+  totalTradingRewards: denomToHumanReadableConversion(1),
 };
 
 // ============== Assets ==============
@@ -597,7 +598,7 @@ export const defaultTradingReward: TradingRewardCreateObject = {
   address: defaultAddress,
   blockHeight: createdHeight,
   blockTime: createdDateTime.toISO(),
-  amount: '1.00',
+  amount: denomToHumanReadableConversion(1),
 };
 
 // ========= Trading Reward Aggregation Data ==========
@@ -607,7 +608,7 @@ export const defaultTradingRewardAggregation: TradingRewardAggregationCreateObje
   startedAtHeight: createdHeight,
   startedAt: createdDateTime.toISO(),
   period: TradingRewardAggregationPeriod.DAILY,
-  amount: '1.00',
+  amount: denomToHumanReadableConversion(1),
 };
 export const defaultTradingRewardAggregationId: string = TradingRewardAggregationTable.uuid(
   defaultTradingRewardAggregation.address,

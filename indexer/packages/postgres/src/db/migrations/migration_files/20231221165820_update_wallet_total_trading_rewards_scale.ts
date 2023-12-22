@@ -4,7 +4,8 @@ export async function up(knex: Knex): Promise<void> {
   return knex
     .schema
     .alterTable('wallets', (table) => {
-      table.decimal('totalTradingRewards', 18, 18).notNullable().alter();
+      // 27 is the max precision and 18 is scale, which means 9 digits before the decimal point and 18 after
+      table.decimal('totalTradingRewards', 27, 18).notNullable().alter();
     });
 }
 
