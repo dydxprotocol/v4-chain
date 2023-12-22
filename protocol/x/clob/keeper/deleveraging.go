@@ -240,6 +240,18 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		!isDeleveragingLong,
 	)
 
+	if len(subaccountsWithOpenPositions) == 0 {
+		liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+		k.Logger(ctx).Error(
+			"Failed to find subaccounts with open positions on opposite side of liquidated subaccount",
+			"blockHeight", ctx.BlockHeight(),
+			"perpetualId", perpetualId,
+			"deltaQuantumsTotal", deltaQuantumsTotal,
+			"liquidatedSubaccount", liquidatedSubaccount,
+		)
+		return fills, deltaQuantumsRemaining
+	}
+
 	// Start from a random subaccount.
 	pseudoRand := k.GetPseudoRand(ctx)
 	numSubaccounts := len(subaccountsWithOpenPositions)
