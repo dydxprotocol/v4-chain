@@ -115,3 +115,22 @@ func (ls *DaemonLiquidationInfo) GetSubaccountsWithPositions() map[uint32]*clobt
 	}
 	return result
 }
+
+// GetSubaccountsWithOpenPositionsForPerpetual returns the list of subaccount ids with open positions.
+func (ls *DaemonLiquidationInfo) GetSubaccountsWithOpenPositionsForPerpetual(
+	perpetualId uint32,
+	isLong bool,
+) []satypes.SubaccountId {
+	ls.Lock()
+	defer ls.Unlock()
+
+	result := make([]satypes.SubaccountId, 0)
+	if info, ok := ls.subaccountsWithPositions[perpetualId]; ok {
+		if isLong {
+			result = append(result, info.SubaccountsWithLongPosition...)
+		} else {
+			result = append(result, info.SubaccountsWithShortPosition...)
+		}
+	}
+	return result
+}

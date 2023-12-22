@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -1123,7 +1124,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
+				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
 			})
 			require.NoError(t, err)
 

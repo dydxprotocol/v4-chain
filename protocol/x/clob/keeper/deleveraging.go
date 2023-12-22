@@ -210,100 +210,104 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	deltaQuantumsRemaining = new(big.Int).Set(deltaQuantumsTotal)
 	fills = make([]types.MatchPerpetualDeleveraging_Fill, 0)
 
-	k.subaccountsKeeper.ForEachSubaccountRandomStart(
-		ctx,
-		func(offsettingSubaccount satypes.Subaccount) (finished bool) {
-			// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
-			if numSubaccountsIterated >= k.Flags.MaxDeleveragingSubaccountsToIterate {
-				return true
-			}
+	subaccountsWithOpenPositions := k.DaemonLiquidationInfo.GetSubaccountsWithOpenPositionsForPerpetual(
+		perpetualId,
+		deltaQuantumsTotal.Sign() == 1,
+	)
+	for _, subaccountId := range subaccountsWithOpenPositions {
+		// Iterate at most `MaxDeleveragingSubaccountsToIterate` subaccounts.
+		if numSubaccountsIterated >= k.Flags.MaxDeleveragingSubaccountsToIterate {
+			break
+		}
 
-			numSubaccountsIterated++
-			offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-			bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+		if deltaQuantumsRemaining.Sign() == 0 {
+			break
+		}
 
-			// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
-			if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
-				numSubaccountsWithNoOpenPositionOnOppositeSide++
-				return false
-			}
+		numSubaccountsIterated++
+		offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
+		offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
+		bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
 
-			// TODO(DEC-1495): Determine max amount to offset per offsetting subaccount.
-			var deltaQuantums *big.Int
-			if deltaQuantumsRemaining.CmpAbs(bigOffsettingPositionQuantums) > 0 {
-				deltaQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
-			} else {
-				deltaQuantums = new(big.Int).Set(deltaQuantumsRemaining)
-			}
+		// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
+		if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
+			numSubaccountsWithNoOpenPositionOnOppositeSide++
+			continue
+		}
 
-			// Fetch delta quote quantums. Calculated at bankruptcy price for standard
-			// deleveraging and at oracle price for final settlement deleveraging.
-			deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
-				ctx,
-				perpetualId,
-				liquidatedSubaccountId,
+		// TODO(DEC-1495): Determine max amount to offset per offsetting subaccount.
+		var deltaQuantums *big.Int
+		if deltaQuantumsRemaining.CmpAbs(bigOffsettingPositionQuantums) > 0 {
+			deltaQuantums = new(big.Int).Set(bigOffsettingPositionQuantums)
+		} else {
+			deltaQuantums = new(big.Int).Set(deltaQuantumsRemaining)
+		}
+
+		// Fetch delta quote quantums. Calculated at bankruptcy price for standard
+		// deleveraging and at oracle price for final settlement deleveraging.
+		deltaQuoteQuantums, err := k.getDeleveragingQuoteQuantumsDelta(
+			ctx,
+			perpetualId,
+			liquidatedSubaccountId,
+			deltaQuantums,
+		)
+		if err != nil {
+			liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+			k.Logger(ctx).Error(
+				"Encountered error when getting quote quantums for deleveraging",
+				"error", err,
+				"blockHeight", ctx.BlockHeight(),
+				"perpetualId", perpetualId,
+				"deltaQuantums", deltaQuantums,
+				"liquidatedSubaccount", liquidatedSubaccount,
+				"offsettingSubaccount", offsettingSubaccount,
+			)
+			continue
+		}
+
+		// Try to process the deleveraging operation for both subaccounts.
+		if err := k.ProcessDeleveraging(
+			ctx,
+			liquidatedSubaccountId,
+			*offsettingSubaccount.Id,
+			perpetualId,
+			deltaQuantums,
+			deltaQuoteQuantums,
+		); err == nil {
+			// Update the remaining liquidatable quantums.
+			deltaQuantumsRemaining = new(big.Int).Sub(
+				deltaQuantumsRemaining,
 				deltaQuantums,
 			)
-			if err != nil {
-				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-				k.Logger(ctx).Error(
-					"Encountered error when getting quote quantums for deleveraging",
-					"error", err,
-					"blockHeight", ctx.BlockHeight(),
-					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", liquidatedSubaccount,
-					"offsettingSubaccount", offsettingSubaccount,
-				)
-				return false
-			}
-
-			// Try to process the deleveraging operation for both subaccounts.
-			if err := k.ProcessDeleveraging(
-				ctx,
-				liquidatedSubaccountId,
-				*offsettingSubaccount.Id,
-				perpetualId,
-				deltaQuantums,
-				deltaQuoteQuantums,
-			); err == nil {
-				// Update the remaining liquidatable quantums.
-				deltaQuantumsRemaining = new(big.Int).Sub(
-					deltaQuantumsRemaining,
-					deltaQuantums,
-				)
-				fills = append(fills, types.MatchPerpetualDeleveraging_Fill{
-					OffsettingSubaccountId: *offsettingSubaccount.Id,
-					FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
-				})
-			} else if errors.Is(err, types.ErrInvalidPerpetualPositionSizeDelta) {
-				panic(
-					fmt.Sprintf(
-						"Invalid perpetual position size delta when processing deleveraging. error: %v",
-						err,
-					),
-				)
-			} else {
-				// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
-				// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
-				liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-				offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
-				k.Logger(ctx).Debug(
-					"Encountered error when processing deleveraging",
-					"error", err,
-					"blockHeight", ctx.BlockHeight(),
-					"checkTx", ctx.IsCheckTx(),
-					"perpetualId", perpetualId,
-					"deltaQuantums", deltaQuantums,
-					"liquidatedSubaccount", liquidatedSubaccount,
-					"offsettingSubaccount", offsettingSubaccount,
-				)
-				numSubaccountsWithNonOverlappingBankruptcyPrices++
-			}
-			return deltaQuantumsRemaining.Sign() == 0
-		},
-		k.GetPseudoRand(ctx),
-	)
+			fills = append(fills, types.MatchPerpetualDeleveraging_Fill{
+				OffsettingSubaccountId: *offsettingSubaccount.Id,
+				FillAmount:             new(big.Int).Abs(deltaQuantums).Uint64(),
+			})
+		} else if errors.Is(err, types.ErrInvalidPerpetualPositionSizeDelta) {
+			panic(
+				fmt.Sprintf(
+					"Invalid perpetual position size delta when processing deleveraging. error: %v",
+					err,
+				),
+			)
+		} else {
+			// If an error is returned, it's likely because the subaccounts' bankruptcy prices do not overlap.
+			// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
+			liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
+			offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
+			k.Logger(ctx).Debug(
+				"Encountered error when processing deleveraging",
+				"error", err,
+				"blockHeight", ctx.BlockHeight(),
+				"checkTx", ctx.IsCheckTx(),
+				"perpetualId", perpetualId,
+				"deltaQuantums", deltaQuantums,
+				"liquidatedSubaccount", liquidatedSubaccount,
+				"offsettingSubaccount", offsettingSubaccount,
+			)
+			numSubaccountsWithNonOverlappingBankruptcyPrices++
+		}
+	}
 
 	labels := []metrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),

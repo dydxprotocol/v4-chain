@@ -1,9 +1,10 @@
 package app
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"reflect"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 
@@ -15,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -72,6 +74,7 @@ func newTestHandlerOptions() HandlerOptions {
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
+		liquidationtypes.NewDaemonLiquidationInfo(),
 	)
 	return HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{

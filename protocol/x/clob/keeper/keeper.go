@@ -17,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -56,6 +57,8 @@ type (
 
 		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
 		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
+
+		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
 )
 
@@ -84,6 +87,7 @@ func NewKeeper(
 	clobFlags flags.ClobFlags,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
 	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
+	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) *Keeper {
 	keeper := &Keeper{
 		cdc:                          cdc,
@@ -113,6 +117,7 @@ func NewKeeper(
 		Flags:                  clobFlags,
 		placeOrderRateLimiter:  placeOrderRateLimiter,
 		cancelOrderRateLimiter: cancelOrderRateLimiter,
+		DaemonLiquidationInfo:  daemonLiquidationInfo,
 	}
 
 	// Provide the keeper to the MemClob.

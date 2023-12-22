@@ -6,7 +6,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -117,7 +116,6 @@ func EndBlocker(
 func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) {
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
@@ -197,7 +195,7 @@ func PrepareCheckState(
 	}
 
 	// 6. Get all potentially liquidatable subaccount IDs and attempt to liquidate them.
-	subaccountIds := daemonLiquidationInfo.GetLiquidatableSubaccountIds()
+	subaccountIds := keeper.DaemonLiquidationInfo.GetLiquidatableSubaccountIds()
 	if err := keeper.LiquidateSubaccountsAgainstOrderbook(ctx, subaccountIds); err != nil {
 		panic(err)
 	}
