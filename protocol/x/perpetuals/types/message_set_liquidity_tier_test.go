@@ -2,6 +2,7 @@ package types_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -30,6 +31,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 					InitialMarginPpm:       217,
 					MaintenanceFractionPpm: 217,
 					ImpactNotional:         5_000,
+					VolatilityBoundsPeriod: time.Hour,
 				},
 			},
 		},
@@ -48,6 +50,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 					InitialMarginPpm:       1_000_001,
 					MaintenanceFractionPpm: 217,
 					ImpactNotional:         5_000,
+					VolatilityBoundsPeriod: time.Hour,
 				},
 			},
 			expectedErr: "InitialMarginPpm exceeds maximum value of 1e6",
@@ -61,6 +64,7 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 					InitialMarginPpm:       217,
 					MaintenanceFractionPpm: 1_000_001,
 					ImpactNotional:         5_000,
+					VolatilityBoundsPeriod: time.Hour,
 				},
 			},
 			expectedErr: "MaintenanceFractionPpm exceeds maximum value of 1e6",
@@ -74,9 +78,38 @@ func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 					InitialMarginPpm:       217,
 					MaintenanceFractionPpm: 217,
 					ImpactNotional:         0,
+					VolatilityBoundsPeriod: time.Hour,
 				},
 			},
 			expectedErr: "Impact notional is zero",
+		},
+		"Failure: volatility bounds period is zero": {
+			msg: types.MsgSetLiquidityTier{
+				Authority: validAuthority,
+				LiquidityTier: types.LiquidityTier{
+					Id:                     1,
+					Name:                   "test",
+					InitialMarginPpm:       217,
+					MaintenanceFractionPpm: 217,
+					ImpactNotional:         5_000,
+					VolatilityBoundsPeriod: 0,
+				},
+			},
+			expectedErr: "Volatility bounds period is non-positive",
+		},
+		"Failure: volatility bounds period is negative": {
+			msg: types.MsgSetLiquidityTier{
+				Authority: validAuthority,
+				LiquidityTier: types.LiquidityTier{
+					Id:                     1,
+					Name:                   "test",
+					InitialMarginPpm:       217,
+					MaintenanceFractionPpm: 217,
+					ImpactNotional:         5_000,
+					VolatilityBoundsPeriod: -time.Hour,
+				},
+			},
+			expectedErr: "Volatility bounds period is non-positive",
 		},
 	}
 

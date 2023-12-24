@@ -24,6 +24,10 @@ func (liquidityTier LiquidityTier) Validate() error {
 		return ErrImpactNotionalIsZero
 	}
 
+	if liquidityTier.VolatilityBoundsPeriod <= 0 {
+		return ErrVolatilityBoundsPeriodIsNonPositive
+	}
+
 	return nil
 }
 

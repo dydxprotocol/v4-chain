@@ -2,6 +2,7 @@ package perpetuals_test
 
 import (
 	"testing"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -42,6 +43,7 @@ func TestGenesis_Failure(t *testing.T) {
 		initialMarginPpm          uint32
 		maintenanceFractionPpm    uint32
 		impactNotional            uint64
+		volatilityBoundsPeriod    time.Duration
 		fundingRateClampFactorPpm uint32
 		premiumVoteClampFactorPpm uint32
 		minNumVotesPerSample      uint32
@@ -52,6 +54,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -62,6 +65,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    0,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -72,6 +76,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          lib.OneMillion + 1,
 			maintenanceFractionPpm:    0,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -82,6 +87,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -92,6 +98,29 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion + 1,
 			impactNotional:            0,
+			volatilityBoundsPeriod:    time.Hour,
+			fundingRateClampFactorPpm: 1,
+			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
+		},
+		"Volatility Bounds Period is zero": {
+			marketId:                  0,
+			ticker:                    "genesis_ticker",
+			initialMarginPpm:          0,
+			maintenanceFractionPpm:    lib.OneMillion + 1,
+			impactNotional:            1,
+			volatilityBoundsPeriod:    0,
+			fundingRateClampFactorPpm: 1,
+			premiumVoteClampFactorPpm: 1,
+			minNumVotesPerSample:      0,
+		},
+		"Volatility Bounds Period is negative": {
+			marketId:                  0,
+			ticker:                    "genesis_ticker",
+			initialMarginPpm:          0,
+			maintenanceFractionPpm:    lib.OneMillion + 1,
+			impactNotional:            1,
+			volatilityBoundsPeriod:    -time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -102,6 +131,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 0,
 			premiumVoteClampFactorPpm: 1,
 			minNumVotesPerSample:      0,
@@ -112,6 +142,7 @@ func TestGenesis_Failure(t *testing.T) {
 			initialMarginPpm:          0,
 			maintenanceFractionPpm:    lib.OneMillion,
 			impactNotional:            1,
+			volatilityBoundsPeriod:    time.Hour,
 			fundingRateClampFactorPpm: 1,
 			premiumVoteClampFactorPpm: 0,
 			minNumVotesPerSample:      0,
@@ -134,6 +165,7 @@ func TestGenesis_Failure(t *testing.T) {
 						InitialMarginPpm:       tc.initialMarginPpm,
 						MaintenanceFractionPpm: tc.maintenanceFractionPpm,
 						ImpactNotional:         tc.impactNotional,
+						VolatilityBoundsPeriod: tc.volatilityBoundsPeriod,
 					},
 				},
 				Params: types.Params{

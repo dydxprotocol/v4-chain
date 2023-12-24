@@ -107,6 +107,16 @@ var (
 		22,
 		"MinNumVotesPerSample is zero",
 	)
+	ErrVolatilityBoundsPeriodIsNonPositive = errorsmod.Register(
+		ModuleName,
+		23,
+		"Volatility bounds period is non-positive",
+	)
+	ErrVolatilityBoundsDoesNotExist = errorsmod.Register(
+		ModuleName,
+		24,
+		"Volatility bounds does not exist",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")
