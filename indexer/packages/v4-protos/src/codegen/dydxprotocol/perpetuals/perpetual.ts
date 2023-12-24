@@ -1,3 +1,4 @@
+import { Duration, DurationSDKType } from "../../google/protobuf/duration";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** Perpetual represents a perpetual on the dYdX exchange. */
@@ -216,6 +217,12 @@ export interface LiquidityTier {
    */
 
   impactNotional: Long;
+  /**
+   * This duration specifies how fast volatility bounds recover.
+   * A longer duration leads to a longer (slower) recovery time.
+   */
+
+  volatilityBoundsPeriod?: Duration;
 }
 /** LiquidityTier stores margin information. */
 
@@ -259,6 +266,36 @@ export interface LiquidityTierSDKType {
    */
 
   impact_notional: Long;
+  /**
+   * This duration specifies how fast volatility bounds recover.
+   * A longer duration leads to a longer (slower) recovery time.
+   */
+
+  volatility_bounds_period?: DurationSDKType;
+}
+/**
+ * VolatilityBounds stores lower and upper bounds of volatility for a perpeutal.
+ * A perpetual's variable margin fraction is computed with
+ * `VolatilityBounds.Min` and `VolatilityBounds.Max` as (let `o` be oracle price
+ * of the corresponding market and `mmf` be margin maintenance fraction):
+ * max((VolatilityBounds.Max - o) / o, (o - VolatilityBounds.Min) / o) + mmf
+ */
+
+export interface VolatilityBounds {
+  min: Long;
+  max: Long;
+}
+/**
+ * VolatilityBounds stores lower and upper bounds of volatility for a perpeutal.
+ * A perpetual's variable margin fraction is computed with
+ * `VolatilityBounds.Min` and `VolatilityBounds.Max` as (let `o` be oracle price
+ * of the corresponding market and `mmf` be margin maintenance fraction):
+ * max((VolatilityBounds.Max - o) / o, (o - VolatilityBounds.Min) / o) + mmf
+ */
+
+export interface VolatilityBoundsSDKType {
+  min: Long;
+  max: Long;
 }
 
 function createBasePerpetual(): Perpetual {
@@ -540,7 +577,8 @@ function createBaseLiquidityTier(): LiquidityTier {
     initialMarginPpm: 0,
     maintenanceFractionPpm: 0,
     basePositionNotional: Long.UZERO,
-    impactNotional: Long.UZERO
+    impactNotional: Long.UZERO,
+    volatilityBoundsPeriod: undefined
   };
 }
 
@@ -568,6 +606,10 @@ export const LiquidityTier = {
 
     if (!message.impactNotional.isZero()) {
       writer.uint32(48).uint64(message.impactNotional);
+    }
+
+    if (message.volatilityBoundsPeriod !== undefined) {
+      Duration.encode(message.volatilityBoundsPeriod, writer.uint32(58).fork()).ldelim();
     }
 
     return writer;
@@ -606,6 +648,10 @@ export const LiquidityTier = {
           message.impactNotional = (reader.uint64() as Long);
           break;
 
+        case 7:
+          message.volatilityBoundsPeriod = Duration.decode(reader, reader.uint32());
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -623,6 +669,62 @@ export const LiquidityTier = {
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
     message.impactNotional = object.impactNotional !== undefined && object.impactNotional !== null ? Long.fromValue(object.impactNotional) : Long.UZERO;
+    message.volatilityBoundsPeriod = object.volatilityBoundsPeriod !== undefined && object.volatilityBoundsPeriod !== null ? Duration.fromPartial(object.volatilityBoundsPeriod) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseVolatilityBounds(): VolatilityBounds {
+  return {
+    min: Long.UZERO,
+    max: Long.UZERO
+  };
+}
+
+export const VolatilityBounds = {
+  encode(message: VolatilityBounds, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (!message.min.isZero()) {
+      writer.uint32(8).uint64(message.min);
+    }
+
+    if (!message.max.isZero()) {
+      writer.uint32(16).uint64(message.max);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): VolatilityBounds {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseVolatilityBounds();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.min = (reader.uint64() as Long);
+          break;
+
+        case 2:
+          message.max = (reader.uint64() as Long);
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<VolatilityBounds>): VolatilityBounds {
+    const message = createBaseVolatilityBounds();
+    message.min = object.min !== undefined && object.min !== null ? Long.fromValue(object.min) : Long.UZERO;
+    message.max = object.max !== undefined && object.max !== null ? Long.fromValue(object.max) : Long.UZERO;
     return message;
   }
 

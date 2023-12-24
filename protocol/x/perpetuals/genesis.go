@@ -26,6 +26,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			elem.InitialMarginPpm,
 			elem.MaintenanceFractionPpm,
 			elem.ImpactNotional,
+			elem.VolatilityBoundsPeriod,
 		)
 
 		if err != nil {

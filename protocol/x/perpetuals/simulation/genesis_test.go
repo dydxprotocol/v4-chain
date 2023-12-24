@@ -55,6 +55,8 @@ func TestRandomizedGenState(t *testing.T) {
 			require.True(t, lt.InitialMarginPpm <= lib.OneMillion)
 
 			require.True(t, lt.MaintenanceFractionPpm <= lib.OneMillion)
+
+			require.True(t, lt.VolatilityBoundsPeriod > 0)
 		}
 
 		for _, perp := range perpetualsGenesis.Perpetuals {

@@ -783,6 +783,145 @@ paths:
                       format: byte
       tags:
         - Query
+  /dydxprotocol/clob/block_rate:
+    get:
+      summary: Queries BlockRateLimitConfiguration.
+      operationId: BlockRateLimitConfiguration
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              block_rate_limit_config:
+                type: object
+                properties:
+                  max_short_term_orders_per_n_blocks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        num_blocks:
+                          type: integer
+                          format: int64
+                          description: |-
+                            How many blocks the rate limit is over.
+                            Specifying 0 is invalid.
+                        limit:
+                          type: integer
+                          format: int64
+                          description: |-
+                            What the limit is for `num_blocks`.
+                            Specifying 0 is invalid.
+                      description: Defines a rate limit over a specific number of blocks.
+                    description: >-
+                      How many short term order attempts (successful and failed)
+                      are allowed for
+
+                      an account per N blocks. Note that the rate limits are
+                      applied
+
+                      in an AND fashion such that an order placement must pass
+                      all rate limit
+
+                      configurations.
+
+
+                      Specifying 0 values disables this rate limit.
+                  max_stateful_orders_per_n_blocks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        num_blocks:
+                          type: integer
+                          format: int64
+                          description: |-
+                            How many blocks the rate limit is over.
+                            Specifying 0 is invalid.
+                        limit:
+                          type: integer
+                          format: int64
+                          description: |-
+                            What the limit is for `num_blocks`.
+                            Specifying 0 is invalid.
+                      description: Defines a rate limit over a specific number of blocks.
+                    description: >-
+                      How many stateful order attempts (successful and failed)
+                      are allowed for
+
+                      an account per N blocks. Note that the rate limits are
+                      applied
+
+                      in an AND fashion such that an order placement must pass
+                      all rate limit
+
+                      configurations.
+
+
+                      Specifying 0 values disables this rate limit.
+                  max_short_term_order_cancellations_per_n_blocks:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        num_blocks:
+                          type: integer
+                          format: int64
+                          description: |-
+                            How many blocks the rate limit is over.
+                            Specifying 0 is invalid.
+                        limit:
+                          type: integer
+                          format: int64
+                          description: |-
+                            What the limit is for `num_blocks`.
+                            Specifying 0 is invalid.
+                      description: Defines a rate limit over a specific number of blocks.
+                    description: >-
+                      How many short term order cancellation attempts
+                      (successful and failed) are
+
+                      allowed for an account per N blocks. Note that the rate
+                      limits are
+
+                      applied in an AND fashion such that an order cancellation
+                      must pass all
+
+                      rate limit configurations.
+
+
+                      Specifying 0 values disables this rate limit.
+                description: Defines the block rate limits for CLOB specific operations.
+            description: >-
+              QueryBlockRateLimitConfigurationResponse is a response message
+              that contains
+
+              the BlockRateLimitConfiguration.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /dydxprotocol/clob/clob_pair:
     get:
       summary: Queries a list of ClobPair items.
@@ -865,8 +1004,9 @@ paths:
                         - STATUS_CANCEL_ONLY
                         - STATUS_POST_ONLY
                         - STATUS_INITIALIZING
+                        - STATUS_FINAL_SETTLEMENT
                       default: STATUS_UNSPECIFIED
-                      description: |-
+                      description: >-
                         Status of the CLOB.
 
                          - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
@@ -879,7 +1019,16 @@ paths:
                         TODO(DEC-600): update this documentation.
                          - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
                         Clob pairs in this state only accept orders which are
+
                         both short-term and post-only.
+                         - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                        and trading has ceased. All open positions will be
+                        closed by the
+
+                        protocol. Open stateful orders will be cancelled. Open
+                        short-term
+
+                        orders will be left to expire.
                   description: |-
                     ClobPair represents a single CLOB pair for a given product
                     in state.
@@ -1075,8 +1224,9 @@ paths:
                       - STATUS_CANCEL_ONLY
                       - STATUS_POST_ONLY
                       - STATUS_INITIALIZING
+                      - STATUS_FINAL_SETTLEMENT
                     default: STATUS_UNSPECIFIED
-                    description: |-
+                    description: >-
                       Status of the CLOB.
 
                        - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
@@ -1089,7 +1239,16 @@ paths:
                       TODO(DEC-600): update this documentation.
                        - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
                       Clob pairs in this state only accept orders which are
+
                       both short-term and post-only.
+                       - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                      and trading has ceased. All open positions will be closed
+                      by the
+
+                      protocol. Open stateful orders will be cancelled. Open
+                      short-term
+
+                      orders will be left to expire.
                 description: |-
                   ClobPair represents a single CLOB pair for a given product
                   in state.
@@ -1185,6 +1344,134 @@ paths:
               that contains
 
               the EquityTierLimitConfiguration.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/clob/liquidations_config:
+    get:
+      summary: Queries LiquidationsConfiguration.
+      operationId: LiquidationsConfiguration
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              liquidations_config:
+                type: object
+                properties:
+                  max_liquidation_fee_ppm:
+                    type: integer
+                    format: int64
+                    description: >-
+                      The maximum liquidation fee (in parts-per-million). This
+                      fee goes
+
+                      100% to the insurance fund.
+                  position_block_limits:
+                    description: >-
+                      Limits around how much of a single position can be
+                      liquidated
+
+                      within a single block.
+                    type: object
+                    properties:
+                      min_position_notional_liquidated:
+                        type: string
+                        format: uint64
+                        description: >-
+                          The minimum amount of quantums to liquidate for each
+                          message (in
+
+                          quote quantums).
+
+                          Overridden by the maximum size of the position.
+                      max_position_portion_liquidated_ppm:
+                        type: integer
+                        format: int64
+                        description: >-
+                          The maximum portion of the position liquidated (in
+                          parts-per-
+
+                          million). Overridden by
+                          min_position_notional_liquidated.
+                  subaccount_block_limits:
+                    description: >-
+                      Limits around how many quote quantums from a single
+                      subaccount can
+
+                      be liquidated within a single block.
+                    type: object
+                    properties:
+                      max_notional_liquidated:
+                        type: string
+                        format: uint64
+                        description: >-
+                          The maximum notional amount that a single subaccount
+                          can have
+
+                          liquidated (in quote quantums) per block.
+                      max_quantums_insurance_lost:
+                        type: string
+                        format: uint64
+                        description: >-
+                          The maximum insurance-fund payout amount for a given
+                          subaccount
+
+                          per block. I.e. how much it can cover for that
+                          subaccount.
+                  fillable_price_config:
+                    description: >-
+                      Config about how the fillable-price spread from the oracle
+                      price
+
+                      increases based on the adjusted bankruptcy rating of the
+                      subaccount.
+                    type: object
+                    properties:
+                      bankruptcy_adjustment_ppm:
+                        type: integer
+                        format: int64
+                        description: >-
+                          The rate at which the Adjusted Bankruptcy Rating
+                          increases.
+                      spread_to_maintenance_margin_ratio_ppm:
+                        type: integer
+                        format: int64
+                        description: >-
+                          The maximum value that the liquidation spread can
+                          take, as
+
+                          a ratio against the position's maintenance margin.
+                description: >-
+                  LiquidationsConfig stores all configurable fields related to
+                  liquidations.
+            description: >-
+              QueryLiquidationsConfigurationResponse is a response message that
+              contains
+
+              the LiquidationsConfiguration.
         default:
           description: An unexpected error response.
           schema:
@@ -1641,6 +1928,7 @@ paths:
                                 - STATUS_CANCEL_ONLY
                                 - STATUS_POST_ONLY
                                 - STATUS_INITIALIZING
+                                - STATUS_FINAL_SETTLEMENT
                               default: STATUS_UNSPECIFIED
                               description: >-
                                 Status of the CLOB.
@@ -1658,6 +1946,14 @@ paths:
                                 which are
 
                                 both short-term and post-only.
+                                 - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                                and trading has ceased. All open positions will
+                                be closed by the
+
+                                protocol. Open stateful orders will be
+                                cancelled. Open short-term
+
+                                orders will be left to expire.
                           description: >-
                             ClobPair represents a single CLOB pair for a given
                             product
@@ -1669,6 +1965,149 @@ paths:
                       description: >-
                         ClobMidPrice contains the mid price of a CLOB pair,
                         represented by it's ID.
+                  bp_mev_matches:
+                    type: object
+                    properties:
+                      matches:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            taker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            taker_fee_ppm:
+                              type: integer
+                              format: int32
+                            maker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            maker_order_subticks:
+                              type: string
+                              format: uint64
+                            maker_order_is_buy:
+                              type: boolean
+                            maker_fee_ppm:
+                              type: integer
+                              format: int32
+                            clob_pair_id:
+                              type: integer
+                              format: int64
+                            fill_amount:
+                              type: string
+                              format: uint64
+                          description: >-
+                            MEVMatch represents all necessary data to calculate
+                            MEV for a regular match.
+                      liquidation_matches:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            liquidated_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            insurance_fund_delta_quote_quantums:
+                              type: string
+                              format: int64
+                            maker_order_subaccount_id:
+                              type: object
+                              properties:
+                                owner:
+                                  type: string
+                                  description: >-
+                                    The address of the wallet that owns this
+                                    subaccount.
+                                number:
+                                  type: integer
+                                  format: int64
+                                  description: >-
+                                    < 128 Since 128 should be enough to start
+                                    and it fits within
+
+                                    1 Byte (1 Bit needed to indicate that the
+                                    first byte is the last).
+                              description: >-
+                                SubaccountId defines a unique identifier for a
+                                Subaccount.
+                            maker_order_subticks:
+                              type: string
+                              format: uint64
+                            maker_order_is_buy:
+                              type: boolean
+                            maker_fee_ppm:
+                              type: integer
+                              format: int32
+                            clob_pair_id:
+                              type: integer
+                              format: int64
+                            fill_amount:
+                              type: string
+                              format: uint64
+                          description: >-
+                            MEVLiquidationMatch represents all necessary data to
+                            calculate MEV for a
+
+                            liquidation.
+                    description: >-
+                      ValidatorMevMatches contains all matches from the
+                      validator's local
+
+                      operations queue.
+                  proposal_receive_time:
+                    type: string
+                    format: uint64
             description: >-
               MevNodeToNodeCalculationRequest is a request message used to run
               the
@@ -2973,6 +3412,275 @@ paths:
           type: string
       tags:
         - Query
+  /dydxprotocol/perpetuals/liquidity_tiers:
+    get:
+      summary: Queries a list of LiquidityTiers.
+      operationId: AllLiquidityTiers
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              liquidity_tiers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                      format: int64
+                      description: Unique id.
+                    name:
+                      type: string
+                      description: >-
+                        The name of the tier purely for mnemonic purposes, e.g.
+                        "Gold".
+                    initial_margin_ppm:
+                      type: integer
+                      format: int64
+                      description: |-
+                        The margin fraction needed to open a position.
+                        In parts-per-million.
+                    maintenance_fraction_ppm:
+                      type: integer
+                      format: int64
+                      description: >-
+                        The fraction of the initial-margin that the
+                        maintenance-margin is,
+
+                        e.g. 50%. In parts-per-million.
+                    base_position_notional:
+                      type: string
+                      format: uint64
+                      description: >-
+                        The maximum position size at which the margin
+                        requirements are
+
+                        not increased over the default values. Above this
+                        position size,
+
+                        the margin requirements increase at a rate of
+                        sqrt(size).
+
+
+                        Deprecated since v3.x.
+                    impact_notional:
+                      type: string
+                      format: uint64
+                      description: >-
+                        The impact notional amount (in quote quantums) is used
+                        to determine impact
+
+                        bid/ask prices and its recommended value is 500 USDC /
+                        initial margin
+
+                        fraction.
+
+                        - Impact bid price = average execution price for a
+                        market sell of the
+
+                        impact notional value.
+
+                        - Impact ask price = average execution price for a
+                        market buy of the
+
+                        impact notional value.
+                    volatility_bounds_period:
+                      type: string
+                      description: >-
+                        This duration specifies how fast volatility bounds
+                        recover.
+
+                        A longer duration leads to a longer (slower) recovery
+                        time.
+                  description: LiquidityTier stores margin information.
+              pagination:
+                type: object
+                properties:
+                  next_key:
+                    type: string
+                    format: byte
+                    description: |-
+                      next_key is the key to be passed to PageRequest.key to
+                      query the next page most efficiently. It will be empty if
+                      there are no more results.
+                  total:
+                    type: string
+                    format: uint64
+                    title: >-
+                      total is total number of results available if
+                      PageRequest.count_total
+
+                      was set, its value is undefined otherwise
+                description: >-
+                  PageResponse is to be embedded in gRPC response messages where
+                  the
+
+                  corresponding request message has used PageRequest.
+
+                   message SomeResponse {
+                           repeated Bar results = 1;
+                           PageResponse page = 2;
+                   }
+            description: >-
+              QueryAllLiquidityTiersResponse is response type for the
+              AllLiquidityTiers RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      parameters:
+        - name: pagination.key
+          description: |-
+            key is a value returned in PageResponse.next_key to begin
+            querying the next page most efficiently. Only one of offset or key
+            should be set.
+          in: query
+          required: false
+          type: string
+          format: byte
+        - name: pagination.offset
+          description: >-
+            offset is a numeric offset that can be used when key is unavailable.
+
+            It is less efficient than using key. Only one of offset or key
+            should
+
+            be set.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.limit
+          description: >-
+            limit is the total number of results to be returned in the result
+            page.
+
+            If left empty it will default to a value to be set by each app.
+          in: query
+          required: false
+          type: string
+          format: uint64
+        - name: pagination.count_total
+          description: >-
+            count_total is set to true  to indicate that the result set should
+            include
+
+            a count of the total number of items available for pagination in
+            UIs.
+
+            count_total is only respected when offset is used. It is ignored
+            when key
+
+            is set.
+          in: query
+          required: false
+          type: boolean
+        - name: pagination.reverse
+          description: >-
+            reverse is set to true if results are to be returned in the
+            descending order.
+
+
+            Since: cosmos-sdk 0.43
+          in: query
+          required: false
+          type: boolean
+      tags:
+        - Query
+  /dydxprotocol/perpetuals/params:
+    get:
+      summary: Queries the perpetual params.
+      operationId: PerpetualParams
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              params:
+                type: object
+                properties:
+                  funding_rate_clamp_factor_ppm:
+                    type: integer
+                    format: int64
+                    description: >-
+                      Funding rate clamp factor in parts-per-million, used for
+                      clamping 8-hour
+
+                      funding rates according to equation: |R| <=
+                      funding_rate_clamp_factor *
+
+                      (initial margin - maintenance margin).
+                  premium_vote_clamp_factor_ppm:
+                    type: integer
+                    format: int64
+                    description: >-
+                      Premium vote clamp factor in parts-per-million, used for
+                      clamping premium
+
+                      votes according to equation: |V| <=
+                      premium_vote_clamp_factor *
+
+                      (initial margin - maintenance margin).
+                  min_num_votes_per_sample:
+                    type: integer
+                    format: int64
+                    description: >-
+                      Minimum number of premium votes per premium sample. If
+                      number of premium
+
+                      votes is smaller than this number, pad with zeros up to
+                      this number.
+                description: Params defines the parameters for x/perpetuals module.
+            description: >-
+              QueryParamsResponse is the response type for the Params RPC
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
   /dydxprotocol/perpetuals/perpetual:
     get:
       summary: Queries a list of Perpetual items.
@@ -3256,6 +3964,218 @@ paths:
           required: true
           type: integer
           format: int64
+      tags:
+        - Query
+  /dydxprotocol/perpetuals/premium_samples:
+    get:
+      summary: Queries a list of premium samples.
+      operationId: PremiumSamples
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              premium_samples:
+                type: object
+                properties:
+                  all_market_premiums:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        perpetual_id:
+                          type: integer
+                          format: int64
+                          description: perpetual_id is the Id of the perpetual market.
+                        premiums:
+                          type: array
+                          items:
+                            type: integer
+                            format: int32
+                          description: >-
+                            premiums is a list of premium values for a perpetual
+                            market. Since most
+
+                            premiums are zeros under "stable" market conditions,
+                            only non-zero values
+
+                            are stored in this list.
+                      description: >-
+                        MarketPremiums stores a list of premiums for a single
+                        perpetual market.
+                    description: >-
+                      all_market_premiums a list of `MarketPremiums`, each
+                      corresponding to
+
+                      a perpetual market.
+                  num_premiums:
+                    type: integer
+                    format: int64
+                    description: >-
+                      number of rounds where premium values were added. This
+                      value indicates
+
+                      the total number of premiums (zeros and non-zeros) for
+                      each
+
+                      `MarketPremiums` struct. Note that in the edge case a
+                      perpetual market was
+
+                      added in the middle of a epoch, we don't keep a seperate
+                      count for that
+
+                      market. This means we treat this market as having zero
+                      premiums before it
+
+                      was added.
+                description: >-
+                  PremiumStore is a struct to store a perpetual premiums for all
+
+                  perpetual markets. It stores a list of `MarketPremiums`, each
+                  of which
+
+                  corresponds to a perpetual market and stores a list of
+                  non-zero premium
+
+                  values for that market.
+
+                  This struct can either be used to store `PremiumVotes` or
+
+                  `PremiumSamples`.
+            description: >-
+              QueryPremiumSamplesResponse is the response type for the
+              PremiumSamples RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
+      tags:
+        - Query
+  /dydxprotocol/perpetuals/premium_votes:
+    get:
+      summary: Queries a list of premium votes.
+      operationId: PremiumVotes
+      responses:
+        '200':
+          description: A successful response.
+          schema:
+            type: object
+            properties:
+              premium_votes:
+                type: object
+                properties:
+                  all_market_premiums:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        perpetual_id:
+                          type: integer
+                          format: int64
+                          description: perpetual_id is the Id of the perpetual market.
+                        premiums:
+                          type: array
+                          items:
+                            type: integer
+                            format: int32
+                          description: >-
+                            premiums is a list of premium values for a perpetual
+                            market. Since most
+
+                            premiums are zeros under "stable" market conditions,
+                            only non-zero values
+
+                            are stored in this list.
+                      description: >-
+                        MarketPremiums stores a list of premiums for a single
+                        perpetual market.
+                    description: >-
+                      all_market_premiums a list of `MarketPremiums`, each
+                      corresponding to
+
+                      a perpetual market.
+                  num_premiums:
+                    type: integer
+                    format: int64
+                    description: >-
+                      number of rounds where premium values were added. This
+                      value indicates
+
+                      the total number of premiums (zeros and non-zeros) for
+                      each
+
+                      `MarketPremiums` struct. Note that in the edge case a
+                      perpetual market was
+
+                      added in the middle of a epoch, we don't keep a seperate
+                      count for that
+
+                      market. This means we treat this market as having zero
+                      premiums before it
+
+                      was added.
+                description: >-
+                  PremiumStore is a struct to store a perpetual premiums for all
+
+                  perpetual markets. It stores a list of `MarketPremiums`, each
+                  of which
+
+                  corresponds to a perpetual market and stores a list of
+                  non-zero premium
+
+                  values for that market.
+
+                  This struct can either be used to store `PremiumVotes` or
+
+                  `PremiumSamples`.
+            description: >-
+              QueryPremiumVotesResponse is the response type for the
+              PremiumVotes RPC
+
+              method.
+        default:
+          description: An unexpected error response.
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+              code:
+                type: integer
+                format: int32
+              message:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    type_url:
+                      type: string
+                    value:
+                      type: string
+                      format: byte
       tags:
         - Query
   /dydxprotocol/prices/market:
@@ -7318,7 +8238,7 @@ paths:
           format: uint64
         - name: latest_height
           description: >-
-            latest_height overrrides the height field and queries the latest
+            latest_height overrides the height field and queries the latest
             stored
 
             ConsensusState.
@@ -8602,7 +9522,7 @@ paths:
                               identifier
                         description: >-
                           Version defines the versioning scheme used to
-                          negotiate the IBC verison in
+                          negotiate the IBC version in
 
                           the connection handshake.
                       title: >-
@@ -9008,7 +9928,7 @@ paths:
                             identifier
                       description: >-
                         Version defines the versioning scheme used to negotiate
-                        the IBC verison in
+                        the IBC version in
 
                         the connection handshake.
                     description: >-
@@ -28693,7 +29613,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -29309,7 +30229,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -29940,7 +30860,7 @@ paths:
                             type: string
                             format: uint64
                           title: >-
-                            list of unbonding ids, each uniquely identifing an
+                            list of unbonding ids, each uniquely identifying an
                             unbonding of this validator
                       description: >-
                         Validator defines a validator, together with the total
@@ -30234,6 +31154,26 @@ paths:
                     title: >-
                       min_commission_rate is the chain-wide minimum commission
                       rate that a validator can charge their delegators
+                  key_rotation_fee:
+                    type: object
+                    properties:
+                      denom:
+                        type: string
+                      amount:
+                        type: string
+                    description: >-
+                      Coin defines a token with a denomination and an amount.
+
+
+                      NOTE: The amount field is an Int which implements the
+                      custom method
+
+                      signatures required by gogoproto.
+                    title: >-
+                      key_rotation_fee is fee to be spent when rotating
+                      validator's key
+
+                      (either consensus pubkey or operator key)
             description: >-
               QueryParamsResponse is response type for the Query/Params RPC
               method.
@@ -30963,7 +31903,7 @@ paths:
                         type: string
                         format: uint64
                       title: >-
-                        list of unbonding ids, each uniquely identifing an
+                        list of unbonding ids, each uniquely identifying an
                         unbonding of this validator
                   description: >-
                     Validator defines a validator, together with the total
@@ -31577,7 +32517,7 @@ paths:
                       type: string
                       format: uint64
                     title: >-
-                      list of unbonding ids, each uniquely identifing an
+                      list of unbonding ids, each uniquely identifying an
                       unbonding of this validator
                 description: >-
                   Validator defines a validator, together with the total amount
@@ -42873,6 +43813,103 @@ definitions:
       is_liquidatable:
         type: boolean
     description: Result returns whether a subaccount should be liquidated.
+  dydxprotocol.clob.BlockRateLimitConfiguration:
+    type: object
+    properties:
+      max_short_term_orders_per_n_blocks:
+        type: array
+        items:
+          type: object
+          properties:
+            num_blocks:
+              type: integer
+              format: int64
+              description: |-
+                How many blocks the rate limit is over.
+                Specifying 0 is invalid.
+            limit:
+              type: integer
+              format: int64
+              description: |-
+                What the limit is for `num_blocks`.
+                Specifying 0 is invalid.
+          description: Defines a rate limit over a specific number of blocks.
+        description: >-
+          How many short term order attempts (successful and failed) are allowed
+          for
+
+          an account per N blocks. Note that the rate limits are applied
+
+          in an AND fashion such that an order placement must pass all rate
+          limit
+
+          configurations.
+
+
+          Specifying 0 values disables this rate limit.
+      max_stateful_orders_per_n_blocks:
+        type: array
+        items:
+          type: object
+          properties:
+            num_blocks:
+              type: integer
+              format: int64
+              description: |-
+                How many blocks the rate limit is over.
+                Specifying 0 is invalid.
+            limit:
+              type: integer
+              format: int64
+              description: |-
+                What the limit is for `num_blocks`.
+                Specifying 0 is invalid.
+          description: Defines a rate limit over a specific number of blocks.
+        description: >-
+          How many stateful order attempts (successful and failed) are allowed
+          for
+
+          an account per N blocks. Note that the rate limits are applied
+
+          in an AND fashion such that an order placement must pass all rate
+          limit
+
+          configurations.
+
+
+          Specifying 0 values disables this rate limit.
+      max_short_term_order_cancellations_per_n_blocks:
+        type: array
+        items:
+          type: object
+          properties:
+            num_blocks:
+              type: integer
+              format: int64
+              description: |-
+                How many blocks the rate limit is over.
+                Specifying 0 is invalid.
+            limit:
+              type: integer
+              format: int64
+              description: |-
+                What the limit is for `num_blocks`.
+                Specifying 0 is invalid.
+          description: Defines a rate limit over a specific number of blocks.
+        description: >-
+          How many short term order cancellation attempts (successful and
+          failed) are
+
+          allowed for an account per N blocks. Note that the rate limits are
+
+          applied in an AND fashion such that an order cancellation must pass
+          all
+
+          rate limit configurations.
+
+
+          Specifying 0 values disables this rate limit.
+    description: Defines the block rate limits for CLOB specific operations.
   dydxprotocol.clob.ClobMidPrice:
     type: object
     properties:
@@ -42946,6 +43983,7 @@ definitions:
               - STATUS_CANCEL_ONLY
               - STATUS_POST_ONLY
               - STATUS_INITIALIZING
+              - STATUS_FINAL_SETTLEMENT
             default: STATUS_UNSPECIFIED
             description: |-
               Status of the CLOB.
@@ -42961,6 +43999,10 @@ definitions:
                - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
               Clob pairs in this state only accept orders which are
               both short-term and post-only.
+               - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+              and trading has ceased. All open positions will be closed by the
+              protocol. Open stateful orders will be cancelled. Open short-term
+              orders will be left to expire.
         description: |-
           ClobPair represents a single CLOB pair for a given product
           in state.
@@ -43028,6 +44070,7 @@ definitions:
           - STATUS_CANCEL_ONLY
           - STATUS_POST_ONLY
           - STATUS_INITIALIZING
+          - STATUS_FINAL_SETTLEMENT
         default: STATUS_UNSPECIFIED
         description: |-
           Status of the CLOB.
@@ -43043,6 +44086,10 @@ definitions:
            - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
           Clob pairs in this state only accept orders which are
           both short-term and post-only.
+           - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+          and trading has ceased. All open positions will be closed by the
+          protocol. Open stateful orders will be cancelled. Open short-term
+          orders will be left to expire.
     description: |-
       ClobPair represents a single CLOB pair for a given product
       in state.
@@ -43055,6 +44102,7 @@ definitions:
       - STATUS_CANCEL_ONLY
       - STATUS_POST_ONLY
       - STATUS_INITIALIZING
+      - STATUS_FINAL_SETTLEMENT
     default: STATUS_UNSPECIFIED
     description: |-
       Status of the CLOB.
@@ -43070,6 +44118,10 @@ definitions:
        - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
       Clob pairs in this state only accept orders which are
       both short-term and post-only.
+       - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+      and trading has ceased. All open positions will be closed by the
+      protocol. Open stateful orders will be cancelled. Open short-term
+      orders will be left to expire.
   dydxprotocol.clob.EquityTierLimit:
     type: object
     properties:
@@ -43126,6 +44178,85 @@ definitions:
     description: |-
       Defines the set of equity tiers to limit how many open orders
       a subaccount is allowed to have.
+  dydxprotocol.clob.FillablePriceConfig:
+    type: object
+    properties:
+      bankruptcy_adjustment_ppm:
+        type: integer
+        format: int64
+        description: The rate at which the Adjusted Bankruptcy Rating increases.
+      spread_to_maintenance_margin_ratio_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The maximum value that the liquidation spread can take, as
+          a ratio against the position's maintenance margin.
+    description: |-
+      FillablePriceConfig stores all configurable fields related to calculating
+      the fillable price for liquidating a position.
+  dydxprotocol.clob.LiquidationsConfig:
+    type: object
+    properties:
+      max_liquidation_fee_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The maximum liquidation fee (in parts-per-million). This fee goes
+          100% to the insurance fund.
+      position_block_limits:
+        description: |-
+          Limits around how much of a single position can be liquidated
+          within a single block.
+        type: object
+        properties:
+          min_position_notional_liquidated:
+            type: string
+            format: uint64
+            description: |-
+              The minimum amount of quantums to liquidate for each message (in
+              quote quantums).
+              Overridden by the maximum size of the position.
+          max_position_portion_liquidated_ppm:
+            type: integer
+            format: int64
+            description: |-
+              The maximum portion of the position liquidated (in parts-per-
+              million). Overridden by min_position_notional_liquidated.
+      subaccount_block_limits:
+        description: |-
+          Limits around how many quote quantums from a single subaccount can
+          be liquidated within a single block.
+        type: object
+        properties:
+          max_notional_liquidated:
+            type: string
+            format: uint64
+            description: |-
+              The maximum notional amount that a single subaccount can have
+              liquidated (in quote quantums) per block.
+          max_quantums_insurance_lost:
+            type: string
+            format: uint64
+            description: |-
+              The maximum insurance-fund payout amount for a given subaccount
+              per block. I.e. how much it can cover for that subaccount.
+      fillable_price_config:
+        description: |-
+          Config about how the fillable-price spread from the oracle price
+          increases based on the adjusted bankruptcy rating of the subaccount.
+        type: object
+        properties:
+          bankruptcy_adjustment_ppm:
+            type: integer
+            format: int64
+            description: The rate at which the Adjusted Bankruptcy Rating increases.
+          spread_to_maintenance_margin_ratio_ppm:
+            type: integer
+            format: int64
+            description: |-
+              The maximum value that the liquidation spread can take, as
+              a ratio against the position's maintenance margin.
+    description: LiquidationsConfig stores all configurable fields related to liquidations.
   dydxprotocol.clob.MEVLiquidationMatch:
     type: object
     properties:
@@ -43224,6 +44355,22 @@ definitions:
     description: >-
       MEVMatch represents all necessary data to calculate MEV for a regular
       match.
+  dydxprotocol.clob.MaxPerNBlocksRateLimit:
+    type: object
+    properties:
+      num_blocks:
+        type: integer
+        format: int64
+        description: |-
+          How many blocks the rate limit is over.
+          Specifying 0 is invalid.
+      limit:
+        type: integer
+        format: int64
+        description: |-
+          What the limit is for `num_blocks`.
+          Specifying 0 is invalid.
+    description: Defines a rate limit over a specific number of blocks.
   dydxprotocol.clob.MevNodeToNodeCalculationRequest:
     type: object
     properties:
@@ -43566,8 +44713,9 @@ definitions:
                         - STATUS_CANCEL_ONLY
                         - STATUS_POST_ONLY
                         - STATUS_INITIALIZING
+                        - STATUS_FINAL_SETTLEMENT
                       default: STATUS_UNSPECIFIED
-                      description: |-
+                      description: >-
                         Status of the CLOB.
 
                          - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
@@ -43580,7 +44728,16 @@ definitions:
                         TODO(DEC-600): update this documentation.
                          - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
                         Clob pairs in this state only accept orders which are
+
                         both short-term and post-only.
+                         - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                        and trading has ceased. All open positions will be
+                        closed by the
+
+                        protocol. Open stateful orders will be cancelled. Open
+                        short-term
+
+                        orders will be left to expire.
                   description: |-
                     ClobPair represents a single CLOB pair for a given product
                     in state.
@@ -43590,6 +44747,141 @@ definitions:
               description: >-
                 ClobMidPrice contains the mid price of a CLOB pair, represented
                 by it's ID.
+          bp_mev_matches:
+            type: object
+            properties:
+              matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    taker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    taker_fee_ppm:
+                      type: integer
+                      format: int32
+                    maker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    maker_order_subticks:
+                      type: string
+                      format: uint64
+                    maker_order_is_buy:
+                      type: boolean
+                    maker_fee_ppm:
+                      type: integer
+                      format: int32
+                    clob_pair_id:
+                      type: integer
+                      format: int64
+                    fill_amount:
+                      type: string
+                      format: uint64
+                  description: >-
+                    MEVMatch represents all necessary data to calculate MEV for
+                    a regular match.
+              liquidation_matches:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    liquidated_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    insurance_fund_delta_quote_quantums:
+                      type: string
+                      format: int64
+                    maker_order_subaccount_id:
+                      type: object
+                      properties:
+                        owner:
+                          type: string
+                          description: The address of the wallet that owns this subaccount.
+                        number:
+                          type: integer
+                          format: int64
+                          description: >-
+                            < 128 Since 128 should be enough to start and it
+                            fits within
+
+                            1 Byte (1 Bit needed to indicate that the first byte
+                            is the last).
+                      description: >-
+                        SubaccountId defines a unique identifier for a
+                        Subaccount.
+                    maker_order_subticks:
+                      type: string
+                      format: uint64
+                    maker_order_is_buy:
+                      type: boolean
+                    maker_fee_ppm:
+                      type: integer
+                      format: int32
+                    clob_pair_id:
+                      type: integer
+                      format: int64
+                    fill_amount:
+                      type: string
+                      format: uint64
+                  description: >-
+                    MEVLiquidationMatch represents all necessary data to
+                    calculate MEV for a
+
+                    liquidation.
+            description: >-
+              ValidatorMevMatches contains all matches from the validator's
+              local
+
+              operations queue.
+          proposal_receive_time:
+            type: string
+            format: uint64
     description: |-
       MevNodeToNodeCalculationRequest is a request message used to run the
       MEV node <> node calculation.
@@ -43831,8 +45123,9 @@ definitions:
                     - STATUS_CANCEL_ONLY
                     - STATUS_POST_ONLY
                     - STATUS_INITIALIZING
+                    - STATUS_FINAL_SETTLEMENT
                   default: STATUS_UNSPECIFIED
-                  description: |-
+                  description: >-
                     Status of the CLOB.
 
                      - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
@@ -43845,7 +45138,16 @@ definitions:
                     TODO(DEC-600): update this documentation.
                      - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
                     Clob pairs in this state only accept orders which are
+
                     both short-term and post-only.
+                     - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                    and trading has ceased. All open positions will be closed by
+                    the
+
+                    protocol. Open stateful orders will be cancelled. Open
+                    short-term
+
+                    orders will be left to expire.
               description: |-
                 ClobPair represents a single CLOB pair for a given product
                 in state.
@@ -43855,6 +45157,131 @@ definitions:
           description: >-
             ClobMidPrice contains the mid price of a CLOB pair, represented by
             it's ID.
+      bp_mev_matches:
+        type: object
+        properties:
+          matches:
+            type: array
+            items:
+              type: object
+              properties:
+                taker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                taker_fee_ppm:
+                  type: integer
+                  format: int32
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVMatch represents all necessary data to calculate MEV for a
+                regular match.
+          liquidation_matches:
+            type: array
+            items:
+              type: object
+              properties:
+                liquidated_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                insurance_fund_delta_quote_quantums:
+                  type: string
+                  format: int64
+                maker_order_subaccount_id:
+                  type: object
+                  properties:
+                    owner:
+                      type: string
+                      description: The address of the wallet that owns this subaccount.
+                    number:
+                      type: integer
+                      format: int64
+                      description: >-
+                        < 128 Since 128 should be enough to start and it fits
+                        within
+
+                        1 Byte (1 Bit needed to indicate that the first byte is
+                        the last).
+                  description: SubaccountId defines a unique identifier for a Subaccount.
+                maker_order_subticks:
+                  type: string
+                  format: uint64
+                maker_order_is_buy:
+                  type: boolean
+                maker_fee_ppm:
+                  type: integer
+                  format: int32
+                clob_pair_id:
+                  type: integer
+                  format: int64
+                fill_amount:
+                  type: string
+                  format: uint64
+              description: >-
+                MEVLiquidationMatch represents all necessary data to calculate
+                MEV for a
+
+                liquidation.
+        description: |-
+          ValidatorMevMatches contains all matches from the validator's local
+          operations queue.
+      proposal_receive_time:
+        type: string
+        format: uint64
     description: |-
       MevNodeToNodeMetrics is a data structure for encapsulating all MEV node <>
       node metrics.
@@ -43868,6 +45295,132 @@ definitions:
     description: |-
       PerpetualClobMetadata contains metadata for a `ClobPair`
       representing a Perpetual product.
+  dydxprotocol.clob.PositionBlockLimits:
+    type: object
+    properties:
+      min_position_notional_liquidated:
+        type: string
+        format: uint64
+        description: |-
+          The minimum amount of quantums to liquidate for each message (in
+          quote quantums).
+          Overridden by the maximum size of the position.
+      max_position_portion_liquidated_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The maximum portion of the position liquidated (in parts-per-
+          million). Overridden by min_position_notional_liquidated.
+    description: >-
+      PositionBlockLimits stores all configurable fields related to limits
+
+      around how much of a single position can be liquidated within a single
+      block.
+  dydxprotocol.clob.QueryBlockRateLimitConfigurationResponse:
+    type: object
+    properties:
+      block_rate_limit_config:
+        type: object
+        properties:
+          max_short_term_orders_per_n_blocks:
+            type: array
+            items:
+              type: object
+              properties:
+                num_blocks:
+                  type: integer
+                  format: int64
+                  description: |-
+                    How many blocks the rate limit is over.
+                    Specifying 0 is invalid.
+                limit:
+                  type: integer
+                  format: int64
+                  description: |-
+                    What the limit is for `num_blocks`.
+                    Specifying 0 is invalid.
+              description: Defines a rate limit over a specific number of blocks.
+            description: >-
+              How many short term order attempts (successful and failed) are
+              allowed for
+
+              an account per N blocks. Note that the rate limits are applied
+
+              in an AND fashion such that an order placement must pass all rate
+              limit
+
+              configurations.
+
+
+              Specifying 0 values disables this rate limit.
+          max_stateful_orders_per_n_blocks:
+            type: array
+            items:
+              type: object
+              properties:
+                num_blocks:
+                  type: integer
+                  format: int64
+                  description: |-
+                    How many blocks the rate limit is over.
+                    Specifying 0 is invalid.
+                limit:
+                  type: integer
+                  format: int64
+                  description: |-
+                    What the limit is for `num_blocks`.
+                    Specifying 0 is invalid.
+              description: Defines a rate limit over a specific number of blocks.
+            description: >-
+              How many stateful order attempts (successful and failed) are
+              allowed for
+
+              an account per N blocks. Note that the rate limits are applied
+
+              in an AND fashion such that an order placement must pass all rate
+              limit
+
+              configurations.
+
+
+              Specifying 0 values disables this rate limit.
+          max_short_term_order_cancellations_per_n_blocks:
+            type: array
+            items:
+              type: object
+              properties:
+                num_blocks:
+                  type: integer
+                  format: int64
+                  description: |-
+                    How many blocks the rate limit is over.
+                    Specifying 0 is invalid.
+                limit:
+                  type: integer
+                  format: int64
+                  description: |-
+                    What the limit is for `num_blocks`.
+                    Specifying 0 is invalid.
+              description: Defines a rate limit over a specific number of blocks.
+            description: >-
+              How many short term order cancellation attempts (successful and
+              failed) are
+
+              allowed for an account per N blocks. Note that the rate limits are
+
+              applied in an AND fashion such that an order cancellation must
+              pass all
+
+              rate limit configurations.
+
+
+              Specifying 0 values disables this rate limit.
+        description: Defines the block rate limits for CLOB specific operations.
+    description: >-
+      QueryBlockRateLimitConfigurationResponse is a response message that
+      contains
+
+      the BlockRateLimitConfiguration.
   dydxprotocol.clob.QueryClobPairAllResponse:
     type: object
     properties:
@@ -43943,8 +45496,9 @@ definitions:
                 - STATUS_CANCEL_ONLY
                 - STATUS_POST_ONLY
                 - STATUS_INITIALIZING
+                - STATUS_FINAL_SETTLEMENT
               default: STATUS_UNSPECIFIED
-              description: |-
+              description: >-
                 Status of the CLOB.
 
                  - STATUS_UNSPECIFIED: Default value. This value is invalid and unused.
@@ -43957,7 +45511,15 @@ definitions:
                 TODO(DEC-600): update this documentation.
                  - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
                 Clob pairs in this state only accept orders which are
+
                 both short-term and post-only.
+                 - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+                and trading has ceased. All open positions will be closed by the
+
+                protocol. Open stateful orders will be cancelled. Open
+                short-term
+
+                orders will be left to expire.
           description: |-
             ClobPair represents a single CLOB pair for a given product
             in state.
@@ -44061,6 +45623,7 @@ definitions:
               - STATUS_CANCEL_ONLY
               - STATUS_POST_ONLY
               - STATUS_INITIALIZING
+              - STATUS_FINAL_SETTLEMENT
             default: STATUS_UNSPECIFIED
             description: |-
               Status of the CLOB.
@@ -44076,6 +45639,10 @@ definitions:
                - STATUS_INITIALIZING: STATUS_INITIALIZING represents a newly-added clob pair.
               Clob pairs in this state only accept orders which are
               both short-term and post-only.
+               - STATUS_FINAL_SETTLEMENT: STATUS_FINAL_SETTLEMENT represents a clob pair which is deactivated
+              and trading has ceased. All open positions will be closed by the
+              protocol. Open stateful orders will be cancelled. Open short-term
+              orders will be left to expire.
         description: |-
           ClobPair represents a single CLOB pair for a given product
           in state.
@@ -44132,6 +45699,84 @@ definitions:
       contains
 
       the EquityTierLimitConfiguration.
+  dydxprotocol.clob.QueryLiquidationsConfigurationResponse:
+    type: object
+    properties:
+      liquidations_config:
+        type: object
+        properties:
+          max_liquidation_fee_ppm:
+            type: integer
+            format: int64
+            description: |-
+              The maximum liquidation fee (in parts-per-million). This fee goes
+              100% to the insurance fund.
+          position_block_limits:
+            description: |-
+              Limits around how much of a single position can be liquidated
+              within a single block.
+            type: object
+            properties:
+              min_position_notional_liquidated:
+                type: string
+                format: uint64
+                description: >-
+                  The minimum amount of quantums to liquidate for each message
+                  (in
+
+                  quote quantums).
+
+                  Overridden by the maximum size of the position.
+              max_position_portion_liquidated_ppm:
+                type: integer
+                format: int64
+                description: |-
+                  The maximum portion of the position liquidated (in parts-per-
+                  million). Overridden by min_position_notional_liquidated.
+          subaccount_block_limits:
+            description: |-
+              Limits around how many quote quantums from a single subaccount can
+              be liquidated within a single block.
+            type: object
+            properties:
+              max_notional_liquidated:
+                type: string
+                format: uint64
+                description: |-
+                  The maximum notional amount that a single subaccount can have
+                  liquidated (in quote quantums) per block.
+              max_quantums_insurance_lost:
+                type: string
+                format: uint64
+                description: >-
+                  The maximum insurance-fund payout amount for a given
+                  subaccount
+
+                  per block. I.e. how much it can cover for that subaccount.
+          fillable_price_config:
+            description: >-
+              Config about how the fillable-price spread from the oracle price
+
+              increases based on the adjusted bankruptcy rating of the
+              subaccount.
+            type: object
+            properties:
+              bankruptcy_adjustment_ppm:
+                type: integer
+                format: int64
+                description: The rate at which the Adjusted Bankruptcy Rating increases.
+              spread_to_maintenance_margin_ratio_ppm:
+                type: integer
+                format: int64
+                description: |-
+                  The maximum value that the liquidation spread can take, as
+                  a ratio against the position's maintenance margin.
+        description: >-
+          LiquidationsConfig stores all configurable fields related to
+          liquidations.
+    description: |-
+      QueryLiquidationsConfigurationResponse is a response message that contains
+      the LiquidationsConfiguration.
   dydxprotocol.clob.SpotClobMetadata:
     type: object
     properties:
@@ -44146,6 +45791,25 @@ definitions:
     description: |-
       PerpetualClobMetadata contains metadata for a `ClobPair`
       representing a Spot product.
+  dydxprotocol.clob.SubaccountBlockLimits:
+    type: object
+    properties:
+      max_notional_liquidated:
+        type: string
+        format: uint64
+        description: |-
+          The maximum notional amount that a single subaccount can have
+          liquidated (in quote quantums) per block.
+      max_quantums_insurance_lost:
+        type: string
+        format: uint64
+        description: |-
+          The maximum insurance-fund payout amount for a given subaccount
+          per block. I.e. how much it can cover for that subaccount.
+    description: |-
+      SubaccountBlockLimits stores all configurable fields related to limits
+      around how many quote quantums from a single subaccount can
+      be liquidated within a single block.
   dydxprotocol.clob.ValidatorMevMatches:
     type: object
     properties:
@@ -45036,6 +46700,115 @@ definitions:
             description: The taker fee once this tier is reached.
         title: A fee tier for perpetuals
     description: QueryUserFeeTierResponse is a request type for the UserFeeTier RPC method.
+  dydxprotocol.perpetuals.LiquidityTier:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+        description: Unique id.
+      name:
+        type: string
+        description: The name of the tier purely for mnemonic purposes, e.g. "Gold".
+      initial_margin_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The margin fraction needed to open a position.
+          In parts-per-million.
+      maintenance_fraction_ppm:
+        type: integer
+        format: int64
+        description: |-
+          The fraction of the initial-margin that the maintenance-margin is,
+          e.g. 50%. In parts-per-million.
+      base_position_notional:
+        type: string
+        format: uint64
+        description: |-
+          The maximum position size at which the margin requirements are
+          not increased over the default values. Above this position size,
+          the margin requirements increase at a rate of sqrt(size).
+
+          Deprecated since v3.x.
+      impact_notional:
+        type: string
+        format: uint64
+        description: >-
+          The impact notional amount (in quote quantums) is used to determine
+          impact
+
+          bid/ask prices and its recommended value is 500 USDC / initial margin
+
+          fraction.
+
+          - Impact bid price = average execution price for a market sell of the
+
+          impact notional value.
+
+          - Impact ask price = average execution price for a market buy of the
+
+          impact notional value.
+      volatility_bounds_period:
+        type: string
+        description: |-
+          This duration specifies how fast volatility bounds recover.
+          A longer duration leads to a longer (slower) recovery time.
+    description: LiquidityTier stores margin information.
+  dydxprotocol.perpetuals.MarketPremiums:
+    type: object
+    properties:
+      perpetual_id:
+        type: integer
+        format: int64
+        description: perpetual_id is the Id of the perpetual market.
+      premiums:
+        type: array
+        items:
+          type: integer
+          format: int32
+        description: >-
+          premiums is a list of premium values for a perpetual market. Since
+          most
+
+          premiums are zeros under "stable" market conditions, only non-zero
+          values
+
+          are stored in this list.
+    description: MarketPremiums stores a list of premiums for a single perpetual market.
+  dydxprotocol.perpetuals.Params:
+    type: object
+    properties:
+      funding_rate_clamp_factor_ppm:
+        type: integer
+        format: int64
+        description: >-
+          Funding rate clamp factor in parts-per-million, used for clamping
+          8-hour
+
+          funding rates according to equation: |R| <= funding_rate_clamp_factor
+          *
+
+          (initial margin - maintenance margin).
+      premium_vote_clamp_factor_ppm:
+        type: integer
+        format: int64
+        description: >-
+          Premium vote clamp factor in parts-per-million, used for clamping
+          premium
+
+          votes according to equation: |V| <= premium_vote_clamp_factor *
+
+          (initial margin - maintenance margin).
+      min_num_votes_per_sample:
+        type: integer
+        format: int64
+        description: >-
+          Minimum number of premium votes per premium sample. If number of
+          premium
+
+          votes is smaller than this number, pad with zeros up to this number.
+    description: Params defines the parameters for x/perpetuals module.
   dydxprotocol.perpetuals.Perpetual:
     type: object
     properties:
@@ -45120,6 +46893,158 @@ definitions:
     description: |-
       PerpetualParams represents the parameters of a perpetual on the dYdX
       exchange.
+  dydxprotocol.perpetuals.PremiumStore:
+    type: object
+    properties:
+      all_market_premiums:
+        type: array
+        items:
+          type: object
+          properties:
+            perpetual_id:
+              type: integer
+              format: int64
+              description: perpetual_id is the Id of the perpetual market.
+            premiums:
+              type: array
+              items:
+                type: integer
+                format: int32
+              description: >-
+                premiums is a list of premium values for a perpetual market.
+                Since most
+
+                premiums are zeros under "stable" market conditions, only
+                non-zero values
+
+                are stored in this list.
+          description: >-
+            MarketPremiums stores a list of premiums for a single perpetual
+            market.
+        description: |-
+          all_market_premiums a list of `MarketPremiums`, each corresponding to
+          a perpetual market.
+      num_premiums:
+        type: integer
+        format: int64
+        description: >-
+          number of rounds where premium values were added. This value indicates
+
+          the total number of premiums (zeros and non-zeros) for each
+
+          `MarketPremiums` struct. Note that in the edge case a perpetual market
+          was
+
+          added in the middle of a epoch, we don't keep a seperate count for
+          that
+
+          market. This means we treat this market as having zero premiums before
+          it
+
+          was added.
+    description: |-
+      PremiumStore is a struct to store a perpetual premiums for all
+      perpetual markets. It stores a list of `MarketPremiums`, each of which
+      corresponds to a perpetual market and stores a list of non-zero premium
+      values for that market.
+      This struct can either be used to store `PremiumVotes` or
+      `PremiumSamples`.
+  dydxprotocol.perpetuals.QueryAllLiquidityTiersResponse:
+    type: object
+    properties:
+      liquidity_tiers:
+        type: array
+        items:
+          type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              description: Unique id.
+            name:
+              type: string
+              description: The name of the tier purely for mnemonic purposes, e.g. "Gold".
+            initial_margin_ppm:
+              type: integer
+              format: int64
+              description: |-
+                The margin fraction needed to open a position.
+                In parts-per-million.
+            maintenance_fraction_ppm:
+              type: integer
+              format: int64
+              description: >-
+                The fraction of the initial-margin that the maintenance-margin
+                is,
+
+                e.g. 50%. In parts-per-million.
+            base_position_notional:
+              type: string
+              format: uint64
+              description: |-
+                The maximum position size at which the margin requirements are
+                not increased over the default values. Above this position size,
+                the margin requirements increase at a rate of sqrt(size).
+
+                Deprecated since v3.x.
+            impact_notional:
+              type: string
+              format: uint64
+              description: >-
+                The impact notional amount (in quote quantums) is used to
+                determine impact
+
+                bid/ask prices and its recommended value is 500 USDC / initial
+                margin
+
+                fraction.
+
+                - Impact bid price = average execution price for a market sell
+                of the
+
+                impact notional value.
+
+                - Impact ask price = average execution price for a market buy of
+                the
+
+                impact notional value.
+            volatility_bounds_period:
+              type: string
+              description: |-
+                This duration specifies how fast volatility bounds recover.
+                A longer duration leads to a longer (slower) recovery time.
+          description: LiquidityTier stores margin information.
+      pagination:
+        type: object
+        properties:
+          next_key:
+            type: string
+            format: byte
+            description: |-
+              next_key is the key to be passed to PageRequest.key to
+              query the next page most efficiently. It will be empty if
+              there are no more results.
+          total:
+            type: string
+            format: uint64
+            title: >-
+              total is total number of results available if
+              PageRequest.count_total
+
+              was set, its value is undefined otherwise
+        description: |-
+          PageResponse is to be embedded in gRPC response messages where the
+          corresponding request message has used PageRequest.
+
+           message SomeResponse {
+                   repeated Bar results = 1;
+                   PageResponse page = 2;
+           }
+    description: >-
+      QueryAllLiquidityTiersResponse is response type for the AllLiquidityTiers
+      RPC
+
+      method.
   dydxprotocol.perpetuals.QueryAllPerpetualsResponse:
     type: object
     properties:
@@ -45204,6 +47129,44 @@ definitions:
     description: >-
       QueryAllPerpetualsResponse is response type for the AllPerpetuals RPC
       method.
+  dydxprotocol.perpetuals.QueryParamsResponse:
+    type: object
+    properties:
+      params:
+        type: object
+        properties:
+          funding_rate_clamp_factor_ppm:
+            type: integer
+            format: int64
+            description: >-
+              Funding rate clamp factor in parts-per-million, used for clamping
+              8-hour
+
+              funding rates according to equation: |R| <=
+              funding_rate_clamp_factor *
+
+              (initial margin - maintenance margin).
+          premium_vote_clamp_factor_ppm:
+            type: integer
+            format: int64
+            description: >-
+              Premium vote clamp factor in parts-per-million, used for clamping
+              premium
+
+              votes according to equation: |V| <= premium_vote_clamp_factor *
+
+              (initial margin - maintenance margin).
+          min_num_votes_per_sample:
+            type: integer
+            format: int64
+            description: >-
+              Minimum number of premium votes per premium sample. If number of
+              premium
+
+              votes is smaller than this number, pad with zeros up to this
+              number.
+        description: Params defines the parameters for x/perpetuals module.
+    description: QueryParamsResponse is the response type for the Params RPC method.
   dydxprotocol.perpetuals.QueryPerpetualResponse:
     type: object
     properties:
@@ -45254,6 +47217,150 @@ definitions:
               history of the funding mechanism. Starts at zero.
         description: Perpetual represents a perpetual on the dYdX exchange.
     description: QueryPerpetualResponse is response type for the Perpetual RPC method.
+  dydxprotocol.perpetuals.QueryPremiumSamplesResponse:
+    type: object
+    properties:
+      premium_samples:
+        type: object
+        properties:
+          all_market_premiums:
+            type: array
+            items:
+              type: object
+              properties:
+                perpetual_id:
+                  type: integer
+                  format: int64
+                  description: perpetual_id is the Id of the perpetual market.
+                premiums:
+                  type: array
+                  items:
+                    type: integer
+                    format: int32
+                  description: >-
+                    premiums is a list of premium values for a perpetual market.
+                    Since most
+
+                    premiums are zeros under "stable" market conditions, only
+                    non-zero values
+
+                    are stored in this list.
+              description: >-
+                MarketPremiums stores a list of premiums for a single perpetual
+                market.
+            description: >-
+              all_market_premiums a list of `MarketPremiums`, each corresponding
+              to
+
+              a perpetual market.
+          num_premiums:
+            type: integer
+            format: int64
+            description: >-
+              number of rounds where premium values were added. This value
+              indicates
+
+              the total number of premiums (zeros and non-zeros) for each
+
+              `MarketPremiums` struct. Note that in the edge case a perpetual
+              market was
+
+              added in the middle of a epoch, we don't keep a seperate count for
+              that
+
+              market. This means we treat this market as having zero premiums
+              before it
+
+              was added.
+        description: >-
+          PremiumStore is a struct to store a perpetual premiums for all
+
+          perpetual markets. It stores a list of `MarketPremiums`, each of which
+
+          corresponds to a perpetual market and stores a list of non-zero
+          premium
+
+          values for that market.
+
+          This struct can either be used to store `PremiumVotes` or
+
+          `PremiumSamples`.
+    description: >-
+      QueryPremiumSamplesResponse is the response type for the PremiumSamples
+      RPC
+
+      method.
+  dydxprotocol.perpetuals.QueryPremiumVotesResponse:
+    type: object
+    properties:
+      premium_votes:
+        type: object
+        properties:
+          all_market_premiums:
+            type: array
+            items:
+              type: object
+              properties:
+                perpetual_id:
+                  type: integer
+                  format: int64
+                  description: perpetual_id is the Id of the perpetual market.
+                premiums:
+                  type: array
+                  items:
+                    type: integer
+                    format: int32
+                  description: >-
+                    premiums is a list of premium values for a perpetual market.
+                    Since most
+
+                    premiums are zeros under "stable" market conditions, only
+                    non-zero values
+
+                    are stored in this list.
+              description: >-
+                MarketPremiums stores a list of premiums for a single perpetual
+                market.
+            description: >-
+              all_market_premiums a list of `MarketPremiums`, each corresponding
+              to
+
+              a perpetual market.
+          num_premiums:
+            type: integer
+            format: int64
+            description: >-
+              number of rounds where premium values were added. This value
+              indicates
+
+              the total number of premiums (zeros and non-zeros) for each
+
+              `MarketPremiums` struct. Note that in the edge case a perpetual
+              market was
+
+              added in the middle of a epoch, we don't keep a seperate count for
+              that
+
+              market. This means we treat this market as having zero premiums
+              before it
+
+              was added.
+        description: >-
+          PremiumStore is a struct to store a perpetual premiums for all
+
+          perpetual markets. It stores a list of `MarketPremiums`, each of which
+
+          corresponds to a perpetual market and stores a list of non-zero
+          premium
+
+          values for that market.
+
+          This struct can either be used to store `PremiumVotes` or
+
+          `PremiumSamples`.
+    description: |-
+      QueryPremiumVotesResponse is the response type for the PremiumVotes RPC
+      method.
   dydxprotocol.prices.MarketParam:
     type: object
     properties:
@@ -48067,7 +50174,7 @@ definitions:
               title: list of features compatible with the specified identifier
           description: >-
             Version defines the versioning scheme used to negotiate the IBC
-            verison in
+            version in
 
             the connection handshake.
         description: >-
@@ -48189,7 +50296,7 @@ definitions:
               title: list of features compatible with the specified identifier
           description: >-
             Version defines the versioning scheme used to negotiate the IBC
-            verison in
+            version in
 
             the connection handshake.
         title: >-
@@ -48768,7 +50875,7 @@ definitions:
                   title: list of features compatible with the specified identifier
               description: >-
                 Version defines the versioning scheme used to negotiate the IBC
-                verison in
+                version in
 
                 the connection handshake.
             description: >-
@@ -48905,7 +51012,7 @@ definitions:
                     title: list of features compatible with the specified identifier
                 description: >-
                   Version defines the versioning scheme used to negotiate the
-                  IBC verison in
+                  IBC version in
 
                   the connection handshake.
               title: >-
@@ -49051,7 +51158,7 @@ definitions:
           type: string
         title: list of features compatible with the specified identifier
     description: |-
-      Version defines the versioning scheme used to negotiate the IBC verison in
+      Version defines the versioning scheme used to negotiate the IBC version in
       the connection handshake.
   ibc.core.channel.v1.Channel:
     type: object
@@ -56812,7 +58919,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -56895,6 +59002,21 @@ definitions:
         title: >-
           min_commission_rate is the chain-wide minimum commission rate that a
           validator can charge their delegators
+      key_rotation_fee:
+        type: object
+        properties:
+          denom:
+            type: string
+          amount:
+            type: string
+        description: |-
+          Coin defines a token with a denomination and an amount.
+
+          NOTE: The amount field is an Int which implements the custom method
+          signatures required by gogoproto.
+        title: |-
+          key_rotation_fee is fee to be spent when rotating validator's key
+          (either consensus pubkey or operator key)
     description: Params defines the parameters for the x/staking module.
   cosmos.staking.v1beta1.Pool:
     type: object
@@ -57390,7 +59512,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -57708,7 +59830,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -58133,8 +60255,8 @@ definitions:
                     type: string
                     format: uint64
                   title: >-
-                    list of unbonding ids, each uniquely identifing an unbonding
-                    of this validator
+                    list of unbonding ids, each uniquely identifying an
+                    unbonding of this validator
               description: >-
                 Validator defines a validator, together with the total amount of
                 the
@@ -58217,6 +60339,24 @@ definitions:
             title: >-
               min_commission_rate is the chain-wide minimum commission rate that
               a validator can charge their delegators
+          key_rotation_fee:
+            type: object
+            properties:
+              denom:
+                type: string
+              amount:
+                type: string
+            description: >-
+              Coin defines a token with a denomination and an amount.
+
+
+              NOTE: The amount field is an Int which implements the custom
+              method
+
+              signatures required by gogoproto.
+            title: |-
+              key_rotation_fee is fee to be spent when rotating validator's key
+              (either consensus pubkey or operator key)
     description: QueryParamsResponse is response type for the Query/Params RPC method.
   cosmos.staking.v1beta1.QueryPoolResponse:
     type: object
@@ -58798,7 +60938,7 @@ definitions:
               type: string
               format: uint64
             title: >-
-              list of unbonding ids, each uniquely identifing an unbonding of
+              list of unbonding ids, each uniquely identifying an unbonding of
               this validator
         description: >-
           Validator defines a validator, together with the total amount of the
@@ -59192,7 +61332,7 @@ definitions:
                 type: string
                 format: uint64
               title: >-
-                list of unbonding ids, each uniquely identifing an unbonding of
+                list of unbonding ids, each uniquely identifying an unbonding of
                 this validator
           description: >-
             Validator defines a validator, together with the total amount of the
@@ -59856,7 +61996,7 @@ definitions:
           type: string
           format: uint64
         title: >-
-          list of unbonding ids, each uniquely identifing an unbonding of this
+          list of unbonding ids, each uniquely identifying an unbonding of this
           validator
     description: >-
       Validator defines a validator, together with the total amount of the

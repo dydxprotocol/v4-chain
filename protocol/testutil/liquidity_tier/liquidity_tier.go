@@ -1,6 +1,8 @@
 package liquidity_tier
 
 import (
+	"time"
+
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -36,6 +38,12 @@ func WithImpactNotional(impactNotional uint64) LtModifierOption {
 	}
 }
 
+func WithVolatilityBoundsPeriod(volatilityBoundsPeriod time.Duration) LtModifierOption {
+	return func(lt *perptypes.LiquidityTier) {
+		lt.VolatilityBoundsPeriod = volatilityBoundsPeriod
+	}
+}
+
 // GenerateLiquidityTier returns a `LiquidityTier` object set to default values.
 // Passing in `LtModifierOption` methods alters the value of the `LiquidityTier` returned.
 // It will start with the default, valid `LiquidityTier` value defined within the method
@@ -52,6 +60,7 @@ func GenerateLiquidityTier(optionalModifications ...LtModifierOption) *perptypes
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 1_000_000,
 		ImpactNotional:         500_000_000,
+		VolatilityBoundsPeriod: time.Hour,
 	}
 
 	for _, opt := range optionalModifications {

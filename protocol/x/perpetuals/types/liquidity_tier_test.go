@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/big"
 	"testing"
+	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
@@ -14,31 +15,50 @@ func TestLiquidityTierValidate(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		ImpactNotional         uint64
+		VolatilityBoundsPeriod time.Duration
 		expectedError          error
 	}{
 		"Validates successfully": {
 			initialMarginPpm:       150_000,       // 15%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
 			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			VolatilityBoundsPeriod: time.Second,
 			expectedError:          nil,
 		},
 		"Failure: initial margin ppm exceeds max": {
 			initialMarginPpm:       1_000_001,     // above 100%
 			maintenanceFractionPpm: 800_000,       // 80% of IM
 			ImpactNotional:         1_000_000_000, // 1_000 USDC
+			VolatilityBoundsPeriod: time.Second,
 			expectedError:          types.ErrInitialMarginPpmExceedsMax,
 		},
 		"Failure: maintenance fraction ppm exceeds max": {
 			initialMarginPpm:       1_000_000,     // 100%
 			maintenanceFractionPpm: 1_000_001,     // above 100%
 			ImpactNotional:         1_000_000_000, // 1_000 USDC
+			VolatilityBoundsPeriod: time.Second,
 			expectedError:          types.ErrMaintenanceFractionPpmExceedsMax,
 		},
 		"Failure: impact notional is zero": {
 			initialMarginPpm:       1_000_000, // 100%
 			maintenanceFractionPpm: 1_000_000, // 100%
 			ImpactNotional:         0,         // 0
+			VolatilityBoundsPeriod: time.Second,
 			expectedError:          types.ErrImpactNotionalIsZero,
+		},
+		"Failure: volatility bounds period is zero": {
+			initialMarginPpm:       150_000,       // 15%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			VolatilityBoundsPeriod: 0,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
+		},
+		"Failure: volatility bounds period is negative": {
+			initialMarginPpm:       150_000,       // 15%
+			maintenanceFractionPpm: 800_000,       // 80% of IM
+			ImpactNotional:         3_333_000_000, // 3_333 USDC
+			VolatilityBoundsPeriod: -time.Microsecond,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
 		},
 	}
 
@@ -49,6 +69,7 @@ func TestLiquidityTierValidate(t *testing.T) {
 				InitialMarginPpm:       tc.initialMarginPpm,
 				MaintenanceFractionPpm: tc.maintenanceFractionPpm,
 				ImpactNotional:         tc.ImpactNotional,
+				VolatilityBoundsPeriod: tc.VolatilityBoundsPeriod,
 			}
 
 			err := liquidityTier.Validate()

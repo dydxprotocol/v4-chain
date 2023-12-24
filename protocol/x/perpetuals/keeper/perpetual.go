@@ -1355,6 +1355,7 @@ func (k Keeper) SetLiquidityTier(
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
 	impactNotional uint64,
+	volatilityBoundsPeriod time.Duration,
 ) (
 	liquidityTier types.LiquidityTier,
 	err error,
@@ -1366,6 +1367,7 @@ func (k Keeper) SetLiquidityTier(
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
 		ImpactNotional:         impactNotional,
+		VolatilityBoundsPeriod: volatilityBoundsPeriod,
 	}
 
 	// Validate liquidity tier's fields.

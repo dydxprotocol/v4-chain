@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"sort"
 	"testing"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -650,7 +651,8 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				"name",
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
-				1, // dummy impact notional value
+				1,         // dummy impact notional value
+				time.Hour, // TODO (CORE-839): add VMF tests after VMF is implemented
 			)
 			require.NoError(t, err)
 
@@ -2792,6 +2794,7 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.VolatilityBoundsPeriod,
 		)
 		require.NoError(t, err)
 	}
@@ -2830,6 +2833,7 @@ func TestHasLiquidityTier(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.VolatilityBoundsPeriod,
 		)
 		require.NoError(t, err)
 	}
@@ -2854,6 +2858,7 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.VolatilityBoundsPeriod,
 		)
 		require.NoError(t, err)
 
@@ -2868,6 +2873,7 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 		require.Equal(t, lt.InitialMarginPpm, liquidityTier.InitialMarginPpm)
 		require.Equal(t, lt.MaintenanceFractionPpm, liquidityTier.MaintenanceFractionPpm)
 		require.Equal(t, lt.ImpactNotional, liquidityTier.ImpactNotional)
+		require.Equal(t, lt.VolatilityBoundsPeriod, liquidityTier.VolatilityBoundsPeriod)
 	}
 }
 
@@ -2878,6 +2884,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		volatilityBoundsPeriod time.Duration
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2886,6 +2893,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -2894,6 +2902,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -2902,7 +2911,26 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          types.ErrImpactNotionalIsZero,
+		},
+		"Volatility Bounds Period is zero": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: 0,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
+		},
+		"Volatility Bounds Period is negative": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: -time.Hour,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
 		},
 	}
 
@@ -2919,6 +2947,7 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.volatilityBoundsPeriod,
 			)
 
 			require.Error(t, err)
@@ -2937,6 +2966,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.VolatilityBoundsPeriod,
 		)
 		require.NoError(t, err)
 	}
@@ -2948,6 +2978,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		initialMarginPpm := uint32(i * 2)
 		maintenanceFractionPpm := uint32(i * 2)
 		impactNotional := uint64((i + 1) * 500_000_000)
+		volatilityBoundsPeriod := time.Duration(i+1) * time.Hour
 		modifiedLt, err := pc.PerpetualsKeeper.SetLiquidityTier(
 			pc.Ctx,
 			lt.Id,
@@ -2955,6 +2986,7 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			initialMarginPpm,
 			maintenanceFractionPpm,
 			impactNotional,
+			volatilityBoundsPeriod,
 		)
 		require.NoError(t, err)
 		obtainedLt, err := pc.PerpetualsKeeper.GetLiquidityTier(pc.Ctx, lt.Id)
@@ -2984,6 +3016,11 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			impactNotional,
 			obtainedLt.ImpactNotional,
 		)
+		require.Equal(
+			t,
+			volatilityBoundsPeriod,
+			obtainedLt.VolatilityBoundsPeriod,
+		)
 	}
 	liquidityTierUpsertEvents := keepertest.GetLiquidityTierUpsertEventsFromIndexerBlock(pc.Ctx, pc.PerpetualsKeeper)
 	require.Len(t, liquidityTierUpsertEvents, len(constants.LiquidityTiers)*2)
@@ -2996,6 +3033,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		volatilityBoundsPeriod time.Duration
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -3004,6 +3042,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -3012,6 +3051,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -3020,7 +3060,26 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			volatilityBoundsPeriod: time.Hour,
 			expectedError:          types.ErrImpactNotionalIsZero,
+		},
+		"Volatility Bounds Period is zero": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: 0,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
+		},
+		"Volatility Bounds Period is negative": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			volatilityBoundsPeriod: -time.Hour,
+			expectedError:          types.ErrVolatilityBoundsPeriodIsNonPositive,
 		},
 	}
 
@@ -3038,6 +3097,7 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.volatilityBoundsPeriod,
 			)
 
 			require.Error(t, err)

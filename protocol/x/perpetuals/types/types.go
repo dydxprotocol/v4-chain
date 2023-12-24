@@ -2,6 +2,7 @@ package types
 
 import (
 	"math/big"
+	time "time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -92,6 +93,7 @@ type PerpetualsKeeper interface {
 		initialMarginPpm uint32,
 		maintenanceFractionPpm uint32,
 		impactNotional uint64,
+		volatilityBoundsPeriod time.Duration,
 	) (
 		liquidityTier LiquidityTier,
 		err error,
