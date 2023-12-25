@@ -334,7 +334,7 @@ export interface SourceOfFundsSDKType {
 export interface TransferEventV1 {
   senderSubaccountId?: IndexerSubaccountId;
   recipientSubaccountId?: IndexerSubaccountId;
-  /** Id of the asset transfered. */
+  /** Id of the asset transferred. */
 
   assetId: number;
   /** The amount of asset in quantums to transfer. */
@@ -365,7 +365,7 @@ export interface TransferEventV1 {
 export interface TransferEventV1SDKType {
   sender_subaccount_id?: IndexerSubaccountIdSDKType;
   recipient_subaccount_id?: IndexerSubaccountIdSDKType;
-  /** Id of the asset transfered. */
+  /** Id of the asset transferred. */
 
   asset_id: number;
   /** The amount of asset in quantums to transfer. */
