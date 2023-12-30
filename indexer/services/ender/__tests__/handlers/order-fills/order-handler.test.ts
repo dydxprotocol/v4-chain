@@ -1320,6 +1320,7 @@ describe('OrderHandler', () => {
       },
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+      // Invalid TIF
       timeInForce: (4 as IndexerOrder_TimeInForce),
       reduceOnly: false,
       clientMetadata: 0,
@@ -1338,6 +1339,7 @@ describe('OrderHandler', () => {
       },
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       orderFlags: ORDER_FLAG_LONG_TERM.toString(),
+      // Invalid TIF
       timeInForce: (17 as IndexerOrder_TimeInForce),
       reduceOnly: true,
       clientMetadata: 0,
@@ -1432,6 +1434,7 @@ describe('OrderHandler', () => {
       clobPairId: testConstants.defaultPerpetualMarket3.clobPairId,
       side: protocolTranslations.protocolOrderSideToOrderSide(takerOrderProto.side),
       orderFlags: takerOrderProto.orderId!.orderFlags.toString(),
+      // Invalid TIF in order is treated as GTT
       timeInForce: TimeInForce.GTT,
       reduceOnly: true,
       goodTilBlock: protocolTranslations.getGoodTilBlock(takerOrderProto)?.toString(),
