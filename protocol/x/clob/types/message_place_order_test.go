@@ -53,6 +53,36 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 			},
 			err: ErrInvalidOrderSide,
 		},
+		"invalid time in force": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+					},
+					Side:        Order_SIDE_BUY,
+					TimeInForce: Order_TimeInForce(uint32(999)),
+				},
+			},
+			err: ErrInvalidTimeInForce,
+		},
+		"invalid condition type": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+					},
+					Side:          Order_SIDE_BUY,
+					ConditionType: Order_ConditionType(uint32(999)),
+				},
+			},
+			err: ErrInvalidConditionType,
+		},
 		"unspecified side": {
 			msg: MsgPlaceOrder{
 				Order: Order{
