@@ -6,23 +6,23 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-// InfoLog reports msg as an info level log with key vals.
+// InfoLog reports msg as an info level log with specified key vals.
 func InfoLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
 	ctx.Logger().Info(msg, keyvals...)
 }
 
-// DebugLog reports msg as a debug level log with key vals.
+// DebugLog reports msg as a debug level log with specified key vals.
 func DebugLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
 	ctx.Logger().Debug(msg, keyvals...)
 }
 
-// ErrorLogWithError reports msg as a error log, as well as attaching the error
-// object to the log for datadog error tracking.
+// ErrorLogWithError reports msg as a error log with specified key vals,
+// as well as attaching the error object to the log for datadog error tracking.
 func ErrorLogWithError(ctx sdk.Context, msg string, err error, keyvals ...interface{}) {
 	ctx.Logger().Error(msg, append(keyvals, Error, err))
 }
 
-// ErrorLog reports msg as a error log. It constructs error object on the fly with
+// ErrorLog reports msg as a error log. It constructs an error object on the fly with
 // the given message object.
 // Please try to use define a new message and use `ErrorLogWithError` instead.
 func ErrorLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
