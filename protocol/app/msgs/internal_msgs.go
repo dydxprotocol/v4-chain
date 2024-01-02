@@ -57,12 +57,8 @@ var (
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// distribution
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  &distribution.MsgCommunityPoolSpend{},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          nil,
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distribution.MsgDepositValidatorRewardsPool{},
-		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":                        &distribution.MsgUpdateParams{},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":                nil,
+		"/cosmos.distribution.v1beta1.MsgUpdateParams":         &distribution.MsgUpdateParams{},
+		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// gov
 		"/cosmos.gov.v1.MsgExecLegacyContent":         &gov.MsgExecLegacyContent{},

@@ -51,6 +51,10 @@ var (
 
 		// distribution
 		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             nil,
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  &distr.MsgCommunityPoolSpend{},
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          nil,
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distr.MsgDepositValidatorRewardsPool{},
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   &distr.MsgFundCommunityPool{},
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse":           nil,
 		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":                  &distr.MsgSetWithdrawAddress{},

@@ -48,9 +48,7 @@ func IsInternalMsg(msg sdk.Msg) bool {
 		*crisis.MsgUpdateParams,
 
 		// distribution
-		*distribution.MsgCommunityPoolSpend,
 		*distribution.MsgUpdateParams,
-		*distribution.MsgDepositValidatorRewardsPool,
 
 		// gov
 		*gov.MsgExecLegacyContent,
