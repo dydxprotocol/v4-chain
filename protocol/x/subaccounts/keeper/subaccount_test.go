@@ -233,6 +233,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		expectedSuccess            bool
 		expectedSuccessPerUpdate   []types.UpdateResult
 		expectedErr                error
+
 		// Only contains the updated perpetual positions, to assert against the events included.
 		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
 		expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt
@@ -2144,7 +2145,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates)
+			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, types.Match)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
@@ -2180,6 +2181,868 @@ func TestUpdateSubaccounts(t *testing.T) {
 				require.Equal(t, *ep, *newSubaccount.PerpetualPositions[i])
 			}
 			require.Equal(t, len(newSubaccount.AssetPositions), len(tc.expectedAssetPositions))
+			for i, ep := range tc.expectedAssetPositions {
+				require.Equal(t, *ep, *newSubaccount.AssetPositions[i])
+			}
+		})
+	}
+}
+
+func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
+	// default subaccount id, the first subaccount id generated when calling createNSubaccount
+	firstSubaccountId := types.SubaccountId{
+		Owner:  "0",
+		Number: 0,
+	}
+	secondSubaccountId := types.SubaccountId{
+		Owner:  "0",
+		Number: 1,
+	}
+
+	tests := map[string]struct {
+		// state
+		perpetuals        []perptypes.Perpetual
+		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
+		assets            []*asstypes.Asset
+		marketParamPrices []pricestypes.MarketParamPrice
+
+		// subaccount state
+		perpetualPositions []*types.PerpetualPosition
+		assetPositions     []*types.AssetPosition
+
+		// updates
+		updates []types.Update
+
+		// expectations
+		expectedQuoteBalance       *big.Int
+		expectedPerpetualPositions []*types.PerpetualPosition
+		expectedAssetPositions     []*types.AssetPosition
+		expectedSuccess            bool
+		expectedSuccessPerUpdate   []types.UpdateResult
+		expectedErr                error
+
+		// Only contains the updated perpetual positions, to assert against the events included.
+		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
+		expectedSubaccoundIdToFundingPayments map[types.SubaccountId]map[uint32]dtypes.SerializableInt
+		expectedUpdatedAssetPositions         map[types.SubaccountId][]*types.AssetPosition
+		msgSenderEnabled                      bool
+
+		// Negative TNC subaccount state
+		currentBlock                     uint32
+		negativeTncSubaccountSeenAtBlock uint32
+
+		// Update type
+		updateType types.UpdateType
+	}{
+		"deposits are not blocked if negative TNC subaccount was seen at current block": {
+			expectedQuoteBalance:     big.NewInt(100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(100), // 100 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 100,
+
+			updateType: types.Deposit,
+		},
+		`deposits are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance:     big.NewInt(100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(100), // 100 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+
+			updateType: types.Deposit,
+		},
+		"deposits are not blocked if negative TNC subaccount was never seen": {
+			expectedQuoteBalance:     big.NewInt(100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(100), // 100 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 0,
+
+			updateType: types.Deposit,
+		},
+		"withdrawals are blocked if negative TNC subaccount was seen at current block": {
+			expectedQuoteBalance:     big.NewInt(-100),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.WithdrawalsAndTransfersBlocked},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 100,
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are blocked if negative TNC subaccount was seen within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance:     big.NewInt(-100),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.WithdrawalsAndTransfersBlocked},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are not blocked if negative TNC subaccount was seen after
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance:     big.NewInt(-100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(-100), // 100 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+
+			updateType: types.Withdrawal,
+		},
+		"withdrawals are not blocked if negative TNC subaccount was never seen": {
+			expectedQuoteBalance:     big.NewInt(-100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(-100), // 100 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 0,
+
+			updateType: types.Withdrawal,
+		},
+		"well-collateralized matches are not blocked if negative TNC subaccount was seen at current block": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(0),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: false,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 100,
+
+			updateType: types.Match,
+		},
+		`well-collateralized matches are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(0),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: false,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+
+			updateType: types.Match,
+		},
+		"well-collateralized matches are not blocked if negative TNC subaccount was never seen": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(0),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: false,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 0,
+
+			updateType: types.Match,
+		},
+		"undercollateralized matches are not blocked if negative TNC subaccount was seen at current block": {
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 100,
+
+			updateType: types.Match,
+		},
+		`undercollateralized matches are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+
+			updateType: types.Match,
+		},
+		"undercollateralized matches are not blocked if negative TNC subaccount was never seen": {
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(1_000_000), // 0.01 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-50_000_000_000)), // -$50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 0,
+
+			updateType: types.Match,
+		},
+		"transfers are blocked if negative TNC subaccount was seen at current block": {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals:                 []perptypes.Perpetual{},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions:     []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 100,
+
+			updateType: types.Withdrawal,
+		},
+		`transfers are blocked if negative TNC subaccount was seen within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals:                 []perptypes.Perpetual{},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions:     []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+
+			updateType: types.Withdrawal,
+		},
+		`transfers are not blocked if negative TNC subaccount was seen after
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.Success,
+			},
+			perpetuals:                 []perptypes.Perpetual{},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions:     []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: 100 -
+				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+
+			updateType: types.Withdrawal,
+		},
+		"transfers are not blocked if negative TNC subaccount was never seen": {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.Success,
+			},
+			perpetuals:                 []perptypes.Perpetual{},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions:     []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     100,
+			negativeTncSubaccountSeenAtBlock: 0,
+
+			updateType: types.Withdrawal,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _ := testutil.SubaccountsKeepers(
+				t,
+				tc.msgSenderEnabled,
+			)
+			ctx = ctx.WithTxBytes(constants.TestTxBytes)
+			testutil.CreateTestMarkets(t, ctx, pricesKeeper)
+			testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+			for _, m := range tc.marketParamPrices {
+				_, err := pricesKeeper.CreateMarket(
+					ctx,
+					m.Param,
+					m.Price,
+				)
+				require.NoError(t, err)
+			}
+
+			// Always creates USDC asset first
+			require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+			for _, a := range tc.assets {
+				_, err := assetsKeeper.CreateAsset(
+					ctx,
+					a.Id,
+					a.Symbol,
+					a.Denom,
+					a.DenomExponent,
+					a.HasMarket,
+					a.MarketId,
+					a.AtomicResolution,
+				)
+				require.NoError(t, err)
+			}
+
+			for i, p := range tc.perpetuals {
+				perp, err := perpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+
+				// Update FundingIndex for testing settlements.
+				if i < len(tc.newFundingIndices) {
+					err = perpetualsKeeper.ModifyFundingIndex(
+						ctx,
+						perp.Params.Id,
+						tc.newFundingIndices[i],
+					)
+					require.NoError(t, err)
+				}
+			}
+
+			subaccounts := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
+			subaccounts[0].PerpetualPositions = tc.perpetualPositions
+			subaccounts[0].AssetPositions = tc.assetPositions
+			keeper.SetSubaccount(ctx, subaccounts[0])
+			keeper.SetSubaccount(ctx, subaccounts[1])
+			subaccountId := *subaccounts[0].Id
+
+			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
+			if tc.negativeTncSubaccountSeenAtBlock != 0 {
+				keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, tc.negativeTncSubaccountSeenAtBlock)
+			}
+
+			// Set the current block number on the context.
+			ctx = ctx.WithBlockHeight(int64(tc.currentBlock))
+
+			for i, u := range tc.updates {
+				if u.SubaccountId == (types.SubaccountId{}) {
+					u.SubaccountId = subaccountId
+				}
+				tc.updates[i] = u
+			}
+
+			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, tc.updateType)
+			if tc.expectedErr != nil {
+				require.ErrorIs(t, tc.expectedErr, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedSuccessPerUpdate, successPerUpdate)
+				require.Equal(t, tc.expectedSuccess, success)
+			}
+
+			if tc.msgSenderEnabled {
+				assertSubaccountUpdateEventsInIndexerBlock(
+					t,
+					keeper,
+					ctx,
+					tc.expectedErr,
+					tc.expectedSuccess,
+					tc.updates,
+					tc.expectedSuccessPerUpdate,
+					tc.expectedUpdatedPerpetualPositions,
+					tc.expectedSubaccoundIdToFundingPayments,
+					tc.expectedUpdatedAssetPositions,
+				)
+			} else {
+				assertSubaccountUpdateEventsNotInIndexerBlock(
+					t,
+					keeper,
+					ctx,
+				)
+			}
+
+			newSubaccount := keeper.GetSubaccount(ctx, subaccountId)
+			require.Equal(t, len(tc.expectedPerpetualPositions), len(newSubaccount.PerpetualPositions))
+			for i, ep := range tc.expectedPerpetualPositions {
+				require.Equal(t, *ep, *newSubaccount.PerpetualPositions[i])
+			}
+			require.Equal(t, len(tc.expectedAssetPositions), len(newSubaccount.AssetPositions))
 			for i, ep := range tc.expectedAssetPositions {
 				require.Equal(t, *ep, *newSubaccount.AssetPositions[i])
 			}
@@ -2758,7 +3621,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates)
+			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates, types.Match)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
