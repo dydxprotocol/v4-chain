@@ -25,4 +25,4 @@ docker cp clear-all-kafa-topics.sh $KAFKA_CONTAINER:/opt/kafka
 docker exec -it $KAFKA_CONTAINER /bin/bash -c "./clear-all-kafa-topics.sh"
 
 echo "Restarting all containers..."
-docker-compose -f docker-compose-e2e-test.yml up
+docker-compose -f docker-compose-e2e-test.yml up -d
