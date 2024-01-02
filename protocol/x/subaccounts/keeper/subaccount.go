@@ -17,6 +17,8 @@ import (
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -107,49 +109,6 @@ func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccoun
 		done := callback(subaccount)
 		if done {
 			break
-		}
-	}
-}
-
-// ForEachSubaccountRandomStart performs a callback across all subaccounts.
-// The callback function should return a boolean if we should end iteration or not.
-// Note that this function starts at a random subaccount using the passed in `rand`
-// and iterates from there. `rand` should be seeded for determinism if used in ways
-// that affect consensus.
-// TODO(CLOB-823): improve how random bytes are selected since bytes distribution
-// might not be uniform.
-func (k Keeper) ForEachSubaccountRandomStart(
-	ctx sdk.Context,
-	callback func(types.Subaccount) (finished bool),
-	rand *rand.Rand,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	prefix, err := k.getRandomBytes(ctx, rand)
-	if err != nil {
-		return
-	}
-
-	// Iterate over subaccounts from the random prefix (inclusive) to the end.
-	prefixStartIterator := store.Iterator(prefix, nil)
-	defer prefixStartIterator.Close()
-	for ; prefixStartIterator.Valid(); prefixStartIterator.Next() {
-		var subaccount types.Subaccount
-		k.cdc.MustUnmarshal(prefixStartIterator.Value(), &subaccount)
-		done := callback(subaccount)
-		if done {
-			return
-		}
-	}
-
-	// Iterator over subaccounts from the start to the random prefix (exclusive).
-	prefixEndIterator := store.Iterator(nil, prefix)
-	defer prefixEndIterator.Close()
-	for ; prefixEndIterator.Valid(); prefixEndIterator.Next() {
-		var subaccount types.Subaccount
-		k.cdc.MustUnmarshal(prefixEndIterator.Value(), &subaccount)
-		done := callback(subaccount)
-		if done {
-			return
 		}
 	}
 }
@@ -377,6 +336,33 @@ func (k Keeper) getSettledSubaccount(
 	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
+	// Fetch all relevant perpetuals.
+	perpetuals := make(map[uint32]perptypes.Perpetual)
+	for _, p := range subaccount.PerpetualPositions {
+		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, p.PerpetualId)
+		if err != nil {
+			return types.Subaccount{}, nil, err
+		}
+		perpetuals[p.PerpetualId] = perpetual
+	}
+
+	return GetSettledSubaccountWithPerpetuals(subaccount, perpetuals)
+}
+
+// GetSettledSubaccountWithPerpetuals returns 1. a new settled subaccount given an unsettled subaccount,
+// updating the USDC AssetPosition, FundingIndex, and LastFundingPayment fields accordingly
+// (does not persist any changes) and 2. a map with perpetual ID as key and last funding
+// payment as value (for emitting funding payments to indexer).
+//
+// Note that this is a stateless utility function.
+func GetSettledSubaccountWithPerpetuals(
+	subaccount types.Subaccount,
+	perpetuals map[uint32]perptypes.Perpetual,
+) (
+	settledSubaccount types.Subaccount,
+	fundingPayments map[uint32]dtypes.SerializableInt,
+	err error,
+) {
 	totalNetSettlementPpm := big.NewInt(0)
 
 	newPerpetualPositions := []*types.PerpetualPosition{}
@@ -384,15 +370,21 @@ func (k Keeper) getSettledSubaccount(
 
 	// Iterate through and settle all perpetual positions.
 	for _, p := range subaccount.PerpetualPositions {
-		bigNetSettlementPpm, newFundingIndex, err := k.perpetualsKeeper.GetSettlementPpm(
-			ctx,
-			p.PerpetualId,
+		perpetual, found := perpetuals[p.PerpetualId]
+		if !found {
+			return types.Subaccount{},
+				nil,
+				errorsmod.Wrap(
+					perptypes.ErrPerpetualDoesNotExist, lib.UintToString(p.PerpetualId),
+				)
+		}
+
+		// Call the stateless utility function to get the net settlement and new funding index.
+		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+			perpetual,
 			p.GetBigQuantums(),
 			p.FundingIndex.BigInt(),
 		)
-		if err != nil {
-			return types.Subaccount{}, nil, err
-		}
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.

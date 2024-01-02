@@ -104,6 +104,58 @@ func TestUniqueSliceToSet(t *testing.T) {
 	}
 }
 
+func TestUniqueSliceToMap(t *testing.T) {
+	type testStruct struct {
+		Id uint32
+	}
+
+	tests := map[string]struct {
+		input     []testStruct
+		expected  map[uint32]testStruct
+		panicWith string
+	}{
+		"Empty": {
+			input:    []testStruct{},
+			expected: map[uint32]testStruct{},
+		},
+		"Basic": {
+			input: []testStruct{
+				{Id: 0}, {Id: 1}, {Id: 2},
+			},
+			expected: map[uint32]testStruct{
+				0: {Id: 0},
+				1: {Id: 1},
+				2: {Id: 2},
+			},
+		},
+		"Duplicate": {
+			input: []testStruct{
+				{Id: 0}, {Id: 0},
+			},
+			panicWith: "UniqueSliceToMap: duplicate value: {Id:0}",
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.panicWith != "" {
+				require.PanicsWithValue(
+					t,
+					tc.panicWith,
+					func() {
+						lib.UniqueSliceToMap(tc.input, func(t testStruct) uint32 { return t.Id })
+					},
+				)
+			} else {
+				require.Equal(
+					t,
+					tc.expected,
+					lib.UniqueSliceToMap(tc.input, func(t testStruct) uint32 { return t.Id }),
+				)
+			}
+		})
+	}
+}
+
 func TestMapSlice(t *testing.T) {
 	// Can increment all numbers in a slice by 1, and change type to `uint64`.
 	require.Equal(

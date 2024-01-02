@@ -13,4 +13,9 @@ export class CountryRestrictor {
 
     return false;
   }
+
+  public getCountry(req: IncomingMessage): string | undefined {
+    const countryHeaders: CountryHeaders = req.headers as CountryHeaders;
+    return countryHeaders['cf-ipcountry'];
+  }
 }

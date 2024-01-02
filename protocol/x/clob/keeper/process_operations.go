@@ -606,7 +606,10 @@ func (k Keeper) PersistMatchLiquidationToState(
 
 // PersistMatchDeleveragingToState writes a MatchPerpetualDeleveraging object to state.
 // This function returns an error if:
-// - CanDeleverageSubaccount returns false, indicating the subaccount failed deleveraging validation.
+// - CanDeleverageSubaccount returns false for both boolean return values, indicating the
+// subaccount failed deleveraging validation.
+// - The IsFinalSettlement flag on the operation does not match the expected value based on collateralization
+// and market status.
 // - OffsetSubaccountPerpetualPosition returns an error.
 // - The generated fills do not match the fills in the Operations object.
 // TODO(CLOB-654) Verify deleveraging is triggered by unmatched liquidation orders and for the correct amount.
@@ -615,9 +618,15 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	matchDeleveraging *types.MatchPerpetualDeleveraging,
 ) error {
 	liquidatedSubaccountId := matchDeleveraging.GetLiquidated()
+	perpetualId := matchDeleveraging.GetPerpetualId()
 
 	// Validate that the provided subaccount can be deleveraged.
-	if canDeleverageSubaccount, err := k.CanDeleverageSubaccount(ctx, liquidatedSubaccountId); err != nil {
+	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
+		ctx,
+		liquidatedSubaccountId,
+		perpetualId,
+	)
+	if err != nil {
 		panic(
 			fmt.Sprintf(
 				"PersistMatchDeleveragingToState: Failed to determine if subaccount can be deleveraged. "+
@@ -626,7 +635,9 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			),
 		)
-	} else if !canDeleverageSubaccount {
+	}
+
+	if !shouldDeleverageAtBankruptcyPrice && !shouldDeleverageAtOraclePrice {
 		// TODO(CLOB-853): Add more verbose error logging about why deleveraging failed validation.
 		return errorsmod.Wrapf(
 			types.ErrInvalidDeleveragedSubaccount,
@@ -635,7 +646,18 @@ func (k Keeper) PersistMatchDeleveragingToState(
 		)
 	}
 
-	perpetualId := matchDeleveraging.GetPerpetualId()
+	if matchDeleveraging.IsFinalSettlement != shouldDeleverageAtOraclePrice {
+		// Throw error if the isFinalSettlement flag does not match the expected value. This prevents misuse or lack
+		// of use of the isFinalSettlement flag. The isFinalSettlement flag should be set to true if-and-only-if the
+		// subaccount has non-negative TNC and the market is in final settlement. Otherwise, it must be false.
+		return errorsmod.Wrapf(
+			types.ErrDeleveragingIsFinalSettlementFlagMismatch,
+			"MatchPerpetualDeleveraging %+v has isFinalSettlement flag (%v), expected (%v)",
+			matchDeleveraging,
+			matchDeleveraging.IsFinalSettlement,
+			shouldDeleverageAtOraclePrice,
+		)
+	}
 
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	position, exists := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
@@ -660,6 +682,7 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			perpetualId,
 			liquidatedSubaccountId,
 			deltaBaseQuantums,
+			matchDeleveraging.IsFinalSettlement,
 		)
 		if err != nil {
 			return err
@@ -685,6 +708,25 @@ func (k Keeper) PersistMatchDeleveragingToState(
 				err,
 			)
 		}
+
+		// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
+		// if the branched state is discarded, so batching is not necessary.
+		k.GetIndexerEventManager().AddTxnEvent(
+			ctx,
+			indexerevents.SubtypeDeleveraging,
+			indexerevents.DeleveragingEventVersion,
+			indexer_manager.GetBytes(
+				indexerevents.NewDeleveragingEvent(
+					liquidatedSubaccountId,
+					fill.OffsettingSubaccountId,
+					perpetualId,
+					satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+					satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
+					deltaBaseQuantums.Sign() > 0,
+					matchDeleveraging.IsFinalSettlement,
+				),
+			),
+		)
 	}
 
 	return nil

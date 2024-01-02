@@ -28,6 +28,7 @@ import {
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
+  TradingRewardsEventV1,
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
@@ -386,4 +387,13 @@ export const defaultLongTermOrderPlacementEvent: StatefulOrderEventV1 = {
       goodTilBlockTime: 123,
     },
   },
+};
+
+export const defaultTradingRewardsEvent: TradingRewardsEventV1 = {
+  tradingRewards: [
+    {
+      owner: testConstants.defaultWallet.address,
+      denomAmount: new Uint8Array(1),
+    },
+  ],
 };

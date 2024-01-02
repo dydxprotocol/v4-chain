@@ -39,6 +39,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_perpetual_market_handler.sql',
   'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
+  'dydx_trading_rewards_handler.sql',
   'dydx_transfer_handler.sql',
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_handler.sql',
@@ -67,6 +68,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_liquidation_fill_handler_per_order.sql',
   'dydx_order_fill_handler_per_order.sql',
   'dydx_perpetual_position_and_order_side_matching.sql',
+  'dydx_process_trading_reward_event.sql',
   'dydx_protocol_condition_type_to_order_type.sql',
   'dydx_tendermint_event_to_transaction_index.sql',
   'dydx_trim_scale.sql',
@@ -81,6 +83,7 @@ const HELPER_SCRIPTS: string[] = [
   'dydx_uuid_from_perpetual_position_parts.sql',
   'dydx_uuid_from_subaccount_id.sql',
   'dydx_uuid_from_subaccount_id_parts.sql',
+  'dydx_uuid_from_trading_rewards_parts.sql',
   'dydx_uuid_from_transaction_parts.sql',
   'dydx_uuid_from_transfer_parts.sql',
 ];

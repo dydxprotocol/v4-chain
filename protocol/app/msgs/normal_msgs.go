@@ -206,5 +206,8 @@ var (
 		"/ibc.lightclients.tendermint.v1.ConsensusState": nil,
 		"/ibc.lightclients.tendermint.v1.Header":         nil,
 		"/ibc.lightclients.tendermint.v1.Misbehaviour":   nil,
+
+		// ica
+		"/ibc.applications.interchain_accounts.v1.InterchainAccount": nil,
 	}
 )

@@ -119,6 +119,7 @@ export interface Connection {
   messageId: number;
   heartbeat?: NodeJS.Timeout;
   disconnect?: NodeJS.Timeout;
+  countryCode?: string;
 }
 
 export interface MessageToForward {

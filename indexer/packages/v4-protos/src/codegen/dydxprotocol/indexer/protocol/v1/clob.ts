@@ -311,8 +311,9 @@ export enum ClobPairStatus {
   /**
    * CLOB_PAIR_STATUS_FINAL_SETTLEMENT - CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
    * deactivated. Clob pairs in this state do not accept new orders and trading
-   * is blocked. All open positions are closed by the protocol when the clob
-   * pair gains this status.
+   * is blocked. All open positions are closed and open stateful orders canceled
+   * by the protocol when the clob pair transitions to this status. All
+   * short-term orders are left to expire.
    */
   CLOB_PAIR_STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,
@@ -360,8 +361,9 @@ export enum ClobPairStatusSDKType {
   /**
    * CLOB_PAIR_STATUS_FINAL_SETTLEMENT - CLOB_PAIR_STATUS_FINAL_SETTLEMENT represents a clob pair that has been
    * deactivated. Clob pairs in this state do not accept new orders and trading
-   * is blocked. All open positions are closed by the protocol when the clob
-   * pair gains this status.
+   * is blocked. All open positions are closed and open stateful orders canceled
+   * by the protocol when the clob pair transitions to this status. All
+   * short-term orders are left to expire.
    */
   CLOB_PAIR_STATUS_FINAL_SETTLEMENT = 6,
   UNRECOGNIZED = -1,

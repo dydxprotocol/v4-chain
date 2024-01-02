@@ -7,6 +7,7 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -34,6 +35,7 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		vestmoduletypes.CommunityTreasuryAccountName: "dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn",
 		vestmoduletypes.CommunityVesterAccountName:   "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
 		delaymsgtypes.ModuleName:                     "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
+		icatypes.ModuleName:                          "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 	}
 
 	require.True(t, len(expectedModuleAccToAddresses) == len(app.GetMaccPerms()))
@@ -50,6 +52,7 @@ func TestBlockedAddresses(t *testing.T) {
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true,
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true,
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true,
+		"dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8": true,
 	}
 	require.Equal(t, expectedBlockedAddresses, app.BlockedAddresses())
 }
@@ -66,6 +69,7 @@ func TestMaccPerms(t *testing.T) {
 		"not_bonded_tokens_pool": {"burner", "staking"},
 		"subaccounts":            nil,
 		"transfer":               {"minter", "burner"},
+		"interchainaccounts":     nil,
 		"rewards_treasury":       nil,
 		"rewards_vester":         nil,
 		"community_treasury":     nil,
@@ -84,6 +88,7 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true, // x/staking.notBondedPool
 		"dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky": true, // x/ gov
 		"dydx1yl6hdjhmkf37639730gffanpzndzdpmh8xcdh5": true, // ibc transfer
+		"dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8": true, // interchainaccounts
 		"dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6": true, // x/subaccount
 		"dydx1c7ptc87hkd54e3r7zjy92q29xkq7t79w64slrq": true, // x/clob.insuranceFund
 		"dydx16wrau2x4tsg033xfrrdpae6kxfn9kyuerr5jjp": true, // x/rewards.treasury

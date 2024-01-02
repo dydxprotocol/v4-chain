@@ -18,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -104,11 +103,10 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper                    *keeper.Keeper
-	accountKeeper             types.AccountKeeper
-	bankKeeper                types.BankKeeper
-	subaccountsKeeper         types.SubaccountsKeeper
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds
+	keeper            *keeper.Keeper
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	subaccountsKeeper types.SubaccountsKeeper
 }
 
 func NewAppModule(
@@ -117,15 +115,13 @@ func NewAppModule(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
-	liquidatableSubaccountIds *liquidationtypes.LiquidatableSubaccountIds,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic:            NewAppModuleBasic(cdc),
-		keeper:                    keeper,
-		accountKeeper:             accountKeeper,
-		bankKeeper:                bankKeeper,
-		subaccountsKeeper:         subaccountsKeeper,
-		liquidatableSubaccountIds: liquidatableSubaccountIds,
+		AppModuleBasic:    NewAppModuleBasic(cdc),
+		keeper:            keeper,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		subaccountsKeeper: subaccountsKeeper,
 	}
 }
 
@@ -194,6 +190,5 @@ func (am AppModule) Commit(ctx sdk.Context) {
 	PrepareCheckState(
 		ctx,
 		am.keeper,
-		am.liquidatableSubaccountIds,
 	)
 }

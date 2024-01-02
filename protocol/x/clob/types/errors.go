@@ -308,6 +308,16 @@ var (
 		1020,
 		"Position cannot be fully offset",
 	)
+	ErrDeleveragingIsFinalSettlementFlagMismatch = errorsmod.Register(
+		ModuleName,
+		1021,
+		"Deleveraging match has incorrect value for isFinalSettlement flag",
+	)
+	ErrLiquidationConflictsWithClobPairStatus = errorsmod.Register(
+		ModuleName,
+		1022,
+		"Liquidation conflicts with ClobPair status",
+	)
 
 	// Advanced order type errors.
 	ErrFokOrderCouldNotBeFullyFilled = errorsmod.Register(

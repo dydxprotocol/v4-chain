@@ -25,7 +25,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -1063,7 +1062,7 @@ func TestLiquidateSubaccounts(t *testing.T) {
 
 			// Update the liquidatable subaccount IDs.
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccounts,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccounts,
 			})
 			require.NoError(t, err)
 
@@ -1099,7 +1098,6 @@ func TestPrepareCheckState_WithProcessProposerMatchesEventsWithBadBlockHeight(t 
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
-			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
 }
@@ -1126,7 +1124,6 @@ func TestCommitBlocker_WithProcessProposerMatchesEventsWithBadBlockHeight(t *tes
 		clob.PrepareCheckState(
 			ks.Ctx.WithBlockHeight(int64(blockHeight+1)),
 			ks.ClobKeeper,
-			liquidationtypes.NewLiquidatableSubaccountIds(),
 		)
 	})
 }
@@ -1475,14 +1472,12 @@ func TestPrepareCheckState(t *testing.T) {
 			}
 
 			// Set the liquidatable subaccount IDs.
-			liquidatableSubaccountIds := liquidationtypes.NewLiquidatableSubaccountIds()
-			liquidatableSubaccountIds.UpdateSubaccountIds(tc.liquidatableSubaccounts)
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
 
 			// Run the test.
 			clob.PrepareCheckState(
 				ctx,
 				ks.ClobKeeper,
-				liquidatableSubaccountIds,
 			)
 
 			// Verify test expectations.

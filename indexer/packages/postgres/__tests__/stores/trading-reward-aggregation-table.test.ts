@@ -9,6 +9,7 @@ import {
 import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-aggregation-table';
 import { WalletTable } from '../../src';
 import { seedData } from '../helpers/mock-generators';
+import { denomToHumanReadableConversion } from '../helpers/conversion-helpers';
 
 describe('TradingRewardAggregation store', () => {
   beforeAll(async () => {
@@ -82,7 +83,7 @@ describe('TradingRewardAggregation store', () => {
   it('Successfully updates an existing TradingRewardAggregation', async () => {
     await TradingRewardAggregationTable.create(defaultTradingRewardAggregation);
 
-    const amount: string = '100000.00';
+    const amount: string = denomToHumanReadableConversion(100000);
     const endedAt: string = '2021-01-01T00:00:00.000Z';
     const endedAtHeight: string = '1000';
     const update:

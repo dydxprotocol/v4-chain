@@ -83,6 +83,28 @@ export interface SubaccountLiquidationInfoSDKType {
 
   quantums_insurance_lost: Long;
 }
+/**
+ * SubaccountOpenPositionInfo holds information about open positions for a
+ * perpetual.
+ */
+
+export interface SubaccountOpenPositionInfo {
+  /** The id of the perpetual. */
+  perpetualId: number;
+  subaccountsWithLongPosition: SubaccountId[];
+  subaccountsWithShortPosition: SubaccountId[];
+}
+/**
+ * SubaccountOpenPositionInfo holds information about open positions for a
+ * perpetual.
+ */
+
+export interface SubaccountOpenPositionInfoSDKType {
+  /** The id of the perpetual. */
+  perpetual_id: number;
+  subaccounts_with_long_position: SubaccountIdSDKType[];
+  subaccounts_with_short_position: SubaccountIdSDKType[];
+}
 
 function createBasePerpetualLiquidationInfo(): PerpetualLiquidationInfo {
   return {
@@ -212,6 +234,71 @@ export const SubaccountLiquidationInfo = {
     message.perpetualsLiquidated = object.perpetualsLiquidated?.map(e => e) || [];
     message.notionalLiquidated = object.notionalLiquidated !== undefined && object.notionalLiquidated !== null ? Long.fromValue(object.notionalLiquidated) : Long.UZERO;
     message.quantumsInsuranceLost = object.quantumsInsuranceLost !== undefined && object.quantumsInsuranceLost !== null ? Long.fromValue(object.quantumsInsuranceLost) : Long.UZERO;
+    return message;
+  }
+
+};
+
+function createBaseSubaccountOpenPositionInfo(): SubaccountOpenPositionInfo {
+  return {
+    perpetualId: 0,
+    subaccountsWithLongPosition: [],
+    subaccountsWithShortPosition: []
+  };
+}
+
+export const SubaccountOpenPositionInfo = {
+  encode(message: SubaccountOpenPositionInfo, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
+    for (const v of message.subaccountsWithLongPosition) {
+      SubaccountId.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    for (const v of message.subaccountsWithShortPosition) {
+      SubaccountId.encode(v!, writer.uint32(26).fork()).ldelim();
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): SubaccountOpenPositionInfo {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseSubaccountOpenPositionInfo();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 2:
+          message.subaccountsWithLongPosition.push(SubaccountId.decode(reader, reader.uint32()));
+          break;
+
+        case 3:
+          message.subaccountsWithShortPosition.push(SubaccountId.decode(reader, reader.uint32()));
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<SubaccountOpenPositionInfo>): SubaccountOpenPositionInfo {
+    const message = createBaseSubaccountOpenPositionInfo();
+    message.perpetualId = object.perpetualId ?? 0;
+    message.subaccountsWithLongPosition = object.subaccountsWithLongPosition?.map(e => SubaccountId.fromPartial(e)) || [];
+    message.subaccountsWithShortPosition = object.subaccountsWithShortPosition?.map(e => SubaccountId.fromPartial(e)) || [];
     return message;
   }
 

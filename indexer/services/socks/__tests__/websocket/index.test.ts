@@ -15,7 +15,7 @@ import {
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { PingHandler } from '../../src/lib/ping';
 import config from '../../src/config';
-import { isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
+import { isRestrictedCountryHeaders, COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
 
 jest.mock('uuid');
 jest.mock('../../src/helpers/wss');
@@ -38,6 +38,7 @@ describe('Index', () => {
 
   const connectionId: string = 'conId';
   const defaultGeoblockingEnabled: boolean = config.INDEXER_LEVEL_GEOBLOCKING_ENABLED;
+  const countryCode: string = 'AR';
 
   beforeAll(() => {
     jest.useFakeTimers();
@@ -142,7 +143,9 @@ describe('Index', () => {
     beforeEach(() => {
       // Connect to the index before starting each test.
       (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
-      mockConnect(websocket, new IncomingMessage(new Socket()));
+      const incomingMessage: IncomingMessage = new IncomingMessage(new Socket());
+      incomingMessage.headers[COUNTRY_HEADER_KEY] = countryCode;
+      mockConnect(websocket, incomingMessage);
     });
 
     describe('message', () => {
@@ -257,6 +260,7 @@ describe('Index', () => {
           index.connections[connectionId].messageId,
           id,
           isBatched,
+          countryCode,
         );
       });
 

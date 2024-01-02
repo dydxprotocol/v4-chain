@@ -73,7 +73,7 @@ export const defaultOrder: IndexerOrder = {
   subticks: Long.fromValue(2_000_000, true),
   goodTilBlock: 1150,
   goodTilBlockTime: undefined,
-  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY,
   reduceOnly: false,
   clientMetadata: 0,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED,
@@ -90,6 +90,14 @@ export const defaultConditionalOrder: IndexerOrder = {
   orderId: defaultOrderIdConditional,
   conditionType: IndexerOrder_ConditionType.CONDITION_TYPE_STOP_LOSS,
   conditionalOrderTriggerSubticks: Long.fromValue(190_000_000, true),
+};
+export const defaultOrderFok: IndexerOrder = {
+  ...defaultOrder,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_FILL_OR_KILL,
+};
+export const defaultOrderIoc: IndexerOrder = {
+  ...defaultOrder,
+  timeInForce: IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC,
 };
 
 export const defaultOrderUuid: string = OrderTable.orderIdToUuid(defaultOrderId);
@@ -125,6 +133,14 @@ export const defaultRedisOrderConditional: RedisOrder = {
   ...defaultRedisOrder,
   id: defaultOrderUuidConditional,
   order: defaultConditionalOrder,
+};
+export const defaultRedisOrderFok: RedisOrder = {
+  ...defaultRedisOrder,
+  order: defaultOrderFok,
+};
+export const defaultRedisOrderIoc: RedisOrder = {
+  ...defaultRedisOrder,
+  order: defaultOrderIoc,
 };
 
 export const orderPlace: OffChainUpdateOrderPlaceUpdateMessage = {

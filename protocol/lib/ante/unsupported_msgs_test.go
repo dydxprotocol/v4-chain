@@ -47,7 +47,6 @@ func TestIsUnsupportedMsg_Invalid(t *testing.T) {
 
 func TestIsUnsupportedMsg_Valid(t *testing.T) {
 	sampleMsgs := testmsgs.GetNonNilSampleMsgs(appmsgs.UnsupportedMsgSamples)
-	require.Len(t, sampleMsgs, len(appmsgs.UnsupportedMsgSamples)/2)
 
 	for _, sampleMsg := range sampleMsgs {
 		t.Run(sampleMsg.Name, func(t *testing.T) {

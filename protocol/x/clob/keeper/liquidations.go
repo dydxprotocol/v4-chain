@@ -19,13 +19,26 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// subaccountToDeleverage is a struct containing a subaccount ID and perpetual ID to deleverage.
+// This struct is used as a return type for the LiquidateSubaccountsAgainstOrderbook and
+// GetSubaccountsWithOpenPositionsInFinalSettlementMarkets called in PrepareCheckState.
+type subaccountToDeleverage struct {
+	SubaccountId satypes.SubaccountId
+	PerpetualId  uint32
+}
+
 // LiquidateSubaccountsAgainstOrderbook takes a list of subaccount IDs and liquidates them against
 // the orderbook. It will liquidate as many subaccounts as possible up to the maximum number of
-// liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset.
+// liquidations per block. Subaccounts are selected with a pseudo-randomly generated offset. A slice
+// of subaccounts to deleverage is returned from this function, derived from liquidation orders that
+// failed to fill.
 func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	ctx sdk.Context,
 	subaccountIds []satypes.SubaccountId,
-) error {
+) (
+	subaccountsToDeleverage []subaccountToDeleverage,
+	err error,
+) {
 	lib.AssertCheckTxMode(ctx)
 
 	metrics.AddSample(
@@ -36,7 +49,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 	// Early return if there are 0 subaccounts to liquidate.
 	numSubaccounts := len(subaccountIds)
 	if numSubaccounts == 0 {
-		return nil
+		return nil, nil
 	}
 
 	defer telemetry.MeasureSince(
@@ -69,7 +82,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return nil, err
 		}
 
 		liquidationOrders = append(liquidationOrders, *liquidationOrder)
@@ -94,7 +107,6 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 
 	// Attempt to place each liquidation order and perform deleveraging if necessary.
 	startPlaceLiquidationOrders := time.Now()
-	unfilledLiquidations := make([]types.LiquidationOrder, 0)
 	for _, subaccountId := range subaccountIdsToLiquidate {
 		// Generate a new liquidation order with the appropriate order size from the sorted subaccount ids.
 		liquidationOrder, err := k.MaybeGetLiquidationOrder(ctx, subaccountId)
@@ -106,19 +118,27 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 			}
 
 			// Return unexpected errors.
-			return err
+			return nil, err
 		}
 
 		optimisticallyFilledQuantums, _, err := k.PlacePerpetualLiquidation(ctx, *liquidationOrder)
-		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to liquidate subaccount", err,
+		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
+		// for subaccounts with open positions in final settlement markets.
+		if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
+			log.ErrorLogWithError(
+				ctx,
+				"Failed to liquidate subaccount",
+				err,
 				"liquidationOrder", *liquidationOrder,
 			)
-			return err
+			return nil, err
 		}
 
 		if optimisticallyFilledQuantums == 0 {
-			unfilledLiquidations = append(unfilledLiquidations, *liquidationOrder)
+			subaccountsToDeleverage = append(subaccountsToDeleverage, subaccountToDeleverage{
+				SubaccountId: liquidationOrder.GetSubaccountId(),
+				PerpetualId:  liquidationOrder.MustGetLiquidatedPerpetualId(),
+			})
 		}
 	}
 	telemetry.MeasureSince(
@@ -128,28 +148,7 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
-	// For each unfilled liquidation, attempt to deleverage the subaccount.
-	startDeleverageSubaccounts := time.Now()
-	for i := 0; i < int(k.Flags.MaxDeleveragingAttemptsPerBlock) && i < len(unfilledLiquidations); i++ {
-		liquidationOrder := unfilledLiquidations[i]
-
-		subaccountId := liquidationOrder.GetSubaccountId()
-		perpetualId := liquidationOrder.MustGetLiquidatedPerpetualId()
-
-		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
-		if err != nil {
-			log.ErrorLogWithError(ctx, "Failed to deleverage subaccount", err)
-			return err
-		}
-	}
-	telemetry.MeasureSince(
-		startDeleverageSubaccounts,
-		types.ModuleName,
-		metrics.LiquidateSubaccounts_Deleverage,
-		metrics.Latency,
-	)
-
-	return nil
+	return subaccountsToDeleverage, nil
 }
 
 // MaybeGetLiquidationOrder takes a subaccount ID and returns a liquidation order that can be used to
@@ -235,7 +234,8 @@ func (k Keeper) GetLiquidationOrderForPerpetual(
 }
 
 // PlacePerpetualLiquidation places an IOC liquidation order onto the book that results in fills of type
-// `PerpetualLiquidation`.
+// `PerpetualLiquidation`. This function will return an error if attempting to place a liquidation order
+// in a non-active market.
 func (k Keeper) PlacePerpetualLiquidation(
 	ctx sdk.Context,
 	liquidationOrder types.LiquidationOrder,
@@ -251,6 +251,10 @@ func (k Keeper) PlacePerpetualLiquidation(
 		time.Now(),
 		metrics.PlacePerpetualLiquidation,
 	)
+
+	if err := k.validateLiquidationAgainstClobPairStatus(ctx, liquidationOrder); err != nil {
+		return 0, 0, err
+	}
 
 	orderSizeOptimisticallyFilledFromMatchingQuantums,
 		orderStatus,
@@ -354,11 +358,22 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	// The subaccount is liquidatable if both of the following are true:
-	// - The maintenance margin requirements are greater than zero (note that they can never be negative).
-	// - The maintenance margin requirements are greater than the subaccount's net collateral.
-	isLiquidatable := bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
-	return isLiquidatable, nil
+	return CanLiquidateSubaccount(bigNetCollateral, bigMaintenanceMargin), nil
+}
+
+// CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
+// maintenance margin requirement.
+//
+// The subaccount is liquidatable if both of the following are true:
+// - The maintenance margin requirements are greater than zero (note that they can never be negative).
+// - The maintenance margin requirements are greater than the subaccount's net collateral.
+//
+// Note that this is a stateless function.
+func CanLiquidateSubaccount(
+	bigNetCollateral *big.Int,
+	bigMaintenanceMargin *big.Int,
+) bool {
+	return bigMaintenanceMargin.Sign() > 0 && bigMaintenanceMargin.Cmp(bigNetCollateral) == 1
 }
 
 // EnsureIsLiquidatable returns an error if the subaccount is not liquidatable.

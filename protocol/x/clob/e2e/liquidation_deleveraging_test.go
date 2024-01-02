@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -619,7 +620,7 @@ func TestLiquidationConfig(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds: tc.liquidatableSubaccountIds,
 			})
 			require.NoError(t, err)
 
@@ -1040,6 +1041,75 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				},
 			},
 		},
+		`Deleveraging occurs at bankruptcy price for negative TNC subaccount with open position in final settlement market`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			// Account should be deleveraged regardless of whether or not the liquidations engine returns this subaccount
+			// in the list of liquidatable subaccounts. Pass empty list to confirm this.
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidityTiers:            constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_499_000_000),
+						},
+					},
+				},
+			},
+		},
+		`Deleveraging occurs at oracle price for non-negative TNC subaccounts 
+			with open positions in final settlement market`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1BTC_Short_100000USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			liquidatableSubaccountIds: []satypes.SubaccountId{},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidityTiers:            constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
+
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(100_000_000_000 - 50_000_000_000),
+						},
+					},
+				},
+				{
+					Id: &constants.Dave_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(50_000_000_000 + 50_000_000_000),
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -1123,7 +1193,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			}
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				SubaccountIds: tc.liquidatableSubaccountIds,
+				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
+				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
 			})
 			require.NoError(t, err)
 

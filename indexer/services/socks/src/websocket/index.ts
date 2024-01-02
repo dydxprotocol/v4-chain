@@ -109,6 +109,7 @@ export class Index {
     this.connections[connectionId] = {
       ws,
       messageId: 0,
+      countryCode: this.countryRestrictor.getCountry(req),
     };
 
     const numConcurrentConnections: number = Object.keys(this.connections).length;
@@ -287,6 +288,7 @@ export class Index {
           this.connections[connectionId].messageId,
           subscribeMessage.id,
           subscribeMessage.batched,
+          this.connections[connectionId].countryCode,
         ).catch((error: Error) => logger.error({
           at: 'Subscription#subscribe',
           message: `Subscribing threw error: ${error.message}`,
