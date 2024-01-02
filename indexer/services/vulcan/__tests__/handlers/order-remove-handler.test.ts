@@ -1705,7 +1705,9 @@ describe('OrderRemoveHandler', () => {
       const removedRedisOrder: RedisOrder = redisTestConstants.defaultRedisOrder;
       const expectedOrderUuid: string = redisTestConstants.defaultOrderUuid;
 
-      const tableSpy = jest.spyOn(BlockTable, 'getLatest').mockResolvedValueOnce(undefined);
+      const tableSpy = jest.spyOn(BlockTable, 'getLatest').mockImplementation(() => {
+        throw new Error();
+      });
 
       try {
         const orderRemoveJson: OrderRemoveV1 = { ...indexerExpiredOrderRemoved, removedOrderId };

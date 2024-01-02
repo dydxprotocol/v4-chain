@@ -17,10 +17,8 @@ const INITIAL_BLOCK_HEIGHT: string = '-1';
 let currentBlockHeight: string = INITIAL_BLOCK_HEIGHT;
 
 export async function refreshBlockCache(txId?: number): Promise<void> {
-  const block: BlockFromDatabase | undefined = await BlockTable.getLatest({ txId });
-  if (block !== undefined) {
-    currentBlockHeight = block.blockHeight;
-  }
+  const block: BlockFromDatabase = await BlockTable.getLatest({ txId });
+  currentBlockHeight = block.blockHeight || INITIAL_BLOCK_HEIGHT;
 }
 
 export function getCurrentBlockHeight(): string {
