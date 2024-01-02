@@ -531,8 +531,3 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 		})
 	}
 }
-
-func TestGetSigners(t *testing.T) {
-	msg := types.MsgProposedOperations{}
-	require.Empty(t, msg.GetSigners())
-}

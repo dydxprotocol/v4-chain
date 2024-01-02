@@ -59,11 +59,15 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.BasicAllowance",
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowance",
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowanceResponse",
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowances",
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowancesResponse",
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowance",
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse",
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
 		// gov
+		"/cosmos.gov.v1.MsgCancelProposal",
+		"/cosmos.gov.v1.MsgCancelProposalResponse",
 		"/cosmos.gov.v1.MsgDeposit",
 		"/cosmos.gov.v1.MsgDepositResponse",
 		"/cosmos.gov.v1.MsgVote",
@@ -131,6 +135,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer",
 		"/ibc.applications.transfer.v1.MsgTransferResponse",
+		"/ibc.applications.transfer.v1.MsgUpdateParams",
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse",
 		"/ibc.applications.transfer.v1.TransferAuthorization",
 
 		// ibc.core.channel
@@ -163,10 +169,16 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.client.v1.Height",
 		"/ibc.core.client.v1.MsgCreateClient",
 		"/ibc.core.client.v1.MsgCreateClientResponse",
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgrade",
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgradeResponse",
+		"/ibc.core.client.v1.MsgRecoverClient",
+		"/ibc.core.client.v1.MsgRecoverClientResponse",
 		"/ibc.core.client.v1.MsgSubmitMisbehaviour",
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse",
 		"/ibc.core.client.v1.MsgUpdateClient",
 		"/ibc.core.client.v1.MsgUpdateClientResponse",
+		"/ibc.core.client.v1.MsgUpdateParams",
+		"/ibc.core.client.v1.MsgUpdateParamsResponse",
 		"/ibc.core.client.v1.MsgUpgradeClient",
 		"/ibc.core.client.v1.MsgUpgradeClientResponse",
 		"/ibc.core.client.v1.UpgradeProposal",
@@ -188,7 +200,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.connection.v1.MsgConnectionOpenInitResponse",
 		"/ibc.core.connection.v1.MsgConnectionOpenTry",
 		"/ibc.core.connection.v1.MsgConnectionOpenTryResponse",
-		"/ibc.core.connection.v1.Version",
+		"/ibc.core.connection.v1.MsgUpdateParams",
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
 
 		// ibc.lightclients
 		"/ibc.lightclients.localhost.v2.ClientState",

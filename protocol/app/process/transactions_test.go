@@ -114,7 +114,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 			_, err := process.DecodeProcessProposalTxs(
 				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
-				abci.RequestProcessProposal{Txs: tc.txsBytes},
+				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
 				pricesKeeper,
 			)
@@ -195,7 +195,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 			ppt, err := process.DecodeProcessProposalTxs(
 				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
-				abci.RequestProcessProposal{Txs: tc.txsBytes},
+				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
 				pricesKeeper,
 			)
@@ -249,8 +249,8 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 
 	// "Other" tx.
 	validSingleMsgOtherTx := constants.Msg_Send_TxBytes
-	invalidSingleMsgOtherTx := constants.Msg_Send_Invalid_Zero_Amount_TxBytes
-	_ = txBuilder.SetMsgs(constants.Msg_Send, constants.Msg_Send_Invalid_Zero_Amount)
+	invalidSingleMsgOtherTx := constants.Msg_Transfer_Invalid_SameSenderAndRecipient_TxBytes
+	_ = txBuilder.SetMsgs(constants.Msg_Send, constants.Msg_Transfer_Invalid_SameSenderAndRecipient)
 	invalidMultiMsgOtherTx, _ := encodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 
 	tests := map[string]struct {
@@ -300,7 +300,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
@@ -311,7 +311,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 	}
 
@@ -343,7 +343,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 			ppt, err := process.DecodeProcessProposalTxs(
 				ctx,
 				encodingCfg.TxConfig.TxDecoder(),
-				abci.RequestProcessProposal{Txs: tc.txsBytes},
+				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
 				pricesKeeper,
 			)
@@ -450,7 +450,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 			ppt, err := process.DecodeProcessProposalTxs(
 				ctx,
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
-				abci.RequestProcessProposal{Txs: tc.txsBytes},
+				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
 				pricesKeeper,
 			)

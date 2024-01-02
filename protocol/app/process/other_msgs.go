@@ -59,8 +59,10 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 // Validate returns an error if one of the underlying msgs fails `ValidateBasic`.
 func (omt *OtherMsgsTx) Validate() error {
 	for _, msg := range omt.msgs {
-		if err := msg.ValidateBasic(); err != nil {
-			return getValidateBasicError(msg, err)
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return getValidateBasicError(msg, err)
+			}
 		}
 	}
 	return nil

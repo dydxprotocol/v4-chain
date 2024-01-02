@@ -1,9 +1,9 @@
 package server_test
 
 import (
+	"cosmossdk.io/log"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	pricefeedconstants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"

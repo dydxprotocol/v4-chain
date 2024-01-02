@@ -93,10 +93,11 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
 			// Run.
-			resp := handler(ctx, req)
+			// TODO(CORE-538): Update tests to check err returned by handler.
+			resp, _ := handler(ctx, &req)
 
 			// Validate.
-			require.Equal(t, acceptResponse, resp)
+			require.Equal(t, acceptResponse, *resp)
 		})
 	}
 }

@@ -39,7 +39,6 @@ func GenerateAndDeliverTx(
 		TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 		Cdc:             cdc,
 		Msg:             msg,
-		MsgType:         msgType,
 		Context:         ctx,
 		SimAccount:      account,
 		AccountKeeper:   ak,
@@ -86,7 +85,7 @@ func GenerateAndCheckTx(
 
 	// Workaround: cosmos-sdk Simulation hard-codes to a deliver context. Generate and use a new
 	// check context (with the same headers) specifically for CheckTx.
-	checkTxCtx := app.NewContext(true, ctx.BlockHeader())
+	checkTxCtx := app.NewContext(true).WithBlockHeader(ctx.BlockHeader())
 
 	simAccount := ak.GetAccount(checkTxCtx, account.Address)
 	spendable := bk.SpendableCoins(checkTxCtx, simAccount.GetAddress())
@@ -97,7 +96,6 @@ func GenerateAndCheckTx(
 		TxGen:           tx.NewTxConfig(cdc, tx.DefaultSignModes),
 		Cdc:             cdc,
 		Msg:             msg,
-		MsgType:         msgType,
 		Context:         checkTxCtx,
 		SimAccount:      account,
 		AccountKeeper:   ak,
@@ -114,12 +112,12 @@ func GenerateAndCheckTx(
 	} else {
 		coins, hasNeg := spendable.SafeSub(txCtx.CoinsSpentInMsg...)
 		if hasNeg {
-			return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "message doesn't leave room for fees"), nil
+			return simtypes.NoOpMsg(txCtx.ModuleName, msgType, "message doesn't leave room for fees"), nil
 		}
 
 		fees, err = simtypes.RandomFees(txCtx.R, txCtx.Context, coins)
 		if err != nil {
-			return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate fees"), err
+			return simtypes.NoOpMsg(txCtx.ModuleName, msgType, "unable to generate fees"), err
 		}
 	}
 
@@ -135,13 +133,13 @@ func GenerateAndCheckTx(
 		txCtx.SimAccount.PrivKey,
 	)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to generate mock tx"), err
+		return simtypes.NoOpMsg(txCtx.ModuleName, msgType, "unable to generate mock tx"), err
 	}
 
 	_, _, err = txCtx.App.SimCheck(txCtx.TxGen.TxEncoder(), tx)
 	if err != nil {
-		return simtypes.NoOpMsg(txCtx.ModuleName, txCtx.MsgType, "unable to check tx"), err
+		return simtypes.NoOpMsg(txCtx.ModuleName, msgType, "unable to check tx"), err
 	}
 
-	return simtypes.NewOperationMsg(txCtx.Msg, true, "", txCtx.Cdc), nil
+	return simtypes.NewOperationMsg(txCtx.Msg, true, ""), nil
 }

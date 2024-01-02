@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -13,8 +14,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -24,6 +24,7 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // CreatePerpetual creates a new perpetual in the store.
@@ -161,7 +162,7 @@ func (k Keeper) GetPerpetual(
 // GetAllPerpetuals returns all perpetuals, sorted by perpetual Id.
 func (k Keeper) GetAllPerpetuals(ctx sdk.Context) (list []types.Perpetual) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PerpetualKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -1413,7 +1414,7 @@ func (k Keeper) GetLiquidityTier(ctx sdk.Context, id uint32) (
 // `GetAllLiquidityTiers` returns all liquidity tiers, sorted by id.
 func (k Keeper) GetAllLiquidityTiers(ctx sdk.Context) (list []types.LiquidityTier) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LiquidityTierKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

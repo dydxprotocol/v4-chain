@@ -1,10 +1,10 @@
 package types_test
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"math"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
 	"github.com/stretchr/testify/require"
 )
@@ -24,8 +24,8 @@ func TestInfiniteGasMeter(t *testing.T) {
 	require.Equal(t, uint64(0), meter.GasConsumed())
 	require.False(t, meter.IsPastLimit())
 	require.False(t, meter.IsOutOfGas())
-	meter.ConsumeGas(types.Gas(math.MaxUint64/2), "consume half max uint64")
-	require.NotPanics(t, func() { meter.ConsumeGas(types.Gas(math.MaxUint64/2)+2, "panic") })
+	meter.ConsumeGas(storetypes.Gas(math.MaxUint64/2), "consume half max uint64")
+	require.NotPanics(t, func() { meter.ConsumeGas(storetypes.Gas(math.MaxUint64/2)+2, "panic") })
 	require.NotPanics(t, func() { meter.RefundGas(meter.GasConsumed()+1, "refund greater than consumed") })
 	require.Equal(t, "FreeInfiniteGasMeter:\n  consumed: 0", meter.String())
 }

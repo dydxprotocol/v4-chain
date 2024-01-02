@@ -13,11 +13,6 @@ const TypeMsgProposedOperations = "proposed_operations"
 
 var _ sdk.Msg = &MsgProposedOperations{}
 
-func (msg *MsgProposedOperations) GetSigners() []sdk.AccAddress {
-	// Return empty slice because app-injected msg is not expected to be signed.
-	return []sdk.AccAddress{}
-}
-
 // Stateless validation for MsgProposedOperations is located in ValidateAndTransformRawOperations.
 func (msg *MsgProposedOperations) ValidateBasic() error {
 	// Go through the operations one by one to validate them, updating state as necessary.

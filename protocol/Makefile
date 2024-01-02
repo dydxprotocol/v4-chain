@@ -409,7 +409,7 @@ update-swagger-docs: statik
 .PHONY: update-swagger-docs
 
 ###############################################################################
-###                           Sample Prengenesis                            ###
+###                           Sample Pregenesis                             ###
 ###############################################################################
 
 # Run at `./protocol` directory.
@@ -421,7 +421,7 @@ update-sample-pregenesis:
 
 check-sample-pregenesis-up-to-date:
 	$(MAKE) localnet-build
-	@docker build . -t check-sample-pregenesis  -f scripts/genesis/Dockerfile --no-cache
+	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
 	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
 
 .PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date

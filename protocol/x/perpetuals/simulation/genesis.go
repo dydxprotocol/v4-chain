@@ -4,13 +4,12 @@ package simulation
 
 import (
 	"fmt"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -167,7 +166,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	}
 
 	// Get number of `Prices.Markets`.
-	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	cdc := codec.NewProtoCodec(v4module.InterfaceRegistry)
 	pricesGenesisBytes := simState.GenState[pricestypes.ModuleName]
 	var pricesGenesis pricestypes.GenesisState
 	if err := cdc.UnmarshalJSON(pricesGenesisBytes, &pricesGenesis); err != nil {

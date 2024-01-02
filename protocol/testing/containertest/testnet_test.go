@@ -12,10 +12,10 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
+	upgrade "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
@@ -307,6 +307,7 @@ func TestUpgrade(t *testing.T) {
 		testapp.TestMetadata,
 		testapp.TestTitle,
 		testapp.TestSummary,
+		false,
 	)
 	require.NoError(t, err)
 

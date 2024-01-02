@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/stretchr/testify/require"
@@ -98,7 +99,7 @@ func TestHealthChecker(t *testing.T) {
 				timeProvider,
 				TestMaximumUnhealthyDuration,
 				types.DaemonStartupGracePeriod,
-				&mocks.Logger{},
+				log.NewNopLogger(),
 			)
 
 			// Cleanup.

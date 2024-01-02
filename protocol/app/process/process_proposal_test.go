@@ -289,10 +289,10 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
 			// Run.
-			resp := handler(ctx, req)
+			resp, _ := handler(ctx, &req)
 
 			// Validate.
-			require.Equal(t, tc.expectedResponse, resp)
+			require.Equal(t, tc.expectedResponse, *resp)
 			require.Equal(
 				t,
 				marketToSmoothedPrices.GetSmoothedPricesForTest(),

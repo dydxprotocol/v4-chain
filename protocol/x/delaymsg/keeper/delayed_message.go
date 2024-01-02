@@ -5,8 +5,8 @@ import (
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/store/prefix"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -96,6 +96,7 @@ func (k Keeper) DeleteMessage(
 			id,
 		)
 	}
+
 	store := k.newDelayedMessageStore(ctx)
 	store.Delete(lib.Uint32ToKey(id))
 
@@ -133,7 +134,16 @@ func (k Keeper) SetDelayedMessage(
 		)
 	}
 
-	if err := k.ValidateMsg(sdkMsg); err != nil {
+	signers, _, err := k.cdc.GetMsgAnySigners(msg.Msg)
+	if err != nil {
+		return errorsmod.Wrapf(
+			types.ErrInvalidInput,
+			"failed to delay msg: failed to get signers with error '%v'",
+			err,
+		)
+	}
+
+	if err := k.ValidateMsg(sdkMsg, signers); err != nil {
 		return errorsmod.Wrapf(
 			types.ErrInvalidInput,
 			"failed to delay message: failed to validate with error '%v'",
@@ -170,8 +180,7 @@ func (k Keeper) SetDelayedMessage(
 
 // validateSigners validates that the message has exactly one signer, and that the signer is the delaymsg module
 // address.
-func validateSigners(msg sdk.Msg) error {
-	signers := msg.GetSigners()
+func validateSigners(signers [][]byte) error {
 	if len(signers) != 1 {
 		return errorsmod.Wrapf(
 			types.ErrInvalidSigner,
@@ -188,7 +197,7 @@ func validateSigners(msg sdk.Msg) error {
 }
 
 // ValidateMsg validates that a message is routable, passes ValidateBasic, and has the expected signer.
-func (k Keeper) ValidateMsg(msg sdk.Msg) error {
+func (k Keeper) ValidateMsg(msg sdk.Msg, signers [][]byte) error {
 	handler := k.router.Handler(msg)
 	// If the message type is not routable, return an error.
 	if handler == nil {
@@ -198,15 +207,17 @@ func (k Keeper) ValidateMsg(msg sdk.Msg) error {
 		)
 	}
 
-	if err := msg.ValidateBasic(); err != nil {
-		return errorsmod.Wrapf(
-			types.ErrInvalidInput,
-			"message failed basic validation: %v",
-			err,
-		)
+	if m, ok := msg.(sdk.HasValidateBasic); ok {
+		if err := m.ValidateBasic(); err != nil {
+			return errorsmod.Wrapf(
+				types.ErrInvalidInput,
+				"message failed basic validation: %v",
+				err,
+			)
+		}
 	}
 
-	if err := validateSigners(msg); err != nil {
+	if err := validateSigners(signers); err != nil {
 		return err
 	}
 

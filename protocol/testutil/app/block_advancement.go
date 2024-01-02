@@ -1,15 +1,15 @@
 package app
 
 import (
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	"github.com/stretchr/testify/require"
 )
 
 // BlockAdvancement holds orders and matches to be placed in a block. Using this struct and building
@@ -42,18 +42,19 @@ func (b BlockAdvancementWithErrors) AdvanceToBlock(
 	t *testing.T,
 ) sdktypes.Context {
 	advanceToBlockOptions := AdvanceToBlockOptions{
-		ValidateDeliverTxs: func(
+		ValidateFinalizeBlock: func(
 			ctx sdktypes.Context,
-			request abcitypes.RequestDeliverTx,
-			response abcitypes.ResponseDeliverTx,
-			txIndex int,
+			request abcitypes.RequestFinalizeBlock,
+			response abcitypes.ResponseFinalizeBlock,
 		) (haltchain bool) {
-			expectedError, found := b.ExpectedDeliverTxErrors[txIndex]
-			if found && expectedError != "" {
-				require.True(t, response.IsErr(), "Expected CheckTx to error. Response: %+v", response)
-				require.Contains(t, response.Log, expectedError)
-			} else {
-				require.True(t, response.IsOK(), "Expected CheckTx to succeed. Response: %+v", response)
+			for i, txResult := range response.TxResults {
+				expectedError, found := b.ExpectedDeliverTxErrors[i]
+				if found && expectedError != "" {
+					require.True(t, txResult.IsErr(), "Expected CheckTx to error. Response: %+v", response)
+					require.Contains(t, txResult.Log, expectedError)
+				} else {
+					require.True(t, txResult.IsOK(), "Expected CheckTx to succeed. Response: %+v", response)
+				}
 			}
 			return false
 		},

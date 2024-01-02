@@ -8,8 +8,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	sdklog "cosmossdk.io/log"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -21,7 +20,7 @@ var client = &http.Client{
 }
 
 func logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, "x/clob/mev_telemetry")
+	return ctx.Logger().With(log.ModuleKey, "x/clob/mev_telemetry")
 }
 
 // SendDatapoints sends MEV metrics to an HTTP-based metric collection service

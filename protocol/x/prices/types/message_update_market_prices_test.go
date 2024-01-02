@@ -18,15 +18,6 @@ func TestMsgUpdateMarketPrices(t *testing.T) {
 	require.Equal(t, updates, msg.MarketPriceUpdates)
 }
 
-func TestMsgUpdateMarketPrices_GetSigners(t *testing.T) {
-	update := types.NewMarketPriceUpdate(uint32(0), uint64(1))
-	updates := []*types.MsgUpdateMarketPrices_MarketPrice{update}
-	msg := types.NewMsgUpdateMarketPrices(updates)
-
-	signers := msg.GetSigners()
-	require.Empty(t, signers)
-}
-
 func TestMsgUpdateMarketPrices_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		updates []*types.MsgUpdateMarketPrices_MarketPrice

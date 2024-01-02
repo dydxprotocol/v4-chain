@@ -46,9 +46,8 @@ func TestMsgServerAcknowledgeBridges(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
 			ctx, _, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 			tc.setupMocks(ctx, mockKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
 
-			resp, err := msgServer.AcknowledgeBridges(goCtx, testMsg)
+			resp, err := msgServer.AcknowledgeBridges(ctx, testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)

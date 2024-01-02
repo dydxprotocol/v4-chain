@@ -73,6 +73,8 @@ func TestShowEpochInfo(t *testing.T) {
 	cfg := networkWithEpochInfoObjects(t)
 	networkStartTime := time.Now()
 	net := network.New(t, cfg)
+	_, err := net.WaitForHeight(3)
+	require.NoError(t, err)
 
 	ctx := net.Validators[0].ClientCtx
 	common := []string{
@@ -129,6 +131,8 @@ func TestListEpochInfo(t *testing.T) {
 	cfg := networkWithEpochInfoObjects(t)
 	networkStartTime := time.Now()
 	net := network.New(t, cfg)
+	_, err := net.WaitForHeight(3)
+	require.NoError(t, err)
 
 	objs := types.DefaultGenesis().GetEpochInfoList()
 

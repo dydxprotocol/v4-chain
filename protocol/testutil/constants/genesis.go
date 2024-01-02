@@ -825,9 +825,19 @@ const GenesisState = `{
           }
         ],
         "min_initial_deposit_ratio": "0.000000000000000000",
+        "proposal_cancel_ratio": "0.500000000000000000",
         "quorum": "0.334000000000000000",
         "threshold": "0.500000000000000000",
         "veto_threshold": "0.334000000000000000",
+		"min_deposit_ratio": "0.010000000000000000",
+        "expedited_voting_period": "86400s",
+        "expedited_threshold": "0.667000000000000000",
+        "expedited_min_deposit": [
+          {
+            "amount": "50000000",
+            "denom": "adv4tnt"
+          }
+        ],
         "voting_period": "172800s"
       },
       "proposals": [],

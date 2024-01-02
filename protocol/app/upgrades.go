@@ -3,8 +3,8 @@ package app
 import (
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 	v3_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v3.0.0"
 )

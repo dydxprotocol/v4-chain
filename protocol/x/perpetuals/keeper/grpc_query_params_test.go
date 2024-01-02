@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
@@ -12,7 +11,6 @@ import (
 
 func TestParams(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
-	wctx := sdk.WrapSDKContext(pc.Ctx)
 
 	tests := map[string]struct {
 		req         *types.QueryParamsRequest
@@ -33,7 +31,7 @@ func TestParams(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			res, err := pc.PerpetualsKeeper.Params(wctx, tc.req)
+			res, err := pc.PerpetualsKeeper.Params(pc.Ctx, tc.req)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, err, tc.expectedErr)
 			} else {

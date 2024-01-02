@@ -11,16 +11,16 @@ import (
 
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 
+	evidencemodule "cosmossdk.io/x/evidence"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	evidencemodule "github.com/cosmos/cosmos-sdk/x/evidence"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -28,13 +28,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/cosmos/ibc-go/modules/capability"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
@@ -101,13 +99,18 @@ func TestAppIsFullyInitialized(t *testing.T) {
 			tApp.InitChain()
 			uninitializedFields := getUninitializedStructFields(reflect.ValueOf(*tApp.App))
 
-			// Note that the daemon clients are currently hard coded as disabled in GetDefaultTestAppOptions.
-			// Normally they would be only disabled for non-validating full nodes or for nodes where any
-			// daemon is explicitly disabled.
 			expectedUninitializedFields := []string{
+				// Note that the daemon clients are currently hard coded as disabled in GetDefaultTestAppOptions.
+				// Normally they would be only disabled for non-validating full nodes or for nodes where any
+				// daemon is explicitly disabled.
 				"PriceFeedClient",
 				"LiquidationsClient",
 				"BridgeClient",
+
+				// Any default constructed type can be considered initialized if the default is what is
+				// expected. getUninitializedStructFields relies on fields being the non-default and
+				// reports the following as uninitialized.
+				"event",
 			}
 			for _, field := range expectedUninitializedFields {
 				if idx := slices.Index(uninitializedFields, field); idx >= 0 {
@@ -188,10 +191,6 @@ func TestModuleBasics(t *testing.T) {
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler,
-				upgradeclient.LegacyProposalHandler,
-				upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler,
-				ibcclientclient.UpgradeProposalHandler,
 			},
 		),
 		params.AppModuleBasic{},

@@ -4,18 +4,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgUpdateMarketParam_GetSigners(t *testing.T) {
-	msg := types.MsgUpdateMarketParam{
-		Authority: constants.DaveAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.DaveAccAddress}, msg.GetSigners())
-}
 
 func TestMsgUpdateMarketParam_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

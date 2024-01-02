@@ -1,6 +1,7 @@
 package msgs
 
 import (
+	upgrade "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -10,7 +11,6 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridge "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -52,10 +52,12 @@ var (
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse": nil,
 
 		// distribution
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":         &distribution.MsgCommunityPoolSpend{},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse": nil,
-		"/cosmos.distribution.v1beta1.MsgUpdateParams":               &distribution.MsgUpdateParams{},
-		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":       nil,
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  &distribution.MsgCommunityPoolSpend{},
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          nil,
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distribution.MsgDepositValidatorRewardsPool{},
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
+		"/cosmos.distribution.v1beta1.MsgUpdateParams":                        &distribution.MsgUpdateParams{},
+		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse":                nil,
 
 		// gov
 		"/cosmos.gov.v1.MsgExecLegacyContent":         &gov.MsgExecLegacyContent{},

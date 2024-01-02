@@ -15,13 +15,6 @@ var (
 	AcceptedAuthority = types.ModuleAddress
 )
 
-func TestMsgDelayMessage_GetSigners(t *testing.T) {
-	msg := types.MsgDelayMessage{
-		Authority: AcceptedAuthority.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{AcceptedAuthority}, msg.GetSigners())
-}
-
 func TestMsgDelayMessage_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
 		mdm         types.MsgDelayMessage
