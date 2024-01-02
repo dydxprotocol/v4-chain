@@ -3,7 +3,7 @@
 # Quickest way to reset the network/clear all Indexer data sources without rebuilding from scratch
 
 echo "Stopping all Docker containers..."
-docker stop $(docker ps -a -q)
+docker stop $(docker ps -a | grep 'e2e-testing' | awk '{print $1}')
 
 echo "Deleting all dydxprotocold* containers..."
 docker rm $(docker ps -a | grep dydxprotocold | awk '{print $1}')
@@ -16,12 +16,13 @@ echo "Deleting the postgres container..."
 docker rm $(docker ps -a | grep postgres | awk '{print $1}')
 
 echo "Restarting the Kafka container..."
-docker start $(docker ps -a | grep kafka | awk '{print $1}')
+KAFKA_CONTAINER=$(docker ps -a | grep 'e2e-testing' | grep 'kafka' | awk '{print $1}')
+docker start $KAFKA_CONTAINER
 
 echo "Clearing all Kafka topics..."
-KAFKA_CONTAINER=$(docker ps -a | grep kafka | awk '{print $1}')
-docker cp remove-all-kafka-msgs.sh $KAFKA_CONTAINER:/opt/kafka
-docker exec -it $KAFKA_CONTAINER /bin/bash -c "./remove-all-kafka-msgs.sh"
+cd ../e2e-testing
+docker cp clear-all-kafa-topics.sh $KAFKA_CONTAINER:/opt/kafka
+docker exec -it $KAFKA_CONTAINER /bin/bash -c "./clear-all-kafa-topics.sh"
 
 echo "Restarting all containers..."
 docker-compose -f docker-compose-e2e-test.yml up
