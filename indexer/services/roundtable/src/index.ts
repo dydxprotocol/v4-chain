@@ -11,6 +11,7 @@ import {
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
+import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
@@ -96,6 +97,14 @@ async function start(): Promise<void> {
       updateResearchEnvironmentTask,
       'update_research_environment',
       config.LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS) {
+    startLoop(
+      takeFastSyncSnapshotTask,
+      'take_fast_sync_snapshot',
+      config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
     );
   }
 

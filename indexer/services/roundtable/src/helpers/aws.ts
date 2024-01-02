@@ -16,8 +16,9 @@ enum ExportTaskStatus {
   COMPLETE = 'complete',
 }
 
-const S3_BUCKET_NAME = config.S3_BUCKET_ARN.split(':::')[1];
-export const S3_LOCATION_PREFIX = `s3://${S3_BUCKET_NAME}`;
+export const RESEARCH_SNAPSHOT_S3_BUCKET_NAME = config.RESEARCH_SNAPSHOT_S3_BUCKET_ARN.split(':::')[1];
+export const RESEARCH_SNAPSHOT_S3_LOCATION_PREFIX = `s3://${RESEARCH_SNAPSHOT_S3_BUCKET_NAME}`;
+export const FAST_SYNC_SNAPSHOT_S3_BUCKET_NAME = config.FAST_SYNC_SNAPSHOT_S3_BUCKET_ARN.split(':::')[1];
 
 /**
  * @description Get most recent snapshot identifier for an RDS database.
@@ -45,9 +46,12 @@ export async function getMostRecentDBSnapshotIdentifier(rds: RDS): Promise<strin
 /**
  * @description Check if an S3 Object already exists.
  */
-export async function checkIfS3ObjectExists(s3: S3, s3Date: string): Promise<boolean> {
+export async function checkIfS3ObjectExists(
+  s3: S3,
+  s3Date: string,
+  bucket: string,
+): Promise<boolean> {
   const at: string = `${atStart}checkIfS3ObjectExists`;
-  const bucket: string = S3_BUCKET_NAME;
   const key: string = `${config.RDS_INSTANCE_NAME}-${s3Date}/export_info_${config.RDS_INSTANCE_NAME}-${s3Date}.json`;
 
   logger.info({
@@ -143,12 +147,13 @@ export async function checkIfExportJobToS3IsOngoing(
 export async function startExportTask(
   rds: RDS,
   rdsExportIdentifier: string,
+  bucket: string,
 ): Promise<RDS.ExportTask> {
   // TODO: Add validation
   const sourceArnPrefix = `arn:aws:rds:${config.AWS_REGION}:${config.AWS_ACCOUNT_ID}:snapshot:rds:`;
   const awsResponse: RDS.ExportTask = await rds.startExportTask({
     ExportTaskIdentifier: rdsExportIdentifier,
-    S3BucketName: S3_BUCKET_NAME,
+    S3BucketName: bucket,
     KmsKeyId: config.KMS_KEY_ARN,
     IamRoleArn: config.ECS_TASK_ROLE_ARN,
     SourceArn: `${sourceArnPrefix}${rdsExportIdentifier}`,
@@ -216,7 +221,7 @@ export async function startAthenaQuery(
       Database: config.ATHENA_DATABASE_NAME,
     },
     ResultConfiguration: {
-      OutputLocation: `${S3_LOCATION_PREFIX}/output/${timestamp}`,
+      OutputLocation: `${RESEARCH_SNAPSHOT_S3_LOCATION_PREFIX}/output/${timestamp}`,
     },
     WorkGroup: config.ATHENA_WORKING_GROUP,
   }).promise();
