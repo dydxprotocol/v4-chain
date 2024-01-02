@@ -28,7 +28,6 @@ import {
   testMocks,
   apiTranslations,
   TimeInForce,
-  BlockFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -1706,6 +1705,7 @@ describe('OrderRemoveHandler', () => {
       const removedRedisOrder: RedisOrder = redisTestConstants.defaultRedisOrder;
       const expectedOrderUuid: string = redisTestConstants.defaultOrderUuid;
 
+      // eslint-disable-next-line @typescript-eslint/require-await
       const tableSpy = jest.spyOn(BlockTable, 'getLatest').mockImplementation(async () => {
         throw new Error();
       });
