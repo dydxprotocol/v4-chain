@@ -17,8 +17,17 @@ const INITIAL_BLOCK_HEIGHT: string = '-1';
 let currentBlockHeight: string = INITIAL_BLOCK_HEIGHT;
 
 export async function refreshBlockCache(txId?: number): Promise<void> {
-  const block: BlockFromDatabase = await BlockTable.getLatest({ txId });
-  currentBlockHeight = block.blockHeight || INITIAL_BLOCK_HEIGHT;
+  try {
+    const block: BlockFromDatabase = await BlockTable.getLatest({ txId });
+    currentBlockHeight = block.blockHeight;
+  } catch (error) { // Unable to find latest block
+    logger.info({
+      at: 'block-cache#refreshBlockCache',
+      message: 'Unable to refresh block cache most likely due to unable to find latest block',
+      error,
+    });
+    return;
+  }
 }
 
 export function getCurrentBlockHeight(): string {
