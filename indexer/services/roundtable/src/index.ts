@@ -11,11 +11,11 @@ import {
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
-import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
+import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
