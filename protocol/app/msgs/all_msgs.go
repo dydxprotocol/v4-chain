@@ -308,9 +308,15 @@ var (
 		// since ICA Controller Keeper is initialized as nil.
 		// However, since the ica.AppModuleBasic{} needs to be passed to basic_mananger as a whole, these messages
 		// registered in the interface registry.
-		"/ibc.applications.interchain_accounts.v1.InterchainAccount":                       {},
-		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx":                    {},
-		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount": {},
+		"/ibc.applications.interchain_accounts.v1.InterchainAccount":                               {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx":                            {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTxResponse":                    {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount":         {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccountResponse": {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams":                      {},
+		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse":              {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":                            {},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":                    {},
 	}
 
 	// DisallowMsgs are messages that cannot be externally submitted.

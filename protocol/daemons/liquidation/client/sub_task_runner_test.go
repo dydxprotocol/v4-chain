@@ -2,9 +2,9 @@ package client_test
 
 import (
 	"context"
+	"cosmossdk.io/log"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"

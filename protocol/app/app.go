@@ -171,6 +171,9 @@ import (
 
 	// IBC
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
 	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
@@ -245,6 +248,7 @@ type App struct {
 	ParamsKeeper     paramskeeper.Keeper
 	// IBC Keeper must be a pointer in the app, so we can SetRouter on it correctly
 	IBCKeeper             *ibckeeper.Keeper
+	ICAControllerKeeper   icacontrollerkeeper.Keeper
 	ICAHostKeeper         icahostkeeper.Keeper
 	EvidenceKeeper        evidencekeeper.Keeper
 	TransferKeeper        ibctransferkeeper.Keeper
@@ -352,6 +356,7 @@ func New(
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey, feegrant.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey,
 		ratelimitmoduletypes.StoreKey,
+		icacontrollertypes.StoreKey,
 		icahosttypes.StoreKey,
 		evidencetypes.StoreKey,
 		capabilitytypes.StoreKey,
@@ -551,6 +556,7 @@ func New(
 
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
+	scopedICAControllerKeeper := app.CapabilityKeeper.ScopeToModule(icacontrollertypes.SubModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
 
 	app.CapabilityKeeper.Seal()
@@ -578,6 +584,18 @@ func New(
 		scopedICAHostKeeper,                         // scopedKeeper
 		app.MsgServiceRouter(),                      // msgRouter
 		lib.GovModuleAddress.String(),               // authority
+	)
+
+	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
+		appCodec,
+		keys[icacontrollertypes.StoreKey], // key
+		app.getSubspace(icacontrollertypes.SubModuleName), // paramSpace
+		app.IBCKeeper.ChannelKeeper,                       // ics4Wrapper, may be replaced with middleware such as ics29 fee
+		app.IBCKeeper.ChannelKeeper,                       // channelKeeper
+		app.IBCKeeper.PortKeeper,                          // portKeeper
+		scopedICAControllerKeeper,                         // scopedKeeper
+		app.MsgServiceRouter(),                            // msgRouter
+		lib.GovModuleAddress.String(),                     // authority
 	)
 
 	// Create Transfer Keepers
@@ -609,11 +627,13 @@ func New(
 	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
+	icaControlerIBCModule := icacontroller.NewIBCMiddleware(icaHostIBCModule, app.ICAControllerKeeper)
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	// Ordering of `AddRoute` does not matter.
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+	ibcRouter.AddRoute(icacontrollertypes.SubModuleName, icaControlerIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -1024,7 +1044,7 @@ func New(
 		upgrade.NewAppModule(app.UpgradeKeeper, addresscodec.NewBech32Codec(sdk.Bech32PrefixAccAddr)),
 		evidence.NewAppModule(app.EvidenceKeeper),
 		ibc.NewAppModule(app.IBCKeeper),
-		ica.NewAppModule(nil, &app.ICAHostKeeper),
+		ica.NewAppModule(&app.ICAControllerKeeper, &app.ICAHostKeeper),
 		params.NewAppModule(app.ParamsKeeper),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
 		transferModule,

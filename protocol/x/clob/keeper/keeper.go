@@ -10,13 +10,13 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 )
 
 type (
