@@ -50,7 +50,7 @@ describe('transfers', () => {
     );
 
     // TODO(IND-547): investigate deterministically advancing network height
-    await utils.sleep(5000);  // wait 5s for deposit to complete
+    await utils.sleep(10000);  // wait 10s for deposit to complete
     const defaultSubaccountId: string = SubaccountTable.uuid(wallet.address!, 0);
 
     // Check DB
