@@ -24,7 +24,7 @@ func (k Keeper) GetLastTradePriceForPerpetual(
 	return types.Subticks(result.Value), true
 }
 
-// GetLastTradePriceForPerpetual sets the last trade price for a perpetual.
+// SetLastTradePriceForPerpetual sets the last trade price for a perpetual.
 func (k Keeper) SetLastTradePriceForPerpetual(
 	ctx sdk.Context,
 	perpetualId uint32,
