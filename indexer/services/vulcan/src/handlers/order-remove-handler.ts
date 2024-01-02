@@ -393,10 +393,21 @@ export class OrderRemoveHandler extends Handler {
    * update since it occurred which would invalidate the message.
    */
   protected async isOrderExpired(orderRemove: OrderRemoveV1): Promise<boolean> {
-    const block: BlockFromDatabase = await runFuncWithTimingStat(
-      BlockTable.getLatest({ readReplica: true }),
-      this.generateTimingStatsOptions('get_latest_block_for_indexer_expired_expiry_verification'),
-    );
+    let block: BlockFromDatabase;
+    try {
+      block = await runFuncWithTimingStat(
+        BlockTable.getLatest({ readReplica: true }),
+        this.generateTimingStatsOptions('get_latest_block_for_indexer_expired_expiry_verification'),
+      );
+    } catch {
+      logger.error({
+        at: 'orderRemoveHandler#isOrderExpired',
+        message: 'Unable to find latest block',
+        orderRemove,
+      });
+      // We can't say with certainty that this order is expired, so return false
+      return false;
+    }
 
     const redisOrder: RedisOrder | null = await runFuncWithTimingStat(
       OrdersCache.getOrder(OrderTable.orderIdToUuid(orderRemove.removedOrderId!), redisClient),
