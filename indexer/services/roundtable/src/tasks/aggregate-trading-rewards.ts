@@ -2,8 +2,8 @@ import {
   BlockFromDatabase,
   BlockTable,
   TradingRewardFromDatabase,
-} from "@dydxprotocol-indexer/postgres";
-import { DateTime } from "luxon";
+} from '@dydxprotocol-indexer/postgres';
+import { DateTime } from 'luxon';
 
 /**
  * Task: Aggregate Trading Rewards
@@ -24,7 +24,9 @@ export default async function runTask(): Promise<void> {
   // TODO(IND-499): Add resetting aggregation data when cache is empty
   const interval: Interval | undefined = await getTradingRewardDataToProcessInterval();
 
-  const tradingRewardData: TradingRewardFromDatabase[] = await getTradingRewardDataToProcess(interval);
+  const tradingRewardData: TradingRewardFromDatabase[] = await getTradingRewardDataToProcess(
+    interval,
+  );
   const sortedTradingRewardData: SortedTradingRewardData = sortTradingRewardData(tradingRewardData);
   await updateTradingRewardsAggregation(sortedTradingRewardData);
   // TODO(IND-499): Update AggregateTradingRewardsProcessedCache
@@ -40,16 +42,22 @@ async function getTradingRewardDataToProcessInterval(): Promise<Interval> {
   };
 }
 
-async function getTradingRewardDataToProcess(interval: Interval): Promise<TradingRewardFromDatabase[]> {
+async function getTradingRewardDataToProcess(
+  _interval: Interval,
+): Promise<TradingRewardFromDatabase[]> {
   // TODO: Implement
-  return [];
+  return Promise.resolve([]);
 }
 
-function sortTradingRewardData(tradingRewardData: TradingRewardFromDatabase[]): SortedTradingRewardData {
+function sortTradingRewardData(
+  _tradingRewardData: TradingRewardFromDatabase[],
+): SortedTradingRewardData {
   // TODO: Implement
   return {};
 }
 
-async function updateTradingRewardsAggregation(sortedTradingRewardData: SortedTradingRewardData): Promise<void> {
+async function updateTradingRewardsAggregation(
+  _sortedTradingRewardData: SortedTradingRewardData,
+): Promise<void> {
   // TODO: Implement
 }

@@ -1,7 +1,6 @@
 import {
   dbHelpers, testMocks,
 } from '@dydxprotocol-indexer/postgres';
-import _ from 'lodash';
 
 describe('aggregate-trading-rewards', () => {
   beforeAll(async () => {
@@ -22,4 +21,3 @@ describe('aggregate-trading-rewards', () => {
     await dbHelpers.teardown();
   });
 });
-
