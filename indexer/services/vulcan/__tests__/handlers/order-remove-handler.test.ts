@@ -27,6 +27,7 @@ import {
   testConstants,
   testMocks,
   apiTranslations,
+  TimeInForce,
 } from '@dydxprotocol-indexer/postgres';
 import {
   OpenOrdersCache,
@@ -122,6 +123,15 @@ describe('OrderRemoveHandler', () => {
     defaultQuantums.toString(),
     testConstants.defaultPerpetualMarket.atomicResolution,
   );
+
+  const dbOrderFok: OrderCreateObject = {
+    ...testConstants.defaultOrder,
+    timeInForce: TimeInForce.FOK,
+  };
+  const dbOrderIoc: OrderCreateObject = {
+    ...testConstants.defaultOrder,
+    timeInForce: TimeInForce.IOC,
+  };
 
   it.each([
     [
@@ -222,6 +232,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrder,
         redisTestConstants.defaultRedisOrder,
         redisTestConstants.defaultOrderUuid,
+        true,
         undefined,
       ],
       [
@@ -230,6 +241,7 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
+        true,
         undefined,
       ],
       [
@@ -238,7 +250,26 @@ describe('OrderRemoveHandler', () => {
         testConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         redisTestConstants.defaultOrderUuidConditional,
+        true,
         testConstants.defaultConditionalOrder.triggerPrice,
+      ],
+      [
+        'Fill-or-Kill',
+        redisTestConstants.defaultOrderId,
+        dbOrderFok,
+        redisTestConstants.defaultRedisOrderFok,
+        redisTestConstants.defaultOrderUuid,
+        false,
+        undefined,
+      ],
+      [
+        'Immediate-or-Cancel',
+        redisTestConstants.defaultOrderId,
+        dbOrderIoc,
+        redisTestConstants.defaultRedisOrderIoc,
+        redisTestConstants.defaultOrderUuid,
+        false,
+        undefined,
       ],
     ])('successfully removes order (with %s)', async (
       _name: string,
@@ -246,6 +277,7 @@ describe('OrderRemoveHandler', () => {
       removedOrder: OrderCreateObject,
       removedRedisOrder: RedisOrder,
       expectedOrderUuid: string,
+      expectOrderbookUpdate: boolean,
       triggerPrice?: string,
     ) => {
       const offChainUpdate: OffChainUpdateV1 = orderRemoveToOffChainUpdate({
@@ -302,7 +334,7 @@ describe('OrderRemoveHandler', () => {
           removedRedisOrder.ticker,
           OrderSide.BUY,
           defaultPrice,
-          remainingOrderbookLevel,
+          expectOrderbookUpdate ? remainingOrderbookLevel : orderbookLevel,
         ),
         expectOrdersCacheEmpty(expectedOrderUuid),
         expectOrdersDataCacheEmpty(removedOrderId),
@@ -365,11 +397,12 @@ describe('OrderRemoveHandler', () => {
           subaccountId: redisTestConstants.defaultSubaccountId,
           version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
         }),
-        OrderbookMessage.fromPartial({
-          contents: JSON.stringify(orderbookContents),
-          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-          version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-        }),
+        expectOrderbookUpdate
+          ? OrderbookMessage.fromPartial({
+            contents: JSON.stringify(orderbookContents),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
+          }) : undefined,
       );
       expect(logger.error).not.toHaveBeenCalled();
       expectTimingStats(true, true);

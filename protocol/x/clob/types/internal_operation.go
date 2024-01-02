@@ -112,6 +112,7 @@ func NewMatchPerpetualDeleveragingInternalOperation(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	fills []MatchPerpetualDeleveraging_Fill,
+	isFinalSettlement bool,
 ) InternalOperation {
 	if len(fills) == 0 {
 		panic(
@@ -129,9 +130,10 @@ func NewMatchPerpetualDeleveragingInternalOperation(
 			Match: &ClobMatch{
 				Match: &ClobMatch_MatchPerpetualDeleveraging{
 					MatchPerpetualDeleveraging: &MatchPerpetualDeleveraging{
-						Liquidated:  liquidatedSubaccountId,
-						PerpetualId: perpetualId,
-						Fills:       fills,
+						Liquidated:        liquidatedSubaccountId,
+						PerpetualId:       perpetualId,
+						Fills:             fills,
+						IsFinalSettlement: isFinalSettlement,
 					},
 				},
 			},

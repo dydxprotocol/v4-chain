@@ -32,6 +32,7 @@ const (
 	ClobDeleveragingNonOverlappingBankrupcyPricesCount             = "clob_deleveraging_non_overlapping_bankruptcy_prices_count"
 	ClobDeleveragingNoOpenPositionOnOppositeSideCount              = "clob_deleveraging_no_open_position_on_opposite_side_count"
 	ClobDeleverageSubaccountFilledQuoteQuantums                    = "clob_deleverage_subaccount_filled_quote_quantums"
+	ClobSubaccountsWithFinalSettlementPositionsCount               = "clob_subaccounts_with_final_settlement_positions_count"
 	LiquidationsLiquidatableSubaccountIdsCount                     = "liquidations_liquidatable_subaccount_ids_count"
 	LiquidationsPercentFilledDistribution                          = "liquidations_percent_filled_distribution"
 	LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution = "liquidations_place_perpetual_liquidation_quote_quantums_distribution"

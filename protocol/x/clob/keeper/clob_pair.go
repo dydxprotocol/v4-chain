@@ -304,6 +304,42 @@ func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
 	return
 }
 
+// validateLiquidationAgainstClobPairStatus returns an error if placing the provided
+// liquidation order would conflict with the clob pair's current status.
+func (k Keeper) validateLiquidationAgainstClobPairStatus(
+	ctx sdk.Context,
+	liquidationOrder types.LiquidationOrder,
+) error {
+	clobPair, found := k.GetClobPair(ctx, liquidationOrder.GetClobPairId())
+	if !found {
+		return errorsmod.Wrapf(
+			types.ErrInvalidClob,
+			"Clob %v is not a valid clob",
+			liquidationOrder.GetClobPairId(),
+		)
+	}
+
+	if !types.IsSupportedClobPairStatus(clobPair.Status) {
+		panic(
+			fmt.Sprintf(
+				"validateLiquidationAgainstClobPairStatus: clob pair status %v is not supported",
+				clobPair.Status,
+			),
+		)
+	}
+
+	if clobPair.Status != types.ClobPair_STATUS_ACTIVE {
+		return errorsmod.Wrapf(
+			types.ErrLiquidationConflictsWithClobPairStatus,
+			"Liquidation order %+v cannot be placed for clob pair with status %+v",
+			liquidationOrder,
+			clobPair.Status,
+		)
+	}
+
+	return nil
+}
+
 // validateOrderAgainstClobPairStatus returns an error if placing the provided
 // order would conflict with the clob pair's current status.
 func (k Keeper) validateOrderAgainstClobPairStatus(
@@ -373,6 +409,13 @@ func (k Keeper) validateOrderAgainstClobPairStatus(
 				clobPair.Status,
 			)
 		}
+	case types.ClobPair_STATUS_FINAL_SETTLEMENT:
+		return errorsmod.Wrapf(
+			types.ErrOrderConflictsWithClobPairStatus,
+			"Order %+v disallowed, trading is disabled for clob pair with status %+v",
+			order,
+			clobPair.Status,
+		)
 	}
 
 	return nil
@@ -468,7 +511,7 @@ func (k Keeper) UpdateClobPair(
 
 	oldStatus := oldClobPair.Status
 	newStatus := clobPair.Status
-	if oldStatus != newStatus && !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
+	if !types.IsSupportedClobPairStatusTransition(oldStatus, newStatus) {
 		return errorsmod.Wrapf(
 			types.ErrInvalidClobPairStatusTransition,
 			"Cannot transition from status %+v to status %+v",
@@ -498,6 +541,11 @@ func (k Keeper) UpdateClobPair(
 			),
 		),
 	)
+
+	// If newly transitioning to final settlement, enter final settlement.
+	if newStatus == types.ClobPair_STATUS_FINAL_SETTLEMENT && oldStatus != newStatus {
+		k.mustTransitionToFinalSettlement(ctx, clobPair.GetClobPairId())
+	}
 
 	return nil
 }
@@ -589,6 +637,19 @@ func (k Keeper) validateInternalOperationAgainstClobPairStatus(
 			clobPairId,
 			types.ClobPair_STATUS_INITIALIZING,
 		)
+	case types.ClobPair_STATUS_FINAL_SETTLEMENT:
+		// Only allow deleveraging events. This allows the protocol to close out open
+		// positions in the market. All other operations are not allowed.
+		if match := internalOperation.GetMatch(); match != nil && match.GetMatchPerpetualDeleveraging() != nil {
+			return nil
+		}
+		return errorsmod.Wrapf(
+			types.ErrOperationConflictsWithClobPairStatus,
+			"Operation %s invalid for ClobPair with id %d with status %s",
+			internalOperation.GetInternalOperationTextString(),
+			clobPairId,
+			types.ClobPair_STATUS_FINAL_SETTLEMENT,
+		)
 	}
 
 	return nil
@@ -609,7 +670,7 @@ func (k Keeper) IsPerpetualClobPairActive(
 	if !found {
 		return false, errorsmod.Wrapf(
 			types.ErrInvalidClob,
-			"GetPerpetualClobPairStatus: did not find clob pair with id = %d",
+			"IsPerpetualClobPairActive: did not find clob pair with id = %d",
 			clobPairId,
 		)
 	}

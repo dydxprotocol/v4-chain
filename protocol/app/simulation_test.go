@@ -41,6 +41,7 @@ import (
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
 	exportedtypes "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
@@ -114,6 +115,7 @@ var genesisModuleOrder = []string{
 	exportedtypes.ModuleName,
 	evidencetypes.ModuleName,
 	ibctransfertypes.ModuleName,
+	icatypes.ModuleName,
 	pricestypes.ModuleName,
 	assetstypes.ModuleName,
 	perpetualstypes.ModuleName,

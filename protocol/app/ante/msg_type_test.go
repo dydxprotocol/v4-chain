@@ -1,10 +1,11 @@
 package ante_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	"golang.org/x/exp/slices"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
+	"golang.org/x/exp/slices"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"

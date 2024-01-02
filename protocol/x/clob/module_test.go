@@ -21,7 +21,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/tx"
-	liquidations_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -103,7 +102,6 @@ func createAppModuleWithKeeper(t *testing.T) (
 		nil,
 		nil,
 		nil,
-		liquidations_types.NewDaemonLiquidationInfo(),
 	), ks.ClobKeeper, ks.PricesKeeper, ks.PerpetualsKeeper, ks.Ctx, mockIndexerEventManager
 }
 

@@ -343,6 +343,82 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 	}
 }
 
+func TestPlacePerpetualLiquidation_validateLiquidationAgainstClobPairStatus(t *testing.T) {
+	tests := map[string]struct {
+		status types.ClobPair_Status
+
+		expectedError error
+	}{
+		"Cannot liquidate in initializing state": {
+			status: types.ClobPair_STATUS_INITIALIZING,
+
+			expectedError: types.ErrLiquidationConflictsWithClobPairStatus,
+		},
+		"Can liquidate in active state": {
+			status: types.ClobPair_STATUS_ACTIVE,
+		},
+		"Cannot liquidate in final settlement state": {
+			status: types.ClobPair_STATUS_FINAL_SETTLEMENT,
+
+			expectedError: types.ErrLiquidationConflictsWithClobPairStatus,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ctx := ks.Ctx.WithIsCheckTx(true)
+
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ks.Ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ks.Ctx, ks.PerpetualsKeeper)
+
+			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
+
+			perpetuals := []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			}
+			for _, p := range perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
+				)
+				require.NoError(t, err)
+			}
+
+			clobPair := constants.ClobPair_Btc
+			_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+				ctx,
+				clobPair.Id,
+				clobtest.MustPerpetualId(clobPair),
+				satypes.BaseQuantums(clobPair.StepBaseQuantums),
+				clobPair.QuantumConversionExponent,
+				clobPair.SubticksPerTick,
+				tc.status,
+			)
+			require.NoError(t, err)
+
+			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(
+				ctx,
+				constants.LiquidationOrder_Dave_Num0_Clob0_Sell1BTC_Price50000,
+			)
+			if tc.expectedError != nil {
+				require.ErrorIs(t, err, tc.expectedError)
+			}
+		})
+	}
+}
+
 func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 	tests := map[string]struct {
 		// State.
@@ -1926,6 +2002,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
+
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(
+				clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
+			)
 
 			for marketId, oraclePrice := range tc.marketIdToOraclePriceOverride {
 				err := ks.PricesKeeper.UpdateMarketPrices(
