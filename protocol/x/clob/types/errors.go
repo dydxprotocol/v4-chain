@@ -201,6 +201,11 @@ var (
 		43,
 		"Order has remaining size",
 	)
+	ErrReduceOnlyOrderReplacement = errorsmod.Register(
+		ModuleName,
+		44,
+		"Reduce only order cannot replace a non reduce only order",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
@@ -493,7 +498,7 @@ var (
 	ErrReduceOnlyDisabled = errorsmod.Register(
 		ModuleName,
 		9003,
-		"Reduce-only is currently disabled",
+		"Reduce-only is currently disabled for non-FOK/IOC orders",
 	)
 
 	// Equity tier limit errors.

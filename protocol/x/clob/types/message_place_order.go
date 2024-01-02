@@ -74,8 +74,8 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		return ErrLongTermOrdersCannotRequireImmediateExecution
 	}
 
-	if msg.Order.ReduceOnly {
-		return errorsmod.Wrapf(ErrReduceOnlyDisabled, "reduce-only is temporarily disabled")
+	if msg.Order.ReduceOnly && !msg.Order.RequiresImmediateExecution() {
+		return errorsmod.Wrapf(ErrReduceOnlyDisabled, "reduce only orders must be short term IOC or FOK orders")
 	}
 
 	if msg.Order.Subticks == uint64(0) {
