@@ -12,7 +12,7 @@ func (k Keeper) GetLastTradePriceForPerpetual(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (subticks types.Subticks, found bool) {
-	store := k.GetLastTradePriceMemStore(ctx)
+	store := k.GetLastTradePriceStore(ctx)
 
 	b := store.Get(lib.Uint32ToKey(perpetualId))
 	if b == nil {
@@ -30,7 +30,7 @@ func (k Keeper) SetLastTradePriceForPerpetual(
 	perpetualId uint32,
 	subticks types.Subticks,
 ) {
-	store := k.GetLastTradePriceMemStore(ctx)
+	store := k.GetLastTradePriceStore(ctx)
 
 	value := gogotypes.UInt64Value{Value: subticks.ToUint64()}
 	store.Set(
