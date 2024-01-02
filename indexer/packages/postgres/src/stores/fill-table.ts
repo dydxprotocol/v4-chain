@@ -45,6 +45,8 @@ export async function findAll(
     transactionHash,
     createdBeforeOrAtHeight,
     createdBeforeOrAt,
+    createdOnOrAfterHeight,
+    createdOnOrAfter,
     clientMetadata,
     fee,
   }: FillQueryConfig,
@@ -64,6 +66,8 @@ export async function findAll(
       transactionHash,
       createdBeforeOrAtHeight,
       createdBeforeOrAt,
+      createdOnOrAfterHeight,
+      createdOnOrAfter,
       clientMetadata,
     } as QueryConfig,
     requiredFields,
@@ -116,6 +120,18 @@ export async function findAll(
 
   if (createdBeforeOrAt !== undefined) {
     baseQuery = baseQuery.where(FillColumns.createdAt, '<=', createdBeforeOrAt);
+  }
+
+  if (createdOnOrAfterHeight !== undefined) {
+    baseQuery = baseQuery.where(
+      FillColumns.createdAtHeight,
+      '>=',
+      createdOnOrAfterHeight,
+    );
+  }
+
+  if (createdOnOrAfter !== undefined) {
+    baseQuery = baseQuery.where(FillColumns.createdAt, '>=', createdOnOrAfter);
   }
 
   if (clientMetadata !== undefined) {
