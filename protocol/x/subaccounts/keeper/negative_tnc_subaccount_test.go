@@ -19,12 +19,14 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		// Expectations.
 		expectedMultiStoreWrites []string
 	}{
-		"Block height defaults to zero if not set": {
+		"Block height defaults to zero if not set and doesn't exist": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
+				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.False(t, exists)
 				require.Equal(
 					t,
 					uint32(0),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 			},
 
@@ -33,10 +35,12 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		"Block height can be updated": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 1)
+				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(1),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 			},
 
@@ -47,31 +51,39 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		"Block height can be updated more than once": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 1)
+				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(1),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 2)
+				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(2),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 3)
+				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(3),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 10)
+				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(10),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 			},
 
@@ -85,17 +97,21 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		"Block height can be updated to same block height": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 0)
+				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(0),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 
 				k.SetNegativeTncSubaccountSeenAtBlock(ctx, 0)
+				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+				require.True(t, exists)
 				require.Equal(
 					t,
 					uint32(0),
-					k.GetNegativeTncSubaccountSeenAtBlock(ctx),
+					block,
 				)
 			},
 

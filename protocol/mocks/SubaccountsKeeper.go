@@ -18,20 +18,20 @@ type SubaccountsKeeper struct {
 	mock.Mock
 }
 
-// CanUpdateSubaccounts provides a mock function with given fields: ctx, updates
-func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult, error) {
-	ret := _m.Called(ctx, updates)
+// CanUpdateSubaccounts provides a mock function with given fields: ctx, updates, updateType
+func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update, updateType subaccountstypes.UpdateType) (bool, []subaccountstypes.UpdateResult, error) {
+	ret := _m.Called(ctx, updates, updateType)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, []subaccountstypes.Update) bool); ok {
-		r0 = rf(ctx, updates)
+	if rf, ok := ret.Get(0).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) bool); ok {
+		r0 = rf(ctx, updates, updateType)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 []subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(1).(func(types.Context, []subaccountstypes.Update) []subaccountstypes.UpdateResult); ok {
-		r1 = rf(ctx, updates)
+	if rf, ok := ret.Get(1).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) []subaccountstypes.UpdateResult); ok {
+		r1 = rf(ctx, updates, updateType)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([]subaccountstypes.UpdateResult)
@@ -39,8 +39,8 @@ func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []s
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update) error); ok {
-		r2 = rf(ctx, updates)
+	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) error); ok {
+		r2 = rf(ctx, updates, updateType)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -159,20 +159,20 @@ func (_m *SubaccountsKeeper) SetSubaccount(ctx types.Context, subaccount subacco
 	_m.Called(ctx, subaccount)
 }
 
-// UpdateSubaccounts provides a mock function with given fields: ctx, updates
-func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update) (bool, []subaccountstypes.UpdateResult, error) {
-	ret := _m.Called(ctx, updates)
+// UpdateSubaccounts provides a mock function with given fields: ctx, updates, updateType
+func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update, updateType subaccountstypes.UpdateType) (bool, []subaccountstypes.UpdateResult, error) {
+	ret := _m.Called(ctx, updates, updateType)
 
 	var r0 bool
-	if rf, ok := ret.Get(0).(func(types.Context, []subaccountstypes.Update) bool); ok {
-		r0 = rf(ctx, updates)
+	if rf, ok := ret.Get(0).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) bool); ok {
+		r0 = rf(ctx, updates, updateType)
 	} else {
 		r0 = ret.Get(0).(bool)
 	}
 
 	var r1 []subaccountstypes.UpdateResult
-	if rf, ok := ret.Get(1).(func(types.Context, []subaccountstypes.Update) []subaccountstypes.UpdateResult); ok {
-		r1 = rf(ctx, updates)
+	if rf, ok := ret.Get(1).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) []subaccountstypes.UpdateResult); ok {
+		r1 = rf(ctx, updates, updateType)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([]subaccountstypes.UpdateResult)
@@ -180,8 +180,8 @@ func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []suba
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update) error); ok {
-		r2 = rf(ctx, updates)
+	if rf, ok := ret.Get(2).(func(types.Context, []subaccountstypes.Update, subaccountstypes.UpdateType) error); ok {
+		r2 = rf(ctx, updates, updateType)
 	} else {
 		r2 = ret.Error(2)
 	}
