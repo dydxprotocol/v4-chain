@@ -26,7 +26,7 @@ export async function refreshBlockCache(txId?: number): Promise<void> {
       message: 'Unable to refresh block cache most likely due to unable to find latest block',
       error,
     });
-    return;
+
   }
 }
 
