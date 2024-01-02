@@ -1,7 +1,5 @@
 package log
 
-import "errors"
-
 const (
 	SourceModuleKey = "source_module"
 	Error           = "error"
@@ -51,11 +49,4 @@ const (
 	BeginBlocker       = "BeginBlocker"
 	EndBlocker         = "EndBlocker"
 	PrepareCheckState  = "PrepareCheckState"
-)
-
-// Miscallaneous logging constants.
-var (
-	// ErrPanicRecoverDefaultValue represents an error that is default used for error tracking
-	// when a panic recover function returns a non-error object.
-	ErrPanicRecoverDefaultValue = errors.New("default error used for panic recovers not of type error")
 )

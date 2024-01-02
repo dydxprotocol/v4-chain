@@ -79,12 +79,16 @@ func (k Keeper) RecordMevMetrics(
 		if r := recover(); r != nil {
 			err, ok := r.(error)
 			if !ok {
-				err = log.ErrPanicRecoverDefaultValue
+				log.ErrorLog(ctx, "panic when recording mev metrics",
+					log.StackTrace,
+					string(debug.Stack()),
+				)
+			} else {
+				log.ErrorLogWithError(ctx, "panic when recording mev metrics", err,
+					log.StackTrace,
+					string(debug.Stack()),
+				)
 			}
-			log.ErrorLogWithError(ctx, "panic when recording mev metrics", err,
-				log.StackTrace,
-				string(debug.Stack()),
-			)
 		}
 	}()
 
