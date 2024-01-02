@@ -19,10 +19,11 @@ import {
 import * as utils from './helpers/utils';
 import Big from 'big.js';
 import { DYDX_LOCAL_ADDRESS, DYDX_LOCAL_MNEMONIC } from './helpers/constants';
+import { connectAndValidateSocketClient } from './helpers/utils';
 
 describe('transfers', () => {
   it('test deposit', async () => {
-    connectAndValidateSocketClient();
+    connectAndValidateSocketClient(validateTransfers);
     const wallet = await LocalWallet.fromMnemonic(DYDX_LOCAL_MNEMONIC, BECH32_PREFIX);
 
     const validatorClient = await ValidatorClient.connect(Network.local().validatorConfig);
@@ -100,48 +101,33 @@ describe('transfers', () => {
     expect(usdcPositionSizeAfter).toEqual(new Big(usdcPositionSizeBefore).plus(10).toString());
   });
 
-  function connectAndValidateSocketClient(): void {
-    const mySocket = new SocketClient(
-      Network.local().indexerConfig,
-      () => {
-        console.log('open');
-      },
-      () => {
-        console.log('close');
-      },
-      (message) => {
-        if (typeof message.data === 'string') {
-          const data = JSON.parse(message.data as string);
-          if (data.type === 'connected') {
-            mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
-          } else if (data.type === 'subscribed') {
-            expect(data.channel).toEqual('v4_subaccounts');
-            expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
-            expect(data.contents.subaccount).toEqual(
-              expect.objectContaining({
-                address: DYDX_LOCAL_ADDRESS,
-                subaccountNumber: 0,
-              }),
-            );
-          } else if (data.type === 'channel_data' && data.contents.transfers) {
-            expect(data.contents.transfers).toEqual(
-              expect.objectContaining({
-                sender: {
-                  address: DYDX_LOCAL_ADDRESS,
-                },
-                recipient: {
-                  address: DYDX_LOCAL_ADDRESS,
-                  subaccountNumber: 0,
-                },
-                size: '10',
-                symbol: 'USDC',
-                type: 'DEPOSIT',
-              }),
-            );
-          }
-        }
-      },
-    );
-    mySocket.connect();
+  function validateTransfers(data: any, socketClient: SocketClient): void {
+    if (data.type === 'connected') {
+      socketClient.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
+    } else if (data.type === 'subscribed') {
+      expect(data.channel).toEqual('v4_subaccounts');
+      expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
+      expect(data.contents.subaccount).toEqual(
+        expect.objectContaining({
+          address: DYDX_LOCAL_ADDRESS,
+          subaccountNumber: 0,
+        }),
+      );
+    } else if (data.type === 'channel_data' && data.contents.transfers) {
+      expect(data.contents.transfers).toEqual(
+        expect.objectContaining({
+          sender: {
+            address: DYDX_LOCAL_ADDRESS,
+          },
+          recipient: {
+            address: DYDX_LOCAL_ADDRESS,
+            subaccountNumber: 0,
+          },
+          size: '10',
+          symbol: 'USDC',
+          type: 'DEPOSIT',
+        }),
+      );
+    }
   }
 });

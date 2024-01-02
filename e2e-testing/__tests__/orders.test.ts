@@ -1,83 +1,36 @@
-import Long from 'long';
 import {
   BECH32_PREFIX,
+  HeightResponse,
   IndexerClient,
   IPlaceOrder,
   LocalWallet,
   Network,
-  Order_Side,
-  Order_TimeInForce,
-  OrderFlags, SocketClient,
+  SocketClient,
   SubaccountInfo,
   ValidatorClient,
-  HeightResponse,
 } from '@dydxprotocol/v4-client-js';
 import {
   DYDX_LOCAL_ADDRESS,
   DYDX_LOCAL_ADDRESS_2,
   DYDX_LOCAL_MNEMONIC,
   DYDX_LOCAL_MNEMONIC_2,
+  orderDetails,
+  PERPETUAL_PAIR_BTC_USD,
 } from './helpers/constants';
 import { DateTime } from 'luxon';
 import * as utils from './helpers/utils';
+import { connectAndValidateSocketClient, createModifiedOrder } from './helpers/utils';
 import {
+  CandleResolution,
   FillTable,
   FillType,
+  helpers,
+  IsoString,
   Liquidity,
   OrderSide,
   OrderTable,
   SubaccountTable,
-  helpers,
-  IsoString,
-  CandleResolution,
 } from '@dydxprotocol-indexer/postgres';
-
-const PERPETUAL_PAIR_BTC_USD: number = 0;
-const quantums: Long = new Long(1_000_000_000);
-const subticks: Long = new Long(1_000_000_000);
-
-const defaultOrder: IPlaceOrder = {
-  clientId: 0,
-  orderFlags: OrderFlags.SHORT_TERM,
-  clobPairId: PERPETUAL_PAIR_BTC_USD,
-  side: Order_Side.SIDE_BUY,
-  quantums,
-  subticks,
-  timeInForce: Order_TimeInForce.TIME_IN_FORCE_UNSPECIFIED,
-  reduceOnly: false,
-  clientMetadata: 0,
-};
-
-type OrderDetails = {
-  mnemonic: string;
-  timeInForce: number;
-  orderFlags: number;
-  side: number;
-  clobPairId: number;
-  quantums: number;
-  subticks: number;
-};
-
-const orderDetails: OrderDetails[] = [
-  {
-    mnemonic: DYDX_LOCAL_MNEMONIC,
-    timeInForce: 0,
-    orderFlags: 64,
-    side: 1,
-    clobPairId: PERPETUAL_PAIR_BTC_USD,
-    quantums: 10000000,
-    subticks: 5000000000,
-  },
-  {
-    mnemonic: DYDX_LOCAL_MNEMONIC_2,
-    timeInForce: 0,
-    orderFlags: 64,
-    side: 2,
-    clobPairId: PERPETUAL_PAIR_BTC_USD,
-    quantums: 5000000,
-    subticks: 5000000000,
-  },
-];
 
 async function placeOrder(
   mnemonic: string,
@@ -111,20 +64,11 @@ describe('orders', () => {
     const indexerClient = new IndexerClient(Network.local().indexerConfig);
     const heightResp: HeightResponse = await indexerClient.utility.getHeight();
     const height: number = heightResp.height;
-    connectAndValidateSocketClient();
+    connectAndValidateSocketClient(validateOrders);
 
     // place all orders
     for (const order of orderDetails) {
-      const modifiedOrder: IPlaceOrder = defaultOrder;
-      modifiedOrder.clientId = Math.floor(Math.random() * 1000000000);
-      modifiedOrder.goodTilBlock = 0;
-      modifiedOrder.clobPairId = order.clobPairId;
-      modifiedOrder.timeInForce = order.timeInForce;
-      modifiedOrder.reduceOnly = false;
-      modifiedOrder.orderFlags = order.orderFlags;
-      modifiedOrder.side = order.side;
-      modifiedOrder.quantums = Long.fromNumber(order.quantums);
-      modifiedOrder.subticks = Long.fromNumber(order.subticks);
+      const modifiedOrder: IPlaceOrder = createModifiedOrder(order);
 
       await placeOrder(order.mnemonic, modifiedOrder);
     }
@@ -243,7 +187,7 @@ describe('orders', () => {
         reduceOnly: false,
         orderFlags: '64',
         postOnly: false,
-        ticker: 'BTC-USD'
+        ticker: 'BTC-USD',
       }),
     );
     expect(ordersResponse2[0]).toEqual(
@@ -260,14 +204,14 @@ describe('orders', () => {
         reduceOnly: false,
         orderFlags: '64',
         postOnly: false,
-        ticker: 'BTC-USD'
+        ticker: 'BTC-USD',
       }),
     );
 
     // Check API /v4/perpetualPositions endpoint
     const [response, response2] = await Promise.all([
       indexerClient.account.getSubaccountPerpetualPositions(DYDX_LOCAL_ADDRESS, 0),
-      indexerClient.account.getSubaccountPerpetualPositions(DYDX_LOCAL_ADDRESS_2, 0)
+      indexerClient.account.getSubaccountPerpetualPositions(DYDX_LOCAL_ADDRESS_2, 0),
     ]);
     expect(response.positions.length).toEqual(1);
     expect(response.positions[0]).toEqual(
@@ -292,13 +236,13 @@ describe('orders', () => {
     const orderbooksResponse = await indexerClient.markets.getPerpetualMarketOrderbook('BTC-USD');
     expect(orderbooksResponse).toEqual(
       expect.objectContaining({
-        bids:[
+        bids: [
           {
             price: '50000',
             size: '0.0005',
-          }
+          },
         ],
-        asks:[]
+        asks: [],
       }),
     );
 
@@ -326,62 +270,46 @@ describe('orders', () => {
     );
   });
 
-
-  function connectAndValidateSocketClient(): void {
-    const mySocket = new SocketClient(
-      Network.local().indexerConfig,
-      () => {
-        console.log('open');
-      },
-      () => {
-        console.log('close');
-      },
-      (message) => {
-        if (typeof message.data === 'string') {
-          const data = JSON.parse(message.data as string);
-          if (data.type === 'connected') {
-            mySocket.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
-          } else if (data.type === 'subscribed') {
-            expect(data.channel).toEqual('v4_subaccounts');
-            expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
-            expect(data.contents.subaccount).toEqual(
-              expect.objectContaining({
-                address: DYDX_LOCAL_ADDRESS,
-                subaccountNumber: 0,
-              }),
-            );
-          } else if (data.type === 'channel_data' && data.contents.perpetualPositions) {
-            expect(data.contents.perpetualPositions[0]).toEqual(
-              expect.objectContaining({
-                address: DYDX_LOCAL_ADDRESS,
-                subaccountNumber: 0,
-                market: 'BTC-USD',
-                side: 'LONG',
-                status: 'OPEN',
-                netFunding: '0',
-                exitPrice: null,
-              }),
-            );
-          } else if (data.type === 'channel_data' && data.contents.fills) {
-            expect(data.contents.fills[0]).toEqual(
-              expect.objectContaining({
-                fee: '-0.00275',
-                side: 'BUY',
-                size: '0.0005',
-                type: 'LIMIT',
-                price: '50000',
-                liquidity: 'MAKER',
-                clobPairId: '0',
-                quoteAmount: '25',
-                subaccountId: SubaccountTable.uuid(DYDX_LOCAL_ADDRESS, 0),
-                clientMetadata: '0',
-                ticker: 'BTC-USD'
-              }),
-            );
-          }
-        }
-      },
-    );
-    mySocket.connect();
+  function validateOrders(data: any, socketClient: SocketClient): void {
+    if (data.type === 'connected') {
+      socketClient.subscribeToSubaccount(DYDX_LOCAL_ADDRESS, 0);
+    } else if (data.type === 'subscribed') {
+      expect(data.channel).toEqual('v4_subaccounts');
+      expect(data.id).toEqual(`${DYDX_LOCAL_ADDRESS}/0`);
+      expect(data.contents.subaccount).toEqual(
+        expect.objectContaining({
+          address: DYDX_LOCAL_ADDRESS,
+          subaccountNumber: 0,
+        }),
+      );
+    } else if (data.type === 'channel_data' && data.contents.perpetualPositions) {
+      expect(data.contents.perpetualPositions[0]).toEqual(
+        expect.objectContaining({
+          address: DYDX_LOCAL_ADDRESS,
+          subaccountNumber: 0,
+          market: 'BTC-USD',
+          side: 'LONG',
+          status: 'OPEN',
+          netFunding: '0',
+          exitPrice: null,
+        }),
+      );
+    } else if (data.type === 'channel_data' && data.contents.fills) {
+      expect(data.contents.fills[0]).toEqual(
+        expect.objectContaining({
+          fee: '-0.00275',
+          side: 'BUY',
+          size: '0.0005',
+          type: 'LIMIT',
+          price: '50000',
+          liquidity: 'MAKER',
+          clobPairId: '0',
+          quoteAmount: '25',
+          subaccountId: SubaccountTable.uuid(DYDX_LOCAL_ADDRESS, 0),
+          clientMetadata: '0',
+          ticker: 'BTC-USD',
+        }),
+      );
+    }
   }
 });
