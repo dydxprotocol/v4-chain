@@ -150,3 +150,12 @@ func (k Keeper) fetchStateStoresForOrder(
 		),
 	)
 }
+
+// GetLastTradePriceMemStore fetches a mem store used for reading and updating the
+// last trade prices for perpetuals.
+func (k Keeper) GetLastTradePriceMemStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.memKey),
+		[]byte(types.LastTradePricePrefix),
+	)
+}

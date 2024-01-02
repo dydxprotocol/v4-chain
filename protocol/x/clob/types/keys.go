@@ -75,6 +75,10 @@ const (
 	// memclob state based on the latest block.
 	ProcessProposerMatchesEventsKey = "ProposerEvents"
 
+	// LastTradePricePrefix is the key prefix to retrieve the last trade price for a perpetual.
+	// This is meant to be used for improved conditional order triggering.
+	LastTradePricePrefix = "LastTrade/"
+
 	// StatefulOrderCountPrefix is the key to retrieve the stateful order count. The stateful order count
 	// represents the number of stateful orders stored in state.
 	StatefulOrderCountPrefix = "NumSO:"
