@@ -126,7 +126,6 @@ func (k Keeper) ProcessSingleMatch(
 			"FillAmount",
 			matchWithOrders.FillAmount.ToUint64(),
 		)
-
 	}
 
 	// Retrieve the associated perpetual id for the `ClobPair`.
