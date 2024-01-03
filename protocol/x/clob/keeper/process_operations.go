@@ -675,10 +675,9 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	}
 	deltaBaseQuantumsIsNegative := position.GetIsLong()
 
-	// TODO: This logic assumes that the subaccount is negative equity. Should account for final settlement markets.
-	// If there are zero-deleveraging fills, this is a sentinel value to indicate a subaccount could not be liquidated
-	// or deleveraged and still has negative equity. Mark the current block number in state to indicate a negative TNC
-	// subaccount was seen.
+	// If there are zero-fill deleveraging operations, this is a sentinel value to indicate a subaccount could not be
+	// liquidated or deleveraged and still has negative equity. Mark the current block number in state to indicate a
+	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
 		if !shouldDeleverageAtBankruptcyPrice {
 			panic(
