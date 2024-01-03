@@ -70,7 +70,7 @@ export default async function runTask(): Promise<void> {
     rds,
     undefined,
     config.FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX,
-  );
+  ) as string;
   stats.timing(`${statStart}.describe_rds_snapshots`, Date.now() - startDescribe);
 
   // dev example: rds:dev-indexer-apne1-db-2023-06-25-18-34
@@ -122,6 +122,7 @@ export default async function runTask(): Promise<void> {
       rds,
       rdsExportIdentifier,
       RESEARCH_SNAPSHOT_S3_BUCKET_NAME,
+      true,
     );
 
     logger.info({

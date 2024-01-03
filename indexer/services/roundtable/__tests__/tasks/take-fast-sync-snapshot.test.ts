@@ -39,4 +39,15 @@ describe('fast-sync-export-db-snapshot', () => {
     expect(createDBSnapshot).not.toHaveBeenCalled();
     expect(startExportTask).not.toHaveBeenCalled();
   });
+
+  it('No existing snapshot', async () => {
+    asMock(getMostRecentDBSnapshotIdentifier).mockImplementation(
+      async () => Promise.resolve(undefined),
+    );
+
+    await takeFastSyncSnapshotTask();
+
+    expect(createDBSnapshot).toHaveBeenCalled();
+    expect(startExportTask).toHaveBeenCalled();
+  });
 });

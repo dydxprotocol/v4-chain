@@ -33,7 +33,7 @@ export async function getMostRecentDBSnapshotIdentifier(
   rds: RDS,
   snapshotIdentifierPrefixInclude?: string,
   snapshotIdentifierPrefixExclude?: string,
-): Promise<string> {
+): Promise<string | undefined> {
   const awsResponse: RDS.DBSnapshotMessage = await rds.describeDBSnapshots({
     DBInstanceIdentifier: config.RDS_INSTANCE_NAME,
     MaxRecords: 20, // this is the minimum
@@ -46,13 +46,13 @@ export async function getMostRecentDBSnapshotIdentifier(
   let snapshots: RDS.DBSnapshotList = awsResponse.DBSnapshots;
   // Only include snapshots with snapshot identifier that starts with prefixInclude
   if (snapshotIdentifierPrefixInclude !== undefined) {
-    snapshots = awsResponse.DBSnapshots
+    snapshots = snapshots
       .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
         snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixInclude),
       );
   }
   if (snapshotIdentifierPrefixExclude !== undefined) {
-    snapshots = awsResponse.DBSnapshots
+    snapshots = snapshots
       .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
         !snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixExclude),
       );
@@ -64,11 +64,12 @@ export async function getMostRecentDBSnapshotIdentifier(
     mostRecentSnapshot: snapshots[snapshots.length - 1],
   });
 
-  return snapshots[snapshots.length - 1].DBSnapshotIdentifier!;
+  return snapshots[snapshots.length - 1]?.DBSnapshotIdentifier;
 }
 
 /**
- * @description Create DB snapshot for an RDS database.
+ * @description Create DB snapshot for an RDS database. Only returns when the
+ * snapshot is available.
  */
 export async function createDBSnapshot(
   rds: RDS,
@@ -80,11 +81,37 @@ export async function createDBSnapshot(
     DBSnapshotIdentifier: snapshotIdentifier,
   };
 
-  const awsResponse: RDS.CreateDBSnapshotResult = await rds.createDBSnapshot(params).promise();
-  if (awsResponse.DBSnapshot === undefined) {
-    throw Error(`No DB snapshot was created with identifier: ${snapshotIdentifier}`);
+  try {
+    await rds.createDBSnapshot(params).promise();
+    // Polling function to check snapshot status. Only return when the snapshot is available.
+    const waitForSnapshot = async () => {
+      // eslint-disable-next-line no-constant-condition
+      while (true) {
+        const statusResponse = await rds.describeDBSnapshots(
+          { DBSnapshotIdentifier: snapshotIdentifier },
+        ).promise();
+        const snapshot = statusResponse.DBSnapshots![0];
+        if (snapshot.Status === 'available') {
+          return snapshot.DBSnapshotIdentifier!;
+        } else if (snapshot.Status === 'failed') {
+          throw Error(`Snapshot creation failed for identifier: ${snapshotIdentifier}`);
+        }
+
+        // Wait for 1 minute before checking again
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+      }
+    };
+
+    return await waitForSnapshot();
+  } catch (error) {
+    logger.error({
+      at: `${atStart}createDBSnapshot`,
+      message: 'Failed to create DB snapshot',
+      error,
+      snapshotIdentifier,
+    });
+    throw error;
   }
-  return awsResponse.DBSnapshot.DBSnapshotIdentifier!;
 }
 
 /**
@@ -192,9 +219,13 @@ export async function startExportTask(
   rds: RDS,
   rdsExportIdentifier: string,
   bucket: string,
+  isAutomatedSnapshot: boolean,
 ): Promise<RDS.ExportTask> {
   // TODO: Add validation
-  const sourceArnPrefix = `arn:aws:rds:${config.AWS_REGION}:${config.AWS_ACCOUNT_ID}:snapshot:rds:`;
+  let sourceArnPrefix: string = `arn:aws:rds:${config.AWS_REGION}:${config.AWS_ACCOUNT_ID}:snapshot:`;
+  if (isAutomatedSnapshot) {
+    sourceArnPrefix = sourceArnPrefix.concat('rds:');
+  }
   const awsResponse: RDS.ExportTask = await rds.startExportTask({
     ExportTaskIdentifier: rdsExportIdentifier,
     S3BucketName: bucket,

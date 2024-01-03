@@ -49,24 +49,26 @@ export default async function runTask(): Promise<void> {
   const dateString: string = DateTime.utc().toFormat('yyyy-MM-dd-HH-mm');
   const rdsExportIdentifier: string = `${config.FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX}-${config.RDS_INSTANCE_NAME}-${dateString}`;
   // check the time of the last snapshot
-  const lastSnapshotIdentifier: string = await getMostRecentDBSnapshotIdentifier(
+  const lastSnapshotIdentifier: string | undefined = await getMostRecentDBSnapshotIdentifier(
     rds,
     config.FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX,
   );
-  const s3Date: string = lastSnapshotIdentifier.split(config.RDS_INSTANCE_NAME)[1].slice(1);
-  if (
-    isDifferenceLessThanInterval(
-      s3Date,
-      dateString,
-      config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
-    )
-  ) {
-    logger.info({
-      at,
-      message: 'Last fast sync db snapshot was taken less than the interval ago',
-      interval: config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
-    });
-    return;
+  if (lastSnapshotIdentifier !== undefined) {
+    const s3Date: string = lastSnapshotIdentifier.split(config.RDS_INSTANCE_NAME)[1].slice(1);
+    if (
+      isDifferenceLessThanInterval(
+        s3Date,
+        dateString,
+        config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
+      )
+    ) {
+      logger.info({
+        at,
+        message: 'Last fast sync db snapshot was taken less than the interval ago',
+        interval: config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
+      });
+      return;
+    }
   }
   // Create the DB snapshot
   await createDBSnapshot(rds, rdsExportIdentifier, config.RDS_INSTANCE_NAME);
@@ -78,6 +80,7 @@ export default async function runTask(): Promise<void> {
       rds,
       rdsExportIdentifier,
       FAST_SYNC_SNAPSHOT_S3_BUCKET_NAME,
+      false,
     );
 
     logger.info({
