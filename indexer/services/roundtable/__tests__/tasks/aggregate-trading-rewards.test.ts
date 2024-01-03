@@ -20,4 +20,8 @@ describe('aggregate-trading-rewards', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
   });
+
+  it('temp', () => {
+    expect(true).toEqual(true);
+  });
 });
