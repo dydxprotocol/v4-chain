@@ -62,6 +62,7 @@ export default async function runTask(): Promise<void> {
         config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
       )
     ) {
+      stats.increment(`${statStart}.existingDbSnapshot`, 1);
       logger.info({
         at,
         message: 'Last fast sync db snapshot was taken less than the interval ago',
@@ -71,39 +72,43 @@ export default async function runTask(): Promise<void> {
     }
   }
   // Create the DB snapshot
+  const startSnapshot: number = Date.now();
   await createDBSnapshot(rds, rdsExportIdentifier, config.RDS_INSTANCE_NAME);
+  stats.timing(`${statStart}.createDbSnapshot`, Date.now() - startSnapshot);
 
   // start S3 Export Job.
-  const startExport: number = Date.now();
-  try {
-    const exportData: RDS.ExportTask = await startExportTask(
-      rds,
-      rdsExportIdentifier,
-      FAST_SYNC_SNAPSHOT_S3_BUCKET_NAME,
-      false,
-    );
+  if (config.EXPORT_FAST_SYNC_SNAPSHOTS_TO_S3) {
+    const startExport: number = Date.now();
+    try {
+      const exportData: RDS.ExportTask = await startExportTask(
+        rds,
+        rdsExportIdentifier,
+        FAST_SYNC_SNAPSHOT_S3_BUCKET_NAME,
+        false,
+      );
 
-    logger.info({
-      at,
-      message: 'Started an export task',
-      exportData,
-    });
-  } catch (error) { // TODO handle this by finding the most recent snapshot earlier
-    const message: InfoObject = {
-      at,
-      message: 'export to S3 failed',
-      error,
-    };
+      logger.info({
+        at,
+        message: 'Started an export task',
+        exportData,
+      });
+    } catch (error) { // TODO handle this by finding the most recent snapshot earlier
+      const message: InfoObject = {
+        at,
+        message: 'export to S3 failed',
+        error,
+      };
 
-    if (error.name === 'DBSnapshotNotFound') {
-      stats.increment(`${statStart}.no_s3_snapshot`, 1);
+      if (error.name === 'DBSnapshotNotFound') {
+        stats.increment(`${statStart}.no_s3_snapshot`, 1);
 
-      logger.info(message);
-      return;
+        logger.info(message);
+        return;
+      }
+
+      logger.error(message);
+    } finally {
+      stats.timing(`${statStart}.rdsSnapshotExport`, Date.now() - startExport);
     }
-
-    logger.error(message);
-  } finally {
-    stats.timing(`${statStart}.rdsSnapshotExport`, Date.now() - startExport);
   }
 }

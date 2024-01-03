@@ -119,6 +119,7 @@ export const configSchema = {
   RESEARCH_SNAPSHOT_S3_BUCKET_ARN: parseString(),
   FAST_SYNC_SNAPSHOT_S3_BUCKET_ARN: parseString(),
   FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX: parseString({ default: 'fast-sync' }),
+  EXPORT_FAST_SYNC_SNAPSHOTS_TO_S3: parseBoolean({ default: false }),
   ECS_TASK_ROLE_ARN: parseString(),
   KMS_KEY_ARN: parseString(),
   RDS_INSTANCE_NAME: parseString(),
