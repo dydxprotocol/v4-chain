@@ -232,6 +232,12 @@ func PrepareCheckState(
 		panic(err)
 	}
 
+	// 8. Insert a zero-fill deleveraging operation into the operations queue if any of the liquidatable
+	// subaccounts still have negative TNC.
+	for _, subaccountId := range liquidatableSubaccountIds {
+		keeper.CanDeleverageSubaccount(ctx, subaccountId)
+	}
+
 	// Send all off-chain Indexer events
 	keeper.SendOffchainMessages(offchainUpdates, nil, metrics.SendPrepareCheckStateOffchainUpdates)
 
