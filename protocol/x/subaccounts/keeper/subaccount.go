@@ -281,8 +281,8 @@ func (k Keeper) UpdateSubaccounts(
 		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
 		// and negative if the subaccount received funding.
 		// Note the perpetual IDs are sorted first to ensure event emission determinism.
-		sortedPerpsWithFunding := lib.GetSortedKeys[lib.Sortable[uint32]](fundingPayments)
-		for _, perpetualId := range sortedPerpsWithFunding {
+		sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](fundingPayments)
+		for _, perpetualId := range sortedPerpIds {
 			fundingPaid := fundingPayments[perpetualId]
 			ctx.EventManager().EmitEvent(
 				types.NewCreateSettledFundingEvent(
