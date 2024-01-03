@@ -998,6 +998,50 @@ func TestProcessProposerOperations(t *testing.T) {
 
 			expectedNegativeTncSubaccountSeen: true,
 		},
+		"Zero-fill deleveraging succeeds when there's multiple zero-fill deleveraging events for the same subaccount " +
+			"and perpetual ID": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				// deleverageable since TNC = -$1
+				constants.Carl_Num0_1BTC_Short_50499USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills:       []types.MatchPerpetualDeleveraging_Fill{},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills:       []types.MatchPerpetualDeleveraging_Fill{},
+					},
+				),
+			},
+
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
+			},
+			expectedNegativeTncSubaccountSeen: true,
+		},
 		"Succeeds order removal operations with previous stateful orders": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
@@ -1430,7 +1474,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},
-		"Panics if zero-fill deleveraging operation proposed for non-negative TNC subaccount in final settlement": {
+		"Returns error if zero-fill deleveraging operation proposed for non-negative TNC subaccount in final settlement": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
 			},
