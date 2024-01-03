@@ -334,6 +334,7 @@ const (
 	NotEnoughPositionToFullyOffset = "not_enough_position_to_fully_offset"
 	NonOverlappingBankruptcyPrices = "non_overlapping_bankruptcy_prices"
 	NoOpenPositionOnOppositeSide   = "no_open_position_on_opposite_side"
+	NegativeTncSubaccountSeen      = "negative_tnc_subaccount_seen"
 
 	// Pricefeed Daemon.
 	Exchange                                = "exchange"
