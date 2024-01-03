@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/big"
 	"math/rand"
+	"sort"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
@@ -280,7 +281,16 @@ func (k Keeper) UpdateSubaccounts(
 		// Emit an event indicating a funding payment was paid / received for each settled funding
 		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
 		// and negative if the subaccount received funding.
-		for perpetualId, fundingPaid := range fundingPayments {
+		// Note the perpetual IDs are sorted first to ensure event emission determinism.
+		perpsWithFunding := make([]uint32, 0, len(fundingPayments))
+		for perpetualId := range fundingPayments {
+			perpsWithFunding = append(perpsWithFunding, perpetualId)
+		}
+		sort.Slice(perpsWithFunding, func(i, j int) bool {
+			return perpsWithFunding[i] < perpsWithFunding[j]
+		})
+		for _, perpetualId := range perpsWithFunding {
+			fundingPaid := fundingPayments[perpetualId]
 			ctx.EventManager().EmitEvent(
 				types.NewCreateSettledFundingEvent(
 					*u.SettledSubaccount.Id,
