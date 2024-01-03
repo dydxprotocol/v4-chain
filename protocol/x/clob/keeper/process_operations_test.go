@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -1465,11 +1464,7 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_100000USD.GetPerpetualPositions(),
 				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
 			},
-			expectedPanics: fmt.Sprintf(
-				"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
-					" and perpetual 0 but cannot be be deleveraged at bankruptcy price",
-				constants.Carl_Num0,
-			),
+			expectedError: types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 		},
 		"Fails with clob match for market in initializing mode": {
 			perpetuals: []*perptypes.Perpetual{

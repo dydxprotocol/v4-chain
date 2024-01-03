@@ -443,7 +443,7 @@ var (
 	ErrZeroFillDeleveragingForNonNegativeTncSubaccount = errorsmod.Register(
 		ModuleName,
 		4008,
-		"Deleveraging fill is invalid",
+		"Zero-fill deleveraging operation included in block for non-negative TNC subaccount",
 	)
 
 	// Block rate limit errors.
