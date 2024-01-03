@@ -680,16 +680,25 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	// negative TNC subaccount was seen.
 	if len(matchDeleveraging.GetFills()) == 0 {
 		if !shouldDeleverageAtBankruptcyPrice {
-			panic(
+			return errorsmod.Wrapf(
+				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 				fmt.Sprintf(
 					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
-						" and perpetual %d but cannot be be deleveraged at bankruptcy price",
+						" and perpetual %d but subaccount isn't negative TNC",
 					liquidatedSubaccountId,
 					perpetualId,
 				),
 			)
 		}
 
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.ProcessOperations, metrics.NegativeTncSubaccountSeen, metrics.Count},
+			1,
+			[]metrics.Label{
+				metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+				metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
+			},
+		)
 		k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 		return nil
 	}

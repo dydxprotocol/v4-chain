@@ -440,6 +440,11 @@ var (
 		4007,
 		"Order Removal reason is invalid",
 	)
+	ErrZeroFillDeleveragingForNonNegativeTncSubaccount = errorsmod.Register(
+		ModuleName,
+		4008,
+		"Deleveraging fill is invalid",
+	)
 
 	// Block rate limit errors.
 	ErrInvalidBlockRateLimitConfig = errorsmod.Register(
