@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io"
 	"math/big"
 	"net/http"
@@ -223,8 +222,6 @@ type App struct {
 	appCodec          codec.Codec
 	txConfig          client.TxConfig
 	interfaceRegistry types.InterfaceRegistry
-	db                dbm.DB
-	snapshotDB        dbm.DB
 	event             runtime.EventService
 	closeOnce         func() error
 
@@ -315,7 +312,6 @@ func assertAppPreconditions() {
 func New(
 	logger log.Logger,
 	db dbm.DB,
-	snapshotDB dbm.DB,
 	traceStore io.Writer,
 	loadLatest bool,
 	appOpts servertypes.AppOptions,
@@ -390,8 +386,6 @@ func New(
 		keys:              keys,
 		tkeys:             tkeys,
 		memKeys:           memKeys,
-		db:                db,
-		snapshotDB:        snapshotDB,
 	}
 	app.closeOnce = sync.OnceValue[error](
 		func() error {
@@ -401,11 +395,7 @@ func New(
 			if app.Server != nil {
 				app.Server.Stop()
 			}
-			return errors.Join(
-				// TODO(CORE-538): Remove this if possible during upgrade to Cosmos 0.50.
-				app.db.Close(),
-				app.snapshotDB.Close(),
-			)
+			return nil
 		},
 	)
 
@@ -1600,6 +1590,7 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 
 // Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
+	app.BaseApp.Close()
 	return app.closeOnce()
 }
 

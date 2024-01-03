@@ -218,7 +218,6 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 			return app.New(
 				logger,
 				db,
-				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -291,7 +290,6 @@ func TestFullAppSimulation(t *testing.T) {
 			return app.New(
 				logger,
 				db,
-				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -364,7 +362,6 @@ func TestAppStateDeterminism(t *testing.T) {
 					return app.New(
 						logger,
 						db,
-						dbm.NewMemDB(),
 						nil,
 						true,
 						appOptions,
