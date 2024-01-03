@@ -130,8 +130,6 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.vest.MsgSetVestEntryResponse",
 
 		// ibc
-		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams",
-		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse",
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams",
 		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse",
 		"/ibc.applications.transfer.v1.MsgUpdateParams",

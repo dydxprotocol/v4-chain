@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	dbm "github.com/cosmos/cosmos-db"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	"io"
 	"math/rand"
 	"os"
@@ -41,7 +42,6 @@ import (
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	exportedtypes "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
@@ -127,12 +127,24 @@ var genesisModuleOrder = []string{
 	epochstypes.ModuleName,
 }
 
+var skippedGenesisModules = map[string]interface{}{
+	// Skip adding the interchain accounts module since the modules simulation
+	// https://github.com/cosmos/ibc-go/blob/2551dea/modules/apps/27-interchain-accounts/simulation/proposals.go#L23
+	// adds both ICA host and controller messages while the app only supports host messages causing the
+	// simulation to fail due to unroutable controller messages.
+	icatypes.ModuleName: nil,
+}
+
 // WithRandomlyGeneratedOperationsSimulationManager uses the default weighted operations of each of
 // the modules which are currently using randomness to generate operations for simulation.
 func (app *SimApp) WithRandomlyGeneratedOperationsSimulationManager() {
 	// Find all simulation modules and replace the auth one with one that is needed for simulation.
 	simAppModules := []module.AppModuleSimulation{}
 	for _, genesisModule := range genesisModuleOrder {
+		if _, skipped := skippedGenesisModules[genesisModule]; skipped {
+			continue
+		}
+
 		if simAppModule, ok := app.ModuleManager.Modules[genesisModule].(module.AppModuleSimulation); ok {
 			// Replace the auth module so that it generates some random accounts.
 			if simAppModule.(module.AppModule).Name() == authtypes.ModuleName {
@@ -156,11 +168,12 @@ func (app *SimApp) WithRandomlyGeneratedOperationsSimulationManager() {
 			foundSimAppModules = append(foundSimAppModules, simAppModule.(module.AppModuleBasic).Name())
 		}
 	}
-	if len(simAppModules) != len(foundSimAppModules) {
+	if len(simAppModules) != len(foundSimAppModules)-len(skippedGenesisModules) {
 		panic(fmt.Sprintf(
 			"Under specified AppModuleSimulation genesis order. "+
-				"Genesis order is %s but found modules %s.",
+				"Genesis order is %s with skipped modules %s but found modules %s.",
 			genesisModuleOrder,
+			skippedGenesisModules,
 			foundSimAppModules,
 		))
 	}

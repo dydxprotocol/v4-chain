@@ -11,7 +11,6 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -150,16 +149,13 @@ var (
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
 
 		// ibc
-		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams": &icacontrollertypes.
-			MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":               &icahosttypes.MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse":       nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":                               &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                       nil,
-		"/ibc.core.client.v1.MsgUpdateParams":                                         &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":                                 nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                                     &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                             nil,
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
+		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
 	}
 )

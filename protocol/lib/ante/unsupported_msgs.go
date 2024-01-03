@@ -11,6 +11,7 @@ func IsUnsupportedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
 		// ICA Controller messages
+		*icacontrollertypes.MsgUpdateParams,
 		*icacontrollertypes.MsgSendTx,
 		*icacontrollertypes.MsgRegisterInterchainAccount,
 		// ------- CosmosSDK default modules

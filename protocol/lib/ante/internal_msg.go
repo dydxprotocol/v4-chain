@@ -11,7 +11,6 @@ import (
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
@@ -112,7 +111,6 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// ibc
 		*icahosttypes.MsgUpdateParams,
-		*icacontrollertypes.MsgUpdateParams,
 		*ibctransfer.MsgUpdateParams,
 		*ibcclient.MsgUpdateParams,
 		*ibcconn.MsgUpdateParams:
