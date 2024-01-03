@@ -166,6 +166,50 @@ describe('Fill store', () => {
     checkLengthAndContains(fills, expectedLength, expectedFill);
   });
 
+  it.each([
+    [1, 1, defaultFill],
+    [0, 1, defaultFill],
+    [-1, 0, undefined],
+  ])('Successfuly finds Fill with createdOnOrAfter, delta %d seconds', async (
+    deltaSeconds: number,
+    expectedLength: number,
+    expectedFill?: FillCreateObject,
+  ) => {
+    await FillTable.create(defaultFill);
+
+    const fills: FillFromDatabase[] = await FillTable.findAll(
+      {
+        createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO(),
+      },
+      [],
+      { readReplica: true },
+    );
+
+    checkLengthAndContains(fills, expectedLength, expectedFill);
+  });
+
+  it.each([
+    [1, 1, defaultFill],
+    [0, 1, defaultFill],
+    [-1, 0, undefined],
+  ])('Successfuly finds Fill with createdOnOrAfterHeight, delta %d blocks', async (
+    deltaBlocks: number,
+    expectedLength: number,
+    expectedFill?: FillCreateObject,
+  ) => {
+    await FillTable.create(defaultFill);
+
+    const fills: FillFromDatabase[] = await FillTable.findAll(
+      {
+        createdOnOrAfterHeight: Big(createdHeight).minus(deltaBlocks).toFixed(),
+      },
+      [],
+      { readReplica: true },
+    );
+
+    checkLengthAndContains(fills, expectedLength, expectedFill);
+  });
+
   it('Successfully finds a Fill', async () => {
     await FillTable.create(defaultFill);
 

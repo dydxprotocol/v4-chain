@@ -9,28 +9,30 @@ import (
 )
 
 // GetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was
-// seen in state. Note this defaults to 0 if it has not been set.
+// seen in state and a boolean for whether it exists in state.
 func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
-) uint32 {
+) (uint32, bool) {
 	store := ctx.KVStore(k.storeKey)
 	return k.getNegativeTncSubaccountSeenAtBlock(store)
 }
 
 // getNegativeTncSubaccountSeenAtBlock is a helper function that takes a store and returns the last
-// block height a negative TNC subaccount was seen in state.
+// block height a negative TNC subaccount was seen in state and a boolean for whether it exists in state.
 func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
 	store sdk.KVStore,
-) uint32 {
+) (uint32, bool) {
 	b := store.Get(
 		[]byte(types.NegativeTncSubaccountSeenAtBlockKey),
 	)
 	blockHeight := gogotypes.UInt32Value{Value: 0}
+	exists := false
 	if b != nil {
 		k.cdc.MustUnmarshal(b, &blockHeight)
+		exists = true
 	}
 
-	return blockHeight.Value
+	return blockHeight.Value, exists
 }
 
 // SetNegativeTncSubaccountSeenAtBlock sets a block number in state where a negative TNC subaccount
@@ -42,9 +44,9 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 ) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Panic if the new block height is less than the current block height.
-	currentValue := k.getNegativeTncSubaccountSeenAtBlock(store)
-	if blockHeight < currentValue {
+	// Panic if the stored block height value exists and is greater than the new block height value.
+	currentValue, exists := k.getNegativeTncSubaccountSeenAtBlock(store)
+	if exists && blockHeight < currentValue {
 		panic(
 			fmt.Sprintf(
 				"SetNegativeTncSubaccountSeenAtBlock: new block height (%d) is less than the current block height (%d)",

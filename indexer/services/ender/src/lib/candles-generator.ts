@@ -18,6 +18,7 @@ import {
   PerpetualPositionTable,
   TradeContent,
   TradeMessageContents,
+  helpers,
 } from '@dydxprotocol-indexer/postgres';
 import { CandleMessage } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -283,7 +284,7 @@ export class CandlesGenerator {
       return _.some(
         Object.values(CandleResolution),
         (resolution: CandleResolution) => {
-          const startedAt: DateTime = CandlesGenerator.calculateNormalizedCandleStartTime(
+          const startedAt: DateTime = helpers.calculateNormalizedCandleStartTime(
             this.blockTimestamp,
             resolution,
           );

@@ -74,7 +74,7 @@ class AddressesController extends Controller {
       AssetPositionFromDatabase[],
       PerpetualPositionFromDatabase[],
       AssetFromDatabase[],
-      BlockFromDatabase | undefined,
+      BlockFromDatabase,
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountUuid,
@@ -116,7 +116,7 @@ class AddressesController extends Controller {
 
     // If a subaccount, latest block, and perpetual positions exist, calculate the unsettled funding
     // for positions and adjust the returned USDC position
-    if (subaccount !== undefined && latestBlock !== undefined && perpetualPositions.length > 0) {
+    if (subaccount !== undefined && perpetualPositions.length > 0) {
       const {
         lastUpdatedFundingIndexMap,
         latestFundingIndexMap,

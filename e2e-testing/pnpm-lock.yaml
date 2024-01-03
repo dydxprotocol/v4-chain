@@ -8,8 +8,10 @@ specifiers:
   '@dydxprotocol-indexer/v4-proto-parser': file:../indexer/packages/v4-proto-parser
   '@dydxprotocol-indexer/v4-protos': file:../indexer/packages/v4-protos
   '@dydxprotocol/v4-client-js': ^1.0.12
+  '@types/big.js': ^6.1.5
   '@types/jest': ^28.1.4
   '@types/long': 4.0.2
+  '@types/luxon': 3.0.0
   '@types/node': ^18.0.3
   '@types/ws': 8.5.4
   '@types/yargs': ^16.0.0
@@ -28,6 +30,7 @@ specifiers:
   kafkajs: ^2.1.0
   lodash: ^4.17.21
   long: 5.2.3
+  luxon: 3.0.1
   ts-node: ^10.8.2
   tsconfig-paths: ^4.0.0
   typescript: 4.7.4
@@ -45,12 +48,15 @@ dependencies:
   kafkajs: 2.2.4
   lodash: 4.17.21
   long: 5.2.3
+  luxon: 3.0.1
   yargs: 13.3.2
 
 devDependencies:
   '@dydxprotocol-indexer/dev': link:../indexer/packages/dev
+  '@types/big.js': 6.2.2
   '@types/jest': 28.1.8
   '@types/long': 4.0.2
+  '@types/luxon': 3.0.0
   '@types/node': 18.19.3
   '@types/ws': 8.5.4
   '@types/yargs': 16.0.9
@@ -1080,6 +1086,10 @@ packages:
       '@babel/types': 7.23.6
     dev: true
 
+  /@types/big.js/6.2.2:
+    resolution: {integrity: sha512-e2cOW9YlVzFY2iScnGBBkplKsrn2CsObHQ2Hiw4V1sSyiGbgWL8IyqE3zFi1Pt5o1pdAtYkDAIsF3KKUPjdzaA==}
+    dev: true
+
   /@types/eslint-visitor-keys/1.0.0:
     resolution: {integrity: sha512-OCutwjDZ4aFS6PB1UZ988C4YgwlBHJd6wCeQqaLdmadZ/7e+w79+hbMUFC1QXDNCmdyoRfAFdm0RypzwR+Qpag==}
     dev: true
@@ -1123,6 +1133,10 @@ packages:
 
   /@types/long/4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
+
+  /@types/luxon/3.0.0:
+    resolution: {integrity: sha512-Lx+EZoJxUKw4dp8uei9XiUVNlgkYmax5+ovqt6Xf3LzJOnWhlfJw/jLBmqfGVwOP/pDr4HT8bI1WtxK0IChMLw==}
+    dev: true
 
   /@types/node/18.15.13:
     resolution: {integrity: sha512-N+0kuo9KgrUQ1Sn/ifDXsvg0TTleP7rIy4zOBGECxAljqvqfqpTfzx0Q1NUedOixRMBfe2Whhb056a42cWs26Q==}
@@ -3705,6 +3719,11 @@ packages:
     dependencies:
       yallist: 4.0.0
     dev: true
+
+  /luxon/3.0.1:
+    resolution: {integrity: sha512-hF3kv0e5gwHQZKz4wtm4c+inDtyc7elkanAsBq+fundaCdUBNJB1dHEGUZIM6SfSBUlbVFduPwEtNjFK8wLtcw==}
+    engines: {node: '>=12'}
+    dev: false
 
   /make-dir/4.0.0:
     resolution: {integrity: sha512-hXdUTZYIVOt1Ex//jAQi+wTZZpUpwBj/0QsOzqegb3rGMMeJiSEu5xLHnYfBrRV4RH2+OCSOO95Is/7x1WJ4bw==}

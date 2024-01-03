@@ -84,12 +84,11 @@ describe('Block store', () => {
       BlockTable.create(defaultBlock2),
     ]);
 
-    const block: BlockFromDatabase | undefined = await BlockTable.getLatest();
+    const block: BlockFromDatabase = await BlockTable.getLatest();
     expect(block).toEqual(expect.objectContaining(defaultBlock2));
   });
 
   it('Unable to find latest Block', async () => {
-    const block: BlockFromDatabase | undefined = await BlockTable.getLatest();
-    expect(block).toEqual(undefined);
+    await expect(BlockTable.getLatest()).rejects.toEqual(new Error('Unable to find latest block'));
   });
 });

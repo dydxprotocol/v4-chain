@@ -28,7 +28,7 @@ export default async function runTask(): Promise<void> {
     validatorBlock,
     otherFullNodeBlock,
   ]: [
-    BlockFromDatabase | undefined,
+    BlockFromDatabase,
     BlockData,
     BlockData,
     BlockData,
@@ -38,10 +38,6 @@ export default async function runTask(): Promise<void> {
     getValidatorBlockData(config.TRACK_LAG_VALIDATOR_URL, 'validator'),
     getValidatorBlockData(config.TRACK_LAG_OTHER_FULL_NODE_URL, 'other_full_node'),
   ]);
-
-  if (indexerBlockFromDatabase === undefined) {
-    return;
-  }
 
   const indexerBlock: BlockData = {
     block: indexerBlockFromDatabase.blockHeight,

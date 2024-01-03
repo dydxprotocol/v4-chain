@@ -2748,6 +2748,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 							},
 						},
 					},
+					satypes.Match,
 				)
 
 				require.True(t, success)
