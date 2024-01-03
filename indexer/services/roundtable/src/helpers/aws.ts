@@ -22,9 +22,18 @@ export const FAST_SYNC_SNAPSHOT_S3_BUCKET_NAME = config.FAST_SYNC_SNAPSHOT_S3_BU
 
 /**
  * @description Get most recent snapshot identifier for an RDS database.
+ * @param rds - RDS client
+ * @param snapshotIdentifierPrefixInclude - Only include snapshots with snapshot identifier
+ * that starts with prefixInclude
+ * @param snapshotIdentifierPrefixExclude - Only include snapshots with snapshot identifier
+ * that does not start with prefixExclude
  */
 // TODO(CLOB-672): Verify this function returns the most recent DB snapshot.
-export async function getMostRecentDBSnapshotIdentifier(rds: RDS): Promise<string> {
+export async function getMostRecentDBSnapshotIdentifier(
+  rds: RDS,
+  snapshotIdentifierPrefixInclude?: string,
+  snapshotIdentifierPrefixExclude?: string,
+): Promise<string> {
   const awsResponse: RDS.DBSnapshotMessage = await rds.describeDBSnapshots({
     DBInstanceIdentifier: config.RDS_INSTANCE_NAME,
     MaxRecords: 20, // this is the minimum
@@ -34,13 +43,48 @@ export async function getMostRecentDBSnapshotIdentifier(rds: RDS): Promise<strin
     throw Error(`No DB snapshots found with identifier: ${config.RDS_INSTANCE_NAME}`);
   }
 
+  let snapshots: RDS.DBSnapshotList = awsResponse.DBSnapshots;
+  // Only include snapshots with snapshot identifier that starts with prefixInclude
+  if (snapshotIdentifierPrefixInclude !== undefined) {
+    snapshots = awsResponse.DBSnapshots
+      .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
+        snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixInclude),
+      );
+  }
+  if (snapshotIdentifierPrefixExclude !== undefined) {
+    snapshots = awsResponse.DBSnapshots
+      .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
+        !snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixExclude),
+      );
+  }
+
   logger.info({
     at: `${atStart}getMostRecentDBSnapshotIdentifier`,
     message: 'Described snapshots for database',
-    mostRecentSnapshot: awsResponse.DBSnapshots[awsResponse.DBSnapshots.length - 1],
+    mostRecentSnapshot: snapshots[snapshots.length - 1],
   });
 
-  return awsResponse.DBSnapshots[awsResponse.DBSnapshots.length - 1].DBSnapshotIdentifier!;
+  return snapshots[snapshots.length - 1].DBSnapshotIdentifier!;
+}
+
+/**
+ * @description Create DB snapshot for an RDS database.
+ */
+export async function createDBSnapshot(
+  rds: RDS,
+  snapshotIdentifier: string,
+  dbInstanceIdentifier: string,
+): Promise<string> {
+  const params = {
+    DBInstanceIdentifier: dbInstanceIdentifier,
+    DBSnapshotIdentifier: snapshotIdentifier,
+  };
+
+  const awsResponse: RDS.CreateDBSnapshotResult = await rds.createDBSnapshot(params).promise();
+  if (awsResponse.DBSnapshot === undefined) {
+    throw Error(`No DB snapshot was created with identifier: ${snapshotIdentifier}`);
+  }
+  return awsResponse.DBSnapshot.DBSnapshotIdentifier!;
 }
 
 /**
