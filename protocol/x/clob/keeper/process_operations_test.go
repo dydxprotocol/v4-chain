@@ -959,6 +959,46 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedNegativeTncSubaccountSeen: true,
 		},
+		"Zero-fill deleveraging succeeds when the account is negative TNC and has a position in final settlement" +
+			" market. It updates the last negative TNC subaccount seen block number in state": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_100PercentMarginRequirement,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc_Final_Settlement,
+			},
+			subaccounts: []satypes.Subaccount{
+				// liquidatable: MMR = $5000, TNC = -$1.
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills:       []types.MatchPerpetualDeleveraging_Fill{},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64(),
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
+			},
+
+			expectedNegativeTncSubaccountSeen: true,
+		},
 		"Succeeds order removal operations with previous stateful orders": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
