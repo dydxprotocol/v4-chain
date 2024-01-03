@@ -8,6 +8,7 @@ import {
   redisClient,
   connect as connectToRedis,
 } from './helpers/redis';
+import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
@@ -127,6 +128,14 @@ async function start(): Promise<void> {
       removeOldOrderUpdatesTask,
       'remove_old_order_updates',
       config.LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS) {
+    startLoop(
+      aggregateTradingRewardsTasks,
+      'aggregate_trading_rewards',
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
     );
   }
 

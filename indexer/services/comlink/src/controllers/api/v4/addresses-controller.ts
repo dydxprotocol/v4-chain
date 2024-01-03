@@ -82,7 +82,7 @@ class AddressesController extends Controller {
   ): Promise<SubaccountResponseObject[]> {
     // TODO(IND-189): Use a transaction across all the DB queries
     const [subaccounts, latestBlock]:
-    [SubaccountFromDatabase[], BlockFromDatabase | undefined] = await Promise.all([
+    [SubaccountFromDatabase[], BlockFromDatabase] = await Promise.all([
       SubaccountTable.findAll(
         {
           address,
@@ -92,7 +92,7 @@ class AddressesController extends Controller {
       BlockTable.getLatest(),
     ]);
 
-    if (subaccounts.length === 0 || latestBlock === undefined) {
+    if (subaccounts.length === 0) {
       throw new NotFoundError(`No subaccounts found for address ${address}`);
     }
 
@@ -175,7 +175,7 @@ class AddressesController extends Controller {
       AssetPositionFromDatabase[],
       AssetFromDatabase[],
       MarketFromDatabase[],
-      BlockFromDatabase | undefined,
+      BlockFromDatabase,
     ] = await Promise.all([
       SubaccountTable.findById(
         subaccountId,
@@ -197,7 +197,7 @@ class AddressesController extends Controller {
       BlockTable.getLatest(),
     ]);
 
-    if (subaccount === undefined || latestBlock === undefined) {
+    if (subaccount === undefined) {
       throw new NotFoundError(
         `No subaccount found with address ${address} and subaccountNumber ${subaccountNumber}`,
       );

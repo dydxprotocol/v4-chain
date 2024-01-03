@@ -19,16 +19,15 @@ const controllerName: string = 'height-controller';
 class HeightController extends Controller {
   @Get('/')
   async getHeight(): Promise<HeightResponse> {
-    const latestBlock: BlockFromDatabase | undefined = await BlockTable.getLatest();
-
-    if (latestBlock === undefined) {
+    try {
+      const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
+      return {
+        height: latestBlock.blockHeight,
+        time: latestBlock.time,
+      };
+    } catch {
       throw new NotFoundError('No blocks found');
     }
-
-    return {
-      height: latestBlock.blockHeight,
-      time: latestBlock.time,
-    };
   }
 }
 

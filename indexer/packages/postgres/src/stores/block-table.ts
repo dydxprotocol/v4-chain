@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
@@ -91,7 +92,7 @@ export async function findByBlockHeight(
 
 export async function getLatest(
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<BlockFromDatabase | undefined> {
+): Promise<BlockFromDatabase> {
   const baseQuery: QueryBuilder<BlockModel> = setupBaseQuery<BlockModel>(
     BlockModel,
     options,
@@ -102,5 +103,13 @@ export async function getLatest(
     .limit(1)
     .returning('*');
 
-  return results[0];
+  const latestBlock: BlockFromDatabase | undefined = results[0];
+  if (latestBlock === undefined) {
+    logger.error({
+      at: 'block-table#getLatest',
+      message: 'Unable to find latest block',
+    });
+    throw new Error('Unable to find latest block');
+  }
+  return latestBlock;
 }
