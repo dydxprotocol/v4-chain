@@ -123,6 +123,84 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 				dtypes.NewInt(5_000_000_000_000), // 5m tokens (10% of 50m)
 			},
 		},
+		"50m TVL, capactiy correctly initialized to 5% and 20% (rounds down)": {
+			denom: testDenom,
+			limiters: []types.Limiter{
+				{
+					PeriodSec:       3_600,
+					BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+					BaselineTvlPpm:  50_000,                         // 5%
+				},
+				{
+					PeriodSec:       86_400,
+					BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1m tokens (assuming 6 decimals)
+					BaselineTvlPpm:  200_000,                          // 20%
+				},
+			},
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(25_123_450_000_000), // 25M token
+						},
+					},
+				},
+				{
+					Address: testAddress2,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+						},
+					},
+				},
+			},
+			expectedCapacityList: []dtypes.SerializableInt{
+				dtypes.NewInt(2_506_172_500_000),  // ~2.5M tokens (5% of ~50m)
+				dtypes.NewInt(10_024_690_000_000), // ~5m tokens (20% of 50m)
+			},
+		},
+		"50m TVL, capactiy correctly initialized to 10% and 100%": {
+			denom: testDenom,
+			limiters: []types.Limiter{
+				{
+					PeriodSec:       3_600,
+					BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+					BaselineTvlPpm:  100_000,                        // 10%
+				},
+				{
+					PeriodSec:       86_400,
+					BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1m tokens (assuming 6 decimals)
+					BaselineTvlPpm:  1_000_000,                        // 100%
+				},
+			},
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+						},
+					},
+				},
+				{
+					Address: testAddress2,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+						},
+					},
+				},
+			},
+			expectedCapacityList: []dtypes.SerializableInt{
+				dtypes.NewInt(5_000_000_000_000),  // 5m tokens (10% of 50m)
+				dtypes.NewInt(50_000_000_000_000), // 50m tokens (100% of 50m)
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -263,7 +341,45 @@ func TestGetBaseline(t *testing.T) {
 			},
 			expectedBaseline: big.NewInt(150_000_000_000), // 150k token (1% of 15m)
 		},
-		"max(10% of TVL, $1mm), TVL = 20M token": {
+		"max(1% of TVL, 100k token), TVL = ~15M token, rounds down": {
+			denom: testDenom,
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(1_000_000_000_000), // 1M token
+						},
+					},
+				},
+				{
+					Address: testAddress2,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(4_000_123_456_777), // ~4M token
+						},
+					},
+				},
+				{
+					Address: testAddress3,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdk.NewInt(10_200_000_000_000), // ~10M token
+						},
+					},
+				},
+			},
+			limiter: types.Limiter{
+				PeriodSec:       3_600,
+				BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k token
+				BaselineTvlPpm:  10_000,                         // 1%
+			},
+			expectedBaseline: big.NewInt(152_001_234_567), // ~152k token (1% of 15.2m)
+		},
+		"max(10% of TVL, 1 million), TVL = 20M token": {
 			denom: testDenom,
 			balances: []banktypes.Balance{
 				{
@@ -301,7 +417,7 @@ func TestGetBaseline(t *testing.T) {
 			},
 			expectedBaseline: big.NewInt(2_000_000_000_000), // 2m token (10% of 20m)
 		},
-		"max(10% of TVL, $1mm), TVL = 8M token": {
+		"max(10% of TVL, 1 million), TVL = 8M token": {
 			denom: testDenom,
 			balances: []banktypes.Balance{
 				{
