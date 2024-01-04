@@ -9,6 +9,10 @@ describe('TradingReward store', () => {
     await migrate();
   });
 
+  beforeEach(async () => {
+    await WalletTable.create(defaultWallet);
+  });
+
   afterEach(async () => {
     await clearData();
   });
