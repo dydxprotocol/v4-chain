@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 
@@ -104,7 +105,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token
 						},
 					},
 				},
@@ -113,7 +114,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token
 						},
 					},
 				},
@@ -143,7 +144,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_123_450_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_123_450_000_000), // 25M token
 						},
 					},
 				},
@@ -152,7 +153,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token
 						},
 					},
 				},
@@ -182,7 +183,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token
 						},
 					},
 				},
@@ -191,7 +192,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(25_000_000_000_000), // 25M token
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token
 						},
 					},
 				},
@@ -282,7 +283,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(1_000_000_000_000), // 1M token
+							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
 						},
 					},
 				},
@@ -291,7 +292,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(4_000_000_000_000), // 4M token
+							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
 						},
 					},
 				},
@@ -311,7 +312,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(1_000_000_000_000), // 1M token
+							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
 						},
 					},
 				},
@@ -320,7 +321,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(4_000_000_000_000), // 4M token
+							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
 						},
 					},
 				},
@@ -329,7 +330,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(10_000_000_000_000), // 10M token
+							Amount: sdkmath.NewInt(10_000_000_000_000), // 10M token
 						},
 					},
 				},
@@ -349,7 +350,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(1_000_000_000_000), // 1M token
+							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
 						},
 					},
 				},
@@ -358,7 +359,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(4_000_123_456_777), // ~4M token
+							Amount: sdkmath.NewInt(4_000_123_456_777), // ~4M token
 						},
 					},
 				},
@@ -367,7 +368,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(10_200_000_000_000), // ~10M token
+							Amount: sdkmath.NewInt(10_200_000_000_000), // ~10M token
 						},
 					},
 				},
@@ -387,7 +388,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(6_000_000_000_000), // 6M token
+							Amount: sdkmath.NewInt(6_000_000_000_000), // 6M token
 						},
 					},
 				},
@@ -396,7 +397,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(4_000_000_000_000), // 4M token
+							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
 						},
 					},
 				},
@@ -405,7 +406,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(10_000_000_000_000), // 10M token
+							Amount: sdkmath.NewInt(10_000_000_000_000), // 10M token
 						},
 					},
 				},
@@ -425,7 +426,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(2_000_000_000_000), // 2M token
+							Amount: sdkmath.NewInt(2_000_000_000_000), // 2M token
 						},
 					},
 				},
@@ -434,7 +435,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(4_000_000_000_000), // 4M token
+							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
 						},
 					},
 				},
@@ -443,7 +444,7 @@ func TestGetBaseline(t *testing.T) {
 					Coins: sdk.Coins{
 						{
 							Denom:  testDenom,
-							Amount: sdk.NewInt(2_000_000_000_000), // 2M token
+							Amount: sdkmath.NewInt(2_000_000_000_000), // 2M token
 						},
 					},
 				},
