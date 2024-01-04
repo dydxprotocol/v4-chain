@@ -8,6 +8,7 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
@@ -1334,6 +1335,404 @@ func TestPlaceLongTermOrder(t *testing.T) {
 			}
 			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
 			ctx := tApp.InitChain()
+
+			for _, ordersAndExpectations := range tc.ordersAndExpectationsPerBlock {
+				// CheckTx
+				for _, order := range ordersAndExpectations.orderMsgs {
+					for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+						ctx,
+						tApp.App,
+						order,
+					) {
+						resp := tApp.CheckTx(checkTx)
+						require.True(
+							t,
+							resp.IsOK(),
+							"Expected CheckTx to succeed. Response: %+v, Block Height: %d",
+							resp,
+							ordersAndExpectations.blockHeight,
+						)
+					}
+				}
+				require.ElementsMatch(
+					t,
+					ordersAndExpectations.expectedOffchainMessagesCheckTx,
+					msgSender.GetOffchainMessages(),
+					"Block height: %d",
+					ordersAndExpectations.blockHeight,
+				)
+				msgSender.Clear()
+
+				// Block Processing
+				ctx = tApp.AdvanceToBlock(ordersAndExpectations.blockHeight, testapp.AdvanceToBlockOptions{})
+				require.ElementsMatch(
+					t,
+					ordersAndExpectations.expectedOnchainMessagesAfterBlock,
+					msgSender.GetOnchainMessages(),
+					"Block height: %d",
+					ordersAndExpectations.blockHeight,
+				)
+				require.ElementsMatch(
+					t,
+					ordersAndExpectations.expectedOffchainMessagesAfterBlock,
+					msgSender.GetOffchainMessages(),
+					"Block height: %d",
+					ordersAndExpectations.blockHeight,
+				)
+				msgSender.Clear()
+			}
+
+			// Verify orderbook
+			_, found := tApp.App.ClobKeeper.MemClob.GetOrder(ctx, tc.order.OrderId)
+			require.Equal(t, tc.orderShouldRestOnOrderbook, found)
+
+			// Verify fill amount
+			_, fillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, tc.order.OrderId)
+			require.Equal(
+				t,
+				tc.expectedOrderFillAmount,
+				fillAmount.ToUint64(),
+				"Fill amount should be %d, not %d",
+				tc.expectedOrderFillAmount,
+				fillAmount,
+			)
+
+			// Verify subaccounts
+			for _, expectedSubaccount := range tc.expectedSubaccounts {
+				subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id)
+				require.Equal(t, expectedSubaccount, subaccount)
+			}
+		})
+	}
+}
+
+func TestRegression_InvalidTimeInForce(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).
+		// Disable non-determinism checks since we mutate keeper state directly.
+		WithNonDeterminismChecksEnabled(false).
+		Build()
+	ctx := tApp.InitChain()
+
+	// subaccounts for indexer expectation assertions
+	aliceSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Alice_Num0)
+	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
+
+	// order msgs
+	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: *aliceSubaccount.Id,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     10_000_000_000, // 1 BTC, assuming atomic resolution of -10
+			Subticks:     500_000_000,    // 50k USDC / BTC, assuming QCE of -8
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		},
+	)
+	// CheckTx Txs needed for indexer expectation assertions
+	CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := testapp.MustMakeCheckTx(
+		ctx,
+		tApp.App,
+		testapp.MustMakeCheckTxOptions{
+			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
+				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+			),
+		},
+		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+	)
+
+	// Pre-existing order with invalid time in force.
+	LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20 := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId: clobtypes.OrderId{
+				SubaccountId: constants.Bob_Num0,
+				ClientId:     0,
+				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+				ClobPairId:   0,
+			},
+			Side:     clobtypes.Order_SIDE_SELL,
+			Quantums: 10_000_000_000,
+			Subticks: 500_000_000,
+			// Invalid time in force
+			TimeInForce:  clobtypes.Order_TimeInForce(uint32(999)),
+			GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+		},
+	)
+
+	type ordersAndExpectations struct {
+		orderMsgs   []clobtypes.MsgPlaceOrder
+		blockHeight uint32
+
+		expectedOffchainMessagesCheckTx    []msgsender.Message
+		expectedOffchainMessagesAfterBlock []msgsender.Message
+		expectedOnchainMessagesAfterBlock  []msgsender.Message
+	}
+
+	tests := map[string]struct {
+		// Long-term order to track
+		order clobtypes.Order
+
+		// Orders to place in each block and expectations to verify
+		ordersAndExpectationsPerBlock []ordersAndExpectations
+
+		// Expectations to verify at end of test
+		orderShouldRestOnOrderbook bool
+		expectedOrderFillAmount    uint64
+		expectedSubaccounts        []satypes.Subaccount
+	}{
+		"Test matching an order fully as taker against order with invalid time in force": {
+			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+			orderShouldRestOnOrderbook: false,
+			expectedOrderFillAmount:    0, // order is fully-filled and removed from state
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Sub(
+									aliceSubaccount.GetUsdcPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+25_000_000, // taker fee of .5%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled: true,
+				},
+				{
+					Id: &constants.Bob_Num0,
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: Clob_0.MustGetPerpetualId(),
+							Quantums: dtypes.NewInt(-int64(
+								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId: 0,
+							Quantums: dtypes.NewIntFromBigInt(
+								new(big.Int).Add(
+									bobSubaccount.GetUsdcPosition(),
+									new(big.Int).SetInt64(
+										50_000_000_000+5_500_000, // maker rebate of .110%
+									),
+								),
+							),
+						},
+					},
+					MarginEnabled: true,
+				},
+			},
+			ordersAndExpectationsPerBlock: []ordersAndExpectations{
+				{
+					blockHeight: 2,
+					orderMsgs: []clobtypes.MsgPlaceOrder{
+						LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+					},
+					// Short term order placement results in Create and Update with 0 fill amount
+					expectedOffchainMessagesCheckTx: []msgsender.Message{},
+					// Short term order update for fill amount, stateful order update for fill amount
+					// Note there are no headers because these events are generated in PrepareCheckState
+					expectedOffchainMessagesAfterBlock: []msgsender.Message{
+						// maker
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							nil,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
+						),
+						// taker
+						off_chain_updates.MustCreateOrderUpdateMessage(
+							nil,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
+							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+						),
+					},
+					// Stateful order placement
+					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+						&indexer_manager.IndexerTendermintBlock{
+							Height: 2,
+							Time:   ctx.BlockTime(),
+							Events: []*indexer_manager.IndexerTendermintEvent{
+								{
+									Subtype:             indexerevents.SubtypeStatefulOrder,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          0,
+									Version:             indexerevents.StatefulOrderEventVersion,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewLongTermOrderPlacementEvent(
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+										),
+									),
+								},
+							},
+							TxHashes: []string{
+								string(lib.GetTxHash(
+									CheckTx_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Tx,
+								)),
+							},
+						},
+					)},
+				},
+				{
+					blockHeight: 3,
+					expectedOnchainMessagesAfterBlock: []msgsender.Message{indexer_manager.CreateIndexerBlockEventMessage(
+						&indexer_manager.IndexerTendermintBlock{
+							Height: 3,
+							Time:   ctx.BlockTime(),
+							Events: []*indexer_manager.IndexerTendermintEvent{
+								// taker subaccount state transition
+								{
+									Subtype: indexerevents.SubtypeSubaccountUpdate,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewSubaccountUpdateEvent(
+											&constants.Alice_Num0,
+											[]*satypes.PerpetualPosition{
+												{
+													PerpetualId: Clob_0.MustGetPerpetualId(),
+													Quantums: dtypes.NewInt(int64(
+														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+													FundingIndex: dtypes.NewInt(0),
+												},
+											},
+											[]*satypes.AssetPosition{
+												{
+													AssetId: 0,
+													Quantums: dtypes.NewIntFromBigInt(
+														new(big.Int).Sub(
+															aliceSubaccount.GetUsdcPosition(),
+															new(big.Int).SetInt64(
+																50_000_000_000+25_000_000, // taker fee of .5%
+															),
+														),
+													),
+												},
+											},
+											nil, // no funding payments
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          0,
+									Version:             indexerevents.SubaccountUpdateEventVersion,
+								},
+								// maker subaccount state transition
+								{
+									Subtype: indexerevents.SubtypeSubaccountUpdate,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewSubaccountUpdateEvent(
+											&constants.Bob_Num0,
+											[]*satypes.PerpetualPosition{
+												{
+													PerpetualId: Clob_0.MustGetPerpetualId(),
+													Quantums: dtypes.NewInt(-int64(
+														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+													FundingIndex: dtypes.NewInt(0),
+												},
+											},
+											[]*satypes.AssetPosition{
+												{
+													AssetId: 0,
+													Quantums: dtypes.NewIntFromBigInt(
+														new(big.Int).Add(
+															bobSubaccount.GetUsdcPosition(),
+															new(big.Int).SetInt64(
+																50_000_000_000+5_500_000, // maker rebate of .110%
+															),
+														),
+													),
+												},
+											},
+											nil, // no funding payments
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          1,
+									Version:             indexerevents.SubaccountUpdateEventVersion,
+								},
+								{
+									Subtype: indexerevents.SubtypeOrderFill,
+									DataBytes: indexer_manager.GetBytes(
+										indexerevents.NewOrderFillEvent(
+											LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+											-5_500_000,
+											25_000_000,
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+										),
+									),
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          2,
+									Version:             indexerevents.OrderFillEventVersion,
+								},
+							},
+							TxHashes: []string{
+								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
+									OperationsQueue: []clobtypes.OperationRaw{
+										clobtestutils.NewMatchOperationRaw(
+											&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											[]clobtypes.MakerFill{
+												{
+													FillAmount: LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.
+														Order.GetBaseQuantums().ToUint64(),
+													MakerOrderId: LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+												},
+											},
+										),
+									},
+								}))),
+							},
+						},
+					)},
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+			tApp := testapp.NewTestAppBuilder(t).
+				// Disable non-determinism checks since we mutate keeper state directly.
+				WithNonDeterminismChecksEnabled(false).
+				WithAppOptions(appOpts).Build()
+			ctx := tApp.InitChain()
+
+			// Add the order with invalid time in force to state and orderbook.
+			tApp.App.ClobKeeper.SetLongTermOrderPlacement(
+				tApp.App.NewUncachedContext(true, tmproto.Header{}),
+				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+				1,
+			)
+			tApp.App.ClobKeeper.MustAddOrderToStatefulOrdersTimeSlice(
+				tApp.App.NewUncachedContext(true, tmproto.Header{}),
+				time.Unix(5, 0),
+				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
+			)
+			_, _, _, err := tApp.App.ClobKeeper.MemClob.PlaceOrder(
+				tApp.App.NewUncachedContext(true, tmproto.Header{}),
+				LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
+			)
+			require.NoError(t, err)
 
 			for _, ordersAndExpectations := range tc.ordersAndExpectationsPerBlock {
 				// CheckTx
