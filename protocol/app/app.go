@@ -601,7 +601,6 @@ func New(
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
-		app.BankKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
