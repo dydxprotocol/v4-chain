@@ -146,7 +146,6 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 			return app.New(
 				val.GetCtx().Logger,
 				dbm.NewMemDB(),
-				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -177,7 +176,6 @@ func NewTestNetworkFixture() network.TestFixture {
 	dydxApp := app.New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
-		dbm.NewMemDB(),
 		nil,
 		true,
 		appOptions,
@@ -186,7 +184,6 @@ func NewTestNetworkFixture() network.TestFixture {
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return app.New(
 			val.GetCtx().Logger,
-			dbm.NewMemDB(),
 			dbm.NewMemDB(),
 			nil,
 			true,

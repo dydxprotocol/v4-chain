@@ -151,11 +151,9 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		logger, _ = testlog.TestLogger()
 	}
 	db := dbm.NewMemDB()
-	snapshotsDB := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
 		db,
-		snapshotsDB,
 		nil,
 		true,
 		appOptions,
@@ -1274,9 +1272,6 @@ func launchValidatorInDir(
 	case a = <-appCaptor:
 		shutdownFn = func() error {
 			cancelFn()
-			// TODO(CORE-538): Remove this explicit app.Close() invocation since wrapCPUProfile doesn't actually
-			// wait till the Cosmos app shuts down.
-			a.Close()
 			return <-done
 		}
 		return a, shutdownFn, nil
