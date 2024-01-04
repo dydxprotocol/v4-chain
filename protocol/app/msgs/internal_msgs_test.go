@@ -38,6 +38,8 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/cosmos.crisis.v1beta1.MsgUpdateParamsResponse",
 
 		// distribution
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
+		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse",
 		"/cosmos.distribution.v1beta1.MsgUpdateParams",
 		"/cosmos.distribution.v1beta1.MsgUpdateParamsResponse",
 

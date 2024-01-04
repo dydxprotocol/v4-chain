@@ -51,8 +51,6 @@ var (
 
 		// distribution
 		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             nil,
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend":                  &distr.MsgCommunityPoolSpend{},
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse":          nil,
 		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distr.MsgDepositValidatorRewardsPool{},
 		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   &distr.MsgFundCommunityPool{},
@@ -185,11 +183,13 @@ var (
 		"/ibc.core.client.v1.MsgRecoverClientResponse":      nil,
 		"/ibc.core.client.v1.MsgSubmitMisbehaviour":         &ibcclient.MsgSubmitMisbehaviour{}, //nolint:staticcheck
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse": nil,
-		"/ibc.core.client.v1.MsgUpdateClient":               &ibcclient.MsgUpdateClient{},
-		"/ibc.core.client.v1.MsgUpdateClientResponse":       nil,
-		"/ibc.core.client.v1.MsgUpgradeClient":              &ibcclient.MsgUpgradeClient{},
-		"/ibc.core.client.v1.MsgUpgradeClientResponse":      nil,
-		"/ibc.core.client.v1.UpgradeProposal":               nil,
+		// TODO(CORE-538): Move MsgUpdateClient and MsgUpgradeClient to unsupported_msgs once upgrade has been added
+		// and verified to function.
+		"/ibc.core.client.v1.MsgUpdateClient":          &ibcclient.MsgUpdateClient{},
+		"/ibc.core.client.v1.MsgUpdateClientResponse":  nil,
+		"/ibc.core.client.v1.MsgUpgradeClient":         &ibcclient.MsgUpgradeClient{},
+		"/ibc.core.client.v1.MsgUpgradeClientResponse": nil,
+		"/ibc.core.client.v1.UpgradeProposal":          nil,
 
 		// ibc.core.commitment
 		"/ibc.core.commitment.v1.MerklePath":   nil,

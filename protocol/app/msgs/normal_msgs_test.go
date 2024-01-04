@@ -40,8 +40,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 
 		// distribution
 		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpend",
-		"/cosmos.distribution.v1beta1.MsgCommunityPoolSpendResponse",
 		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool",
 		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse",
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPool",
