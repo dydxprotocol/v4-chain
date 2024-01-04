@@ -23,9 +23,9 @@ export const S3_LOCATION_PREFIX = `s3://${S3_BUCKET_NAME}`;
  * @description Get most recent snapshot identifier for an RDS database.
  * @param rds - RDS client
  * @param snapshotIdentifierPrefixInclude - Only include snapshots with snapshot identifier
- * that starts with prefixInclude
- * @param snapshotIdentifierPrefixExclude - Only include snapshots with snapshot identifier
- * that does not start with prefixExclude
+ * that starts with snapshotIdentifierPrefixInclude
+ * @param snapshotIdentifierPrefixExclude - Exclude snapshots with snapshot identifier
+ * that starts with snapshotIdentifierPrefixExclude
  */
 // TODO(CLOB-672): Verify this function returns the most recent DB snapshot.
 export async function getMostRecentDBSnapshotIdentifier(
