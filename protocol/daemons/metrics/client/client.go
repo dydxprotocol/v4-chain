@@ -4,11 +4,11 @@ import (
 	"context"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 var (

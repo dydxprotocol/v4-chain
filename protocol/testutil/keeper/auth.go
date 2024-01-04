@@ -1,10 +1,12 @@
 package keeper
 
 import (
-	db "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
+	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -18,18 +20,18 @@ import (
 
 func createAccountKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *db.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	registry codectypes.InterfaceRegistry,
 ) (*keeper.AccountKeeper, storetypes.StoreKey) {
 	types.RegisterInterfaces(registry)
 
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
-	paramKey := sdk.NewKVStoreKey(paramtypes.StoreKey)
+	paramKey := storetypes.NewKVStoreKey(paramtypes.StoreKey)
 	stateStore.MountStoreWithDB(paramKey, storetypes.StoreTypeIAVL, db)
-	paramTKey := sdk.NewTransientStoreKey(paramtypes.TStoreKey)
+	paramTKey := storetypes.NewTransientStoreKey(paramtypes.TStoreKey)
 	stateStore.MountStoreWithDB(paramTKey, storetypes.StoreTypeTransient, db)
 
 	// Create default module account permissions for test.
@@ -43,10 +45,11 @@ func createAccountKeeper(
 
 	k := keeper.NewAccountKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		types.ProtoBaseAccount,
 		maccPerms,
-		sdk.Bech32MainPrefix,
+		addresscodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
 		lib.GovModuleAddress.String(),
 	)
 

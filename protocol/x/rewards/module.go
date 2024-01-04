@@ -2,14 +2,13 @@ package rewards
 
 import (
 	"context"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
-	abci "github.com/cometbft/cometbft/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -22,8 +21,14 @@ import (
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -56,21 +61,6 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default
-// GenesisState need to be defined by the module developer and is primarily used for testing
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
-}
-
-// ValidateGenesis used to validate the GenesisState, given in its json.RawMessage form
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var genState types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-	return genState.Validate()
-}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	if err := types.RegisterQueryHandlerClient(
@@ -89,6 +79,21 @@ func (a AppModuleBasic) GetTxCmd() *cobra.Command {
 // end-users to generate new queries to the subset of the state defined by the module
 func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey)
+}
+
+// DefaultGenesis returns a default GenesisState for the module, marshalled to json.RawMessage. The default
+// GenesisState need to be defined by the module developer and is primarily used for testing
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
+}
+
+// ValidateGenesis used to validate the GenesisState, given in its json.RawMessage form
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
 }
 
 // ----------------------------------------------------------------------------
@@ -113,25 +118,25 @@ func NewAppModule(
 	}
 }
 
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
+
 // RegisterServices registers a gRPC query service to respond to the module-specific gRPC queries
 func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 }
 
-// RegisterInvariants registers the invariants of the module. If an invariant deviates from its predicted value, the
-// InvariantRegistry triggers appropriate logic (most often the chain will be halted)
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
-
 // InitGenesis performs the module's genesis initialization. It returns no validator updates.
-func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) []abci.ValidatorUpdate {
+func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, gs json.RawMessage) {
 	var genState types.GenesisState
 	// Initialize global index to index in genesis state
 	cdc.MustUnmarshalJSON(gs, &genState)
 
 	InitGenesis(ctx, am.keeper, genState)
-
-	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the module's exported genesis state as raw JSON bytes.
@@ -145,20 +150,18 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // be set to 1
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
-// BeginBlock contains the logic that is automatically triggered at the beginning of each block
-func (am AppModule) BeginBlock(_ sdk.Context, _ abci.RequestBeginBlock) {}
-
 // EndBlock contains the logic that is automatically triggered at the end of each block
-func (am AppModule) EndBlock(ctx sdk.Context, _ abci.RequestEndBlock) []abci.ValidatorUpdate {
-	if err := am.keeper.ProcessRewardsForBlock(ctx); err != nil {
+func (am AppModule) EndBlock(ctx context.Context) error {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := am.keeper.ProcessRewardsForBlock(sdkCtx); err != nil {
 		// Panicking here will only happen due to misconfiguration of the rewards module,
 		// and will lead to consensus failure.
-		am.keeper.Logger(ctx).Error(
+		am.keeper.Logger(sdkCtx).Error(
 			"failed to process rewards for block",
 			constants.ErrorLogKey,
 			err,
 		)
 	}
 
-	return []abci.ValidatorUpdate{}
+	return nil
 }

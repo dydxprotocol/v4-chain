@@ -1,18 +1,19 @@
 package encoding
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
 
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -20,14 +21,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	"github.com/cosmos/gogoproto/proto"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/cosmos/ibc-go/modules/capability"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -41,7 +40,7 @@ import (
 
 // GetTestEncodingCfg returns an encoding config for testing purposes.
 func GetTestEncodingCfg() testutil.TestEncodingConfig {
-	encodingCfg := testutil.MakeTestEncodingConfig(
+	encodingCfg := ante.MakeTestEncodingConfig(
 		auth.AppModuleBasic{},
 		genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
 		bank.AppModuleBasic{},
@@ -51,10 +50,6 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		gov.NewAppModuleBasic(
 			[]govclient.ProposalHandler{
 				paramsclient.ProposalHandler,
-				upgradeclient.LegacyProposalHandler,
-				upgradeclient.LegacyCancelProposalHandler,
-				ibcclientclient.UpdateClientProposalHandler,
-				ibcclientclient.UpgradeProposalHandler,
 			},
 		),
 		params.AppModuleBasic{},

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"

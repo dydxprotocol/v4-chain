@@ -16,7 +16,11 @@ func TestUnsupportedMsgSamples_Key(t *testing.T) {
 
 		// ICA Controller messages
 		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccount",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgRegisterInterchainAccountResponse",
 		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTx",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgSendTxResponse",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParams",
+		"/ibc.applications.interchain_accounts.controller.v1.MsgUpdateParamsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.UnsupportedMsgSamples))

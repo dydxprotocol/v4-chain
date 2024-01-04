@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	errorspkg "github.com/pkg/errors"

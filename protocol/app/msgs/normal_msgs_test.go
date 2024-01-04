@@ -40,6 +40,8 @@ func TestNormalMsgs_Key(t *testing.T) {
 
 		// distribution
 		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal",
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool",
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse",
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPool",
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse",
 		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
@@ -59,11 +61,15 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.BasicAllowance",
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowance",
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowanceResponse",
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowances",
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowancesResponse",
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowance",
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse",
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
 		// gov
+		"/cosmos.gov.v1.MsgCancelProposal",
+		"/cosmos.gov.v1.MsgCancelProposalResponse",
 		"/cosmos.gov.v1.MsgDeposit",
 		"/cosmos.gov.v1.MsgDepositResponse",
 		"/cosmos.gov.v1.MsgVote",
@@ -163,6 +169,10 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.client.v1.Height",
 		"/ibc.core.client.v1.MsgCreateClient",
 		"/ibc.core.client.v1.MsgCreateClientResponse",
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgrade",
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgradeResponse",
+		"/ibc.core.client.v1.MsgRecoverClient",
+		"/ibc.core.client.v1.MsgRecoverClientResponse",
 		"/ibc.core.client.v1.MsgSubmitMisbehaviour",
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse",
 		"/ibc.core.client.v1.MsgUpdateClient",
@@ -188,7 +198,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/ibc.core.connection.v1.MsgConnectionOpenInitResponse",
 		"/ibc.core.connection.v1.MsgConnectionOpenTry",
 		"/ibc.core.connection.v1.MsgConnectionOpenTryResponse",
-		"/ibc.core.connection.v1.Version",
 
 		// ibc.lightclients
 		"/ibc.lightclients.localhost.v2.ClientState",

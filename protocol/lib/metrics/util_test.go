@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/stretchr/testify/require"
 )

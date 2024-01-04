@@ -2,9 +2,9 @@ package client_test
 
 import (
 	"context"
+	"cosmossdk.io/log"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client"

@@ -3,18 +3,9 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgSetLiquidityTier_GetSigners(t *testing.T) {
-	msg := types.MsgSetLiquidityTier{
-		Authority: constants.BobAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.BobAccAddress}, msg.GetSigners())
-}
 
 func TestMsgSetLiquidityTier_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

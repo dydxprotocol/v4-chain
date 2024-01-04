@@ -7,10 +7,10 @@ import (
 	"math/big"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 var _ MatchableOrder = &Order{}

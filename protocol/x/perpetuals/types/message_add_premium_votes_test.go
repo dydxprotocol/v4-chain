@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 
 	"github.com/stretchr/testify/require"
@@ -17,19 +16,6 @@ func TestMsgAddPremiumVotes(t *testing.T) {
 	require.Equal(t, uint32(0), sample.PerpetualId)
 	require.Equal(t, int32(10), sample.PremiumPpm)
 	require.Equal(t, samples, msg.Votes)
-}
-
-func TestMsgAddPremiumVotes_GetSigners(t *testing.T) {
-	// This package does not contain the `app/config` package in its import chain, and therefore needs to call
-	// SetAddressPrefixes() explicitly in order to set the `dydx` address prefixes.
-	config.SetAddressPrefixes()
-
-	sample := types.NewFundingPremium(uint32(0), int32(10))
-	samples := []types.FundingPremium{*sample}
-	msg := types.NewMsgAddPremiumVotes(samples)
-
-	signers := msg.GetSigners()
-	require.Empty(t, signers)
 }
 
 func TestValidateBasic(t *testing.T) {

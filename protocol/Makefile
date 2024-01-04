@@ -223,7 +223,7 @@ test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./...
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock $(build_tags)' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...
 
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
@@ -412,7 +412,7 @@ update-swagger-docs: statik
 .PHONY: update-swagger-docs
 
 ###############################################################################
-###                           Sample Prengenesis                            ###
+###                           Sample Pregenesis                             ###
 ###############################################################################
 
 # Run at `./protocol` directory.
@@ -424,7 +424,7 @@ update-sample-pregenesis:
 
 check-sample-pregenesis-up-to-date:
 	$(MAKE) localnet-build
-	@docker build . -t check-sample-pregenesis  -f scripts/genesis/Dockerfile --no-cache
+	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
 	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
 
 .PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date

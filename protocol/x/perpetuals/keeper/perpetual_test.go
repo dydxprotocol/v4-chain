@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
@@ -15,14 +16,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -715,8 +715,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
 	perpetual.Params.MarketId = nonExistentMarketId
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
@@ -747,8 +746,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	// Store the perpetual with a bad LiquidityTier.
 	nonExistentLiquidityTier := uint32(999)
 	perpetual.Params.LiquidityTier = nonExistentLiquidityTier
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
@@ -910,8 +908,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
 	perpetual.Params.MarketId = nonExistentMarketId
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
@@ -1072,8 +1069,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
 	perpetual.Params.MarketId = nonExistentMarketId
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)
@@ -1235,8 +1231,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	// Store the perpetual with a bad MarketId.
 	nonExistentMarketId := uint32(999)
 	perpetual.Params.MarketId = nonExistentMarketId
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	b := cdc.MustMarshal(&perpetual)
 	perpetualStore := prefix.NewStore(pc.Ctx.KVStore(pc.StoreKey), []byte(types.PerpetualKeyPrefix))
 	perpetualStore.Set(lib.Uint32ToKey(perpetual.Params.Id), b)

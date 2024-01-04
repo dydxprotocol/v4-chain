@@ -43,7 +43,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 		return nil, errorsmod.Wrap(sdkerrors.ErrLogic, "sign mode handler is required for ante builder")
 	}
 
-	anteDecorators := newAnteDecoratorChain(options)
+	anteDecorators := NewAnteDecoratorChain(options)
 
 	// TODO(STAB-24): This change can be reverted to using ChainAnteDecorators again once
 	// https://github.com/cosmos/cosmos-sdk/pull/16076 is merged, released, and we pick-up the SDK version containing
@@ -65,8 +65,8 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	return anteHandlers[0], nil
 }
 
-// newAnteDecoratorChain returns a list of AnteDecorators in the expected application chain ordering
-func newAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
+// NewAnteDecoratorChain returns a list of AnteDecorators in the expected application chain ordering
+func NewAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
 	return []sdk.AnteDecorator{
 		// Note: app-injected messages, and clob transactions don't require Gas fees.
 		libante.NewAppInjectedMsgAnteWrapper(

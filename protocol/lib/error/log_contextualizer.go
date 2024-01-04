@@ -1,6 +1,6 @@
 package error
 
-import "github.com/cometbft/cometbft/libs/log"
+import "cosmossdk.io/log"
 
 // LogContextualizer describes an object that can add context - that is, descriptive key-value pairs, to a logger.
 // This interface is implemented by ErrorWithLogContext, which wraps some errors that are returned from the protocol.

@@ -2,6 +2,7 @@ package ante_test
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -108,7 +109,14 @@ func runTest(t *testing.T, name string, msgs []sdk.Msg, expectSkip bool) {
 		// Empty private key, so tx's signature should be empty.
 		privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
-		tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+		tx, err := suite.CreateTestTx(
+			suite.Ctx,
+			privs,
+			accNums,
+			accSeqs,
+			suite.Ctx.ChainID(),
+			signing.SignMode_SIGN_MODE_DIRECT,
+		)
 		require.NoError(t, err)
 
 		resultCtx, err := antehandler(suite.Ctx, tx, false)

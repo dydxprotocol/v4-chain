@@ -19,7 +19,7 @@ const (
 )
 
 func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
-	req := abci.RequestPrepareProposal{
+	req := &abci.RequestPrepareProposal{
 		MaxTxBytes: 123,
 	}
 	ppt, err := prepare.NewPrepareProposalTxs(req)
@@ -36,7 +36,7 @@ func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
 }
 
 func Test_NewPrepareProposalTransactions_Fail(t *testing.T) {
-	req := abci.RequestPrepareProposal{
+	req := &abci.RequestPrepareProposal{
 		MaxTxBytes: 0,
 	}
 	ppt, err := prepare.NewPrepareProposalTxs(req)
@@ -95,7 +95,7 @@ func setterTestCases(t *testing.T, tFunc TestFunction) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
+				&abci.RequestPrepareProposal{
 					MaxTxBytes: 4,
 				},
 			)
@@ -202,7 +202,7 @@ func Test_AddOtherTxs(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
+				&abci.RequestPrepareProposal{
 					MaxTxBytes: 4,
 				},
 			)
@@ -272,7 +272,7 @@ func Test_UpdateUsedBytes(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
+				&abci.RequestPrepareProposal{
 					MaxTxBytes: 10,
 				},
 			)
@@ -341,7 +341,7 @@ func Test_GetAvailableBytes(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
+				&abci.RequestPrepareProposal{
 					MaxTxBytes: 10,
 				},
 			)
@@ -485,7 +485,7 @@ func Test_GetTxsInOrder(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ppt, err := prepare.NewPrepareProposalTxs(
-				abci.RequestPrepareProposal{
+				&abci.RequestPrepareProposal{
 					MaxTxBytes: 11,
 				},
 			)

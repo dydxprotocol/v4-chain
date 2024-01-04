@@ -8,7 +8,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -16,6 +15,7 @@ import (
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // ProcessSingleMatch accepts a single match and its associated orders matched in the block,

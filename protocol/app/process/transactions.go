@@ -71,7 +71,7 @@ type ProcessProposalTxs struct {
 func DecodeProcessProposalTxs(
 	ctx sdk.Context,
 	decoder sdk.TxDecoder,
-	req abci.RequestProcessProposal,
+	req *abci.RequestProcessProposal,
 	bridgeKeeper ProcessBridgeKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) (*ProcessProposalTxs, error) {

@@ -3,8 +3,8 @@
 package client_test
 
 import (
+	"cosmossdk.io/log"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
@@ -274,7 +274,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 
 	// Configure mock daemon server with prices cache.
 	s.daemonServer = daemonserver.NewServer(
-		log.TestingLogger(),
+		log.NewNopLogger(),
 		grpc.NewServer(),
 		&daemontypes.FileHandlerImpl{},
 		s.daemonFlags.Shared.SocketAddress,
@@ -283,7 +283,7 @@ func (s *PriceDaemonIntegrationTestSuite) SetupTest() {
 	s.healthMonitor = servertypes.NewHealthMonitor(
 		servertypes.DaemonStartupGracePeriod,
 		servertypes.HealthCheckPollFrequency,
-		log.TestingLogger(),
+		log.NewNopLogger(),
 		flags.GetDefaultDaemonFlags().Shared.PanicOnDaemonFailureEnabled, // Use default behavior for testing
 	)
 
@@ -331,7 +331,7 @@ func (s *PriceDaemonIntegrationTestSuite) startClient() {
 		grpc_util.Ctx,
 		s.daemonFlags,
 		s.appFlags,
-		log.TestingLogger(),
+		log.NewNopLogger(),
 		&daemontypes.GrpcClientImpl{},
 		testExchangeQueryConfigs,
 		testExchangeToQueryDetails,

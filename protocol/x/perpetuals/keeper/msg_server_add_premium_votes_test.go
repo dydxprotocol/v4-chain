@@ -56,15 +56,13 @@ func TestMsgServerAddPremiumVotes(t *testing.T) {
 
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
 
-			goCtx := sdk.WrapSDKContext(pc.Ctx)
-
 			if tc.shouldPanic {
 				require.PanicsWithValue(t, tc.expectedErr, func() {
 					//nolint:errcheck
-					msgServer.AddPremiumVotes(goCtx, testMsg)
+					msgServer.AddPremiumVotes(pc.Ctx, testMsg)
 				})
 			} else {
-				resp, err := msgServer.AddPremiumVotes(goCtx, testMsg)
+				resp, err := msgServer.AddPremiumVotes(pc.Ctx, testMsg)
 				require.NoError(t, err)
 				require.NotNil(t, resp)
 			}

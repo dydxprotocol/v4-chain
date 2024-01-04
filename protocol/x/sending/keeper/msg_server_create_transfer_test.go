@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -71,7 +72,7 @@ func setUpTestCase(
 	tc.setupMocks(ctx, mockKeeper)
 
 	// Return message server and sdk context.
-	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), sdk.WrapSDKContext(ctx)
+	return mockKeeper, keeper.NewMsgServerImpl(mockKeeper), ctx
 }
 
 func TestCreateTransfer(t *testing.T) {
@@ -272,7 +273,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 			},
 			expectedResp: &types.MsgSendFromModuleToAccountResponse{},
 		},
@@ -281,7 +282,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 				Authority:        "12345",
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 			},
 			expectedErr: fmt.Sprintf(
 				"invalid authority %s",
@@ -293,7 +294,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: "community_treasury",
 				Recipient:        constants.CarlAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 			},
 			keeperResp:  fmt.Errorf("keeper error"),
 			expectedErr: "keeper error",
@@ -311,7 +312,7 @@ func TestMsgServerSendFromModuleToAccount(t *testing.T) {
 			)
 			mockKeeper.On("SendFromModuleToAccount", ks.Ctx, &tc.testMsg).Return(tc.keeperResp)
 
-			resp, err := msgServer.SendFromModuleToAccount(sdk.WrapSDKContext(ks.Ctx), &tc.testMsg)
+			resp, err := msgServer.SendFromModuleToAccount(ks.Ctx, &tc.testMsg)
 
 			// Assert msg server response.
 			require.Equal(t, tc.expectedResp, resp)

@@ -7,7 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"

@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -27,7 +27,7 @@ func VestKeepers(
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -55,7 +55,7 @@ func VestKeepers(
 
 func createVestKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc codec.BinaryCodec,
 	bankKeeper *bankkeeper.BaseKeeper,
 	blocktimeKeeper *blocktimekeeper.Keeper,

@@ -11,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -483,7 +482,7 @@ func TestFunding(t *testing.T) {
 					ctx,
 					tApp.App,
 					testapp.MustMakeCheckTxOptions{
-						AccAddressForSigning: testtx.MustGetOnlySignerAddress(&transfer),
+						AccAddressForSigning: transfer.Transfer.Sender.Owner,
 						Gas:                  100_000,
 						FeeAmt:               constants.TestFeeCoins_5Cents,
 					},

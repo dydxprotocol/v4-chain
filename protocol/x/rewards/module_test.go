@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/rewards"
@@ -23,8 +23,7 @@ import (
 // This is useful for tests which want to write/read state
 // to/from the keeper.
 func createAppModuleWithKeeper(t *testing.T) (rewards.AppModule, *rewards_keeper.Keeper, sdk.Context) {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	ctx, keeper, _, _, _, _, _, _ := keepertest.RewardsKeepers(t)
 
@@ -35,8 +34,7 @@ func createAppModuleWithKeeper(t *testing.T) (rewards.AppModule, *rewards_keeper
 }
 
 func createAppModuleBasic(t *testing.T) rewards.AppModuleBasic {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	appModule := rewards.NewAppModuleBasic(appCodec)
 	require.NotNil(t, appModule)
@@ -73,8 +71,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			am := createAppModuleBasic(t)
 
-			interfaceRegistry := types.NewInterfaceRegistry()
-			cdc := codec.NewProtoCodec(interfaceRegistry)
+			cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 			err := am.ValidateGenesis(cdc, nil, json.RawMessage(tc.genesisJson))
 			require.EqualError(t, err, tc.expectedErr)
@@ -123,15 +120,13 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	validGenesisState := pricefeed.ReadJsonTestFile(t, "expected_default_genesis.json")
 
 	gs := json.RawMessage(validGenesisState)
 
-	result := am.InitGenesis(ctx, cdc, gs)
-	require.Equal(t, 0, len(result))
+	am.InitGenesis(ctx, cdc, gs)
 
 	params := keeper.GetParams(ctx)
 
