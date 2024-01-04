@@ -87,8 +87,11 @@ func TestPlaceOrder_Error(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
 
 			mockLogger := &mocks.Logger{}
-			mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-				mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
+			mockLogger.On("With",
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+			).Return(mockLogger)
 			if errors.Is(tc.ExpectedError, types.ErrStatefulOrderCollateralizationCheckFailed) {
 				mockLogger.On("Info",
 					mock.Anything,
