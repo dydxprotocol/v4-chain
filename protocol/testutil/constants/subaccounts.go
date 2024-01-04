@@ -35,6 +35,30 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 	}
+	Alice_Num1_1BTC_Short_100_000USD = satypes.Subaccount{
+		Id: &Alice_Num1,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_100_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId: 0,
+				Quantums:    dtypes.NewInt(-100_000_000), // -1 BTC
+			},
+		},
+	}
+	Alice_Num1_1BTC_Long_500_000USD = satypes.Subaccount{
+		Id: &Alice_Num1,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_500_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId: 0,
+				Quantums:    dtypes.NewInt(100_000_000), // +1 BTC
+			},
+		},
+	}
 	Bob_Num0_10_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
