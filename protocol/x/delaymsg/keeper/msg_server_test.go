@@ -111,7 +111,6 @@ func TestDelayMessage(t *testing.T) {
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
 			ctx, _, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 			tc.setupMocks(ctx, mockKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
 
 			// Set up error logging for expected errors.
 			if tc.expectedErr != nil {
@@ -120,7 +119,7 @@ func TestDelayMessage(t *testing.T) {
 				mockKeeper.On("Logger", ctx).Return(logger)
 			}
 
-			resp, err := msgServer.DelayMessage(goCtx, tc.msg)
+			resp, err := msgServer.DelayMessage(ctx, tc.msg)
 
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())

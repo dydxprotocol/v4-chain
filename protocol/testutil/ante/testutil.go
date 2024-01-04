@@ -1,7 +1,18 @@
 package ante
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	storetypes "cosmossdk.io/store/types"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/runtime"
+	"github.com/cosmos/cosmos-sdk/std"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
+	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
+	"github.com/cosmos/cosmos-sdk/x/bank"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -27,7 +38,7 @@ import (
 
 // TestAccount represents an account used in the tests in x/auth/ante.
 type TestAccount struct {
-	acc  types.AccountI
+	acc  sdk.AccountI
 	priv cryptotypes.PrivKey
 }
 
@@ -39,23 +50,23 @@ type AnteTestSuite struct {
 	TxBuilder      client.TxBuilder
 	AccountKeeper  keeper.AccountKeeper
 	BankKeeper     *authtestutil.MockBankKeeper
+	TxBankKeeper   *txtestutil.MockBankKeeper
 	FeeGrantKeeper *antetestutil.MockFeegrantKeeper
 	EncCfg         moduletestutil.TestEncodingConfig
 }
 
-// SetupTest setups a new test, with new app, context, and AnteHandler.
+// SetupTest setups a new test, with new app, context, and anteHandler.
 func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	suite := &AnteTestSuite{}
 	ctrl := gomock.NewController(t)
 	suite.BankKeeper = authtestutil.NewMockBankKeeper(ctrl)
-
+	suite.TxBankKeeper = txtestutil.NewMockBankKeeper(ctrl)
 	suite.FeeGrantKeeper = antetestutil.NewMockFeegrantKeeper(ctrl)
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	testCtx := testutil.DefaultContextWithDB(t, key, sdk.NewTransientStoreKey("transient_test"))
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	testCtx := testutil.DefaultContextWithDB(t, key, storetypes.NewTransientStoreKey("transient_test"))
 	suite.Ctx = testCtx.Ctx.WithIsCheckTx(isCheckTx).WithBlockHeight(1)
-	// app.BaseApp.NewContext(isCheckTx, tmproto.Header{}).WithBlockHeight(1)
-	suite.EncCfg = moduletestutil.MakeTestEncodingConfig(auth.AppModuleBasic{})
+	suite.EncCfg = MakeTestEncodingConfig(auth.AppModuleBasic{}, bank.AppModuleBasic{})
 
 	maccPerms := map[string][]string{
 		"fee_collector":          nil,
@@ -68,14 +79,15 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 
 	suite.AccountKeeper = keeper.NewAccountKeeper(
 		suite.EncCfg.Codec,
-		key,
+		runtime.NewKVStoreService(key),
 		types.ProtoBaseAccount,
 		maccPerms,
-		sdk.Bech32MainPrefix,
-		lib.GovModuleAddress.String(),
+		authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		sdk.GetConfig().GetBech32AccountAddrPrefix(),
+		types.NewModuleAddress("gov").String(),
 	)
 	suite.AccountKeeper.GetModuleAccount(suite.Ctx, types.FeeCollectorName)
-	err := suite.AccountKeeper.SetParams(suite.Ctx, types.DefaultParams())
+	err := suite.AccountKeeper.Params.Set(suite.Ctx, types.DefaultParams())
 	require.NoError(t, err)
 
 	// We're using TestMsg encoding in some tests, so register it here.
@@ -83,9 +95,10 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	testdata.RegisterInterfaces(suite.EncCfg.InterfaceRegistry)
 
 	suite.ClientCtx = client.Context{}.
-		WithTxConfig(suite.EncCfg.TxConfig)
+		WithTxConfig(suite.EncCfg.TxConfig).
+		WithClient(clitestutil.NewMockCometRPC(abci.ResponseQuery{}))
 
-	AnteHandler, err := ante.NewAnteHandler(
+	anteHandler, err := ante.NewAnteHandler(
 		ante.HandlerOptions{
 			AccountKeeper:   suite.AccountKeeper,
 			BankKeeper:      suite.BankKeeper,
@@ -96,7 +109,7 @@ func SetupTestSuite(t *testing.T, isCheckTx bool) *AnteTestSuite {
 	)
 
 	require.NoError(t, err)
-	suite.AnteHandler = AnteHandler
+	suite.AnteHandler = anteHandler
 
 	suite.TxBuilder = suite.ClientCtx.TxConfig.NewTxBuilder()
 
@@ -121,9 +134,6 @@ func (suite *AnteTestSuite) CreateTestAccounts(numAccs int) []TestAccount {
 
 // TestCase represents a test case used in test tables.
 type TestCase struct {
-	// Comment out the follow `desc` and `malleate` fields since they are not used.
-	// desc     string
-	// malleate func(*AnteTestSuite) TestCaseArgs
 	simulate bool
 	expPass  bool
 	expErr   error
@@ -139,16 +149,25 @@ type TestCaseArgs struct {
 	privs     []cryptotypes.PrivKey
 }
 
-// DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a test case,
-// for example to test for replay protection.
+func (t TestCaseArgs) WithAccountsInfo(accs []TestAccount) TestCaseArgs {
+	newT := t
+	for _, acc := range accs {
+		newT.accNums = append(newT.accNums, acc.acc.GetAccountNumber())
+		newT.accSeqs = append(newT.accSeqs, acc.acc.GetSequence())
+		newT.privs = append(newT.privs, acc.priv)
+	}
+	return newT
+}
+
+// DeliverMsgs constructs a tx and runs it through the ante handler. This is used to set the context for a
+// test case, for example to test for replay protection.
 func (suite *AnteTestSuite) DeliverMsgs(
 	t *testing.T,
 	privs []cryptotypes.PrivKey,
 	msgs []sdk.Msg,
 	feeAmount sdk.Coins,
 	gasLimit uint64,
-	accNums,
-	accSeqs []uint64,
+	accNums, accSeqs []uint64,
 	chainID string,
 	simulate bool,
 ) (sdk.Context, error) {
@@ -156,9 +175,12 @@ func (suite *AnteTestSuite) DeliverMsgs(
 	suite.TxBuilder.SetFeeAmount(feeAmount)
 	suite.TxBuilder.SetGasLimit(gasLimit)
 
-	tx, txErr := suite.CreateTestTx(privs, accNums, accSeqs, chainID)
+	tx, txErr := suite.CreateTestTx(suite.Ctx, privs, accNums, accSeqs, chainID, signing.SignMode_SIGN_MODE_DIRECT)
 	require.NoError(t, txErr)
-	return suite.AnteHandler(suite.Ctx, tx, simulate)
+	txBytes, err := suite.ClientCtx.TxConfig.TxEncoder()(tx)
+	bytesCtx := suite.Ctx.WithTxBytes(txBytes)
+	require.NoError(t, err)
+	return suite.AnteHandler(bytesCtx, tx, simulate)
 }
 
 func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCaseArgs) {
@@ -169,8 +191,18 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 	// Theoretically speaking, ante handler unit tests should only test
 	// ante handlers, but here we sometimes also test the tx creation
 	// process.
-	tx, txErr := suite.CreateTestTx(args.privs, args.accNums, args.accSeqs, args.chainID)
-	newCtx, anteErr := suite.AnteHandler(suite.Ctx, tx, tc.simulate)
+	tx, txErr := suite.CreateTestTx(
+		suite.Ctx,
+		args.privs,
+		args.accNums,
+		args.accSeqs,
+		args.chainID,
+		signing.SignMode_SIGN_MODE_DIRECT,
+	)
+	txBytes, err := suite.ClientCtx.TxConfig.TxEncoder()(tx)
+	require.NoError(t, err)
+	bytesCtx := suite.Ctx.WithTxBytes(txBytes)
+	newCtx, anteErr := suite.AnteHandler(bytesCtx, tx, tc.simulate)
 
 	if tc.expPass {
 		require.NoError(t, txErr)
@@ -196,10 +228,9 @@ func (suite *AnteTestSuite) RunTestCase(t *testing.T, tc TestCase, args TestCase
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
 func (suite *AnteTestSuite) CreateTestTx(
-	privs []cryptotypes.PrivKey,
-	accNums []uint64,
-	accSeqs []uint64,
-	chainID string,
+	ctx sdk.Context, privs []cryptotypes.PrivKey,
+	accNums, accSeqs []uint64,
+	chainID string, signMode signing.SignMode,
 ) (xauthsigning.Tx, error) {
 	// First round: we gather all the signer infos. We use the "set empty
 	// signature" hack to do that.
@@ -208,7 +239,7 @@ func (suite *AnteTestSuite) CreateTestTx(
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  suite.ClientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  signMode,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -225,12 +256,14 @@ func (suite *AnteTestSuite) CreateTestTx(
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			suite.ClientCtx.TxConfig.SignModeHandler().DefaultMode(), signerData,
+			ctx, signMode, signerData,
 			suite.TxBuilder, priv, suite.ClientCtx.TxConfig, accSeqs[i])
 		if err != nil {
 			return nil, err
@@ -244,4 +277,26 @@ func (suite *AnteTestSuite) CreateTestTx(
 	}
 
 	return suite.TxBuilder.GetTx(), nil
+}
+
+func MakeTestEncodingConfig(modules ...module.AppModuleBasic) moduletestutil.TestEncodingConfig {
+	aminoCodec := codec.NewLegacyAmino()
+	interfaceRegistry := v4module.InterfaceRegistry
+	codec := codec.NewProtoCodec(interfaceRegistry)
+
+	encCfg := moduletestutil.TestEncodingConfig{
+		InterfaceRegistry: interfaceRegistry,
+		Codec:             codec,
+		TxConfig:          authtx.NewTxConfig(codec, authtx.DefaultSignModes),
+		Amino:             aminoCodec,
+	}
+
+	mb := module.NewBasicManager(modules...)
+
+	std.RegisterLegacyAminoCodec(encCfg.Amino)
+	std.RegisterInterfaces(encCfg.InterfaceRegistry)
+	mb.RegisterLegacyAminoCodec(encCfg.Amino)
+	mb.RegisterInterfaces(encCfg.InterfaceRegistry)
+
+	return encCfg
 }

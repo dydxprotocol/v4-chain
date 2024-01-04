@@ -1,5 +1,4 @@
 import {
-  logger,
   stats,
 } from '@dydxprotocol-indexer/base';
 import {
@@ -17,17 +16,9 @@ import config from '../config';
 // and the orders have their status correctly set
 export default async function runTask(): Promise<void> {
   const queryStart: number = Date.now();
-  const latestBlock: BlockFromDatabase | undefined = await BlockTable.getLatest({
+  const latestBlock: BlockFromDatabase = await BlockTable.getLatest({
     readReplica: true,
   });
-
-  if (latestBlock === undefined) {
-    logger.info({
-      at: 'close-stale-orders#getLatestBlockHeight',
-      message: 'No latest block height found. Skipping task',
-    });
-    return;
-  }
 
   const latestBlockHeight: number = parseInt(latestBlock.blockHeight, 10);
 

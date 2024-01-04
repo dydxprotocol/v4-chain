@@ -1,11 +1,15 @@
 package sending
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sendingsimulation "github.com/dydxprotocol/v4-chain/protocol/x/sending/simulation"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+)
+
+var (
+	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasProposalMsgs     = AppModule{}
 )
 
 // GenerateGenesisState creates a randomized GenState of the module
@@ -20,22 +24,22 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&sendingGenesis)
 }
 
-// ProposalMsgs doesn't return any content functions for governance proposals
-func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
 	return sendingsimulation.WeightedOperations(
 		simState.AppParams,
-		simState.Cdc,
 		am.keeper,
 		am.accountKeeper,
 		am.bankKeeper,
 		am.subaccountsKeeper,
 	)
+}
+
+// TODO(DEC-906): implement simulated gov proposal.
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
 }

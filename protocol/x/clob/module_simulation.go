@@ -5,23 +5,24 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	clobsimulation "github.com/dydxprotocol/v4-chain/protocol/x/clob/simulation"
 )
 
 // avoid unused import issue
 var (
-	_ = sample.AccAddress
-	_ = clobsimulation.FindAccount
-	_ = sims.StakePerAccount
-	_ = simulation.MsgEntryKind
-	_ = baseapp.Paramspace
+	_                            = sample.AccAddress
+	_                            = clobsimulation.FindAccount
+	_                            = sims.StakePerAccount
+	_                            = simulation.MsgEntryKind
+	_                            = baseapp.Paramspace
+	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasProposalMsgs     = AppModule{}
 )
 
 const (
@@ -44,21 +45,16 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	clobsimulation.RandomizedGenState(simState)
 }
 
-// ProposalMsgs doesn't return any content functions for governance proposals
-func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	protoCdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	protoCdc := codec.NewProtoCodec(v4module.InterfaceRegistry)
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgProposedOperations int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgProposedOperations, &weightMsgProposedOperations, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgProposedOperations, &weightMsgProposedOperations, nil,
 		func(_ *rand.Rand) {
 			weightMsgProposedOperations = defaultWeightMsgProposedOperations
 		},
@@ -69,7 +65,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgPlaceOrder int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgPlaceOrder, &weightMsgPlaceOrder, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgPlaceOrder, &weightMsgPlaceOrder, nil,
 		func(_ *rand.Rand) {
 			weightMsgPlaceOrder = defaultWeightMsgPlaceOrder
 		},
@@ -80,7 +76,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgCancelOrder int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCancelOrder, &weightMsgCancelOrder, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgCancelOrder, &weightMsgCancelOrder, nil,
 		func(_ *rand.Rand) {
 			weightMsgCancelOrder = defaultWeightMsgCancelOrder
 		},
@@ -100,4 +96,10 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
+}
+
+// TODO(DEC-906): implement simulated gov proposal.
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
 }

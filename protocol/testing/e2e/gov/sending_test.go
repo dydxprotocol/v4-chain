@@ -1,6 +1,7 @@
 package gov_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
@@ -29,7 +30,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(123)),
 			},
 			initialModuleBalance:   200,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -39,7 +40,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(123)),
 			},
 			initialModuleBalance:   123,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -49,7 +50,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				Authority:        lib.GovModuleAddress.String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        authtypes.NewModuleAddress(vesttypes.CommunityVesterAccountName).String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(124)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(124)),
 			},
 			initialModuleBalance:   123,
 			expectedProposalStatus: govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
@@ -59,7 +60,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				Authority:        authtypes.NewModuleAddress(sendingtypes.ModuleName).String(),
 				SenderModuleName: vesttypes.CommunityTreasuryAccountName,
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(123)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(123)),
 			},
 			initialModuleBalance:     123,
 			expectSubmitProposalFail: true,
@@ -84,7 +85,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 						genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 							Address: senderModuleAddress.String(),
 							Coins: sdk.Coins{
-								sdk.NewCoin(tc.msg.Coin.Denom, sdk.NewInt(tc.initialModuleBalance)),
+								sdk.NewCoin(tc.msg.Coin.Denom, sdkmath.NewInt(tc.initialModuleBalance)),
 							},
 						})
 					},

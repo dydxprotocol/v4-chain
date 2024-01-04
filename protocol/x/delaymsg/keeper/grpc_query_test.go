@@ -32,8 +32,7 @@ func TestNextDelayedMessageId(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			wctx := sdk.WrapSDKContext(ctx)
-			res, err := delaymsg.NextDelayedMessageId(wctx, &types.QueryNextDelayedMessageIdRequest{})
+			res, err := delaymsg.NextDelayedMessageId(ctx, &types.QueryNextDelayedMessageIdRequest{})
 			require.NoError(t, err)
 			require.Equal(t, uint32(len(tc.delayedMessages)), res.NextDelayedMessageId)
 		})
@@ -58,8 +57,7 @@ func TestMessage(t *testing.T) {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, tc.delayedMessage, 1)
 				require.NoError(t, err)
 			}
-			wctx := sdk.WrapSDKContext(ctx)
-			resp, err := delaymsg.Message(wctx, &types.QueryMessageRequest{Id: 0})
+			resp, err := delaymsg.Message(ctx, &types.QueryMessageRequest{Id: 0})
 			if tc.delayedMessage == nil {
 				require.Error(t, err)
 				require.Nil(t, resp)
@@ -95,8 +93,7 @@ func TestBlockMessageIds(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			wctx := sdk.WrapSDKContext(ctx)
-			res, err := delaymsg.BlockMessageIds(wctx, &types.QueryBlockMessageIdsRequest{BlockHeight: 1})
+			res, err := delaymsg.BlockMessageIds(ctx, &types.QueryBlockMessageIdsRequest{BlockHeight: 1})
 
 			// Not found.
 			if len(tc.delayedMessages) == 0 {

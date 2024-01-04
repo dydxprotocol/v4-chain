@@ -2,11 +2,12 @@ package simulation_test
 
 import (
 	"encoding/json"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -18,8 +19,7 @@ import (
 )
 
 func TestRandomizedGenState(t *testing.T) {
-	interfaceRegistry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(v4module.InterfaceRegistry)
 
 	r := testutil_rand.NewRand()
 
@@ -31,6 +31,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Accounts:     simtypes.RandomAccounts(r, 3),
 		InitialStake: sdkmath.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
+		BondDenom:    sdk.DefaultBondDenom,
 	}
 
 	for i := 0; i < 100; i++ {

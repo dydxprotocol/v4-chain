@@ -93,10 +93,9 @@ func TestCreateOracleMarket(t *testing.T) {
 			ctx, pricesKeeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
 			tc.setup(t, ctx, pricesKeeper)
 
-			_, err := msgServer.CreateOracleMarket(goCtx, tc.msg)
+			_, err := msgServer.CreateOracleMarket(ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {

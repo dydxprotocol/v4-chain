@@ -3,7 +3,7 @@ package ibc
 import (
 	"fmt"
 
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 )
 
 // Given a denom trace string (e.g. `transfer/channel-141/uosmo`),

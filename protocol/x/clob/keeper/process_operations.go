@@ -671,6 +671,32 @@ func (k Keeper) PersistMatchDeleveragingToState(
 	}
 	deltaBaseQuantumsIsNegative := position.GetIsLong()
 
+	// If there are zero-fill deleveraging operations, this is a sentinel value to indicate a subaccount could not be
+	// liquidated or deleveraged and still has negative equity. Mark the current block number in state to indicate a
+	// negative TNC subaccount was seen.
+	if len(matchDeleveraging.GetFills()) == 0 {
+		if !shouldDeleverageAtBankruptcyPrice {
+			return errorsmod.Wrapf(
+				types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
+				fmt.Sprintf(
+					"PersistMatchDeleveragingToState: zero-fill deleveraging operation included for subaccount %+v"+
+						" and perpetual %d but subaccount isn't negative TNC",
+					liquidatedSubaccountId,
+					perpetualId,
+				),
+			)
+		}
+
+		metrics.IncrCountMetricWithLabels(
+			types.ModuleName,
+			metrics.SubaccountsNegativeTncSubaccountSeen,
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
+		)
+		k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
+		return nil
+	}
+
 	for _, fill := range matchDeleveraging.GetFills() {
 		deltaBaseQuantums := new(big.Int).SetUint64(fill.FillAmount)
 		if deltaBaseQuantumsIsNegative {

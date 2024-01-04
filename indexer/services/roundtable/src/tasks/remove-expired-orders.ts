@@ -26,14 +26,7 @@ import { getExpiredOffChainUpdateMessage } from '../helpers/websocket';
  */
 export default async function runTask(): Promise<void> {
   const start: number = Date.now();
-  const block: BlockFromDatabase | undefined = await BlockTable.getLatest({ readReplica: true });
-  if (block === undefined) {
-    logger.error({
-      at: 'remove-expired-orders#runTask',
-      message: 'Unable to find latest block',
-    });
-    return;
-  }
+  const block: BlockFromDatabase = await BlockTable.getLatest({ readReplica: true });
 
   try {
     // Only need to expire short-term orders because long-term OrderRemoves will be on-chain.

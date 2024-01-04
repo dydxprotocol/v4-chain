@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -18,7 +17,7 @@ func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Conte
 	ctx := tApp.InitChain()
 	k := tApp.App.BlockTimeKeeper
 
-	return k, keeper.NewMsgServerImpl(k), sdk.WrapSDKContext(ctx)
+	return k, keeper.NewMsgServerImpl(k), ctx
 }
 
 func TestMsgServer(t *testing.T) {

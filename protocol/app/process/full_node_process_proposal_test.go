@@ -93,10 +93,11 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
 			// Run.
-			resp := handler(ctx, req)
+			resp, err := handler(ctx, &req)
+			require.NoError(t, err)
 
 			// Validate.
-			require.Equal(t, acceptResponse, resp)
+			require.Equal(t, acceptResponse, *resp)
 		})
 	}
 }

@@ -267,6 +267,25 @@ export async function findBySubaccountIdAndClobPair(
   return orders;
 }
 
+export async function findBySubaccountIdAndClobPairAfterHeight(
+  subaccountId: string,
+  clobPairId: string,
+  height: number,
+  options: Options = {},
+): Promise<OrderFromDatabase[]> {
+  const baseQuery: QueryBuilder<OrderModel> = setupBaseQuery<OrderModel>(
+    OrderModel,
+    options,
+  );
+
+  const orders: OrderFromDatabase[] = await baseQuery
+    .where(OrderColumns.subaccountId, subaccountId)
+    .where(OrderColumns.clobPairId, clobPairId)
+    .where(OrderColumns.createdAtHeight, '>=', height)
+    .returning('*');
+  return orders;
+}
+
 export async function upsert(
   orderToUpsert: OrderCreateObject,
   options: Options = { txId: undefined },

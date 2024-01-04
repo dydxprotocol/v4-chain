@@ -125,7 +125,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.firstMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.firstMsg),
 				},
 				tc.firstMsg,
 			)
@@ -138,7 +138,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.secondMsg),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.secondMsg),
 				},
 				tc.secondMsg,
 			)
@@ -251,11 +251,10 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	}
 	// We shouldn't be overfilling orders and the line below shouldn't panic.
 	_ = tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{
-		ValidateDeliverTxs: func(
+		ValidateFinalizeBlock: func(
 			_ sdktypes.Context,
-			_ abcitypes.RequestDeliverTx,
-			_ abcitypes.ResponseDeliverTx,
-			_ int,
+			_ abcitypes.RequestFinalizeBlock,
+			_ abcitypes.ResponseFinalizeBlock,
 		) bool {
 			// Don't halt the chain since it's expected that the order will be removed after getting fully filled,
 			// so the subsequent cancellation will be invalid.
@@ -458,8 +457,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	)
@@ -467,8 +465,7 @@ func TestRateLimitingOrders_StatefulOrdersDuringDeliverTxAreNotRateLimited(t *te
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5),
+			AccAddressForSigning:        constants.Alice_Num0.Owner,
 			AccSequenceNumberForSigning: 2,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
@@ -544,7 +541,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.replayLessGTB),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.replayLessGTB),
 				},
 				tc.replayLessGTB,
 			)
@@ -556,7 +553,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.replayGreaterGTB),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.replayGreaterGTB),
 				},
 				tc.replayGreaterGTB,
 			)
@@ -568,7 +565,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.firstValidGTB),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.firstValidGTB),
 				},
 				tc.firstValidGTB,
 			)
@@ -580,7 +577,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tc.secondValidGTB),
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.secondValidGTB),
 				},
 				tc.secondValidGTB,
 			)

@@ -119,9 +119,8 @@ func TestCreatePerpetual(t *testing.T) {
 			tc.setup(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper)
 
 			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
-			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
-			_, err := msgServer.CreatePerpetual(wrappedCtx, tc.msg)
+			_, err := msgServer.CreatePerpetual(pc.Ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {

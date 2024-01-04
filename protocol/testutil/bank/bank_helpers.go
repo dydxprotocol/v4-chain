@@ -2,11 +2,11 @@ package bank
 
 import (
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/client"
+	"fmt"
 	"github.com/cosmos/cosmos-sdk/codec"
-	testutilcli "github.com/cosmos/cosmos-sdk/testutil/cli"
+	"github.com/cosmos/cosmos-sdk/testutil"
+	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -16,21 +16,31 @@ import (
 // GetModuleAccUsdcBalance is a test utility function to query USDC balance
 // of a module account from the bank module.
 func GetModuleAccUsdcBalance(
-	clientCtx client.Context,
+	val *network.Validator,
 	codec codec.Codec,
 	moduleName string,
 ) (
 	balance int64,
 	err error,
 ) {
-	resp, err := testutilcli.QueryBalancesExec(clientCtx, authtypes.NewModuleAddress(moduleName))
+	moduleAddress, err := codec.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(
+		[]byte(moduleName),
+	)
+	if err != nil {
+		return 0, err
+	}
+	resp, err := testutil.GetRequest(fmt.Sprintf(
+		"%s/cosmos/bank/v1beta1/balances/%s",
+		val.APIAddress,
+		moduleAddress,
+	))
 	if err != nil {
 		return 0, err
 	}
 
 	var balRes banktypes.QueryAllBalancesResponse
 
-	err = codec.UnmarshalJSON(resp.Bytes(), &balRes)
+	err = codec.UnmarshalJSON(resp, &balRes)
 	if err != nil {
 		return 0, err
 	}

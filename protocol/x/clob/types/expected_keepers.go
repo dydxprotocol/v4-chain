@@ -1,11 +1,11 @@
 package types
 
 import (
+	"context"
 	"math/big"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -17,6 +17,7 @@ type SubaccountsKeeper interface {
 	CanUpdateSubaccounts(
 		ctx sdk.Context,
 		updates []satypes.Update,
+		updateType satypes.UpdateType,
 	) (
 		success bool,
 		successPerUpdate []satypes.UpdateResult,
@@ -52,10 +53,15 @@ type SubaccountsKeeper interface {
 	UpdateSubaccounts(
 		ctx sdk.Context,
 		updates []satypes.Update,
+		updateType satypes.UpdateType,
 	) (
 		success bool,
 		successPerUpdate []satypes.UpdateResult,
 		err error,
+	)
+	SetNegativeTncSubaccountSeenAtBlock(
+		ctx sdk.Context,
+		blockHeight uint32,
 	)
 	TransferFeesToFeeCollectorModule(
 		ctx sdk.Context,
@@ -141,13 +147,13 @@ type StatsKeeper interface {
 
 // AccountKeeper defines the expected account keeper used for simulations.
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 }
 
 // BankKeeper defines the expected bank keeper used for simulations.
 type BankKeeper interface {
-	GetBalance(ctx sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addr sdk.AccAddress, denom string) sdk.Coin
 }
 
 type RewardsKeeper interface {

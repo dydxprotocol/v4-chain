@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
@@ -17,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // ExchangeQueryHandlerImpl is the struct that implements the `ExchangeQueryHandler` interface.

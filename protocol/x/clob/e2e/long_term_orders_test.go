@@ -82,7 +82,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT5,
 	))
@@ -94,7 +94,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+			AccAddressForSigning: constants.Bob_Num0.Owner,
 		},
 		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 	))
@@ -105,7 +105,7 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&constants.CancelLongTermOrder_Alice_Num0_Id0_Clob0_GTBT15,
 	)
@@ -114,18 +114,18 @@ func TestCancelFullyFilledStatefulOrderInSameBlockItIsFilled(t *testing.T) {
 
 	// DeliverTx should fail for cancellation tx
 	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-		ValidateDeliverTxs: func(
+		ValidateFinalizeBlock: func(
 			ctx sdktypes.Context,
-			request abcitypes.RequestDeliverTx,
-			response abcitypes.ResponseDeliverTx,
-			txIndex int,
+			request abcitypes.RequestFinalizeBlock,
+			response abcitypes.ResponseFinalizeBlock,
 		) (haltChain bool) {
-			// "Other" msgs come directly after ProposedOperations which is first.
-			if txIndex == 1 {
-				require.True(t, response.IsErr())
-				require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), response.Code)
-			} else {
-				require.True(t, response.IsOK(), "Expected DeliverTx to succeed. Response log: %+v", response.Log)
+			for txIndex, execResult := range response.TxResults {
+				if txIndex == 1 {
+					require.True(t, execResult.IsErr())
+					require.Equal(t, clobtypes.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder.ABCICode(), execResult.Code)
+				} else {
+					require.True(t, execResult.IsOK(), "Expected DeliverTx to succeed. Response log: %+v", execResult.Log)
+				}
 			}
 
 			return false
@@ -288,7 +288,7 @@ func TestCancelStatefulOrder(t *testing.T) {
 						ctx,
 						tApp.App,
 						testapp.MustMakeCheckTxOptions{
-							AccAddressForSigning: testtx.MustGetOnlySignerAddress(testSdkMsg.Msg),
+							AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), testSdkMsg.Msg),
 						},
 						testSdkMsg.Msg,
 					))
@@ -470,9 +470,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
-			),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 	)
@@ -480,9 +478,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5,
-			),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5,
 	)
@@ -490,7 +486,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20),
+			AccAddressForSigning: constants.Bob_Num0.Owner,
 		},
 		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20,
 	)
@@ -498,7 +494,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20),
+			AccAddressForSigning: constants.Bob_Num0.Owner,
 		},
 		&PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20,
 	)
@@ -506,9 +502,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO,
-			),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO,
 	)

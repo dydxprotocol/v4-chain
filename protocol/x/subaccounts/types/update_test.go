@@ -120,6 +120,10 @@ func TestUpdateResultIsSuccess(t *testing.T) {
 			value:          types.StillUndercollateralized,
 			expectedResult: false,
 		},
+		"WithdrawalsAndTransfersBlocked": {
+			value:          types.WithdrawalsAndTransfersBlocked,
+			expectedResult: false,
+		},
 		"UpdateCausedError": {
 			value:          types.UpdateCausedError,
 			expectedResult: false,
@@ -135,6 +139,42 @@ func TestUpdateResultIsSuccess(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			result := tc.value.IsSuccess()
 			require.Equal(t, result, tc.expectedResult)
+		})
+	}
+}
+
+func TestUpdateTypeString(t *testing.T) {
+	tests := map[string]struct {
+		value          types.UpdateType
+		expectedResult string
+	}{
+		"Withdrawal": {
+			value:          types.Withdrawal,
+			expectedResult: "Withdrawal",
+		},
+		"Transfer": {
+			value:          types.Transfer,
+			expectedResult: "Transfer",
+		},
+		"Deposit": {
+			value:          types.Deposit,
+			expectedResult: "Deposit",
+		},
+		"Match": {
+			value:          types.Match,
+			expectedResult: "Match",
+		},
+		"UnexpectedError": {
+			value:          types.UpdateType(999),
+			expectedResult: "UnexpectedUpdateTypeError",
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := tc.value.String()
+			require.Equal(t, tc.expectedResult, result)
 		})
 	}
 }

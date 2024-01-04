@@ -7,7 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -1060,7 +1060,11 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 		metrics.Latency,
 	)
 
-	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(ctx, updates)
+	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(
+		ctx,
+		updates,
+		satypes.Match,
+	)
 	// TODO(DEC-191): Remove the error case from `CanUpdateSubaccounts`, which can only occur on overflow and specifying
 	// duplicate accounts.
 	if err != nil {

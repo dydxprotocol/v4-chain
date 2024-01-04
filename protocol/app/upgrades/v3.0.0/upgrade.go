@@ -1,8 +1,10 @@
 package v_3_0_0
 
 import (
+	"context"
 	"fmt"
 
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -11,12 +13,11 @@ import (
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -76,7 +77,7 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 		acc := ak.GetAccount(ctx, addr)
 		if acc != nil {
 			// Account has been initialized.
-			macc, isModuleAccount := acc.(authtypes.ModuleAccountI)
+			macc, isModuleAccount := acc.(sdk.ModuleAccountI)
 			if isModuleAccount {
 				// Module account was correctly initialized. Skipping
 				ctx.Logger().Info(fmt.Sprintf(
@@ -114,7 +115,7 @@ func InitializeModuleAccs(ctx sdk.Context, ak authkeeper.AccountKeeper) {
 		// Implementation taken from
 		// https://github.com/dydxprotocol/cosmos-sdk/blob/bdf96fdd/x/auth/keeper/keeper.go#L213
 		newModuleAccount := authtypes.NewEmptyModuleAccount(modAccName, perms...)
-		maccI := (ak.NewAccount(ctx, newModuleAccount)).(authtypes.ModuleAccountI) // this set the account number
+		maccI := (ak.NewAccount(ctx, newModuleAccount)).(sdk.ModuleAccountI) // this set the account number
 		ak.SetModuleAccount(ctx, maccI)
 		ctx.Logger().Info(fmt.Sprintf(
 			"Successfully initialized module account in state: %+v",
@@ -154,14 +155,15 @@ func CreateUpgradeHandler(
 	configurator module.Configurator,
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Running %s Upgrade...", UpgradeName)
-		InitializeModuleAccs(ctx, ak)
+	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx.Logger().Info("Running %s Upgrade...", UpgradeName)
+		InitializeModuleAccs(sdkCtx, ak)
 
 		// TODO(CORE-824): Initialize ratelimit module params to desired state.
 
 		// TODO(CORE-848): Any unit test after a v3.0.0 upgrade test is added.
-		IcaHostKeeperUpgradeHandler(ctx, vm, mm)
+		IcaHostKeeperUpgradeHandler(sdkCtx, vm, mm)
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }

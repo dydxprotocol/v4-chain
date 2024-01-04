@@ -7,11 +7,6 @@ import (
 
 var _ sdk.Msg = &MsgCreateClobPair{}
 
-func (msg *MsgCreateClobPair) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func (msg *MsgCreateClobPair) ValidateBasic() error {
 	if msg.Authority == "" {
 		return errorsmod.Wrap(ErrInvalidAuthority, "authority cannot be empty")

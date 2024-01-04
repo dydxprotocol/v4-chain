@@ -290,7 +290,7 @@ describe('helpers', () => {
         latestBlock,
       ]: [
         SubaccountFromDatabase | undefined,
-        BlockFromDatabase | undefined,
+        BlockFromDatabase,
       ] = await Promise.all([
         SubaccountTable.findById(testConstants.defaultSubaccountId),
         BlockTable.getLatest(),
