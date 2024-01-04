@@ -4,18 +4,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgCreateClobPair_GetSigners(t *testing.T) {
-	msg := types.MsgCreateClobPair{
-		Authority: constants.AliceAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.AliceAccAddress}, msg.GetSigners())
-}
 
 func TestMsgCreateClobPair_ValidateBasic(t *testing.T) {
 	tests := []struct {

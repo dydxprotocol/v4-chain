@@ -5,24 +5,20 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-
 	errorsmod "cosmossdk.io/errors"
-
-	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 type (
@@ -57,7 +53,7 @@ func (k Keeper) HasAuthority(authority string) bool {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // Process vesting for all vest entries. Intended to be called in BeginBlocker.
@@ -166,7 +162,7 @@ func (k Keeper) GetAllVestEntries(ctx sdk.Context) (
 	list []types.VestEntry,
 ) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.VestEntryKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
 		var val types.VestEntry

@@ -8,11 +8,6 @@ import (
 
 var _ sdk.Msg = &MsgUpdateMarketParam{}
 
-func (msg *MsgUpdateMarketParam) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func (msg *MsgUpdateMarketParam) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return errorsmod.Wrap(

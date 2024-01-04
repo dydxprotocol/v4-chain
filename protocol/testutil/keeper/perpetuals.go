@@ -2,23 +2,20 @@ package keeper
 
 import (
 	"fmt"
+	dbm "github.com/cosmos/cosmos-db"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-
-	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	assetskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	epochskeeper "github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
@@ -57,7 +54,7 @@ func PerpetualsKeepersWithClobHelpers(
 	clobKeeper types.PerpetualsClobKeeper,
 ) (pc PerpKeepersTestContext) {
 	pc.Ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -95,14 +92,14 @@ func PerpetualsKeepersWithClobHelpers(
 
 func createPerpetualsKeeperWithClobHelpers(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,
 	pck types.PerpetualsClobKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
@@ -129,7 +126,7 @@ func createPerpetualsKeeperWithClobHelpers(
 
 func createPerpetualsKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	pk *priceskeeper.Keeper,
 	ek *epochskeeper.Keeper,

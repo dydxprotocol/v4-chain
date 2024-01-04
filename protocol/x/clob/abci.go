@@ -117,6 +117,10 @@ func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {
+	// TODO(CORE-538): Is there a cleaner way to check to see if this is genesis?
+	if ctx.BlockHeight() == 0 || ctx.BlockHeight() == 1 {
+		return
+	}
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {

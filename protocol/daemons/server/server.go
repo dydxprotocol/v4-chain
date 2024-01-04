@@ -1,8 +1,7 @@
 package server
 
 import (
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	bridgeapi "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
@@ -10,6 +9,7 @@ import (
 	pricefeedapi "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 	"net"
 	"syscall"
 )

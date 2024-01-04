@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"

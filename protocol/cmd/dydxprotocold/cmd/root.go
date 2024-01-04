@@ -1,17 +1,19 @@
 package cmd
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"errors"
+	"github.com/cosmos/cosmos-sdk/codec/address"
 	"io"
 	"os"
 	"path/filepath"
 
-	rosettaCmd "cosmossdk.io/tools/rosetta/cmd"
-
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cometbft/cometbft/libs/log"
-	tmtypes "github.com/cometbft/cometbft/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/config"
@@ -21,10 +23,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/rpc"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
-	"github.com/cosmos/cosmos-sdk/store"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -150,21 +149,28 @@ func initRootCmd(
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) {
 	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
+	valOperAddressCodec := address.NewBech32Codec(sdktypes.GetConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
 		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
-		genutilcli.CollectGenTxsCmd(banktypes.GenesisBalancesIterator{}, dydxapp.DefaultNodeHome, gentxModule.GenTxValidator),
-		genutilcli.MigrateGenesisCmd(),
+		genutilcli.CollectGenTxsCmd(
+			banktypes.GenesisBalancesIterator{},
+			dydxapp.DefaultNodeHome,
+			gentxModule.GenTxValidator,
+			valOperAddressCodec,
+		),
+		genutilcli.MigrateGenesisCmd(genutilcli.MigrationMap),
 		genutilcli.GenTxCmd(
 			basic_manager.ModuleBasics,
 			encodingConfig.TxConfig,
 			banktypes.GenesisBalancesIterator{},
 			dydxapp.DefaultNodeHome,
+			valOperAddressCodec,
 		),
 		genutilcli.ValidateGenesisCmd(basic_manager.ModuleBasics),
 		AddGenesisAccountCmd(dydxapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		config.Cmd(),
+		/** TODO(CORE-538): config.Cmd(), is this now handled by AutoCLI? */
 	)
 
 	a := appCreator{encodingConfig}
@@ -186,14 +192,11 @@ func initRootCmd(
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		//TODO(CORE-538) rpc.StatusCommand(), is this now handled by AutoCLI?
 		queryCommand(),
 		txCommand(),
-		keys.Commands(dydxapp.DefaultNodeHome),
+		keys.Commands(),
 	)
-
-	// add rosetta commands
-	rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
 }
 
 // addModuleInitFlags adds module specific init flags.
@@ -213,14 +216,14 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		//TODO(CORE-538): authcmd.GetAccountCmd(), Is this handled by AutoCLI?
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		//TODO(CORE-538): //TODO rpc.BlockCommand(), Is this handled by AutoCLI?
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
 
-	basic_manager.ModuleBasics.AddQueryCommands(cmd)
+	// TODO(CORE-538): Add AutoCLI https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#autocli
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -248,7 +251,7 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	basic_manager.ModuleBasics.AddTxCommands(cmd)
+	// TODO(CORE-538): Add AutoCLI https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#autocli
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -265,7 +268,7 @@ func (a appCreator) newApp(
 	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) *dydxapp.App {
-	var cache sdk.MultiStorePersistentCache
+	var cache storetypes.MultiStorePersistentCache
 
 	if cast.ToBool(appOpts.Get(server.FlagInterBlockCache)) {
 		cache = store.NewCommitKVStoreCacheManager()
@@ -285,7 +288,7 @@ func (a appCreator) newApp(
 	chainID := cast.ToString(appOpts.Get(flags.FlagChainID))
 	if chainID == "" {
 		// fallback to genesis chain-id
-		appGenesis, err := tmtypes.GenesisDocFromFile(filepath.Join(homeDir, "config", "genesis.json"))
+		appGenesis, err := genutiltypes.AppGenesisFromFile(filepath.Join(homeDir, "config", "genesis.json"))
 		if err != nil {
 			panic(err)
 		}

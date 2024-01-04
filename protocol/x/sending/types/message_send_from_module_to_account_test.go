@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	fmt "fmt"
 	"testing"
 
@@ -24,7 +25,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Authority:        validAuthority,
 				SenderModuleName: "gov",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 			},
 		},
 		"Valid - module name has underscore": {
@@ -32,7 +33,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Authority:        validAuthority,
 				SenderModuleName: "insurance_fund",
 				Recipient:        constants.AliceAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},
 		},
 		"Invalid authority": {
@@ -46,7 +47,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Authority:        validAuthority,
 				SenderModuleName: "", // empty module name
 				Recipient:        constants.BobAccAddress.String(),
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},
 			err: types.ErrEmptyModuleName,
 		},
@@ -55,7 +56,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Authority:        validAuthority,
 				SenderModuleName: "bridge",
 				Recipient:        "invalid_address",
-				Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
+				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},
 			err: types.ErrInvalidAccountAddress,
 		},
@@ -66,7 +67,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin: sdk.Coin{
 					Denom:  "7coin",
-					Amount: sdk.NewInt(100),
+					Amount: sdkmath.NewInt(100),
 				},
 			},
 			err: fmt.Errorf("invalid denom: %s", "7coin"),
@@ -78,7 +79,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin: sdk.Coin{
 					Denom:  "random/coin",
-					Amount: sdk.NewInt(-1),
+					Amount: sdkmath.NewInt(-1),
 				},
 			},
 			err: fmt.Errorf("negative coin amount: %v", -1),

@@ -5,7 +5,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
@@ -131,9 +130,8 @@ func TestSetLiquidityTier(t *testing.T) {
 			require.NoError(t, err)
 
 			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
-			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
-			_, err = msgServer.SetLiquidityTier(wrappedCtx, tc.msg)
+			_, err = msgServer.SetLiquidityTier(pc.Ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 				// Verify that liquidity tier is same as before.

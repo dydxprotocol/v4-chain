@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
@@ -19,11 +18,6 @@ var (
 		EndTime:         time.Date(2024, 2, 1, 0, 0, 0, 0, time.UTC),
 	}
 )
-
-func TestMsgSetVestEntry_GetSigners(t *testing.T) {
-	msg := types.NewMsgSetVestEntry(validAuthority.String(), validVestEntry)
-	require.Equal(t, []sdk.AccAddress{validAuthority}, msg.GetSigners())
-}
 
 func TestMsgSetVestEntry_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {
@@ -54,11 +48,6 @@ func TestMsgSetVestEntry_ValidateBasic(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestMsgDeleteVestEntry_GetSigners(t *testing.T) {
-	msg := types.NewMsgDeleteVestEntry(validAuthority.String(), "vester_account")
-	require.Equal(t, []sdk.AccAddress{validAuthority}, msg.GetSigners())
 }
 
 func TestMsgDeleteVestEntry_ValidateBasic(t *testing.T) {

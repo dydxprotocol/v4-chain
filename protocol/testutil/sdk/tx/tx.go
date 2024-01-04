@@ -1,6 +1,7 @@
 package tx
 
 import (
+	"context"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -33,7 +34,7 @@ func CreateTestTx(
 		sigV2 := signing.SignatureV2{
 			PubKey: priv.PubKey(),
 			Data: &signing.SingleSignatureData{
-				SignMode:  clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+				SignMode:  signing.SignMode_SIGN_MODE_DIRECT,
 				Signature: nil,
 			},
 			Sequence: accSeqs[i],
@@ -50,12 +51,15 @@ func CreateTestTx(
 	sigsV2 = []signing.SignatureV2{}
 	for i, priv := range privs {
 		signerData := xauthsigning.SignerData{
+			Address:       sdk.AccAddress(priv.PubKey().Address()).String(),
 			ChainID:       chainID,
 			AccountNumber: accNums[i],
 			Sequence:      accSeqs[i],
+			PubKey:        priv.PubKey(),
 		}
 		sigV2, err := tx.SignWithPrivKey(
-			clientCtx.TxConfig.SignModeHandler().DefaultMode(),
+			context.Background(),
+			signing.SignMode_SIGN_MODE_DIRECT,
 			signerData,
 			txBuilder,
 			priv,

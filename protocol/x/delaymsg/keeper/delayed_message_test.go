@@ -345,14 +345,17 @@ func TestGetMessage_NotFound(t *testing.T) {
 func TestValidateMsg(t *testing.T) {
 	tests := map[string]struct {
 		msg           sdk.Msg
+		signer        []byte
 		expectedError string
 	}{
 		"No handler found": {
 			msg:           constants.NoHandlerMsg,
+			signer:        types.ModuleAddress,
 			expectedError: "/testpb.TestMsg: Message not recognized by router",
 		},
 		"Message fails ValidateBasic": {
 			msg:           routableInvalidSdkMsg(),
+			signer:        types.ModuleAddress,
 			expectedError: "message failed basic validation: Invalid msg: Invalid input",
 		},
 		"Message fails validateSigners": {
@@ -360,16 +363,18 @@ func TestValidateMsg(t *testing.T) {
 				Authority: bridgetypes.ModuleAddress.String(),
 				Event:     constants.BridgeEvent_Id0_Height0,
 			},
+			signer:        []byte("other signer"),
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
 		},
 		"Valid message": {
-			msg: constants.TestMsg1,
+			msg:    constants.TestMsg1,
+			signer: types.ModuleAddress,
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			_, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
-			err := delaymsg.ValidateMsg(tc.msg)
+			err := delaymsg.ValidateMsg(tc.msg, [][]byte{tc.signer})
 			if tc.expectedError == "" {
 				require.NoError(t, err)
 			} else {

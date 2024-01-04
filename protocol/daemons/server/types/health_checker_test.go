@@ -1,6 +1,7 @@
 package types_test
 
 import (
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/stretchr/testify/require"
@@ -76,8 +77,8 @@ func TestHealthChecker(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			// Set up callback to track error passed to it.
-			callback, callbackError := callbackWithErrorPointer()
+			// Set up channel to track errors passed to it from the callback.
+			errs := make(chan (error), 100)
 
 			// Set up health checkable service.
 			checkable := &mocks.HealthCheckable{}
@@ -94,17 +95,14 @@ func TestHealthChecker(t *testing.T) {
 			healthChecker := types.StartNewHealthChecker(
 				checkable,
 				TestLargeDuration, // set to a >> value so that poll is never auto-triggered by the timer
-				callback,
+				func(err error) {
+					errs <- err
+				},
 				timeProvider,
 				TestMaximumUnhealthyDuration,
 				types.DaemonStartupGracePeriod,
-				&mocks.Logger{},
+				log.NewNopLogger(),
 			)
-
-			// Cleanup.
-			defer func() {
-				healthChecker.Stop()
-			}()
 
 			// Act - simulate the health checker polling for updates.
 			for i := 0; i < len(test.healthCheckResponses); i++ {
@@ -116,11 +114,20 @@ func TestHealthChecker(t *testing.T) {
 			checkable.AssertExpectations(t)
 			timeProvider.AssertExpectations(t)
 
+			var err error
+			select {
+			case err = <-errs:
+			case <-time.After(1 * time.Second):
+			}
+
+			// Cleanup.
+			healthChecker.Stop()
+
 			// Validate the callback was called with the expected error.
 			if test.expectedUnhealthy == nil {
-				require.NoError(t, *callbackError)
+				require.NoError(t, err)
 			} else {
-				require.ErrorContains(t, *callbackError, test.expectedUnhealthy.Error())
+				require.ErrorContains(t, err, test.expectedUnhealthy.Error())
 			}
 		})
 	}

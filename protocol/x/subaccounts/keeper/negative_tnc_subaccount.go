@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -20,7 +21,7 @@ func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 // getNegativeTncSubaccountSeenAtBlock is a helper function that takes a store and returns the last
 // block height a negative TNC subaccount was seen in state and a boolean for whether it exists in state.
 func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
-	store sdk.KVStore,
+	store storetypes.KVStore,
 ) (uint32, bool) {
 	b := store.Get(
 		[]byte(types.NegativeTncSubaccountSeenAtBlockKey),

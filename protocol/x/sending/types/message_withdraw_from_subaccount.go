@@ -26,16 +26,6 @@ func NewMsgWithdrawFromSubaccount(
 	}
 }
 
-// GetSigners specifies that the sender of the message must sign.
-func (msg *MsgWithdrawFromSubaccount) GetSigners() []sdk.AccAddress {
-	// Get address of sender subaccount's account address.
-	sender, err := sdk.AccAddressFromBech32(msg.Sender.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
 // ValidateBasic runs validation on the fields of a MsgWithdrawFromSubaccount.
 func (msg *MsgWithdrawFromSubaccount) ValidateBasic() error {
 	// Validate subaccount sender.

@@ -5,8 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -176,14 +175,13 @@ func TestUpdateMarketPrices_Valid(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			msgServer := keeper.NewMsgServerImpl(k)
-			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
-				goCtx,
+				ctx,
 				&types.MsgUpdateMarketPrices{
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
@@ -295,14 +293,13 @@ func TestUpdateMarketPrices_SkipNonDeterministicCheck_Valid(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 
 			msgServer := keeper.NewMsgServerImpl(k)
-			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			indexPriceCache.UpdatePrices(tc.indexPrices)
 
 			// Run.
 			_, err := msgServer.UpdateMarketPrices(
-				goCtx,
+				ctx,
 				&types.MsgUpdateMarketPrices{
 					MarketPriceUpdates: tc.msgUpdateMarketPrices,
 				})
@@ -359,7 +356,6 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 			ctx, k, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(k)
-			goCtx := sdk.WrapSDKContext(ctx)
 			keepertest.CreateTestMarkets(t, ctx, k)
 
 			// Run and Validate.
@@ -368,7 +364,7 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 				tc.expectedErr.Error(),
 				func() {
 					_, _ = msgServer.UpdateMarketPrices(
-						goCtx,
+						ctx,
 						&types.MsgUpdateMarketPrices{
 							MarketPriceUpdates: tc.msgUpdateMarketPrices,
 						})
@@ -381,7 +377,6 @@ func TestUpdateMarketPrices_Error(t *testing.T) {
 func TestUpdateMarketPrices_Panic(t *testing.T) {
 	// Init.
 	ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
-	goCtx := sdk.WrapSDKContext(ctx)
 	mockKeeper := &mocks.PricesKeeper{}
 	msgServer := keeper.NewMsgServerImpl(mockKeeper)
 
@@ -401,7 +396,7 @@ func TestUpdateMarketPrices_Panic(t *testing.T) {
 		t,
 		testError.Error(),
 		func() {
-			_, _ = msgServer.UpdateMarketPrices(goCtx, testMsg)
+			_, _ = msgServer.UpdateMarketPrices(ctx, testMsg)
 		},
 	)
 }

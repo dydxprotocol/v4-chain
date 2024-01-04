@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -29,7 +30,7 @@ func GetEncodingConfig() EncodingConfig {
 // makeEncodingConfig creates an EncodingConfig for an amino based test configuration.
 func makeEncodingConfig() EncodingConfig {
 	amino := codec.NewLegacyAmino()
-	interfaceRegistry := types.NewInterfaceRegistry()
+	interfaceRegistry := module.InterfaceRegistry
 	codec := codec.NewProtoCodec(interfaceRegistry)
 	txCfg := tx.NewTxConfig(codec, tx.DefaultSignModes)
 

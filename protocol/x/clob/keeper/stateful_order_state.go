@@ -1,14 +1,14 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"sort"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
-	db "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // TODO(CLOB-739) Rename all functions in this file to StatefulOrder instead of LongTermOrder
@@ -156,7 +157,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 		if count == 0 {
 			k.Logger(ctx).Error(
 				"Stateful order count is zero but order is in the memstore. Underflow",
-				"orderId", log.NewLazySprintf("%+v", orderId),
+				"orderId", cmtlog.NewLazySprintf("%+v", orderId),
 			)
 		} else {
 			count--
@@ -427,7 +428,7 @@ func (k Keeper) GetAllUntriggeredConditionalOrders(ctx sdk.Context) []types.Orde
 // getStatefulOrders takes an iterator and iterates over all stateful order placements in state.
 // It returns a list of stateful order placements ordered by ascending time priority. Note this
 // function handles closing the iterator.
-func (k Keeper) getStatefulOrders(statefulOrderIterator db.Iterator) []types.Order {
+func (k Keeper) getStatefulOrders(statefulOrderIterator dbm.Iterator) []types.Order {
 	defer statefulOrderIterator.Close()
 
 	statefulOrderPlacements := make([]types.LongTermOrderPlacement, 0)
@@ -473,12 +474,12 @@ func (k Keeper) setStatefulOrdersTimeSliceInState(
 
 // getStatefulOrdersTimeSliceIterator returns an iterator over all stateful order time slice values
 // from time 0 until `endTime`.
-func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) sdk.Iterator {
+func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time.Time) storetypes.Iterator {
 	store := ctx.KVStore(k.storeKey)
 	startKey := []byte(types.StatefulOrdersTimeSlicePrefix)
 	endKey := append(
 		startKey,
-		sdk.InclusiveEndBytes(
+		storetypes.InclusiveEndBytes(
 			sdk.FormatTimeBytes(endTime),
 		)...,
 	)
@@ -490,32 +491,32 @@ func (k Keeper) getStatefulOrdersTimeSliceIterator(ctx sdk.Context, endTime time
 
 // getAllOrdersIterator returns an iterator over all stateful orders, which includes all
 // Long-Term orders, triggered and untriggered conditional orders.
-func (k Keeper) getAllOrdersIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) getAllOrdersIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.StatefulOrderKeyPrefix),
 	)
-	return sdk.KVStorePrefixIterator(store, []byte{})
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
 // getPlacedOrdersIterator returns an iterator over all placed orders, which includes all
 // Long-Term orders and triggered conditional orders.
-func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) getPlacedOrdersIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.PlacedStatefulOrderKeyPrefix),
 	)
-	return sdk.KVStorePrefixIterator(store, []byte{})
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
 // getUntriggeredConditionalOrdersIterator returns an iterator over all untriggered conditional
 // orders.
-func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) sdk.Iterator {
+func (k Keeper) getUntriggeredConditionalOrdersIterator(ctx sdk.Context) storetypes.Iterator {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.UntriggeredConditionalOrderKeyPrefix),
 	)
-	return sdk.KVStorePrefixIterator(store, []byte{})
+	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
 // GetStatefulOrderCount gets a count of how many stateful orders are written to state for a subaccount.

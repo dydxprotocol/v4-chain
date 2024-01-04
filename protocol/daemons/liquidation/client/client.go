@@ -7,7 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"

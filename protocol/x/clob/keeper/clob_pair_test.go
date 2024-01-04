@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"strconv"
 	"testing"
 
@@ -10,9 +11,8 @@ import (
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -161,8 +161,7 @@ func TestCreatePerpetualClobPair_FailsWithDuplicateClobPairId(t *testing.T) {
 	require.ErrorIs(t, err, types.ErrNoClobPairForPerpetual)
 
 	// Write `ClobPair` to state, but don't call `keeper.createOrderbook`.
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 
 	// Write clob pair to state with clob pair id 0.
@@ -479,8 +478,7 @@ func TestInitMemClobOrderbooks(t *testing.T) {
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
 	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	b := cdc.MustMarshal(&constants.ClobPair_Eth)
 	store.Set(lib.Uint32ToKey(constants.ClobPair_Eth.Id), b)
@@ -511,8 +509,7 @@ func TestHydrateClobPairAndPerpetualMapping(t *testing.T) {
 
 	// Write multiple `ClobPairs` to state, but don't call `MemClob.CreateOrderbook`.
 	store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
-	registry := codectypes.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(registry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	b := cdc.MustMarshal(&constants.ClobPair_Eth)
 	store.Set(lib.Uint32ToKey(constants.ClobPair_Eth.Id), b)
@@ -1043,8 +1040,7 @@ func TestIsPerpetualClobPairActive(t *testing.T) {
 			if tc.clobPair != nil {
 				// allows us to circumvent CreatePerpetualClobPair and write unsupported statuses to state to
 				// test this function with unsupported statuses.
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 
 				b := cdc.MustMarshal(tc.clobPair)

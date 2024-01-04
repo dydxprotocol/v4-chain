@@ -8,11 +8,6 @@ import (
 
 var _ sdk.Msg = &MsgUpdatePerpetualParams{}
 
-func (msg *MsgUpdatePerpetualParams) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func (msg *MsgUpdatePerpetualParams) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return errorsmod.Wrap(

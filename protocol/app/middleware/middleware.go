@@ -6,13 +6,14 @@ import (
 	"runtime/debug"
 	"strings"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
+	kitlog "github.com/go-kit/log"
 )
 
 var (
-	Logger = log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	Logger = log.NewLogger(kitlog.NewSyncWriter(os.Stdout))
 )
 
 func NewRunTxPanicLoggingMiddleware() baseapp.RecoveryHandler {

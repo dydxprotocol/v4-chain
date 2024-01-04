@@ -249,12 +249,14 @@ func (k Keeper) RecordMevMetrics(
 
 	// Add label for the block proposer.
 	proposerConsAddress := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
-	proposer, found := stakingKeeper.GetValidatorByConsAddr(ctx, proposerConsAddress)
-	if !found {
+	proposer, err := stakingKeeper.GetValidatorByConsAddr(ctx, proposerConsAddress)
+	if err != nil {
 		k.Logger(ctx).Error(
 			"Failed to get proposer by consensus address",
 			"proposer",
 			proposerConsAddress.String(),
+			"err",
+			err,
 		)
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,

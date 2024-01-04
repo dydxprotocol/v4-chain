@@ -4,12 +4,12 @@ import (
 	"testing"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
+	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/stretchr/testify/require"
 )
 

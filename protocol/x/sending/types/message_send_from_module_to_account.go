@@ -25,11 +25,6 @@ func NewMsgSendFromModuleToAccount(
 	}
 }
 
-func (msg *MsgSendFromModuleToAccount) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 // ValidateBasic runs validation on the fields of a MsgSendFromModuleToAccount.
 func (msg *MsgSendFromModuleToAccount) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {

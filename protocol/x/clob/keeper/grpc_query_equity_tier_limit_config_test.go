@@ -19,10 +19,11 @@ func TestEquityTierLimitConfiguration(
 	}
 
 	request := types.QueryEquityTierLimitConfigurationRequest{}
-	abciResponse := tApp.App.Query(abci.RequestQuery{
+	abciResponse, err := tApp.App.Query(ctx, &abci.RequestQuery{
 		Path: "/dydxprotocol.clob.Query/EquityTierLimitConfiguration",
 		Data: tApp.App.AppCodec().MustMarshal(&request),
 	})
+	require.NoError(t, err)
 	require.True(t, abciResponse.IsOK())
 
 	var actual types.QueryEquityTierLimitConfigurationResponse

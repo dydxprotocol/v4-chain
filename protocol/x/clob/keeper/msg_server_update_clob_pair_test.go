@@ -1,12 +1,11 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"testing"
 
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -47,8 +46,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				},
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				clobPair := constants.ClobPair_Btc
@@ -90,8 +88,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 				},
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status active.
 				clobPair := constants.ClobPair_Btc
@@ -137,8 +134,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -164,8 +160,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -191,8 +186,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -218,8 +212,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -245,8 +238,7 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 			},
 			setup: func(ks keepertest.ClobKeepersTestContext, mockIndexerEventManager *mocks.IndexerEventManager) {
 				// write default btc clob pair to state
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				// Write clob pair to state with clob pair id 0 and status initializing.
 				b := cdc.MustMarshal(&constants.ClobPair_Btc)
@@ -270,9 +262,8 @@ func TestMsgServerUpdateClobPair(t *testing.T) {
 
 			k := ks.ClobKeeper
 			msgServer := keeper.NewMsgServerImpl(k)
-			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
-			resp, err := msgServer.UpdateClobPair(wrappedCtx, tc.msg)
+			resp, err := msgServer.UpdateClobPair(ks.Ctx, tc.msg)
 			require.Equal(t, tc.expectedResp, resp)
 
 			mockIndexerEventManager.AssertExpectations(t)
