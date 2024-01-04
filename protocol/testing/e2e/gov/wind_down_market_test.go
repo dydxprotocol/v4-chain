@@ -67,12 +67,21 @@ func TestWindDownMarketProposal(t *testing.T) {
 				},
 			},
 		},
-		`Succeeds cancelling open stateful order`: {
+		`Succeeds cancelling open stateful orders on both sides from different subaccounts`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_10_000USD,
 			},
 			statefulOrders: []clobtypes.MsgPlaceOrder{
-				*constants.Msg_PlaceOrder_LongTerm,
+				{
+					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+				},
+				{
+					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
+				},
+				{
+					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
+				},
 			},
 		},
 	}
