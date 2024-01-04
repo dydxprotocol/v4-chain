@@ -1,4 +1,4 @@
-import { RESEARCH_SNAPSHOT_S3_LOCATION_PREFIX } from './aws';
+import { S3_LOCATION_PREFIX } from './aws';
 
 export function castToTimestamp(column: string): string {
   return `CAST("${column}" AS timestamp) as "${column}"`;
@@ -23,7 +23,7 @@ export function getExternalAthenaTableCreationStatement(
         'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
       OUTPUTFORMAT
         'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
-      LOCATION '${RESEARCH_SNAPSHOT_S3_LOCATION_PREFIX}/${rdsExportIdentifier}/dydx/public.${tableName}'
+      LOCATION '${S3_LOCATION_PREFIX}/${rdsExportIdentifier}/dydx/public.${tableName}'
       TBLPROPERTIES ('has_encrypted_data'='false');
   `;
 }

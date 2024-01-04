@@ -116,10 +116,8 @@ export const configSchema = {
   // Update research environment
   AWS_ACCOUNT_ID: parseString(),
   AWS_REGION: parseString(),
-  RESEARCH_SNAPSHOT_S3_BUCKET_ARN: parseString(),
-  FAST_SYNC_SNAPSHOT_S3_BUCKET_ARN: parseString(),
+  S3_BUCKET_ARN: parseString(),
   FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX: parseString({ default: 'fast-sync' }),
-  EXPORT_FAST_SYNC_SNAPSHOTS_TO_S3: parseBoolean({ default: false }),
   ECS_TASK_ROLE_ARN: parseString(),
   KMS_KEY_ARN: parseString(),
   RDS_INSTANCE_NAME: parseString(),

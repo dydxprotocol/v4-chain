@@ -15,7 +15,7 @@ import {
   checkIfS3ObjectExists,
   getMostRecentDBSnapshotIdentifier,
   startExportTask,
-  startAthenaQuery, RESEARCH_SNAPSHOT_S3_BUCKET_NAME,
+  startAthenaQuery,
 } from '../helpers/aws';
 import { AthenaTableDDLQueries } from '../helpers/types';
 import * as athenaAssetPositions from '../lib/athena-ddl-tables/asset_positions';
@@ -79,14 +79,10 @@ export default async function runTask(): Promise<void> {
 
   // check if s3 object exists
   const startS3Check: number = Date.now();
-  const s3ObjectExists: boolean = await checkIfS3ObjectExists(
-    s3,
-    s3Date,
-    RESEARCH_SNAPSHOT_S3_BUCKET_NAME,
-  );
+  const s3ObjectExists: boolean = await checkIfS3ObjectExists(s3, s3Date);
   stats.timing(`${statStart}.checkS3Object`, Date.now() - startS3Check);
 
-  const rdsExportIdentifier: string = `${config.RDS_INSTANCE_NAME}-research-${s3Date}`;
+  const rdsExportIdentifier: string = `${config.RDS_INSTANCE_NAME}-${s3Date}`;
 
   // If the s3 object exists, attempt to add Athena tables or if we are skipping for test purposes
   if (s3ObjectExists || config.SKIP_TO_ATHENA_TABLE_WRITING) {
@@ -118,12 +114,7 @@ export default async function runTask(): Promise<void> {
   // start Export Job if S3 Object does not exist
   const startExport: number = Date.now();
   try {
-    const exportData: RDS.ExportTask = await startExportTask(
-      rds,
-      rdsExportIdentifier,
-      RESEARCH_SNAPSHOT_S3_BUCKET_NAME,
-      true,
-    );
+    const exportData: RDS.ExportTask = await startExportTask(rds, rdsExportIdentifier);
 
     logger.info({
       at,
