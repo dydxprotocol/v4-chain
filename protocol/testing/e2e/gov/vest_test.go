@@ -174,6 +174,7 @@ func TestSetVestEntry_Success(t *testing.T) {
 				ctx,
 				tApp,
 				tc.msgs,
+				testapp.TestSubmitProposalTxHeight,
 				false, // checkTx should not fail.
 				false, // submitProposal should not fail.
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -309,6 +310,7 @@ func TestSetVestEntry_Failure(t *testing.T) {
 				ctx,
 				tApp,
 				tc.msgs,
+				testapp.TestSubmitProposalTxHeight,
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,
@@ -385,6 +387,7 @@ func TestDeleteVestEntry_Success(t *testing.T) {
 				ctx,
 				tApp,
 				tc.msgs,
+				testapp.TestSubmitProposalTxHeight,
 				false, // checkTx should not fail.
 				false, // submitProposal should not fail.
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -489,6 +492,7 @@ func TestDeleteVestEntry_Failure(t *testing.T) {
 				ctx,
 				tApp,
 				tc.msgs,
+				testapp.TestSubmitProposalTxHeight,
 				false, // checkTx should not fail.
 				tc.expectSubmitProposalFail,
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_FAILED,

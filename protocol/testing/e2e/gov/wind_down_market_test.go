@@ -1,7 +1,6 @@
 package gov_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
@@ -21,7 +20,8 @@ import (
 
 func TestWindDownMarketProposal(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts []satypes.Subaccount
+		subaccounts    []satypes.Subaccount
+		statefulOrders []clobtypes.MsgPlaceOrder
 
 		expectedSubaccounts []satypes.Subaccount
 	}{
@@ -65,6 +65,14 @@ func TestWindDownMarketProposal(t *testing.T) {
 						&constants.Usdc_Asset_100_000,
 					},
 				},
+			},
+		},
+		`Succeeds cancelling open stateful order`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+			},
+			statefulOrders: []clobtypes.MsgPlaceOrder{
+				*constants.Msg_PlaceOrder_LongTerm,
 			},
 		},
 	}
@@ -112,10 +120,34 @@ func TestWindDownMarketProposal(t *testing.T) {
 						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
 					},
 				)
-				genesis.GenesisTime = GenesisTime
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
+
+			for _, order := range tc.statefulOrders {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					order,
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.True(
+						t,
+						resp.IsOK(),
+						"Expected CheckTx to succeed. Response: %+v",
+						resp,
+					)
+				}
+			}
+
+			// Advance to next block to trigger proposal execution, executed in EndBlocker
+			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
+
+			// Verify stateful orders were placed
+			for _, order := range tc.statefulOrders {
+				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
+				require.True(t, exists)
+			}
 
 			// Build MsgUpdateClobPair
 			clobPairId := 0
@@ -127,7 +159,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 				ClobPair:  clobPair,
 			}
 
-			// Submit and Tally Proposal
+			// Submit and Tally Proposal, stateful orders will be placed during block advancement
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
@@ -135,6 +167,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 				[]sdk.Msg{
 					msgUpdateClobPairToFinalSettlement,
 				},
+				uint32(ctx.BlockHeight())+1,
 				false,
 				false,
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
@@ -149,6 +182,10 @@ func TestWindDownMarketProposal(t *testing.T) {
 			require.Equal(t, clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT, updatedClobPair.Status)
 
 			// Verify that open stateful orders are cancelled
+			for _, order := range tc.statefulOrders {
+				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
+				require.False(t, exists)
+			}
 
 			// Set liquidation daemon info, to simulate liquidations daemon updating SubaccountOpenPositionInfo
 			_, err := tApp.App.Server.LiquidateSubaccounts(
@@ -174,9 +211,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 
 			// Verify that final settlement deleveraging occurs
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
-				fmt.Printf("expectedSubaccount: %+v\n", expectedSubaccount.AssetPositions)
 				subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id)
-				fmt.Printf("subaccount: %+v\n", subaccount.AssetPositions)
 				require.Equal(t, expectedSubaccount, subaccount)
 			}
 		})

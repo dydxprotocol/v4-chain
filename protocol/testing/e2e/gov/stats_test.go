@@ -1,9 +1,10 @@
 package gov_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -71,6 +72,7 @@ func TestUpdateParams(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				testapp.TestSubmitProposalTxHeight,
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,

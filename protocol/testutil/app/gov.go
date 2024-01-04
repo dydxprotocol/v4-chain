@@ -35,6 +35,7 @@ func SubmitAndTallyProposal(
 	ctx sdk.Context,
 	tApp *TestApp,
 	messages []sdk.Msg,
+	submitProposalTxHeight uint32,
 	expectCheckTxFails bool,
 	expectSubmitProposalFails bool,
 	expectedProposalStatus govtypesv1.ProposalStatus,
@@ -71,7 +72,7 @@ func SubmitAndTallyProposal(
 	}
 
 	if expectSubmitProposalFails {
-		ctx = tApp.AdvanceToBlock(TestSubmitProposalTxHeight, AdvanceToBlockOptions{
+		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{
 			ValidateDeliverTxs: func(
 				context sdk.Context,
 				request abcitypes.RequestDeliverTx,
@@ -89,7 +90,7 @@ func SubmitAndTallyProposal(
 		// Proposal submission failed. Return early.
 		return ctx
 	} else {
-		ctx = tApp.AdvanceToBlock(TestSubmitProposalTxHeight, AdvanceToBlockOptions{})
+		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{})
 	}
 
 	proposals := tApp.App.GovKeeper.GetProposals(ctx)

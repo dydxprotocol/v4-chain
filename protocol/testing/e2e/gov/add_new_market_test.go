@@ -314,6 +314,7 @@ func TestAddNewMarketProposal(t *testing.T) {
 				ctx,
 				tApp,
 				tc.proposedMsgs,
+				testapp.TestSubmitProposalTxHeight,
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
