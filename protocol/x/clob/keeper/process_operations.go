@@ -691,13 +691,11 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			)
 		}
 
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.ProcessOperations, metrics.NegativeTncSubaccountSeen, metrics.Count},
-			1,
-			[]metrics.Label{
-				metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
-				metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
-			},
+		metrics.IncrCountMetricWithLabels(
+			types.ModuleName,
+			metrics.SubaccountsNegativeTncSubaccountSeen,
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
 		)
 		k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, lib.MustConvertIntegerToUint32(ctx.BlockHeight()))
 		return nil
