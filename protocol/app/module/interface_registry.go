@@ -71,7 +71,7 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 		SigningOptions: signing.Options{
 			AddressCodec:          addresscodec.NewBech32Codec(addrPrefix),
 			ValidatorAddressCodec: addresscodec.NewBech32Codec(valAddrPrefix),
-			// TODO(CORE-840) cosmos.msg.v1.signer annotation doesn't supported nested messages beyond a depth of 1
+			// TODO(CORE-840): cosmos.msg.v1.signer annotation doesn't supported nested messages beyond a depth of 1
 			// which requires any message where the authority is nested further to implement its own accessor. Once
 			// https://github.com/cosmos/cosmos-sdk/issues/18722 is fixed, replace this with the cosmos.msg.v1.signing
 			// annotation on the protos.
