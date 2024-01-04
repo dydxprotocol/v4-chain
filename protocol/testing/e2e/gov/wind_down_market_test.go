@@ -9,6 +9,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -74,7 +79,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 			},
 			statefulOrders: []clobtypes.MsgPlaceOrder{
 				{
-					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15,
+					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price5_GTBT5,
 				},
 				{
 					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
@@ -88,8 +93,13 @@ func TestWindDownMarketProposal(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
+			appOpts := map[string]interface{}{
+				indexer.MsgSenderInstanceForTest: msgSender,
+			}
+
 			// Initialize test app
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 				genesis = testapp.DefaultGenesis()
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
@@ -149,10 +159,8 @@ func TestWindDownMarketProposal(t *testing.T) {
 				}
 			}
 
-			// Advance to next block to trigger proposal execution, executed in EndBlocker
+			// Place stateful orders in state, verify they were placed
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
-
-			// Verify stateful orders were placed
 			for _, order := range tc.statefulOrders {
 				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
 				require.True(t, exists)
@@ -168,7 +176,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 				ClobPair:  clobPair,
 			}
 
-			// Submit and Tally Proposal, stateful orders will be placed during block advancement
+			// Submit and Tally Proposal, proposal is executed in this step
 			ctx = testapp.SubmitAndTallyProposal(
 				t,
 				ctx,
@@ -182,15 +190,66 @@ func TestWindDownMarketProposal(t *testing.T) {
 				govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED,
 			)
 
-			// Advance to next block to trigger proposal execution, executed in EndBlocker
-			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
+			// Verify events emitted by indexer in the last block, the block in which the gov proposal was executed
+			events := []*indexer_manager.IndexerTendermintEvent{
+				{
+					Subtype:             indexerevents.SubtypeUpdateClobPair,
+					OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+					EventIndex:          0,
+					Version:             indexerevents.UpdateClobPairEventVersion,
+					DataBytes: indexer_manager.GetBytes(
+						indexerevents.NewUpdateClobPairEvent(
+							clobPair.GetClobPairId(),
+							clobPair.Status,
+							clobPair.QuantumConversionExponent,
+							clobtypes.SubticksPerTick(clobPair.GetSubticksPerTick()),
+							satypes.BaseQuantums(clobPair.GetStepBaseQuantums()),
+						),
+					),
+				},
+			}
+			for i, order := range tc.statefulOrders {
+				events = append(
+					events,
+					&indexer_manager.IndexerTendermintEvent{
+						Subtype:             indexerevents.SubtypeStatefulOrder,
+						OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+						EventIndex:          uint32(i + 1),
+						Version:             indexerevents.StatefulOrderEventVersion,
+						DataBytes: indexer_manager.GetBytes(
+							indexerevents.NewStatefulOrderRemovalEvent(
+								order.Order.OrderId,
+								indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_FINAL_SETTLEMENT,
+							),
+						),
+					},
+				)
+			}
+			expectedOnChainMessageAfterGovProposal := indexer_manager.CreateIndexerBlockEventMessage(
+				&indexer_manager.IndexerTendermintBlock{
+					Height: uint32(ctx.BlockHeight()),
+					Time:   ctx.BlockTime(),
+					Events: events,
+					TxHashes: []string{
+						string(lib.GetTxHash(
+							[]byte{},
+						)),
+					},
+				},
+			)
+			onchainMessages := msgSender.GetOnchainMessages()
+			require.Equal(
+				t,
+				expectedOnChainMessageAfterGovProposal,
+				onchainMessages[len(onchainMessages)-1],
+			)
 
 			// Verify clob pair is transitioned to final settlement
 			updatedClobPair, exists := tApp.App.ClobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(clobPairId))
 			require.True(t, exists)
 			require.Equal(t, clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT, updatedClobPair.Status)
 
-			// Verify that open stateful orders are cancelled
+			// Verify that open stateful orders are removed from state
 			for _, order := range tc.statefulOrders {
 				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
 				require.False(t, exists)
