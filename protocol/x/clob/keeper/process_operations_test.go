@@ -1042,6 +1042,68 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			expectedNegativeTncSubaccountSeen: true,
 		},
+		"Zero-fill deleverage succeeds after the same subaccount is partially deleveraged": {
+			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			perpetualFeeParams: &constants.PerpetualFeeParams,
+			clobPairs: []types.ClobPair{
+				constants.ClobPair_Btc,
+			},
+			subaccounts: []satypes.Subaccount{
+				// deleveragable: TNC = -$1
+				constants.Carl_Num0_1BTC_Short_50499USD,
+				constants.Dave_Num0_1BTC_Long_50000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			rawOperations: []types.OperationRaw{
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills: []types.MatchPerpetualDeleveraging_Fill{
+							{
+								OffsettingSubaccountId: constants.Dave_Num0,
+								FillAmount:             50_000_000,
+							},
+						},
+					},
+				),
+				clobtest.NewMatchOperationRawFromPerpetualDeleveragingLiquidation(
+					types.MatchPerpetualDeleveraging{
+						Liquidated:  constants.Carl_Num0,
+						PerpetualId: 0,
+						Fills:       []types.MatchPerpetualDeleveraging_Fill{},
+					},
+				),
+			},
+			expectedProcessProposerMatchesEvents: types.ProcessProposerMatchesEvents{
+				BlockHeight: blockHeight,
+			},
+			expectedQuoteBalances: map[satypes.SubaccountId]int64{
+				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetUsdcPosition().Int64() - 25_249_500_000,
+				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetUsdcPosition().Int64() + 25_249_500_000,
+			},
+			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
+				constants.Carl_Num0: {
+					{
+						PerpetualId:  0,
+						Quantums:     dtypes.NewInt(-100_000_000 + 50_000_000),
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+				constants.Dave_Num0: {
+					{
+						PerpetualId:  0,
+						Quantums:     dtypes.NewInt(100_000_000 - 50_000_000),
+						FundingIndex: dtypes.ZeroInt(),
+					},
+				},
+			},
+			expectedNegativeTncSubaccountSeen: true,
+		},
 		"Succeeds order removal operations with previous stateful orders": {
 			perpetuals: []*perptypes.Perpetual{
 				&constants.BtcUsd_100PercentMarginRequirement,
