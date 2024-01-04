@@ -1,14 +1,14 @@
 package keeper_test
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"testing"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -1344,8 +1344,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			// write clob pair to state with unsupported status
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				registry := codectypes.NewInterfaceRegistry()
-				cdc := codec.NewProtoCodec(registry)
+				cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 				store := prefix.NewStore(ks.Ctx.KVStore(ks.StoreKey), []byte(types.ClobPairKeyPrefix))
 				b := cdc.MustMarshal(&constants.ClobPair_Btc_Paused)
 				store.Set(lib.Uint32ToKey(constants.ClobPair_Btc_Paused.Id), b)

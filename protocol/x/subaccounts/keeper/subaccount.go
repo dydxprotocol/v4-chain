@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"math/big"
@@ -8,8 +9,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -20,6 +20,7 @@ import (
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // SetSubaccount set a specific subaccount in the store from its index.
@@ -80,7 +81,7 @@ func (k Keeper) GetSubaccount(
 // For more performant searching and iteration, use `ForEachSubaccount`.
 func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -99,7 +100,7 @@ func (k Keeper) GetAllSubaccount(ctx sdk.Context) (list []types.Subaccount) {
 // and you do not need to iterate through all the subaccounts.
 func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccount) (finished bool)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -109,49 +110,6 @@ func (k Keeper) ForEachSubaccount(ctx sdk.Context, callback func(types.Subaccoun
 		done := callback(subaccount)
 		if done {
 			break
-		}
-	}
-}
-
-// ForEachSubaccountRandomStart performs a callback across all subaccounts.
-// The callback function should return a boolean if we should end iteration or not.
-// Note that this function starts at a random subaccount using the passed in `rand`
-// and iterates from there. `rand` should be seeded for determinism if used in ways
-// that affect consensus.
-// TODO(CLOB-823): improve how random bytes are selected since bytes distribution
-// might not be uniform.
-func (k Keeper) ForEachSubaccountRandomStart(
-	ctx sdk.Context,
-	callback func(types.Subaccount) (finished bool),
-	rand *rand.Rand,
-) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.SubaccountKeyPrefix))
-	prefix, err := k.getRandomBytes(ctx, rand)
-	if err != nil {
-		return
-	}
-
-	// Iterate over subaccounts from the random prefix (inclusive) to the end.
-	prefixStartIterator := store.Iterator(prefix, nil)
-	defer prefixStartIterator.Close()
-	for ; prefixStartIterator.Valid(); prefixStartIterator.Next() {
-		var subaccount types.Subaccount
-		k.cdc.MustUnmarshal(prefixStartIterator.Value(), &subaccount)
-		done := callback(subaccount)
-		if done {
-			return
-		}
-	}
-
-	// Iterator over subaccounts from the start to the random prefix (exclusive).
-	prefixEndIterator := store.Iterator(nil, prefix)
-	defer prefixEndIterator.Close()
-	for ; prefixEndIterator.Valid(); prefixEndIterator.Next() {
-		var subaccount types.Subaccount
-		k.cdc.MustUnmarshal(prefixEndIterator.Value(), &subaccount)
-		done := callback(subaccount)
-		if done {
-			return
 		}
 	}
 }
@@ -255,16 +213,19 @@ func (k Keeper) getSettledUpdates(
 func (k Keeper) UpdateSubaccounts(
 	ctx sdk.Context,
 	updates []types.Update,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithLabels(
 		types.ModuleName,
+		[]string{metrics.UpdateSubaccounts, metrics.Latency},
 		time.Now(),
-		metrics.UpdateSubaccounts,
-		metrics.Latency,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+		},
 	)
 
 	settledUpdates, subaccountIdToFundingPayments, err := k.getSettledUpdates(ctx, updates, true)
@@ -272,7 +233,7 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
@@ -320,7 +281,10 @@ func (k Keeper) UpdateSubaccounts(
 		// Emit an event indicating a funding payment was paid / received for each settled funding
 		// payment. Note that `fundingPaid` is positive if the subaccount paid funding,
 		// and negative if the subaccount received funding.
-		for perpetualId, fundingPaid := range fundingPayments {
+		// Note the perpetual IDs are sorted first to ensure event emission determinism.
+		sortedPerpIds := lib.GetSortedKeys[lib.Sortable[uint32]](fundingPayments)
+		for _, perpetualId := range sortedPerpIds {
+			fundingPaid := fundingPayments[perpetualId]
 			ctx.EventManager().EmitEvent(
 				types.NewCreateSettledFundingEvent(
 					*u.SettledSubaccount.Id,
@@ -347,16 +311,19 @@ func (k Keeper) UpdateSubaccounts(
 func (k Keeper) CanUpdateSubaccounts(
 	ctx sdk.Context,
 	updates []types.Update,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	defer telemetry.ModuleMeasureSince(
+	defer metrics.ModuleMeasureSinceWithLabels(
 		types.ModuleName,
+		[]string{metrics.CanUpdateSubaccounts, metrics.Latency},
 		time.Now(),
-		metrics.CanUpdateSubaccounts,
-		metrics.Latency,
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+		},
 	)
 
 	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
@@ -364,7 +331,7 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates)
+	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -507,6 +474,7 @@ func checkPositionUpdatable(
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
+	updateType types.UpdateType,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -514,6 +482,39 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+
+	// Block all withdrawals and transfers if there was a negative TNC subaccount seen within the
+	// last `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`.
+	if updateType == types.Withdrawal || updateType == types.Transfer {
+		lastBlockNegativeTncSubaccountSeen, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		currentBlock := uint32(ctx.BlockHeight())
+
+		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
+		if exists && currentBlock < lastBlockNegativeTncSubaccountSeen {
+			panic(
+				fmt.Sprintf(
+					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
+						"block a negative TNC subaccount was seen (%d)",
+					currentBlock,
+					lastBlockNegativeTncSubaccountSeen,
+				),
+			)
+		}
+
+		if exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
+			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
+			success = false
+			for i := range settledUpdates {
+				successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
+			}
+			metrics.IncrCounterWithLabels(
+				metrics.SubaccountWithdrawalsAndTransfersBlocked,
+				1,
+				metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+			)
+			return success, successPerUpdate, nil
+		}
+	}
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {

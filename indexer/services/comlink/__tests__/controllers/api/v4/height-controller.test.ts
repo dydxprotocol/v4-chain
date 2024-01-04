@@ -26,7 +26,7 @@ describe('height-controller#V4', () => {
 
     it('Get /height gets latest block', async () => {
       await testMocks.seedData();
-      const latestBlock: BlockFromDatabase | undefined = await BlockTable.getLatest();
+      const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
       const block: any = await sendRequest({
         type: RequestMethod.GET,
         path: '/v4/height',

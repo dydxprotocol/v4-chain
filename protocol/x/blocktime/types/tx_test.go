@@ -4,7 +4,6 @@ import (
 	"testing"
 	time "time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/stretchr/testify/require"
@@ -13,13 +12,6 @@ import (
 var (
 	validAuthority = constants.AliceAccAddress.String()
 )
-
-func TestMsgUpdateDowntimeParams_GetSigners(t *testing.T) {
-	msg := types.MsgUpdateDowntimeParams{
-		Authority: validAuthority,
-	}
-	require.Equal(t, []sdk.AccAddress{constants.AliceAccAddress}, msg.GetSigners())
-}
 
 func TestMsgUpdateDowntimeParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

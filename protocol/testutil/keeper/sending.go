@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
@@ -9,10 +10,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -47,7 +47,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 ) {
 	var mockTimeProvider *mocks.TimeProvider
 	ks.Ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -109,14 +109,14 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 
 func createSendingKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	accKeeper *authkeeper.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	saKeeper types.SubaccountsKeeper,
 	transientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	mockMsgSender := &mocks.IndexerMessageSender{}

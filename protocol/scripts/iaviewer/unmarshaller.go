@@ -1,14 +1,14 @@
 package main
 
 import (
+	"github.com/cosmos/gogoproto/proto"
 	"reflect"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	app "github.com/dydxprotocol/v4-chain/protocol/app"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-func protoUnmarshaller[M codec.ProtoMarshaler](b []byte) string {
+func protoUnmarshaller[M proto.Message](b []byte) string {
 	cdc := app.GetEncodingConfig().Codec
 	var m M
 	// TODO: avoid reflection?

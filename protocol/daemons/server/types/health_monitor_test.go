@@ -51,16 +51,6 @@ func mockFailingHealthCheckerWithError(name string, err error) *mocks.HealthChec
 	return hc
 }
 
-// callbackWithErrorPointer returns a callback function and an error pointer that tracks the error passed to the
-// callback. This can be used to validate that a service was considered unhealthy for the maximum allowable duration.
-func callbackWithErrorPointer() (func(error), *error) {
-	var callbackError error
-	callback := func(err error) {
-		callbackError = err
-	}
-	return callback, &callbackError
-}
-
 // The following tests may still intermittently fail or report false positives on an overloaded system as they rely
 // on callbacks to execute before the termination of the `time.Sleep` call, which is not guaranteed.
 func TestRegisterService_Healthy(t *testing.T) {
@@ -100,29 +90,32 @@ func TestRegisterServiceWithCallback_Mixed(t *testing.T) {
 			// Setup.
 			ufm, logger := createTestMonitor()
 			hc := mockFailingHealthCheckerWithError("test-service", test.healthCheckResponse)
-			callback, callbackError := callbackWithErrorPointer()
+			errs := make(chan (error), 100)
 
 			// Act.
 			err := ufm.RegisterServiceWithCallback(
 				hc,
 				50*time.Millisecond,
-				callback,
+				func(err error) {
+					errs <- err
+				},
 			)
 			require.NoError(t, err)
 
-			// Cleanup.
-			defer func() {
-				ufm.Stop()
-			}()
-
 			// Give the monitor time to poll the health checkable service. Polls occur once every 10ms.
-			time.Sleep(100 * time.Millisecond)
+			select {
+			case err = <-errs:
+			case <-time.After(1 * time.Second):
+			}
+
+			// Cleanup.
+			ufm.Stop()
 
 			// Assert: no calls to the logger were made.
 			mock.AssertExpectationsForObjects(t, hc, logger)
 
 			// Assert: the callback was called or not called as expected.
-			require.Equal(t, test.healthCheckResponse, *callbackError)
+			require.Equal(t, test.healthCheckResponse, err)
 		})
 	}
 }
@@ -172,17 +165,26 @@ func TestRegisterServiceWithCallback_DoubleRegistrationFails(t *testing.T) {
 	hc := mockFailingHealthCheckerWithError("test-service", TestError1)
 	hc2 := mockFailingHealthCheckerWithError("test-service", TestError2)
 
-	callback, callbackError := callbackWithErrorPointer()
+	errs := make(chan (error), 100)
 
-	err := ufm.RegisterServiceWithCallback(hc, 50*time.Millisecond, callback)
+	err := ufm.RegisterServiceWithCallback(hc, 50*time.Millisecond, func(err error) {
+		errs <- err
+	})
 	require.NoError(t, err)
 
 	// Register a service with the same name. This registration should fail.
-	err = ufm.RegisterServiceWithCallback(hc2, 50*time.Millisecond, callback)
+	err = ufm.RegisterServiceWithCallback(hc2, 50*time.Millisecond, func(err error) {
+		errs <- err
+	})
 	require.ErrorContains(t, err, "service already registered")
 
 	// Expect that the first service is still operating and will produce a callback after a sustained unhealthy period.
-	time.Sleep(100 * time.Millisecond)
+	select {
+	case err = <-errs:
+	case <-time.After(1 * time.Second):
+		t.Fatalf("Failed to receive callback before timeout")
+	}
+
 	ufm.Stop()
 
 	// Assert no calls to the logger were made.
@@ -190,7 +192,7 @@ func TestRegisterServiceWithCallback_DoubleRegistrationFails(t *testing.T) {
 	hc2.AssertNotCalled(t, "HealthCheck")
 
 	// Assert the callback was called with the expected error.
-	require.Equal(t, TestError1, *callbackError)
+	require.Equal(t, TestError1, err)
 }
 
 // Create a struct that implements HealthCheckable and Stoppable to check that the monitor stops the service.

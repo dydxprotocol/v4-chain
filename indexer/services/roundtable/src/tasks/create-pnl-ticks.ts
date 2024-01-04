@@ -8,7 +8,6 @@ import {
 } from '@dydxprotocol-indexer/postgres';
 import { LatestAccountPnlTicksCache } from '@dydxprotocol-indexer/redis';
 import _ from 'lodash';
-import { DateTime } from 'luxon';
 
 import config from '../config';
 import { getPnlTicksCreateObjects } from '../helpers/pnl-ticks-helper';
@@ -31,14 +30,14 @@ export default async function runTask(): Promise<void> {
     block,
     pnlTickLatestBlocktime,
   ]: [
-    BlockFromDatabase | undefined,
+    BlockFromDatabase,
     string,
   ] = await Promise.all([
     BlockTable.getLatest({ readReplica: true }),
     PnlTicksTable.findLatestProcessedBlocktime(),
   ]);
-  const latestBlockTime: string = block !== undefined ? block.time : DateTime.utc(0).toISO();
-  const latestBlockHeight: string = block !== undefined ? block.blockHeight : '0';
+  const latestBlockTime: string = block.time;
+  const latestBlockHeight: string = block.blockHeight;
   // Check that the latest block time is within PNL_TICK_UPDATE_INTERVAL_MS of the last computed
   // PNL tick block time.
   if (

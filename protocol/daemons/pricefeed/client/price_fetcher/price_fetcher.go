@@ -9,14 +9,14 @@ import (
 	"sync"
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 	"gopkg.in/typ.v4/lists"
 )
 

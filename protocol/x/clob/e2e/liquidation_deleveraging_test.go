@@ -10,6 +10,7 @@ import (
 	"github.com/cometbft/cometbft/types"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -645,7 +646,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
 		liquidatableSubaccountIds []satypes.SubaccountId
-		subaccountPositionInfo    []clobtypes.SubaccountOpenPositionInfo
 
 		// Configuration.
 		liquidationConfig clobtypes.LiquidationsConfig
@@ -1046,17 +1046,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.Carl_Num0_1BTC_Short_50499USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
-			subaccountPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
-				{
-					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
-					SubaccountsWithLongPosition: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
-					SubaccountsWithShortPosition: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-				},
-			},
 
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
@@ -1091,17 +1080,6 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_100000USD,
 				constants.Dave_Num0_1BTC_Long_50000USD,
-			},
-			subaccountPositionInfo: []clobtypes.SubaccountOpenPositionInfo{
-				{
-					PerpetualId: constants.BtcUsd_20PercentInitial_10PercentMaintenance.GetId(),
-					SubaccountsWithLongPosition: []satypes.SubaccountId{
-						constants.Dave_Num0,
-					},
-					SubaccountsWithShortPosition: []satypes.SubaccountId{
-						constants.Carl_Num0,
-					},
-				},
 			},
 			liquidatableSubaccountIds: []satypes.SubaccountId{},
 			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
@@ -1216,7 +1194,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			_, err := tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
 				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
-				SubaccountOpenPositionInfo: tc.subaccountPositionInfo,
+				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
 			})
 			require.NoError(t, err)
 

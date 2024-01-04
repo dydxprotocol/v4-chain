@@ -148,6 +148,24 @@ describe('Order store', () => {
     expect(orders).toHaveLength(2);
   });
 
+  it('Successfully finds all orders by subaccount/clob pair id after height', async () => {
+    await Promise.all([
+      OrderTable.create(defaultOrder),
+      OrderTable.create({
+        ...defaultOrder,
+        clientId: '2',
+        createdAtHeight: '5',
+      }),
+    ]);
+    const orders: OrderFromDatabase[] = await OrderTable.findBySubaccountIdAndClobPairAfterHeight(
+      defaultOrder.subaccountId,
+      defaultOrder.clobPairId,
+      4,
+    );
+
+    expect(orders).toHaveLength(1);
+  });
+
   it.each([
     [
       'goodTilBlockBeforeOrAt',

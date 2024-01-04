@@ -103,6 +103,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].amount' -v "10000$EIGHTEEN_ZEROS" # 10k whole coins of native token
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '172800s' # 2 days
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '86400s' # 1 day
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '345600s' # 4 days
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%

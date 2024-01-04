@@ -43,7 +43,6 @@ import {
   StatefulOrderUpdatesCache,
   CanceledOrderStatus,
 } from '@dydxprotocol-indexer/redis';
-
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -104,6 +103,20 @@ describe('order-place-handler', () => {
       goodTilBlock: undefined,
       goodTilBlockTime: 1_300_000_000,
     };
+    const replacementOrderFok: IndexerOrder = {
+      ...redisTestConstants.defaultOrderFok,
+      goodTilBlock: 1160,
+      goodTilBlockTime: undefined,
+      quantums: Long.fromValue(500_000, true),
+      subticks: Long.fromValue(1_000_000, true),
+    };
+    const replacementOrderIoc: IndexerOrder = {
+      ...redisTestConstants.defaultOrderIoc,
+      goodTilBlock: 1160,
+      goodTilBlockTime: undefined,
+      quantums: Long.fromValue(500_000, true),
+      subticks: Long.fromValue(1_000_000, true),
+    };
     const replacedOrder: RedisOrder = convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
@@ -114,6 +127,14 @@ describe('order-place-handler', () => {
     );
     const replacedOrderConditional: RedisOrder = convertToRedisOrder(
       replacementOrderConditional,
+      testConstants.defaultPerpetualMarket,
+    );
+    const replacedOrderFok: RedisOrder = convertToRedisOrder(
+      replacementOrderFok,
+      testConstants.defaultPerpetualMarket,
+    );
+    const replacedOrderIoc: RedisOrder = convertToRedisOrder(
+      replacementOrderIoc,
       testConstants.defaultPerpetualMarket,
     );
     const replacementUpdate: OffChainUpdateV1 = {
@@ -137,6 +158,20 @@ describe('order-place-handler', () => {
           OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
+    const replacementUpdateFok: OffChainUpdateV1 = {
+      orderPlace: {
+        order: replacementOrderFok,
+        placementStatus:
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+      },
+    };
+    const replacementUpdateIoc: OffChainUpdateV1 = {
+      orderPlace: {
+        order: replacementOrderIoc,
+        placementStatus:
+          OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+      },
+    };
     const replacementMessage: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
     );
@@ -149,6 +184,12 @@ describe('order-place-handler', () => {
       Buffer.from(Uint8Array.from(
         OffChainUpdateV1.encode(replacementUpdateConditional).finish(),
       )),
+    );
+    const replacementMessageFok: KafkaMessage = createKafkaMessage(
+      Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdateFok).finish())),
+    );
+    const replacementMessageIoc: KafkaMessage = createKafkaMessage(
+      Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdateIoc).finish())),
     );
     const dbDefaultOrder: OrderFromDatabase = {
       ...testConstants.defaultOrder,
@@ -163,6 +204,16 @@ describe('order-place-handler', () => {
       ...testConstants.defaultConditionalOrder,
       id: testConstants.defaultConditionalOrderId,
       createdAtHeight: '3',
+    };
+    const dbDefaultOrderFok: OrderFromDatabase = {
+      ...testConstants.defaultOrder,
+      id: testConstants.defaultOrderId,
+      timeInForce: TimeInForce.FOK,
+    };
+    const dbDefaultOrderIoc: OrderFromDatabase = {
+      ...testConstants.defaultOrder,
+      id: testConstants.defaultOrderId,
+      timeInForce: TimeInForce.IOC,
     };
 
     beforeAll(async () => {
@@ -410,6 +461,7 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderUuid,
         replacedOrder,
         true,
+        true,
       ],
       [
         'goodTilBlockTime',
@@ -420,6 +472,7 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderUuidGoodTilBlockTime,
         replacedOrderGoodTilBlockTime,
         false,
+        true,
       ],
       [
         'conditional',
@@ -429,6 +482,29 @@ describe('order-place-handler', () => {
         dbConditionalOrder,
         redisTestConstants.defaultOrderUuidConditional,
         replacedOrderConditional,
+        false,
+        true,
+      ],
+      [
+        'Fill-or-Kill',
+        redisTestConstants.defaultOrderFok,
+        replacementMessageFok,
+        redisTestConstants.defaultRedisOrderFok,
+        dbDefaultOrderFok,
+        redisTestConstants.defaultOrderUuid,
+        replacedOrderFok,
+        true,
+        false,
+      ],
+      [
+        'Immediate-or-Cancel',
+        redisTestConstants.defaultOrderIoc,
+        replacementMessageIoc,
+        redisTestConstants.defaultRedisOrderIoc,
+        dbDefaultOrderIoc,
+        redisTestConstants.defaultOrderUuid,
+        replacedOrderIoc,
+        true,
         false,
       ],
     ])('handles order place for replacing order (with %s), resting on book', async (
@@ -440,6 +516,7 @@ describe('order-place-handler', () => {
       expectedOrderUuid: string,
       expectedReplacedOrder: RedisOrder,
       expectSubaccountMessage: boolean,
+      expectOrderBookUpdate: boolean,
     ) => {
       const oldOrderTotalFilled: number = 10;
       const oldPriceLevelInitialQuantums: number = Number(initialOrderToPlace.quantums) * 2;
@@ -521,9 +598,11 @@ describe('order-place-handler', () => {
       );
 
       // Check the order book levels were updated
-      expect(orderbook.bids).toHaveLength(1);
-      expect(orderbook.asks).toHaveLength(0);
-      expect(orderbook.bids).toContainEqual(expectedPriceLevel);
+      if (expectOrderBookUpdate) {
+        expect(orderbook.bids).toHaveLength(1);
+        expect(orderbook.asks).toHaveLength(0);
+        expect(orderbook.bids).toContainEqual(expectedPriceLevel);
+      }
 
       // Check the order was removed from the open orders cache
       await expectOpenOrderIds(testConstants.defaultPerpetualMarket.clobPairId, []);
@@ -542,11 +621,12 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.BEST_EFFORT_OPENED,
         expectSubaccountMessage,
-        OrderbookMessage.fromPartial({
-          contents: JSON.stringify(orderbookContents),
-          clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
-          version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
-        }),
+        expectOrderBookUpdate
+          ? OrderbookMessage.fromPartial({
+            contents: JSON.stringify(orderbookContents),
+            clobPairId: testConstants.defaultPerpetualMarket.clobPairId,
+            version: ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
+          }) : undefined,
       );
       expectStats(true);
     });

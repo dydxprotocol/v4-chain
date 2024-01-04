@@ -1,9 +1,8 @@
 package types
 
 import (
-	cosmoslog "cosmossdk.io/log"
+	"cosmossdk.io/log"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"sync"
@@ -141,7 +140,7 @@ func NewHealthMonitor(
 ) *HealthMonitor {
 	return &HealthMonitor{
 		mutableState:       newHealthMonitorMutableState(),
-		logger:             logger.With(cosmoslog.ModuleKey, HealthMonitorLogModuleName),
+		logger:             logger.With(log.ModuleKey, HealthMonitorLogModuleName),
 		startupGracePeriod: startupGracePeriod,
 		pollingFrequency:   pollingFrequency,
 		enablePanics:       enablePanics,

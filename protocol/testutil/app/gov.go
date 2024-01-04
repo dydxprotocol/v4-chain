@@ -6,6 +6,7 @@ import (
 	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -48,6 +49,7 @@ func SubmitAndTallyProposal(
 		TestMetadata,
 		TestTitle,
 		TestSummary,
+		false,
 	)
 	require.NoError(t, err)
 
@@ -63,26 +65,28 @@ func SubmitAndTallyProposal(
 		constants.GetPrivateKeyFromAddress,
 		msgSubmitProposal,
 	)
+	result := tApp.CheckTx(submitProposalCheckTx)
 	if expectCheckTxFails {
-		require.False(t, tApp.CheckTx(submitProposalCheckTx).IsOK())
+		require.False(t, result.IsOK())
 		// CheckTx failed. Return early.
 		return ctx
 	} else {
-		require.True(t, tApp.CheckTx(submitProposalCheckTx).IsOK())
+		require.True(t, result.IsOK())
 	}
 
 	if expectSubmitProposalFails {
 		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{
-			ValidateDeliverTxs: func(
+			ValidateFinalizeBlock: func(
 				context sdk.Context,
-				request abcitypes.RequestDeliverTx,
-				response abcitypes.ResponseDeliverTx,
-				_ int,
+				request abcitypes.RequestFinalizeBlock,
+				response abcitypes.ResponseFinalizeBlock,
 			) (haltChain bool) {
-				if bytes.Equal(request.Tx, submitProposalCheckTx.Tx) {
-					require.True(t, response.IsErr())
-				} else {
-					require.True(t, response.IsOK())
+				for i := range request.Txs {
+					if bytes.Equal(request.Txs[i], submitProposalCheckTx.Tx) {
+						require.True(t, response.TxResults[i].IsErr())
+					} else {
+						require.True(t, response.TxResults[i].IsOK())
+					}
 				}
 				return false
 			},
@@ -93,7 +97,10 @@ func SubmitAndTallyProposal(
 		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{})
 	}
 
-	proposals := tApp.App.GovKeeper.GetProposals(ctx)
+	proposalsIterator, err := tApp.App.GovKeeper.Proposals.Iterate(ctx, nil)
+	require.NoError(t, err)
+	proposals, err := proposalsIterator.Values()
+	require.NoError(t, err)
 	require.Len(t, proposals, 1)
 
 	// Have all 4 validators vote for the proposal.
@@ -132,7 +139,10 @@ func SubmitAndTallyProposal(
 		BlockTime: ctx.BlockTime().Add(TestVotingPeriod).Add(1 * time.Second),
 	})
 
-	proposals = tApp.App.GovKeeper.GetProposals(ctx)
+	proposalsIterator, err = tApp.App.GovKeeper.Proposals.Iterate(ctx, nil)
+	require.NoError(t, err)
+	proposals, err = proposalsIterator.Values()
+	require.NoError(t, err)
 	require.Len(t, proposals, 1)
 	// Check that proposal was executed or failed as expected.
 	require.Equal(t, expectedProposalStatus, proposals[0].Status)

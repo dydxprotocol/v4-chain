@@ -3,7 +3,7 @@ package ante
 import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	"github.com/cometbft/cometbft/libs/log"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -78,7 +78,7 @@ func (cd ClobDecorator) AnteHandle(
 		}
 		cd.clobKeeper.Logger(ctx).Debug("Received new order cancelation",
 			"tx",
-			log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			"msg",
 			msg,
 			"err",
@@ -94,9 +94,9 @@ func (cd ClobDecorator) AnteHandle(
 			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
 			cd.clobKeeper.Logger(ctx).Debug("Received new stateful order",
 				"tx",
-				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
-				log.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				"msg",
 				msg,
 				"err",
@@ -122,9 +122,9 @@ func (cd ClobDecorator) AnteHandle(
 			)
 			cd.clobKeeper.Logger(ctx).Debug("Received new short term order",
 				"tx",
-				log.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 				"orderHash",
-				log.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
 				"msg",
 				msg,
 				"status",

@@ -1,10 +1,9 @@
 package keeper
 
 import (
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -13,10 +12,10 @@ import (
 
 func createBlockTimeKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	authorities := []string{

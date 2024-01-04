@@ -1,87 +1,31 @@
-package app
+package app_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"reflect"
 	"testing"
 
-	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
-	clobmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
-	clobmodulememclob "github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestHandlerOptions() HandlerOptions {
-	encodingConfig := GetEncodingConfig()
-	appCodec := encodingConfig.Codec
-	txConfig := encodingConfig.TxConfig
+func newTestHandlerOptions(t *testing.T) app.HandlerOptions {
+	tApp := testApp.NewTestAppBuilder(t).Build()
+	tApp.InitChain()
 
-	accountKeeper := authkeeper.NewAccountKeeper(
-		appCodec,
-		nil,
-		authtypes.ProtoBaseAccount,
-		nil,
-		sdk.Bech32MainPrefix,
-		lib.GovModuleAddress.String(),
-	)
-
-	bankKeeper := bankkeeper.NewBaseKeeper(
-		appCodec,
-		nil,
-		accountKeeper,
-		BlockedAddresses(),
-		lib.GovModuleAddress.String(),
-	)
-
-	feeGrantKeeper := feegrantkeeper.NewKeeper(appCodec, nil, accountKeeper)
-
-	memClob := clobmodulememclob.NewMemClobPriceTimePriority(false)
-	clobKeeper := clobmodulekeeper.NewKeeper(
-		appCodec,
-		nil,
-		nil,
-		nil,
-		[]string{
-			delaymsgmoduletypes.ModuleAddress.String(),
-			lib.GovModuleAddress.String(),
-		},
-		memClob,
-		nil,
-		nil,
-		nil,
-		bankKeeper,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		nil,
-		flags.GetDefaultClobFlags(),
-		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
-		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
-	)
-	return HandlerOptions{
+	return app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
-			AccountKeeper:   accountKeeper,
-			BankKeeper:      bankKeeper,
-			SignModeHandler: txConfig.SignModeHandler(),
-			FeegrantKeeper:  feeGrantKeeper,
+			AccountKeeper:   tApp.App.AccountKeeper,
+			BankKeeper:      tApp.App.BankKeeper,
+			SignModeHandler: tApp.App.TxConfig().SignModeHandler(),
+			FeegrantKeeper:  tApp.App.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
-		ClobKeeper: clobKeeper,
+		ClobKeeper: tApp.App.ClobKeeper,
 	}
 }
 
@@ -128,8 +72,8 @@ func humanReadableDecoratorTypes(decoratorChain []sdk.AnteDecorator) []string {
 }
 
 func TestAnteHandlerChainOrder_Valid(t *testing.T) {
-	handlerOptions := newTestHandlerOptions()
-	decoratorChain := newAnteDecoratorChain(handlerOptions)
+	handlerOptions := newTestHandlerOptions(t)
+	decoratorChain := app.NewAnteDecoratorChain(handlerOptions)
 	decoratorTypes := humanReadableDecoratorTypes(decoratorChain)
 
 	expectedDecoratorTypes := []string{

@@ -2,11 +2,11 @@ package clob
 
 import (
 	"context"
+	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"time"
 
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
@@ -18,15 +18,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 var (
-	_ module.AppModule      = AppModule{}
-	_ module.AppModuleBasic = AppModuleBasic{}
+	_ module.AppModuleBasic   = AppModuleBasic{}
+	_ module.HasGenesisBasics = AppModuleBasic{}
+
+	_ appmodule.AppModule            = AppModule{}
+	_ appmodule.HasBeginBlocker      = AppModule{}
+	_ appmodule.HasEndBlocker        = AppModule{}
+	_ appmodule.HasPrepareCheckState = AppModule{}
+	_ module.HasConsensusVersion     = AppModule{}
+	_ module.HasServices             = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -60,24 +66,6 @@ func (a AppModuleBasic) RegisterInterfaces(reg cdctypes.InterfaceRegistry) {
 	types.RegisterInterfaces(reg)
 }
 
-// DefaultGenesis returns the clob module's default genesis state.
-func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
-	return cdc.MustMarshalJSON(types.DefaultGenesis())
-}
-
-// ValidateGenesis performs genesis state validation for the clob module.
-func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
-	var genState types.GenesisState
-	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
-		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
-	}
-	return genState.Validate()
-}
-
-// RegisterRESTRoutes registers the clob module's REST service handlers.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-}
-
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
 	err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
@@ -96,6 +84,20 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 	return cli.GetQueryCmd(types.StoreKey)
 }
 
+// DefaultGenesis returns the clob module's default genesis state.
+func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
+	return cdc.MustMarshalJSON(types.DefaultGenesis())
+}
+
+// ValidateGenesis performs genesis state validation for the clob module.
+func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncodingConfig, bz json.RawMessage) error {
+	var genState types.GenesisState
+	if err := cdc.UnmarshalJSON(bz, &genState); err != nil {
+		return fmt.Errorf("failed to unmarshal %s genesis state: %w", types.ModuleName, err)
+	}
+	return genState.Validate()
+}
+
 // ----------------------------------------------------------------------------
 // AppModule
 // ----------------------------------------------------------------------------
@@ -104,11 +106,10 @@ func (AppModuleBasic) GetQueryCmd() *cobra.Command {
 type AppModule struct {
 	AppModuleBasic
 
-	keeper                *keeper.Keeper
-	accountKeeper         types.AccountKeeper
-	bankKeeper            types.BankKeeper
-	subaccountsKeeper     types.SubaccountsKeeper
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
+	keeper            *keeper.Keeper
+	accountKeeper     types.AccountKeeper
+	bankKeeper        types.BankKeeper
+	subaccountsKeeper types.SubaccountsKeeper
 }
 
 func NewAppModule(
@@ -117,22 +118,21 @@ func NewAppModule(
 	accountKeeper types.AccountKeeper,
 	bankKeeper types.BankKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
-	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) AppModule {
 	return AppModule{
-		AppModuleBasic:        NewAppModuleBasic(cdc),
-		keeper:                keeper,
-		accountKeeper:         accountKeeper,
-		bankKeeper:            bankKeeper,
-		subaccountsKeeper:     subaccountsKeeper,
-		daemonLiquidationInfo: daemonLiquidationInfo,
+		AppModuleBasic:    NewAppModuleBasic(cdc),
+		keeper:            keeper,
+		accountKeeper:     accountKeeper,
+		bankKeeper:        bankKeeper,
+		subaccountsKeeper: subaccountsKeeper,
 	}
 }
 
-// Name returns the clob module's name.
-func (am AppModule) Name() string {
-	return am.AppModuleBasic.Name()
-}
+// IsAppModule implements the appmodule.AppModule interface.
+func (am AppModule) IsAppModule() {}
+
+// IsOnePerModuleType is a marker function just indicates that this is a one-per-module type.
+func (am AppModule) IsOnePerModuleType() {}
 
 // RegisterServices registers a GRPC query service to respond to the
 // module-specific GRPC queries.
@@ -140,9 +140,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterQueryServer(cfg.QueryServer(), am.keeper)
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 }
-
-// RegisterInvariants registers the clob module's invariants.
-func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
 // InitGenesis performs the clob module's genesis initialization It returns
 // no validator updates.
@@ -166,34 +163,32 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the clob module.
-func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {
+func (am AppModule) BeginBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyBeginBlocker)
 	BeginBlocker(
-		ctx,
+		sdk.UnwrapSDKContext(ctx),
 		am.keeper,
 	)
+	return nil
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the clob module. It
 // returns no validator updates.
-func (am AppModule) EndBlock(
-	ctx sdk.Context,
-	_ abci.RequestEndBlock,
-) []abci.ValidatorUpdate {
+func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
 	EndBlocker(
-		ctx,
+		sdk.UnwrapSDKContext(ctx),
 		*am.keeper,
 	)
-	return []abci.ValidatorUpdate{}
+	return nil
 }
 
-// Commit executes all ABCI Commit logic respective to the clob module.
-func (am AppModule) Commit(ctx sdk.Context) {
-	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyCommit)
+// PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
+func (am AppModule) PrepareCheckState(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
 	PrepareCheckState(
-		ctx,
+		sdk.UnwrapSDKContext(ctx),
 		am.keeper,
-		am.daemonLiquidationInfo,
 	)
+	return nil
 }

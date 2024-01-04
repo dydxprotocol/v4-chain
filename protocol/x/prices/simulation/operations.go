@@ -3,12 +3,12 @@ package simulation
 // DONTCOVER
 
 import (
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math/big"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -34,18 +34,17 @@ var (
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
 	appParams simtypes.AppParams,
-	jsonCdc codec.JSONCodec,
 	k keeper.Keeper,
 	ak types.AccountKeeper,
 	bk types.BankKeeper,
 ) simulation.WeightedOperations {
-	protoCdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	protoCdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	// MsgUpdateMarketPrices
 	var weightMsgUpdateMarketPrices int
-	appParams.GetOrGenerate(jsonCdc, opWeightMsgUpdateMarketPrices, &weightMsgUpdateMarketPrices, nil,
+	appParams.GetOrGenerate(opWeightMsgUpdateMarketPrices, &weightMsgUpdateMarketPrices, nil,
 		func(_ *rand.Rand) {
 			weightMsgUpdateMarketPrices = defaultWeightMsgUpdateMarketPrices
 		},

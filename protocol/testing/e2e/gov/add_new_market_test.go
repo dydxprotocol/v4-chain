@@ -321,10 +321,14 @@ func TestAddNewMarketProposal(t *testing.T) {
 			)
 
 			if tc.expectSubmitProposalFail {
+				proposalsIter, err := tApp.App.GovKeeper.Proposals.Iterate(ctx, nil)
+				require.NoError(t, err)
+				proposals, err := proposalsIter.Values()
+				require.NoError(t, err)
 				require.Equal(t, initMarketParams, tApp.App.PricesKeeper.GetAllMarketParams(ctx))
 				require.Equal(t, initPerpetuals, tApp.App.PerpetualsKeeper.GetAllPerpetuals(ctx))
 				require.Equal(t, initClobPairs, tApp.App.ClobKeeper.GetAllClobPairs(ctx))
-				require.Len(t, tApp.App.GovKeeper.GetProposals(ctx), 0)
+				require.Len(t, proposals, 0)
 				return
 			}
 

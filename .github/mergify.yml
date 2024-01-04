@@ -13,6 +13,14 @@ pull_request_rules:
       backport:
         branches:
           - release/protocol/v0.3.x
+  - name: backport to release/indexer/v1.x branch
+    conditions:
+      - base=main
+      - label=backport/indexer/v1.x
+    actions:
+      backport:
+        branches:
+          - release/indexer/v1.x
   - name: backport to release/protocol/v1.x branch
     conditions:
       - base=main
@@ -21,3 +29,27 @@ pull_request_rules:
       backport:
         branches:
           - release/protocol/v1.x
+  - name: backport to release/protocol/v2.x branch
+    conditions:
+      - base=main
+      - label=backport/protocol/v2.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v2.x
+  - name: backport to release/indexer/v3.x branch
+    conditions:
+      - base=main
+      - label=backport/indexer/v3.x
+    actions:
+      backport:
+        branches:
+          - release/indexer/v3.x
+  - name: backport to release/protocol/v3.x branch
+    conditions:
+      - base=main
+      - label=backport/protocol/v3.x
+    actions:
+      backport:
+        branches:
+          - release/protocol/v3.x

@@ -1,6 +1,7 @@
 package trading_rewards_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
 	"time"
@@ -719,13 +720,13 @@ func TestTradingRewards(t *testing.T) {
 							genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 								Address: RewardsTreasuryAccAddress.String(),
 								Coins: sdk.Coins{
-									sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewInt(0)),
+									sdk.NewCoin(lib.DefaultBaseDenom, sdkmath.NewInt(0)),
 								},
 							})
 							genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
 								Address: RewardsVesterAccAddress.String(),
 								Coins: sdk.Coins{
-									sdk.NewCoin(lib.DefaultBaseDenom, sdk.NewIntFromBigInt(
+									sdk.NewCoin(lib.DefaultBaseDenom, sdkmath.NewIntFromBigInt(
 										tc.initRewardsVesterBalance,
 									)),
 								},

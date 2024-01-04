@@ -1,22 +1,20 @@
 package msgs
 
 import (
+	evidence "cosmossdk.io/x/evidence/types"
+	feegrant "cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidence "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	feegrant "github.com/cosmos/cosmos-sdk/x/feegrant"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	slashing "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	staking "github.com/cosmos/cosmos-sdk/x/staking/types"
-
-	ibctransfer "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	ibcconn "github.com/cosmos/ibc-go/v7/modules/core/03-connection/types"
-	ibccore "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
-
+	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
+	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
+	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
@@ -53,6 +51,8 @@ var (
 
 		// distribution
 		"/cosmos.distribution.v1beta1.CommunityPoolSpendProposal":             nil,
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPool":         &distr.MsgDepositValidatorRewardsPool{},
+		"/cosmos.distribution.v1beta1.MsgDepositValidatorRewardsPoolResponse": nil,
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPool":                   &distr.MsgFundCommunityPool{},
 		"/cosmos.distribution.v1beta1.MsgFundCommunityPoolResponse":           nil,
 		"/cosmos.distribution.v1beta1.MsgSetWithdrawAddress":                  &distr.MsgSetWithdrawAddress{},
@@ -72,11 +72,15 @@ var (
 		"/cosmos.feegrant.v1beta1.BasicAllowance":             nil,
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowance":          &feegrant.MsgGrantAllowance{},
 		"/cosmos.feegrant.v1beta1.MsgGrantAllowanceResponse":  nil,
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowances":         &feegrant.MsgPruneAllowances{},
+		"/cosmos.feegrant.v1beta1.MsgPruneAllowancesResponse": nil,
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowance":         &feegrant.MsgRevokeAllowance{},
 		"/cosmos.feegrant.v1beta1.MsgRevokeAllowanceResponse": nil,
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance":          nil,
 
 		// gov
+		"/cosmos.gov.v1.MsgCancelProposal":            &gov.MsgCancelProposal{},
+		"/cosmos.gov.v1.MsgCancelProposalResponse":    nil,
 		"/cosmos.gov.v1.MsgDeposit":                   &gov.MsgDeposit{},
 		"/cosmos.gov.v1.MsgDepositResponse":           nil,
 		"/cosmos.gov.v1.MsgVote":                      &gov.MsgVote{},
@@ -173,13 +177,19 @@ var (
 		"/ibc.core.client.v1.Height":                        nil,
 		"/ibc.core.client.v1.MsgCreateClient":               &ibcclient.MsgCreateClient{},
 		"/ibc.core.client.v1.MsgCreateClientResponse":       nil,
-		"/ibc.core.client.v1.MsgSubmitMisbehaviour":         &ibcclient.MsgSubmitMisbehaviour{},
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgrade":         &ibcclient.MsgIBCSoftwareUpgrade{},
+		"/ibc.core.client.v1.MsgIBCSoftwareUpgradeResponse": nil,
+		"/ibc.core.client.v1.MsgRecoverClient":              &ibcclient.MsgRecoverClient{},
+		"/ibc.core.client.v1.MsgRecoverClientResponse":      nil,
+		"/ibc.core.client.v1.MsgSubmitMisbehaviour":         &ibcclient.MsgSubmitMisbehaviour{}, //nolint:staticcheck
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse": nil,
-		"/ibc.core.client.v1.MsgUpdateClient":               &ibcclient.MsgUpdateClient{},
-		"/ibc.core.client.v1.MsgUpdateClientResponse":       nil,
-		"/ibc.core.client.v1.MsgUpgradeClient":              &ibcclient.MsgUpgradeClient{},
-		"/ibc.core.client.v1.MsgUpgradeClientResponse":      nil,
-		"/ibc.core.client.v1.UpgradeProposal":               nil,
+		// TODO(CORE-538): Move MsgUpdateClient and MsgUpgradeClient to unsupported_msgs once upgrade has been added
+		// and verified to function.
+		"/ibc.core.client.v1.MsgUpdateClient":          &ibcclient.MsgUpdateClient{},
+		"/ibc.core.client.v1.MsgUpdateClientResponse":  nil,
+		"/ibc.core.client.v1.MsgUpgradeClient":         &ibcclient.MsgUpgradeClient{},
+		"/ibc.core.client.v1.MsgUpgradeClientResponse": nil,
+		"/ibc.core.client.v1.UpgradeProposal":          nil,
 
 		// ibc.core.commitment
 		"/ibc.core.commitment.v1.MerklePath":   nil,
@@ -198,7 +208,6 @@ var (
 		"/ibc.core.connection.v1.MsgConnectionOpenInitResponse":    nil,
 		"/ibc.core.connection.v1.MsgConnectionOpenTry":             &ibcconn.MsgConnectionOpenTry{},
 		"/ibc.core.connection.v1.MsgConnectionOpenTryResponse":     nil,
-		"/ibc.core.connection.v1.Version":                          nil,
 
 		// ibc.lightclients
 		"/ibc.lightclients.localhost.v2.ClientState":     nil,

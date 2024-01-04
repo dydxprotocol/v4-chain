@@ -36,7 +36,7 @@ import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-fun
 import { TradingRewardsHandler } from '../../src/handlers/trading-rewards-handler';
 import { intToSerializedInt } from '../helpers/conversion-helpers';
 
-const defaultTransactionIndex: number = 0;
+const defaultTransactionIndex: number = -2; // end block
 
 describe('tradingRewardHandler', () => {
   beforeAll(async () => {

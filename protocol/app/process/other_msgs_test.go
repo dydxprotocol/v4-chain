@@ -120,9 +120,9 @@ func TestOtherMsgsTx_Validate(t *testing.T) {
 	txBuilder := encodingCfg.TxConfig.NewTxBuilder()
 
 	// Fails `ValidateBasic`
-	failingSingleTx := constants.Msg_Send_Invalid_Zero_Amount_TxBytes
+	failingSingleTx := constants.Msg_Transfer_Invalid_SameSenderAndRecipient_TxBytes
 
-	_ = txBuilder.SetMsgs(constants.Msg_Send, constants.Msg_Send_Invalid_Zero_Amount) // invalid.
+	_ = txBuilder.SetMsgs(constants.Msg_Send, constants.Msg_Transfer_Invalid_SameSenderAndRecipient) // invalid.
 	failingMultiTx, _ := encodingCfg.TxConfig.TxEncoder()(txBuilder.GetTx())
 
 	tests := map[string]struct {
@@ -131,11 +131,11 @@ func TestOtherMsgsTx_Validate(t *testing.T) {
 	}{
 		"Error Single: ValidateBasic fails": {
 			txBytes:     failingSingleTx,
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 		"Error Multi: ValidateBasic fails": {
 			txBytes:     failingMultiTx,
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "0foo: invalid coins"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 		"Valid Single: ValidateBasic passes": {
 			txBytes: constants.Msg_Send_TxBytes,

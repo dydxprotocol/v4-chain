@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -156,7 +157,7 @@ func main() {
 			bankBalances,
 			banktypes.Balance{
 				Address: address,
-				Coins:   sdk.NewCoins(sdk.NewCoin(denom, sdk.NewIntFromBigInt(balances[address]))),
+				Coins:   sdk.NewCoins(sdk.NewCoin(denom, sdkmath.NewIntFromBigInt(balances[address]))),
 			},
 		)
 	}
@@ -177,7 +178,7 @@ func main() {
 	// Print x/auth accounts information.
 	genesisAccounts := authtypes.GenesisAccounts{}
 	for i, address := range sortedAddresses {
-		var ba authtypes.AccountI = &authtypes.BaseAccount{
+		var ba sdk.AccountI = &authtypes.BaseAccount{
 			Address:       address,
 			PubKey:        nil,
 			AccountNumber: uint64(i),

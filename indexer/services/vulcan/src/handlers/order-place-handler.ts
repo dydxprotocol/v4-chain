@@ -26,7 +26,9 @@ import {
   CanceledOrdersCache,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder, requiresImmediateExecution,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -186,7 +188,11 @@ export class OrderPlaceHandler extends Handler {
   ): Promise<number | undefined> {
     // TODO(DEC-1339): Update price levels based on if the order is reduce-only and if the replaced
     // order is reduce-only.
-    if (result.replaced !== true || result.restingOnBook !== true) {
+    if (
+      result.replaced !== true ||
+      result.restingOnBook !== true ||
+      requiresImmediateExecution(result.oldOrder!.order!.timeInForce)
+    ) {
       return undefined;
     }
 

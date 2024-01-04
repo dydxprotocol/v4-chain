@@ -6,7 +6,7 @@ COPY ./testing/start.sh /dydxprotocol/start.sh
 COPY ./daemons/pricefeed/client/constants/testdata /dydxprotocol/exchange_config
 COPY ./testing/delaymsg_config /dydxprotocol/delaymsg_config
 
-RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
 RUN /dydxprotocol/staging.sh
 

@@ -1,6 +1,7 @@
 package process
 
 import (
+	"context"
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -38,7 +39,7 @@ type ProcessClobKeeper interface {
 
 // ProcessStakingKeeper defines the expected staking keeper used for `ProcessProposal`.
 type ProcessStakingKeeper interface {
-	GetValidatorByConsAddr(ctx sdk.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, found bool)
+	GetValidatorByConsAddr(ctx context.Context, consAddr sdk.ConsAddress) (validator stakingtypes.Validator, err error)
 }
 
 // ProcessPerpetualKeeper defines the expected perpetual keeper used for `ProcessProposal`.

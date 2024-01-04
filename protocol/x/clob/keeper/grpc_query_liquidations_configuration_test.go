@@ -1,7 +1,6 @@
 package keeper_test
 
 import (
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
@@ -31,7 +30,7 @@ func TestLiquidationsConfiguration(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			tApp := testApp.NewTestAppBuilder(t).Build()
 			ctx := tApp.InitChain()
-			res, err := tApp.App.ClobKeeper.LiquidationsConfiguration(sdktypes.WrapSDKContext(ctx), tc.req)
+			res, err := tApp.App.ClobKeeper.LiquidationsConfiguration(ctx, tc.req)
 
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)

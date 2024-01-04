@@ -140,6 +140,8 @@ export interface FillQueryConfig extends QueryConfig {
   [QueryableField.TRANSACTION_HASH]?: string;
   [QueryableField.CREATED_BEFORE_OR_AT_HEIGHT]?: string;
   [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.CREATED_ON_OR_AFTER_HEIGHT]?: string;
+  [QueryableField.CREATED_ON_OR_AFTER]?: string;
   [QueryableField.CLIENT_METADATA]?: string;
   [QueryableField.FEE]?: string;
 }

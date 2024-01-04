@@ -15,6 +15,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -799,6 +800,8 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				).Return()
 			}
 
+			positions := clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts)
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateSubaccountsWithPositions(positions)
 			fills, deltaQuantumsRemaining := ks.ClobKeeper.OffsetSubaccountPerpetualPosition(
 				ks.Ctx,
 				tc.liquidatedSubaccountId,

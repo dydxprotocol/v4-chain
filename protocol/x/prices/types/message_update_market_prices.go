@@ -20,11 +20,6 @@ func NewMsgUpdateMarketPrices(updates []*MsgUpdateMarketPrices_MarketPrice) *Msg
 	}
 }
 
-func (msg *MsgUpdateMarketPrices) GetSigners() []sdk.AccAddress {
-	// Return empty slice because app-injected msg is not expected to be signed.
-	return []sdk.AccAddress{}
-}
-
 // ValidateBasic performs stateless validations on the message. Specifically:
 // - Update prices are non-zero.
 // - Updates are sorted by market id in ascending order.

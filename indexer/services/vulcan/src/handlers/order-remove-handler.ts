@@ -23,7 +23,11 @@ import {
   removeOrder,
   CanceledOrdersCache,
 } from '@dydxprotocol-indexer/redis';
-import { ORDER_FLAG_SHORT_TERM, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import {
+  ORDER_FLAG_SHORT_TERM,
+  isStatefulOrder,
+  requiresImmediateExecution,
+} from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
   IndexerOrder,
@@ -231,7 +235,12 @@ export class OrderRemoveHandler extends Handler {
 
     // If an order was removed from the Orders cache and was resting on the book, update the
     // orderbook levels cache
-    if (removeOrderResult.removed && removeOrderResult.restingOnBook === true) {
+    // Orders that require immediate execution do not rest on the book, and also should not lead
+    // to an update to the orderbook levels cache
+    if (
+      removeOrderResult.removed &&
+      removeOrderResult.restingOnBook === true &&
+      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
       await this.updateOrderbook(removeOrderResult, perpetualMarket);
     }
 
@@ -308,8 +317,11 @@ export class OrderRemoveHandler extends Handler {
       removeOrderResult.removedOrder!,
     ));
     // Do not update orderbook if order being cancelled has no remaining quantums or is
-    // resting on book
-    if (!remainingQuantums.eq('0') && removeOrderResult.restingOnBook !== false) {
+    // resting on book, or requires immediate execution and will not rest on the book
+    if (
+      !remainingQuantums.eq('0') &&
+      removeOrderResult.restingOnBook !== false &&
+      !requiresImmediateExecution(removeOrderResult.removedOrder!.order!.timeInForce)) {
       await this.updateOrderbook(removeOrderResult, perpetualMarket);
     }
     // TODO: consolidate remove handler logic into a single lua script.
@@ -381,11 +393,13 @@ export class OrderRemoveHandler extends Handler {
    * update since it occurred which would invalidate the message.
    */
   protected async isOrderExpired(orderRemove: OrderRemoveV1): Promise<boolean> {
-    const block: BlockFromDatabase | undefined = await runFuncWithTimingStat(
-      BlockTable.getLatest({ readReplica: true }),
-      this.generateTimingStatsOptions('get_latest_block_for_indexer_expired_expiry_verification'),
-    );
-    if (block === undefined) {
+    let block: BlockFromDatabase;
+    try {
+      block = await runFuncWithTimingStat(
+        BlockTable.getLatest({ readReplica: true }),
+        this.generateTimingStatsOptions('get_latest_block_for_indexer_expired_expiry_verification'),
+      );
+    } catch {
       logger.error({
         at: 'orderRemoveHandler#isOrderExpired',
         message: 'Unable to find latest block',

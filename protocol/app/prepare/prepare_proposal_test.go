@@ -364,7 +364,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 				MaxTxBytes: tc.maxBytes,
 			}
 
-			response := handler(ctx, req)
+			response, err := handler(ctx, &req)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedTxs, response.Txs)
 		})
 	}
@@ -443,7 +444,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				MaxTxBytes: 100_000, // something large.
 			}
 
-			response := handler(ctx, req)
+			response, err := handler(ctx, &req)
+			require.NoError(t, err)
 			require.Equal(t, tc.expectedTxs, response.Txs)
 		})
 	}

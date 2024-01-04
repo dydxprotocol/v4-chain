@@ -3,10 +3,10 @@ package keeper
 import (
 	"testing"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
@@ -35,7 +35,7 @@ func RewardsKeepers(
 	storeKey storetypes.StoreKey,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -93,11 +93,11 @@ func createRewardsKeeper(
 	feeTiersKeeper *feetierskeeper.Keeper,
 	pricesKeeper *priceskeeper.Keeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*rewardskeeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
-	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)

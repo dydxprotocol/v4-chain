@@ -197,7 +197,7 @@ func TestValidateNestedMsg_IterateEachMsgSample(t *testing.T) {
 
 	for _, tc := range allTestCases {
 		t.Run(tc.name, func(t *testing.T) {
-			nestedMsg, err := gov.NewMsgSubmitProposal(tc.msgs, nil, "", "", "", "")
+			nestedMsg, err := gov.NewMsgSubmitProposal(tc.msgs, nil, "", "", "", "", false)
 			require.NoError(t, err)
 			result := ante.ValidateNestedMsg(nestedMsg)
 			require.Equal(t, tc.expectedErr, result)

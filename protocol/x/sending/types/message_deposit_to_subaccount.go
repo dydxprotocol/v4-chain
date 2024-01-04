@@ -26,16 +26,6 @@ func NewMsgDepositToSubaccount(
 	}
 }
 
-// GetSigners specifies that the sender of the message must sign.
-func (msg *MsgDepositToSubaccount) GetSigners() []sdk.AccAddress {
-	// Get sender account's address.
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
 // ValidateBasic runs validation on the fields of a MsgDepositToSubaccount.
 func (msg *MsgDepositToSubaccount) ValidateBasic() error {
 	// Validate account sender.

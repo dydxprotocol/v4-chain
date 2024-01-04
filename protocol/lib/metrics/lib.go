@@ -3,8 +3,8 @@ package metrics
 import (
 	"time"
 
-	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // This file provides a main entrypoint for logging in the v4 protocol.

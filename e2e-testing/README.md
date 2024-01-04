@@ -16,3 +16,9 @@ In another terminal, run
 ```
 pnpm build && pnpm test
 ```
+
+#### Quickest way to reset the network/clear all Indexer data sources without rebuilding from scratch
+
+```
+./reset-network.sh
+```

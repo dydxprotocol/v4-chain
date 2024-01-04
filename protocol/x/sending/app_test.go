@@ -23,7 +23,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sample_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
-	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -192,7 +191,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgCreateTransfer),
+					AccAddressForSigning: msgCreateTransfer.Transfer.Sender.Owner,
 					Gas:                  100_000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
@@ -217,16 +216,17 @@ func TestMsgCreateTransfer(t *testing.T) {
 			if tc.deliverTxFails {
 				// Check that DeliverTx fails on MsgCreateTransfer.
 				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
-					ValidateDeliverTxs: func(
+					ValidateFinalizeBlock: func(
 						context sdk.Context,
-						request abcitypes.RequestDeliverTx,
-						response abcitypes.ResponseDeliverTx,
-						_ int,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
 					) (haltChain bool) {
-						if bytes.Equal(request.Tx, CheckTx_MsgCreateTransfer.Tx) {
-							require.True(t, response.IsErr())
-						} else {
-							require.True(t, response.IsOK())
+						for i, tx := range request.Txs {
+							if bytes.Equal(tx, CheckTx_MsgCreateTransfer.Tx) {
+								require.True(t, response.TxResults[i].IsErr())
+							} else {
+								require.True(t, response.TxResults[i].IsOK())
+							}
 						}
 						return false
 					},
@@ -396,7 +396,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
 			}
-			tApp := testapp.NewTestAppBuilder(t).WithAppOptions(appOpts).Build()
+			tApp := testapp.NewTestAppBuilder(t).WithNonDeterminismChecksEnabled(false).WithAppOptions(appOpts).Build()
 			ctx := tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 			// Clear any messages produced prior to CheckTx calls.
 			msgSender.Clear()
@@ -419,8 +419,8 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgDepositToSubaccount),
-					Gas:                  100_000,
+					AccAddressForSigning: msgDepositToSubaccount.Sender,
+					Gas:                  1_000_000,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},
 				&msgDepositToSubaccount,
@@ -447,8 +447,8 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			accountBalanceAfterDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
 			require.Equal(
 				t,
-				accountBalanceAfterDeposit,
 				accountBalanceBeforeDeposit.Sub(transferredCoin).Sub(constants.TestFeeCoins_5Cents[0]),
+				accountBalanceAfterDeposit,
 			)
 			// Check expected subaccount asset position.
 			subaccountQuantumsAfterDeposit :=
@@ -613,7 +613,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(&msgWithdrawFromSubaccount),
+					AccAddressForSigning: msgWithdrawFromSubaccount.Sender.Owner,
 					Gas:                  constants.TestGasLimit,
 					FeeAmt:               constants.TestFeeCoins_5Cents,
 				},

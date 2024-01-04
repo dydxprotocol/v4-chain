@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"context"
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
@@ -27,10 +28,13 @@ func TestAllLiquidityTiers(
 	tApp.InitChain()
 
 	request := perptypes.QueryAllLiquidityTiersRequest{}
-	abciResponse := tApp.App.Query(abci.RequestQuery{
-		Path: "/dydxprotocol.perpetuals.Query/AllLiquidityTiers",
-		Data: tApp.App.AppCodec().MustMarshal(&request),
-	})
+	abciResponse, err := tApp.App.Query(
+		context.Background(),
+		&abci.RequestQuery{
+			Path: "/dydxprotocol.perpetuals.Query/AllLiquidityTiers",
+			Data: tApp.App.AppCodec().MustMarshal(&request),
+		})
+	require.NoError(t, err)
 	require.True(t, abciResponse.IsOK())
 
 	var actual perptypes.QueryAllLiquidityTiersResponse

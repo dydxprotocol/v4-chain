@@ -157,6 +157,7 @@ function overwrite_genesis_public_testnet() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].amount' -v '1000000'
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '86400s' # 1 day
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '3600s' # 1 hour
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '86400s' # 1 day
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v '0.33400' # 33.4%
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.threshold' -v '0.50000' # 50%
