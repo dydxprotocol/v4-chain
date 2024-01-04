@@ -1,6 +1,10 @@
 import config from '../../src/config';
 import { asMock } from '@dydxprotocol-indexer/dev';
-import { createDBSnapshot, getMostRecentDBSnapshotIdentifier } from '../../src/helpers/aws';
+import {
+  createDBSnapshot,
+  deleteOldFastSyncSnapshots,
+  getMostRecentDBSnapshotIdentifier,
+} from '../../src/helpers/aws';
 import takeFastSyncSnapshotTask from '../../src/tasks/take-fast-sync-snapshot';
 import { DateTime } from 'luxon';
 
@@ -25,6 +29,7 @@ describe('fast-sync-export-db-snapshot', () => {
     await takeFastSyncSnapshotTask();
 
     expect(createDBSnapshot).toHaveBeenCalled();
+    expect(deleteOldFastSyncSnapshots).toHaveBeenCalled();
   });
 
   it('Last snapshot was taken less than interval ago', async () => {
@@ -36,6 +41,7 @@ describe('fast-sync-export-db-snapshot', () => {
     await takeFastSyncSnapshotTask();
 
     expect(createDBSnapshot).not.toHaveBeenCalled();
+    expect(deleteOldFastSyncSnapshots).not.toHaveBeenCalled();
   });
 
   it('No existing snapshot', async () => {
@@ -46,5 +52,6 @@ describe('fast-sync-export-db-snapshot', () => {
     await takeFastSyncSnapshotTask();
 
     expect(createDBSnapshot).toHaveBeenCalled();
+    expect(deleteOldFastSyncSnapshots).toHaveBeenCalled();
   });
 });
