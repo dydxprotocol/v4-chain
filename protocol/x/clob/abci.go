@@ -234,8 +234,27 @@ func PrepareCheckState(
 
 	// 8. Insert a zero-fill deleveraging operation into the operations queue if any of the liquidatable
 	// subaccounts still have negative TNC.
+	encounteredNegativeTnc := false
 	for _, subaccountId := range liquidatableSubaccountIds {
-		keeper.CanDeleverageSubaccount(ctx, subaccountId)
+		shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := keeper.CanDeleverageSubaccount(
+			ctx,
+			subaccountId,
+			0,
+		)
+		if err != nil {
+			panic(err)
+		}
+
+		// Negative TNC, deleverage at bankruptcy price.
+		if shouldDeleverageAtBankruptcyPrice {
+			encounteredNegativeTnc = true
+			break
+		}
+	}
+
+	if encounteredNegativeTnc {
+		keeper.MemClob.
+			keeper.MemClob.InsertZeroFillDeleveragingOperation(ctx)
 	}
 
 	// Send all off-chain Indexer events
