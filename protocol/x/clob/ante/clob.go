@@ -67,7 +67,7 @@ func (cd ClobDecorator) AnteHandle(
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Module, log.Clob,
 		log.Callback, lib.TxMode(ctx),
-		log.BlockHeight, ctx.BlockHeight(),
+		log.BlockHeight, ctx.BlockHeight()+1,
 		log.Msg, msg,
 	)
 

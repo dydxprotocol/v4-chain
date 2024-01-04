@@ -130,7 +130,8 @@ func PrepareCheckState(
 ) {
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.PrepareCheckState,
-		log.BlockHeight, ctx.BlockHeight(),
+		// Prepare check state is for the next block.
+		log.BlockHeight, ctx.BlockHeight()+1,
 	)
 
 	// Get the events generated from processing the matches in the latest block.

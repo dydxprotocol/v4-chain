@@ -34,7 +34,9 @@ const (
 
 // Tag values
 const (
-	Clob      = "x/clob"
+	// Module tag values are prefixed with `x/`
+	Clob = "x/clob"
+
 	CheckTx   = "check_tx"
 	RecheckTx = "recheck_tx"
 	DeliverTx = "deliver_tx"
