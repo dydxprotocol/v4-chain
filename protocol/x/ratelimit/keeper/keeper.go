@@ -15,11 +15,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 )
 
+var (
+	// TempTVLPlacerholder is a placeholder value for TVL.
+	// TODO(CORE-836): Remove this after `GetBaseline` is fully implemented.
+	TempTVLPlacerholder = big.NewInt(20_000_000_000_000)
+)
+
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		bankKeeper types.BankKeeper
+		cdc      codec.BinaryCodec
+		storeKey storetypes.StoreKey
 
 		// TODO(CORE-824): Implement `x/ratelimit` keeper
 
@@ -31,13 +36,11 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
-	bankKeeper types.BankKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
-		bankKeeper:  bankKeeper,
 		authorities: lib.UniqueSliceToSet(authorities),
 	}
 }
@@ -126,8 +129,8 @@ func (k Keeper) GetBaseline(
 	limiter types.Limiter,
 ) *big.Int {
 	// Get the current TVL.
-	supply := k.bankKeeper.GetSupply(ctx, denom)
-	currentTVL := supply.Amount.BigInt()
+	// TODO(CORE-836): Query bank Keeper to get current supply of the token.
+	currentTVL := TempTVLPlacerholder
 
 	return lib.BigMax(
 		limiter.BaselineMinimum.BigInt(),
