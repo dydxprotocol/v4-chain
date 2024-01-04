@@ -5,10 +5,9 @@ import {
   defaultSubaccountId,
   defaultTradingRewardAggregation,
   defaultTradingRewardAggregationId,
-  defaultWallet,
 } from '../helpers/constants';
 import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-aggregation-table';
-import { BlockTable, WalletTable } from '../../src';
+import { BlockTable } from '../../src';
 import { seedData } from '../helpers/mock-generators';
 import { denomToHumanReadableConversion } from '../helpers/conversion-helpers';
 
@@ -19,7 +18,6 @@ describe('TradingRewardAggregation store', () => {
 
   beforeEach(async () => {
     await seedData();
-    await WalletTable.create(defaultWallet);
   });
 
   afterEach(async () => {
