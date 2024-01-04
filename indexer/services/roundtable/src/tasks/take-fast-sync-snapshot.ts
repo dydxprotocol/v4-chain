@@ -5,6 +5,7 @@ import { DateTime } from 'luxon';
 import config from '../config';
 import {
   createDBSnapshot,
+  deleteOldFastSyncSnapshots,
   getMostRecentDBSnapshotIdentifier,
 } from '../helpers/aws';
 
@@ -75,4 +76,8 @@ export default async function runTask(): Promise<void> {
   createDBSnapshot(rds, snapshotIdentifier, config.RDS_INSTANCE_NAME);
   logger.info({ at, message: 'Created DB snapshot.', snapshotIdentifier: createdSnapshotIdentifier });
   stats.timing(`${statStart}.createDbSnapshot`, Date.now() - startSnapshot);
+  const startDeleteOldSnapshot: number = Date.now();
+  // Delete old snapshots.
+  await deleteOldFastSyncSnapshots(rds);
+  stats.timing(`${statStart}.deleteOldSnapshots`, Date.now() - startDeleteOldSnapshot);
 }

@@ -20,6 +20,71 @@ export const S3_BUCKET_NAME = config.S3_BUCKET_ARN.split(':::')[1];
 export const S3_LOCATION_PREFIX = `s3://${S3_BUCKET_NAME}`;
 
 /**
+ * Delete snapshots for the RDS instance older than the specified number of days.
+ * Defaults to 7 days.
+ * @param rds
+ * @param daysOld
+ */
+export async function deleteOldFastSyncSnapshots(rds: RDS, daysOld: number = 7): Promise<void> {
+  try {
+    const cutoffTime: number = new Date().getTime() - daysOld * 24 * 60 * 60 * 1000;
+    let marker;
+    do {
+      const response: RDS.DBSnapshotMessage = await rds.describeDBSnapshots({
+        DBInstanceIdentifier: config.RDS_INSTANCE_NAME,
+        MaxRecords: 20, // Maximum number of records per page
+        Marker: marker, // Marker for pagination
+      }).promise();
+
+      if (response.DBSnapshots === undefined) {
+        logger.error({
+          at: `${atStart}deleteOldSnapshots`,
+          message: `No DB snapshots found with identifier: ${config.RDS_INSTANCE_NAME}`,
+        });
+        return;
+      }
+
+      // Filter for fast sync snapshots older than cutoffTime
+      const oldFastSyncSnapshots = response.DBSnapshots.filter((snapshot) => {
+        if (!snapshot.DBSnapshotIdentifier!.startsWith(
+          config.FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX,
+        )) {
+          return false;
+        }
+        const snapshotDate = snapshot.SnapshotCreateTime!.getTime();
+        return snapshotDate < cutoffTime;
+      });
+
+      // Delete each old snapshot
+      for (const snapshot of oldFastSyncSnapshots) {
+        logger.info({
+          at: `${atStart}deleteOldSnapshots`,
+          message: 'Deleting snapshot',
+          snapshotIdentifier: snapshot.DBSnapshotIdentifier,
+        });
+        const snapshotResult: RDS.Types.DeleteDBSnapshotResult = await rds.deleteDBSnapshot(
+          { DBSnapshotIdentifier: snapshot.DBSnapshotIdentifier! },
+        ).promise();
+        logger.info({
+          at: `${atStart}deleteOldSnapshots`,
+          message: 'Snapshot deleted',
+          snapshotIdentifier: snapshotResult.DBSnapshot!.DBSnapshotIdentifier!,
+        });
+      }
+
+      marker = response.Marker;
+    } while (marker);
+  } catch (error) {
+    logger.error({
+      at: `${atStart}deleteOldSnapshots`,
+      message: 'Error deleting old snapshots',
+      error,
+    });
+    throw error;
+  }
+}
+
+/**
  * @description Get most recent snapshot identifier for an RDS database.
  * @param rds - RDS client
  * @param snapshotIdentifierPrefixInclude - Only include snapshots with snapshot identifier
@@ -33,37 +98,47 @@ export async function getMostRecentDBSnapshotIdentifier(
   snapshotIdentifierPrefixInclude?: string,
   snapshotIdentifierPrefixExclude?: string,
 ): Promise<string | undefined> {
-  const awsResponse: RDS.DBSnapshotMessage = await rds.describeDBSnapshots({
-    DBInstanceIdentifier: config.RDS_INSTANCE_NAME,
-    MaxRecords: 20, // this is the minimum
-  }).promise();
+  let snapshots: RDS.DBSnapshotList = [];
+  let marker: string | undefined;
 
-  if (awsResponse.DBSnapshots === undefined) {
-    throw Error(`No DB snapshots found with identifier: ${config.RDS_INSTANCE_NAME}`);
-  }
+  do {
+    const awsResponse: RDS.DBSnapshotMessage = await rds.describeDBSnapshots({
+      DBInstanceIdentifier: config.RDS_INSTANCE_NAME,
+      MaxRecords: 20, // Maximum number of records per page
+      Marker: marker, // Marker for pagination
+    }).promise();
 
-  let snapshots: RDS.DBSnapshotList = awsResponse.DBSnapshots;
-  // Only include snapshots with snapshot identifier that starts with prefixInclude
+    if (awsResponse.DBSnapshots === undefined) {
+      throw Error(`No DB snapshots found with identifier: ${config.RDS_INSTANCE_NAME}`);
+    }
+
+    snapshots = snapshots.concat(awsResponse.DBSnapshots);
+    marker = awsResponse.Marker;
+  } while (marker);
+
+  // Filter snapshots based on include/exclude prefixes
   if (snapshotIdentifierPrefixInclude !== undefined) {
     snapshots = snapshots
       .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
-        snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixInclude),
-      );
+        snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixInclude));
   }
   if (snapshotIdentifierPrefixExclude !== undefined) {
     snapshots = snapshots
       .filter((snapshot) => snapshot.DBSnapshotIdentifier &&
-        !snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixExclude),
-      );
+        !snapshot.DBSnapshotIdentifier.startsWith(snapshotIdentifierPrefixExclude));
   }
+
+  // Sort snapshots by creation time in descending order
+  snapshots.sort((a, b) => b.SnapshotCreateTime!.getTime() - a.SnapshotCreateTime!.getTime());
 
   logger.info({
     at: `${atStart}getMostRecentDBSnapshotIdentifier`,
     message: 'Described snapshots for database',
-    mostRecentSnapshot: snapshots[snapshots.length - 1],
+    mostRecentSnapshot: snapshots[0],
   });
 
-  return snapshots[snapshots.length - 1]?.DBSnapshotIdentifier;
+  // Return the latest snapshot identifier
+  return snapshots[0]?.DBSnapshotIdentifier;
 }
 
 /**
@@ -82,26 +157,27 @@ export async function createDBSnapshot(
 
   try {
     await rds.createDBSnapshot(params).promise();
-    // Polling function to check snapshot status. Only return when the snapshot is available.
-    const waitForSnapshot = async () => {
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const statusResponse = await rds.describeDBSnapshots(
-          { DBSnapshotIdentifier: snapshotIdentifier },
-        ).promise();
-        const snapshot = statusResponse.DBSnapshots![0];
-        if (snapshot.Status === 'available') {
-          return snapshot.DBSnapshotIdentifier!;
-        } else if (snapshot.Status === 'failed') {
-          throw Error(`Snapshot creation failed for identifier: ${snapshotIdentifier}`);
-        }
 
-        // Wait for 1 minute before checking again
-        await new Promise((resolve) => setTimeout(resolve, 60000));
-      }
-    };
+    // Wait for the DB snapshot to become available with the specified waiter configuration
+    await rds.waitFor('dBSnapshotAvailable', {
+      DBSnapshotIdentifier: snapshotIdentifier,
+      $waiter: {
+        delay: 60,       // 60 seconds delay between each request
+        maxAttempts: 10,  // Maximum of 10 attempts
+      },
+    }).promise();
 
-    return await waitForSnapshot();
+    // Once it's available, retrieve its details
+    const statusResponse = await rds.describeDBSnapshots(
+      { DBSnapshotIdentifier: snapshotIdentifier },
+    ).promise();
+
+    const snapshot = statusResponse.DBSnapshots![0];
+    if (snapshot.Status === 'available') {
+      return snapshot.DBSnapshotIdentifier!;
+    } else {
+      throw Error(`Snapshot is not in the available state: Status is ${snapshot.Status}`);
+    }
   } catch (error) {
     logger.error({
       at: `${atStart}createDBSnapshot`,
