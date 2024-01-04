@@ -34,7 +34,7 @@ func TestPerformStatelessMatchPerpetualDeleveragingValidation(t *testing.T) {
 				PerpetualId: constants.ClobPair_Eth.MustGetPerpetualId(),
 				Fills:       []types.MatchPerpetualDeleveraging_Fill{},
 			},
-			expectedError: types.ErrEmptyDeleveragingFills,
+			expectedError: nil,
 		},
 		"Deleveraging fill subaccount id the same as liquidation subaccount id": {
 			match: types.MatchPerpetualDeleveraging{

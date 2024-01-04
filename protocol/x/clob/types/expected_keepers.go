@@ -59,6 +59,10 @@ type SubaccountsKeeper interface {
 		successPerUpdate []satypes.UpdateResult,
 		err error,
 	)
+	SetNegativeTncSubaccountSeenAtBlock(
+		ctx sdk.Context,
+		blockHeight uint32,
+	)
 	TransferFeesToFeeCollectorModule(
 		ctx sdk.Context,
 		assetId uint32,
