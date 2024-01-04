@@ -42,7 +42,7 @@ const (
 	DeliverTx = "deliver_tx"
 )
 
-// Tag values that should be camelcased (i.e function names)
+// Special tag values that should be PascalCased (i.e function names)
 const (
 	AnteHandler        = "AnteHandler"
 	PlaceOrder         = "PlaceOrder"
