@@ -1,5 +1,6 @@
 import { logger, startBugsnag, wrapBackgroundTask } from '@dydxprotocol-indexer/base';
 import { producer } from '@dydxprotocol-indexer/kafka';
+import { TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
 
 import config from './config';
 import { complianceProvider } from './helpers/compliance-clients';
@@ -140,11 +141,27 @@ async function start(): Promise<void> {
     );
   }
 
-  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS) {
+  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY) {
     startLoop(
-      aggregateTradingRewardsTasks,
-      'aggregate_trading_rewards',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
+      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.DAILY),
+      'aggregate_trading_rewards_daily',
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_DAILY,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY) {
+    startLoop(
+      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.WEEKLY),
+      'aggregate_trading_rewards_weekly',
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_WEEKLY,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY) {
+    startLoop(
+      aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.MONTHLY),
+      'aggregate_trading_rewards_monthly',
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_MONTHLY,
     );
   }
 

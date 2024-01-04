@@ -92,6 +92,22 @@ export async function findAll(
   return baseQuery.returning('*');
 }
 
+export async function getLatestAggregatedTradeReward(
+  period: TradingRewardAggregationPeriod,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<TradingRewardAggregationFromDatabase | undefined> {
+  const baseQuery:
+  QueryBuilder<TradingRewardAggregationModel> = setupBaseQuery<TradingRewardAggregationModel>(
+    TradingRewardAggregationModel,
+    options,
+  );
+
+  return baseQuery
+    .where(TradingRewardAggregationColumns.period, period)
+    .orderBy(TradingRewardAggregationColumns.startedAtHeight, Ordering.DESC)
+    .first();
+}
+
 export async function create(
   aggregationToCreate: TradingRewardAggregationCreateObject,
   options: Options = { txId: undefined },
@@ -126,7 +142,7 @@ export async function update(
   {
     ...fields
   }: TradingRewardAggregationUpdateObject,
-  options: Options = { txId: undefined },
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<TradingRewardAggregationFromDatabase | undefined> {
   const aggregation = await TradingRewardAggregationModel.query(
     Transaction.get(options.txId),
@@ -135,4 +151,28 @@ export async function update(
   ).findById(fields.id).patch(fields as any).returning('*');
   // The objection types mistakenly think the query returns an array of orders.
   return aggregation as unknown as (TradingRewardAggregationFromDatabase | undefined);
+}
+
+export async function deleteAll(
+  {
+    period,
+    startedAtHeightOrAfter,
+  }: TradingRewardAggregationQueryConfig,
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
+): Promise<void> {
+  let baseQuery:
+  QueryBuilder<TradingRewardAggregationModel> = setupBaseQuery<TradingRewardAggregationModel>(
+    TradingRewardAggregationModel,
+    options,
+  );
+
+  if (period) {
+    baseQuery = baseQuery.where(TradingRewardAggregationColumns.period, period);
+  }
+
+  if (startedAtHeightOrAfter) {
+    baseQuery = baseQuery.where(TradingRewardAggregationColumns.startedAtHeight, '>=', startedAtHeightOrAfter);
+  }
+
+  await baseQuery.delete();
 }
