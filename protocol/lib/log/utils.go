@@ -9,7 +9,6 @@ import (
 // InfoLog reports msg as an info level log with specified key vals.
 // `keyvals` should be even number in length and be of alternating types (string, interface{}).
 func InfoLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
-
 	ctx.Logger().Info(msg, keyvals...)
 }
 
