@@ -171,7 +171,7 @@ class AddressesController extends Controller {
     return {
       subaccounts: subaccountResponses,
       totalTradingRewards: wallet?.totalTradingRewards,
-    }
+    };
   }
 
   @Get('/:address/subaccountNumber/:subaccountNumber')
