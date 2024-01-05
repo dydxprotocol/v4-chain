@@ -1,6 +1,6 @@
 import { WalletFromDatabase } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { defaultAddress, defaultWallet2 } from '../helpers/constants';
+import { defaultWallet2 } from '../helpers/constants';
 import * as WalletTable from '../../src/stores/wallet-table';
 
 describe('Wallet store', () => {
@@ -23,14 +23,12 @@ describe('Wallet store', () => {
   it('Successfully upserts a Wallet multiple times', async () => {
     await WalletTable.upsert(defaultWallet2);
     let wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-      defaultAddress,
+      defaultWallet2.address,
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
     await WalletTable.upsert(defaultWallet2);
-    wallet = await WalletTable.findById(
-      defaultAddress,
-    );
+    wallet = await WalletTable.findById(defaultWallet2.address);
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
   });
@@ -61,7 +59,7 @@ describe('Wallet store', () => {
     await WalletTable.create(defaultWallet2);
 
     const wallet: WalletFromDatabase | undefined = await WalletTable.findById(
-      defaultAddress,
+      defaultWallet2.address,
     );
 
     expect(wallet).toEqual(expect.objectContaining(defaultWallet2));
