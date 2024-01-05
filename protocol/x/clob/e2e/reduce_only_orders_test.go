@@ -44,7 +44,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: false,
 			},
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId: 100,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId:          100,
+				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: 100,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -104,7 +105,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: false,
 			},
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId: 100,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy10_Price500000_GTB20.OrderId:          100,
+				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: 100,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -164,7 +166,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: false,
 			},
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId: 150,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          150,
+				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_IOC_RO.OrderId: 150,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
