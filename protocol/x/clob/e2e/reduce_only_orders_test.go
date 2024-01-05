@@ -365,7 +365,6 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 			ctx := tApp.InitChain()
 
 			for idx, order := range tc.orders {
-
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 					ctx,
 					tApp.App,
