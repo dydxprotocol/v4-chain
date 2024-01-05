@@ -1,4 +1,4 @@
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionFromDatabase,
   BlockTable,
@@ -22,6 +22,8 @@ import {
   Options,
   FundingIndexUpdatesTable,
   FundingIndexMap,
+  WalletTable,
+  WalletFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import express from 'express';
@@ -69,6 +71,7 @@ import {
   AssetPositionResponseObject,
   AssetPositionsMap,
   PerpetualPositionWithFunding,
+  AddressResponse,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -79,10 +82,13 @@ class AddressesController extends Controller {
   @Get('/:address')
   public async getAddress(
     @Path() address: string,
-  ): Promise<SubaccountResponseObject[]> {
+  ): Promise<AddressResponse> {
     // TODO(IND-189): Use a transaction across all the DB queries
-    const [subaccounts, latestBlock]:
-    [SubaccountFromDatabase[], BlockFromDatabase] = await Promise.all([
+    const [subaccounts, latestBlock, wallet]: [
+      SubaccountFromDatabase[],
+      BlockFromDatabase,
+      WalletFromDatabase | undefined,
+    ] = await Promise.all([
       SubaccountTable.findAll(
         {
           address,
@@ -90,10 +96,20 @@ class AddressesController extends Controller {
         [],
       ),
       BlockTable.getLatest(),
+      WalletTable.findById(address),
     ]);
 
     if (subaccounts.length === 0) {
       throw new NotFoundError(`No subaccounts found for address ${address}`);
+    }
+
+    if (wallet === undefined) {
+      logger.error({
+        at: 'AddressesController#getAddress',
+        message: 'No wallet found for address, but subaccounts found for address, this should never happen',
+        address,
+      });
+      throw new NotFoundError(`No wallet found for address ${address}`);
     }
 
     const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
@@ -152,7 +168,10 @@ class AddressesController extends Controller {
       },
     ));
 
-    return subaccountResponses;
+    return {
+      subaccounts: subaccountResponses,
+      totalTradingRewards: wallet?.totalTradingRewards,
+    }
   }
 
   @Get('/:address/subaccountNumber/:subaccountNumber')
@@ -257,13 +276,11 @@ router.get(
 
     try {
       const controller: AddressesController = new AddressesController();
-      const subaccountResponse: SubaccountResponseObject[] = await controller.getAddress(
+      const addressResponse: AddressResponse = await controller.getAddress(
         address,
       );
 
-      return res.send({
-        subaccounts: subaccountResponse,
-      });
+      return res.send(addressResponse);
     } catch (error) {
       return handleControllerError(
         'AddressesController GET /:address',

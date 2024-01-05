@@ -62,120 +62,75 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
 > 200 Response
 
 ```json
-[
-  {
-    "address": "string",
-    "subaccountNumber": 0,
-    "equity": "string",
-    "freeCollateral": "string",
-    "openPerpetualPositions": {
-      "property1": {
-        "market": "string",
-        "status": "OPEN",
-        "side": "LONG",
-        "size": "string",
-        "maxSize": "string",
-        "entryPrice": "string",
-        "realizedPnl": "string",
-        "createdAt": "string",
-        "createdAtHeight": "string",
-        "sumOpen": "string",
-        "sumClose": "string",
-        "netFunding": "string",
-        "unrealizedPnl": "string",
-        "closedAt": "string",
-        "exitPrice": "string"
+{
+  "subaccounts": [
+    {
+      "address": "string",
+      "subaccountNumber": 0,
+      "equity": "string",
+      "freeCollateral": "string",
+      "openPerpetualPositions": {
+        "property1": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        },
+        "property2": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        }
       },
-      "property2": {
-        "market": "string",
-        "status": "OPEN",
-        "side": "LONG",
-        "size": "string",
-        "maxSize": "string",
-        "entryPrice": "string",
-        "realizedPnl": "string",
-        "createdAt": "string",
-        "createdAtHeight": "string",
-        "sumOpen": "string",
-        "sumClose": "string",
-        "netFunding": "string",
-        "unrealizedPnl": "string",
-        "closedAt": "string",
-        "exitPrice": "string"
-      }
-    },
-    "assetPositions": {
-      "property1": {
-        "symbol": "string",
-        "side": "LONG",
-        "size": "string",
-        "assetId": "string"
+      "assetPositions": {
+        "property1": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string"
+        },
+        "property2": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string"
+        }
       },
-      "property2": {
-        "symbol": "string",
-        "side": "LONG",
-        "size": "string",
-        "assetId": "string"
-      }
-    },
-    "marginEnabled": true
-  }
-]
+      "marginEnabled": true
+    }
+  ],
+  "totalTradingRewards": "string"
+}
 ```
 
 ### Responses
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
-
-### Response Schema
-
-Status Code **200**
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|*anonymous*|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|false|none|none|
-|» address|string|true|none|none|
-|» subaccountNumber|number(double)|true|none|none|
-|» equity|string|true|none|none|
-|» freeCollateral|string|true|none|none|
-|» openPerpetualPositions|[PerpetualPositionsMap](#schemaperpetualpositionsmap)|true|none|none|
-|»» **additionalProperties**|[PerpetualPositionResponseObject](#schemaperpetualpositionresponseobject)|false|none|none|
-|»»» market|string|true|none|none|
-|»»» status|[PerpetualPositionStatus](#schemaperpetualpositionstatus)|true|none|none|
-|»»» side|[PositionSide](#schemapositionside)|true|none|none|
-|»»» size|string|true|none|none|
-|»»» maxSize|string|true|none|none|
-|»»» entryPrice|string|true|none|none|
-|»»» realizedPnl|string|true|none|none|
-|»»» createdAt|[IsoString](#schemaisostring)|true|none|none|
-|»»» createdAtHeight|string|true|none|none|
-|»»» sumOpen|string|true|none|none|
-|»»» sumClose|string|true|none|none|
-|»»» netFunding|string|true|none|none|
-|»»» unrealizedPnl|string|true|none|none|
-|»»» closedAt|[IsoString](#schemaisostring)¦null|false|none|none|
-|»»» exitPrice|string¦null|false|none|none|
-|» assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
-|»» **additionalProperties**|[AssetPositionResponseObject](#schemaassetpositionresponseobject)|false|none|none|
-|»»» symbol|string|true|none|none|
-|»»» side|[PositionSide](#schemapositionside)|true|none|none|
-|»»» size|string|true|none|none|
-|»»» assetId|string|true|none|none|
-|» marginEnabled|boolean|true|none|none|
-
-#### Enumerated Values
-
-|Property|Value|
-|---|---|
-|status|OPEN|
-|status|CLOSED|
-|status|LIQUIDATED|
-|side|LONG|
-|side|SHORT|
-|side|LONG|
-|side|SHORT|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AddressResponse](#schemaaddressresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -2053,6 +2008,86 @@ This operation does not require authentication
 |openPerpetualPositions|[PerpetualPositionsMap](#schemaperpetualpositionsmap)|true|none|none|
 |assetPositions|[AssetPositionsMap](#schemaassetpositionsmap)|true|none|none|
 |marginEnabled|boolean|true|none|none|
+
+## AddressResponse
+
+<a id="schemaaddressresponse"></a>
+<a id="schema_AddressResponse"></a>
+<a id="tocSaddressresponse"></a>
+<a id="tocsaddressresponse"></a>
+
+```json
+{
+  "subaccounts": [
+    {
+      "address": "string",
+      "subaccountNumber": 0,
+      "equity": "string",
+      "freeCollateral": "string",
+      "openPerpetualPositions": {
+        "property1": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        },
+        "property2": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        }
+      },
+      "assetPositions": {
+        "property1": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string"
+        },
+        "property2": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string"
+        }
+      },
+      "marginEnabled": true
+    }
+  ],
+  "totalTradingRewards": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|subaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
+|totalTradingRewards|string|true|none|none|
 
 ## AssetPositionResponse
 
