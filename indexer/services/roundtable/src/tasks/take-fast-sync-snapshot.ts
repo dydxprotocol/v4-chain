@@ -5,39 +5,10 @@ import { DateTime } from 'luxon';
 import config from '../config';
 import {
   createDBSnapshot,
-  deleteOldFastSyncSnapshots,
   getMostRecentDBSnapshotIdentifier,
 } from '../helpers/aws';
 
 const statStart: string = `${config.SERVICE_NAME}.fast_sync_export_db_snapshot`;
-
-/**
- * Checks if the difference between two dates is less than a given interval.
- *
- * @param startDate
- * @param endDate
- * @param intervalMs
- */
-function isDifferenceLessThanInterval(
-  startDate: string,
-  endDate: string,
-  intervalMs: number,
-): boolean {
-  const parseDateString = (dateStr: string): Date => {
-    const [year, month, day, hour, minute] = dateStr.split('-').map(Number);
-    return new Date(year, month, day, hour, minute);
-  };
-
-  // Parse the date strings
-  const parsedDate1 = parseDateString(startDate);
-  const parsedDate2 = parseDateString(endDate);
-
-  // Calculate the difference in milliseconds
-  const differenceInMilliseconds = Math.abs(parsedDate1.getTime() - parsedDate2.getTime());
-
-  // Compare with the interval
-  return differenceInMilliseconds < intervalMs;
-}
 
 export default async function runTask(): Promise<void> {
   const at: string = 'fast-sync-export-db-snapshot#runTask';
@@ -66,6 +37,8 @@ export default async function runTask(): Promise<void> {
         at,
         message: 'Last fast sync db snapshot was taken less than the interval ago',
         interval: config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
+        currentDate: dateString,
+        lastSnapshotDate: s3Date,
       });
       return;
     }
@@ -76,8 +49,32 @@ export default async function runTask(): Promise<void> {
   createDBSnapshot(rds, snapshotIdentifier, config.RDS_INSTANCE_NAME);
   logger.info({ at, message: 'Created DB snapshot.', snapshotIdentifier: createdSnapshotIdentifier });
   stats.timing(`${statStart}.createDbSnapshot`, Date.now() - startSnapshot);
-  const startDeleteOldSnapshot: number = Date.now();
-  // Delete old snapshots.
-  await deleteOldFastSyncSnapshots(rds);
-  stats.timing(`${statStart}.deleteOldSnapshots`, Date.now() - startDeleteOldSnapshot);
+}
+
+/**
+ * Checks if the difference between two dates is less than a given interval.
+ *
+ * @param startDate
+ * @param endDate
+ * @param intervalMs
+ */
+function isDifferenceLessThanInterval(
+  startDate: string,
+  endDate: string,
+  intervalMs: number,
+): boolean {
+  const parseDateString = (dateStr: string): Date => {
+    const [year, month, day, hour, minute] = dateStr.split('-').map(Number);
+    return new Date(year, month, day, hour, minute);
+  };
+
+  // Parse the date strings
+  const parsedDate1 = parseDateString(startDate);
+  const parsedDate2 = parseDateString(endDate);
+
+  // Calculate the difference in milliseconds
+  const differenceInMilliseconds = Math.abs(parsedDate1.getTime() - parsedDate2.getTime());
+
+  // Compare with the interval
+  return differenceInMilliseconds < intervalMs;
 }

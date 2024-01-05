@@ -16,6 +16,7 @@ import {
   ONE_SECOND_IN_MILLISECONDS,
   TEN_SECONDS_IN_MILLISECONDS,
   FOUR_HOURS_IN_MILLISECONDS,
+  ONE_DAY_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -42,6 +43,7 @@ export const configSchema = {
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: false }),
   LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_DELETE_OLD_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
   LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
   LOOPS_ENABLED_REMOVE_OLD_ORDER_UPDATES: parseBoolean({ default: true }),
   LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS: parseBoolean({ default: true }),
@@ -70,6 +72,9 @@ export const configSchema = {
   }),
   LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS: parseInteger({
     default: FOUR_HOURS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_DELETE_OLD_FAST_SYNC_SNAPSHOTS: parseInteger({
+    default: ONE_DAY_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA: parseInteger({
     default: FIVE_MINUTES_IN_MILLISECONDS,
