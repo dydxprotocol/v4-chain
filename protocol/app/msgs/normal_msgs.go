@@ -183,8 +183,8 @@ var (
 		"/ibc.core.client.v1.MsgRecoverClientResponse":      nil,
 		"/ibc.core.client.v1.MsgSubmitMisbehaviour":         &ibcclient.MsgSubmitMisbehaviour{}, //nolint:staticcheck
 		"/ibc.core.client.v1.MsgSubmitMisbehaviourResponse": nil,
-		// TODO(CORE-538): Move MsgUpdateClient and MsgUpgradeClient to unsupported_msgs once upgrade has been added
-		// and verified to function.
+		// TODO(CORE-851): Move MsgUpdateClient and MsgUpgradeClient to unsupported_msgs once v4.0.0 upgrade has
+		// been completed and Cosmos 0.50 performs well.
 		"/ibc.core.client.v1.MsgUpdateClient":          &ibcclient.MsgUpdateClient{},
 		"/ibc.core.client.v1.MsgUpdateClientResponse":  nil,
 		"/ibc.core.client.v1.MsgUpgradeClient":         &ibcclient.MsgUpgradeClient{},

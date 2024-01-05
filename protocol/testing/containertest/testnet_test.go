@@ -285,8 +285,8 @@ func TestMarketPrices(t *testing.T) {
 }
 
 func TestUpgrade(t *testing.T) {
-	t.Skip("TODO(CORE-538): Update upgrade handler for Cosmos 0.50 upgrade")
-
+	// TODO(CORE-538): Swap to using official 3.0.0 binaries, if they are the same as 3.0.0-dev0 then remove this
+	// line as that is what is currently being used.
 	testnet, err := NewTestnetWithPreupgradeGenesis()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
 	err = testnet.Start()
