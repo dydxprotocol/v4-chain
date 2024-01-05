@@ -18,6 +18,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 		ordersForFirstBlock  []clobtypes.Order
 		ordersForSecondBlock []clobtypes.Order
 
+		crashingAppCheckTxNonDeterminsmChecksDisabled bool
+
 		expectedOrderOnMemClob  map[clobtypes.OrderId]bool
 		expectedOrderFillAmount map[clobtypes.OrderId]uint64
 		expectedSubaccounts     []satypes.Subaccount
@@ -224,6 +226,73 @@ func TestReduceOnlyOrders(t *testing.T) {
 				),
 			},
 
+			// Crashing app checks have to be disabled because the FOK order will not match
+			// with an empty orderbook and fail to be placed.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
+				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO.OrderId: false,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId: 150,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(9_250_0825_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(150),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(507_496_250_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(99_999_850),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
+		"FOK Reduce only order fully matches short term order same block, maker order partially filled": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_100000USD,
+				constants.Alice_Num1_1BTC_Long_500_000USD,
+			},
+			ordersForFirstBlock: []clobtypes.Order{
+				MustScaleOrder(
+					constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20,
+					testapp.DefaultGenesis(),
+				),
+				MustScaleOrder(
+					constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO,
+					testapp.DefaultGenesis(),
+				),
+			},
+			ordersForSecondBlock: []clobtypes.Order{},
+
+			// Crashing app checks have to be disabled because the FOK order will not match
+			// with an empty orderbook and fail to be placed.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
+
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
 				constants.Order_Alice_Num1_Id1_Clob0_Sell15_Price500000_GTB20_FOK_RO.OrderId: false,
@@ -270,16 +339,18 @@ func TestReduceOnlyOrders(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-				genesis = testapp.DefaultGenesis()
-				testapp.UpdateGenesisDocWithAppStateForModule(
-					&genesis,
-					func(genesisState *satypes.GenesisState) {
-						genesisState.Subaccounts = tc.subaccounts
-					},
-				)
-				return genesis
-			}).Build()
+			tApp := testapp.NewTestAppBuilder(t).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminsmChecksDisabled).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = tc.subaccounts
+						},
+					)
+					return genesis
+				}).Build()
 			ctx := tApp.InitChain()
 
 			// Create all orders.
