@@ -201,6 +201,11 @@ var (
 		43,
 		"Order has remaining size",
 	)
+	ErrInvalidTimeInForce = errorsmod.Register(
+		ModuleName,
+		44,
+		"invalid time in force",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
