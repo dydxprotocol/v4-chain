@@ -6,7 +6,7 @@ import {
 } from '../../src/caches/aggregate-trading-rewards-processed-cache';
 import { IsoString, TradingRewardAggregationPeriod } from '@dydxprotocol-indexer/postgres';
 
-describe('cancelledOrdersCache', () => {
+describe('aggregateTradingRewardsProcessedCache', () => {
   beforeEach(async () => {
     await deleteAllAsync(client);
   });

@@ -87,13 +87,7 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
-  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_DAILY: parseInteger({
-    default: THIRTY_SECONDS_IN_MILLISECONDS,
-  }),
-  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_WEEKLY: parseInteger({
-    default: THIRTY_SECONDS_IN_MILLISECONDS,
-  }),
-  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_MONTHLY: parseInteger({
+  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
@@ -149,6 +143,11 @@ export const configSchema = {
 
   // Remove old cached order updates
   OLD_CACHED_ORDER_UPDATES_WINDOW_MS: parseInteger({ default: 30 * ONE_SECOND_IN_MILLISECONDS }),
+
+  // Aggregate Trading Rewards
+  AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS: parseInteger({
+    default: ONE_HOUR_IN_MILLISECONDS,
+  }),
 };
 
 export default parseSchema(configSchema);

@@ -16,6 +16,7 @@ import {
 import { AggregateTradingRewardsProcessedCache } from '@dydxprotocol-indexer/redis';
 import { DateTime, Interval } from 'luxon';
 
+import config from '../config';
 import { redisClient } from '../helpers/redis';
 import { UTC_OPTIONS } from '../lib/constants';
 
@@ -46,14 +47,8 @@ export class AggregateTradingReward {
   }
 
   async runTask(): Promise<void> {
-    const interval: Interval | undefined = await this.getTradingRewardDataToProcessInterval();
-    if (interval === undefined) {
-      logger.info({
-        at: 'aggregate-trading-rewards#runTask',
-        message: 'No interval to aggregate trading rewards',
-      });
-      return;
-    }
+    await this.maybeDeleteIncompleteAggregatedTradingReward();
+    const interval: Interval = await this.getTradingRewardDataToProcessInterval();
     logger.info({
       at: 'aggregate-trading-rewards#runTask',
       message: 'Generated interval to aggregate trading rewards',
@@ -75,37 +70,74 @@ export class AggregateTradingReward {
   }
 
   /**
-   * Gets the interval of time to aggregate trading rewards for.
-   * If there are no blocks in the database, then do not process any data.
-   * If There is no processedTime in the cache, then delete the latest month of data,
-   * and reprocess that data or start from block 1.
-   * If the processedTime is not null, and blocks exist in the database, then process up to the
-   * next hour of data.
+   * If the latest processed time is null (should only happen during a fast sync),
+   * and the latest period of aggregated trading rewards is incomplete.
    */
-  async getTradingRewardDataToProcessInterval(): Promise<Interval | undefined> {
-    let latestBlock: BlockFromDatabase;
-    try {
-      latestBlock = await BlockTable.getLatest();
-    } catch (e) {
-      logger.info({
-        at: 'aggregate-trading-rewards#getTradingRewardDataToProcessInterval',
-        message: 'Unable to aggregate trading rewards because there are no blocks in the database.',
-      });
-      return;
-    }
-
+  async maybeDeleteIncompleteAggregatedTradingReward(): Promise<void> {
     const processedTime:
     IsoString | null = await AggregateTradingRewardsProcessedCache.getProcessedTime(
       this.period,
       redisClient,
     );
+    if (processedTime !== null) {
+      return;
+    }
+    const latestAggregation:
+    TradingRewardAggregationFromDatabase | undefined = await
+    TradingRewardAggregationTable.getLatestAggregatedTradeReward(this.period);
+
+    // endedAt is only set when the entire interval has been processed for an aggregation
+    if (latestAggregation !== undefined && latestAggregation.endedAt === null) {
+      await this.deleteIncompleteAggregatedTradingReward(latestAggregation);
+    }
+  }
+
+  /**
+   * Deletes the latest this.period of aggregated trading rewards if it is incomplete. This is
+   * called when the processedTime is null, and the latest aggregated trading rewards is incomplete.
+   * We delete the latest this.period of aggregated trading rewards data because we don't know how
+   * much data was processed within the interval, and we don't want to double count rewards.
+   */
+  private async deleteIncompleteAggregatedTradingReward(
+    latestAggregation: TradingRewardAggregationFromDatabase,
+  ): Promise<void> {
+    logger.info({
+      at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
+      message: `Deleting the latest ${this.period} aggregated trading rewards.`,
+    });
+    await TradingRewardAggregationTable.deleteAll({
+      period: this.period,
+      startedAtHeightOrAfter: latestAggregation.startedAtHeight,
+    });
+    logger.info({
+      at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
+      message: `Deleted the last ${this.period} aggregated trading rewards`,
+      height: latestAggregation.startedAtHeight,
+      time: latestAggregation.startedAt,
+    });
+  }
+
+  /**
+   * Gets the interval of time to aggregate trading rewards for.
+   * If there are no blocks in the database, then throw an error.
+   * If There is no processedTime in the cache, then delete the latest month of data,
+   * and reprocess that data or start from block 1.
+   * If the processedTime is not null, and blocks exist in the database, then process up to the
+   * next config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS of data.
+   */
+  async getTradingRewardDataToProcessInterval(): Promise<Interval> {
+    const processedTime:
+    IsoString | null = await AggregateTradingRewardsProcessedCache.getProcessedTime(
+      this.period,
+      redisClient,
+    );
+    const latestBlock: BlockFromDatabase = await BlockTable.getLatest();
     if (processedTime === null) {
-      await this.deleteIncompleteAggregatedTradingReward();
       logger.info({
         at: 'aggregate-trading-rewards#getTradingRewardDataToProcessInterval',
         message: 'Resetting AggregateTradingRewardsProcessedCache',
       });
-      const nextStartTime: DateTime = await this.getNextIntervalStart();
+      const nextStartTime: DateTime = await this.getNextIntervalStartWhenCacheEmpty();
       await AggregateTradingRewardsProcessedCache.setProcessedTime(
         this.period,
         nextStartTime.toISO(),
@@ -120,41 +152,12 @@ export class AggregateTradingReward {
   }
 
   /**
-   * Deletes the latest this.period of aggregated trading rewards if it is incomplete. This is
-   * called when the processedTime is null, and we need to reprocess the latest month of data.
-   * We delete the latest this.period of aggregated trading rewards data because we don't know if
-   * the data is complete.
+   * Returns the start time of the next interval to process if the
+   * AggregateTradingRewardProcessedCache is empty. If there is a most recent complete aggregation
+   * for this period, returns the end time of the most recent aggregation, otherwise returns the
+   * start time of the first block in the database.
    */
-  private async deleteIncompleteAggregatedTradingReward(): Promise<void> {
-    logger.info({
-      at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
-      message: `Deleting the latest ${this.period} aggregated trading rewards.`,
-    });
-
-    const latestAggregation:
-    TradingRewardAggregationFromDatabase | undefined = await
-    TradingRewardAggregationTable.getLatestAggregatedTradeReward(this.period);
-
-    if (latestAggregation !== undefined && latestAggregation.endedAt === null) {
-      await TradingRewardAggregationTable.deleteAll({
-        period: this.period,
-        startedAtHeightOrAfter: latestAggregation.startedAtHeight,
-      });
-      logger.info({
-        at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
-        message: `Deleted the last ${this.period} aggregated trading rewards`,
-        height: latestAggregation.startedAtHeight,
-        time: latestAggregation.startedAt,
-      });
-    }
-  }
-
-  /**
-   * The start time of the next interval to process. This will be the start time of the
-   * first block in the database, or the start time of the next month after the latest
-   * monthly aggregation.
-   */
-  private async getNextIntervalStart(): Promise<DateTime> {
+  private async getNextIntervalStartWhenCacheEmpty(): Promise<DateTime> {
     const latestAggregation:
     TradingRewardAggregationFromDatabase | undefined = await
     TradingRewardAggregationTable.getLatestAggregatedTradeReward(this.period);
@@ -176,7 +179,7 @@ export class AggregateTradingReward {
    * Generate the interval that will be processed. The end time of the interval is calculated from
    * a start time and the latest block. This will be the earliest of the following:
    * 1. The next day
-   * 2. An hour after start time
+   * 2. Start time plus config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS
    * 3. The start of the minute of the latest block
    * @param startTime - startTime of the interval
    * @param latestBlock
@@ -198,11 +201,13 @@ export class AggregateTradingReward {
     const normalizedNextDay: Date = floorDate(nextDay, ONE_DAY_IN_MILLISECONDS);
 
     const startDate: Date = startTime.toJSDate();
-    const oneHourAfterStart: Date = DateTime.fromJSDate(startDate).plus({ hour: 1 }).toJSDate();
+    const startTimePlusMaxIntervalSize: Date = DateTime.fromJSDate(startDate).plus(
+      { milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS },
+    ).toJSDate();
     const endTime: Date = new Date(Math.min(
       normalizedLatestBlockTime.getTime(),
       normalizedNextDay.getTime(),
-      oneHourAfterStart.getTime(),
+      startTimePlusMaxIntervalSize.getTime(),
     ));
     const endDateTime: DateTime = DateTime.fromJSDate(endTime).toUTC();
     return Interval.fromDateTimes(startTime, endDateTime);

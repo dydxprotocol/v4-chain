@@ -3,6 +3,11 @@ import { RedisClient } from 'redis';
 
 import { getAsync } from '../helpers/redis';
 
+/**
+ * Cache key for the aggregate trading rewards processed cache. Given a
+ * TradingRewardAggregationPeriod, this cache stores the timestamp of the
+ * trading rewards that have been processed up to and excluding that timestamp.
+ */
 export const AGGREGATE_TRADING_REWARDS_PROCESSED_CACHE_KEY: string = 'v4/aggregate_trading_rewards_processed/';
 
 function getKey(period: TradingRewardAggregationPeriod): string {

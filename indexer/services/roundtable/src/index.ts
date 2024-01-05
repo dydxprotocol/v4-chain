@@ -145,7 +145,7 @@ async function start(): Promise<void> {
     startLoop(
       aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.DAILY),
       'aggregate_trading_rewards_daily',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_DAILY,
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
     );
   }
 
@@ -153,7 +153,7 @@ async function start(): Promise<void> {
     startLoop(
       aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.WEEKLY),
       'aggregate_trading_rewards_weekly',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_WEEKLY,
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
     );
   }
 
@@ -161,7 +161,7 @@ async function start(): Promise<void> {
     startLoop(
       aggregateTradingRewardsTasks(TradingRewardAggregationPeriod.MONTHLY),
       'aggregate_trading_rewards_monthly',
-      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS_MONTHLY,
+      config.LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS,
     );
   }
 

@@ -13,6 +13,7 @@ import { UTC_OPTIONS } from '../../src/lib/constants';
 import { deleteAllAsync } from '@dydxprotocol-indexer/redis/build/src/helpers/redis';
 import { redisClient } from '../../src/helpers/redis';
 import { AggregateTradingRewardsProcessedCache } from '@dydxprotocol-indexer/redis';
+import config from '../../src/config';
 
 describe('aggregate-trading-rewards', () => {
   beforeAll(async () => {
@@ -56,51 +57,7 @@ describe('aggregate-trading-rewards', () => {
     amount: '10',
   };
 
-  describe('getTradingRewardDataToProcessInterval', () => {
-    it.each([
-      TradingRewardAggregationPeriod.DAILY,
-      TradingRewardAggregationPeriod.WEEKLY,
-      TradingRewardAggregationPeriod.MONTHLY,
-    ])('Successfully returns undefined if there are no blocks in the database', async (
-      period: TradingRewardAggregationPeriod,
-    ) => {
-      await dbHelpers.clearData();
-      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(period);
-      const interval:
-      Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
-
-      expect(interval).toBeUndefined();
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message:
-            'Unable to aggregate trading rewards because there are no blocks in the database.',
-        }),
-      );
-    });
-
-    it.each([
-      TradingRewardAggregationPeriod.DAILY,
-      TradingRewardAggregationPeriod.WEEKLY,
-      TradingRewardAggregationPeriod.MONTHLY,
-    ])('Successfully returns first block time if cache is empty and no aggregations', async (
-      period: TradingRewardAggregationPeriod,
-    ) => {
-      const firstBlockTime: DateTime = DateTime.fromISO(
-        testConstants.defaultBlock.time,
-        UTC_OPTIONS,
-      ).toUTC();
-      await createBlockWithTime(firstBlockTime.plus({ hours: 1 }));
-      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(period);
-      const interval:
-      Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
-
-      expect(interval).not.toBeUndefined();
-      expect(interval).toEqual(Interval.fromDateTimes(
-        firstBlockTime,
-        firstBlockTime.plus({ hours: 1 })),
-      );
-    });
-
+  describe('maybeDeleteIncompleteAggregatedTradingReward', () => {
     it(
       'Deletes incomplete aggregations when cache is empty and only one incomplete aggregations exist',
       async () => {
@@ -114,18 +71,7 @@ describe('aggregate-trading-rewards', () => {
         const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
           TradingRewardAggregationPeriod.MONTHLY,
         );
-        const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
-
-        const firstBlockTime: DateTime = DateTime.fromISO(
-          testConstants.defaultBlock.time,
-          UTC_OPTIONS,
-        ).toUTC();
-        expect(interval).toEqual(Interval.fromDateTimes(
-          firstBlockTime,
-          firstBlockTime.plus({ hours: 1 })),
-        );
-
+        await aggregateTradingReward.maybeDeleteIncompleteAggregatedTradingReward();
         const aggregations:
         TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
           {},
@@ -150,10 +96,102 @@ describe('aggregate-trading-rewards', () => {
         const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
           TradingRewardAggregationPeriod.MONTHLY,
         );
+        await aggregateTradingReward.maybeDeleteIncompleteAggregatedTradingReward();
+
+        const aggregations:
+        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
+          {},
+          [],
+        );
+        expect(aggregations.length).toEqual(2);
+      },
+    );
+  });
+
+  describe('getTradingRewardDataToProcessInterval', () => {
+    it.each([
+      TradingRewardAggregationPeriod.DAILY,
+      TradingRewardAggregationPeriod.WEEKLY,
+      TradingRewardAggregationPeriod.MONTHLY,
+    ])('Throws error if there are no blocks in the database', async (
+      period: TradingRewardAggregationPeriod,
+    ) => {
+      await dbHelpers.clearData();
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(period);
+      await expect(aggregateTradingReward.getTradingRewardDataToProcessInterval())
+        .rejects.toEqual(new Error('Unable to find latest block'));
+    });
+
+    it.each([
+      TradingRewardAggregationPeriod.DAILY,
+      TradingRewardAggregationPeriod.WEEKLY,
+      TradingRewardAggregationPeriod.MONTHLY,
+    ])('Successfully returns interval if cache is empty and no aggregations', async (
+      period: TradingRewardAggregationPeriod,
+    ) => {
+      const firstBlockTime: DateTime = DateTime.fromISO(
+        testConstants.defaultBlock.time,
+        UTC_OPTIONS,
+      ).toUTC();
+      await createBlockWithTime(firstBlockTime.plus({ hours: 1 }));
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(period);
+      const interval:
+      Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+
+      expect(interval).not.toBeUndefined();
+      expect(interval).toEqual(Interval.fromDateTimes(
+        firstBlockTime,
+        firstBlockTime.plus({ hours: 1 })),
+      );
+    });
+
+    it(
+      'Successfully returns interval when cache is empty and no',
+      async () => {
+        await TradingRewardAggregationTable.create({
+          ...defaultMonthlyTradingRewardAggregation,
+          period: TradingRewardAggregationPeriod.WEEKLY,
+        });
+        const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+          TradingRewardAggregationPeriod.MONTHLY,
+        );
         const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+
+        const firstBlockTime: DateTime = DateTime.fromISO(
+          testConstants.defaultBlock.time,
+          UTC_OPTIONS,
+        ).toUTC();
+        expect(interval).toEqual(Interval.fromDateTimes(
+          firstBlockTime,
+          firstBlockTime.plus({
+            milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS,
+          })),
+        );
+      },
+    );
+
+    it(
+      'Successfully returns interval when cache is empty and a complete aggregations exist',
+      async () => {
+        await Promise.all([
+          TradingRewardAggregationTable.create(defaultMonthlyTradingRewardAggregation),
+          TradingRewardAggregationTable.create({
+            ...defaultMonthlyTradingRewardAggregation2,
+            period: TradingRewardAggregationPeriod.WEEKLY,
+          }),
+          createBlockWithTime(startedAt2.plus({ hours: 1 })),
+        ]);
+        const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+          TradingRewardAggregationPeriod.MONTHLY,
+        );
+        const interval:
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).not.toBeUndefined();
-        expect(interval).toEqual(Interval.fromDateTimes(startedAt2, startedAt2.plus({ hours: 1 })));
+        expect(interval).toEqual(Interval.fromDateTimes(
+          startedAt2,
+          startedAt2.plus({ milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS }),
+        ));
 
         const aggregations:
         TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
@@ -185,7 +223,7 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationPeriod.MONTHLY,
         );
         const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).toEqual(Interval.fromDateTimes(endedAt2, endedAt2));
 
         const aggregations:
@@ -218,7 +256,7 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationPeriod.MONTHLY,
         );
         const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).toEqual(Interval.fromDateTimes(endedAt2, endedAt2.plus({ minutes: 1 })));
 
         const aggregations:
@@ -251,8 +289,11 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationPeriod.MONTHLY,
         );
         const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
-        expect(interval).toEqual(Interval.fromDateTimes(endedAt2, endedAt2.plus({ hour: 1 })));
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+        expect(interval).toEqual(Interval.fromDateTimes(
+          endedAt2,
+          endedAt2.plus({ milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS }),
+        ));
 
         const aggregations:
         TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
@@ -284,7 +325,7 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationPeriod.MONTHLY,
         );
         const interval:
-        Interval | undefined = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).toEqual(Interval.fromDateTimes(
           endedAt2.plus({ hours: 23, minutes: 55 }),
           endedAt2.plus({ days: 1 })),
@@ -302,13 +343,8 @@ describe('aggregate-trading-rewards', () => {
   describe('runTask', () => {
     it('Successfully logs and exits if there are no blocks in the database', async () => {
       await dbHelpers.clearData();
-      await generateTaskFromPeriod(TradingRewardAggregationPeriod.MONTHLY)();
-
-      expect(logger.info).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: 'No interval to aggregate trading rewards',
-        }),
-      );
+      await expect(generateTaskFromPeriod(TradingRewardAggregationPeriod.MONTHLY)())
+        .rejects.toEqual(new Error('Unable to find latest block'));
     });
   });
 });
