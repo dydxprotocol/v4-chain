@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import {
   assetRefresher,
@@ -73,6 +73,9 @@ describe('DeleveragingHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
+    jest.spyOn(stats, 'increment');
+    jest.spyOn(stats, 'timing');
+    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -315,6 +318,7 @@ describe('DeleveragingHandler', () => {
         producerSendMock,
         eventId,
       ),
+      expectTimingStats(),
     ]);
   });
 
@@ -345,3 +349,14 @@ describe('DeleveragingHandler', () => {
     );
   }
 });
+
+function expectTimingStats() {
+  expect(stats.timing).toHaveBeenCalledWith(
+    'ender.handle_event.timing',
+    expect.any(Number),
+    {
+      className: 'DeleveragingHandler',
+      eventType: 'DeleveragingEvent',
+    },
+  );
+}

@@ -34,7 +34,7 @@ import {
 import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
-  eventType: string = 'OrderFillEvent';
+  eventType: string = 'LiquidationEvent';
 
   /**
    * @returns the parallelizationIds for the this.event.liquidity order
