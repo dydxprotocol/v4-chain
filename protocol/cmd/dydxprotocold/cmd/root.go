@@ -1,17 +1,19 @@
 package cmd
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"errors"
-	"github.com/cosmos/cosmos-sdk/codec/address"
 	"io"
 	"os"
 	"path/filepath"
 
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store"
 	"cosmossdk.io/store/snapshots"
 	snapshottypes "cosmossdk.io/store/snapshots/types"
+	storetypes "cosmossdk.io/store/types"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -21,10 +23,15 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/keys"
 	"github.com/cosmos/cosmos-sdk/client/rpc"
+	"github.com/cosmos/cosmos-sdk/codec/address"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -37,6 +44,7 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	// Unnamed import of statik for swagger UI support.
 	// Used in cosmos-sdk when registering the route for swagger docs.
@@ -138,6 +146,10 @@ func NewRootCmdWithInterceptors(
 
 	initRootCmd(rootCmd, option, encodingConfig, appInterceptor)
 
+	if err := autoCliOpts(encodingConfig, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
+
 	return rootCmd
 }
 
@@ -170,17 +182,16 @@ func initRootCmd(
 		AddGenesisAccountCmd(dydxapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		/** TODO(CORE-538): config.Cmd(), is this now handled by AutoCLI? */
+		confixcmd.ConfigCommand(),
 	)
 
-	a := appCreator{encodingConfig}
 	server.AddCommands(
 		rootCmd,
 		dydxapp.DefaultNodeHome,
 		func(logger log.Logger, db dbm.DB, writer io.Writer, options servertypes.AppOptions) servertypes.Application {
-			return appInterceptor(a.newApp(logger, db, writer, options))
+			return appInterceptor(newApp(logger, db, writer, options))
 		},
-		a.appExport,
+		appExport,
 		func(cmd *cobra.Command) {
 			addModuleInitFlags(cmd)
 
@@ -192,11 +203,52 @@ func initRootCmd(
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		//TODO(CORE-538) rpc.StatusCommand(), is this now handled by AutoCLI?
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
 		keys.Commands(),
 	)
+
+	// TODO(CORE-852) add rosetta commands
+	// rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
+}
+
+// autoCliOpts returns options based upon the modules in the dYdX v4 app.
+//
+// Creates an instance of the application that is discarded to enumerate the modules.
+func autoCliOpts(encodingCfg dydxapp.EncodingConfig, initClientCtx client.Context) autocli.AppOptions {
+	app := dydxapp.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+
+	modules := make(map[string]appmodule.AppModule, 0)
+	for _, m := range app.ModuleManager.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	cliKR, err := keyring.NewAutoCLIKeyring(initClientCtx.Keyring)
+	if err != nil {
+		panic(err)
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32ConsensusAddrPrefix()),
+		Keyring:               cliKR,
+		ClientCtx:             initClientCtx,
+	}
 }
 
 // addModuleInitFlags adds module specific init flags.
@@ -216,14 +268,14 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		//TODO(CORE-538): authcmd.GetAccountCmd(), Is this handled by AutoCLI?
 		rpc.ValidatorCommand(),
-		//TODO(CORE-538): //TODO rpc.BlockCommand(), Is this handled by AutoCLI?
+		server.QueryBlockCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
 	)
 
-	// TODO(CORE-538): Add AutoCLI https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#autocli
+	// Module specific query sub-commands are added by AutoCLI
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
@@ -251,18 +303,15 @@ func txCommand() *cobra.Command {
 		authcmd.GetDecodeCommand(),
 	)
 
-	// TODO(CORE-538): Add AutoCLI https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#autocli
+	// Module specific tx sub-commands are added by AutoCLI
+
 	cmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
 	return cmd
 }
 
-type appCreator struct {
-	encCfg dydxapp.EncodingConfig
-}
-
 // newApp initializes and returns a new app.
-func (a appCreator) newApp(
+func newApp(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
@@ -335,7 +384,7 @@ func (a appCreator) newApp(
 //
 // Deprecated: this feature relies on the use of known unstable, legacy export functionality
 // from cosmos.
-func (a appCreator) appExport(
+func appExport(
 	logger log.Logger,
 	db dbm.DB,
 	traceStore io.Writer,
