@@ -11,11 +11,13 @@ import {
 import aggregateTradingRewardsTasks from './tasks/aggregate-trading-rewards';
 import cancelStaleOrdersTask from './tasks/cancel-stale-orders';
 import createPnlTicksTask from './tasks/create-pnl-ticks';
+import deleteOldFastSyncSnapshots from './tasks/delete-old-fast-sync-snapshots';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
+import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
 import trackLag from './tasks/track-lag';
 import updateComplianceDataTask from './tasks/update-compliance-data';
 import updateResearchEnvironmentTask from './tasks/update-research-environment';
@@ -97,6 +99,22 @@ async function start(): Promise<void> {
       updateResearchEnvironmentTask,
       'update_research_environment',
       config.LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS) {
+    startLoop(
+      takeFastSyncSnapshotTask,
+      'take_fast_sync_snapshot',
+      config.LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS,
+    );
+  }
+
+  if (config.LOOPS_ENABLED_DELETE_OLD_FAST_SYNC_SNAPSHOTS) {
+    startLoop(
+      deleteOldFastSyncSnapshots,
+      'delete_old_fast_sync_snapshots',
+      config.LOOPS_INTERVAL_MS_DELETE_OLD_FAST_SYNC_SNAPSHOTS,
     );
   }
 
