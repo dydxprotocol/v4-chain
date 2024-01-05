@@ -1,13 +1,12 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -17,10 +16,10 @@ import (
 func createFeeTiersKeeper(
 	stateStore storetypes.CommitMultiStore,
 	statsKeeper *statskeeper.Keeper,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	mockMsgSender := &mocks.IndexerMessageSender{}

@@ -1,6 +1,9 @@
 package lib
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+)
 
 func AssertDeliverTxMode(ctx sdk.Context) {
 	if ctx.IsCheckTx() || ctx.IsReCheckTx() {
@@ -21,10 +24,10 @@ func AssertCheckTxMode(ctx sdk.Context) {
 // TxMode returns a textual representation of the tx mode, one of `CheckTx`, `ReCheckTx`, or `DeliverTx`.
 func TxMode(ctx sdk.Context) string {
 	if ctx.IsReCheckTx() {
-		return "ReCheckTx"
+		return log.RecheckTx
 	} else if ctx.IsCheckTx() {
-		return "CheckTx"
+		return log.CheckTx
 	} else {
-		return "DeliverTx"
+		return log.DeliverTx
 	}
 }

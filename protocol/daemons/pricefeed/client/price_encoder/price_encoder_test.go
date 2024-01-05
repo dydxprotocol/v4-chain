@@ -2,9 +2,9 @@ package price_encoder
 
 import (
 	"context"
+	"cosmossdk.io/log"
 	"errors"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	pf_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
@@ -46,7 +46,7 @@ func genNewPriceEncoder(t *testing.T) *PriceEncoderImpl {
 		&constants.Exchange1_3Markets_MutableExchangeMarketConfig,
 		constants.MutableMarketConfigs_3Markets,
 		etmp,
-		log.TestingLogger(),
+		log.NewTestLogger(t),
 		bCh,
 	)
 	require.NoError(t, err)
@@ -261,7 +261,7 @@ func TestConvertPriceUpdate_Mixed(t *testing.T) {
 				tc.mutableExchangeConfig,
 				tc.mutableMarketConfigs,
 				&emtp,
-				log.TestingLogger(),
+				log.NewTestLogger(t),
 				nil,
 			)
 			require.NoError(t, err)

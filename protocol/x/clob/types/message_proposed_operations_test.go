@@ -474,7 +474,7 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 					},
 				),
 			},
-			expectedError: types.ErrEmptyDeleveragingFills,
+			expectedError: nil,
 		},
 
 		// Tests for byte functionality
@@ -530,9 +530,4 @@ func TestValidateAndTransformRawOperations(t *testing.T) {
 			require.NoError(t, err)
 		})
 	}
-}
-
-func TestGetSigners(t *testing.T) {
-	msg := types.MsgProposedOperations{}
-	require.Empty(t, msg.GetSigners())
 }

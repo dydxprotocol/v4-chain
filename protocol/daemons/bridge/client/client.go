@@ -2,18 +2,17 @@ package client
 
 import (
 	"context"
-	sdklog "cosmossdk.io/log"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types/constants"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"time"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/client/types/constants"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/ethereum/go-ethereum/ethclient"
 )
@@ -28,7 +27,7 @@ type Client struct {
 }
 
 func NewClient(logger log.Logger) *Client {
-	logger = logger.With(sdklog.ModuleKey, constants.BridgeDaemonModuleName)
+	logger = logger.With(log.ModuleKey, constants.BridgeDaemonModuleName)
 	return &Client{
 		HealthCheckable: daemontypes.NewTimeBoundedHealthCheckable(
 			constants.BridgeDaemonModuleName,

@@ -1,17 +1,19 @@
 // Originally forked from https://github.com/cosmos/iavl/blob/v0.20.0/cmd/iaviewer/main.go
+// TODO(CORE-538): Update this fork for Cosmos 0.50 upgrade.
 package main
 
 import (
 	"bytes"
+	"cosmossdk.io/log"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	dbm "github.com/cosmos/cosmos-db"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	dbm "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/iavl"
 	"github.com/spf13/cobra"
 )
@@ -202,7 +204,7 @@ func OpenDB(dir string) (dbm.DB, error) {
 		return nil, fmt.Errorf("cannot cut paths on %s", dir)
 	}
 	name := dir[cut+1:]
-	db, err := dbm.NewGoLevelDB(name, dir[:cut])
+	db, err := dbm.NewGoLevelDB(name, dir[:cut], nil)
 	if err != nil {
 		return nil, err
 	}
@@ -265,10 +267,7 @@ func ReadTree(db dbm.DB, version uint64, prefix []byte) (*iavl.MutableTree, erro
 		db = dbm.NewPrefixDB(db, prefix)
 	}
 
-	tree, err := iavl.NewMutableTree(db, DefaultCacheSize, false)
-	if err != nil {
-		return nil, err
-	}
+	tree := iavl.NewMutableTree(db, DefaultCacheSize, false, log.NewLogger(os.Stdout))
 	ver, err := tree.LoadVersion(int64(version))
 	fmt.Printf("Tree %s version: %d\n", prefix, ver)
 	return tree, err
@@ -291,10 +290,7 @@ func PrintTree(tree *iavl.MutableTree, prefix string) error {
 		}
 		return false
 	})
-	hash, err := tree.Hash()
-	if err != nil {
-		return err
-	}
+	hash := tree.Hash()
 	fmt.Printf("Tree %s Hash: %X\n", prefix, hash)
 	fmt.Printf("Tree %s Size: %X\n", prefix, tree.Size())
 	return nil

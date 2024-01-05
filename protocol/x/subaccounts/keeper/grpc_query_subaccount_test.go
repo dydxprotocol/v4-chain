@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -21,7 +20,6 @@ var _ = strconv.IntSize
 
 func TestSubaccountQuerySingle(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
 	for _, tc := range []struct {
 		desc     string
@@ -77,7 +75,7 @@ func TestSubaccountQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.Subaccount(wctx, tc.request)
+			response, err := keeper.Subaccount(ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -93,7 +91,6 @@ func TestSubaccountQuerySingle(t *testing.T) {
 
 func TestSubaccountQueryPaginated(t *testing.T) {
 	ctx, keeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := createNSubaccount(keeper, ctx, 5, big.NewInt(1_000))
 
 	request := func(next []byte, offset, limit uint64, total bool) *types.QueryAllSubaccountRequest {
@@ -109,7 +106,7 @@ func TestSubaccountQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.SubaccountAll(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := keeper.SubaccountAll(ctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
@@ -122,7 +119,7 @@ func TestSubaccountQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(msgs); i += step {
-			resp, err := keeper.SubaccountAll(wctx, request(next, 0, uint64(step), false))
+			resp, err := keeper.SubaccountAll(ctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.Subaccount), step)
 			require.Subset(t,
@@ -133,7 +130,7 @@ func TestSubaccountQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.SubaccountAll(wctx, request(nil, 0, 0, true))
+		resp, err := keeper.SubaccountAll(ctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(msgs), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -142,7 +139,7 @@ func TestSubaccountQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.SubaccountAll(wctx, nil)
+		_, err := keeper.SubaccountAll(ctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

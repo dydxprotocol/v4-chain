@@ -4,7 +4,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
@@ -18,7 +17,6 @@ import (
 func TestMarketPriceQuerySingle(t *testing.T) {
 	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 2)
 	for _, tc := range []struct {
 		desc     string
@@ -53,7 +51,7 @@ func TestMarketPriceQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.MarketPrice(wctx, tc.request)
+			response, err := keeper.MarketPrice(ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -70,7 +68,6 @@ func TestMarketPriceQuerySingle(t *testing.T) {
 func TestMarketPriceQueryPaginated(t *testing.T) {
 	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 5)
 	prices := make([]types.MarketPrice, len(msgs))
 	for i := range msgs {
@@ -90,7 +87,7 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(prices); i += step {
-			resp, err := keeper.AllMarketPrices(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := keeper.AllMarketPrices(ctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.MarketPrices), step)
 			require.Subset(t,
@@ -103,7 +100,7 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(prices); i += step {
-			resp, err := keeper.AllMarketPrices(wctx, request(next, 0, uint64(step), false))
+			resp, err := keeper.AllMarketPrices(ctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.MarketPrices), step)
 			require.Subset(t,
@@ -114,7 +111,7 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.AllMarketPrices(wctx, request(nil, 0, 0, true))
+		resp, err := keeper.AllMarketPrices(ctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(prices), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -123,7 +120,7 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.AllMarketPrices(wctx, nil)
+		_, err := keeper.AllMarketPrices(ctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }
@@ -131,7 +128,6 @@ func TestMarketPriceQueryPaginated(t *testing.T) {
 func TestMarketParamQuerySingle(t *testing.T) {
 	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 2)
 	for _, tc := range []struct {
 		desc     string
@@ -166,7 +162,7 @@ func TestMarketParamQuerySingle(t *testing.T) {
 		},
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
-			response, err := keeper.MarketParam(wctx, tc.request)
+			response, err := keeper.MarketParam(ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {
@@ -183,7 +179,6 @@ func TestMarketParamQuerySingle(t *testing.T) {
 func TestMarketParamQueryPaginated(t *testing.T) {
 	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
-	wctx := sdk.WrapSDKContext(ctx)
 	msgs := keepertest.CreateNMarkets(t, ctx, keeper, 5)
 	params := make([]types.MarketParam, len(msgs))
 	for i := range msgs {
@@ -203,7 +198,7 @@ func TestMarketParamQueryPaginated(t *testing.T) {
 	t.Run("ByOffset", func(t *testing.T) {
 		step := 2
 		for i := 0; i < len(params); i += step {
-			resp, err := keeper.AllMarketParams(wctx, request(nil, uint64(i), uint64(step), false))
+			resp, err := keeper.AllMarketParams(ctx, request(nil, uint64(i), uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.MarketParams), step)
 			require.Subset(t,
@@ -216,7 +211,7 @@ func TestMarketParamQueryPaginated(t *testing.T) {
 		step := 2
 		var next []byte
 		for i := 0; i < len(params); i += step {
-			resp, err := keeper.AllMarketParams(wctx, request(next, 0, uint64(step), false))
+			resp, err := keeper.AllMarketParams(ctx, request(next, 0, uint64(step), false))
 			require.NoError(t, err)
 			require.LessOrEqual(t, len(resp.MarketParams), step)
 			require.Subset(t,
@@ -227,7 +222,7 @@ func TestMarketParamQueryPaginated(t *testing.T) {
 		}
 	})
 	t.Run("Total", func(t *testing.T) {
-		resp, err := keeper.AllMarketParams(wctx, request(nil, 0, 0, true))
+		resp, err := keeper.AllMarketParams(ctx, request(nil, 0, 0, true))
 		require.NoError(t, err)
 		require.Equal(t, len(params), int(resp.Pagination.Total))
 		require.ElementsMatch(t,
@@ -236,7 +231,7 @@ func TestMarketParamQueryPaginated(t *testing.T) {
 		)
 	})
 	t.Run("InvalidRequest", func(t *testing.T) {
-		_, err := keeper.AllMarketParams(wctx, nil)
+		_, err := keeper.AllMarketParams(ctx, nil)
 		require.ErrorIs(t, err, status.Error(codes.InvalidArgument, "invalid request"))
 	})
 }

@@ -24,8 +24,8 @@ func init() {
 	_ = TestTxBuilder.SetMsgs(Msg_Send)
 	Msg_Send_TxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
-	_ = TestTxBuilder.SetMsgs(Msg_Send_Invalid_Zero_Amount)
-	Msg_Send_Invalid_Zero_Amount_TxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
+	_ = TestTxBuilder.SetMsgs(Msg_Transfer_Invalid_SameSenderAndRecipient)
+	Msg_Transfer_Invalid_SameSenderAndRecipient_TxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
 	_ = TestTxBuilder.SetMsgs(Msg_Send, Msg_Transfer)
 	Msg_SendAndTransfer_TxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
@@ -68,6 +68,16 @@ var (
 			Amount:    500_000_000, // $500
 		},
 	}
+	Msg_Transfer_Invalid_SameSenderAndRecipient = &sendingtypes.MsgCreateTransfer{
+		Transfer: &sendingtypes.Transfer{
+			Sender:    Alice_Num0,
+			Recipient: Alice_Num0,
+			AssetId:   assettypes.AssetUsdc.Id,
+			Amount:    500_000_000, // $500
+		},
+	}
+	Msg_Transfer_Invalid_SameSenderAndRecipient_TxBytes []byte
+
 	Msg_Send = &banktypes.MsgSend{
 		FromAddress: AliceAccAddress.String(),
 		ToAddress:   BobAccAddress.String(),
@@ -77,16 +87,6 @@ var (
 		}},
 	}
 	Msg_Send_TxBytes []byte
-
-	Msg_Send_Invalid_Zero_Amount = &banktypes.MsgSend{
-		FromAddress: AliceAccAddress.String(),
-		ToAddress:   BobAccAddress.String(),
-		Amount: sdk.Coins{sdk.Coin{
-			Denom:  "foo",
-			Amount: sdkmath.Int{}, // amount cannot be zero.
-		}},
-	}
-	Msg_Send_Invalid_Zero_Amount_TxBytes []byte
 
 	Msg_SendAndTransfer_TxBytes []byte
 )

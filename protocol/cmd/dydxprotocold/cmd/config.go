@@ -64,7 +64,6 @@ func initAppConfig() (string, *DydxAppConfig) {
 
 	// GRPC.
 	appConfig.GRPC.Address = "0.0.0.0:9090"
-	appConfig.GRPCWeb.Address = "0.0.0.0:9091"
 
 	appTemplate := serverconfig.DefaultConfigTemplate
 
@@ -84,7 +83,6 @@ func initTendermintConfig() *tmcfg.Config {
 	cfg.RPC.CORSAllowedOrigins = []string{"*"}
 
 	// Mempool config.
-	cfg.Mempool.Version = "v1"
 	// We specifically are using a number greater than max QPS (currently set at 5000) * ShortBlockWindow to prevent
 	// a replay attack that is possible with short-term order placements and cancellations. The attack would consume
 	// a users rate limit if the entry is evicted from the mempool cache as it would be possible for the transaction

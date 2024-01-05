@@ -6,7 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"

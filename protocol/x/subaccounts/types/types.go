@@ -22,6 +22,7 @@ type SubaccountsKeeper interface {
 	CanUpdateSubaccounts(
 		ctx sdk.Context,
 		updates []Update,
+		updateType UpdateType,
 	) (
 		success bool,
 		successPerUpdate []UpdateResult,
@@ -30,6 +31,7 @@ type SubaccountsKeeper interface {
 	UpdateSubaccounts(
 		ctx sdk.Context,
 		updates []Update,
+		updateType UpdateType,
 	) (
 		success bool,
 		successPerUpdate []UpdateResult,

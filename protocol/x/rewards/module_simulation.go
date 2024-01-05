@@ -4,7 +4,6 @@ import (
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -15,11 +14,13 @@ import (
 
 // avoid unused import issue
 var (
-	_ = sample.AccAddress
-	_ = rewardssimulation.FindAccount
-	_ = simulation.MsgEntryKind
-	_ = baseapp.Paramspace
-	_ = rand.Rand{}
+	_                            = sample.AccAddress
+	_                            = rewardssimulation.FindAccount
+	_                            = simulation.MsgEntryKind
+	_                            = baseapp.Paramspace
+	_                            = rand.Rand{}
+	_ module.AppModuleSimulation = AppModule{}
+	_ module.HasProposalMsgs     = AppModule{}
 )
 
 // GenerateGenesisState creates a randomized GenState of the module.
@@ -35,7 +36,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 }
 
 // RegisterStoreDecoder registers a decoder.
-func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (am AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
@@ -44,7 +45,8 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	return operations
 }
 
-// ProposalMsgs returns msgs used for governance proposals for simulations.
-func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.WeightedProposalMsg {
-	return []simtypes.WeightedProposalMsg{}
+// TODO(DEC-906): implement simulated gov proposal.
+// ProposalMsgs doesn't return any content functions for governance proposals
+func (AppModule) ProposalMsgs(_ module.SimulationState) []simtypes.WeightedProposalMsg {
+	return nil
 }

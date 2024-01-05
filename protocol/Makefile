@@ -223,7 +223,7 @@ test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./...
 
 test-race:
-	@VERSION=$(VERSION) go test -mod=readonly -race -tags='test_ledger_mock $(build_tags)' ./...
+	@VERSION=$(VERSION) go test -mod=readonly -timeout 20m -race -tags='test_ledger_mock $(build_tags)' ./...
 
 test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
@@ -347,7 +347,7 @@ localnet-build:
 localnet-build-amd64:
 	DOCKER_BUILDKIT=1 docker build --build-arg VERSION=$(VERSION) --build-arg COMMIT=$(COMMIT) -f Dockerfile . -t dydxprotocol-base --no-cache --platform linux/amd64
 
-localnet-init:
+reset-chain:
 	rm -rf localnet
 	# Creates the directories which store the chain data for each node.
 	mkdir -p localnet/dydxprotocol0
@@ -360,6 +360,9 @@ localnet-init:
 	echo '{"height": "0", "round": 0, "step": 0 }' > localnet/dydxprotocol1/priv_validator_state.json
 	echo '{"height": "0", "round": 0, "step": 0 }' > localnet/dydxprotocol2/priv_validator_state.json
 	echo '{"height": "0", "round": 0, "step": 0 }' > localnet/dydxprotocol3/priv_validator_state.json
+
+localnet-init:
+	make reset-chain
 	# Build the base image.
 	make localnet-build
 
@@ -409,7 +412,7 @@ update-swagger-docs: statik
 .PHONY: update-swagger-docs
 
 ###############################################################################
-###                           Sample Prengenesis                            ###
+###                           Sample Pregenesis                             ###
 ###############################################################################
 
 # Run at `./protocol` directory.
@@ -421,7 +424,7 @@ update-sample-pregenesis:
 
 check-sample-pregenesis-up-to-date:
 	$(MAKE) localnet-build
-	@docker build . -t check-sample-pregenesis  -f scripts/genesis/Dockerfile --no-cache
+	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
 	@docker run -v $(CURDIR):/workspace check-sample-pregenesis 
 
 .PHONY: update-sample-pregenesis check-sample-pregenesis-up-to-date

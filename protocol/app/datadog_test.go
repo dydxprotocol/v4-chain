@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	"github.com/stretchr/testify/require"
 	"os"
 	"testing"
@@ -105,7 +105,7 @@ func TestConfigureDatadogProfilerOptions(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			logger := log.TestingLogger()
+			logger, _ := logger.TestLogger()
 
 			// Optional configure environment variables
 			if len(tc.envVars) > 0 {

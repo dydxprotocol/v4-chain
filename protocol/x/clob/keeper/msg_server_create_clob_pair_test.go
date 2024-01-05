@@ -4,7 +4,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -157,9 +156,8 @@ func TestCreateClobPair(t *testing.T) {
 			tc.setup(t, ks, mockIndexerEventManager)
 
 			msgServer := keeper.NewMsgServerImpl(ks.ClobKeeper)
-			wrappedCtx := sdk.WrapSDKContext(ks.Ctx)
 
-			_, err := msgServer.CreateClobPair(wrappedCtx, tc.msg)
+			_, err := msgServer.CreateClobPair(ks.Ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {

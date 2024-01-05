@@ -34,14 +34,6 @@ func NewMsgCancelOrderStateful(orderId OrderId, goodTilBlockTime uint32) *MsgCan
 	}
 }
 
-func (msg *MsgCancelOrder) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.OrderId.SubaccountId.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
 func (msg *MsgCancelOrder) ValidateBasic() (err error) {
 	orderId := msg.GetOrderId()
 

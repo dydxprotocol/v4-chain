@@ -3,7 +3,7 @@ package middleware_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
@@ -25,7 +25,6 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 				panic("test123")
 			},
 			expectedLogs: []string{
-				"E[202",                       // error and date prefix
 				"runTx panic'ed with test123", // message
 				"middleware_test.go",          // part of stack trace
 			},
@@ -35,7 +34,6 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 				panic(fmt.Errorf("test456"))
 			},
 			expectedLogs: []string{
-				"E[202",                       // error and date prefix
 				"runTx panic'ed with test456", // message
 				"middleware_test.go",          // part of stack trace
 			},
@@ -48,8 +46,8 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 			oldLogger := middleware.Logger
 			defer func() { middleware.Logger = oldLogger }()
 
-			buf := new(bytes.Buffer)
-			middleware.Logger = log.NewTMLogger(buf)
+			var buf *bytes.Buffer
+			middleware.Logger, buf = logger.TestLogger()
 
 			func() {
 				defer func() {

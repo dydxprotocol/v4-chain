@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"cosmossdk.io/errors"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 )
@@ -14,7 +14,7 @@ func (k msgServer) CompleteBridge(
 	msg *types.MsgCompleteBridge,
 ) (*types.MsgCompleteBridgeResponse, error) {
 	if !k.Keeper.HasAuthority(msg.GetAuthority()) {
-		return nil, errors.Wrapf(
+		return nil, errorsmod.Wrapf(
 			types.ErrInvalidAuthority,
 			"message authority %s is not valid for sending complete bridge messages",
 			msg.Authority,

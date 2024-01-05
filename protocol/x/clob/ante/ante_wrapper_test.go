@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -121,7 +122,14 @@ func TestValidateMsgType_NewSingleMsgClobTx(t *testing.T) {
 			// Empty private key, so tx's signature should be empty.
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+			tx, err := suite.CreateTestTx(
+				suite.Ctx,
+				privs,
+				accNums,
+				accSeqs,
+				suite.Ctx.ChainID(),
+				signing.SignMode_SIGN_MODE_DIRECT,
+			)
 			require.NoError(t, err)
 
 			resultCtx, err := antehandler(suite.Ctx, tx, false)
@@ -256,7 +264,14 @@ func TestValidateMsgType_NewShortTermSingleMsgClobTx(t *testing.T) {
 			// Empty private key, so tx's signature should be empty.
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+			tx, err := suite.CreateTestTx(
+				suite.Ctx,
+				privs,
+				accNums,
+				accSeqs,
+				suite.Ctx.ChainID(),
+				signing.SignMode_SIGN_MODE_DIRECT,
+			)
 			require.NoError(t, err)
 
 			resultCtx, err := antehandler(suite.Ctx, tx, false)

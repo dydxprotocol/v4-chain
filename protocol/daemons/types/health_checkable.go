@@ -1,8 +1,8 @@
 package types
 
 import (
+	"cosmossdk.io/log"
 	"fmt"
-	"github.com/cometbft/cometbft/libs/log"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"sync"
 	"time"

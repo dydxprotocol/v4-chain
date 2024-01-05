@@ -4,7 +4,6 @@ import (
 	"context"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -22,7 +21,7 @@ func setupMsgServer(t *testing.T) (keeper.Keeper, types.MsgServer, context.Conte
 	ctx := tApp.InitChain()
 	k := tApp.App.StatsKeeper
 
-	return k, keeper.NewMsgServerImpl(k), sdk.WrapSDKContext(ctx)
+	return k, keeper.NewMsgServerImpl(k), ctx
 }
 
 func TestMsgServer(t *testing.T) {

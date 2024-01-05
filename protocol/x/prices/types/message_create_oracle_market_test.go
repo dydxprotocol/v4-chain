@@ -4,18 +4,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgCreateOracleMarket_GetSigners(t *testing.T) {
-	msg := types.MsgCreateOracleMarket{
-		Authority: constants.AliceAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.AliceAccAddress}, msg.GetSigners())
-}
 
 func TestMsgCreateOracleMarket_ValidateBasic(t *testing.T) {
 	validExchangeConfigJson := `{"exchanges":[{"exchangeName":"Binance","ticker":"BTCUSDT"}]}`

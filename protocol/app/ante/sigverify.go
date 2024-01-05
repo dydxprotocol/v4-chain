@@ -1,31 +1,34 @@
 package ante
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
 
-	gometrics "github.com/armon/go-metrics"
+	errorsmod "cosmossdk.io/errors"
+	txsigning "cosmossdk.io/x/tx/signing"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	gometrics "github.com/hashicorp/go-metrics"
+	"google.golang.org/protobuf/types/known/anypb"
 )
 
-// Verify all signatures for a tx and return an error if any are invalid. Note,
+// SigVerificationDecorator verifies all signatures for a tx and return an error if any are invalid. Note,
 // the SigVerificationDecorator will not check signatures on ReCheck.
 //
 // CONTRACT: Pubkeys are set in context for all signers before this decorator runs
 // CONTRACT: Tx must implement SigVerifiableTx interface
 type SigVerificationDecorator struct {
 	ak              sdkante.AccountKeeper
-	signModeHandler authsigning.SignModeHandler
+	signModeHandler *txsigning.HandlerMap
 }
 
 func NewSigVerificationDecorator(
 	ak sdkante.AccountKeeper,
-	signModeHandler authsigning.SignModeHandler,
+	signModeHandler *txsigning.HandlerMap,
 ) SigVerificationDecorator {
 	return SigVerificationDecorator{
 		ak:              ak,
@@ -39,7 +42,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	sigTx, ok := tx.(authsigning.SigVerifiableTx)
+	sigTx, ok := tx.(authsigning.Tx)
 	if !ok {
 		return ctx, errorsmod.Wrap(sdkerrors.ErrTxDecode, "invalid transaction type")
 	}
@@ -51,14 +54,17 @@ func (svd SigVerificationDecorator) AnteHandle(
 		return ctx, err
 	}
 
-	signerAddrs := sigTx.GetSigners()
+	signers, err := sigTx.GetSigners()
+	if err != nil {
+		return ctx, err
+	}
 
 	// check that signer length and signature length are the same
-	if len(sigs) != len(signerAddrs) {
+	if len(sigs) != len(signers) {
 		err := errorsmod.Wrapf(
 			sdkerrors.ErrUnauthorized,
 			"invalid number of signer;  expected: %d, got %d",
-			len(signerAddrs),
+			len(signers),
 			len(sigs),
 		)
 		return ctx, err
@@ -69,7 +75,7 @@ func (svd SigVerificationDecorator) AnteHandle(
 	skipSequenceValidation := ShouldSkipSequenceValidation(tx.GetMsgs())
 
 	for i, sig := range sigs {
-		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signerAddrs[i])
+		acc, err := sdkante.GetSignerAcc(ctx, svd.ak, signers[i])
 		if err != nil {
 			return ctx, err
 		}
@@ -109,23 +115,32 @@ func (svd SigVerificationDecorator) AnteHandle(
 		if !genesis {
 			accNum = acc.GetAccountNumber()
 		}
-		signerData := authsigning.SignerData{
-			Address:       acc.GetAddress().String(),
-			ChainID:       chainID,
-			AccountNumber: accNum,
-			Sequence:      acc.GetSequence(),
-			PubKey:        pubKey,
-		}
 
 		// no need to verify signatures on recheck tx
 		if !simulate && !ctx.IsReCheckTx() {
-			err := authsigning.VerifySignature(pubKey, signerData, sig.Data, svd.signModeHandler, tx)
+			anyPk, _ := codectypes.NewAnyWithValue(pubKey)
+
+			signerData := txsigning.SignerData{
+				Address:       acc.GetAddress().String(),
+				ChainID:       chainID,
+				AccountNumber: accNum,
+				Sequence:      acc.GetSequence(),
+				PubKey: &anypb.Any{
+					TypeUrl: anyPk.TypeUrl,
+					Value:   anyPk.Value,
+				},
+			}
+			adaptableTx, ok := tx.(authsigning.V2AdaptableTx)
+			if !ok {
+				return ctx, fmt.Errorf("expected tx to implement V2AdaptableTx, got %T", tx)
+			}
+			txData := adaptableTx.GetSigningTxData()
+			err = authsigning.VerifySignature(ctx, pubKey, signerData, sig.Data, svd.signModeHandler, txData)
 			if err != nil {
 				var errMsg string
 				if sdkante.OnlyLegacyAminoSigners(sig.Data) {
-					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to
-					// check account sequence number, and therefore communicate sequence number as a
-					// potential cause of error.
+					// If all signers are using SIGN_MODE_LEGACY_AMINO, we rely on VerifySignature to check account sequence number,
+					// and therefore communicate sequence number as a potential cause of error.
 					errMsg = fmt.Sprintf(
 						"signature verification failed; please verify account number (%d), sequence (%d)"+
 							" and chain-id (%s)",
@@ -135,9 +150,10 @@ func (svd SigVerificationDecorator) AnteHandle(
 					)
 				} else {
 					errMsg = fmt.Sprintf(
-						"signature verification failed; please verify account number (%d) and chain-id (%s)",
+						"signature verification failed; please verify account number (%d) and chain-id (%s): (%s)",
 						accNum,
 						chainID,
+						err.Error(),
 					)
 				}
 				return ctx, errorsmod.Wrap(sdkerrors.ErrUnauthorized, errMsg)

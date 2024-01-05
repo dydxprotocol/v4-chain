@@ -5,20 +5,17 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
-	"github.com/cometbft/cometbft/libs/log"
-
-	sdklog "cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -138,7 +135,7 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With(
-		sdklog.ModuleKey, "x/clob",
+		log.ModuleKey, "x/clob",
 		metrics.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
 		metrics.CheckTx, ctx.IsCheckTx(),
 		metrics.ReCheckTx, ctx.IsReCheckTx(),

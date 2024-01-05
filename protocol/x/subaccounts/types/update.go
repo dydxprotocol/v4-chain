@@ -1,8 +1,9 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"math/big"
+
+	errorsmod "cosmossdk.io/errors"
 )
 
 type UpdateResult uint
@@ -50,16 +51,18 @@ func GetErrorFromUpdateResults(
 }
 
 var updateResultStringMap = map[UpdateResult]string{
-	0: "Success",
-	1: "NewlyUndercollateralized",
-	2: "StillUndercollateralized",
-	3: "UpdateCausedError",
+	Success:                        "Success",
+	NewlyUndercollateralized:       "NewlyUndercollateralized",
+	StillUndercollateralized:       "StillUndercollateralized",
+	WithdrawalsAndTransfersBlocked: "WithdrawalsAndTransfersBlocked",
+	UpdateCausedError:              "UpdateCausedError",
 }
 
 const (
 	Success UpdateResult = iota
 	NewlyUndercollateralized
 	StillUndercollateralized
+	WithdrawalsAndTransfersBlocked
 	UpdateCausedError
 )
 
@@ -89,3 +92,33 @@ type PerpetualUpdate struct {
 	// represented in base quantums.
 	BigQuantumsDelta *big.Int
 }
+
+type UpdateType uint
+
+const (
+	Withdrawal UpdateType = iota
+	Transfer
+	Deposit
+	Match
+)
+
+var updateTypeStringMap = map[UpdateType]string{
+	Withdrawal: "Withdrawal",
+	Transfer:   "Transfer",
+	Deposit:    "Deposit",
+	Match:      "Match",
+}
+
+func (u UpdateType) String() string {
+	result, exists := updateTypeStringMap[u]
+	if !exists {
+		return "UnexpectedUpdateTypeError"
+	}
+
+	return result
+}
+
+// WITHDRAWAL_AND_TRANSFER_DELAY_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS defines the number of
+// blocks withdrawals and transfers will be blocked if a negative TNC subaccount is seen in state,
+// starting from the last block a negative TNC subaccount was seen.
+const WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS = 50

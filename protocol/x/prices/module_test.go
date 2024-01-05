@@ -3,28 +3,26 @@ package prices_test
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	errorsmod "cosmossdk.io/errors"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/tx"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	prices_keeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -49,8 +47,7 @@ func createAppModule(t *testing.T) prices.AppModule {
 // This is useful for tests which want to write/read state
 // to/from the keeper.
 func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.Keeper, sdk.Context) {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	ctx, keeper, _, _, _, mockTimeProvider := keeper.PricesKeepers(t)
 	// Mock the time provider response for market creation.
@@ -65,8 +62,7 @@ func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.K
 }
 
 func createAppModuleBasic(t *testing.T) prices.AppModuleBasic {
-	interfaceRegistry := types.NewInterfaceRegistry()
-	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	appModule := prices.NewAppModuleBasic(appCodec)
 	require.NotNil(t, appModule)
@@ -78,17 +74,6 @@ func TestAppModuleBasic_Name(t *testing.T) {
 	am := createAppModuleBasic(t)
 
 	require.Equal(t, "prices", am.Name())
-}
-
-func TestAppModuleBasic_RegisterCodec(t *testing.T) {
-	am := createAppModuleBasic(t)
-
-	cdc := codec.NewLegacyAmino()
-	am.RegisterCodec(cdc)
-
-	var buf bytes.Buffer
-	err := cdc.Amino.PrintTypes(&buf)
-	require.NoError(t, err)
 }
 
 func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
@@ -105,19 +90,19 @@ func TestAppModuleBasic_RegisterCodecLegacyAmino(t *testing.T) {
 func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	am := createAppModuleBasic(t)
 
-	mockRegistry := new(mocks.InterfaceRegistry)
-	mockRegistry.On("RegisterImplementations", (*sdk.Msg)(nil), mock.Anything).Return()
-	mockRegistry.On("RegisterImplementations", (*tx.MsgResponse)(nil), mock.Anything).Return()
-	am.RegisterInterfaces(mockRegistry)
-	mockRegistry.AssertNumberOfCalls(t, "RegisterImplementations", 6)
-	mockRegistry.AssertExpectations(t)
+	registry := types.NewInterfaceRegistry()
+	am.RegisterInterfaces(registry)
+	// implInterfaces is a map[reflect.Type]reflect.Type that isn't exported and can't be mocked
+	// due to it using an unexported method on the interface thus we use reflection to access the field
+	// directly that contains the registrations.
+	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
+	require.Len(t, fv.MapKeys(), 6)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	am := createAppModuleBasic(t)
 
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	expectedGenesisJsonString := pricefeed.ReadJsonTestFile(t, "expected_default_genesis.json")
 
@@ -166,8 +151,7 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			am := createAppModuleBasic(t)
 
-			interfaceRegistry := types.NewInterfaceRegistry()
-			cdc := codec.NewProtoCodec(interfaceRegistry)
+			cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 			err := am.ValidateGenesis(cdc, nil, json.RawMessage(tc.genesisJson))
 			require.EqualError(t, err, tc.expectedErr)
@@ -178,26 +162,11 @@ func TestAppModuleBasic_ValidateGenesisErr(t *testing.T) {
 func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 	am := createAppModuleBasic(t)
 
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 
 	h := json.RawMessage(validGenesisState)
 
 	err := am.ValidateGenesis(cdc, nil, h)
-	require.NoError(t, err)
-}
-
-func TestAppModuleBasic_RegisterRESTRoutes(t *testing.T) {
-	am := createAppModuleBasic(t)
-
-	router := mux.NewRouter()
-
-	am.RegisterRESTRoutes(client.Context{}, router)
-
-	err := router.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
-		return errors.New("No Routes Expected")
-	})
-
 	require.NoError(t, err)
 }
 
@@ -273,19 +242,12 @@ func TestAppModule_RegisterServices(t *testing.T) {
 	require.Equal(t, true, mockMsgServer.AssertExpectations(t))
 }
 
-func TestAppModule_RegisterInvariants(t *testing.T) {
-	am := createAppModule(t)
-	am.RegisterInvariants(nil)
-}
-
 func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(validGenesisState)
 
-	result := am.InitGenesis(ctx, cdc, gs)
-	require.Equal(t, 0, len(result))
+	am.InitGenesis(ctx, cdc, gs)
 
 	marketParams := keeper.GetAllMarketParams(ctx)
 	require.Equal(t, 1, len(marketParams))
@@ -299,8 +261,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 func TestAppModule_InitGenesisPanic(t *testing.T) {
 	am, _, ctx := createAppModuleWithKeeper(t)
-	interfaceRegistry := types.NewInterfaceRegistry()
-	cdc := codec.NewProtoCodec(interfaceRegistry)
+	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 	gs := json.RawMessage(`invalid json`)
 
 	require.Panics(t, func() { am.InitGenesis(ctx, cdc, gs) })
@@ -309,21 +270,4 @@ func TestAppModule_InitGenesisPanic(t *testing.T) {
 func TestAppModule_ConsensusVersion(t *testing.T) {
 	am := createAppModule(t)
 	require.Equal(t, uint64(1), am.ConsensusVersion())
-}
-
-func TestAppModule_BeginBlock(t *testing.T) {
-	am := createAppModule(t)
-
-	var ctx sdk.Context
-	var req abci.RequestBeginBlock
-	am.BeginBlock(ctx, req) // should not panic
-}
-
-func TestAppModule_EndBlock(t *testing.T) {
-	am := createAppModule(t)
-
-	var ctx sdk.Context
-	var req abci.RequestEndBlock
-	result := am.EndBlock(ctx, req)
-	require.Equal(t, 0, len(result))
 }

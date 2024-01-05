@@ -35,7 +35,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20,
 	)
@@ -43,7 +43,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20),
+			AccAddressForSigning: constants.Alice_Num0.Owner,
 		},
 		&PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
 	)
@@ -51,7 +51,7 @@ func TestPlaceOrder(t *testing.T) {
 		ctx,
 		tApp.App,
 		testapp.MustMakeCheckTxOptions{
-			AccAddressForSigning: testtx.MustGetOnlySignerAddress(&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20),
+			AccAddressForSigning: constants.Bob_Num0.Owner,
 		},
 		&PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20,
 	)

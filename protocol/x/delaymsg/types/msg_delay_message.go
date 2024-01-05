@@ -11,11 +11,6 @@ import (
 // Implementing this interface is necessary to decode the Msg, see https://docs.cosmos.network/v0.45/core/encoding.html
 var _ codec.UnpackInterfacesMessage = &MsgDelayMessage{}
 
-func (msg *MsgDelayMessage) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 // ValidateBasic performs basic validation on the message.
 func (msg *MsgDelayMessage) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {

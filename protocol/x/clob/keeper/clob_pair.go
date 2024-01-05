@@ -1,12 +1,13 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -288,7 +289,7 @@ func (k Keeper) RemoveClobPair(
 func (k Keeper) GetAllClobPairs(ctx sdk.Context) (list []types.ClobPair) {
 	store := k.getClobPairStore(ctx)
 
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
