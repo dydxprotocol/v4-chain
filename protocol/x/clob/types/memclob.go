@@ -137,4 +137,9 @@ type MemClob interface {
 		bestAsk Order,
 		exists bool,
 	)
+	InsertZeroFillDeleveragingIntoOperationsQueue(
+		ctx sdk.Context,
+		subaccountId satypes.SubaccountId,
+		perpetualId uint32,
+	)
 }

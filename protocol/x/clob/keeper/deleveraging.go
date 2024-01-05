@@ -191,37 +191,45 @@ func (k Keeper) CanDeleverageSubaccount(
 // GateWithdrawalsIfNegativeTncSubaccountSeen gates withdrawals if a negative TNC subaccount exists.
 // It does this by inserting a zero-fill deleveraging operation into the operations queue iff any of
 // the provided liquidatable subaccounts are negative TNC.
-func (k Keeper) CanDeleverageSubaccount(
+func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	ctx sdk.Context,
-	subaccountId satypes.SubaccountId,
-	perpetualId uint32,
-) (shouldDeleverageAtBankruptcyPrice bool, shouldDeleverageAtOraclePrice bool, err error) {
-	bigNetCollateral,
-		_,
-		_,
-		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-		ctx,
-		satypes.Update{SubaccountId: subaccountId},
-	)
+	liquidatableSubaccountIds []satypes.SubaccountId,
+) (err error) {
+	foundNegativeTncSubaccount := false
+	var negativeTncSubaccountId satypes.SubaccountId
+	for _, subaccountId := range liquidatableSubaccountIds {
+		bigNetCollateral,
+			_,
+			_,
+			err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+			ctx,
+			satypes.Update{SubaccountId: subaccountId},
+		)
+		if err != nil {
+			return err
+		}
+
+		// If the subaccount has negative TNC, mark that a negative TNC subaccount was found.
+		if bigNetCollateral.Sign() == -1 {
+			foundNegativeTncSubaccount = true
+			negativeTncSubaccountId = subaccountId
+			break
+		}
+	}
+
+	if !foundNegativeTncSubaccount {
+		return nil
+	}
+
+	// A negative TNC subaccount was found, therefore insert a zero-fill deleveraging operation into
+	// the operations queue to indicate withdrawals should be gated.
+	perpetualId, err := k.GetPerpetualPositionToLiquidate(ctx, negativeTncSubaccountId)
 	if err != nil {
-		return false, false, err
+		return err
 	}
+	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
 
-	// Negative TNC, deleverage at bankruptcy price.
-	if bigNetCollateral.Sign() == -1 {
-		return true, false, nil
-	}
-
-	clobPairId, err := k.GetClobPairIdForPerpetual(ctx, perpetualId)
-	if err != nil {
-		return false, false, err
-	}
-	clobPair := k.mustGetClobPair(ctx, clobPairId)
-
-	// Non-negative TNC, deleverage at oracle price if market is in final settlement. Deleveraging at oracle price
-	// is always a valid state transition when TNC is non-negative. This is because the TNC/TMMR ratio is improving;
-	// TNC is staying constant while TMMR is decreasing.
-	return false, clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT, nil
+	return nil
 }
 
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance

@@ -25,10 +25,6 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 	ret := _m.Called(ctx, msgCancelOrder)
 
 	var r0 *clobtypes.OffchainUpdates
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) (*clobtypes.OffchainUpdates, error)); ok {
-		return rf(ctx, msgCancelOrder)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgCancelOrder) *clobtypes.OffchainUpdates); ok {
 		r0 = rf(ctx, msgCancelOrder)
 	} else {
@@ -37,6 +33,7 @@ func (_m *MemClob) CancelOrder(ctx types.Context, msgCancelOrder *clobtypes.MsgC
 		}
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MsgCancelOrder) error); ok {
 		r1 = rf(ctx, msgCancelOrder)
 	} else {
@@ -70,10 +67,6 @@ func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccou
 	ret := _m.Called(ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement)
 
 	var r0 *big.Int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int, bool) (*big.Int, error)); ok {
-		return rf(ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int, bool) *big.Int); ok {
 		r0 = rf(ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement)
 	} else {
@@ -82,6 +75,7 @@ func (_m *MemClob) DeleverageSubaccount(ctx types.Context, subaccountId subaccou
 		}
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.SubaccountId, uint32, *big.Int, bool) error); ok {
 		r1 = rf(ctx, subaccountId, perpetualId, deltaQuantums, isFinalSettlement)
 	} else {
@@ -96,16 +90,13 @@ func (_m *MemClob) GetCancelOrder(ctx types.Context, orderId clobtypes.OrderId) 
 	ret := _m.Called(ctx, orderId)
 
 	var r0 uint32
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) (uint32, bool)); ok {
-		return rf(ctx, orderId)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) uint32); ok {
 		r0 = rf(ctx, orderId)
 	} else {
 		r0 = ret.Get(0).(uint32)
 	}
 
+	var r1 bool
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
 		r1 = rf(ctx, orderId)
 	} else {
@@ -120,30 +111,27 @@ func (_m *MemClob) GetMidPrice(ctx types.Context, clobPairId clobtypes.ClobPairI
 	ret := _m.Called(ctx, clobPairId)
 
 	var r0 clobtypes.Subticks
-	var r1 clobtypes.Order
-	var r2 clobtypes.Order
-	var r3 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) (clobtypes.Subticks, clobtypes.Order, clobtypes.Order, bool)); ok {
-		return rf(ctx, clobPairId)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) clobtypes.Subticks); ok {
 		r0 = rf(ctx, clobPairId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.Subticks)
 	}
 
+	var r1 clobtypes.Order
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId) clobtypes.Order); ok {
 		r1 = rf(ctx, clobPairId)
 	} else {
 		r1 = ret.Get(1).(clobtypes.Order)
 	}
 
+	var r2 clobtypes.Order
 	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.ClobPairId) clobtypes.Order); ok {
 		r2 = rf(ctx, clobPairId)
 	} else {
 		r2 = ret.Get(2).(clobtypes.Order)
 	}
 
+	var r3 bool
 	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.ClobPairId) bool); ok {
 		r3 = rf(ctx, clobPairId)
 	} else {
@@ -174,10 +162,6 @@ func (_m *MemClob) GetOperationsToReplay(ctx types.Context) ([]clobtypes.Interna
 	ret := _m.Called(ctx)
 
 	var r0 []clobtypes.InternalOperation
-	var r1 map[clobtypes.OrderHash][]byte
-	if rf, ok := ret.Get(0).(func(types.Context) ([]clobtypes.InternalOperation, map[clobtypes.OrderHash][]byte)); ok {
-		return rf(ctx)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context) []clobtypes.InternalOperation); ok {
 		r0 = rf(ctx)
 	} else {
@@ -186,6 +170,7 @@ func (_m *MemClob) GetOperationsToReplay(ctx types.Context) ([]clobtypes.Interna
 		}
 	}
 
+	var r1 map[clobtypes.OrderHash][]byte
 	if rf, ok := ret.Get(1).(func(types.Context) map[clobtypes.OrderHash][]byte); ok {
 		r1 = rf(ctx)
 	} else {
@@ -202,16 +187,13 @@ func (_m *MemClob) GetOrder(ctx types.Context, orderId clobtypes.OrderId) (clobt
 	ret := _m.Called(ctx, orderId)
 
 	var r0 clobtypes.Order
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) (clobtypes.Order, bool)); ok {
-		return rf(ctx, orderId)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) clobtypes.Order); ok {
 		r0 = rf(ctx, orderId)
 	} else {
 		r0 = ret.Get(0).(clobtypes.Order)
 	}
 
+	var r1 bool
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.OrderId) bool); ok {
 		r1 = rf(ctx, orderId)
 	} else {
@@ -240,16 +222,13 @@ func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Or
 	ret := _m.Called(ctx, order)
 
 	var r0 subaccountstypes.BaseQuantums
-	var r1 bool
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) (subaccountstypes.BaseQuantums, bool)); ok {
-		return rf(ctx, order)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
 		r0 = rf(ctx, order)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
 	}
 
+	var r1 bool
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) bool); ok {
 		r1 = rf(ctx, order)
 	} else {
@@ -264,16 +243,13 @@ func (_m *MemClob) GetPricePremium(ctx types.Context, clobPair clobtypes.ClobPai
 	ret := _m.Called(ctx, clobPair, params)
 
 	var r0 int32
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair, perpetualstypes.GetPricePremiumParams) (int32, error)); ok {
-		return rf(ctx, clobPair, params)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPair, perpetualstypes.GetPricePremiumParams) int32); ok {
 		r0 = rf(ctx, clobPair, params)
 	} else {
 		r0 = ret.Get(0).(int32)
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPair, perpetualstypes.GetPricePremiumParams) error); ok {
 		r1 = rf(ctx, clobPair, params)
 	} else {
@@ -288,10 +264,6 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 	ret := _m.Called(ctx, clobPairId, subaccountId, side)
 
 	var r0 []clobtypes.Order
-	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) ([]clobtypes.Order, error)); ok {
-		return rf(ctx, clobPairId, subaccountId, side)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) []clobtypes.Order); ok {
 		r0 = rf(ctx, clobPairId, subaccountId, side)
 	} else {
@@ -300,6 +272,7 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 		}
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.ClobPairId, subaccountstypes.SubaccountId, clobtypes.Order_Side) error); ok {
 		r1 = rf(ctx, clobPairId, subaccountId, side)
 	} else {
@@ -309,29 +282,30 @@ func (_m *MemClob) GetSubaccountOrders(ctx types.Context, clobPairId clobtypes.C
 	return r0, r1
 }
 
+// InsertZeroFillDeleveragingIntoOperationsQueue provides a mock function with given fields: ctx, subaccountId, perpetualId
+func (_m *MemClob) InsertZeroFillDeleveragingIntoOperationsQueue(ctx types.Context, subaccountId subaccountstypes.SubaccountId, perpetualId uint32) {
+	_m.Called(ctx, subaccountId, perpetualId)
+}
+
 // PlaceOrder provides a mock function with given fields: ctx, order
 func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error) {
 	ret := _m.Called(ctx, order)
 
 	var r0 subaccountstypes.BaseQuantums
-	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
-		return rf(ctx, order)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) subaccountstypes.BaseQuantums); ok {
 		r0 = rf(ctx, order)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
 	}
 
+	var r1 clobtypes.OrderStatus
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.Order) clobtypes.OrderStatus); ok {
 		r1 = rf(ctx, order)
 	} else {
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
+	var r2 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
 		r2 = rf(ctx, order)
 	} else {
@@ -340,6 +314,7 @@ func (_m *MemClob) PlaceOrder(ctx types.Context, order clobtypes.Order) (subacco
 		}
 	}
 
+	var r3 error
 	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.Order) error); ok {
 		r3 = rf(ctx, order)
 	} else {
@@ -354,24 +329,20 @@ func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder
 	ret := _m.Called(ctx, liquidationOrder)
 
 	var r0 subaccountstypes.BaseQuantums
-	var r1 clobtypes.OrderStatus
-	var r2 *clobtypes.OffchainUpdates
-	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationOrder) (subaccountstypes.BaseQuantums, clobtypes.OrderStatus, *clobtypes.OffchainUpdates, error)); ok {
-		return rf(ctx, liquidationOrder)
-	}
 	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.LiquidationOrder) subaccountstypes.BaseQuantums); ok {
 		r0 = rf(ctx, liquidationOrder)
 	} else {
 		r0 = ret.Get(0).(subaccountstypes.BaseQuantums)
 	}
 
+	var r1 clobtypes.OrderStatus
 	if rf, ok := ret.Get(1).(func(types.Context, clobtypes.LiquidationOrder) clobtypes.OrderStatus); ok {
 		r1 = rf(ctx, liquidationOrder)
 	} else {
 		r1 = ret.Get(1).(clobtypes.OrderStatus)
 	}
 
+	var r2 *clobtypes.OffchainUpdates
 	if rf, ok := ret.Get(2).(func(types.Context, clobtypes.LiquidationOrder) *clobtypes.OffchainUpdates); ok {
 		r2 = rf(ctx, liquidationOrder)
 	} else {
@@ -380,6 +351,7 @@ func (_m *MemClob) PlacePerpetualLiquidation(ctx types.Context, liquidationOrder
 		}
 	}
 
+	var r3 error
 	if rf, ok := ret.Get(3).(func(types.Context, clobtypes.LiquidationOrder) error); ok {
 		r3 = rf(ctx, liquidationOrder)
 	} else {
