@@ -1,16 +1,16 @@
 package keeper
 
 import (
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
 
-	tmdb "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	bridgekeeper "github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
@@ -19,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
+// TODO(CORE-538): Migrate to testapp
 func DelayMsgKeepers(
 	t testing.TB,
 ) (
@@ -30,13 +31,13 @@ func DelayMsgKeepers(
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		_ codectypes.InterfaceRegistry,
 		_ *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
-		encCfg := testutil.MakeTestEncodingConfig()
+		encCfg := ante.MakeTestEncodingConfig()
 		cdc := encCfg.Codec.(*codec.ProtoCodec)
 		registry := encCfg.InterfaceRegistry
 
@@ -83,13 +84,13 @@ func DelayMsgKeeperWithMockBridgeKeeper(
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
-		db *tmdb.MemDB,
+		db *dbm.MemDB,
 		_ codectypes.InterfaceRegistry,
 		_ *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
-		encCfg := testutil.MakeTestEncodingConfig()
+		encCfg := ante.MakeTestEncodingConfig()
 		cdc := encCfg.Codec.(*codec.ProtoCodec)
 		registry := encCfg.InterfaceRegistry
 
@@ -123,12 +124,12 @@ func DelayMsgKeeperWithMockBridgeKeeper(
 
 func createDelayMsgKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	router *baseapp.MsgServiceRouter,
 	authorities []string,
 ) (*keeper.Keeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 

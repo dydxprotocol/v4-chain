@@ -58,9 +58,14 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 
 // Validate returns an error if one of the underlying msgs fails `ValidateBasic`.
 func (omt *OtherMsgsTx) Validate() error {
+	// Note that with Cosmos SDK 0.50.0 ValidateBasic has been removed from SDK message types,
+	// and it is recommended that users simulate the transaction instead to ensure that it could be
+	// processed.
 	for _, msg := range omt.msgs {
-		if err := msg.ValidateBasic(); err != nil {
-			return getValidateBasicError(msg, err)
+		if m, ok := msg.(sdk.HasValidateBasic); ok {
+			if err := m.ValidateBasic(); err != nil {
+				return getValidateBasicError(msg, err)
+			}
 		}
 	}
 	return nil

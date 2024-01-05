@@ -3,11 +3,10 @@ package keeper
 import (
 	"fmt"
 
-	sdklog "cosmossdk.io/log"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -15,7 +14,7 @@ import (
 
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
+		cdc      codec.Codec
 		storeKey storetypes.StoreKey
 		// authorities stores addresses capable of submitting a delayed message.
 		authorities map[string]struct{}
@@ -25,7 +24,7 @@ type (
 
 // NewKeeper creates a new x/delaymsg keeper.
 func NewKeeper(
-	cdc codec.BinaryCodec,
+	cdc codec.Codec,
 	storeKey storetypes.StoreKey,
 	router *baseapp.MsgServiceRouter,
 	authorities []string,
@@ -55,5 +54,5 @@ func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
 
 // Logger returns a module-specific logger for x/delaymsg.
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }

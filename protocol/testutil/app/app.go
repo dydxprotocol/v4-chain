@@ -3,13 +3,19 @@ package app
 import (
 	"bytes"
 	"context"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"math"
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -19,14 +25,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cometbft/cometbft/mempool"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cometbft/cometbft/types"
@@ -43,7 +46,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
-	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
@@ -103,13 +105,11 @@ type ValidateResponsePrepareProposalFn func(sdk.Context, abcitypes.ResponsePrepa
 // ValidateResponseProcessProposal is a function that validates the response from the ProcessProposalHandler.
 type ValidateResponseProcessProposalFn func(sdk.Context, abcitypes.ResponseProcessProposal) (haltChain bool)
 
-// ValidateDeliverTxsFn is a function that validates the response from each transaction that is delivered.
-// txIndex specifies the index of the transaction in the block.
-type ValidateDeliverTxsFn func(
+// ValidateFinalizeBlockFn is a function that validates the response from finalizing the block.
+type ValidateFinalizeBlockFn func(
 	ctx sdk.Context,
-	request abcitypes.RequestDeliverTx,
-	response abcitypes.ResponseDeliverTx,
-	txIndex int,
+	request abcitypes.RequestFinalizeBlock,
+	response abcitypes.ResponseFinalizeBlock,
 ) (haltchain bool)
 
 // AdvanceToBlockOptions is a struct containing options for AdvanceToBlock.* functions.
@@ -137,9 +137,9 @@ type AdvanceToBlockOptions struct {
 	// This skips the PrepareProposal and ProcessProposal phase.
 	DeliverTxsOverride [][]byte
 
-	ValidateRespPrepare ValidateResponsePrepareProposalFn
-	ValidateRespProcess ValidateResponseProcessProposalFn
-	ValidateDeliverTxs  ValidateDeliverTxsFn
+	ValidateRespPrepare   ValidateResponsePrepareProposalFn
+	ValidateRespProcess   ValidateResponseProcessProposalFn
+	ValidateFinalizeBlock ValidateFinalizeBlockFn
 }
 
 // DefaultTestApp creates an instance of app.App with default settings, suitable for unit testing. The app will be
@@ -151,11 +151,9 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 		logger, _ = testlog.TestLogger()
 	}
 	db := dbm.NewMemDB()
-	snapshotsDB := dbm.NewMemDB()
 	dydxApp := app.New(
 		logger,
 		db,
-		snapshotsDB,
 		nil,
 		true,
 		appOptions,
@@ -436,7 +434,7 @@ func (tApp *TestApp) InitChain() sdk.Context {
 		panic(errors.New("Cannot initialize chain that has been initialized already."))
 	}
 	tApp.initChainIfNeeded()
-	return tApp.App.NewContext(true, tApp.header)
+	return tApp.App.NewContextLegacy(true, tApp.header)
 }
 
 func (tApp *TestApp) initChainIfNeeded() {
@@ -453,17 +451,6 @@ func (tApp *TestApp) initChainIfNeeded() {
 		))
 		return
 	}
-
-	// Prevent Cosmos SDK code from waiting for 5 seconds on each start-up.
-	// TODO(CORE-538): Remove this during the upgrade since 0.50 Cosmos SDK no longer relies on this.
-	// There is a benign race here where another instance of the app running at the same time might use the shared
-	// value which will lead to possibly using the wrong server start time.
-	originalServerStartTime := srvtypes.ServerStartTime.Load()
-	srvtypes.ServerStartTime.Store(int64(time.Millisecond * 10))
-	tApp.builder.t.Cleanup(func() {
-		// Restore the original server time.
-		srvtypes.ServerStartTime.Store(originalServerStartTime)
-	})
 
 	// Launch the main instance of the application
 	// TODO(CORE-721): Consolidate launch of apps into an abstraction since the logic is mostly repeated 4 times.
@@ -625,18 +612,33 @@ func (tApp *TestApp) initChainIfNeeded() {
 		ConsensusParams: &consensusParamsProto,
 		Time:            tApp.genesis.GenesisTime,
 	}
-	tApp.App.InitChain(initChainRequest)
-	if tApp.builder.enableNonDeterminismChecks {
-		tApp.parallelApp.InitChain(initChainRequest)
-		tApp.noCheckTxApp.InitChain(initChainRequest)
-		tApp.crashingApp.InitChain(initChainRequest)
+	initChainResponse, err := tApp.App.InitChain(&initChainRequest)
+	if err != nil {
+		tApp.builder.t.Fatalf("Failed to initialize chain %+v, err %+v", initChainResponse, err)
 	}
 
-	tApp.App.Commit()
 	if tApp.builder.enableNonDeterminismChecks {
-		tApp.parallelApp.Commit()
-		tApp.noCheckTxApp.Commit()
-		tApp.crashingApp.Commit()
+		initChain(tApp.builder.t, tApp.parallelApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.noCheckTxApp, initChainRequest, initChainResponse.AppHash)
+		initChain(tApp.builder.t, tApp.crashingApp, initChainRequest, initChainResponse.AppHash)
+	}
+
+	finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
+		Hash:   initChainResponse.AppHash,
+		Height: 1,
+		Time:   tApp.genesis.GenesisTime,
+	}
+	finalizeBlockResponse, err := tApp.App.FinalizeBlock(&finalizeBlockRequest)
+	if err != nil {
+		tApp.builder.t.Fatalf("Failed to finalize block %+v, err %+v", finalizeBlockResponse, err)
+	}
+
+	_, err = tApp.App.Commit()
+	require.NoError(tApp.builder.t, err)
+	if tApp.builder.enableNonDeterminismChecks {
+		finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+		finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 	}
 
 	tApp.header = tmproto.Header{
@@ -669,7 +671,7 @@ func (tApp *TestApp) AdvanceToBlock(
 		panic(fmt.Errorf("Expected time (%v) >= current block time (%v).", options.BlockTime, tApp.header.Time))
 	}
 	if int64(block) == tApp.GetBlockHeight() {
-		return tApp.App.NewContext(true, tApp.header)
+		return tApp.App.NewContextLegacy(true, tApp.header)
 	}
 
 	// Ensure that we grab the lock so that we can read and write passingCheckTxs correctly.
@@ -705,18 +707,27 @@ func (tApp *TestApp) AdvanceToBlock(
 			if options.RequestPrepareProposalTxsOverride != nil {
 				prepareRequest.Txs = options.RequestPrepareProposalTxsOverride
 			}
-			prepareResponse := tApp.App.PrepareProposal(prepareRequest)
+			prepareResponse, prepareErr := tApp.App.PrepareProposal(&prepareRequest)
 
 			if options.ValidateRespPrepare != nil {
 				haltChain := options.ValidateRespPrepare(
-					tApp.App.NewContext(true, tApp.header),
-					prepareResponse,
+					tApp.App.NewContextLegacy(true, tApp.header),
+					*prepareResponse,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
+					return tApp.App.NewContextLegacy(true, tApp.header)
 				}
 			}
+
+			require.NoError(
+				tApp.builder.t,
+				prepareErr,
+				"Expected prepare proposal request %+v to succeed, but failed with %+v and err %+v.",
+				prepareRequest,
+				prepareResponse,
+				prepareErr,
+			)
 
 			// Pass forward any transactions that were modified through the preparation phase and process them.
 			if options.RequestProcessProposalTxsOverride != nil {
@@ -730,52 +741,56 @@ func (tApp *TestApp) AdvanceToBlock(
 				NextValidatorsHash: tApp.header.NextValidatorsHash,
 				ProposerAddress:    tApp.header.ProposerAddress,
 			}
-			processResponse := tApp.App.ProcessProposal(processRequest)
+			processResponse, processErr := tApp.App.ProcessProposal(&processRequest)
 
 			if options.ValidateRespProcess != nil {
 				haltChain := options.ValidateRespProcess(
-					tApp.App.NewContext(true, tApp.header),
-					processResponse,
+					tApp.App.NewContextLegacy(true, tApp.header),
+					*processResponse,
 				)
 				tApp.halted = haltChain
 				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
+					return tApp.App.NewContextLegacy(true, tApp.header)
 				}
 			}
 
 			require.Truef(
 				tApp.builder.t,
-				processResponse.IsAccepted(),
-				"Expected process proposal request %+v to be accepted, but failed with %+v.",
+				processErr == nil && processResponse.IsAccepted(),
+				"Expected process proposal request %+v to be accepted, but failed with %+v and err %+v.",
 				processRequest,
 				processResponse,
+				processErr,
 			)
 
 			// Check that all instances of the application can process the proposoal and come to the same result.
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelProcessResponse := tApp.parallelApp.ProcessProposal(processRequest)
+				parallelProcessResponse, parallelProcessErr := tApp.parallelApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
-					parallelProcessResponse.IsAccepted(),
-					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					parallelProcessErr == nil && parallelProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v and err %+v.",
 					processRequest,
 					parallelProcessResponse,
+					parallelProcessErr,
 				)
-				noCheckTxProcessResponse := tApp.noCheckTxApp.ProcessProposal(processRequest)
+				noCheckTxProcessResponse, noCheckTxProcessErr := tApp.noCheckTxApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
-					noCheckTxProcessResponse.IsAccepted(),
-					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					noCheckTxProcessErr == nil && noCheckTxProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v and err %+v.",
 					processRequest,
 					noCheckTxProcessResponse,
+					noCheckTxProcessErr,
 				)
-				crashingProcessResponse := tApp.crashingApp.ProcessProposal(processRequest)
+				crashingProcessResponse, crashingProcessErr := tApp.crashingApp.ProcessProposal(&processRequest)
 				require.Truef(
 					tApp.builder.t,
-					crashingProcessResponse.IsAccepted(),
-					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v.",
+					crashingProcessErr == nil && crashingProcessResponse.IsAccepted(),
+					"Non-determinism detected, expected process proposal request %+v to be accepted, but failed with %+v and err %+v.",
 					processRequest,
 					crashingProcessResponse,
+					crashingProcessErr,
 				)
 			}
 
@@ -797,79 +812,55 @@ func (tApp *TestApp) AdvanceToBlock(
 			tApp.restartCrashingApp()
 		}
 
-		// Start the next block
-		beginBlockRequest := abcitypes.RequestBeginBlock{
-			Header: tApp.header,
+		// Finalize the block
+		finalizeBlockRequest := abcitypes.RequestFinalizeBlock{
+			Txs:                deliverTxs,
+			Hash:               tApp.header.AppHash,
+			Height:             tApp.header.Height,
+			Time:               tApp.header.Time,
+			NextValidatorsHash: tApp.header.NextValidatorsHash,
+			ProposerAddress:    tApp.header.ProposerAddress,
 		}
-		tApp.App.BeginBlock(beginBlockRequest)
-		if tApp.builder.enableNonDeterminismChecks {
-			tApp.parallelApp.BeginBlock(beginBlockRequest)
-			tApp.noCheckTxApp.BeginBlock(beginBlockRequest)
-			tApp.crashingApp.BeginBlock(beginBlockRequest)
-		}
+		finalizeBlockResponse, finalizeBlockErr := tApp.App.FinalizeBlock(&finalizeBlockRequest)
 
-		// Deliver the transaction from the previous block
-		for i, bz := range deliverTxs {
-			deliverTxRequest := abcitypes.RequestDeliverTx{Tx: bz}
-			deliverTxResponse := tApp.App.DeliverTx(deliverTxRequest)
-			// Use the supplied validator otherwise use the default validation which expects all delivered
-			// transactions to succeed.
-			if options.ValidateDeliverTxs != nil {
-				haltChain := options.ValidateDeliverTxs(
-					tApp.App.NewContext(false, tApp.header),
-					deliverTxRequest,
-					deliverTxResponse,
-					i,
-				)
-				tApp.halted = haltChain
-				if tApp.halted {
-					return tApp.App.NewContext(true, tApp.header)
-				}
-			} else {
-				require.Truef(
+		if options.ValidateFinalizeBlock != nil {
+			tApp.halted = options.ValidateFinalizeBlock(
+				tApp.App.NewContextLegacy(false, tApp.header),
+				finalizeBlockRequest,
+				*finalizeBlockResponse,
+			)
+			if tApp.halted {
+				return tApp.App.NewContextLegacy(true, tApp.header)
+			}
+		} else {
+			require.NoErrorf(
+				tApp.builder.t,
+				finalizeBlockErr,
+				"Expected block finalization to succeed but failed %+v with err %+v.",
+				finalizeBlockResponse,
+				finalizeBlockErr,
+			)
+			for i, txResult := range finalizeBlockResponse.TxResults {
+				require.Conditionf(
 					tApp.builder.t,
-					deliverTxResponse.IsOK(),
-					"Failed to deliver transaction that was accepted: %+v.",
-					deliverTxResponse,
+					txResult.IsOK,
+					"Failed to deliver transaction %d that was accepted: %+v. Response: %+v",
+					i,
+					txResult,
+					finalizeBlockResponse,
 				)
-			}
-
-			// Ensure that all instances of the application have the blocks delivered.
-			if tApp.builder.enableNonDeterminismChecks {
-				tApp.parallelApp.DeliverTx(deliverTxRequest)
-				tApp.noCheckTxApp.DeliverTx(deliverTxRequest)
-				tApp.crashingApp.DeliverTx(deliverTxRequest)
 			}
 		}
 
-		// End the block and commit it.
-		endBlockRequest := abcitypes.RequestEndBlock{Height: tApp.header.Height}
-		tApp.App.EndBlock(endBlockRequest)
-		tApp.App.Commit()
-		if tApp.builder.enableNonDeterminismChecks {
-			tApp.parallelApp.EndBlock(endBlockRequest)
-			tApp.noCheckTxApp.EndBlock(endBlockRequest)
-			tApp.crashingApp.EndBlock(endBlockRequest)
-			tApp.parallelApp.Commit()
-			tApp.noCheckTxApp.Commit()
-			tApp.crashingApp.Commit()
+		// Commit the block.
+		_, err := tApp.App.Commit()
+		require.NoError(tApp.builder.t, err)
 
-			// Ensure that all instances after committing the block came to the same commit hash.
-			require.Equalf(tApp.builder.t,
-				tApp.App.LastCommitID(),
-				tApp.parallelApp.LastCommitID(),
-				"Non-determinism in state detected, expected LastCommitID to match.",
-			)
-			require.Equalf(tApp.builder.t,
-				tApp.App.LastCommitID(),
-				tApp.noCheckTxApp.LastCommitID(),
-				"Non-determinism in state detected, expected LastCommitID to match.",
-			)
-			require.Equalf(tApp.builder.t,
-				tApp.App.LastCommitID(),
-				tApp.crashingApp.LastCommitID(),
-				"Non-determinism in state detected, expected LastCommitID to match.",
-			)
+		// Finalize and commit all the blocks for the non-determinism checkers.
+		if tApp.builder.enableNonDeterminismChecks {
+			finalizeBlockAndCommit(tApp.builder.t, tApp.parallelApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.noCheckTxApp, finalizeBlockRequest, tApp.App)
+			finalizeBlockAndCommit(tApp.builder.t, tApp.crashingApp, finalizeBlockRequest, tApp.App)
 		}
 
 		// Recheck the remaining transactions in the mempool pruning any that have failed during recheck.
@@ -879,20 +870,23 @@ func (tApp *TestApp) AdvanceToBlock(
 				Tx:   passingCheckTx,
 				Type: abcitypes.CheckTxType_Recheck,
 			}
-			recheckTxResponse := tApp.App.CheckTx(recheckTxRequest)
-			if recheckTxResponse.IsOK() {
+			recheckTxResponse, recheckTxErr := tApp.App.CheckTx(&recheckTxRequest)
+			if recheckTxErr == nil && recheckTxResponse.IsOK() {
 				passingRecheckTxs = append(passingRecheckTxs, passingCheckTx)
 			}
 
 			if tApp.builder.enableNonDeterminismChecks {
-				parallelRecheckTxResponse := tApp.parallelApp.CheckTx(recheckTxRequest)
-				require.Equalf(
+				parallelRecheckTxResponse, parallelRecheckTxErr := tApp.parallelApp.CheckTx(&recheckTxRequest)
+				require.Truef(
 					tApp.builder.t,
-					recheckTxResponse.Code,
-					parallelRecheckTxResponse.Code,
-					"Non-determinism detected during RecheckTx, expected %+v, got %+v.",
+					recheckTxResponse.Code == parallelRecheckTxResponse.Code &&
+						((recheckTxErr == nil && parallelRecheckTxErr == nil) ||
+							(recheckTxErr != nil && parallelRecheckTxErr != nil)),
+					"Non-determinism detected during RecheckTx, expected %+v with err %+v, got %+v with err %+v.",
 					recheckTxResponse,
+					recheckTxErr,
 					parallelRecheckTxResponse,
+					parallelRecheckTxErr,
 				)
 
 				// None of the transactions should be rechecked in `noCheckTxApp` since the transaction will only
@@ -903,7 +897,133 @@ func (tApp *TestApp) AdvanceToBlock(
 		tApp.passingCheckTxs = passingRecheckTxs
 	}
 
-	return tApp.App.NewContext(true, tApp.header)
+	return tApp.App.NewContextLegacy(true, tApp.header)
+}
+
+// initChain initializes the chain and ensures that it did successfully and also that it reached the expected
+// app hash.
+func initChain(t testing.TB, app *app.App, request abcitypes.RequestInitChain, expectedAppHash []byte) {
+	response, err := app.InitChain(&request)
+	if err != nil {
+		t.Fatalf("Failed to initialize chain %+v, err %+v", response, err)
+	}
+	require.Equal(t, expectedAppHash, response.AppHash)
+}
+
+// finalizeBlockAndCommit finalizes the block and commits the chain verifying that the chain matches the
+// expected commit id.
+func finalizeBlockAndCommit(
+	t testing.TB,
+	app *app.App,
+	request abcitypes.RequestFinalizeBlock,
+	expectedApp *app.App,
+) {
+	_, err := app.FinalizeBlock(&request)
+	require.NoError(t, err)
+	_, err = app.Commit()
+	require.NoError(t, err)
+
+	diffs := make([]string, 0)
+	if !bytes.Equal(app.LastCommitID().Hash, expectedApp.LastCommitID().Hash) {
+		rootMulti := app.CommitMultiStore().(*rootmulti.Store)
+		expectedRootMulti := expectedApp.CommitMultiStore().(*rootmulti.Store)
+
+		commitInfo, err := rootMulti.GetCommitInfo(app.LastBlockHeight())
+		require.NoError(t, err)
+		expectedCommitInfo, err := expectedRootMulti.GetCommitInfo(app.LastBlockHeight())
+		require.NoError(t, err)
+		storeInfos := make(map[string]storetypes.StoreInfo)
+		for _, storeInfo := range commitInfo.StoreInfos {
+			storeInfos[storeInfo.Name] = storeInfo
+		}
+
+		storeDiffs := make([]string, 0)
+		for _, storeInfo := range expectedCommitInfo.StoreInfos {
+			if !bytes.Equal(storeInfos[storeInfo.Name].GetHash(), storeInfo.GetHash()) {
+				diffs = append(
+					diffs,
+					fmt.Sprintf("Expected store '%s' hashes to match.", storeInfo.Name),
+				)
+				storeDiffs = append(storeDiffs, storeInfo.Name)
+			}
+		}
+
+		for _, storeName := range storeDiffs {
+			store := rootMulti.GetCommitKVStore(rootMulti.StoreKeysByName()[storeName])
+			expectedStore := expectedRootMulti.GetCommitKVStore(expectedRootMulti.StoreKeysByName()[storeName])
+
+			itr := store.Iterator(nil, nil)
+			defer itr.Close()
+			expectedItr := expectedStore.Iterator(nil, nil)
+			defer expectedItr.Close()
+
+			for ; itr.Valid(); itr.Next() {
+				if !expectedItr.Valid() {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Expected key/value ('%s', '%s') to exist in store '%s'.",
+							itr.Key(),
+							itr.Value(),
+							storeName,
+						),
+					)
+					continue
+				} else if !bytes.Equal(itr.Key(), expectedItr.Key()) {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Expected key '%s' to exist in store '%s'.",
+							itr.Key(),
+							storeName,
+						),
+					)
+				} else if !bytes.Equal(itr.Value(), expectedItr.Value()) {
+					diffs = append(
+						diffs,
+						fmt.Sprintf(
+							"Found key '%s' with different value '%s' which "+
+								"differs from original value '%s' in store '%s'.",
+							itr.Key(),
+							expectedItr.Value(),
+							itr.Value(),
+							storeName,
+						),
+					)
+				}
+
+				expectedItr.Next()
+			}
+
+			for ; expectedItr.Valid(); expectedItr.Next() {
+				diffs = append(
+					diffs,
+					fmt.Sprintf(
+						"Expected key/value (%s, %s) to not exist in store '%s'",
+						expectedItr.Key(),
+						expectedItr.Value(),
+						storeName,
+					),
+				)
+			}
+		}
+	}
+
+	if len(diffs) != 0 {
+		t.Errorf(
+			"Expected no differences in stores but found %d difference(s):\n  %s",
+			len(diffs),
+			strings.Join(diffs, "\n  "),
+		)
+		t.FailNow()
+	}
+
+	// Ensure that all instances after committing the block came to the same commit hash.
+	require.Equalf(t,
+		expectedApp.LastCommitID(),
+		app.LastCommitID(),
+		"Non-determinism in state detected, expected LastCommitID to match.",
+	)
 }
 
 // GetHeader fetches the current header of the test app.
@@ -924,11 +1044,11 @@ func (tApp *TestApp) GetHalted() bool {
 // newTestingLogger returns a logger that will write to stdout if testing is verbose. This method replaces
 // cometbft's log.TestingLogger, which re-uses the same logger for all tests, which can cause race test false positives
 // when accessed by concurrent go routines in the same test.
-func newTestingLogger() log.Logger {
+func newTestingLogger() cmtlog.Logger {
 	if testing.Verbose() {
-		return log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+		return cmtlog.NewTMLogger(cmtlog.NewSyncWriter(os.Stdout))
 	} else {
-		return log.NewNopLogger()
+		return cmtlog.NewNopLogger()
 	}
 }
 
@@ -938,11 +1058,13 @@ func newTestingLogger() log.Logger {
 //
 // This method is thread-safe.
 func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseCheckTx {
+	// TODO(CORE-538): Expose the updated CheckTx API that uses pointers and returns errors to tests.
+
 	tApp.panicIfChainIsHalted()
-	res := tApp.App.CheckTx(req)
+	res, err := tApp.App.CheckTx(&req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
 	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
-	if res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
+	if err == nil && res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
 		tApp.passingCheckTxsMtx.Lock()
@@ -953,31 +1075,33 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 	if tApp.builder.enableNonDeterminismChecks {
 		// We expect the parallel app to always produce the same result since all in memory state should be
 		// consistent with tApp.App and produce the same result.
-		parallelRes := tApp.parallelApp.CheckTx(req)
-		require.Equalf(
+		parallelRes, parallelErr := tApp.parallelApp.CheckTx(&req)
+		require.Truef(
 			tApp.builder.t,
-			res.Code,
-			parallelRes.Code,
-			"Non-determinism detected during CheckTx, expected %+v, got %+v.",
+			res.Code == parallelRes.Code && ((err == nil && parallelErr == nil) || (err != nil && parallelErr != nil)),
+			"Non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
 			res,
+			err,
 			parallelRes,
+			parallelErr,
 		)
 
 		// The crashing app may or may not be able to get to a recoverable state that would produce equivalent
 		// results. For example short-term orders and cancellations will be lost from in-memory state.
-		crashingRes := tApp.crashingApp.CheckTx(req)
+		crashingRes, crashingErr := tApp.crashingApp.CheckTx(&req)
 		if tApp.builder.enableCrashingAppCheckTxNonDeterminismChecks {
-			require.Equalf(
+			require.Truef(
 				tApp.builder.t,
-				res.Code,
-				crashingRes.Code,
-				"Non-determinism detected during CheckTx, expected %+v, got %+v.",
+				res.Code == crashingRes.Code && ((err == nil && crashingErr == nil) || (err != nil && crashingErr != nil)),
+				"Non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
 				res,
+				err,
 				crashingRes,
+				crashingErr,
 			)
 		}
 	}
-	return res
+	return *res
 }
 
 // panicIfChainIsHalted panics if the chain is halted.
@@ -989,8 +1113,8 @@ func (tApp *TestApp) panicIfChainIsHalted() {
 
 // PrepareProposal creates an abci `RequestPrepareProposal` using the current state of the chain
 // and calls the PrepareProposal handler to return an abci `ResponsePrepareProposal`.
-func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
-	return tApp.App.PrepareProposal(abcitypes.RequestPrepareProposal{
+func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, error) {
+	return tApp.App.PrepareProposal(&abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,
 		Height:             tApp.header.Height,
@@ -1004,14 +1128,24 @@ func (tApp *TestApp) PrepareProposal() abcitypes.ResponsePrepareProposal {
 // application for the current block height. This is helpful for testcases where we want to use DeliverTxsOverride
 // to insert new transactions, but preserve the operations that would have been proposed.
 func (tApp *TestApp) GetProposedOperationsTx() []byte {
-	return tApp.App.PrepareProposal(abcitypes.RequestPrepareProposal{
+	request := abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,
 		Height:             tApp.header.Height,
 		Time:               tApp.header.Time,
 		NextValidatorsHash: tApp.header.NextValidatorsHash,
 		ProposerAddress:    tApp.header.ProposerAddress,
-	}).Txs[0]
+	}
+	response, err := tApp.App.PrepareProposal(&request)
+	require.NoError(
+		tApp.builder.t,
+		err,
+		"Expected prepare proposal request %+v to succeed, but failed with %+v and err %+v.",
+		request,
+		response,
+		err,
+	)
+	return response.Txs[0]
 }
 
 // prepareValidatorHomeDir launches a validator using the `start` command with the specified genesis doc and application
@@ -1079,13 +1213,13 @@ func launchValidatorInDir(
 			// created. The actual limit is OS specific.
 			apiSocketPath := filepath.Join(validatorHomeDir, "api_socket")
 			grpcSocketPath := filepath.Join(validatorHomeDir, "grpc_socket")
-			grpcWebSocketPath := filepath.Join(validatorHomeDir, "grpc_web_socket")
 			appConfig.API.Address = fmt.Sprintf("unix://%s", apiSocketPath)
 			appConfig.GRPC.Address = fmt.Sprintf("unix://%s", grpcSocketPath)
-			appConfig.GRPCWeb.Address = fmt.Sprintf("unix://%s", grpcWebSocketPath)
 
 			// TODO(CORE-29): This disables launching the daemons since not all daemons currently shutdown as needed.
 			appConfig.API.Enable = false
+			// We disable telemetry since multiple instances of the application fail to register causing a panic.
+			appConfig.Telemetry.Enabled = false
 			return s, appConfig
 		},
 		// Capture the application instance.
@@ -1138,9 +1272,6 @@ func launchValidatorInDir(
 	case a = <-appCaptor:
 		shutdownFn = func() error {
 			cancelFn()
-			// TODO(CORE-538): Remove this explicit app.Close() invocation since wrapCPUProfile doesn't actually
-			// wait till the Cosmos app shuts down.
-			a.Close()
 			return <-done
 		}
 		return a, shutdownFn, nil
@@ -1165,19 +1296,13 @@ func MustMakeCheckTxsWithClobMsg[T clobtypes.MsgPlaceOrder | clobtypes.MsgCancel
 		var m sdk.Msg
 		switch v := any(msg).(type) {
 		case clobtypes.MsgPlaceOrder:
+			signerAddress = v.Order.OrderId.SubaccountId.Owner
 			m = &v
 		case clobtypes.MsgCancelOrder:
+			signerAddress = v.OrderId.SubaccountId.Owner
 			m = &v
 		default:
 			panic(fmt.Errorf("MustMakeCheckTxsWithClobMsg: Unknown message type %T", msg))
-		}
-
-		msgSignerAddress := testtx.MustGetOnlySignerAddress(m)
-		if signerAddress == "" {
-			signerAddress = msgSignerAddress
-		}
-		if signerAddress != msgSignerAddress {
-			panic(fmt.Errorf("Input msgs must have the same owner/signer address"))
 		}
 
 		sdkMessages[i] = m

@@ -1,22 +1,23 @@
 package sdk
 
 import (
+	"cosmossdk.io/store/metrics"
+	dbm "github.com/cosmos/cosmos-db"
 	"time"
 
-	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func NewSdkContextWithMultistore() (
 	ctx sdk.Context,
 	stateStore store.CommitMultiStore,
-	db *tmdb.MemDB,
+	db *dbm.MemDB,
 ) {
-	db = tmdb.NewMemDB()
-	stateStore = store.NewCommitMultiStore(db)
+	db = dbm.NewMemDB()
+	stateStore = store.NewCommitMultiStore(db, log.NewNopLogger(), metrics.NewNoOpMetrics())
 	ctx = sdk.NewContext(stateStore, tmproto.Header{}, false, log.NewNopLogger())
 	ctx = ctx.WithTxBytes([]byte{1})
 	return ctx, stateStore, db

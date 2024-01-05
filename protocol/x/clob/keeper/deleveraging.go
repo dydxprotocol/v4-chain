@@ -13,6 +13,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -32,6 +33,11 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	err error,
 ) {
 	lib.AssertCheckTxMode(ctx)
+
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.PerpetualId, perpetualId,
+		log.Subaccount, subaccountId,
+	)
 
 	shouldDeleverageAtBankruptcyPrice, shouldDeleverageAtOraclePrice, err := k.CanDeleverageSubaccount(
 		ctx,
@@ -58,11 +64,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	if !exists {
 		// Early return to skip deleveraging if the subaccount does not have an open position for the perpetual.
 		// This could happen if the subaccount's position was closed by other liquidation matches.
-		k.Logger(ctx).Debug(
-			"Subaccount does not have an open position for the perpetual that is being deleveraged",
-			"subaccount", subaccount,
-			"perpetualId", perpetualId,
-		)
+		log.DebugLog(ctx, "Subaccount does not have an open position for the perpetual that is being deleveraged")
 		return new(big.Int), nil
 	}
 
@@ -243,10 +245,9 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 	numSubaccounts := len(subaccountsWithOpenPositions)
 	if numSubaccounts == 0 {
 		liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-		k.Logger(ctx).Error(
+		log.ErrorLog(
+			ctx,
 			"Failed to find subaccounts with open positions on opposite side of liquidated subaccount",
-			"blockHeight", ctx.BlockHeight(),
-			"perpetualId", perpetualId,
 			"deltaQuantumsTotal", deltaQuantumsTotal,
 			"liquidatedSubaccount", liquidatedSubaccount,
 		)
@@ -294,11 +295,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		)
 		if err != nil {
 			liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
-			k.Logger(ctx).Error(
-				"Encountered error when getting quote quantums for deleveraging",
-				"error", err,
-				"blockHeight", ctx.BlockHeight(),
-				"perpetualId", perpetualId,
+			log.ErrorLogWithError(ctx, "Encountered error when getting quote quantums for deleveraging",
+				err,
 				"deltaBaseQuantums", deltaBaseQuantums,
 				"liquidatedSubaccount", liquidatedSubaccount,
 				"offsettingSubaccount", offsettingSubaccount,
@@ -351,9 +349,8 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 			// TODO(CLOB-75): Support deleveraging subaccounts with non overlapping bankruptcy prices.
 			liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 			offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, *offsettingSubaccount.Id)
-			k.Logger(ctx).Debug(
-				"Encountered error when processing deleveraging",
-				"error", err,
+			log.DebugLog(ctx, "Encountered error when processing deleveraging",
+				err,
 				"blockHeight", ctx.BlockHeight(),
 				"checkTx", ctx.IsCheckTx(),
 				"perpetualId", perpetualId,
@@ -609,11 +606,12 @@ func (k Keeper) DeleverageSubaccounts(
 		perpetualId := subaccountsToDeleverage[i].PerpetualId
 		_, err := k.MaybeDeleverageSubaccount(ctx, subaccountId, perpetualId)
 		if err != nil {
-			k.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"Failed to deleverage subaccount.",
+				err,
 				"subaccount", subaccountId,
 				"perpetualId", perpetualId,
-				"error", err,
 			)
 			return err
 		}

@@ -11,7 +11,7 @@ import (
 // FullNodePrepareProposalHandler returns an EmptyResponse and logs an error
 // if a node running in `--non-validating-full-node` mode attempts to run PrepareProposal.
 func FullNodePrepareProposalHandler() sdk.PrepareProposalHandler {
-	return func(ctx sdk.Context, req abci.RequestPrepareProposal) abci.ResponsePrepareProposal {
+	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		ctx.Logger().Error(`
         Full nodes do not support PrepareProposal.
         This validator may be incorrectly running in full-node mode!
@@ -20,6 +20,6 @@ func FullNodePrepareProposalHandler() sdk.PrepareProposalHandler {
 		recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
 
 		// Return an empty response if the node is running in full-node mode so that the proposal fails.
-		return EmptyResponse
+		return &EmptyResponse, nil
 	}
 }

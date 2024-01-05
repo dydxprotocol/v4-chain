@@ -4,7 +4,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
@@ -147,11 +146,10 @@ func TestUpdateMarketParam(t *testing.T) {
 			ctx, pricesKeeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
-			goCtx := sdk.WrapSDKContext(ctx)
 			initialMarketParam, err := pricesKeeper.CreateMarket(ctx, testMarketParam, testMarketPrice)
 			require.NoError(t, err)
 
-			_, err = msgServer.UpdateMarketParam(goCtx, tc.msg)
+			_, err = msgServer.UpdateMarketParam(ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 				// Verify that market param was not updated.

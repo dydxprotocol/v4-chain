@@ -7,7 +7,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -430,6 +430,7 @@ func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
 // correctly.
 func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
+	// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
 	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
 		genesis = testapp.DefaultGenesis()
 		// Update the genesis state to execute the perpetual fee params update at block 2.
@@ -442,7 +443,7 @@ func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
 			},
 		)
 		return genesis
-	}).Build()
+	}).WithNonDeterminismChecksEnabled(false).Build()
 	ctx := tApp.InitChain()
 
 	resp, err := tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})

@@ -26,7 +26,7 @@ type PrepareProposalTxs struct {
 
 // NewPrepareProposalTxs returns a new `PrepareProposalTxs` given the request.
 func NewPrepareProposalTxs(
-	req abci.RequestPrepareProposal,
+	req *abci.RequestPrepareProposal,
 ) (PrepareProposalTxs, error) {
 	if req.MaxTxBytes <= 0 {
 		return PrepareProposalTxs{}, errors.New("MaxTxBytes must be positive")

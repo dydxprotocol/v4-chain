@@ -5,27 +5,21 @@ import (
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
-	sdklog "cosmossdk.io/log"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 )
 
-var (
-	// TempTVLPlacerholder is a placeholder value for TVL.
-	// TODO(CORE-836): Remove this after `GetBaseline` is fully implemented.
-	TempTVLPlacerholder = big.NewInt(20_000_000_000_000)
-)
-
 type (
 	Keeper struct {
-		cdc      codec.BinaryCodec
-		storeKey storetypes.StoreKey
+		cdc        codec.BinaryCodec
+		storeKey   storetypes.StoreKey
+		bankKeeper types.BankKeeper
 
 		// TODO(CORE-824): Implement `x/ratelimit` keeper
 
@@ -37,11 +31,13 @@ type (
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	bankKeeper types.BankKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
 		cdc:         cdc,
 		storeKey:    storeKey,
+		bankKeeper:  bankKeeper,
 		authorities: lib.UniqueSliceToSet(authorities),
 	}
 }
@@ -130,8 +126,8 @@ func (k Keeper) GetBaseline(
 	limiter types.Limiter,
 ) *big.Int {
 	// Get the current TVL.
-	// TODO(CORE-836): Query bank Keeper to get current supply of the token.
-	currentTVL := TempTVLPlacerholder
+	supply := k.bankKeeper.GetSupply(ctx, denom)
+	currentTVL := supply.Amount.BigInt()
 
 	return lib.BigMax(
 		limiter.BaselineMinimum.BigInt(),
@@ -249,7 +245,7 @@ func (k Keeper) HasAuthority(authority string) bool {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {

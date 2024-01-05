@@ -38,7 +38,6 @@ func TestProposedOperations(t *testing.T) {
 						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 					}...,
 				).Return()
-				mck.On("Logger", ctx).Return(mockLogger)
 			},
 			expectedErr: testError,
 		},
@@ -64,9 +63,8 @@ func TestProposedOperations(t *testing.T) {
 			msg := &types.MsgProposedOperations{
 				OperationsQueue: make([]types.OperationRaw, 0),
 			}
-			goCtx := sdk.WrapSDKContext(ctx)
 
-			resp, err := msgServer.ProposedOperations(goCtx, msg)
+			resp, err := msgServer.ProposedOperations(ctx, msg)
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 				require.Nil(t, resp)

@@ -4,7 +4,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
@@ -85,9 +84,8 @@ func TestUpdateParams(t *testing.T) {
 			require.NoError(t, err)
 
 			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
-			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
-			_, err = msgServer.UpdateParams(wrappedCtx, tc.msg)
+			_, err = msgServer.UpdateParams(pc.Ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 				// Verify that params in state are unchanged.

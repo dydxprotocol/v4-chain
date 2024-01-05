@@ -3,6 +3,7 @@ package ante_test
 import (
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -120,7 +121,14 @@ func TestValidateMsgType_FreeInfiniteGasDecorator(t *testing.T) {
 			// Empty private key, so tx's signature should be empty.
 			privs, accNums, accSeqs := []cryptotypes.PrivKey{}, []uint64{}, []uint64{}
 
-			tx, err := suite.CreateTestTx(privs, accNums, accSeqs, suite.Ctx.ChainID())
+			tx, err := suite.CreateTestTx(
+				suite.Ctx,
+				privs,
+				accNums,
+				accSeqs,
+				suite.Ctx.ChainID(),
+				signing.SignMode_SIGN_MODE_DIRECT,
+			)
 			require.NoError(t, err)
 
 			resultCtx, err := antehandler(suite.Ctx, tx, false)

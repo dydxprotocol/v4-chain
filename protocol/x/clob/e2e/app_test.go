@@ -328,7 +328,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(msg),
+					AccAddressForSigning: expectedFills[i].OrderId.SubaccountId.Owner,
 				},
 				privKeySupplier,
 				msg,
@@ -366,7 +366,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(placeOrderMsg),
+					AccAddressForSigning: orderId.SubaccountId.Owner,
 				},
 				privKeySupplier,
 				placeOrderMsg,
@@ -376,7 +376,7 @@ func TestConcurrentMatchesAndCancels(t *testing.T) {
 				ctx,
 				tApp.App,
 				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: testtx.MustGetOnlySignerAddress(cancelOrderMsg),
+					AccAddressForSigning: orderId.SubaccountId.Owner,
 				},
 				privKeySupplier,
 				cancelOrderMsg,
@@ -470,7 +470,8 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 				require.Fail(t, "Invalid operation type: %+v", tc.msg)
 			}
 
-			proposal := tApp.PrepareProposal()
+			proposal, err := tApp.PrepareProposal()
+			require.NoError(t, err)
 			proposal.Txs[0] = testtx.MustGetTxBytes(
 				&clobtypes.MsgProposedOperations{
 					OperationsQueue: operationsQueue,
@@ -480,14 +481,14 @@ func TestFailsDeliverTxWithIncorrectlySignedPlaceOrderTx(t *testing.T) {
 			tApp.AdvanceToBlock(3,
 				testapp.AdvanceToBlockOptions{
 					RequestProcessProposalTxsOverride: proposal.Txs,
-					ValidateDeliverTxs: func(
+					ValidateFinalizeBlock: func(
 						ctx sdktypes.Context,
-						request abcitypes.RequestDeliverTx,
-						response abcitypes.ResponseDeliverTx,
-						txIndex int,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
-						require.Contains(t, response.Log, "invalid pubkey: MsgProposedOperations is invalid")
+						txResult := response.TxResults[0]
+						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, txResult.Log, "invalid pubkey: MsgProposedOperations is invalid")
 						return true
 					},
 				},
@@ -521,21 +522,22 @@ func TestFailsDeliverTxWithUnsignedTransactions(t *testing.T) {
 			tApp.InitChain()
 			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
 
-			proposal := tApp.PrepareProposal()
+			proposal, err := tApp.PrepareProposal()
+			require.NoError(t, err)
 			proposal.Txs[0] = tc.proposedOperationsTx
 
 			tApp.AdvanceToBlock(
 				3,
 				testapp.AdvanceToBlockOptions{
 					RequestProcessProposalTxsOverride: proposal.Txs,
-					ValidateDeliverTxs: func(
+					ValidateFinalizeBlock: func(
 						ctx sdktypes.Context,
-						request abcitypes.RequestDeliverTx,
-						response abcitypes.ResponseDeliverTx,
-						txIndex int,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						require.Condition(t, response.IsErr, "Expected DeliverTx to fail but passed %+v", response)
-						require.Contains(t, response.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
+						txResult := response.TxResults[0]
+						require.Condition(t, txResult.IsErr, "Expected DeliverTx to fail but passed %+v", response)
+						require.Contains(t, txResult.Log, "Error: no signatures supplied: MsgProposedOperations is invalid")
 						return true
 					},
 				},

@@ -3,18 +3,10 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgUpdateLiquidationsConfig_GetSigners(t *testing.T) {
-	msg := types.MsgUpdateLiquidationsConfig{
-		Authority: constants.AliceAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.AliceAccAddress}, msg.GetSigners())
-}
 
 func TestMsgUpdateLiquidationsConfig_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

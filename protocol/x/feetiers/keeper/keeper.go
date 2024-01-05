@@ -5,11 +5,9 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/cometbft/cometbft/libs/log"
-
-	sdklog "cosmossdk.io/log"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -44,7 +42,7 @@ func (k Keeper) HasAuthority(authority string) bool {
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(sdklog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}

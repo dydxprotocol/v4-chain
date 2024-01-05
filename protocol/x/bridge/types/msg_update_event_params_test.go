@@ -3,7 +3,6 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
@@ -13,13 +12,6 @@ var (
 	// validAuthority is a valid bech32 address string.
 	validAuthority = constants.AliceAccAddress.String()
 )
-
-func TestMsgUpdateEventParams_GetSigners(t *testing.T) {
-	msg := types.MsgUpdateEventParams{
-		Authority: constants.CarlAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.CarlAccAddress}, msg.GetSigners())
-}
 
 func TestMsgUpdateEventParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

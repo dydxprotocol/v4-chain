@@ -2,11 +2,11 @@ package simulation
 
 import (
 	"fmt"
+	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/rand"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -105,7 +105,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 	clobGenesis := types.GenesisState{}
 
 	// Get number of perpetuals.
-	cdc := codec.NewProtoCodec(codectypes.NewInterfaceRegistry())
+	cdc := codec.NewProtoCodec(v4module.InterfaceRegistry)
 	perpGenesisBytes := simState.GenState[perptypes.ModuleName]
 	var perpetualsGenesis perptypes.GenesisState
 	if err := cdc.UnmarshalJSON(perpGenesisBytes, &perpetualsGenesis); err != nil {

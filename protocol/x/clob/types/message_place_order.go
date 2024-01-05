@@ -17,14 +17,6 @@ func NewMsgPlaceOrder(order Order) *MsgPlaceOrder {
 	}
 }
 
-func (msg *MsgPlaceOrder) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Order.OrderId.SubaccountId.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
 func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	defer func() {
 		if err != nil {

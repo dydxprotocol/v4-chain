@@ -8,18 +8,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/types/module/testutil"
-
-	tmdb "github.com/cometbft/cometbft-db"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
+	pruningtypes "cosmossdk.io/store/pruning/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	pruningtypes "github.com/cosmos/cosmos-sdk/store/pruning/types"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
@@ -146,8 +145,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 
 			return app.New(
 				val.GetCtx().Logger,
-				tmdb.NewMemDB(),
-				tmdb.NewMemDB(),
+				dbm.NewMemDB(),
 				nil,
 				true,
 				appOptions,
@@ -177,8 +175,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	appOptions := appoptions.GetDefaultTestAppOptionsFromTempDirectory("", nil)
 	dydxApp := app.New(
 		log.NewNopLogger(),
-		tmdb.NewMemDB(),
-		tmdb.NewMemDB(),
+		dbm.NewMemDB(),
 		nil,
 		true,
 		appOptions,
@@ -187,8 +184,7 @@ func NewTestNetworkFixture() network.TestFixture {
 	appCtr := func(val network.ValidatorI) servertypes.Application {
 		return app.New(
 			val.GetCtx().Logger,
-			tmdb.NewMemDB(),
-			tmdb.NewMemDB(),
+			dbm.NewMemDB(),
 			nil,
 			true,
 			appOptions,

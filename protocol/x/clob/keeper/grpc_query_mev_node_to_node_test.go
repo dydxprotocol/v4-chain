@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +19,6 @@ import (
 func TestMevNodeToNodeCalculation(t *testing.T) {
 	memClob := memclob.NewMemClobPriceTimePriority(false)
 	ks := keepertest.NewClobKeepersTestContext(t, memClob, &mocks.BankKeeper{}, &mocks.IndexerEventManager{})
-	wctx := sdk.WrapSDKContext(ks.Ctx)
 	prices.InitGenesis(ks.Ctx, *ks.PricesKeeper, constants.Prices_DefaultGenesisState)
 	perpetuals.InitGenesis(ks.Ctx, *ks.PerpetualsKeeper, constants.Perpetuals_DefaultGenesisState)
 	for testName, tc := range map[string]struct {
@@ -124,7 +122,7 @@ func TestMevNodeToNodeCalculation(t *testing.T) {
 		},
 	} {
 		t.Run(testName, func(t *testing.T) {
-			response, err := ks.ClobKeeper.MevNodeToNodeCalculation(wctx, tc.request)
+			response, err := ks.ClobKeeper.MevNodeToNodeCalculation(ks.Ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)
 			} else {

@@ -3,31 +3,26 @@ package keeper
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
-	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"github.com/stretchr/testify/require"
-
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-
-	db "github.com/cometbft/cometbft-db"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -35,6 +30,7 @@ import (
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/require"
 )
 
 type ClobKeepersTestContext struct {
@@ -75,7 +71,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 ) (ks ClobKeepersTestContext) {
 	var mockTimeProvider *mocks.TimeProvider
 	ks.Ctx = initKeepers(t, func(
-		db *db.MemDB,
+		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
 		stateStore storetypes.CommitMultiStore,
@@ -173,7 +169,7 @@ func NewClobKeepersTestContextWithUninitializedMemStore(
 
 func createClobKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *db.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	memClob types.MemClob,
 	aKeeper *asskeeper.Keeper,
@@ -187,9 +183,9 @@ func createClobKeeper(
 	indexerEventManager indexer_manager.IndexerEventManager,
 	indexerEventsTransientStoreKey storetypes.StoreKey,
 ) (*keeper.Keeper, storetypes.StoreKey, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	memKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	transientStoreKey := sdk.NewTransientStoreKey(types.TransientStoreKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(types.TransientStoreKey)
 
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	stateStore.MountStoreWithDB(memKey, storetypes.StoreTypeMemory, db)

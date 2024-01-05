@@ -7,7 +7,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	gometrics "github.com/armon/go-metrics"
+	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -438,12 +439,10 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 			// Error log if this is a conditional orders and it doesn't exist in triggered state, since it
 			// can't have been canceled.
 			if orderId.IsConditionalOrder() {
-				k.Logger(ctx).Error(
-					fmt.Sprintf(
-						"PlaceStatefulOrdersFromLastBlock: Triggered conditional Order ID %+v doesn't exist in state",
-						orderId,
-					),
-				)
+				log.ErrorLog(ctx, fmt.Sprintf(
+					"PlaceStatefulOrdersFromLastBlock: Triggered conditional Order ID %+v doesn't exist in state",
+					orderId,
+				))
 			}
 
 			// Order does not exist in state and therefore should not be placed. This likely
@@ -460,7 +459,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 		)
 
 		if err != nil {
-			k.Logger(ctx).Debug(
+			log.DebugLog(ctx,
 				fmt.Sprintf(
 					"MustPlaceStatefulOrdersFromLastBlock: PlaceOrder() returned an error %+v for order %+v",
 					err,
@@ -566,7 +565,8 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 		prevBlockHeight := previousBlockInfo.Height
 		currBlockHeight := uint32(ctx.BlockHeight())
 		if lib.IsDeliverTxMode(ctx) && prevBlockHeight != currBlockHeight-1 {
-			k.Logger(ctx).Error(
+			log.ErrorLog(
+				ctx,
 				"PerformOrderCancellationStatefulValidation: prev block height is not one below"+
 					"current block height in DeliverTx",
 				"previousBlockHeight", prevBlockHeight,
@@ -577,7 +577,8 @@ func (k Keeper) PerformOrderCancellationStatefulValidation(
 
 		// CheckTx or ReCheckTx
 		if !lib.IsDeliverTxMode(ctx) && currBlockHeight > 1 && prevBlockHeight != currBlockHeight {
-			k.Logger(ctx).Error(
+			log.ErrorLog(
+				ctx,
 				"PerformOrderCancellationStatefulValidation: prev block height is not equal to current block height"+
 					metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx),
 				"previousBlockHeight", prevBlockHeight,
@@ -992,7 +993,8 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 			)
 			if satypes.ErrIntegerOverflow.Is(err) {
 				// TODO(DEC-1701): Determine best action to take if the oracle price overflows max uint64
-				k.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					fmt.Sprintf(
 						"Integer overflow: oracle price (subticks) exceeded uint64 max. "+
 							"perpetual ID = (%d), oracle price = (%+v), is buy = (%t)",
@@ -1183,9 +1185,9 @@ func (k Keeper) InitStatefulOrders(
 		if err != nil {
 			// TODO(DEC-847): Revisit this error log once `MsgRemoveOrder` is implemented,
 			// since it should potentially be a panic.
-			k.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"InitStatefulOrders: PlaceOrder() returned an error",
-				"error",
 				err,
 			)
 		}

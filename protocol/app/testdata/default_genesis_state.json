@@ -93,7 +93,6 @@
       "stateful_order_equity_tiers": []
     }
   },
-  "consensus": null,
   "crisis": {
     "constant_fee": {
       "denom": "stake",
@@ -154,8 +153,8 @@
       }
     ]
   },
-  "evidence":{
-    "evidence":[]
+  "evidence": {
+    "evidence": []
   },
   "feegrant": {
     "allowances": []
@@ -262,10 +261,22 @@
       "threshold": "0.500000000000000000",
       "veto_threshold": "0.334000000000000000",
       "min_initial_deposit_ratio": "0.000000000000000000",
+      "proposal_cancel_ratio": "0.500000000000000000",
+      "proposal_cancel_dest": "",
+      "expedited_voting_period": "86400s",
+      "expedited_threshold": "0.667000000000000000",
+      "expedited_min_deposit": [
+        {
+          "denom": "stake",
+          "amount": "50000000"
+        }
+      ],
       "burn_vote_quorum": false,
       "burn_proposal_deposit_prevote": false,
-      "burn_vote_veto": true
-    }
+      "burn_vote_veto": true,
+      "min_deposit_ratio": "0.010000000000000000"
+    },
+    "constitution": ""
   },
   "ibc": {
     "client_genesis": {
@@ -322,7 +333,6 @@
       "port": "icahost"
     }
   },
-  "params": null,
   "perpetuals": {
     "perpetuals": [],
     "liquidity_tiers": [],
@@ -366,11 +376,11 @@
   },
   "rewards": {
     "params": {
-      "treasury_account":"rewards_treasury",
-      "denom":"adv4tnt",
-      "denom_exponent":-18,
-      "market_id":1,
-      "fee_multiplier_ppm":990000
+      "treasury_account": "rewards_treasury",
+      "denom": "adv4tnt",
+      "denom_exponent": -18,
+      "market_id": 1,
+      "fee_multiplier_ppm": 990000
     }
   },
   "sending": {},

@@ -182,9 +182,8 @@ func TestUpdatePerpetualParams(t *testing.T) {
 			tc.setup(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper)
 
 			msgServer := perpkeeper.NewMsgServerImpl(pc.PerpetualsKeeper)
-			wrappedCtx := sdk.WrapSDKContext(pc.Ctx)
 
-			_, err := msgServer.UpdatePerpetualParams(wrappedCtx, tc.msg)
+			_, err := msgServer.UpdatePerpetualParams(pc.Ctx, tc.msg)
 			if tc.expectedErr != "" {
 				require.ErrorContains(t, err, tc.expectedErr)
 			} else {
