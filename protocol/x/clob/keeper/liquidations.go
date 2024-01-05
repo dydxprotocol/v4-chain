@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -124,10 +125,11 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		// Exception for liquidation which conflicts with clob pair status. This is expected for liquidations generated
 		// for subaccounts with open positions in final settlement markets.
 		if err != nil && !errors.Is(err, types.ErrLiquidationConflictsWithClobPairStatus) {
-			k.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"Failed to liquidate subaccount",
+				err,
 				"liquidationOrder", *liquidationOrder,
-				"error", err,
 			)
 			return nil, err
 		}
@@ -1126,7 +1128,7 @@ func (k Keeper) validateMatchedLiquidation(
 	// Validate that processing the liquidation fill does not leave insufficient funds
 	// in the insurance fund (such that the liquidation couldn't have possibly continued).
 	if !k.IsValidInsuranceFundDelta(ctx, insuranceFundDelta) {
-		k.Logger(ctx).Debug("ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
+		log.DebugLog(ctx, "ProcessMatches: insurance fund has insufficient balance to process the liquidation.")
 		return nil, errorsmod.Wrapf(
 			types.ErrInsuranceFundHasInsufficientFunds,
 			"Liquidation order %v, insurance fund delta %v",

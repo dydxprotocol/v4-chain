@@ -38,7 +38,6 @@ func TestProposedOperations(t *testing.T) {
 						mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 					}...,
 				).Return()
-				mck.On("Logger", ctx).Return(mockLogger)
 			},
 			expectedErr: testError,
 		},

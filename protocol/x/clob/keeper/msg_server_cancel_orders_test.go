@@ -5,8 +5,6 @@ import (
 	"testing"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
@@ -68,20 +66,15 @@ func TestCancelOrder_InfoLogIfOrderNotFound(t *testing.T) {
 	ctx := ks.Ctx.WithBlockHeight(2)
 	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
-	mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
+	mockLogger.On("With",
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+	).Return(mockLogger)
 	mockLogger.On("Info",
-		errorsmod.Wrapf(
-			types.ErrStatefulOrderCancellationFailedForAlreadyRemovedOrder,
-			"Error: %s",
-			errorsmod.Wrapf(
-				types.ErrStatefulOrderDoesNotExist,
-				"Order Id to cancel does not exist. OrderId : %+v",
-				orderToCancel.OrderId,
-			).Error(),
-		).Error(),
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
-		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything,
+		mock.Anything,
+		mock.AnythingOfType("*errors.wrappedError"),
 	).Return()
 	ctx = ctx.WithLogger(mockLogger)
 	ctx = ctx.WithBlockTime(time.Unix(int64(2), 0))
@@ -114,11 +107,13 @@ func TestCancelOrder_ErrorLogIfGTBTTooLow(t *testing.T) {
 	ctx := ks.Ctx.WithBlockHeight(2)
 	ctx = ctx.WithIsCheckTx(false).WithIsReCheckTx(false)
 	mockLogger := &mocks.Logger{}
-	mockLogger.On("With", mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+	mockLogger.On("With",
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockLogger)
 	mockLogger.On(
 		"Error",
-		types.ErrTimeExceedsGoodTilBlockTime.Error(),
+		"Error cancelling order",
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 		mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 	).Return()

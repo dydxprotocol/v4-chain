@@ -3,10 +3,11 @@ package ante
 import (
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
+	cometbftlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -62,8 +63,20 @@ func (cd ClobDecorator) AnteHandle(
 	msgs := tx.GetMsgs()
 	var msg = msgs[0]
 
+	// Set request-level logging tags
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight()+1,
+		log.Msg, msg,
+	)
+
 	switch msg := msg.(type) {
 	case *types.MsgCancelOrder:
+		ctx = log.AddPersistentTagsToLogger(ctx,
+			log.Handler, log.CancelOrder,
+		)
+
 		if msg.OrderId.IsStatefulOrder() {
 			err = cd.clobKeeper.CancelStatefulOrder(ctx, msg)
 		} else {
@@ -76,35 +89,23 @@ func (cd ClobDecorator) AnteHandle(
 			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
 			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
 		}
-		cd.clobKeeper.Logger(ctx).Debug("Received new order cancelation",
-			"tx",
-			cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-			"msg",
-			msg,
-			"err",
-			err,
-			"block",
-			ctx.BlockHeight(),
-			"txMode",
-			lib.TxMode(ctx),
+
+		log.DebugLog(ctx, "Received new order cancellation",
+			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			log.Error, err,
 		)
 
 	case *types.MsgPlaceOrder:
+		ctx = log.AddPersistentTagsToLogger(ctx,
+			log.Handler, log.PlaceOrder,
+		)
 		if msg.Order.OrderId.IsStatefulOrder() {
 			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
-			cd.clobKeeper.Logger(ctx).Debug("Received new stateful order",
-				"tx",
-				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				"orderHash",
-				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
-				"msg",
-				msg,
-				"err",
-				err,
-				"block",
-				ctx.BlockHeight(),
-				"txMode",
-				lib.TxMode(ctx),
+
+			log.DebugLog(ctx, "Received new stateful order",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				log.Error, err,
 			)
 		} else {
 			// No need to process short term orders on `ReCheckTx`.
@@ -120,23 +121,13 @@ func (cd ClobDecorator) AnteHandle(
 				ctx,
 				msg,
 			)
-			cd.clobKeeper.Logger(ctx).Debug("Received new short term order",
-				"tx",
-				cmtlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
-				"orderHash",
-				cmtlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
-				"msg",
-				msg,
-				"status",
-				status,
-				"orderSizeOptimisticallyFilledFromMatchingQuantums",
-				orderSizeOptimisticallyFilledFromMatchingQuantums,
-				"err",
-				err,
-				"block",
-				ctx.BlockHeight(),
-				"txMode",
-				lib.TxMode(ctx),
+
+			log.DebugLog(ctx, "Received new short term order",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				log.OrderStatus, status,
+				log.OrderSizeOptimisticallyFilledFromMatchingQuantums, orderSizeOptimisticallyFilledFromMatchingQuantums,
+				log.Error, err,
 			)
 		}
 	}

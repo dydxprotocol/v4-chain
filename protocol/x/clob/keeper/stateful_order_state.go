@@ -1,22 +1,23 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cosmos/cosmos-db"
 	"sort"
 	"time"
 
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
+
 	"cosmossdk.io/store/prefix"
+	cometbftlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // TODO(CLOB-739) Rename all functions in this file to StatefulOrder instead of LongTermOrder
@@ -74,7 +75,7 @@ func (k Keeper) SetLongTermOrderPlacement(
 		telemetry.IncrCounterWithLabels(
 			[]string{types.ModuleName, metrics.StatefulOrder, metrics.Count},
 			1,
-			[]gometrics.Label{
+			[]metrics.Label{
 				metrics.GetLabelForIntValue(metrics.ClobPairId, int(order.GetClobPairId())),
 				metrics.GetLabelForBoolValue(metrics.Conditional, order.OrderId.IsConditionalOrder()),
 			},
@@ -155,9 +156,8 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	orderKey := orderId.ToStateKey()
 	if memStore.Has(orderKey) {
 		if count == 0 {
-			k.Logger(ctx).Error(
-				"Stateful order count is zero but order is in the memstore. Underflow",
-				"orderId", cmtlog.NewLazySprintf("%+v", orderId),
+			log.ErrorLog(ctx, "Stateful order count is zero but order is in the memstore. Underflow",
+				"orderId", cometbftlog.NewLazySprintf("%+v", orderId),
 			)
 		} else {
 			count--
@@ -176,7 +176,7 @@ func (k Keeper) DeleteLongTermOrderPlacement(
 	telemetry.IncrCounterWithLabels(
 		[]string{types.ModuleName, metrics.StatefulOrderRemoved, metrics.Count},
 		1,
-		[]gometrics.Label{
+		[]metrics.Label{
 			metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
 			metrics.GetLabelForBoolValue(metrics.Conditional, orderId.IsConditionalOrder()),
 		},
