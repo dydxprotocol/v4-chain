@@ -194,7 +194,7 @@ describe('tradingRewardHandler', () => {
       txHash: defaultTxHash,
     });
 
-    await WalletTable.create({
+    await WalletTable.update({
       address: testConstants.defaultWallet.address,
       totalTradingRewards: testConversionHelpers.denomToHumanReadableConversion(1_000_000_000),
     });

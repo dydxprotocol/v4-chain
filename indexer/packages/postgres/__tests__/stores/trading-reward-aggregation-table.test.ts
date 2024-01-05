@@ -1,13 +1,13 @@
-import { TradingRewardAggregationFromDatabase } from '../../src/types';
+import { TradingRewardAggregationFromDatabase, TradingRewardAggregationPeriod } from '../../src/types';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
+  createdDateTime,
   defaultSubaccountId,
   defaultTradingRewardAggregation,
   defaultTradingRewardAggregationId,
-  defaultWallet,
 } from '../helpers/constants';
 import * as TradingRewardAggregationTable from '../../src/stores/trading-reward-aggregation-table';
-import { WalletTable } from '../../src';
+import { BlockTable } from '../../src';
 import { seedData } from '../helpers/mock-generators';
 import { denomToHumanReadableConversion } from '../helpers/conversion-helpers';
 
@@ -18,7 +18,6 @@ describe('TradingRewardAggregation store', () => {
 
   beforeEach(async () => {
     await seedData();
-    await WalletTable.create(defaultWallet);
   });
 
   afterEach(async () => {
@@ -56,6 +55,39 @@ describe('TradingRewardAggregation store', () => {
     }));
     expect(tradingRewardAggregations[1]).toEqual(
       expect.objectContaining(defaultTradingRewardAggregation),
+    );
+  });
+
+  it('Successfully finds latest monthly TradingRewardAggregation', async () => {
+    await Promise.all([
+      BlockTable.create({
+        blockHeight: '100',
+        time: createdDateTime.toISO(),
+      }),
+    ]);
+
+    await Promise.all([
+      TradingRewardAggregationTable.create({
+        ...defaultTradingRewardAggregation,
+        period: TradingRewardAggregationPeriod.MONTHLY,
+      }),
+      TradingRewardAggregationTable.create({
+        ...defaultTradingRewardAggregation,
+        startedAtHeight: '100',
+        period: TradingRewardAggregationPeriod.MONTHLY,
+      }),
+    ]);
+
+    const tradingRewardAggregation:
+    TradingRewardAggregationFromDatabase | undefined = await TradingRewardAggregationTable
+      .getLatestAggregatedTradeReward(TradingRewardAggregationPeriod.MONTHLY);
+
+    expect(tradingRewardAggregation).toEqual(
+      expect.objectContaining({
+        ...defaultTradingRewardAggregation,
+        startedAtHeight: '100',
+        period: TradingRewardAggregationPeriod.MONTHLY,
+      }),
     );
   });
 
@@ -100,5 +132,45 @@ describe('TradingRewardAggregation store', () => {
       endedAtHeight,
       amount,
     });
+  });
+
+  it('Successfully deleted trading reward aggregations after a certain height', async () => {
+    await Promise.all([
+      BlockTable.create({
+        blockHeight: '100',
+        time: createdDateTime.toISO(),
+      }),
+      BlockTable.create({
+        blockHeight: '101',
+        time: createdDateTime.toISO(),
+      }),
+    ]);
+
+    await Promise.all([
+      TradingRewardAggregationTable.create(defaultTradingRewardAggregation),
+      TradingRewardAggregationTable.create({
+        ...defaultTradingRewardAggregation,
+        startedAtHeight: '100',
+      }),
+      TradingRewardAggregationTable.create({
+        ...defaultTradingRewardAggregation,
+        startedAtHeight: '101',
+      }),
+    ]);
+
+    await TradingRewardAggregationTable.deleteAll({
+      startedAtHeightOrAfter: '100',
+    });
+
+    const tradingRewardAggregations:
+    TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
+      {},
+      [],
+    );
+
+    expect(tradingRewardAggregations.length).toEqual(1);
+    expect(tradingRewardAggregations[0]).toEqual(
+      expect.objectContaining(defaultTradingRewardAggregation),
+    );
   });
 });
