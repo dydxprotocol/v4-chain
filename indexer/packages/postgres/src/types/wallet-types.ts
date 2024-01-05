@@ -5,6 +5,11 @@ export interface WalletCreateObject {
   totalTradingRewards: string,
 }
 
+export interface WalletUpdateObject {
+  address: string,
+  totalTradingRewards: string,
+}
+
 export enum WalletColumns {
   address = 'address',
   totalTradingRewards = 'totalTradingRewards',
