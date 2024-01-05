@@ -39,10 +39,12 @@ require (
 )
 
 require (
+	cosmossdk.io/client/v2 v2.0.0-beta.1
 	cosmossdk.io/core v0.11.0
 	cosmossdk.io/errors v1.0.0
 	cosmossdk.io/log v1.2.1
 	cosmossdk.io/store v1.0.0
+	cosmossdk.io/tools/confix v0.1.0
 	cosmossdk.io/x/evidence v0.1.0
 	cosmossdk.io/x/feegrant v0.1.0
 	cosmossdk.io/x/tx v0.12.0
@@ -60,6 +62,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.31.0
 	github.com/shopspring/decimal v1.3.1
+	github.com/spf13/viper v1.16.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231012201019-e917dd12ba7a
 	google.golang.org/protobuf v1.31.0
 )
@@ -133,6 +136,8 @@ require (
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/ics23/go v0.10.0 // indirect
 	github.com/cosmos/ledger-cosmos-go v0.13.3 // indirect
+	github.com/creachadair/atomicfile v0.3.1 // indirect
+	github.com/creachadair/tomledit v0.0.24 // indirect
 	github.com/curioswitch/go-reassign v0.2.0 // indirect
 	github.com/daixiang0/gci v0.11.0 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
@@ -326,7 +331,6 @@ require (
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
-	github.com/spf13/viper v1.16.0 // indirect
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
