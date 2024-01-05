@@ -289,9 +289,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
 
-			// Crashing app checks have to be disabled because the FOK order will not match
-			// with an empty orderbook and fail to be placed.
-			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
+			// Crashing app checks don't need to be disabled since matches occur in same block.
+			crashingAppCheckTxNonDeterminsmChecksDisabled: false,
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
