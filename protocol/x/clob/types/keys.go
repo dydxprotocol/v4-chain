@@ -52,6 +52,10 @@ const (
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
 	StatefulOrdersTimeSlicePrefix = "ExpTm:"
+
+	// LastTradePricePrefix is the key prefix to retrieve the last trade price for a perpetual.
+	// This is meant to be used for improved conditional order triggering.
+	LastTradePricePrefix = "LastTrade:"
 )
 
 // Store / Memstore
