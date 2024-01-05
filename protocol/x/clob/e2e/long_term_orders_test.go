@@ -1412,7 +1412,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 	bobSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, constants.Bob_Num0)
 
 	// order msgs
-	LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
+	Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: *aliceSubaccount.Id,
@@ -1433,10 +1433,10 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 		testapp.MustMakeCheckTxOptions{
 			AccAddressForSigning: testtx.MustGetOnlySignerAddress(
 				tApp.App.AppCodec(),
-				&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+				&Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 			),
 		},
-		&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+		&Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 	)
 
 	// Pre-existing order with invalid time in force.
@@ -1479,7 +1479,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 		expectedSubaccounts        []satypes.Subaccount
 	}{
 		"Test matching an order fully as taker against order with invalid time in force": {
-			order:                      LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+			order:                      Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 			orderShouldRestOnOrderbook: false,
 			expectedOrderFillAmount:    0, // order is fully-filled and removed from state
 			expectedSubaccounts: []satypes.Subaccount{
@@ -1489,7 +1489,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 						{
 							PerpetualId: Clob_0.MustGetPerpetualId(),
 							Quantums: dtypes.NewInt(int64(
-								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
 						},
 					},
@@ -1514,7 +1514,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 						{
 							PerpetualId: Clob_0.MustGetPerpetualId(),
 							Quantums: dtypes.NewInt(-int64(
-								LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+								Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 							FundingIndex: dtypes.NewInt(0),
 						},
 					},
@@ -1538,7 +1538,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 				{
 					blockHeight: 2,
 					orderMsgs: []clobtypes.MsgPlaceOrder{
-						LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
+						Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5,
 					},
 					// Short term order placement results in Create and Update with 0 fill amount
 					expectedOffchainMessagesCheckTx: []msgsender.Message{},
@@ -1554,8 +1554,8 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
 							nil,
-							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
-							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
+							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
 						),
 					},
 					// Stateful order placement
@@ -1571,7 +1571,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 									Version:             indexerevents.StatefulOrderEventVersion,
 									DataBytes: indexer_manager.GetBytes(
 										indexerevents.NewLongTermOrderPlacementEvent(
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 										),
 									),
 								},
@@ -1601,7 +1601,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												{
 													PerpetualId: Clob_0.MustGetPerpetualId(),
 													Quantums: dtypes.NewInt(int64(
-														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 													FundingIndex: dtypes.NewInt(0),
 												},
 											},
@@ -1635,7 +1635,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 												{
 													PerpetualId: Clob_0.MustGetPerpetualId(),
 													Quantums: dtypes.NewInt(-int64(
-														LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
+														Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetQuantums())),
 													FundingIndex: dtypes.NewInt(0),
 												},
 											},
@@ -1664,12 +1664,12 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 									DataBytes: indexer_manager.GetBytes(
 										indexerevents.NewOrderFillEvent(
 											LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
 											-5_500_000,
 											25_000_000,
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
-											LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
+											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
 										),
 									),
 									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
@@ -1681,7 +1681,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 								string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
 									OperationsQueue: []clobtypes.OperationRaw{
 										clobtestutils.NewMatchOperationRaw(
-											&LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
+											&Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 											[]clobtypes.MakerFill{
 												{
 													FillAmount: LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.
