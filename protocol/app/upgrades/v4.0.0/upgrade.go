@@ -17,6 +17,8 @@ func CreateUpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
+		// TODO(CORE-824): Initialize ratelimit module params to desired state.
+
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
 }
