@@ -181,6 +181,7 @@ func TestUpdateMarketParam(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				testapp.TestSubmitProposalTxHeight,
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFails,
 				tc.expectedProposalStatus,

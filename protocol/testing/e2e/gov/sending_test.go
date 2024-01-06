@@ -1,9 +1,11 @@
 package gov_test
 
 import (
-	sdkmath "cosmossdk.io/math"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -106,6 +108,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 				ctx,
 				tApp,
 				[]sdk.Msg{tc.msg},
+				testapp.TestSubmitProposalTxHeight,
 				tc.expectCheckTxFails,
 				tc.expectSubmitProposalFail,
 				tc.expectedProposalStatus,
