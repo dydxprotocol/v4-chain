@@ -223,10 +223,16 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 
 	// A negative TNC subaccount was found, therefore insert a zero-fill deleveraging operation into
 	// the operations queue to indicate withdrawals should be gated.
-	perpetualId, err := k.GetPerpetualPositionToLiquidate(ctx, negativeTncSubaccountId)
-	if err != nil {
-		return err
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, negativeTncSubaccountId)
+	perpetualPositions := subaccount.GetPerpetualPositions()
+	if len(perpetualPositions) == 0 {
+		return errorsmod.Wrapf(
+			types.ErrNoPerpetualPositionsToLiquidate,
+			"GateWithdrawalsIfNegativeTncSubaccountSeen: subaccount has no open positions: (%s)",
+			lib.MaybeGetJsonString(subaccount),
+		)
 	}
+	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
 	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
 
 	return nil
