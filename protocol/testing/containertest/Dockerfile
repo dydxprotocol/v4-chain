@@ -1,5 +1,6 @@
 FROM dydxprotocol-base
 
+COPY ./testing/containertest/dydxprotocold_preupgrade* /bin/
 COPY ./testing/containertest/containertest.sh /dydxprotocol/containertest.sh
 COPY ./testing/containertest/preupgrade_entrypoint.sh /dydxprotocol/preupgrade_entrypoint.sh
 COPY ./testing/containertest/preupgrade_genesis.json /dydxprotocol/preupgrade_genesis.json
