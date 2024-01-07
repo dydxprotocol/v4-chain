@@ -113,8 +113,8 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			historicalSmoothedPrices,
 		)
 
-		// If the index price would have updated, track how the proposal price changes the update
-		// decision / amount.
+		// If the index price would have caused an update, track how the proposal price (which is also derived from
+		// the smoothed price) changes the update decision / amount.
 		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice) {
 			logPriceUpdateBehavior(
 				k.Logger(ctx),
