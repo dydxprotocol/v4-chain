@@ -36,7 +36,6 @@ import { bigIntToBytes, bytesToBase64 } from '@dydxprotocol-indexer/v4-proto-par
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
-import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../src/constants';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { addPositionsToContents, annotateWithPnl, convertPerpetualPosition } from '../../src/helpers/kafka-helper';
 import { onMessage } from '../../src/lib/on-message';
@@ -46,10 +45,8 @@ import {
   createIndexerTendermintEvent,
   expectSubaccountKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
-import { SubaccountUpdateHandler } from '../../src/handlers/subaccount-update-handler';
 import {
   defaultDateTime,
-  defaultEmptySubaccountUpdate,
   defaultEmptySubaccountUpdateEvent,
   defaultHeight,
   defaultPreviousHeight,
@@ -106,39 +103,6 @@ describe('subaccountUpdateHandler', () => {
   const defaultMarketMap: MarketsMap = {
     [testConstants.defaultMarket.id]: testConstants.defaultMarket,
   };
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.SUBACCOUNT_UPDATE,
-        SubaccountUpdateEventV1.encode(defaultEmptySubaccountUpdateEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: SubaccountUpdateHandler = new SubaccountUpdateHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultEmptySubaccountUpdate,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${SubaccountTable.subaccountIdToUuid(defaultEmptySubaccountUpdateEvent.subaccountId!)}`,
-        `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(defaultEmptySubaccountUpdateEvent.subaccountId!)}`,
-      ]);
-    });
-  });
 
   it('successfully creates subaccount', async () => {
     const transactionIndex: number = 0;

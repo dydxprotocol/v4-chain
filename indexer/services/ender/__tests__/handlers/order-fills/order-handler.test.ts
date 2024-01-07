@@ -3,10 +3,7 @@ import {
   IndexerOrder,
   IndexerOrder_Side,
   IndexerOrder_TimeInForce,
-  IndexerOrderId,
   IndexerSubaccountId,
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   OrderFillEventV1,
   Timestamp,
   OffChainUpdateV1,
@@ -33,7 +30,6 @@ import {
   PerpetualPositionTable,
   PositionSide,
   protocolTranslations,
-  SubaccountTable,
   TendermintEventTable,
   testConstants,
   testMocks,
@@ -44,14 +40,10 @@ import { DateTime } from 'luxon';
 import {
   MILLIS_IN_NANOS,
   SECONDS_IN_MILLIS,
-  STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE,
-  SUBACCOUNT_ORDER_FILL_EVENT_TYPE,
 } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../../src/lib/on-message';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   createKafkaMessageFromOrderFillEvent,
   createOrder,
   expectDefaultTradeKafkaMessageFromTakerFillId,
@@ -66,10 +58,8 @@ import { getWeightedAverage } from '../../../src/lib/helper';
 import { ORDER_FLAG_LONG_TERM, ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  defaultOrder, defaultOrderEvent, defaultPreviousHeight, defaultTakerOrder,
+  defaultPreviousHeight,
 } from '../../helpers/constants';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
-import { OrderHandler } from '../../../src/handlers/order-fills/order-handler';
 import { clearCandlesMap } from '../../../src/caches/candle-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
@@ -143,60 +133,6 @@ describe('OrderHandler', () => {
     lastEventId: testConstants.defaultTendermintEventId4,
     settledFunding: '200000',
   };
-
-  describe('getParallelizationIds', () => {
-    it.each([
-      [
-        'maker',
-        Liquidity.MAKER,
-        defaultOrderEvent.makerOrder!.orderId!,
-      ],
-      [
-        'taker',
-        Liquidity.TAKER,
-        defaultTakerOrder.orderId!,
-      ],
-    ])('returns the correct %s parallelization ids', (
-      _name: string,
-      liquidity: Liquidity,
-      orderId: IndexerOrderId,
-    ) => {
-      const subaccountId: IndexerSubaccountId = orderId.subaccountId!;
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ORDER_FILL,
-        OrderFillEventV1.encode(defaultOrderEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: OrderHandler = new OrderHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        {
-          ...defaultOrder,
-          liquidity,
-        },
-      );
-
-      const orderUuid: string = OrderTable.orderIdToUuid(orderId);
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${SubaccountTable.subaccountIdToUuid(subaccountId)}_${defaultOrderEvent.makerOrder!.orderId!.clobPairId}`,
-        `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(subaccountId)}`,
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-      ]);
-    });
-  });
 
   it.each([
     [

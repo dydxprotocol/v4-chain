@@ -1,6 +1,3 @@
-import {
-  OrderTable,
-} from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OffChainUpdateV1,
@@ -11,17 +8,10 @@ import {
 import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
-import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { Handler } from '../handler';
 
-export class StatefulOrderRemovalHandler extends
-  AbstractStatefulOrderHandler<StatefulOrderEventV1> {
+export class StatefulOrderRemovalHandler extends Handler<StatefulOrderEventV1> {
   eventType: string = 'StatefulOrderEvent';
-
-  public getParallelizationIds(): string[] {
-    // Stateful Order Events with the same orderId
-    const orderId: string = OrderTable.orderIdToUuid(this.event.orderRemoval!.removedOrderId!);
-    return this.getParallelizationIdsFromOrderId(orderId);
-  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {

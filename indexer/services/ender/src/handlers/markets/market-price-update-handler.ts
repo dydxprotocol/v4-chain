@@ -17,11 +17,6 @@ import { Handler } from '../handler';
 export class MarketPriceUpdateHandler extends Handler<MarketEventV1> {
   eventType: string = 'MarketEvent';
 
-  public getParallelizationIds(): string[] {
-    // MarketEvents with the same market must be handled sequentially
-    return [`${this.eventType}_${this.event.marketId}`];
-  }
-
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     logger.info({

@@ -15,11 +15,6 @@ import { Handler } from './handler';
 export class TransferHandler extends Handler<TransferEventV1> {
   eventType: string = 'TransferEvent';
 
-  public getParallelizationIds(): string[] {
-    // Must be handled sequentially with asset create events
-    return [];
-  }
-
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const asset: AssetFromDatabase = AssetModel.fromJson(

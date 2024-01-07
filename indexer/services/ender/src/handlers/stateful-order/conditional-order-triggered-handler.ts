@@ -1,6 +1,5 @@
 import {
   OrderFromDatabase,
-  OrderTable,
   PerpetualMarketFromDatabase,
   orderTranslations,
   SubaccountFromDatabase, OrderModel, PerpetualMarketModel,
@@ -16,18 +15,10 @@ import {
 import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
-import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { Handler } from '../handler';
 
-export class ConditionalOrderTriggeredHandler extends
-  AbstractStatefulOrderHandler<StatefulOrderEventV1> {
+export class ConditionalOrderTriggeredHandler extends Handler<StatefulOrderEventV1> {
   eventType: string = 'StatefulOrderEvent';
-
-  public getParallelizationIds(): string[] {
-    const orderId: string = OrderTable.orderIdToUuid(
-      this.event.conditionalOrderTriggered!.triggeredOrderId!,
-    );
-    return this.getParallelizationIdsFromOrderId(orderId);
-  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {

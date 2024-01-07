@@ -20,18 +20,17 @@ import {
 import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';
 import { BlockProcessor } from '../../src/lib/block-processor';
-import { BatchedHandlers } from '../../src/lib/batched-handlers';
 import { SyncHandlers } from '../../src/lib/sync-handlers';
 import { mock, MockProxy } from 'jest-mock-extended';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('block-processor', () => {
-  let batchedHandlers: MockProxy<BatchedHandlers>;
-  let syncHandlers: MockProxy<SyncHandlers>;
+  let unorderedHandlers: MockProxy<SyncHandlers>;
+  let orderedHandlers: MockProxy<SyncHandlers>;
 
   beforeEach(() => {
-    batchedHandlers = mock<BatchedHandlers>();
-    syncHandlers = mock<SyncHandlers>();
+    unorderedHandlers = mock<SyncHandlers>();
+    orderedHandlers = mock<SyncHandlers>();
     updateBlockCache(defaultPreviousHeight);
   });
 
@@ -122,14 +121,14 @@ describe('block-processor', () => {
       block,
       txId,
     );
-    blockProcessor.batchedHandlers = batchedHandlers;
-    blockProcessor.syncHandlers = syncHandlers;
+    blockProcessor.unorderedHandlers = unorderedHandlers;
+    blockProcessor.orderedHandlers = orderedHandlers;
     await blockProcessor.process();
     await Transaction.commit(txId);
-    expect(syncHandlers.addHandler).toHaveBeenCalledTimes(2);
-    expect(batchedHandlers.addHandler).toHaveBeenCalledTimes(1);
-    expect(batchedHandlers.process.mock.invocationCallOrder[0]).toBeLessThan(
-      syncHandlers.process.mock.invocationCallOrder[0],
+    expect(orderedHandlers.addHandler).toHaveBeenCalledTimes(2);
+    expect(unorderedHandlers.addHandler).toHaveBeenCalledTimes(1);
+    expect(unorderedHandlers.process.mock.invocationCallOrder[0]).toBeLessThan(
+      orderedHandlers.process.mock.invocationCallOrder[0],
     );
   });
 
@@ -150,14 +149,14 @@ describe('block-processor', () => {
       block,
       txId,
     );
-    blockProcessor.batchedHandlers = batchedHandlers;
-    blockProcessor.syncHandlers = syncHandlers;
+    blockProcessor.unorderedHandlers = unorderedHandlers;
+    blockProcessor.orderedHandlers = orderedHandlers;
     await blockProcessor.process();
     await Transaction.commit(txId);
-    expect(syncHandlers.addHandler).toHaveBeenCalledTimes(2);
-    expect(batchedHandlers.addHandler).toHaveBeenCalledTimes(1);
-    expect(syncHandlers.process.mock.invocationCallOrder[0]).toBeLessThan(
-      batchedHandlers.process.mock.invocationCallOrder[0],
+    expect(orderedHandlers.addHandler).toHaveBeenCalledTimes(2);
+    expect(unorderedHandlers.addHandler).toHaveBeenCalledTimes(1);
+    expect(orderedHandlers.process.mock.invocationCallOrder[0]).toBeLessThan(
+      unorderedHandlers.process.mock.invocationCallOrder[0],
     );
   });
 });

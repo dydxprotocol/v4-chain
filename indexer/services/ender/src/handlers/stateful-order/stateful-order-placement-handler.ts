@@ -1,6 +1,3 @@
-import {
-  OrderTable,
-} from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
   OrderPlaceV1_OrderPlacementStatus,
@@ -11,24 +8,11 @@ import {
 import * as pg from 'pg';
 
 import { ConsolidatedKafkaEvent } from '../../lib/types';
-import { AbstractStatefulOrderHandler } from '../abstract-stateful-order-handler';
+import { Handler } from '../handler';
 
 // TODO(IND-334): Rename to LongTermOrderPlacementHandler after deprecating StatefulOrderPlacement
-export class StatefulOrderPlacementHandler extends
-  AbstractStatefulOrderHandler<StatefulOrderEventV1> {
+export class StatefulOrderPlacementHandler extends Handler<StatefulOrderEventV1> {
   eventType: string = 'StatefulOrderEvent';
-
-  public getParallelizationIds(): string[] {
-    // Stateful Order Events with the same orderId
-    let orderId: string;
-    // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
-    if (this.event.orderPlace !== undefined) {
-      orderId = OrderTable.orderIdToUuid(this.event.orderPlace!.order!.orderId!);
-    } else {
-      orderId = OrderTable.orderIdToUuid(this.event.longTermOrderPlacement!.order!.orderId!);
-    }
-    return this.getParallelizationIdsFromOrderId(orderId);
-  }
 
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
@@ -43,7 +27,7 @@ export class StatefulOrderPlacementHandler extends
   }
 
   private createKafkaEvents(order: IndexerOrder): ConsolidatedKafkaEvent[] {
-    const kafakEvents: ConsolidatedKafkaEvent[] = [];
+    const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
       orderPlace: {
@@ -51,11 +35,11 @@ export class StatefulOrderPlacementHandler extends
         placementStatus: OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED,
       },
     });
-    kafakEvents.push(this.generateConsolidatedVulcanKafkaEvent(
+    kafkaEvents.push(this.generateConsolidatedVulcanKafkaEvent(
       getOrderIdHash(order.orderId!),
       offChainUpdate,
     ));
 
-    return kafakEvents;
+    return kafkaEvents;
   }
 }

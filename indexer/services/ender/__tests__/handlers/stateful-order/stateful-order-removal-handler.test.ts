@@ -8,8 +8,6 @@ import {
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import {
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   OffChainUpdateV1,
   OrderRemovalReason,
   OrderRemoveV1_OrderRemovalStatus,
@@ -17,21 +15,17 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
-  defaultOrderId, defaultPreviousHeight, defaultTime, defaultTxHash,
+  defaultOrderId,
+  defaultPreviousHeight,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { StatefulOrderRemovalHandler } from '../../../src/handlers/stateful-order/stateful-order-removal-handler';
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
@@ -67,39 +61,6 @@ describe('statefulOrderRemovalHandler', () => {
   };
   const orderId: string = OrderTable.orderIdToUuid(defaultOrderId);
   let producerSendMock: jest.SpyInstance;
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
-        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: StatefulOrderRemovalHandler = new StatefulOrderRemovalHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultStatefulOrderEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${orderId}`,
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderId}`,
-      ]);
-    });
-  });
 
   it('successfully cancels and removes order', async () => {
     await OrderTable.create({

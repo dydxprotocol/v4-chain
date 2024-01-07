@@ -66,12 +66,6 @@ export abstract class Handler<T> {
   }
 
   /**
-   * Returns the ids for the event where no other events with the same id can be processed in
-   * parallel.
-   */
-  public abstract getParallelizationIds(): string[];
-
-  /**
    * Performs side effects based upon the results returned from the SQL based handler
    * implementations and then returns all consolidated Kafka events to be written to Kafka.
    */

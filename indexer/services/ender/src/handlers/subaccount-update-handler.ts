@@ -11,13 +11,11 @@ import {
   PerpetualMarketsMap,
   PerpetualPositionModel,
   SubaccountMessageContents,
-  SubaccountTable,
   UpdatedPerpetualPositionSubaccountKafkaObject,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import * as pg from 'pg';
 
-import { SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../constants';
 import { addPositionsToContents, annotateWithPnl } from '../helpers/kafka-helper';
 import { SubaccountUpdate } from '../lib/translated-types';
 import { ConsolidatedKafkaEvent } from '../lib/types';
@@ -25,16 +23,6 @@ import { Handler } from './handler';
 
 export class SubaccountUpdateHandler extends Handler<SubaccountUpdate> {
   eventType: string = 'SubaccountUpdateEvent';
-
-  public getParallelizationIds(): string[] {
-    // SubaccountUpdateEvents with the same subaccountId must be handled sequentially
-    return [
-      `${this.eventType}_${SubaccountTable.subaccountIdToUuid(this.event.subaccountId!)}`,
-      // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-      // processed in parallel
-      `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${SubaccountTable.subaccountIdToUuid(this.event.subaccountId!)}`,
-    ];
-  }
 
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const updateObjects: UpdatedPerpetualPositionSubaccountKafkaObject[] = _.map(

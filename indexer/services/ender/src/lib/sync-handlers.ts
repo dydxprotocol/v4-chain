@@ -44,17 +44,8 @@ export class SyncHandlers {
    * @param handler The handler to add to the batched handlers
    */
   public addHandler(
-    indexerSubtype: DydxIndexerSubtypes,
     handler: Handler<EventMessage>,
   ): void {
-    if (!SYNCHRONOUS_SUBTYPES.includes(indexerSubtype)) {
-      logger.error({
-        at: 'SyncHandlers#addHandler',
-        message: `Invalid indexerSubtype: ${indexerSubtype}`,
-      });
-      return;
-    }
-    // @ts-ignore
     this.handlerBatch.push(handler);
   }
 
@@ -63,7 +54,8 @@ export class SyncHandlers {
    * Adds events to the kafkaPublisher.
    */
   public async process(
-    kafkaPublisher: KafkaPublisher, resultRow: pg.QueryResultRow,
+    kafkaPublisher: KafkaPublisher,
+    resultRow: pg.QueryResultRow,
   ): Promise<void> {
     const start: number = Date.now();
     const handlerCountMapping: { [key: string]: number } = {};

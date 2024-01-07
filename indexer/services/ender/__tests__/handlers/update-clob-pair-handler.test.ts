@@ -27,7 +27,6 @@ import {
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
-import { UpdateClobPairHandler } from '../../src/handlers/update-clob-pair-handler';
 import { createKafkaMessage, producer } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
@@ -56,36 +55,6 @@ describe('update-clob-pair-handler', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
-  });
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.UPDATE_CLOB_PAIR,
-        UpdateClobPairEventV1.encode(defaultUpdateClobPairEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: UpdateClobPairHandler = new UpdateClobPairHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultUpdateClobPairEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
-    });
   });
 
   it('updates an existing perpetual market', async () => {

@@ -4,23 +4,17 @@ import {
   Liquidity,
   OrderFromDatabase,
   OrderModel,
-  OrderTable,
   PerpetualMarketFromDatabase,
   PerpetualMarketModel,
   PerpetualPositionFromDatabase,
   PerpetualPositionModel,
-  SubaccountTable,
   OrderStatus,
 } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import { isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
-import {
-  LiquidationOrderV1, IndexerOrderId,
-} from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import * as pg from 'pg';
 
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE, SUBACCOUNT_ORDER_FILL_EVENT_TYPE } from '../../constants';
 import { convertPerpetualPosition } from '../../helpers/kafka-helper';
 import { redisClient } from '../../helpers/redis/redis-controller';
 import {
@@ -35,44 +29,6 @@ import { AbstractOrderFillHandler } from './abstract-order-fill-handler';
 
 export class LiquidationHandler extends AbstractOrderFillHandler<OrderFillWithLiquidity> {
   eventType: string = 'LiquidationEvent';
-
-  /**
-   * @returns the parallelizationIds for the this.event.liquidity order
-   */
-  public getParallelizationIds(): string[] {
-    // OrderFillEvents with the same subaccountId and clobPairId cannot be processed in parallel.
-    const liquidatedOrderFill:
-    OrderFillEventWithLiquidation = orderFillWithLiquidityToOrderFillEventWithLiquidation(
-      this.event,
-    );
-    if (this.event.liquidity === Liquidity.MAKER) {
-      const orderId: IndexerOrderId = liquidatedOrderFill.makerOrder!.orderId!;
-      const orderUuid: string = OrderTable.orderIdToUuid(orderId);
-      const subaccountUuid: string = SubaccountTable.subaccountIdToUuid(orderId.subaccountId!);
-      return [
-        `${this.eventType}_${subaccountUuid}_${orderId!.clobPairId}`,
-        // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-        // processed in parallel
-        `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${subaccountUuid}`,
-        // To ensure that StatefulOrderEvents and OrderFillEvents for the same order are not
-        // processed in parallel
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderUuid}`,
-      ];
-    } else {
-      const liquidationOrder: LiquidationOrderV1 = liquidatedOrderFill.liquidationOrder!;
-      const subaccountUuid: string = SubaccountTable.subaccountIdToUuid(
-        liquidationOrder.liquidated!,
-      );
-      return [
-        `${this.eventType}_${subaccountUuid}_${liquidationOrder.clobPairId}`,
-        // To ensure that SubaccountUpdateEvents and OrderFillEvents for the same subaccount are not
-        // processed in parallel
-        `${SUBACCOUNT_ORDER_FILL_EVENT_TYPE}_${subaccountUuid}`,
-        // We do not need to add the StatefulOrderEvent parallelizationId here, because liquidation
-        // fills have no order in postgres
-      ];
-    }
-  }
 
   protected getTotalFilled(castedOrderFillEventMessage: OrderFillEventWithLiquidation): Long {
     return this.event.liquidity === Liquidity.TAKER

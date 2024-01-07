@@ -37,7 +37,6 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { generateTransferContents } from '../../src/helpers/kafka-helper';
 import _ from 'lodash';
-import { TransferHandler } from '../../src/handlers/transfer-handler';
 import {
   defaultDateTime,
   defaultDepositEvent,
@@ -100,36 +99,6 @@ describe('transferHandler', () => {
   };
 
   let asset: AssetFromDatabase;
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.TRANSFER,
-        TransferEventV1.encode(defaultTransferEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: TransferHandler = new TransferHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultTransferEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
-    });
-  });
 
   it('fails when TransferEvent does not contain sender subaccountId', async () => {
     const transactionIndex: number = 0;

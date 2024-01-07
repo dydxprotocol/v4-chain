@@ -11,31 +11,25 @@ import {
 import {
   IndexerOrder,
   IndexerOrderId,
-  IndexerTendermintBlock,
-  IndexerTendermintEvent,
   OffChainUpdateV1,
   OrderPlaceV1_OrderPlacementStatus,
   StatefulOrderEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../../src/lib/on-message';
-import { DydxIndexerSubtypes } from '../../../src/lib/types';
 import {
   defaultDateTime,
   defaultHeight,
-  defaultOrderId, defaultPreviousHeight, defaultTime, defaultTxHash,
+  defaultOrderId,
+  defaultPreviousHeight,
 } from '../../helpers/constants';
 import { createKafkaMessageFromStatefulOrderEvent } from '../../helpers/kafka-helpers';
 import { updateBlockCache } from '../../../src/caches/block-cache';
 import {
-  createIndexerTendermintBlock,
-  createIndexerTendermintEvent,
   expectVulcanKafkaMessage,
 } from '../../helpers/indexer-proto-helpers';
-import { STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE } from '../../../src/constants';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
-import { ConditionalOrderTriggeredHandler } from '../../../src/handlers/stateful-order/conditional-order-triggered-handler';
 import { defaultPerpetualMarket } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import { createPostgresFunctions } from '../../../src/helpers/postgres/postgres-functions';
 
@@ -73,39 +67,6 @@ describe('conditionalOrderTriggeredHandler', () => {
   };
   const orderId: string = OrderTable.orderIdToUuid(conditionalOrderId);
   let producerSendMock: jest.SpyInstance;
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.STATEFUL_ORDER,
-        StatefulOrderEventV1.encode(defaultStatefulOrderEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: ConditionalOrderTriggeredHandler = new ConditionalOrderTriggeredHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultStatefulOrderEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([
-        `${handler.eventType}_${orderId}`,
-        `${STATEFUL_ORDER_ORDER_FILL_EVENT_TYPE}_${orderId}`,
-      ]);
-    });
-  });
 
   it('successfully triggers order and sends to vulcan', async () => {
     await OrderTable.create({
