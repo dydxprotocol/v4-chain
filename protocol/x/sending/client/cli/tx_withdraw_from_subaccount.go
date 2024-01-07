@@ -57,9 +57,6 @@ Note, the '--from' flag is ignored as it is implied from [sender_key_or_address]
 				argAmount,
 			)
 
-			if err := msg.ValidateBasic(); err != nil {
-				return err
-			}
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
