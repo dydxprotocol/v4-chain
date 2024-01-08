@@ -1146,6 +1146,24 @@ var (
 		ConditionalOrderTriggerSubticks: 49_999_000_000,
 	}
 
+	// Conditional FOK/IOC RO orders.
+	ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO = clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: Alice_Num1,
+			ClientId:     1,
+			ClobPairId:   0,
+			OrderFlags:   clobtypes.OrderIdFlags_Conditional,
+		},
+		Side:                            clobtypes.Order_SIDE_SELL,
+		Quantums:                        50_000_000, // 0.5 BTC
+		Subticks:                        500_000_000_000,
+		GoodTilOneof:                    &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 20},
+		TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_IOC,
+		ReduceOnly:                      true,
+		ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
+		ConditionalOrderTriggerSubticks: 50001000000,
+	}
+
 	// Long-Term post-only orders.
 	LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15_PO = clobtypes.Order{
 		OrderId: clobtypes.OrderId{
