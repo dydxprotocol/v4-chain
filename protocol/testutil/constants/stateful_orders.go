@@ -1161,7 +1161,7 @@ var (
 		TimeInForce:                     clobtypes.Order_TIME_IN_FORCE_IOC,
 		ReduceOnly:                      true,
 		ConditionType:                   clobtypes.Order_CONDITION_TYPE_TAKE_PROFIT,
-		ConditionalOrderTriggerSubticks: 50001000000,
+		ConditionalOrderTriggerSubticks: 50_001_000_000,
 	}
 
 	// Long-Term post-only orders.

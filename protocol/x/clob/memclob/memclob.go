@@ -3,10 +3,11 @@ package memclob
 import (
 	"errors"
 	"fmt"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"math/big"
 	"runtime/debug"
 	"time"
+
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
 
