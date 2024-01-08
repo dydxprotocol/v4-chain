@@ -219,6 +219,13 @@ func TestWithdrawalGating(t *testing.T) {
 					},
 				},
 			)
+			for _, expectedSubaccount := range tc.expectedSubaccounts {
+				require.Equal(
+					t,
+					expectedSubaccount,
+					tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id),
+				)
+			}
 		})
 	}
 }
