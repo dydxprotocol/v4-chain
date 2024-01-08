@@ -190,14 +190,14 @@ func (k Keeper) CanDeleverageSubaccount(
 
 // GateWithdrawalsIfNegativeTncSubaccountSeen gates withdrawals if a negative TNC subaccount exists.
 // It does this by inserting a zero-fill deleveraging operation into the operations queue iff any of
-// the provided liquidatable subaccounts are negative TNC.
+// the provided negative TNC subaccounts are still negative TNC.
 func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	ctx sdk.Context,
-	liquidatableSubaccountIds []satypes.SubaccountId,
+	negativeTncSubaccountIds []satypes.SubaccountId,
 ) (err error) {
 	foundNegativeTncSubaccount := false
 	var negativeTncSubaccountId satypes.SubaccountId
-	for _, subaccountId := range liquidatableSubaccountIds {
+	for _, subaccountId := range negativeTncSubaccountIds {
 		bigNetCollateral,
 			_,
 			_,

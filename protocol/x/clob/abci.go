@@ -232,9 +232,10 @@ func PrepareCheckState(
 		panic(err)
 	}
 
-	// 8. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue
-	// if any of the liquidatable subaccounts still have negative TNC.
-	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, liquidatableSubaccountIds); err != nil {
+	// 8. Gate withdrawals by inserting a zero-fill deleveraging operation into the operations queue if any
+	// of the negative TNC subaccounts still have negative TNC after liquidations and deleveraging steps.
+	negativeTncSubaccountIds := keeper.DaemonLiquidationInfo.GetNegativeTncSubaccountIds()
+	if err := keeper.GateWithdrawalsIfNegativeTncSubaccountSeen(ctx, negativeTncSubaccountIds); err != nil {
 		panic(err)
 	}
 
