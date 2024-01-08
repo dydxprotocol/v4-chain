@@ -271,6 +271,13 @@ var (
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
 	}
+	Carl_Num0_500000USD = satypes.Subaccount{
+		Id: &Carl_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_500_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
 	Carl_Num0_0USD = satypes.Subaccount{
 		Id:                 &Carl_Num0,
 		AssetPositions:     []*satypes.AssetPosition{},
