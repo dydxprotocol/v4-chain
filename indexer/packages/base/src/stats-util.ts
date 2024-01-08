@@ -11,7 +11,17 @@ export async function runFuncWithTimingStat(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any> {
   const start: number = Date.now();
-  const result = await promise;
+  let result;
+  try {
+    result = await promise;
+  } catch (error) {
+    stats.timing(
+      `${config.SERVICE_NAME}.${functionName ?? STATS_FUNCTION_NAME}.timing`,
+      Date.now() - start,
+      options,
+    );
+    throw error;
+  }
   stats.timing(
     `${config.SERVICE_NAME}.${functionName ?? STATS_FUNCTION_NAME}.timing`,
     Date.now() - start,

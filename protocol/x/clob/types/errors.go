@@ -201,9 +201,14 @@ var (
 		43,
 		"Order has remaining size",
 	)
-	ErrReduceOnlyOrderReplacement = errorsmod.Register(
+	ErrInvalidTimeInForce = errorsmod.Register(
 		ModuleName,
 		44,
+		"invalid time in force",
+	)
+	ErrReduceOnlyOrderReplacement = errorsmod.Register(
+		ModuleName,
+		45,
 		"Reduce only order cannot replace a non reduce only order",
 	)
 
@@ -288,11 +293,7 @@ var (
 		1015,
 		"Invalid delta base and/or quote quantums for insurance fund delta calculation",
 	)
-	ErrEmptyDeleveragingFills = errorsmod.Register(
-		ModuleName,
-		1016,
-		"Deleveraging fills length must be greater than 0",
-	)
+	// TODO: Should the error code be skipped or re-assigned?
 	ErrDeleveragingAgainstSelf = errorsmod.Register(
 		ModuleName,
 		1017,
@@ -448,6 +449,11 @@ var (
 		ModuleName,
 		4007,
 		"Order Removal reason is invalid",
+	)
+	ErrZeroFillDeleveragingForNonNegativeTncSubaccount = errorsmod.Register(
+		ModuleName,
+		4008,
+		"Zero-fill deleveraging operation included in block for non-negative TNC subaccount",
 	)
 
 	// Block rate limit errors.

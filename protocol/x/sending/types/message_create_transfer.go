@@ -14,14 +14,6 @@ func NewMsgCreateTransfer(transfer *Transfer) *MsgCreateTransfer {
 	}
 }
 
-func (msg *MsgCreateTransfer) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Transfer.Sender.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
 func (msg *MsgCreateTransfer) ValidateBasic() error {
 	err := msg.Transfer.Sender.Validate()
 	if err != nil {

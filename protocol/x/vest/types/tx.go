@@ -16,11 +16,6 @@ func NewMsgSetVestEntry(authority string, entry VestEntry) *MsgSetVestEntry {
 	}
 }
 
-func (msg *MsgSetVestEntry) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
-}
-
 func (msg *MsgSetVestEntry) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Authority); err != nil {
 		return errorsmod.Wrapf(
@@ -39,11 +34,6 @@ func NewMsgDeleteVestEntry(authority string, vesterAccount string) *MsgDeleteVes
 		Authority:     authority,
 		VesterAccount: vesterAccount,
 	}
-}
-
-func (msg *MsgDeleteVestEntry) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
-	return []sdk.AccAddress{addr}
 }
 
 func (msg *MsgDeleteVestEntry) ValidateBasic() error {

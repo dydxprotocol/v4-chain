@@ -51,7 +51,7 @@ export default class TradingRewardAggregationModel extends Model {
         address: { type: 'string' },
         startedAt: { type: 'string', format: 'date-time' }, // Inclusive
         startedAtHeight: { type: 'string', pattern: IntegerPattern }, // Inclusive
-        endedAt: { type: ['string', 'null'], format: 'date-time' }, // Inclusive
+        endedAt: { type: ['string', 'null'], format: 'date-time' }, // Exclusive
         endedAtHeight: { type: ['string', 'null'], pattern: IntegerPattern }, // Inclusive
         period: { type: 'string', enum: [...Object.values(TradingRewardAggregationPeriod)] },
         amount: { type: 'string', pattern: NonNegativeNumericPattern },

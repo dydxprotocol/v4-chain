@@ -3,14 +3,13 @@ package memclob
 import (
 	"errors"
 	"fmt"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"math/big"
 	"runtime/debug"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
@@ -20,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // Ensure that `memClobPriceTimePriority` struct properly implements
@@ -913,7 +913,7 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			m.clobKeeper.Logger(ctx).Debug(
 				"Received new order",
 				"orderHash",
-				log.NewLazySprintf("%X", order.GetOrderHash()),
+				cmtlog.NewLazySprintf("%X", order.GetOrderHash()),
 				"msg",
 				msg,
 				"status",

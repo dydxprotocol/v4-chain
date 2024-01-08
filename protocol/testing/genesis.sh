@@ -88,6 +88,7 @@ function edit_genesis() {
 	# reduced deposit period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 	# reduced voting period
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_voting_period' -v '60s'
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
@@ -1437,6 +1438,8 @@ function edit_genesis() {
 
 	# ICA Host Params
 	update_ica_host_params
+	# ICA Controller Params
+	update_ica_controller_params
 }
 
 function add_subaccount() {
@@ -1589,6 +1592,10 @@ function update_ica_host_params() {
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward"
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.distribution.v1beta1.MsgFundCommunityPool"
 	dasel put -t string -f "$GENESIS" '.app_state.interchainaccounts.host_genesis_state.params.allow_messages.[]' -v "/cosmos.gov.v1.MsgVote"
+}
+
+function update_ica_controller_params() {
+	dasel put -t bool -f "$GENESIS" '.app_state.interchainaccounts.controller_genesis_state.params.controller_enabled' -v "false"
 }
 
 # Modify the genesis file to only use fixed price exchange.

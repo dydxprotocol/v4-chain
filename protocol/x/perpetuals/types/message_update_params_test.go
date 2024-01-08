@@ -3,18 +3,9 @@ package types_test
 import (
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	types "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
-
-func TestMsgUpdateParams_GetSigners(t *testing.T) {
-	msg := types.MsgUpdatePerpetualParams{
-		Authority: constants.CarlAccAddress.String(),
-	}
-	require.Equal(t, []sdk.AccAddress{constants.CarlAccAddress}, msg.GetSigners())
-}
 
 func TestMsgUpdateParams_ValidateBasic(t *testing.T) {
 	tests := map[string]struct {

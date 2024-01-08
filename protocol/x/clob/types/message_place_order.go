@@ -17,14 +17,6 @@ func NewMsgPlaceOrder(order Order) *MsgPlaceOrder {
 	}
 }
 
-func (msg *MsgPlaceOrder) GetSigners() []sdk.AccAddress {
-	creator, err := sdk.AccAddressFromBech32(msg.Order.OrderId.SubaccountId.Owner)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{creator}
-}
-
 func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 	defer func() {
 		if err != nil {
@@ -41,8 +33,17 @@ func (msg *MsgPlaceOrder) ValidateBasic() (err error) {
 		return err
 	}
 
+	// Verify that enum type values are valid.
 	if _, exists := Order_Side_name[int32(msg.Order.Side)]; !exists {
 		return errorsmod.Wrapf(ErrInvalidOrderSide, "invalid order side (%s)", msg.Order.Side)
+	}
+
+	if _, exists := Order_TimeInForce_name[int32(msg.Order.TimeInForce)]; !exists {
+		return errorsmod.Wrapf(ErrInvalidTimeInForce, "invalid time in force (%s)", msg.Order.TimeInForce)
+	}
+
+	if _, exists := Order_ConditionType_name[int32(msg.Order.ConditionType)]; !exists {
+		return errorsmod.Wrapf(ErrInvalidConditionType, "invalid condition type (%s)", msg.Order.ConditionType)
 	}
 
 	if msg.Order.Side == Order_SIDE_UNSPECIFIED {

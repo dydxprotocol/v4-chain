@@ -3,8 +3,7 @@ package indexer_manager_test
 import (
 	"testing"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/cosmos/cosmos-sdk/types"
+	storetypes "cosmossdk.io/store/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
@@ -102,7 +101,7 @@ var ExpectedEvent6 = indexer_manager.IndexerTendermintEvent{
 var EventVersion uint32 = 1
 
 func assertIsEnabled(t *testing.T, isEnabled bool) {
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(isEnabled)
 	indexerEventManager := indexer_manager.NewIndexerEventManager(mockMsgSender, storeKey, isEnabled)
@@ -115,7 +114,7 @@ func TestIsEnabled(t *testing.T) {
 }
 
 func TestSendOffchainData(t *testing.T) {
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
 	mockMsgSender.On("SendOffchainData", mock.Anything).Return(nil)
@@ -126,7 +125,7 @@ func TestSendOffchainData(t *testing.T) {
 }
 
 func TestSendOnchainData(t *testing.T) {
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	indexerTendermintBlock := &indexer_manager.IndexerTendermintBlock{}
 	mockMsgSender := &mocks.IndexerMessageSender{}
 	mockMsgSender.On("Enabled").Return(true)
@@ -138,7 +137,7 @@ func TestSendOnchainData(t *testing.T) {
 
 func TestProduceBlockBasicTxnEvent(t *testing.T) {
 	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
 	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight).WithTxBytes(constants.TestTxBytes)
 	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")
@@ -166,7 +165,7 @@ func TestProduceBlockBasicTxnEvent(t *testing.T) {
 
 func TestProduceBlockBasicBlockEvent(t *testing.T) {
 	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
 	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight)
 	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")
@@ -195,7 +194,7 @@ func TestProduceBlockBasicBlockEvent(t *testing.T) {
 
 func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
 	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight).WithTxBytes(constants.TestTxBytes)
 	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")
@@ -245,7 +244,7 @@ func TestProduceBlockMultipleTxnEvents(t *testing.T) {
 
 func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
 	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight).WithTxBytes(constants.TestTxBytes)
 	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")
@@ -335,7 +334,7 @@ func TestProduceBlockMultipleTxnAndBlockEvents(t *testing.T) {
 
 func TestClearEvents(t *testing.T) {
 	ctx, stateStore, db := sdk.NewSdkContextWithMultistore()
-	storeKey := types.NewTransientStoreKey(indexer_manager.TransientStoreKey)
+	storeKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeTransient, db)
 	ctx = ctx.WithBlockTime(BlockTime).WithBlockHeight(BlockHeight).WithTxBytes(constants.TestTxBytes)
 	ctx.GasMeter().ConsumeGas(ConsumedGas, "beforeWrite")

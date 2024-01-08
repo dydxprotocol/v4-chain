@@ -1,10 +1,11 @@
 package keeper
 
 import (
-	db "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/runtime"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	"github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -13,19 +14,20 @@ import (
 
 func createBankKeeper(
 	stateStore storetypes.CommitMultiStore,
-	db *db.MemDB,
+	db *dbm.MemDB,
 	cdc *codec.ProtoCodec,
 	accountKeeper *authkeeper.AccountKeeper,
 ) (*keeper.BaseKeeper, storetypes.StoreKey) {
-	storeKey := sdk.NewKVStoreKey(types.StoreKey)
+	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	k := keeper.NewBaseKeeper(
 		cdc,
-		storeKey,
+		runtime.NewKVStoreService(storeKey),
 		accountKeeper,
 		map[string]bool{},
 		lib.GovModuleAddress.String(),
+		log.NewNopLogger(),
 	)
 
 	return &k, storeKey

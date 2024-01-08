@@ -1,5 +1,6 @@
 export * as redis from './helpers/redis';
 
+export * as AggregateTradingRewardsProcessedCache from './caches/aggregate-trading-rewards-processed-cache';
 export * as OpenOrdersCache from './caches/open-orders-cache';
 export * as OrdersCache from './caches/orders-cache';
 export * as OrdersDataCache from './caches/orders-data-cache';

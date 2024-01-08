@@ -15,6 +15,8 @@ import {
   ONE_HOUR_IN_MILLISECONDS,
   ONE_SECOND_IN_MILLISECONDS,
   TEN_SECONDS_IN_MILLISECONDS,
+  FOUR_HOURS_IN_MILLISECONDS,
+  ONE_DAY_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -40,8 +42,13 @@ export const configSchema = {
   LOOPS_ORDERBOOK_INSTRUMENTATION: parseBoolean({ default: true }),
   LOOPS_CANCEL_STALE_ORDERS: parseBoolean({ default: true }),
   LOOPS_ENABLED_UPDATE_RESEARCH_ENVIRONMENT: parseBoolean({ default: false }),
+  LOOPS_ENABLED_TAKE_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
+  LOOPS_ENABLED_DELETE_OLD_FAST_SYNC_SNAPSHOTS: parseBoolean({ default: true }),
   LOOPS_ENABLED_TRACK_LAG: parseBoolean({ default: false }),
   LOOPS_ENABLED_REMOVE_OLD_ORDER_UPDATES: parseBoolean({ default: true }),
+  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_DAILY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_WEEKLY: parseBoolean({ default: true }),
+  LOOPS_ENABLED_AGGREGATE_TRADING_REWARDS_MONTHLY: parseBoolean({ default: true }),
 
   // Loop Timing
   LOOPS_INTERVAL_MS_MARKET_UPDATER: parseInteger({
@@ -65,6 +72,12 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_UPDATE_RESEARCH_ENVIRONMENT: parseInteger({
     default: ONE_HOUR_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_TAKE_FAST_SYNC_SNAPSHOTS: parseInteger({
+    default: FOUR_HOURS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_DELETE_OLD_FAST_SYNC_SNAPSHOTS: parseInteger({
+    default: ONE_DAY_IN_MILLISECONDS,
+  }),
   LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA: parseInteger({
     default: FIVE_MINUTES_IN_MILLISECONDS,
   }),
@@ -72,6 +85,9 @@ export const configSchema = {
     default: TEN_SECONDS_IN_MILLISECONDS,
   }),
   LOOPS_INTERVAL_MS_REMOVE_OLD_ORDER_UPDATES: parseInteger({
+    default: THIRTY_SECONDS_IN_MILLISECONDS,
+  }),
+  LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
 
@@ -108,6 +124,7 @@ export const configSchema = {
   AWS_ACCOUNT_ID: parseString(),
   AWS_REGION: parseString(),
   S3_BUCKET_ARN: parseString(),
+  FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX: parseString({ default: 'fast-sync' }),
   ECS_TASK_ROLE_ARN: parseString(),
   KMS_KEY_ARN: parseString(),
   RDS_INSTANCE_NAME: parseString(),
@@ -126,6 +143,11 @@ export const configSchema = {
 
   // Remove old cached order updates
   OLD_CACHED_ORDER_UPDATES_WINDOW_MS: parseInteger({ default: 30 * ONE_SECOND_IN_MILLISECONDS }),
+
+  // Aggregate Trading Rewards
+  AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS: parseInteger({
+    default: ONE_HOUR_IN_MILLISECONDS,
+  }),
 };
 
 export default parseSchema(configSchema);

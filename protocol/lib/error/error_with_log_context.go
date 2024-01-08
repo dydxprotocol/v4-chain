@@ -1,6 +1,6 @@
 package error
 
-import "github.com/cometbft/cometbft/libs/log"
+import "cosmossdk.io/log"
 
 // ErrorWithLogContext wraps an error with log context and implements the LogContextualizer interface.
 // ErrorWithLogContext unwraps to the original error.

@@ -1,6 +1,7 @@
 package bridge_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -346,7 +347,8 @@ func TestBridge_REJECT(t *testing.T) {
 			require.Equal(t, &api.AddBridgeEventsResponse{}, res)
 			require.NoError(t, error)
 
-			proposal := tApp.PrepareProposal()
+			proposal, err := tApp.PrepareProposal()
+			require.NoError(t, err)
 			// Propose bridge events by overriding bridge tx, which is the third-to-last tx in the proposal.
 			proposal.Txs[len(proposal.Txs)-3] = testtx.MustGetTxBytes(
 				&bridgetypes.MsgAcknowledgeBridges{
@@ -362,7 +364,8 @@ func TestBridge_REJECT(t *testing.T) {
 				ProposerAddress:    tApp.GetHeader().ProposerAddress,
 			}
 			// Verify that the bad proposal is rejected.
-			processProposalResp := tApp.App.ProcessProposal(processRequest)
+			processProposalResp, err := tApp.App.ProcessProposal(&processRequest)
+			require.NoError(t, err)
 			require.Equal(t, abcitypes.ResponseProcessProposal_REJECT, processProposalResp.Status)
 		})
 	}
@@ -402,21 +405,25 @@ func TestBridge_AcknowledgedEventIdGreaterThanRecognizedEventId(t *testing.T) {
 	// Verify that bridge query `RecognizedEventInfo` returns whichever of AcknowledgedEventInfo and
 	// RecognizedEventInfo has a greater `NextId` (which is AcknowledgedEventInfo in this case).
 	reiRequest := bridgetypes.QueryRecognizedEventInfoRequest{}
-	abciResponse := tApp.App.Query(abcitypes.RequestQuery{
-		Path: "/dydxprotocol.bridge.Query/RecognizedEventInfo",
-		Data: tApp.App.AppCodec().MustMarshal(&reiRequest),
-	})
+	abciResponse, err := tApp.App.Query(
+		context.Background(),
+		&abcitypes.RequestQuery{
+			Path: "/dydxprotocol.bridge.Query/RecognizedEventInfo",
+			Data: tApp.App.AppCodec().MustMarshal(&reiRequest),
+		},
+	)
 	require.True(t, abciResponse.IsOK())
+	require.NoError(t, err)
 	var reiResponse bridgetypes.QueryRecognizedEventInfoResponse
 	tApp.App.AppCodec().MustUnmarshal(abciResponse.Value, &reiResponse)
 	require.Equal(t, aei, reiResponse.Info) // Verify that AcknowledgedEventInfo is returned.
 
 	// Verify that it's ok to add events starting from `NextId` in above query response.
-	_, err := tApp.App.Server.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
+	_, err = tApp.App.Server.AddBridgeEvents(ctx, &api.AddBridgeEventsRequest{
 		BridgeEvents: []bridgetypes.BridgeEvent{
 			{
 				Id:             reiResponse.Info.NextId,
-				Coin:           sdk.NewCoin("adv4tnt", sdk.NewInt(1)),
+				Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1)),
 				Address:        constants.BobAccAddress.String(),
 				EthBlockHeight: 234,
 			},

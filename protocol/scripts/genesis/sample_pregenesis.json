@@ -1,5 +1,5 @@
 {
-  "app_hash": "",
+  "app_name": "dydxprotocold",
   "app_state": {
     "assets": {
       "assets": [
@@ -754,11 +754,20 @@
       "gen_txs": []
     },
     "gov": {
+      "constitution": "",
       "deposits": [],
       "params": {
         "burn_proposal_deposit_prevote": false,
         "burn_vote_quorum": false,
         "burn_vote_veto": true,
+        "expedited_min_deposit": [
+          {
+            "amount": "50000000",
+            "denom": "stake"
+          }
+        ],
+        "expedited_threshold": "0.667000000000000000",
+        "expedited_voting_period": "86400s",
         "max_deposit_period": "172800s",
         "min_deposit": [
           {
@@ -766,7 +775,10 @@
             "denom": "asample"
           }
         ],
+        "min_deposit_ratio": "0.010000000000000000",
         "min_initial_deposit_ratio": "0.20000",
+        "proposal_cancel_dest": "",
+        "proposal_cancel_ratio": "0.500000000000000000",
         "quorum": "0.33400",
         "threshold": "0.50000",
         "veto_threshold": "0.33400",
@@ -813,7 +825,7 @@
         "active_channels": [],
         "interchain_accounts": [],
         "params": {
-          "controller_enabled": true
+          "controller_enabled": false
         },
         "ports": []
       },
@@ -1747,26 +1759,38 @@
       ]
     }
   },
+  "app_version": "ec3dfc3",
   "chain_id": "dydx-sample-1",
+  "consensus": {
+    "params": {
+      "abci": {
+        "vote_extensions_enable_height": "0"
+      },
+      "block": {
+        "max_bytes": "22020096",
+        "max_gas": "-1"
+      },
+      "evidence": {
+        "max_age_duration": "172800000000000",
+        "max_age_num_blocks": "100000",
+        "max_bytes": "1048576"
+      },
+      "validator": {
+        "pub_key_types": [
+          "ed25519"
+        ]
+      },
+      "version": {
+        "app": "0"
+      }
+    }
+  },
   "consensus_params": {
     "block": {
       "max_bytes": "4194304",
       "max_gas": "-1"
-    },
-    "evidence": {
-      "max_age_duration": "172800000000000",
-      "max_age_num_blocks": "100000",
-      "max_bytes": "1048576"
-    },
-    "validator": {
-      "pub_key_types": [
-        "ed25519"
-      ]
-    },
-    "version": {
-      "app": "0"
     }
   },
   "genesis_time": "2023-12-31T00:00:00Z",
-  "initial_height": "1"
+  "initial_height": 1
 }

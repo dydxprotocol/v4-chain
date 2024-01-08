@@ -8,14 +8,15 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	gometrics "github.com/armon/go-metrics"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // ProcessSingleMatch accepts a single match and its associated orders matched in the block,
@@ -56,7 +57,7 @@ func (k Keeper) ProcessSingleMatch(
 					ctx,
 					satypes.Update{SubaccountId: *takerSubaccount.Id},
 				)
-				k.Logger(ctx).Error(
+				log.ErrorLog(ctx,
 					"collateralization check failed for liquidation",
 					"takerSubaccount", fmt.Sprintf("%+v", takerSubaccount),
 					"takerTNC", takerTnc,
@@ -115,7 +116,8 @@ func (k Keeper) ProcessSingleMatch(
 		// it's possible to have zero `quoteQuantums` for a non-zero amount of `baseQuantums`.
 		// This could mean that it's possible that a maker sell order on the book
 		// at a very unfavorable price (subticks) could receive `0` `quoteQuantums` amount.
-		k.Logger(ctx).Error(
+		log.ErrorLog(
+			ctx,
 			"Match resulted in zero quote quantums",
 			"MakerOrder",
 			fmt.Sprintf("%+v", matchWithOrders.MakerOrder),
@@ -513,7 +515,8 @@ func (k Keeper) setOrderFillAmountsAndPruning(
 		// the same `OrderId` with a lower `GoodTilBlock` first if the proposer is using this unmodified application,
 		// but it's still not necessarily guaranteed due to MEV.
 		if curPruneableBlockHeight > order.GetGoodTilBlock()+types.ShortBlockWindow {
-			k.Logger(ctx).Info(
+			log.InfoLog(
+				ctx,
 				"Found an `orderId` in ProcessProposerMatches which had a lower GoodTilBlock than"+
 					" a previous order in the list of fills. This could mean a lower priority order was allowed on the book.",
 				"orderId",

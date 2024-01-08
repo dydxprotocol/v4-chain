@@ -75,6 +75,7 @@ export enum QueryableField {
   BLOCK_TIME_BEFORE_OR_AT = 'blockTimeBeforeOrAt',
   STARTED_AT_HEIGHT = 'startedAtHeight',
   PERIOD = 'period',
+  STARTED_AT_HEIGHT_OR_AFTER = 'startedAtHeightOrAfter',
 }
 
 export interface QueryConfig {
@@ -279,5 +280,6 @@ export interface TradingRewardQueryConfig extends QueryConfig {
 export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string;
   [QueryableField.STARTED_AT_HEIGHT]?: string;
+  [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string;
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
 }

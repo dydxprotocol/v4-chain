@@ -18,11 +18,6 @@ func NewMsgAddPremiumVotes(votes []FundingPremium) *MsgAddPremiumVotes {
 	return &MsgAddPremiumVotes{Votes: votes}
 }
 
-func (msg *MsgAddPremiumVotes) GetSigners() []sdk.AccAddress {
-	// Return empty slice because app-injected msg is not expected to be signed.
-	return []sdk.AccAddress{}
-}
-
 func (msg *MsgAddPremiumVotes) ValidateBasic() error {
 	for i, sample := range msg.Votes {
 		if i > 0 && msg.Votes[i-1].PerpetualId >= sample.PerpetualId {

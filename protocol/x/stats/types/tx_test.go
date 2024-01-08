@@ -1,7 +1,6 @@
 package types_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
@@ -12,13 +11,6 @@ import (
 var (
 	validAuthority = constants.BobAccAddress.String()
 )
-
-func TestGetSigners(t *testing.T) {
-	msg := types.MsgUpdateParams{
-		Authority: validAuthority,
-	}
-	require.Equal(t, []sdk.AccAddress{constants.BobAccAddress}, msg.GetSigners())
-}
 
 func TestValidateBasic(t *testing.T) {
 	tests := map[string]struct {

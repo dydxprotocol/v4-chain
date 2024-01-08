@@ -2,10 +2,9 @@ package price_encoder
 
 import (
 	"context"
+	"cosmossdk.io/log"
 	"errors"
 	"fmt"
-	gometrics "github.com/armon/go-metrics"
-	"github.com/cometbft/cometbft/libs/log"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
@@ -16,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/prices"
+	gometrics "github.com/hashicorp/go-metrics"
 	"syscall"
 	"time"
 )

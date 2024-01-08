@@ -33,6 +33,8 @@ import * as athenaPerpetualPositions from '../lib/athena-ddl-tables/perpetual_po
 import * as athenaPnlTicks from '../lib/athena-ddl-tables/pnl_ticks';
 import * as athenaSubaccounts from '../lib/athena-ddl-tables/subaccounts';
 import * as athenaTendermintEvents from '../lib/athena-ddl-tables/tendermint_events';
+import * as athenaTradingRewardAggregations from '../lib/athena-ddl-tables/trading_reward_aggregations';
+import * as athenaTradingRewards from '../lib/athena-ddl-tables/trading_rewards';
 import * as athenaTransfers from '../lib/athena-ddl-tables/transfers';
 import * as athenaWallets from '../lib/athena-ddl-tables/wallets';
 
@@ -51,6 +53,8 @@ export const tablesToAddToAthena: { [table: string]: AthenaTableDDLQueries } = {
   pnl_ticks: athenaPnlTicks,
   subaccounts: athenaSubaccounts,
   tendermint_events: athenaTendermintEvents,
+  trading_rewards: athenaTradingRewards,
+  trading_reward_aggregation: athenaTradingRewardAggregations,
   transfers: athenaTransfers,
   liquidity_tiers: athenaLiquidityTiers,
   wallets: athenaWallets,
@@ -66,7 +70,11 @@ export default async function runTask(): Promise<void> {
   // get most recent rds snapshot
   const startDescribe: number = Date.now();
   const dateString: string = DateTime.utc().toFormat('yyyy-MM-dd');
-  const mostRecentSnapshot: string = await getMostRecentDBSnapshotIdentifier(rds);
+  const mostRecentSnapshot: string = await getMostRecentDBSnapshotIdentifier(
+    rds,
+    undefined,
+    config.FAST_SYNC_SNAPSHOT_IDENTIFIER_PREFIX,
+  ) as string;
   stats.timing(`${statStart}.describe_rds_snapshots`, Date.now() - startDescribe);
 
   // dev example: rds:dev-indexer-apne1-db-2023-06-25-18-34

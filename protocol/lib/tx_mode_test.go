@@ -1,10 +1,12 @@
 package lib_test
 
 import (
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestAssertDeliverTxMode(t *testing.T) {
@@ -54,7 +56,7 @@ func TestTxMode(t *testing.T) {
 	// Initializing the chain returns a checkTx context so swap to a deliverTx context
 	ctx := tApp.InitChain().WithIsCheckTx(false)
 
-	require.Equal(t, "DeliverTx", lib.TxMode(ctx))
-	require.Equal(t, "CheckTx", lib.TxMode(ctx.WithIsCheckTx(true)))
-	require.Equal(t, "ReCheckTx", lib.TxMode(ctx.WithIsReCheckTx(true)))
+	require.Equal(t, log.DeliverTx, lib.TxMode(ctx))
+	require.Equal(t, log.CheckTx, lib.TxMode(ctx.WithIsCheckTx(true)))
+	require.Equal(t, log.RecheckTx, lib.TxMode(ctx.WithIsReCheckTx(true)))
 }

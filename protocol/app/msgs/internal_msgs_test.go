@@ -130,6 +130,16 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse",
 		"/dydxprotocol.vest.MsgSetVestEntry",
 		"/dydxprotocol.vest.MsgSetVestEntryResponse",
+
+		// ibc
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams",
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse",
+		"/ibc.applications.transfer.v1.MsgUpdateParams",
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse",
+		"/ibc.core.client.v1.MsgUpdateParams",
+		"/ibc.core.client.v1.MsgUpdateParamsResponse",
+		"/ibc.core.connection.v1.MsgUpdateParams",
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse",
 	}
 
 	require.Equal(t, expectedMsgs, lib.GetSortedKeys[sort.StringSlice](msgs.InternalMsgSamplesGovAuth))

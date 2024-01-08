@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
+	sdklog "cosmossdk.io/log"
 	"github.com/Shopify/sarama"
-	tmlog "github.com/cometbft/cometbft/libs/log"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
@@ -119,7 +119,7 @@ func TestIndexerMessageSenderKafka_VerifySend(t *testing.T) {
 			MaxRetries: indexer.DefaultMaxRetries,
 		},
 		nil,
-		tmlog.NewNopLogger(),
+		sdklog.NewNopLogger(),
 	)
 	require.NoError(t, err)
 
@@ -157,7 +157,7 @@ func TestIndexerMessageSenderKafka_SendAfterClosed(t *testing.T) {
 			MaxRetries: indexer.DefaultMaxRetries,
 		},
 		nil,
-		tmlog.NewNopLogger(),
+		sdklog.NewNopLogger(),
 	)
 	require.NoError(t, err)
 	messageSender.Close()
@@ -185,7 +185,7 @@ func TestIndexerMessageSenderKafka_ConcurrentSendAndClosed(t *testing.T) {
 				MaxRetries: indexer.DefaultMaxRetries,
 			},
 			nil,
-			tmlog.NewNopLogger(),
+			sdklog.NewNopLogger(),
 		)
 		require.NoError(t, err)
 

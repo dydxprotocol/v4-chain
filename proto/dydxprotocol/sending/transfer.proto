@@ -48,6 +48,8 @@ message MsgDepositToSubaccount {
 // MsgWithdrawFromSubaccount represents a single transfer from an
 // `x/subaccounts` subaccount to an `x/bank` account.
 message MsgWithdrawFromSubaccount {
+  option (cosmos.msg.v1.signer) = "sender";
+
   // The sender subaccount ID.
   dydxprotocol.subaccounts.SubaccountId sender = 2
       [ (gogoproto.nullable) = false ];

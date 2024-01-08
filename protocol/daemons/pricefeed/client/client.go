@@ -7,20 +7,17 @@ import (
 	"sync"
 	"time"
 
+	"cosmossdk.io/log"
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-
-	sdklog "cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_fetcher"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-
-	"github.com/cometbft/cometbft/libs/log"
 )
 
 // Client encapsulates the logic for executing and cleanly stopping all subtasks associated with the
@@ -61,7 +58,7 @@ type Client struct {
 var _ daemontypes.HealthCheckable = (*Client)(nil)
 
 func newClient(logger log.Logger) *Client {
-	logger = logger.With(sdklog.ModuleKey, constants.PricefeedDaemonModuleName)
+	logger = logger.With(log.ModuleKey, constants.PricefeedDaemonModuleName)
 	client := &Client{
 		tickers: []*time.Ticker{},
 		stops:   []chan bool{},

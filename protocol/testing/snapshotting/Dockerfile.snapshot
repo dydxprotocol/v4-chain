@@ -2,6 +2,6 @@ FROM dydxprotocol-base
 
 COPY ./testing/snapshotting/snapshot.sh /dydxprotocol/snapshot.sh
 
-RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.4.0
+RUN go install cosmossdk.io/tools/cosmovisor/cmd/cosmovisor@v1.5.0
 
 ENTRYPOINT ["/dydxprotocol/snapshot.sh"]

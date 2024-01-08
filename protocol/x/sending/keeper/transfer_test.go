@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -511,7 +512,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 			err := bankKeeper.MintCoins(
 				ctx,
 				testModuleName,
-				sdk.NewCoins(sdk.NewCoin(testDenom, sdk.NewInt(int64(tc.initialModuleBalance)))),
+				sdk.NewCoins(sdk.NewCoin(testDenom, sdkmath.NewInt(int64(tc.initialModuleBalance)))),
 			)
 			require.NoError(t, err)
 			startingModuleBalance := bankKeeper.GetBalance(
@@ -532,7 +533,7 @@ func TestSendFromModuleToAccount(t *testing.T) {
 					Authority:        lib.GovModuleAddress.String(),
 					SenderModuleName: testModuleName,
 					Recipient:        tc.recipientAddress,
-					Coin:             sdk.NewCoin(testDenom, sdk.NewInt(int64(tc.balanceToSend))),
+					Coin:             sdk.NewCoin(testDenom, sdkmath.NewInt(int64(tc.balanceToSend))),
 				},
 			)
 
@@ -592,7 +593,7 @@ func TestSendFromModuleToAccount_InvalidMsg(t *testing.T) {
 		Authority:        lib.GovModuleAddress.String(),
 		SenderModuleName: "",
 		Recipient:        constants.AliceAccAddress.String(),
-		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
+		Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 	}
 
 	ks := keepertest.SendingKeepers(t)
@@ -605,7 +606,7 @@ func TestSendFromModuleToAccount_NonExistentSenderModule(t *testing.T) {
 		Authority:        lib.GovModuleAddress.String(),
 		SenderModuleName: "nonexistent",
 		Recipient:        constants.AliceAccAddress.String(),
-		Coin:             sdk.NewCoin("adv4tnt", sdk.NewInt(100)),
+		Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 	}
 
 	// Calling SendFromModuleToAccount with a non-existent sender module will panic.
@@ -627,7 +628,7 @@ func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
 			Authority:        lib.GovModuleAddress.String(),
 			SenderModuleName: "bridge",
 			Recipient:        "dydx1abc", // invalid recipient address
-			Coin:             sdk.NewCoin("dv4tnt", sdk.NewInt(1)),
+			Coin:             sdk.NewCoin("dv4tnt", sdkmath.NewInt(1)),
 		},
 	)
 	require.ErrorContains(t, err, "Account address is invalid")
