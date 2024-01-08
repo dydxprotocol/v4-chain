@@ -277,7 +277,6 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 	// oracle price and poll out triggered conditional orders.
 	for _, clobPairId := range sortedKeys {
 		untriggeredConditionalOrders := k.UntriggeredConditionalOrders[clobPairId]
-
 		clobPair, found := k.GetClobPair(ctx, clobPairId)
 		if !found {
 			panic(
@@ -291,7 +290,6 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		triggeredOrderIds := untriggeredConditionalOrders.PollTriggeredConditionalOrders(
 			currentOraclePriceSubticksRat,
 		)
-
 		triggeredConditionalOrderIds = append(triggeredConditionalOrderIds, triggeredOrderIds...)
 		// Set the modified untriggeredConditionalOrders back on the keeper field.
 		k.UntriggeredConditionalOrders[clobPairId] = untriggeredConditionalOrders
@@ -315,6 +313,5 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 			),
 		)
 	}
-	fmt.Println("the triggered conditional order ids", triggeredConditionalOrderIds)
 	return triggeredConditionalOrderIds
 }

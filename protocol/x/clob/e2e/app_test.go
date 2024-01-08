@@ -26,7 +26,6 @@ import (
 	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochtypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
-	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -766,7 +765,6 @@ func MustScaleOrder[
 	msgPlaceOrder.Order.Subticks = msgPlaceOrder.Order.Subticks * uint64(clobPair.SubticksPerTick)
 	msgPlaceOrder.Order.ConditionalOrderTriggerSubticks = msgPlaceOrder.Order.ConditionalOrderTriggerSubticks *
 		uint64(clobPair.SubticksPerTick)
-	fmt.Println("scale order clobPair.SubticksPerTick", clobPair.SubticksPerTick, msgPlaceOrder.Order.ConditionalOrderTriggerSubticks)
 
 	// Return a type that matches what the user passed in for the order type.
 	switch any(order).(type) {
@@ -777,41 +775,6 @@ func MustScaleOrder[
 	default:
 		panic(fmt.Errorf("Unable to convert to %T to %T", clobtypes.MsgPlaceOrder{}, order))
 	}
-}
-
-// MustScaleMarketPriceUpdate scales a market price update based upon the clob information provided.
-// Will panic if:
-//   - ClobPairSrcT is an unknown type.
-//   - The clob pair id can't be used to look up the clob pair from the ClobPairSrcT.
-func MustScaleMarketPriceUpdate[
-	ClobPairSrcT clobtypes.ClobPair | types.GenesisDoc](
-	marketPriceUpdate prices.MsgUpdateMarketPrices_MarketPrice,
-	clobPairSrc ClobPairSrcT,
-) *prices.MsgUpdateMarketPrices_MarketPrice {
-	// Find the clob pair id for the market price update
-	clobPairId := clobtypes.ClobPairId(marketPriceUpdate.MarketId)
-
-	// Find the clob pair based upon the clobPairSrc of the clob information passed in.
-	var clobPair clobtypes.ClobPair
-	switch v := any(clobPairSrc).(type) {
-	case clobtypes.ClobPair:
-		clobPair = v
-	case types.GenesisDoc:
-		clobPairs := MustGetClobPairsFromGenesis(v)
-		if hasClobPair, ok := clobPairs[clobPairId]; ok {
-			clobPair = hasClobPair
-		} else {
-			panic(fmt.Errorf("Clob not found in genesis doc for clob id %d", clobPairId))
-		}
-	default:
-		panic(fmt.Errorf("Unknown source type %T to get clob pair", clobPairSrc))
-	}
-
-	// Scale the market price update based upon the subticks passed in.
-	marketPriceUpdate.Price = marketPriceUpdate.Price * uint64(clobPair.SubticksPerTick)
-	fmt.Println("market price update clobPair.SubticksPerTick", clobPair.SubticksPerTick, marketPriceUpdate.Price)
-
-	return &marketPriceUpdate
 }
 
 // MustGetClobPairsFromGenesis unmarshals the initial genesis state and returns a map from clob pair id to clob pair.
