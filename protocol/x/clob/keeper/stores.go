@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
@@ -152,11 +153,20 @@ func (k Keeper) fetchStateStoresForOrder(
 	)
 }
 
-// GetLastTradePriceStore fetches a mem store used for reading and updating the
-// last trade prices for perpetuals.
-func (k Keeper) GetLastTradePriceStore(ctx sdk.Context) prefix.Store {
+// GetMinTradePriceStore fetches a transient store used for reading and updating the
+// min trade prices for perpetuals.
+func (k Keeper) GetMinTradePriceStore(ctx sdk.Context) prefix.Store {
 	return prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.LastTradePricePrefix),
+		ctx.KVStore(k.transientStoreKey),
+		[]byte(types.MinTradePricePrefix),
+	)
+}
+
+// GetMaxTradePriceStore fetches a transient store used for reading and updating the
+// max trade prices for perpetuals.
+func (k Keeper) GetMaxTradePriceStore(ctx sdk.Context) prefix.Store {
+	return prefix.NewStore(
+		ctx.KVStore(k.transientStoreKey),
+		[]byte(types.MaxTradePricePrefix),
 	)
 }
