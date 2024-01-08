@@ -171,6 +171,25 @@
         "type": "object",
         "additionalProperties": false
       },
+      "AddressResponse": {
+        "properties": {
+          "subaccounts": {
+            "items": {
+              "$ref": "#/components/schemas/SubaccountResponseObject"
+            },
+            "type": "array"
+          },
+          "totalTradingRewards": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "subaccounts",
+          "totalTradingRewards"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AssetPositionResponse": {
         "properties": {
           "positions": {
@@ -1010,10 +1029,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "items": {
-                    "$ref": "#/components/schemas/SubaccountResponseObject"
-                  },
-                  "type": "array"
+                  "$ref": "#/components/schemas/AddressResponse"
                 }
               }
             }

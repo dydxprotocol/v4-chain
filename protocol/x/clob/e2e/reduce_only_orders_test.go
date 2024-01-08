@@ -454,6 +454,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 				) {
 					resp := tApp.CheckTx(checkTx)
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+
 					if order.IsStatefulOrder() {
 						deliverTxsOverride = append(deliverTxsOverride, checkTx.Tx)
 					}

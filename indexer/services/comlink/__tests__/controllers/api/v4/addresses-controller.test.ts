@@ -288,6 +288,7 @@ describe('addresses-controller#V4', () => {
             assetPositions: {},
           },
         ],
+        totalTradingRewards: testConstants.defaultWallet.totalTradingRewards,
       });
       expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1,
         {
