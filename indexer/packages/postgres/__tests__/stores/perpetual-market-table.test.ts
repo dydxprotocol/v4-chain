@@ -1,16 +1,10 @@
-import {
-  MarketCreateObject,
-  PerpetualMarketFromDatabase,
-} from '../../src/types';
+import { MarketCreateObject, PerpetualMarketFromDatabase, PerpetualMarketStatus } from '../../src/types';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
 import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
+import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
 import {
-  clearData,
-  migrate,
-  teardown,
-} from '../../src/helpers/db-helpers';
-import {
-  defaultLiquidityTier, defaultLiquidityTier2,
+  defaultLiquidityTier,
+  defaultLiquidityTier2,
   defaultMarket,
   defaultMarket2,
   defaultPerpetualMarket,
@@ -154,6 +148,21 @@ describe('PerpetualMarket store', () => {
     expect(perpetualMarket).toEqual(expect.objectContaining({
       ...defaultPerpetualMarket,
       trades24H: 100,
+    }));
+  });
+
+  it('Successfully winds down a perpetual market', async () => {
+    await PerpetualMarketTable.create(defaultPerpetualMarket);
+
+    const perpetualMarket: PerpetualMarketFromDatabase | undefined = await PerpetualMarketTable
+      .update({
+        id: defaultPerpetualMarket.id,
+        status: PerpetualMarketStatus.FINAL_SETTLEMENT,
+      });
+
+    expect(perpetualMarket).toEqual(expect.objectContaining({
+      ...defaultPerpetualMarket,
+      status: PerpetualMarketStatus.FINAL_SETTLEMENT,
     }));
   });
 
