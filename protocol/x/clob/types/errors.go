@@ -206,6 +206,11 @@ var (
 		44,
 		"invalid time in force",
 	)
+	ErrReduceOnlyOrderReplacement = errorsmod.Register(
+		ModuleName,
+		45,
+		"Reduce only order cannot replace a non reduce only order",
+	)
 
 	// Liquidations errors.
 	ErrInvalidLiquidationsConfig = errorsmod.Register(
@@ -499,7 +504,7 @@ var (
 	ErrReduceOnlyDisabled = errorsmod.Register(
 		ModuleName,
 		9003,
-		"Reduce-only is currently disabled",
+		"Reduce-only is currently disabled for non-FOK/IOC orders",
 	)
 
 	// Equity tier limit errors.
