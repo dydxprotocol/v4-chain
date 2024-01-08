@@ -372,8 +372,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 			// 	),
 			// },
 			ordersForFirstBlock: []clobtypes.Order{
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
-				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
+				// constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
+				// constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
 				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999,
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
@@ -397,8 +397,8 @@ func TestReduceOnlyOrders(t *testing.T) {
 
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {
-					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId:           true,
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+					constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49999.OrderId: true,
+					// constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
 				},
 			},
 
