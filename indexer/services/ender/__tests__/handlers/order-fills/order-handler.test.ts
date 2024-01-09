@@ -1465,7 +1465,6 @@ describe('OrderHandler', () => {
     _name: string,
     useSqlFunction: boolean,
   ) => {
-    config.USE_ORDER_HANDLER_SQL_FUNCTION = useSqlFunction;
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
