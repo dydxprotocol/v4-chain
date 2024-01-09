@@ -53,6 +53,36 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 			},
 			err: ErrInvalidOrderSide,
 		},
+		"invalid time in force": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+					},
+					Side:        Order_SIDE_BUY,
+					TimeInForce: Order_TimeInForce(uint32(999)),
+				},
+			},
+			err: ErrInvalidTimeInForce,
+		},
+		"invalid condition type": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+					},
+					Side:          Order_SIDE_BUY,
+					ConditionType: Order_ConditionType(uint32(999)),
+				},
+			},
+			err: ErrInvalidConditionType,
+		},
 		"unspecified side": {
 			msg: MsgPlaceOrder{
 				Order: Order{
@@ -233,7 +263,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 				},
 			},
 		},
-		"reduce-only disabled": {
+		"short-term FOK reduce-only success": {
 			msg: MsgPlaceOrder{
 				Order: Order{
 					OrderId: OrderId{
@@ -241,6 +271,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 							Owner:  sample.AccAddress(),
 							Number: uint32(0),
 						},
+						OrderFlags: OrderIdFlags_ShortTerm,
 					},
 					Side:         Order_SIDE_BUY,
 					Quantums:     uint64(42),
@@ -248,6 +279,66 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					Subticks:     uint64(10),
 					TimeInForce:  Order_TIME_IN_FORCE_FILL_OR_KILL,
 					ReduceOnly:   true,
+				},
+			},
+		},
+		"short-term IOC reduce-only success": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_ShortTerm,
+					},
+					Side:         Order_SIDE_BUY,
+					Quantums:     uint64(42),
+					GoodTilOneof: &Order_GoodTilBlock{GoodTilBlock: uint32(100)},
+					Subticks:     uint64(10),
+					TimeInForce:  Order_TIME_IN_FORCE_IOC,
+					ReduceOnly:   true,
+				},
+			},
+		},
+		"long-term order reduce-only disabled": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_LongTerm,
+					},
+					Side:         Order_SIDE_BUY,
+					Quantums:     uint64(42),
+					GoodTilOneof: &Order_GoodTilBlockTime{GoodTilBlockTime: uint32(100)},
+					Subticks:     uint64(10),
+					TimeInForce:  Order_TIME_IN_FORCE_UNSPECIFIED,
+					ReduceOnly:   true,
+				},
+			},
+			err: ErrReduceOnlyDisabled,
+		},
+		"long-term reduce-only disabled": {
+			msg: MsgPlaceOrder{
+				Order: Order{
+					OrderId: OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  sample.AccAddress(),
+							Number: uint32(0),
+						},
+						OrderFlags: OrderIdFlags_Conditional,
+					},
+					Side:                            Order_SIDE_BUY,
+					Quantums:                        uint64(42),
+					GoodTilOneof:                    &Order_GoodTilBlockTime{GoodTilBlockTime: uint32(100)},
+					Subticks:                        uint64(10),
+					TimeInForce:                     Order_TIME_IN_FORCE_UNSPECIFIED,
+					ConditionType:                   Order_CONDITION_TYPE_STOP_LOSS,
+					ConditionalOrderTriggerSubticks: uint64(8),
+					ReduceOnly:                      true,
 				},
 			},
 			err: ErrReduceOnlyDisabled,

@@ -11,7 +11,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -24,6 +24,16 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	err error,
 ) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	// Attach various logging tags relative to this request. These should be static with no changes.
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight(),
+		log.Handler, log.PlaceOrder,
+		log.Msg, msg,
+	)
 
 	defer func() {
 		metrics.IncrSuccessOrErrorCounter(
@@ -44,16 +54,10 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 					1,
 					msg.Order.GetOrderLabels(),
 				)
-				k.Keeper.Logger(ctx).Info(
-					err.Error(),
-					metrics.BlockHeight, ctx.BlockHeight(),
-					metrics.Handler, "PlaceOrder",
-					metrics.Callback, metrics.DeliverTx,
-					metrics.Msg, msg,
-				)
+				log.InfoLog(ctx, "Place Order Expected Error", log.Error, err)
 				return
 			}
-			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "PlaceOrder", msg)
+			log.ErrorLogWithError(ctx, "Error placing order", err)
 		}
 	}()
 

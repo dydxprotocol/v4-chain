@@ -5,6 +5,7 @@ import * as MarketTable from '../../src/stores/market-table';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
 import * as SubaccountTable from '../../src/stores/subaccount-table';
 import * as TendermintEventTable from '../../src/stores/tendermint-event-table';
+import * as WalletTable from '../../src/stores/wallet-table';
 import {
   defaultAsset,
   defaultAsset2,
@@ -25,6 +26,7 @@ import {
   defaultTendermintEvent2,
   defaultTendermintEvent3,
   defaultTendermintEvent4,
+  defaultWallet,
 } from './constants';
 
 export async function seedData() {
@@ -60,5 +62,8 @@ export async function seedData() {
     AssetTable.create(defaultAsset),
     AssetTable.create(defaultAsset2),
     AssetTable.create(defaultAsset3),
+  ]);
+  await Promise.all([
+    WalletTable.create(defaultWallet),
   ]);
 }

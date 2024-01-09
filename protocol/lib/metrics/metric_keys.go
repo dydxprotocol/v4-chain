@@ -20,6 +20,7 @@ const (
 	LiquidationsPlacePerpetualLiquidationQuoteQuantums = "liquidations_place_perpetual_liquidation_quote_quantums"
 	LiquidationsLiquidationMatchNegativeTNC            = "liquidations_liquidation_match_negative_tnc"
 	ClobMevErrorCount                                  = "clob_mev_error_count"
+	SubaccountsNegativeTncSubaccountSeen               = "negative_tnc_subaccount_seen"
 
 	// Gauges
 	InsuranceFundBalance = "insurance_fund_balance"

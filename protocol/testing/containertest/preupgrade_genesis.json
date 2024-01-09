@@ -1,5 +1,5 @@
 {
-    "genesis_time": "2023-12-12T17:59:46.05659705Z",
+    "genesis_time": "2024-01-04T00:00:00Z",
     "chain_id": "localdydxprotocol",
     "initial_height": "1",
     "consensus_params": {
@@ -93,7 +93,7 @@
             "coins": [
               {
                 "denom": "adv4tnt",
-                "amount": "995000000000000000000000000"
+                "amount": "795000000000000000000000000"
               }
             ]
           },
@@ -176,13 +176,35 @@
             "coins": [
               {
                 "denom": "adv4tnt",
-                "amount": "10000000000000000000000000"
+                "amount": "200000000000000000000000000"
               }
             ]
           }
         ],
         "supply": [],
-        "denom_metadata": [],
+        "denom_metadata": [
+          {
+            "description": "The native token of the network",
+            "denom_units": [
+              {
+                "denom": "adv4tnt",
+                "exponent": 0,
+                "aliases": []
+              },
+              {
+                "denom": "dv4tnt",
+                "exponent": 18,
+                "aliases": []
+              }
+            ],
+            "base": "adv4tnt",
+            "display": "dv4tnt",
+            "name": "dYdX V4 Testnet Token",
+            "symbol": "dv4tnt",
+            "uri": "",
+            "uri_hash": ""
+          }
+        ],
         "send_enabled": []
       },
       "blocktime": {
@@ -210,7 +232,7 @@
           "skip_rate_ppm": 800000
         },
         "safety_params": {
-          "delay_blocks": 86400,
+          "delay_blocks": 30,
           "is_disabled": false
         }
       },
@@ -573,6 +595,16 @@
             "status": "STATUS_ACTIVE",
             "step_base_quantums": 1000000,
             "subticks_per_tick": 1000000
+          },
+          {
+            "id": 33,
+            "perpetual_clob_metadata": {
+              "perpetual_id": 33
+            },
+            "quantum_conversion_exponent": -8,
+            "status": "STATUS_ACTIVE",
+            "step_base_quantums": 1000000,
+            "subticks_per_tick": 100
           }
         ],
         "equity_tier_limit_config": {
@@ -1181,6 +1213,36 @@
           }
         }
       },
+      "interchainaccounts": {
+        "controller_genesis_state": {
+          "active_channels": [],
+          "interchain_accounts": [],
+          "params": {
+            "controller_enabled": false
+          },
+          "ports": []
+        },
+        "host_genesis_state": {
+          "active_channels": [],
+          "interchain_accounts": [],
+          "params": {
+            "allow_messages": [
+              "/ibc.applications.transfer.v1.MsgTransfer",
+              "/cosmos.bank.v1beta1.MsgSend",
+              "/cosmos.staking.v1beta1.MsgDelegate",
+              "/cosmos.staking.v1beta1.MsgBeginRedelegate",
+              "/cosmos.staking.v1beta1.MsgUndelegate",
+              "/cosmos.staking.v1beta1.MsgCancelUnbondingDelegation",
+              "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
+              "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward",
+              "/cosmos.distribution.v1beta1.MsgFundCommunityPool",
+              "/cosmos.gov.v1.MsgVote"
+            ],
+            "host_enabled": true
+          },
+          "port": "icahost"
+        }
+      },
       "perpetuals": {
         "liquidity_tiers": [
           {
@@ -1214,6 +1276,22 @@
             "initial_margin_ppm": 1000000,
             "maintenance_fraction_ppm": 200000,
             "name": "Safety"
+          },
+          {
+            "base_position_notional": 1000000000039,
+            "id": 4,
+            "impact_notional": 50000000000,
+            "initial_margin_ppm": 10007,
+            "maintenance_fraction_ppm": 500009,
+            "name": "test-usd-100x-liq-tier-linear"
+          },
+          {
+            "base_position_notional": 100000007,
+            "id": 5,
+            "impact_notional": 50000000000,
+            "initial_margin_ppm": 10007,
+            "maintenance_fraction_ppm": 500009,
+            "name": "test-usd-100x-liq-tier-nonlinear"
           }
         ],
         "params": {
@@ -1551,37 +1629,47 @@
               "market_id": 32,
               "ticker": "XRP-USD"
             }
+          },
+          {
+            "params": {
+              "atomic_resolution": -10,
+              "default_funding_ppm": 0,
+              "id": 33,
+              "liquidity_tier": 4,
+              "market_id": 33,
+              "ticker": "TEST-USD"
+            }
           }
         ]
       },
       "prices": {
         "market_params": [
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"BTC-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"BTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BTC-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"btcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXBTZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BTC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -5,
             "id": 0,
-            "min_exchanges": 1,
+            "min_exchanges": 3,
             "min_price_change_ppm": 1000,
             "pair": "BTC-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"ETH-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ETHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ETHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETH-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ethusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XETHZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ETH-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ETH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETH-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -6,
             "id": 1,
-            "min_exchanges": 1,
+            "min_exchanges": 3,
             "min_price_change_ppm": 1000,
             "pair": "ETH-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LINKUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LINK-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LINKUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LINK_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LINK-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 2,
-            "min_exchanges": 1,
+            "min_exchanges": 3,
             "min_price_change_ppm": 2500,
             "pair": "LINK-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"MATICUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MATIC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"maticusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MATICUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"MATIC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MATIC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 3,
             "min_exchanges": 3,
@@ -1589,7 +1677,7 @@
             "pair": "MATIC-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"CRVUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"CRV-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"CRV_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"CRVUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"CRV-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"CRV_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"CRV-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 4,
             "min_exchanges": 3,
@@ -1597,7 +1685,7 @@
             "pair": "CRV-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SOLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SOLUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SOL-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"solusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SOLUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SOL-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SOL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SOL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -8,
             "id": 5,
             "min_exchanges": 3,
@@ -1605,7 +1693,7 @@
             "pair": "SOL-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ADAUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ADAUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ADA-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ADA_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"adausdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ADAUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ADA-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ADA_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ADA-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 6,
             "min_exchanges": 3,
@@ -1613,7 +1701,7 @@
             "pair": "ADA-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"AVAXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"AVAXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"AVAX-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"AVAX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"avaxusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"AVAXUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"AVAX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"AVAX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -8,
             "id": 7,
             "min_exchanges": 3,
@@ -1621,7 +1709,7 @@
             "pair": "AVAX-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"FILUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"FIL-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"FIL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"filusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"FILUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"FIL_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"FIL-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 8,
             "min_exchanges": 3,
@@ -1629,7 +1717,7 @@
             "pair": "FIL-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"LTCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LTC-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ltcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XLTCZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LTC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LTC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LTC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -8,
             "id": 9,
             "min_exchanges": 3,
@@ -1637,7 +1725,7 @@
             "pair": "LTC-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DOGEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DOGEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"DOGE-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOGE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"dogeusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XDGUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOGE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DOGE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOGE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -11,
             "id": 10,
             "min_exchanges": 3,
@@ -1645,7 +1733,7 @@
             "pair": "DOGE-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ATOMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ATOMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ATOM-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ATOM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"ATOMUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ATOM-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ATOM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ATOM-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 11,
             "min_exchanges": 3,
@@ -1653,7 +1741,7 @@
             "pair": "ATOM-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"DOTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"DOTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"DOT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"DOT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"DOTUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"DOT-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"DOT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"DOT-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 12,
             "min_exchanges": 3,
@@ -1661,7 +1749,7 @@
             "pair": "DOT-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"UNIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"UNIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"UNI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"UNI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"UNIUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"UNI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"UNI-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 13,
             "min_exchanges": 3,
@@ -1669,7 +1757,7 @@
             "pair": "UNI-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"BCHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"BCHUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BCH-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"BCH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"bchusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"BCHUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BCH-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BCH_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BCH-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -7,
             "id": 14,
             "min_exchanges": 3,
@@ -1677,7 +1765,7 @@
             "pair": "BCH-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"TRXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"TRXUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"TRX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"trxusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"TRXUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"TRX-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"TRX_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"TRX-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -11,
             "id": 15,
             "min_exchanges": 3,
@@ -1685,7 +1773,7 @@
             "pair": "TRX-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"NEARUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"NEAR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"NEAR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"nearusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"NEAR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"NEAR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"NEAR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 16,
             "min_exchanges": 3,
@@ -1693,7 +1781,7 @@
             "pair": "NEAR-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"MKRUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"MKR-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"MKRUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"MKR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"MKR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"MKR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -6,
             "id": 17,
             "min_exchanges": 3,
@@ -1701,7 +1789,7 @@
             "pair": "MKR-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"XLMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"XLMUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XLM-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXLMZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XLM-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"XLM_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XLM-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 18,
             "min_exchanges": 3,
@@ -1709,7 +1797,7 @@
             "pair": "XLM-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ETCUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ETC-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ETC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"etcusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ETC-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ETC_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ETC-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -8,
             "id": 19,
             "min_exchanges": 3,
@@ -1717,7 +1805,7 @@
             "pair": "ETC-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"COMPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"COMP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"COMP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"COMPUSD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"COMP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"COMP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -8,
             "id": 20,
             "min_exchanges": 3,
@@ -1725,7 +1813,7 @@
             "pair": "COMP-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"WLDUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"WLDUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"WLD_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"wldusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"WLD-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"WLD_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"WLD-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 21,
             "min_exchanges": 3,
@@ -1733,7 +1821,7 @@
             "pair": "WLD-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"APEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"APE-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"APE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"APEUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"APE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"APE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"APE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 22,
             "min_exchanges": 3,
@@ -1741,7 +1829,7 @@
             "pair": "APE-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"APTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"APTUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"APT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"APT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"aptusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"APT-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"APT_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"APT-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 23,
             "min_exchanges": 3,
@@ -1749,7 +1837,7 @@
             "pair": "APT-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"ARBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"ARBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"ARB-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"ARB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"arbusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"ARB-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"ARB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"ARB-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 24,
             "min_exchanges": 3,
@@ -1757,7 +1845,7 @@
             "pair": "ARB-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"BLUR-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"BLUR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"BLURUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BLUR-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"BLUR_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"BLUR-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 25,
             "min_exchanges": 3,
@@ -1765,7 +1853,7 @@
             "pair": "BLUR-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"LDOUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"LDO-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"LDOUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"LDO_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"LDO-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 26,
             "min_exchanges": 3,
@@ -1773,7 +1861,7 @@
             "pair": "LDO-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"OPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"OP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"OP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"OP-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"OP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"OP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -9,
             "id": 27,
             "min_exchanges": 3,
@@ -1781,7 +1869,7 @@
             "pair": "OP-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"PEPEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"PEPEUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"PEPE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"PEPEUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"PEPE-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"PEPE_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"PEPE-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -16,
             "id": 28,
             "min_exchanges": 3,
@@ -1789,7 +1877,7 @@
             "pair": "PEPE-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SEIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SEIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SEI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SEI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"seiusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SEI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SEI_USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 29,
             "min_exchanges": 3,
@@ -1797,7 +1885,7 @@
             "pair": "SEI-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SHIBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SHIBUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SHIB-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SHIB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"SHIBUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SHIB-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SHIB_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SHIB-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -15,
             "id": 30,
             "min_exchanges": 3,
@@ -1805,7 +1893,7 @@
             "pair": "SHIB-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"SUIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"SUIUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"SUI-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"SUI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"suiusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"SUI-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"SUI_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"SUI-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 31,
             "min_exchanges": 3,
@@ -1813,7 +1901,7 @@
             "pair": "SUI-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"XRPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Bybit\",\"ticker\":\"XRPUSDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"XRP-USD\"},{\"exchangeName\":\"Gate\",\"ticker\":\"XRP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"xrpusdt\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Kraken\",\"ticker\":\"XXRPZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"XRP-USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Mexc\",\"ticker\":\"XRP_USDT\",\"adjustByMarket\":\"USDT-USD\"},{\"exchangeName\":\"Okx\",\"ticker\":\"XRP-USDT\",\"adjustByMarket\":\"USDT-USD\"}]}",
             "exponent": -10,
             "id": 32,
             "min_exchanges": 3,
@@ -1821,7 +1909,7 @@
             "pair": "XRP-USD"
           },
           {
-            "exchange_config_json": "{\n\"exchanges\": [\n{\n\"exchangeName\": \"TestExchange\",\n\"ticker\": \"LINK-USD\"\n}\n]\n}",
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"Binance\",\"ticker\":\"USDCUSDT\",\"invert\":true},{\"exchangeName\":\"Bybit\",\"ticker\":\"USDCUSDT\",\"invert\":true},{\"exchangeName\":\"CoinbasePro\",\"ticker\":\"USDT-USD\"},{\"exchangeName\":\"Huobi\",\"ticker\":\"ethusdt\",\"adjustByMarket\":\"ETH-USD\",\"invert\":true},{\"exchangeName\":\"Kraken\",\"ticker\":\"USDTZUSD\"},{\"exchangeName\":\"Kucoin\",\"ticker\":\"BTC-USDT\",\"adjustByMarket\":\"BTC-USD\",\"invert\":true},{\"exchangeName\":\"Okx\",\"ticker\":\"USDC-USDT\",\"invert\":true}]}",
             "exponent": -9,
             "id": 1000000,
             "min_exchanges": 3,
@@ -1835,6 +1923,14 @@
             "min_exchanges": 3,
             "min_price_change_ppm": 2500,
             "pair": "DYDX-USD"
+          },
+          {
+            "exchange_config_json": "{\"exchanges\":[{\"exchangeName\":\"TestVolatileExchange\",\"ticker\":\"TEST-USD\"}]}",
+            "exponent": -5,
+            "id": 33,
+            "min_exchanges": 1,
+            "min_price_change_ppm": 250,
+            "pair": "TEST-USD"
           }
         ],
         "market_prices": [
@@ -2012,6 +2108,11 @@
             "exponent": -9,
             "id": 1000001,
             "price": 2050000000
+          },
+          {
+            "exponent": -5,
+            "id": 33,
+            "price": 10000000
           }
         ]
       },

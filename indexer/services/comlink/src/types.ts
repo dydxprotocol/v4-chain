@@ -39,6 +39,11 @@ export enum RequestMethod {
 
 /* ------- SUBACCOUNT TYPES ------- */
 
+export interface AddressResponse {
+  subaccounts: SubaccountResponseObject[],
+  totalTradingRewards: string,
+}
+
 export interface SubaccountResponseObject {
   address: string,
   subaccountNumber: number,

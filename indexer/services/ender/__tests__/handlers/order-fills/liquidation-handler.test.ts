@@ -1,4 +1,4 @@
-import { logger } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import {
   IndexerTendermintBlock, IndexerTendermintEvent, Timestamp,
   LiquidationOrderV1,
@@ -89,6 +89,9 @@ describe('LiquidationHandler', () => {
   beforeAll(async () => {
     await dbHelpers.migrate();
     await createPostgresFunctions();
+    jest.spyOn(stats, 'increment');
+    jest.spyOn(stats, 'timing');
+    jest.spyOn(stats, 'gauge');
   });
 
   beforeEach(async () => {
@@ -976,6 +979,7 @@ describe('LiquidationHandler', () => {
         OrderTable.orderIdToUuid(makerOrderProto.orderId!),
         orderFillEvent.totalFilledMaker.toString(),
       ),
+      expectTimingStats(),
     ]);
   });
 
@@ -1195,4 +1199,15 @@ async function expectCandlesUpdated() {
 async function expectNoCandles() {
   const candles: CandleFromDatabase[] = await CandleTable.findAll({}, []);
   expect(candles.length).toEqual(0);
+}
+
+function expectTimingStats() {
+  expect(stats.timing).toHaveBeenCalledWith(
+    'ender.handle_event.timing',
+    expect.any(Number),
+    {
+      className: 'LiquidationHandler',
+      eventType: 'LiquidationEvent',
+    },
+  );
 }

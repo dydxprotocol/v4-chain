@@ -1,4 +1,4 @@
-import { QueryBuilder } from 'objection';
+import { PartialModelObject, QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
 import { setupBaseQuery, verifyAllRequiredFields } from '../helpers/stores-helpers';
@@ -13,6 +13,7 @@ import {
   WalletCreateObject,
   WalletFromDatabase,
   WalletQueryConfig,
+  WalletUpdateObject,
 } from '../types';
 
 export async function findAll(
@@ -68,6 +69,21 @@ export async function create(
   return WalletModel.query(
     Transaction.get(options.txId),
   ).insert(walletToCreate).returning('*');
+}
+
+export async function update(
+  {
+    address,
+    ...fields
+  }: WalletUpdateObject,
+  options: Options = { txId: undefined },
+): Promise<WalletFromDatabase | undefined> {
+  const wallet = await WalletModel.query(
+    Transaction.get(options.txId),
+  ).findById(address);
+  const updatedWallet = await wallet.$query().patch(fields as PartialModelObject<WalletModel>).returning('*');
+  // The objection types mistakenly think the query returns an array of Wallets.
+  return updatedWallet as unknown as (WalletFromDatabase | undefined);
 }
 
 export async function upsert(

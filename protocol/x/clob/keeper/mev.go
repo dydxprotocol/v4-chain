@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/mev_telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -76,13 +77,18 @@ func (k Keeper) RecordMevMetrics(
 	// Recover from any panics that occur during MEV calculation.
 	defer func() {
 		if r := recover(); r != nil {
-			k.Logger(ctx).Error(
-				"panic when recording mev metrics",
-				"panic",
-				r,
-				"stack trace",
-				string(debug.Stack()),
-			)
+			err, ok := r.(error)
+			if !ok {
+				log.ErrorLog(ctx, "panic when recording mev metrics",
+					log.StackTrace,
+					string(debug.Stack()),
+				)
+			} else {
+				log.ErrorLogWithError(ctx, "panic when recording mev metrics", err,
+					log.StackTrace,
+					string(debug.Stack()),
+				)
+			}
 		}
 	}()
 
@@ -101,12 +107,9 @@ func (k Keeper) RecordMevMetrics(
 		msgProposedOperations.GetOperationsQueue(),
 	)
 	if err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to create MEV matches for block proposer operations: Error: %+v, Operations: %+v",
-				err.Error(),
-				msgProposedOperations.GetOperationsQueue(),
-			),
+		log.ErrorLogWithError(ctx, "Failed to create MEV matches for block proposer operations", err,
+			log.OperationsQueue,
+			msgProposedOperations.GetOperationsQueue(),
 		)
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
@@ -119,12 +122,9 @@ func (k Keeper) RecordMevMetrics(
 		blockProposerPnL,
 		blockProposerMevMatches,
 	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate match PnL for block proposer: Error: %+v, MEV matches: %+v",
-				err.Error(),
-				blockProposerMevMatches,
-			),
+		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for block proposer", err,
+			log.MevMatches,
+			blockProposerMevMatches,
 		)
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
@@ -139,12 +139,9 @@ func (k Keeper) RecordMevMetrics(
 		k.GetOperations(ctx).GetOperationsQueue(),
 	)
 	if err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to create MEV matches for validator operations: Error: %+v, Operations: %+v",
-				err.Error(),
-				k.GetOperations(ctx).GetOperationsQueue(),
-			),
+		log.ErrorLogWithError(ctx, "Failed to create MEV matches for validator operations", err,
+			log.OperationsQueue,
+			k.GetOperations(ctx).GetOperationsQueue(),
 		)
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
@@ -157,12 +154,9 @@ func (k Keeper) RecordMevMetrics(
 		validatorPnL,
 		validatorMevMatches,
 	); err != nil {
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"Failed to calculate match PnL for validator: Error: %+v, MEV matches: %+v",
-				err.Error(),
-				validatorMevMatches,
-			),
+		log.ErrorLogWithError(ctx, "Failed to calculate match PnL for validator", err,
+			log.MevMatches,
+			validatorMevMatches,
 		)
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
@@ -239,7 +233,7 @@ func (k Keeper) RecordMevMetrics(
 	// Add label for consensus round if available.
 	consensusRound, ok := ctx.Value(process.ConsensusRound).(int64)
 	if !ok {
-		k.Logger(ctx).Error("Failed to get consensus round")
+		log.ErrorLog(ctx, "Failed to get consensus round")
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
 			1,
@@ -251,13 +245,10 @@ func (k Keeper) RecordMevMetrics(
 	proposerConsAddress := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	proposer, err := stakingKeeper.GetValidatorByConsAddr(ctx, proposerConsAddress)
 	if err != nil {
-		k.Logger(ctx).Error(
-			"Failed to get proposer by consensus address",
-			"proposer",
-			proposerConsAddress.String(),
-			"err",
-			err,
+		log.ErrorLogWithError(ctx, "Failed to get proposer by consensus address", err,
+			log.Proposer, proposerConsAddress.String(),
 		)
+
 		metrics.IncrCounter(
 			metrics.ClobMevErrorCount,
 			1,
@@ -278,6 +269,8 @@ func (k Keeper) RecordMevMetrics(
 		)
 
 		// Log MEV metric.
+		// TODO(CLOB-1051) change to use new logger library. Be careful the values are not changed
+		// because mev dashboards rely on this log.
 		k.Logger(ctx).Info(
 			"Measuring MEV for proposed matches",
 			metrics.Mev,

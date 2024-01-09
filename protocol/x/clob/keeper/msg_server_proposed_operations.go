@@ -4,7 +4,8 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -15,10 +16,21 @@ func (k msgServer) ProposedOperations(
 ) (resp *types.MsgProposedOperationsResponse, err error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	// Attach various logging tags relative to this request. These should be static with no changes.
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight(),
+		log.Handler, log.ProposedOperations,
+		// Consider not appending this because it's massive
+		// metrics.Msg, msg,
+	)
+
 	defer func() {
 		metrics.IncrSuccessOrErrorCounter(err, types.ModuleName, metrics.ProposedOperations, metrics.DeliverTx)
 		if err != nil {
-			errorlib.LogDeliverTxError(k.Keeper.Logger(ctx), err, ctx.BlockHeight(), "ProposedOperations", msg)
+			log.ErrorLogWithError(ctx, "Error in Proposed Operations", err)
 		}
 	}()
 

@@ -179,6 +179,8 @@ import (
 	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" // nolint:staticcheck
+	ibcconnectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibcporttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
@@ -511,8 +513,6 @@ func New(
 	govRouter := govv1beta1.NewRouter()
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
-	/** TODO(CORE-538): Migrate software upgrade type to Cosmos 0.50.
-	.AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.UpgradeKeeper)) */
 	govConfig := govtypes.DefaultConfig()
 	/*
 		Example of setting gov params:
@@ -1621,9 +1621,14 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(slashingtypes.ModuleName)
 	paramsKeeper.Subspace(govtypes.ModuleName).WithKeyTable(govv1.ParamKeyTable()) //nolint:staticcheck
 	paramsKeeper.Subspace(crisistypes.ModuleName)
-	paramsKeeper.Subspace(ibctransfertypes.ModuleName)
-	paramsKeeper.Subspace(icahosttypes.SubModuleName)
-	paramsKeeper.Subspace(ibcexported.ModuleName)
+
+	// register the key tables for legacy param subspaces
+	keyTable := ibcclient.ParamKeyTable()
+	keyTable.RegisterParamSet(&ibcconnectiontypes.Params{})
+	paramsKeeper.Subspace(ibcexported.ModuleName).WithKeyTable(keyTable)
+	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
+	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
+	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
 
 	return paramsKeeper
 }
