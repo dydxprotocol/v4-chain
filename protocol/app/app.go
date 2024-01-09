@@ -932,6 +932,7 @@ func New(
 		app.BankKeeper,
 		app.FeeTiersKeeper,
 		app.PerpetualsKeeper,
+		app.PricesKeeper,
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.IndexerEventManager,

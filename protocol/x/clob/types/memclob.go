@@ -2,20 +2,11 @@ package types
 
 import (
 	"math/big"
-	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
-
-// ShortBlockWindow represents the maximum number of blocks past the current block height that a
-// `MsgPlaceOrder` or `MsgCancelOrder` message will be considered valid by the validator.
-const ShortBlockWindow uint32 = 20
-
-// StatefulOrderTimeWindow represents the maximum amount of time in seconds past the current block time that a
-// long-term/conditional `MsgPlaceOrder` message will be considered valid by the validator.
-const StatefulOrderTimeWindow time.Duration = 95 * 24 * time.Hour // 95 days.
 
 // MemClob is an interface that encapsulates all reads and writes to the
 // CLOB's in-memory data structures.
