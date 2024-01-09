@@ -7,7 +7,9 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// GetTradePricesForPerpetual gets the last trade price for a perpetual.
+// GetTradePricesForPerpetual gets the maximum and minimum traded prices for a perpetual for the
+// current block.
+// These prices are intended to be used for improved conditional order triggering in the EndBlocker.
 func (k Keeper) GetTradePricesForPerpetual(
 	ctx sdk.Context,
 	perpetualId uint32,
@@ -59,7 +61,10 @@ func (k Keeper) getMaxTradePriceForPerpetual(
 	return types.Subticks(result.Value), true
 }
 
-// SetTradePricesForPerpetual sets the trade prices for a perpetual.
+// SetTradePricesForPerpetual sets the maximum and minimum traded prices for a perpetual for the current
+// block.
+// Note that this method updates the transient store and is meant to be called in `DeliverTx` when
+// matches are persisted to state.
 func (k Keeper) SetTradePricesForPerpetual(
 	ctx sdk.Context,
 	perpetualId uint32,
