@@ -991,6 +991,14 @@ var (
 	}
 
 	// IOC orders.
+	Order_Alice_Num0_Id1_Clob0_Buy5_Price15_GTB20_IOC = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num0, ClientId: 1, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     5,
+		Subticks:     15,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_IOC,
+	}
 	Order_Alice_Num0_Id1_Clob1_Buy5_Price15_GTB20_IOC = clobtypes.Order{
 		OrderId:      clobtypes.OrderId{SubaccountId: Alice_Num0, ClientId: 1, ClobPairId: 1},
 		Side:         clobtypes.Order_SIDE_BUY,
@@ -1103,6 +1111,14 @@ var (
 		Quantums:     100_000_000, // 1 BTC
 		Subticks:     50_000_000_000,
 		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 10},
+		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+	}
+	Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB20_FOK = clobtypes.Order{
+		OrderId:      clobtypes.OrderId{SubaccountId: Carl_Num0, ClientId: 0, ClobPairId: 0},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     100_000_000, // 1 BTC
+		Subticks:     50_000_000_000,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 20},
 		TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
 	}
 	Order_Carl_Num0_Id0_Clob0_Buy075BTC_Price50000_GTB11_FOK = clobtypes.Order{

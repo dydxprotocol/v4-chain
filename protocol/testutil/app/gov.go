@@ -2,9 +2,10 @@ package app
 
 import (
 	"bytes"
-	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"testing"
 	"time"
+
+	abcitypes "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
@@ -35,6 +36,7 @@ func SubmitAndTallyProposal(
 	ctx sdk.Context,
 	tApp *TestApp,
 	messages []sdk.Msg,
+	submitProposalTxHeight uint32,
 	expectCheckTxFails bool,
 	expectSubmitProposalFails bool,
 	expectedProposalStatus govtypesv1.ProposalStatus,
@@ -73,7 +75,7 @@ func SubmitAndTallyProposal(
 	}
 
 	if expectSubmitProposalFails {
-		ctx = tApp.AdvanceToBlock(TestSubmitProposalTxHeight, AdvanceToBlockOptions{
+		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{
 			ValidateFinalizeBlock: func(
 				context sdk.Context,
 				request abcitypes.RequestFinalizeBlock,
@@ -92,7 +94,7 @@ func SubmitAndTallyProposal(
 		// Proposal submission failed. Return early.
 		return ctx
 	} else {
-		ctx = tApp.AdvanceToBlock(TestSubmitProposalTxHeight, AdvanceToBlockOptions{})
+		ctx = tApp.AdvanceToBlock(submitProposalTxHeight, AdvanceToBlockOptions{})
 	}
 
 	proposalsIterator, err := tApp.App.GovKeeper.Proposals.Iterate(ctx, nil)
