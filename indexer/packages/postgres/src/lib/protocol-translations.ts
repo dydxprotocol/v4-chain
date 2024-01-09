@@ -275,9 +275,7 @@ export function protocolOrderTIFToTIF(
   protocolOrderTIF: IndexerOrder_TimeInForce,
 ): TimeInForce {
   if (!(protocolOrderTIF in PROTOCOL_TIF_TO_INDEXER_TIF_MAP)) {
-    return TimeInForce.GTT;
-    // Removed for emergency patch
-    // throw new Error(`Unexpected TimeInForce from protocol: ${protocolOrderTIF}`);
+    throw new Error(`Unexpected TimeInForce from protocol: ${protocolOrderTIF}`);
   }
 
   return PROTOCOL_TIF_TO_INDEXER_TIF_MAP[protocolOrderTIF];

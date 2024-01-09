@@ -168,8 +168,6 @@ describe('protocolTranslations', () => {
       ['IOC', IndexerOrder_TimeInForce.TIME_IN_FORCE_IOC, TimeInForce.IOC],
       ['UNSPECIFIED', IndexerOrder_TimeInForce.TIME_IN_FORCE_UNSPECIFIED, TimeInForce.GTT],
       ['POST_ONLY', IndexerOrder_TimeInForce.TIME_IN_FORCE_POST_ONLY, TimeInForce.POST_ONLY],
-      // Test case for emergency patch
-      ['INVALID', (100 as IndexerOrder_TimeInForce), TimeInForce.GTT],
     ])('successfully gets TimeInForce given protocol order TIF: %s', (
       _name: string,
       protocolTIF: IndexerOrder_TimeInForce,
@@ -178,14 +176,13 @@ describe('protocolTranslations', () => {
       expect(protocolOrderTIFToTIF(protocolTIF)).toEqual(expectedTimeInForce);
     });
 
-    // Commented out for emergency patch
-    /* it('throws error if unrecognized protocolTIF given', () => {
+    it('throws error if unrecognized protocolTIF given', () => {
       expect(
         () => {
           protocolOrderTIFToTIF(100 as IndexerOrder_TimeInForce);
         },
       ).toThrow(new Error('Unexpected TimeInForce from protocol: 100'));
-    });*/
+    });
   });
 
   describe('tifToProtocolOrderTIF', () => {
