@@ -9,17 +9,21 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		bankKeeper types.BankKeeper
+		cdc             codec.BinaryCodec
+		storeKey        storetypes.StoreKey
+		bankKeeper      types.BankKeeper
+		blockTimeKeeper types.BlockTimeKeeper
 
 		// TODO(CORE-824): Implement `x/ratelimit` keeper
 
@@ -32,13 +36,15 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
+	blockTimeKeeper types.BlockTimeKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		bankKeeper:  bankKeeper,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:             cdc,
+		storeKey:        storeKey,
+		bankKeeper:      bankKeeper,
+		blockTimeKeeper: blockTimeKeeper,
+		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -122,17 +128,13 @@ func (k Keeper) ProcessDeposit(
 //	baseline = max(baseline_minimum, baseline_tvl_ppm * current_tvl)
 func (k Keeper) GetBaseline(
 	ctx sdk.Context,
-	denom string,
+	currentSupply *big.Int,
 	limiter types.Limiter,
 ) *big.Int {
-	// Get the current TVL.
-	supply := k.bankKeeper.GetSupply(ctx, denom)
-	currentTVL := supply.Amount.BigInt()
-
 	return lib.BigMax(
 		limiter.BaselineMinimum.BigInt(),
 		lib.BigIntMulPpm(
-			currentTVL,
+			currentSupply,
 			limiter.BaselineTvlPpm,
 		),
 	)
@@ -161,11 +163,12 @@ func (k Keeper) SetLimitParams(
 		return
 	}
 
+	currentSupply := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 	// Initialize the capacity list with the current baseline.
 	newCapacityList := make([]dtypes.SerializableInt, len(limitParams.Limiters))
 	for i, limiter := range limitParams.Limiters {
 		newCapacityList[i] = dtypes.NewIntFromBigInt(
-			k.GetBaseline(ctx, limitParams.Denom, limiter),
+			k.GetBaseline(ctx, currentSupply.Amount.BigInt(), limiter),
 		)
 	}
 	// Set correspondong `DenomCapacity` in state.
@@ -216,6 +219,159 @@ func (k Keeper) SetDenomCapacity(
 		b := k.cdc.MustMarshal(&denomCapacity)
 		store.Set(key, b)
 	}
+}
+
+// UpdateCapacityEndBlocker is called during the EndBlocker to update the capacity for all limit params.
+func (k Keeper) UpdateCapacityEndBlocker(
+	ctx sdk.Context,
+) {
+	// Iterate through all the limit params in state.
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var limitParams types.LimitParams
+		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
+		k.UpdateCapacityForLimitParams(ctx, limitParams)
+	}
+}
+
+// UpdateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
+// towards baseline.
+// Assumes that the `LimitParams` and corresponding `DenomCapacity` both exist in state.
+// Detailed math for calculating the updated capacity:
+//
+//	`baseline = max(baseline_minimum, baseline_tvl_ppm * tvl)`
+//	`capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
+//
+// This is basically saying that the capacity returns to the baseline over the course of the `period`.
+// Usually in a linear way, but if the `capacity` is more than twice the `baseline`, then in an exponential way.
+//
+//	`capacity =`
+//	    if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline`
+//	    else if `capacity < baseline` then `capacity += capacity_diff`
+//	    else `capacity -= capacity_diff`
+//
+// On a high level, `capacity` trends towards `baseline` by `capacity_diff` but does not “cross” it.
+func (k Keeper) UpdateCapacityForLimitParams(
+	ctx sdk.Context,
+	limitParams types.LimitParams,
+) {
+	supply := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+
+	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
+	if len(capacityList) != len(limitParams.Limiters) {
+		// This violates an invariant. Since this is in the `EndBlocker`, we log an error instead of panicking.
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"denom (%s) capacity list length (%v) != limiters length (%v); skipping capacity update",
+				limitParams.Denom,
+				len(capacityList),
+				len(limitParams.Limiters),
+			),
+		)
+		return
+	}
+
+	// Convert timestamps to milliseconds for algebraic operations.
+	blockTimeMilli := ctx.BlockTime().UnixMilli()
+	prevBlockInfo := k.blockTimeKeeper.GetPreviousBlockInfo(ctx)
+	prevBlockTimeMilli := prevBlockInfo.Timestamp.UnixMilli()
+	timeSinceLastBlockMilli := new(big.Int).Sub(
+		big.NewInt(blockTimeMilli),
+		big.NewInt(prevBlockTimeMilli),
+	)
+	if timeSinceLastBlockMilli.Sign() <= 0 {
+		// This violates an invariant (current block time > prev block time).
+		// Since this is in the `EndBlocker`, we log an error instead of panicking.
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"timeSinceLastBlockMilli (%v) <= 0; skipping capacity update. prevBlockTimeMilli = %v, blockTimeMilli = %v",
+				timeSinceLastBlockMilli,
+				prevBlockTimeMilli,
+				blockTimeMilli,
+			),
+		)
+		return
+	}
+
+	// Declare new capacity list to be populated.
+	newCapacityList := make([]dtypes.SerializableInt, len(capacityList))
+
+	for i, limiter := range limitParams.Limiters {
+		// For each limiter, calculate the current baseline.
+		baseline := k.GetBaseline(ctx, supply.Amount.BigInt(), limiter)
+
+		capacityMinusBaseline := new(big.Int).Sub(
+			capacityList[i].BigInt(), // array access is safe because of the invariant check above
+			baseline,
+		)
+
+		// Calculate left operand: `max(baseline, capacity-baseline)`. This equals `baseline` when `capacity <= 2 * baseline`
+		operandL := new(big.Rat).SetInt(
+			lib.BigMax(
+				baseline,
+				capacityMinusBaseline,
+			),
+		)
+
+		// Calculate right operand: `time_since_last_block / period`
+		periodMilli := new(big.Int).Mul(
+			new(big.Int).SetUint64(uint64(limiter.PeriodSec)),
+			big.NewInt(1000),
+		)
+		operandR := new(big.Rat).Quo(
+			new(big.Rat).SetInt(timeSinceLastBlockMilli),
+			new(big.Rat).SetInt(periodMilli),
+		)
+
+		// Calculate: `capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
+		// Since both operands > 0, `capacity_diff` is positive or zero (due to rounding).
+		capacityDiff := new(big.Rat).Mul(
+			operandL,
+			operandR,
+		)
+
+		bigRatcapacityMinusBaseline := new(big.Rat).SetInt(capacityMinusBaseline)
+
+		if new(big.Rat).Abs(bigRatcapacityMinusBaseline).Cmp(capacityDiff) < 0 {
+			// if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline``
+			newCapacityList[i] = dtypes.NewIntFromBigInt(baseline)
+		} else if capacityList[i].BigInt().Cmp(baseline) < 0 {
+			// else if `capacity < baseline` then `capacity += capacity_diff`
+			newCapacityList[i] = dtypes.NewIntFromBigInt(
+				new(big.Int).Add(
+					capacityList[i].BigInt(),
+					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
+				),
+			)
+		} else {
+			// else `capacity -= capacity_diff`
+			newCapacityList[i] = dtypes.NewIntFromBigInt(
+				new(big.Int).Sub(
+					capacityList[i].BigInt(),
+					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
+				),
+			)
+		}
+
+		// Emit telemetry for the new capacity.
+		telemetry.SetGaugeWithLabels(
+			[]string{types.ModuleName, metrics.Capacity},
+			metrics.GetMetricValueFromBigInt(newCapacityList[i].BigInt()),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.RateLimitDenom, limitParams.Denom),
+				metrics.GetLabelForIntValue(metrics.LimiterIndex, i),
+			},
+		)
+	}
+
+	k.SetDenomCapacity(ctx, types.DenomCapacity{
+		Denom:        limitParams.Denom,
+		CapacityList: newCapacityList,
+	})
 }
 
 // GetDenomCapacity returns `DenomCapacity` for the given denom.

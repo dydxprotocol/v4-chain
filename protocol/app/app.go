@@ -588,10 +588,22 @@ func New(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
+	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
+		appCodec,
+		keys[blocktimemoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
+
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
 		app.BankKeeper,
+		app.BlockTimeKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -791,17 +803,6 @@ func New(
 		app.IndexerEventManager,
 	)
 	assetsModule := assetsmodule.NewAppModule(appCodec, app.AssetsKeeper)
-
-	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
-		appCodec,
-		keys[blocktimemoduletypes.StoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
 
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,

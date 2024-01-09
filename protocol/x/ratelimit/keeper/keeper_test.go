@@ -1,21 +1,26 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"math/big"
 	"testing"
+	"time"
+
+	sdkmath "cosmossdk.io/math"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 )
 
 const (
 	testDenom    = "ibc/xxx"
+	testDenom2   = "testdenom2"
 	testAddress1 = "dydx16h7p7f4dysrgtzptxx2gtpt5d8t834g9dj830z"
 	testAddress2 = "dydx168pjt8rkru35239fsqvz7rzgeclakp49zx3aum"
 	testAddress3 = "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70"
@@ -270,33 +275,12 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 
 func TestGetBaseline(t *testing.T) {
 	tests := map[string]struct {
-		denom            string
-		balances         []banktypes.Balance
+		supply           *big.Int
 		limiter          types.Limiter
 		expectedBaseline *big.Int
 	}{
 		"max(1% of TVL, 100k token), TVL = 5M token": {
-			denom: testDenom,
-			balances: []banktypes.Balance{
-				{
-					Address: testAddress1,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
-						},
-					},
-				},
-				{
-					Address: testAddress2,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
-						},
-					},
-				},
-			},
+			supply: big.NewInt(5_000_000_000_000), // 5M token
 			limiter: types.Limiter{
 				PeriodSec:       3_600,
 				BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k token
@@ -305,36 +289,7 @@ func TestGetBaseline(t *testing.T) {
 			expectedBaseline: big.NewInt(100_000_000_000), // 100k token (baseline minimum)
 		},
 		"max(1% of TVL, 100k token), TVL = 15M token": {
-			denom: testDenom,
-			balances: []banktypes.Balance{
-				{
-					Address: testAddress1,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
-						},
-					},
-				},
-				{
-					Address: testAddress2,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
-						},
-					},
-				},
-				{
-					Address: testAddress3,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(10_000_000_000_000), // 10M token
-						},
-					},
-				},
-			},
+			supply: big.NewInt(15_000_000_000_000), // 10M token
 			limiter: types.Limiter{
 				PeriodSec:       3_600,
 				BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k token
@@ -343,36 +298,7 @@ func TestGetBaseline(t *testing.T) {
 			expectedBaseline: big.NewInt(150_000_000_000), // 150k token (1% of 15m)
 		},
 		"max(1% of TVL, 100k token), TVL = ~15M token, rounds down": {
-			denom: testDenom,
-			balances: []banktypes.Balance{
-				{
-					Address: testAddress1,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token
-						},
-					},
-				},
-				{
-					Address: testAddress2,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(4_000_123_456_777), // ~4M token
-						},
-					},
-				},
-				{
-					Address: testAddress3,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(10_200_000_000_000), // ~10M token
-						},
-					},
-				},
-			},
+			supply: big.NewInt(15_200_123_456_777),
 			limiter: types.Limiter{
 				PeriodSec:       3_600,
 				BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k token
@@ -381,36 +307,7 @@ func TestGetBaseline(t *testing.T) {
 			expectedBaseline: big.NewInt(152_001_234_567), // ~152k token (1% of 15.2m)
 		},
 		"max(10% of TVL, 1 million), TVL = 20M token": {
-			denom: testDenom,
-			balances: []banktypes.Balance{
-				{
-					Address: testAddress1,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(6_000_000_000_000), // 6M token
-						},
-					},
-				},
-				{
-					Address: testAddress2,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
-						},
-					},
-				},
-				{
-					Address: testAddress3,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(10_000_000_000_000), // 10M token
-						},
-					},
-				},
-			},
+			supply: big.NewInt(20_000_000_000_000), // 20M token,
 			limiter: types.Limiter{
 				PeriodSec:       3_600,
 				BaselineMinimum: dtypes.NewInt(100_000_000_000), // 1m token
@@ -419,42 +316,550 @@ func TestGetBaseline(t *testing.T) {
 			expectedBaseline: big.NewInt(2_000_000_000_000), // 2m token (10% of 20m)
 		},
 		"max(10% of TVL, 1 million), TVL = 8M token": {
-			denom: testDenom,
-			balances: []banktypes.Balance{
-				{
-					Address: testAddress1,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(2_000_000_000_000), // 2M token
-						},
-					},
-				},
-				{
-					Address: testAddress2,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(4_000_000_000_000), // 4M token
-						},
-					},
-				},
-				{
-					Address: testAddress3,
-					Coins: sdk.Coins{
-						{
-							Denom:  testDenom,
-							Amount: sdkmath.NewInt(2_000_000_000_000), // 2M token
-						},
-					},
-				},
-			},
+			supply: big.NewInt(8_000_000_000_000), // 2m token (10% of 20m)
 			limiter: types.Limiter{
 				PeriodSec:       3_600,
 				BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1m token
 				BaselineTvlPpm:  100_000,                          // 10%
 			},
 			expectedBaseline: big.NewInt(1_000_000_000_000), // 1m token (baseline minimum)
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+
+			ctx := tApp.InitChain()
+			k := tApp.App.RatelimitKeeper
+
+			gotBaseline := k.GetBaseline(ctx, tc.supply, tc.limiter)
+
+			require.Equal(t, tc.expectedBaseline, gotBaseline, "retrieved baseline does not match the expected value")
+		})
+	}
+}
+
+func TestUpdateCapacityEndBlocker(t *testing.T) {
+	tests := map[string]struct {
+		balances                  []banktypes.Balance // For initializing the current supply
+		limitParamsList           []types.LimitParams
+		prevBlockTime             time.Time
+		blockTime                 time.Time
+		initDenomCapacityList     []types.DenomCapacity
+		expectedDenomCapacityList []types.DenomCapacity
+	}{
+		"One denom, prev capacity equals baseline": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 25M * 10% = 2.5M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(250_000_000_000),   // 250k tokens, which equals baseline
+						dtypes.NewInt(2_500_000_000_000), // 2.5M tokens, which equals baseline
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(250_000_000_000),   // 250k tokens
+						dtypes.NewInt(2_500_000_000_000), // 2.5M tokens
+					},
+				},
+			},
+		},
+		"One denom, prev capacity < baseline": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 25M * 10% = 2.5M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens, < baseline (250k)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens, < baseline (2.5M)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_069_444_444),  // recovered by 1/3600 * 250k = 69.4444 tokens
+						dtypes.NewInt(990_028_935_185), // recovered by 1/86400 * 2.5M = 28.9351 tokens
+					},
+				},
+			},
+		},
+		"One denom, prev capacity < baseline, 18 decimals": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom: testDenom,
+							Amount: sdkmath.NewIntFromBigInt(
+								big_testutil.Int64MulPow10(25, 24), // 25M tokens	(assuming 18 decimals)
+							),
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec: 3_600,
+							BaselineMinimum: dtypes.NewIntFromBigInt(
+								big_testutil.Int64MulPow10(100_000, 18), // 100k tokens(assuming 18 decimals)
+							),
+							BaselineTvlPpm: 10_000, // 1%
+						},
+						// baseline = 25M * 10% = 2.5M tokens
+						{
+							PeriodSec: 86_400,
+							BaselineMinimum: dtypes.NewIntFromBigInt(
+								big_testutil.Int64MulPow10(1_000_000, 18), // 1M tokens(assuming 18 decimals)
+							),
+							BaselineTvlPpm: 100_000, // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewIntFromBigInt(
+							big_testutil.Int64MulPow10(99_000, 18),
+						), // 99k tokens < baseline (250k)
+						dtypes.NewIntFromBigInt(
+							big_testutil.Int64MulPow10(990_000, 18),
+						), // 0.99M tokens, < baseline (2.5M)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewIntFromBigInt(
+							big_testutil.MustFirst(new(big.Int).SetString("99069444444444444444444", 10)),
+						), // recovered by 1/3600 * 250k ~= 69.4444 tokens
+						dtypes.NewIntFromBigInt(
+							big_testutil.MustFirst(new(big.Int).SetString("990028935185185185185185", 10)),
+						), // recovered by 1/86400 * 2.5M ~= 28.9351 tokens
+					},
+				},
+			},
+		},
+		"One denom, prev capacity = 0": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(1_000_000_000_000), // 1M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = baseline minimum = 100k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = baseline minimum = 1M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(0), // 0 Capacity
+						dtypes.NewInt(0), // 0 Capacity
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(27_777_777), // recovered by 1/3600 * 100k ~= 27.7778 tokens
+						dtypes.NewInt(11_574_074), // recovered by 1/86400 * 1M ~= 11.5741 tokens
+					},
+				},
+			},
+		},
+		"One denom, baseline < prev capacity < 2 * baseline": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(20_000_000_000_000), // 20M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 20M * 1% = 200k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 20M * 10% = 2M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(329_000_000_000),
+						dtypes.NewInt(3_500_000_000_000),
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(328_944_444_445),   // recovered by 1/3600 * 200k ~= 55.5555555556
+						dtypes.NewInt(3_499_976_851_852), // recovered by 1/86400 * 2M ~= 23.1481481482
+					},
+				},
+			},
+		},
+		"One denom, prev capacity > 2 * baseline": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(20_000_000_000_000), // 20M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 20M * 1% = 200k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 20M * 10% = 2M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(529_000_000_000),   // 529k tokens > 2 * baseline (200k)
+						dtypes.NewInt(4_500_000_000_000), // 4.5M tokens > 2 * baseline (2)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(528_908_611_112),   // recovered by 1/3600 * (529k - 200k) ~= 91.389
+						dtypes.NewInt(4_499_971_064_815), // recovered by 1/86400 * (4.5M - 2M) ~= 28.935
+					},
+				},
+			},
+		},
+		"Two denoms, mix of values from above cases": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(20_000_000_000_000), // 20M token (assuming 6 decimals)
+						},
+						{
+							Denom:  testDenom2,
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 20M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 20M * 1% = 200k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 20M * 10% = 2M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+				{
+					Denom: testDenom2,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 25M * 10% = 2.5M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC),
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(529_000_000_000),   // 529k tokens > 2 * baseline (200k)
+						dtypes.NewInt(4_500_000_000_000), // 4.5M tokens > 2 * baseline (2)
+					},
+				},
+				{
+					Denom: testDenom2,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens, < baseline (250k)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens, < baseline (2.5M)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(528_908_611_112),   // recovered by 1/3600 * (529k - 200k) ~= 91.389
+						dtypes.NewInt(4_499_971_064_815), // recovered by 1/86400 * (4.5M - 2M) ~= 28.935
+					},
+				},
+				{
+					Denom: testDenom2,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_069_444_444),  // recovered by 1/3600 * 250k = 69.4444 tokens
+						dtypes.NewInt(990_028_935_185), // recovered by 1/86400 * 2.5M = 28.9351 tokens
+					},
+				},
+			},
+		},
+		"(Error) one denom, current block time = prev block time, no changes applied": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+						// baseline = 25M * 10% = 2.5M tokens
+						{
+							PeriodSec:       86_400,
+							BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+							BaselineTvlPpm:  100_000,                          // 10%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1000, 0).In(time.UTC), // same as prev block time (should not happen in practice)
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens, < baseline (250k)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens, < baseline (2.5M)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens (unchanged)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens (unchanged)
+					},
+				},
+			},
+		},
+		"(Error) one denom, len(limiters) != len(capacityList)": {
+			balances: []banktypes.Balance{
+				{
+					Address: testAddress1,
+					Coins: sdk.Coins{
+						{
+							Denom:  testDenom,
+							Amount: sdkmath.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
+						},
+					},
+				},
+			},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						// baseline = 25M * 1% = 250k tokens
+						{
+							PeriodSec:       3_600,
+							BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+							BaselineTvlPpm:  10_000,                         // 1%
+						},
+					},
+				},
+			},
+			prevBlockTime: time.Unix(1000, 0).In(time.UTC),
+			blockTime:     time.Unix(1001, 0).In(time.UTC), // same as prev block time (should not happen in practice)
+			initDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens, < baseline (250k)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens, < baseline (2.5M)
+					},
+				},
+			},
+			expectedDenomCapacityList: []types.DenomCapacity{
+				{
+					Denom: testDenom,
+					CapacityList: []dtypes.SerializableInt{
+						dtypes.NewInt(99_000_000_000),  // 99k tokens (unchanged)
+						dtypes.NewInt(990_000_000_000), // 0.99M tokens (unchanged)
+					},
+				},
+			},
 		},
 	}
 
@@ -474,11 +879,38 @@ func TestGetBaseline(t *testing.T) {
 			}).Build()
 
 			ctx := tApp.InitChain()
+
+			// Set previous block time
+			tApp.App.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: tc.prevBlockTime,
+			})
+
 			k := tApp.App.RatelimitKeeper
 
-			gotBaseline := k.GetBaseline(ctx, tc.denom, tc.limiter)
+			// Initialize limit params
+			for _, limitParams := range tc.limitParamsList {
+				k.SetLimitParams(ctx, limitParams)
+			}
 
-			require.Equal(t, tc.expectedBaseline, gotBaseline, "retrieved baseline does not match the expected value")
+			// Initialize denom capacity
+			for _, denomCapacity := range tc.initDenomCapacityList {
+				k.SetDenomCapacity(ctx, denomCapacity)
+			}
+
+			// Run the function being tested
+			k.UpdateCapacityEndBlocker(ctx.WithBlockTime(tc.blockTime))
+
+			// Check results
+			for _, expectedDenomCapacity := range tc.expectedDenomCapacityList {
+				gotDenomCapacity := k.GetDenomCapacity(ctx, expectedDenomCapacity.Denom)
+				require.Equal(t,
+					expectedDenomCapacity,
+					gotDenomCapacity,
+					"expected denom capacity: %+v, got: %+v",
+					expectedDenomCapacity,
+					gotDenomCapacity,
+				)
+			}
 		})
 	}
 }
