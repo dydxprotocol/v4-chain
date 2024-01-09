@@ -202,6 +202,18 @@ func (k Keeper) SetDenomCapacity(
 		b := k.cdc.MustMarshal(&denomCapacity)
 		store.Set(key, b)
 	}
+
+	// Emit telemetry for the new capacity list.
+	for i, capacity := range denomCapacity.CapacityList {
+		telemetry.SetGaugeWithLabels(
+			[]string{types.ModuleName, metrics.Capacity},
+			metrics.GetMetricValueFromBigInt(capacity.BigInt()),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.RateLimitDenom, denomCapacity.Denom),
+				metrics.GetLabelForIntValue(metrics.LimiterIndex, i),
+			},
+		)
+	}
 }
 
 // UpdateAllCapacitiesEndBlocker is called during the EndBlocker to update the capacity for all limit params.
@@ -224,20 +236,6 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 // updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
 // towards baseline.
 // Assumes that the `LimitParams` exist in state.
-// Detailed math for calculating the updated capacity:
-//
-//	`baseline = max(baseline_minimum, baseline_tvl_ppm * tvl)`
-//	`capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
-//
-// This is basically saying that the capacity returns to the baseline over the course of the `period`.
-// Usually in a linear way, but if the `capacity` is more than twice the `baseline`, then in an exponential way.
-//
-//	`capacity =`
-//	    if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline`
-//	    else if `capacity < baseline` then `capacity += capacity_diff`
-//	    else `capacity -= capacity_diff`
-//
-// On a high level, `capacity` trends towards `baseline` by `capacity_diff` but does not “cross” it.
 func (k Keeper) updateCapacityForLimitParams(
 	ctx sdk.Context,
 	limitParams types.LimitParams,
@@ -258,98 +256,26 @@ func (k Keeper) updateCapacityForLimitParams(
 		return
 	}
 
-	// Convert timestamps to milliseconds for algebraic operations.
-	blockTimeMilli := ctx.BlockTime().UnixMilli()
-	prevBlockInfo := k.blockTimeKeeper.GetPreviousBlockInfo(ctx)
-	prevBlockTimeMilli := prevBlockInfo.Timestamp.UnixMilli()
-	timeSinceLastBlockMilli := new(big.Int).Sub(
-		big.NewInt(blockTimeMilli),
-		big.NewInt(prevBlockTimeMilli),
-	)
-	if timeSinceLastBlockMilli.Sign() <= 0 {
+	timeSinceLastBlock := k.blockTimeKeeper.GetTimeSinceLastBlock(ctx)
+
+	if timeSinceLastBlock < 0 {
 		// This violates an invariant (current block time > prev block time).
 		// Since this is in the `EndBlocker`, we log an error instead of panicking.
 		k.Logger(ctx).Error(
 			fmt.Sprintf(
-				"timeSinceLastBlockMilli (%v) <= 0; skipping capacity update. prevBlockTimeMilli = %v, blockTimeMilli = %v",
-				timeSinceLastBlockMilli,
-				prevBlockTimeMilli,
-				blockTimeMilli,
+				"timeSinceLastBlock (%v) <= 0; skipping capacity update",
+				timeSinceLastBlock,
 			),
 		)
 		return
 	}
 
-	// Declare new capacity list to be populated.
-	newCapacityList := make([]dtypes.SerializableInt, len(capacityList))
-
-	for i, limiter := range limitParams.Limiters {
-		// For each limiter, calculate the current baseline.
-		baseline := ratelimitutil.GetBaseline(tvl.Amount.BigInt(), limiter)
-
-		capacityMinusBaseline := new(big.Int).Sub(
-			capacityList[i].BigInt(), // array access is safe because of the invariant check above
-			baseline,
-		)
-
-		// Calculate left operand: `max(baseline, capacity-baseline)`. This equals `baseline` when `capacity <= 2 * baseline`
-		operandL := new(big.Rat).SetInt(
-			lib.BigMax(
-				baseline,
-				capacityMinusBaseline,
-			),
-		)
-
-		// Calculate right operand: `time_since_last_block / period`
-		periodMilli := new(big.Int).Mul(
-			new(big.Int).SetUint64(uint64(limiter.PeriodSec)),
-			big.NewInt(1000),
-		)
-		operandR := new(big.Rat).Quo(
-			new(big.Rat).SetInt(timeSinceLastBlockMilli),
-			new(big.Rat).SetInt(periodMilli),
-		)
-
-		// Calculate: `capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
-		// Since both operands > 0, `capacity_diff` is positive or zero (due to rounding).
-		capacityDiff := new(big.Rat).Mul(
-			operandL,
-			operandR,
-		)
-
-		bigRatcapacityMinusBaseline := new(big.Rat).SetInt(capacityMinusBaseline)
-
-		if new(big.Rat).Abs(bigRatcapacityMinusBaseline).Cmp(capacityDiff) < 0 {
-			// if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline``
-			newCapacityList[i] = dtypes.NewIntFromBigInt(baseline)
-		} else if capacityList[i].BigInt().Cmp(baseline) < 0 {
-			// else if `capacity < baseline` then `capacity += capacity_diff`
-			newCapacityList[i] = dtypes.NewIntFromBigInt(
-				new(big.Int).Add(
-					capacityList[i].BigInt(),
-					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
-				),
-			)
-		} else {
-			// else `capacity -= capacity_diff`
-			newCapacityList[i] = dtypes.NewIntFromBigInt(
-				new(big.Int).Sub(
-					capacityList[i].BigInt(),
-					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
-				),
-			)
-		}
-
-		// Emit telemetry for the new capacity.
-		telemetry.SetGaugeWithLabels(
-			[]string{types.ModuleName, metrics.Capacity},
-			metrics.GetMetricValueFromBigInt(newCapacityList[i].BigInt()),
-			[]gometrics.Label{
-				metrics.GetLabelForStringValue(metrics.RateLimitDenom, limitParams.Denom),
-				metrics.GetLabelForIntValue(metrics.LimiterIndex, i),
-			},
-		)
-	}
+	newCapacityList := ratelimitutil.CalculateNewCapacityList(
+		tvl.Amount.BigInt(),
+		limitParams,
+		capacityList,
+		timeSinceLastBlock,
+	)
 
 	k.SetDenomCapacity(ctx, types.DenomCapacity{
 		Denom:        limitParams.Denom,

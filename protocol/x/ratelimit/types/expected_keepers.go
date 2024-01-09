@@ -2,9 +2,9 @@ package types
 
 import (
 	"context"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 )
 
 // BankKeeper defines the expected bank keeper used for simulations.
@@ -13,5 +13,5 @@ type BankKeeper interface {
 }
 
 type BlockTimeKeeper interface {
-	GetPreviousBlockInfo(ctx sdk.Context) blocktimetypes.BlockInfo
+	GetTimeSinceLastBlock(ctx sdk.Context) time.Duration
 }

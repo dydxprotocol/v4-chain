@@ -243,3 +243,46 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTimeSinceLastBlock(t *testing.T) {
+	testPrevBlockHeight := uint32(5)
+	tests := map[string]struct {
+		prevBlockTime              time.Time
+		currBlockTime              time.Time
+		expectedTimeSinceLastBlock time.Duration
+	}{
+		"2 sec": {
+			prevBlockTime:              time.Unix(100, 0).UTC(),
+			currBlockTime:              time.Unix(102, 0).UTC(),
+			expectedTimeSinceLastBlock: time.Second * 2,
+		},
+		"Realistic values": {
+			prevBlockTime:              time.Unix(1_704_827_023, 123_000_000).UTC(),
+			currBlockTime:              time.Unix(1_704_827_024, 518_000_000).UTC(),
+			expectedTimeSinceLastBlock: time.Second*1 + time.Nanosecond*395_000_000,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).Build()
+			tApp.InitChain()
+
+			ctx := tApp.AdvanceToBlock(
+				testPrevBlockHeight,
+				testapp.AdvanceToBlockOptions{
+					BlockTime: tc.prevBlockTime,
+				},
+			)
+
+			k := tApp.App.BlockTimeKeeper
+
+			actual := k.GetTimeSinceLastBlock(ctx.WithBlockTime(tc.currBlockTime))
+			require.Equal(
+				t,
+				tc.expectedTimeSinceLastBlock,
+				actual,
+			)
+		})
+	}
+}
