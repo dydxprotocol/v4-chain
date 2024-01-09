@@ -52,10 +52,6 @@ const (
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that
 	// expire at a given timestamp, sorted by order ID.
 	StatefulOrdersTimeSlicePrefix = "ExpTm:"
-
-	// LastTradePricePrefix is the key prefix to retrieve the last trade price for a perpetual.
-	// This is meant to be used for improved conditional order triggering.
-	LastTradePricePrefix = "LastTrade:"
 )
 
 // Store / Memstore
@@ -109,6 +105,14 @@ const (
 	// are stored in a transient store. This count represents the number of uncommitted stateful
 	// `placements - cancellations`.
 	UncommittedStatefulOrderCountPrefix = "NumUncmtSO:"
+
+	// MinTradePricePrefix is the key prefix to retrieve the min trade price for a perpetual.
+	// This is meant to be used for improved conditional order triggering.
+	MinTradePricePrefix = "MinTrade:"
+
+	// MaxTradePricePrefix is the key prefix to retrieve the max trade price for a perpetual.
+	// This is meant to be used for improved conditional order triggering.
+	MaxTradePricePrefix = "MaxTrade:"
 )
 
 // Module Accounts
