@@ -23,8 +23,8 @@ func (k Keeper) GetTradePricesForPerpetual(
 		return 0, 0, false
 	}
 
-	maxTradePriceSubticks, _ = k.getMaxTradePriceForPerpetual(ctx, perpetualId)
-	return minTradePriceSubticks, maxTradePriceSubticks, true
+	maxTradePriceSubticks, found = k.getMaxTradePriceForPerpetual(ctx, perpetualId)
+	return minTradePriceSubticks, maxTradePriceSubticks, found
 }
 
 // getMinTradePriceForPerpetual gets the min trade price for a perpetual.
