@@ -346,7 +346,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 				constants.Alice_Num1_1BTC_Long_500_000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO,
 				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10,
 			},
 			ordersForSecondBlock: []clobtypes.Order{},
@@ -360,20 +360,20 @@ func TestReduceOnlyOrders(t *testing.T) {
 
 			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
 				2: {
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: true,
 				},
 				3: {
-					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: true,
 				},
 			},
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10.OrderId:                                true,
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: false,
 			},
 			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
-				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:                                  50_000_000,
-				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: 50_000_000,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price500000_GTB10.OrderId:                                50_000_000,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_FOK_RO.OrderId: 50_000_000,
 			},
 			expectedSubaccounts: []satypes.Subaccount{
 				{
@@ -404,6 +404,76 @@ func TestReduceOnlyOrders(t *testing.T) {
 						{
 							PerpetualId:  0,
 							Quantums:     dtypes.NewInt(50_000_000),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+			},
+		},
+		"Conditional IOC Reduce only order partially matches short term order same block, maker order fully filled": {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_500000USD,
+				constants.Alice_Num1_1BTC_Long_500_000USD,
+			},
+			ordersForFirstBlock: []clobtypes.Order{
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO,
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10,
+			},
+			ordersForSecondBlock: []clobtypes.Order{},
+
+			priceUpdateForFirstBlock: &prices.MsgUpdateMarketPrices{
+				MarketPriceUpdates: []*prices.MsgUpdateMarketPrices_MarketPrice{
+					prices.NewMarketPriceUpdate(0, 5_000_300_000),
+				},
+			},
+			priceUpdateForSecondBlock: &prices.MsgUpdateMarketPrices{},
+
+			expectedInTriggeredStateAfterBlock: map[uint32]map[clobtypes.OrderId]bool{
+				2: {
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+				},
+				3: {
+					constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: true,
+				},
+			},
+
+			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId:                              false,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: false,
+			},
+			expectedOrderFillAmount: map[clobtypes.OrderId]uint64{
+				constants.Order_Carl_Num0_Id0_Clob0_Buy025BTC_Price500000_GTB10.OrderId:                              25_000_000,
+				constants.ConditionalOrder_Alice_Num1_Id1_Clob0_Sell05BTC_Price500000_GTBT20_TP_50001_IOC_RO.OrderId: 25_000_000,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Carl_Num0,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(375_013_750_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(25_000_000),
+							FundingIndex: dtypes.NewInt(0),
+						},
+					},
+				},
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						{
+							AssetId:  0,
+							Quantums: dtypes.NewInt(624_937_500_000),
+						},
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId:  0,
+							Quantums:     dtypes.NewInt(75_000_000),
 							FundingIndex: dtypes.NewInt(0),
 						},
 					},
