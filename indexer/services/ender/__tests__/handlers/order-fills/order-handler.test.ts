@@ -1452,19 +1452,7 @@ describe('OrderHandler', () => {
   });
 
   // Testing emergency patch
-  it.each([
-    [
-      'via knex',
-      false,
-    ],
-    [
-      'via SQL function',
-      true,
-    ],
-  ])('handles invalid TimeInForce (%s)', async (
-    _name: string,
-    useSqlFunction: boolean,
-  ) => {
+  it('handles invalid TimeInForce (%s)', async () => {
     const transactionIndex: number = 0;
     const eventIndex: number = 0;
     const makerQuantums: number = 100;
