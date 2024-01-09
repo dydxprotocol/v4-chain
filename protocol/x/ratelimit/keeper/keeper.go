@@ -15,6 +15,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
@@ -122,24 +123,6 @@ func (k Keeper) ProcessDeposit(
 	})
 }
 
-// GetBaseline returns the current capacity baseline for the given limiter.
-// `baseline` formula:
-//
-//	baseline = max(baseline_minimum, baseline_tvl_ppm * current_tvl)
-func (k Keeper) GetBaseline(
-	ctx sdk.Context,
-	currentSupply *big.Int,
-	limiter types.Limiter,
-) *big.Int {
-	return lib.BigMax(
-		limiter.BaselineMinimum.BigInt(),
-		lib.BigIntMulPpm(
-			currentSupply,
-			limiter.BaselineTvlPpm,
-		),
-	)
-}
-
 // SetLimitParams sets `LimitParams` for the given denom.
 // Also overwrites the existing `DenomCapacity` object for the denom with a default `capacity_list` of the
 // same length as the `limiters` list. Each `capacity` is initialized to the current baseline.
@@ -163,12 +146,12 @@ func (k Keeper) SetLimitParams(
 		return
 	}
 
-	currentSupply := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+	currentTvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 	// Initialize the capacity list with the current baseline.
 	newCapacityList := make([]dtypes.SerializableInt, len(limitParams.Limiters))
 	for i, limiter := range limitParams.Limiters {
 		newCapacityList[i] = dtypes.NewIntFromBigInt(
-			k.GetBaseline(ctx, currentSupply.Amount.BigInt(), limiter),
+			ratelimitutil.GetBaseline(currentTvl.Amount.BigInt(), limiter),
 		)
 	}
 	// Set correspondong `DenomCapacity` in state.
@@ -221,8 +204,8 @@ func (k Keeper) SetDenomCapacity(
 	}
 }
 
-// UpdateCapacityEndBlocker is called during the EndBlocker to update the capacity for all limit params.
-func (k Keeper) UpdateCapacityEndBlocker(
+// UpdateAllCapacitiesEndBlocker is called during the EndBlocker to update the capacity for all limit params.
+func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	ctx sdk.Context,
 ) {
 	// Iterate through all the limit params in state.
@@ -234,13 +217,13 @@ func (k Keeper) UpdateCapacityEndBlocker(
 	for ; iterator.Valid(); iterator.Next() {
 		var limitParams types.LimitParams
 		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
-		k.UpdateCapacityForLimitParams(ctx, limitParams)
+		k.updateCapacityForLimitParams(ctx, limitParams)
 	}
 }
 
-// UpdateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
+// updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
 // towards baseline.
-// Assumes that the `LimitParams` and corresponding `DenomCapacity` both exist in state.
+// Assumes that the `LimitParams` exist in state.
 // Detailed math for calculating the updated capacity:
 //
 //	`baseline = max(baseline_minimum, baseline_tvl_ppm * tvl)`
@@ -255,11 +238,11 @@ func (k Keeper) UpdateCapacityEndBlocker(
 //	    else `capacity -= capacity_diff`
 //
 // On a high level, `capacity` trends towards `baseline` by `capacity_diff` but does not “cross” it.
-func (k Keeper) UpdateCapacityForLimitParams(
+func (k Keeper) updateCapacityForLimitParams(
 	ctx sdk.Context,
 	limitParams types.LimitParams,
 ) {
-	supply := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 
 	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
 	if len(capacityList) != len(limitParams.Limiters) {
@@ -302,7 +285,7 @@ func (k Keeper) UpdateCapacityForLimitParams(
 
 	for i, limiter := range limitParams.Limiters {
 		// For each limiter, calculate the current baseline.
-		baseline := k.GetBaseline(ctx, supply.Amount.BigInt(), limiter)
+		baseline := ratelimitutil.GetBaseline(tvl.Amount.BigInt(), limiter)
 
 		capacityMinusBaseline := new(big.Int).Sub(
 			capacityList[i].BigInt(), // array access is safe because of the invariant check above
