@@ -14,9 +14,7 @@ BEGIN
         WHEN '1'::jsonb THEN RETURN 'IOC'; /** TIME_IN_FORCE_IOC */
         WHEN '2'::jsonb THEN RETURN 'POST_ONLY'; /** TIME_IN_FORCE_POST_ONLY */
         WHEN '3'::jsonb THEN RETURN 'FOK'; /** TIME_IN_FORCE_FILL_OR_KILL */
-        ELSE RETURN 'GTT';
-        -- Removed for an emergency patch
-        -- ELSE RAISE EXCEPTION 'Unexpected TimeInForce from protocol %', tif;
+        ELSE RAISE EXCEPTION 'Unexpected TimeInForce from protocol %', tif;
     END CASE;
 END;
 $$ LANGUAGE plpgsql IMMUTABLE PARALLEL SAFE;
