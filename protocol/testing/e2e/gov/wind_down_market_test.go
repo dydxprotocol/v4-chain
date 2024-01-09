@@ -25,8 +25,9 @@ import (
 
 func TestWindDownMarketProposal(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts    []satypes.Subaccount
-		statefulOrders []clobtypes.MsgPlaceOrder
+		subaccounts               []satypes.Subaccount
+		preexistingStatefulOrders []clobtypes.MsgPlaceOrder
+		orders                    []clobtypes.MsgPlaceOrder
 
 		expectedSubaccounts []satypes.Subaccount
 	}{
@@ -77,7 +78,39 @@ func TestWindDownMarketProposal(t *testing.T) {
 				constants.Alice_Num0_10_000USD,
 				constants.Bob_Num0_10_000USD,
 			},
-			statefulOrders: []clobtypes.MsgPlaceOrder{
+			preexistingStatefulOrders: []clobtypes.MsgPlaceOrder{
+				{
+					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price5_GTBT5,
+				},
+				{
+					Order: constants.LongTermOrder_Bob_Num0_Id0_Clob0_Sell10_Price10_GTBT10_PO,
+				},
+				{
+					Order: constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50001,
+				},
+			},
+		},
+		`Succeeds blocking new orders from being placed`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_10_000USD,
+				constants.Carl_Num0_10000USD,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				// Short term orders
+				{
+					Order: constants.Order_Alice_Num0_Id0_Clob0_Buy10_Price10_GTB16,
+				},
+				{
+					Order: constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB20_FOK,
+				},
+				{
+					Order: constants.Order_Alice_Num0_Id1_Clob0_Buy5_Price15_GTB20_IOC,
+				},
+				{
+					Order: constants.Order_Alice_Num0_Id1_Clob0_Sell15_Price10_GTB18_PO,
+				},
+				// Stateful orders
 				{
 					Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price5_GTBT5,
 				},
@@ -143,7 +176,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 			}).Build()
 			ctx := tApp.InitChain()
 
-			for _, order := range tc.statefulOrders {
+			for _, order := range tc.preexistingStatefulOrders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
 					ctx,
 					tApp.App,
@@ -161,7 +194,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 
 			// Place stateful orders in state, verify they were placed
 			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
-			for _, order := range tc.statefulOrders {
+			for _, order := range tc.preexistingStatefulOrders {
 				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
 				require.True(t, exists)
 			}
@@ -208,7 +241,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 					),
 				},
 			}
-			for i, order := range tc.statefulOrders {
+			for i, order := range tc.preexistingStatefulOrders {
 				events = append(
 					events,
 					&indexer_manager.IndexerTendermintEvent{
@@ -250,7 +283,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 			require.Equal(t, clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT, updatedClobPair.Status)
 
 			// Verify that open stateful orders are removed from state
-			for _, order := range tc.statefulOrders {
+			for _, order := range tc.preexistingStatefulOrders {
 				_, exists := tApp.App.ClobKeeper.GetLongTermOrderPlacement(ctx, order.Order.OrderId)
 				require.False(t, exists)
 			}
@@ -275,12 +308,30 @@ func TestWindDownMarketProposal(t *testing.T) {
 			require.NoError(t, err)
 
 			// Advance block again to trigger final settlement deleveraging in PrepareCheckState
-			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+5, testapp.AdvanceToBlockOptions{})
+			ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
 
 			// Verify that final settlement deleveraging occurs
 			for _, expectedSubaccount := range tc.expectedSubaccounts {
 				subaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id)
 				require.Equal(t, expectedSubaccount, subaccount)
+			}
+
+			// Attempt to place new orders, should fail validation
+			for _, order := range tc.orders {
+				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(
+					ctx,
+					tApp.App,
+					order,
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Contains(t, resp.Log, "trading is disabled for clob pair")
+					require.False(
+						t,
+						resp.IsOK(),
+						"Expected CheckTx to fail. Response: %+v",
+						resp,
+					)
+				}
 			}
 		})
 	}
