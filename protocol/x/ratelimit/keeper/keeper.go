@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
@@ -220,6 +221,20 @@ func (k Keeper) SetDenomCapacity(
 func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	ctx sdk.Context,
 ) {
+	timeSinceLastBlock := k.blockTimeKeeper.GetTimeSinceLastBlock(ctx)
+
+	if timeSinceLastBlock < 0 {
+		// This violates an invariant (current block time > prev block time).
+		// Since this is in the `EndBlocker`, we log an error instead of panicking.
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"timeSinceLastBlock (%v) <= 0; skipping UpdateAllCapacitiesEndBlocker",
+				timeSinceLastBlock,
+			),
+		)
+		return
+	}
+
 	// Iterate through all the limit params in state.
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
 	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
@@ -229,7 +244,7 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	for ; iterator.Valid(); iterator.Next() {
 		var limitParams types.LimitParams
 		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
-		k.updateCapacityForLimitParams(ctx, limitParams)
+		k.updateCapacityForLimitParams(ctx, limitParams, timeSinceLastBlock)
 	}
 }
 
@@ -239,6 +254,7 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 func (k Keeper) updateCapacityForLimitParams(
 	ctx sdk.Context,
 	limitParams types.LimitParams,
+	timeSinceLastBlock time.Duration,
 ) {
 	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 
@@ -251,20 +267,6 @@ func (k Keeper) updateCapacityForLimitParams(
 				limitParams.Denom,
 				len(capacityList),
 				len(limitParams.Limiters),
-			),
-		)
-		return
-	}
-
-	timeSinceLastBlock := k.blockTimeKeeper.GetTimeSinceLastBlock(ctx)
-
-	if timeSinceLastBlock < 0 {
-		// This violates an invariant (current block time > prev block time).
-		// Since this is in the `EndBlocker`, we log an error instead of panicking.
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"timeSinceLastBlock (%v) <= 0; skipping capacity update",
-				timeSinceLastBlock,
 			),
 		)
 		return

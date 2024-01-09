@@ -10,6 +10,7 @@ import (
 )
 
 // CalculateNewCapacityList calculates the new capacity list for the given current `tvl` and `limitParams“.
+// Input invariant: `len(prevCapapcityList) == len(limitParams.Limiters)`
 // Detailed math for calculating the updated capacity:
 //
 //	`baseline = max(baseline_minimum, baseline_tvl_ppm * tvl)`
@@ -38,7 +39,7 @@ func CalculateNewCapacityList(
 		baseline := GetBaseline(bigTvl, limiter)
 
 		capacityMinusBaseline := new(big.Int).Sub(
-			prevCapapcityList[i].BigInt(), // array access is safe because of the invariant check above
+			prevCapapcityList[i].BigInt(), // array access is safe because of input invariant
 			baseline,
 		)
 
