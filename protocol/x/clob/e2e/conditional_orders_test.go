@@ -10,6 +10,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
@@ -1002,13 +1003,13 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				constants.Dave_Num1_500000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				// Trigger price is $49,750.
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49750,
+				// Trigger price is $49,700.
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_TP_49700,
 			},
 			ordersForSecondBlock: []clobtypes.Order{
 				// Create a match with price $49,500.
 				// This price can trigger the conditional order if unbounded.
-				// The bounded price is $50,000 - $50,000 * 0.4% = $49,800, which would not trigger the conditional order.
+				// The bounded price is $50,000 - $50,000 * 0.5% = $49,750, which would not trigger the conditional order.
 				constants.Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49500_GTB10,
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50003_GTB10,
 			},
@@ -1053,13 +1054,13 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				constants.Dave_Num1_500000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				// Trigger price is $50,250.
-				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50250,
+				// Trigger price is $50,300.
+				constants.ConditionalOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT10_SL_50300,
 			},
 			ordersForSecondBlock: []clobtypes.Order{
 				// Create a match with price $50,500.
 				// This price can trigger the conditional order if unbounded.
-				// The bounded price is $50,000 + $50,000 * 0.4% = $50,200, which would not trigger the conditional order.
+				// The bounded price is $50,000 + $50,000 * 0.5% = $50,250, which would not trigger the conditional order.
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50500_GTB10,
 				constants.Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49997_GTB10,
 			},
@@ -1104,13 +1105,13 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				constants.Dave_Num1_500000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				// Trigger price is $50,250.
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50250,
+				// Trigger price is $50,300.
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_TP_50300,
 			},
 			ordersForSecondBlock: []clobtypes.Order{
 				// Create a match with price $50,500.
 				// This price can trigger the conditional order if unbounded.
-				// The bounded price is $50,000 + $50,000 * 0.4% = $50,200, which would not trigger the conditional order.
+				// The bounded price is $50,000 + $50,000 * 0.5% = $50,250, which would not trigger the conditional order.
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50500_GTB10,
 				constants.Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49997_GTB10,
 			},
@@ -1155,13 +1156,13 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				constants.Dave_Num1_500000USD,
 			},
 			ordersForFirstBlock: []clobtypes.Order{
-				// Trigger price is $49,750.
-				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49750,
+				// Trigger price is $49,700.
+				constants.ConditionalOrder_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTBT10_SL_49700,
 			},
 			ordersForSecondBlock: []clobtypes.Order{
 				// Create a match with price $49,500.
 				// This price can trigger the conditional order if unbounded.
-				// The bounded price is $50,000 - $50,000 * 0.4% = $49,800, which would not trigger the conditional order.
+				// The bounded price is $50,000 - $50,000 * 0.5% = $49,750, which would not trigger the conditional order.
 				constants.Order_Dave_Num1_Id0_Clob0_Sell1BTC_Price49500_GTB10,
 				constants.Order_Carl_Num1_Id0_Clob0_Buy1BTC_Price50003_GTB10,
 			},
@@ -1958,7 +1959,26 @@ func TestConditionalOrder_TriggeringUsingMatchedPrice(t *testing.T) {
 				testapp.UpdateGenesisDocWithAppStateForModule(
 					&genesis,
 					func(genesisState *prices.GenesisState) {
-						*genesisState = constants.TestPricesGenesisState
+						*genesisState = prices.GenesisState{
+							MarketParams: []prices.MarketParam{
+								{
+									Id:                 0,
+									Pair:               constants.BtcUsdPair,
+									Exponent:           constants.BtcUsdExponent,
+									MinExchanges:       1,
+									MinPriceChangePpm:  1_000,
+									ExchangeConfigJson: constants.TestMarketExchangeConfigs[exchange_config.MARKET_BTC_USD],
+								},
+							},
+
+							MarketPrices: []prices.MarketPrice{
+								{
+									Id:       0,
+									Exponent: constants.BtcUsdExponent,
+									Price:    constants.FiveBillion, // $50,000 == 1 BTC
+								},
+							},
+						}
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(
