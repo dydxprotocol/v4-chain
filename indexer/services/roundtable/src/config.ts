@@ -100,6 +100,7 @@ export const configSchema = {
   // Lock multipliers
   MARKET_UPDATER_LOCK_MULTIPLIER: parseInteger({ default: 10 }),
   DELETE_ZERO_PRICE_LEVELS_LOCK_MULTIPLIER: parseInteger({ default: 1 }),
+  PNL_TICK_UPDATE_LOCK_MULTIPLIER: parseInteger({ default: 20 }),
 
   // Maximum number of running tasks - set this equal to PG_POOL_MIN in .env, default is 2
   MAX_CONCURRENT_RUNNING_TASKS: parseInteger({ default: 2 }),
