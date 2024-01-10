@@ -28,6 +28,23 @@ import { redisClient } from './redis';
 import { SubaccountUsdcTransferMap } from './types';
 
 /**
+ * Normalizes a time to the nearest PNL_TICK_UPDATE_INTERVAL_MS.
+ * If PNL_TICK_UPDATE_INTERVAL_MS is set to 1 hour, then 12:01:00 -> 12:00:00.
+ *
+ * @param time
+ */
+export function normalizeStartTime(
+  time: Date,
+): Date {
+  const epochMs: number = time.getTime();
+  const normalizedTimeMs: number = epochMs - (
+    epochMs % config.PNL_TICK_UPDATE_INTERVAL_MS
+  );
+
+  return new Date(normalizedTimeMs);
+}
+
+/**
  * Gets a batch of new pnl ticks to write to the database and set in the cache.
  * @param blockHeight: consider transfers up until this block height.
  */
@@ -161,8 +178,7 @@ export async function getPnlTicksCreateObjects(
 }
 
 /**
- * Gets a list of subaccounts that were last updated more than 0.9 *
- * PNL_TICK_UPDATE_INTERVAL_MS ago.
+ * Gets a list of subaccounts that have not been updated this hour.
  *
  * @param mostRecentPnlTicks
  * @param blockTime
@@ -175,9 +191,14 @@ export function getAccountsToUpdate(
   const accountsToUpdate: string[] = [
     ..._.keys(accountToLastUpdatedBlockTime).filter(
       (accountId) => {
-        const lastUpdatedBlockTime: string = accountToLastUpdatedBlockTime[accountId];
-        return new Date(blockTime).getTime() - new Date(lastUpdatedBlockTime).getTime() >=
-          0.9 * config.PNL_TICK_UPDATE_INTERVAL_MS;
+        const normalizedBlockTime: Date = normalizeStartTime(
+          new Date(blockTime),
+        );  // 12:00:01 -> 12:00:00
+        const lastUpdatedBlockTime = accountToLastUpdatedBlockTime[accountId];
+        const normalizedLastUpdatedBlockTime = normalizeStartTime(
+          new Date(lastUpdatedBlockTime),
+        );  // 12:00:01 -> 12:00:00
+        return normalizedBlockTime.getTime() !== normalizedLastUpdatedBlockTime.getTime();
       },
     ),
   ];
