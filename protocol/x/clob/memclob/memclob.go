@@ -3,10 +3,11 @@ package memclob
 import (
 	"errors"
 	"fmt"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"math/big"
 	"runtime/debug"
 	"time"
+
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -1352,18 +1353,23 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		return types.ErrInvalidReplacement
 	}
 
-	// If the order is a reduce-only order, we should ensure the full size of the order does not increase the
-	// subaccount's current position size. Note that we intentionally do not validate that the reduce-only order
-	// does not change the subaccount's position _side_, and that will be validated if the order is matched.
-	// TODO(DEC-1228): use `MustValidateReduceOnlyOrder` and move this to `PerformStatefulOrderValidation`.
+	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
+	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
+	// as that will be validated if the order is matched.
+	// The subaccount's current position size is defined as is the current state size + any partial fills
+	// that might have occured as a result of this reduce only order replacing another partially filled order.
 	if order.IsReduceOnly() {
-		// If there exists an non-reduce only order with the same order id
-		// cancel the incoming reduce only order by returning an error.
-		if restingOrderExists && !existingRestingOrder.IsReduceOnly() {
-			return types.ErrReduceOnlyOrderReplacement
+		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
+		existingOrderFillAmountExists, existingOrderFillAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, orderId)
+		// If there exists an pre existing order fill, add it to position size in state to get current position size.
+		if existingOrderFillAmountExists && restingOrderExists {
+			existingOrderFillAmountBigInt := existingOrderFillAmount.ToBigInt()
+			if !existingRestingOrder.IsBuy() {
+				existingOrderFillAmountBigInt.Neg(existingOrderFillAmountBigInt)
+			}
+			existingPositionSize.Add(existingPositionSize, existingOrderFillAmountBigInt)
 		}
 
-		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
 		orderSize := order.GetBigQuantums()
 
 		// If the reduce-only order is not on the opposite side of the existing position size,
