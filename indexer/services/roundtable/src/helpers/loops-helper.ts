@@ -32,7 +32,7 @@ export function startLoop(
       extendedLoopLockMultiplier,
     ),
     true,
-    'taskName',
+    taskName,
   );
 }
 
