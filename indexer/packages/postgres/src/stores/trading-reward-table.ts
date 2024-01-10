@@ -28,6 +28,7 @@ export async function findAll(
     blockTimeBeforeOrAt,
     blockTimeAfterOrAt,
     blockTimeBefore,
+    blockHeightBeforeOrAt,
     limit,
   }: TradingRewardQueryConfig,
   requiredFields: QueryableField[],
@@ -40,6 +41,7 @@ export async function findAll(
       blockTimeBeforeOrAt,
       blockTimeAfterOrAt,
       blockTimeBefore,
+      blockHeightBeforeOrAt,
       limit,
     } as QueryConfig,
     requiredFields,
@@ -68,6 +70,10 @@ export async function findAll(
 
   if (blockTimeBefore) {
     baseQuery = baseQuery.where(TradingRewardColumns.blockTime, '<', blockTimeBefore);
+  }
+
+  if (blockHeightBeforeOrAt) {
+    baseQuery = baseQuery.where(TradingRewardColumns.blockHeight, '<=', blockHeightBeforeOrAt);
   }
 
   if (options.orderBy !== undefined) {

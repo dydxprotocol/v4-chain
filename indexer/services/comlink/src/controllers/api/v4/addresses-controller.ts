@@ -29,7 +29,6 @@ import Big from 'big.js';
 import express from 'express';
 import {
   matchedData,
-  checkSchema,
 } from 'express-validator';
 import _ from 'lodash';
 import {
@@ -53,7 +52,7 @@ import {
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
-import { CheckSubaccountSchema } from '../../../lib/validation/schemas';
+import { CheckAddressSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -258,12 +257,7 @@ router.get(
   '/:address',
   rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
-  ...checkSchema({
-    address: {
-      in: ['params'],
-      isString: true,
-    },
-  }),
+  ...CheckAddressSchema,
   handleValidationErrors,
   complianceCheck,
   ExportResponseCodeStats({ controllerName }),

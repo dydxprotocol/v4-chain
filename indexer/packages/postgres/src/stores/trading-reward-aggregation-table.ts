@@ -34,6 +34,8 @@ export async function findAll(
     startedAtHeight,
     period,
     limit,
+    startedAtBeforeOrAt,
+    startedAtHeightBeforeOrAt,
   }: TradingRewardAggregationQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -45,6 +47,8 @@ export async function findAll(
       startedAtHeight,
       period,
       limit,
+      startedAtBeforeOrAt,
+      startedAtHeightBeforeOrAt,
     } as QueryConfig,
     requiredFields,
   );
@@ -69,6 +73,18 @@ export async function findAll(
 
   if (period) {
     baseQuery = baseQuery.where(TradingRewardAggregationColumns.period, period);
+  }
+
+  if (startedAtBeforeOrAt) {
+    baseQuery = baseQuery.where(TradingRewardAggregationColumns.startedAt, '<=', startedAtBeforeOrAt);
+  }
+
+  if (startedAtHeightBeforeOrAt) {
+    baseQuery = baseQuery.where(
+      TradingRewardAggregationColumns.startedAtHeight,
+      '<=',
+      startedAtHeightBeforeOrAt,
+    );
   }
 
   if (options.orderBy !== undefined) {
