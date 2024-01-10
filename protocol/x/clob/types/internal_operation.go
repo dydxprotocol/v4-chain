@@ -107,24 +107,12 @@ func NewMatchPerpetualLiquidationInternalOperation(
 
 // NewMatchPerpetualDeleveragingInternalOperation returns a new operation for deleveraging liquidated subaccount's
 // position against one or more offsetting subaccounts.
-// This function panics if there are zero maker fills.
 func NewMatchPerpetualDeleveragingInternalOperation(
 	liquidatedSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	fills []MatchPerpetualDeleveraging_Fill,
 	isFinalSettlement bool,
 ) InternalOperation {
-	if len(fills) == 0 {
-		panic(
-			fmt.Sprintf(
-				"NewMatchPerpetualDeleveragingInternalOperation: cannot create a match perpetual "+
-					"deleveraging internal operation with no fills: subaccount (%+v), perpetual (%+v)",
-				liquidatedSubaccountId,
-				perpetualId,
-			),
-		)
-	}
-
 	return InternalOperation{
 		Operation: &InternalOperation_Match{
 			Match: &ClobMatch{

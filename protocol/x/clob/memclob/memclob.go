@@ -3,10 +3,11 @@ package memclob
 import (
 	"errors"
 	"fmt"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
 	"math/big"
 	"runtime/debug"
 	"time"
+
+	cmtlog "github.com/cometbft/cometbft/libs/log"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -212,6 +213,20 @@ func (m *MemClobPriceTimePriority) GetSubaccountOrders(
 		clobPairId,
 		subaccountId,
 		side,
+	)
+}
+
+// InsertZeroFillDeleveragingIntoOperationsQueue inserts a zero-fill deleveraging operation
+// into the operations queue. This is used to signify that a subaccount has negative TNC and
+// withdrawals should be disabled.
+func (m *MemClobPriceTimePriority) InsertZeroFillDeleveragingIntoOperationsQueue(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) {
+	m.operationsToPropose.AddZeroFillDeleveragingToOperationsQueue(
+		subaccountId,
+		perpetualId,
 	)
 }
 

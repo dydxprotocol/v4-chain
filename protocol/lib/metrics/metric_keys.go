@@ -39,13 +39,14 @@ const (
 	LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution = "liquidations_place_perpetual_liquidation_quote_quantums_distribution"
 
 	// Measure Since
-	ClobOffsettingSubaccountPerpetualPosition = "clob_offsetting_subaccount_perpetual_position"
-	DaemonGetPreviousBlockInfoLatency         = "daemon_get_previous_block_info_latency"
-	DaemonGetAllMarketPricesLatency           = "daemon_get_all_market_prices_latency"
-	DaemonGetMarketPricesPaginatedLatency     = "daemon_get_market_prices_paginated_latency"
-	DaemonGetAllLiquidityTiersLatency         = "daemon_get_all_liquidity_tiers_latency"
-	DaemonGetLiquidityTiersPaginatedLatency   = "daemon_get_liquidity_tiers_paginated_latency"
-	DaemonGetAllPerpetualsLatency             = "daemon_get_all_perpetuals_latency"
-	DaemonGetPerpetualsPaginatedLatency       = "daemon_get_perpetuals_paginated_latency"
-	MevLatency                                = "mev_latency"
+	ClobOffsettingSubaccountPerpetualPosition  = "clob_offsetting_subaccount_perpetual_position"
+	DaemonGetPreviousBlockInfoLatency          = "daemon_get_previous_block_info_latency"
+	DaemonGetAllMarketPricesLatency            = "daemon_get_all_market_prices_latency"
+	DaemonGetMarketPricesPaginatedLatency      = "daemon_get_market_prices_paginated_latency"
+	DaemonGetAllLiquidityTiersLatency          = "daemon_get_all_liquidity_tiers_latency"
+	DaemonGetLiquidityTiersPaginatedLatency    = "daemon_get_liquidity_tiers_paginated_latency"
+	DaemonGetAllPerpetualsLatency              = "daemon_get_all_perpetuals_latency"
+	DaemonGetPerpetualsPaginatedLatency        = "daemon_get_perpetuals_paginated_latency"
+	MevLatency                                 = "mev_latency"
+	GateWithdrawalsIfNegativeTncSubaccountSeen = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 )

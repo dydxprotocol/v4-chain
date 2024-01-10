@@ -236,6 +236,23 @@ func (o *OperationsToPropose) MustAddMatchToOperationsQueue(
 	)
 }
 
+// AddZeroFillDeleveragingToOperationsQueue adds a zero-fill deleveraging match operation to the
+// operations queue.
+func (o *OperationsToPropose) AddZeroFillDeleveragingToOperationsQueue(
+	liquidatedSubaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) {
+	o.OperationsQueue = append(
+		o.OperationsQueue,
+		NewMatchPerpetualDeleveragingInternalOperation(
+			liquidatedSubaccountId,
+			perpetualId,
+			[]MatchPerpetualDeleveraging_Fill{},
+			false,
+		),
+	)
+}
+
 // MustAddDeleveragingToOperationsQueue adds a deleveraging match operation to the
 // operations queue.
 // This function will panic if:
