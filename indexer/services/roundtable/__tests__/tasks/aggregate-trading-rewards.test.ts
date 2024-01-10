@@ -7,7 +7,10 @@ import {
   TradingRewardAggregationTable,
   TradingRewardCreateObject,
   TradingRewardTable,
-  dbHelpers, testConstants, testConversionHelpers, testMocks,
+  dbHelpers,
+  testConstants,
+  testConversionHelpers,
+  testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import generateTaskFromPeriod, { AggregateTradingReward } from '../../src/tasks/aggregate-trading-rewards';
 import { logger } from '@dydxprotocol-indexer/base';
