@@ -24,6 +24,7 @@ describe('create-pnl-ticks', () => {
     [testConstants.defaultSubaccountId]: {
       ...testConstants.defaultPnlTick,
       createdAt: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
+      blockTime: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
     },
   };
   const dateTime: DateTime = DateTime.utc(2022, 6, 1, 0, 30, 0);
