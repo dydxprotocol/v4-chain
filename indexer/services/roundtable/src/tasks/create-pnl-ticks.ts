@@ -10,19 +10,8 @@ import { LatestAccountPnlTicksCache } from '@dydxprotocol-indexer/redis';
 import _ from 'lodash';
 
 import config from '../config';
-import { getPnlTicksCreateObjects } from '../helpers/pnl-ticks-helper';
+import { getPnlTicksCreateObjects, normalizeStartTime } from '../helpers/pnl-ticks-helper';
 import { redisClient } from '../helpers/redis';
-
-export function normalizeStartTime(
-  time: Date,
-): Date {
-  const epochMs: number = time.getTime();
-  const normalizedTimeMs: number = epochMs - (
-    epochMs % config.PNL_TICK_UPDATE_INTERVAL_MS
-  );
-
-  return new Date(normalizedTimeMs);
-}
 
 export default async function runTask(): Promise<void> {
   const startGetNewTicks: number = Date.now();
