@@ -3,6 +3,7 @@ import {
   AssetPositionTable,
   FundingIndexMap,
   FundingIndexUpdatesTable,
+  helpers,
   IsoString,
   OraclePriceTable,
   PerpetualPositionFromDatabase,
@@ -15,7 +16,6 @@ import {
   SubaccountTable,
   SubaccountToPerpetualPositionsMap,
   TransferTable,
-  helpers,
 } from '@dydxprotocol-indexer/postgres';
 import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
@@ -62,13 +62,7 @@ export async function getPnlTicksCreateObjects(
   );
   // get accounts to update based on last updated block height
   const accountsToUpdate: string[] = [
-    ..._.keys(accountToLastUpdatedBlockTime).filter(
-      (accountId) => {
-        const lastUpdatedBlockTime: string = accountToLastUpdatedBlockTime[accountId];
-        return new Date(blockTime).getTime() - new Date(lastUpdatedBlockTime).getTime() >=
-          config.PNL_TICK_UPDATE_INTERVAL_MS;
-      },
-    ),
+    ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
   ];
   stats.gauge(
@@ -164,6 +158,30 @@ export async function getPnlTicksCreateObjects(
     new Date().getTime() - computePnlStart,
   );
   return newTicksToCreate;
+}
+
+/**
+ * Gets a list of subaccounts that were last updated more than 0.9 *
+ * PNL_TICK_UPDATE_INTERVAL_MS ago.
+ *
+ * @param mostRecentPnlTicks
+ * @param blockTime
+ */
+export function getAccountsToUpdate(
+  accountToLastUpdatedBlockTime: _.Dictionary<IsoString>,
+  blockTime: IsoString,
+): string[] {
+  // get accounts to update based on last updated block time
+  const accountsToUpdate: string[] = [
+    ..._.keys(accountToLastUpdatedBlockTime).filter(
+      (accountId) => {
+        const lastUpdatedBlockTime: string = accountToLastUpdatedBlockTime[accountId];
+        return new Date(blockTime).getTime() - new Date(lastUpdatedBlockTime).getTime() >=
+          0.9 * config.PNL_TICK_UPDATE_INTERVAL_MS;
+      },
+    ),
+  ];
+  return accountsToUpdate;
 }
 
 /**

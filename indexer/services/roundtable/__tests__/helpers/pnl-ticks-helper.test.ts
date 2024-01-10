@@ -25,6 +25,7 @@ import {
   getNewPnlTick,
   getPnlTicksCreateObjects,
   getUsdcTransfersSinceLastPnlTick,
+  getAccountsToUpdate,
 } from '../../src/helpers/pnl-ticks-helper';
 import { defaultPnlTickForSubaccounts } from '../../src/helpers/constants';
 import Big from 'big.js';
@@ -35,6 +36,7 @@ import { ZERO } from '../../src/lib/constants';
 import { SubaccountUsdcTransferMap } from '../../src/helpers/types';
 import config from '../../src/config';
 import _ from 'lodash';
+import { ONE_HOUR_IN_MILLISECONDS } from '@dydxprotocol-indexer/base';
 
 describe('pnl-ticks-helper', () => {
   const positions: PerpetualPositionFromDatabase[] = [
@@ -226,6 +228,25 @@ describe('pnl-ticks-helper', () => {
       [testConstants.defaultSubaccountId]: new Big('-20.5'),
       [testConstants.defaultSubaccountId2]: new Big('20.5'),
     }));
+  });
+
+  it('getAccountsToUpdate', () => {
+    const accountToLastUpdatedBlockTime: _.Dictionary<IsoString> = {
+      account1: '2024-01-01T10:00:00Z',
+      account2: '2024-01-01T11:00:00Z',
+      account3: '2024-01-01T11:01:00Z',
+      account4: '2024-01-01T11:10:00Z',
+      account5: '2024-01-01T12:00:00Z',
+    };
+    const blockTime: IsoString = '2024-01-01T12:00:00Z';
+    config.PNL_TICK_UPDATE_INTERVAL_MS = ONE_HOUR_IN_MILLISECONDS;
+
+    const expectedAccountsToUpdate: string[] = ['account1', 'account2', 'account3'];
+    const accountsToUpdate: string[] = getAccountsToUpdate(
+      accountToLastUpdatedBlockTime,
+      blockTime,
+    );
+    expect(accountsToUpdate).toEqual(expectedAccountsToUpdate);
   });
 
   it('calculateEquity', () => {
