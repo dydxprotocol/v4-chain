@@ -195,6 +195,16 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	ctx sdk.Context,
 	negativeTncSubaccountIds []satypes.SubaccountId,
 ) (err error) {
+	defer metrics.ModuleMeasureSince(
+		types.ModuleName,
+		metrics.GateWithdrawalsIfNegativeTncSubaccountSeen,
+		time.Now(),
+	)
+	metrics.IncrCounter(
+		metrics.GateWithdrawalsIfNegativeTncSubaccountSeen,
+		1,
+	)
+
 	foundNegativeTncSubaccount := false
 	var negativeTncSubaccountId satypes.SubaccountId
 	for _, subaccountId := range negativeTncSubaccountIds {
@@ -234,6 +244,13 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 	}
 	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
 	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
+	metrics.IncrCountMetricWithLabels(
+		types.ModuleName,
+		metrics.SubaccountsNegativeTncSubaccountSeen,
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.IsLong, subaccount.PerpetualPositions[0].GetIsLong()),
+		metrics.GetLabelForBoolValue(metrics.DeliverTx, false),
+	)
 
 	return nil
 }
