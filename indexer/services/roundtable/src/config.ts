@@ -148,6 +148,7 @@ export const configSchema = {
   AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS: parseInteger({
     default: ONE_HOUR_IN_MILLISECONDS,
   }),
+  AGGREGATE_TRADING_REWARDS_CHUNK_SIZE: parseInteger({ default: 50 }),
 };
 
 export default parseSchema(configSchema);

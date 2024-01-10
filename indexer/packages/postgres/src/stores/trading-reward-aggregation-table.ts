@@ -30,6 +30,7 @@ export function uuid(
 export async function findAll(
   {
     address,
+    addresses,
     startedAtHeight,
     period,
     limit,
@@ -40,6 +41,7 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       address,
+      addresses,
       startedAtHeight,
       period,
       limit,
@@ -55,6 +57,10 @@ export async function findAll(
 
   if (address) {
     baseQuery = baseQuery.where(TradingRewardAggregationColumns.address, address);
+  }
+
+  if (addresses) {
+    baseQuery = baseQuery.whereIn(TradingRewardAggregationColumns.address, addresses);
   }
 
   if (startedAtHeight) {

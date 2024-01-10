@@ -76,6 +76,9 @@ export enum QueryableField {
   STARTED_AT_HEIGHT = 'startedAtHeight',
   PERIOD = 'period',
   STARTED_AT_HEIGHT_OR_AFTER = 'startedAtHeightOrAfter',
+  BLOCK_TIME_AFTER_OR_AT = 'blockTimeAfterOrAt',
+  BLOCK_TIME_BEFORE = 'blockTimeBefore',
+  ADDRESSES = 'addresses',
 }
 
 export interface QueryConfig {
@@ -149,7 +152,7 @@ export interface FillQueryConfig extends QueryConfig {
 
 export interface BlockQueryConfig extends QueryConfig {
   [QueryableField.BLOCK_HEIGHT]?: string[];
-  [QueryableField.CREATED_ON_OR_AFTER]?: string[];
+  [QueryableField.CREATED_ON_OR_AFTER]?: string;
 }
 
 export interface TendermintEventQueryConfig extends QueryConfig {
@@ -275,10 +278,13 @@ export interface TradingRewardQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string;
   [QueryableField.BLOCK_HEIGHT]?: string;
   [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString;
+  [QueryableField.BLOCK_TIME_AFTER_OR_AT]?: IsoString;
+  [QueryableField.BLOCK_TIME_BEFORE]?: IsoString;
 }
 
 export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.ADDRESS]?: string;
+  [QueryableField.ADDRESSES]?: string[];
   [QueryableField.STARTED_AT_HEIGHT]?: string;
   [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string;
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
