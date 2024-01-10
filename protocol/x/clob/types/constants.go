@@ -14,6 +14,11 @@ const StatefulOrderTimeWindow time.Duration = 95 * 24 * time.Hour // 95 days.
 
 // ConditionalOrderTriggerMultiplier represents the multiplier used to calculate the upper and lower bounds of
 // the trigger price for a conditional order.
-// The upper bound is calculated as: (1 + min_price_change_ppm / 1_000_000 * ConditionalOrderTriggerMultiplier) * orderPrice
-// The lower bound is calculated as: (1 - min_price_change_ppm / 1_000_000 * ConditionalOrderTriggerMultiplier) * orderPrice
+// The upper bound is calculated as:
+//
+//	upper_bound = (1 + min_price_change_ppm / 1_000_000 * conditional_order_trigger_multiplier) * oracle_price
+//
+// The lower bound is calculated as:
+//
+//	lower_bound = (1 - min_price_change_ppm / 1_000_000 * conditional_order_trigger_multiplier) * oracle_price
 const ConditionalOrderTriggerMultiplier uint64 = 5
