@@ -4,11 +4,14 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // UntriggeredConditionalOrders is an in-memory struct stored on the clob Keeper.
@@ -267,16 +270,16 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 // Function returns a sorted list of conditional order ids that were triggered, intended to be written
 // to `ProcessProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock`.
 // This function is called in EndBlocker.
-func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditionalOrderIds []types.OrderId) {
-	triggeredConditionalOrderIds = make([]types.OrderId, 0)
+func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrderIds []types.OrderId) {
 	// Sort the keys for the untriggered conditional orders struct. We need to trigger
 	// the conditional orders in an ordered way to have deterministic state writes.
 	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](k.UntriggeredConditionalOrders)
 
+	allTriggeredOrderIds = make([]types.OrderId, 0)
 	// For all clob pair ids in UntriggeredConditionalOrders, fetch the updated
 	// oracle price and poll out triggered conditional orders.
 	for _, clobPairId := range sortedKeys {
-		untriggeredConditionalOrders := k.UntriggeredConditionalOrders[clobPairId]
+		untriggered := k.UntriggeredConditionalOrders[clobPairId]
 		clobPair, found := k.GetClobPair(ctx, clobPairId)
 		if !found {
 			panic(
@@ -288,67 +291,60 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 		}
 
 		// Trigger conditional orders using the oracle price.
-		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
-		triggeredOrderIds := untriggeredConditionalOrders.PollTriggeredConditionalOrders(
-			currentOraclePriceSubticksRat,
-		)
-		triggeredConditionalOrderIds = append(triggeredConditionalOrderIds, triggeredOrderIds...)
+		perpetualId := clobPair.MustGetPerpetualId()
+		oraclePrice := k.GetOraclePriceSubticksRat(ctx, clobPair)
+		triggered := k.TriggerOrdersWithPrice(ctx, untriggered, oraclePrice, perpetualId, metrics.OraclePrice)
+		allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
 
 		// Trigger conditional orders using the last traded price.
-		perpetualId := clobPair.MustGetPerpetualId()
-		minTradePriceSubticks, maxTradePriceSubticks, found := k.GetTradePricesForPerpetual(ctx, perpetualId)
+		clampedMinTradePrice,
+			clampedMaxTradePrice,
+			found := k.getClampedTradePricesForTriggering(
+			ctx,
+			perpetualId,
+			oraclePrice,
+		)
+
 		if found {
-			// Get the perpetual.
-			perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
-			if err != nil {
-				panic(
-					fmt.Errorf(
-						"EndBlocker: untriggeredConditionalOrders failed to find perpetualId %+v",
-						perpetualId,
-					),
-				)
-			}
+			triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMinTradePrice, perpetualId, metrics.MinTradePrice)
+			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
 
-			// Get the market param.
-			marketParam, exists := k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
-			if !exists {
-				panic(
-					fmt.Errorf(
-						"EndBlocker: untriggeredConditionalOrders failed to find marketParam %+v",
-						perpetual.Params.MarketId,
-					),
-				)
-			}
-
-			// Calculate the max allowed range.
-			maxAllowedRange := lib.BigRatMulPpm(currentOraclePriceSubticksRat, marketParam.MinPriceChangePpm)
-			maxAllowedRange.Mul(maxAllowedRange, new(big.Rat).SetUint64(types.ConditionalOrderTriggerMultiplier))
-
-			upperBound := new(big.Rat).Add(currentOraclePriceSubticksRat, maxAllowedRange)
-			lowerBound := new(big.Rat).Sub(currentOraclePriceSubticksRat, maxAllowedRange)
-
-			for _, price := range []types.Subticks{minTradePriceSubticks, maxTradePriceSubticks} {
-				// Clamp the min and max trade prices to the upper and lower bounds.
-				clampedTradePrice := lib.BigRatClamp(
-					new(big.Rat).SetUint64(price.ToUint64()),
-					lowerBound,
-					upperBound,
-				)
-				triggeredOrderIds := untriggeredConditionalOrders.PollTriggeredConditionalOrders(clampedTradePrice)
-				triggeredConditionalOrderIds = append(triggeredConditionalOrderIds, triggeredOrderIds...)
-			}
+			triggered = k.TriggerOrdersWithPrice(ctx, untriggered, clampedMaxTradePrice, perpetualId, metrics.MaxTradePrice)
+			allTriggeredOrderIds = append(allTriggeredOrderIds, triggered...)
 		}
 
 		// Set the modified untriggeredConditionalOrders back on the keeper field.
-		k.UntriggeredConditionalOrders[clobPairId] = untriggeredConditionalOrders
+		k.UntriggeredConditionalOrders[clobPairId] = untriggered
 	}
+
+	return allTriggeredOrderIds
+}
+
+// TriggerOrdersWithPrice triggers all untriggered conditional orders using the given price. It returns
+// a list of order ids that were triggered. This function is called in EndBlocker.
+func (k Keeper) TriggerOrdersWithPrice(
+	ctx sdk.Context,
+	untriggered *UntriggeredConditionalOrders,
+	price *big.Rat,
+	perpetualId uint32,
+	priceType string,
+) (triggeredOrderIds []types.OrderId) {
+	triggeredOrderIds = untriggered.PollTriggeredConditionalOrders(price)
+
+	// Emit metrics.
+	priceFloat, _ := price.Float32()
+	labels := []gometrics.Label{
+		metrics.GetLabelForStringValue(metrics.Type, priceType),
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+	}
+	telemetry.SetGaugeWithLabels([]string{metrics.ClobConditionalOrderTriggerPrice}, priceFloat, labels)
 
 	// State write - move the conditional order placement in state from untriggered to triggered state.
 	// Emit an event for each triggered conditional order.
-	for _, triggeredConditionalOrderId := range triggeredConditionalOrderIds {
+	for _, orderId := range triggeredOrderIds {
 		k.MustTriggerConditionalOrder(
 			ctx,
-			triggeredConditionalOrderId,
+			orderId,
 		)
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
@@ -356,10 +352,71 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 			indexerevents.StatefulOrderEventVersion,
 			indexer_manager.GetBytes(
 				indexerevents.NewConditionalOrderTriggeredEvent(
-					triggeredConditionalOrderId,
+					orderId,
 				),
 			),
 		)
+
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.ConditionalOrderTriggered, metrics.Count},
+			1,
+			append(orderId.GetOrderIdLabels(), labels...),
+		)
 	}
-	return triggeredConditionalOrderIds
+	return triggeredOrderIds
+}
+
+func (k Keeper) getClampedTradePricesForTriggering(
+	ctx sdk.Context,
+	perpetualId uint32,
+	oraclePrice *big.Rat,
+) (
+	clampedMinTradePrice *big.Rat,
+	clampedMaxTradePrice *big.Rat,
+	found bool,
+) {
+	minTradePriceSubticks, maxTradePriceSubticks, found := k.GetTradePricesForPerpetual(ctx, perpetualId)
+	if found {
+		// Get the perpetual.
+		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+		if err != nil {
+			panic(
+				fmt.Errorf(
+					"EndBlocker: untriggeredConditionalOrders failed to find perpetualId %+v",
+					perpetualId,
+				),
+			)
+		}
+
+		// Get the market param.
+		marketParam, exists := k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
+		if !exists {
+			panic(
+				fmt.Errorf(
+					"EndBlocker: untriggeredConditionalOrders failed to find marketParam %+v",
+					perpetual.Params.MarketId,
+				),
+			)
+		}
+
+		// Calculate the max allowed range.
+		maxAllowedRange := lib.BigRatMulPpm(oraclePrice, marketParam.MinPriceChangePpm)
+		maxAllowedRange.Mul(maxAllowedRange, new(big.Rat).SetUint64(types.ConditionalOrderTriggerMultiplier))
+
+		upperBound := new(big.Rat).Add(oraclePrice, maxAllowedRange)
+		lowerBound := new(big.Rat).Sub(oraclePrice, maxAllowedRange)
+
+		// Clamp the min and max trade prices to the upper and lower bounds.
+		clampedMinTradePrice = lib.BigRatClamp(
+			new(big.Rat).SetUint64(minTradePriceSubticks.ToUint64()),
+			lowerBound,
+			upperBound,
+		)
+		clampedMaxTradePrice = lib.BigRatClamp(
+			new(big.Rat).SetUint64(maxTradePriceSubticks.ToUint64()),
+			lowerBound,
+			upperBound,
+		)
+	}
+	return clampedMinTradePrice, clampedMaxTradePrice, found
 }
