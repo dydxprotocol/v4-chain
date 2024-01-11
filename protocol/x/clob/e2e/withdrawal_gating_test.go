@@ -323,7 +323,9 @@ func TestWithdrawalGating_BlocksThenUnblocks(t *testing.T) {
 			})
 			require.NoError(t, err)
 			tApp.AdvanceToBlock(
-				tc.expectedNegativeTncSubaccountSeenAtBlock+satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+1,
+				tc.expectedNegativeTncSubaccountSeenAtBlock+
+					satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
+					1,
 				testapp.AdvanceToBlockOptions{},
 			)
 			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
@@ -340,7 +342,9 @@ func TestWithdrawalGating_BlocksThenUnblocks(t *testing.T) {
 				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 			}
 			tApp.AdvanceToBlock(
-				tc.expectedNegativeTncSubaccountSeenAtBlock+satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+2,
+				tc.expectedNegativeTncSubaccountSeenAtBlock+
+					satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
+					2,
 				testapp.AdvanceToBlockOptions{},
 			)
 		})
