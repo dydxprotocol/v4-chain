@@ -10,6 +10,7 @@ import {
   BlockTable,
   IsoString,
   IsolationLevel,
+  Ordering,
   TradingRewardAggregationColumns,
   TradingRewardAggregationCreateObject,
   TradingRewardAggregationFromDatabase,
@@ -156,7 +157,7 @@ export class AggregateTradingReward {
     if (processedTime === null) {
       logger.info({
         at: 'aggregate-trading-rewards#getTradingRewardDataToProcessInterval',
-        message: 'Resetting AggregateTradingRewardsProcessedCache',
+        message: 'AggregateTradingRewardsProcessedCache is empty',
       });
       const nextStartTime: DateTime = await this.getNextIntervalStartWhenCacheEmpty();
       await this.setProcessedTime(
@@ -172,9 +173,12 @@ export class AggregateTradingReward {
 
   /**
    * Returns the start time of the next interval to process if the
-   * AggregateTradingRewardProcessedCache is empty. If there is a most recent complete aggregation
-   * for this period, returns the end time of the most recent aggregation, otherwise returns the
-   * start time of the first block in the database.
+   * AggregateTradingRewardProcessedCache is empty.
+   * - If there is a most recent complete aggregation for this period,
+   * returns the end time of the most recent aggregation.
+   * - If there is a trading reward in the database,
+   * returns the block time of the trading reward.
+   * - Otherwise returns the start time of the first block in the database.
    */
   private async getNextIntervalStartWhenCacheEmpty(): Promise<DateTime> {
     const latestAggregation:
@@ -186,12 +190,23 @@ export class AggregateTradingReward {
       return DateTime.fromISO(latestAggregation.endedAt!, UTC_OPTIONS);
     }
 
-    // Since we were able to find the latest block, we assume we can find the first block
-    const firstBlock: BlockFromDatabase[] = await BlockTable.findAll({
-      blockHeight: ['1'],
+    const firstTradingReward: TradingRewardFromDatabase[] = await TradingRewardTable.findAll({
       limit: 1,
-    }, []);
-    return DateTime.fromISO(firstBlock[0].time, UTC_OPTIONS);
+    }, [], { orderBy: [[TradingRewardColumns.blockTime, Ordering.ASC]] });
+    if (firstTradingReward.length === 0) {
+      logger.info({
+        at: 'aggregate-trading-rewards#getNextIntervalStartWhenCacheEmpty',
+        message: 'No trading rewards in database, relying on first block time to pick first start time',
+      });
+      // Since we were able to find the latest block, we assume we can find the first block
+      const firstBlock: BlockFromDatabase[] = await BlockTable.findAll({
+        blockHeight: ['1'],
+        limit: 1,
+      }, []);
+      return DateTime.fromISO(firstBlock[0].time, UTC_OPTIONS);
+    }
+
+    return DateTime.fromISO(firstTradingReward[0].blockTime, UTC_OPTIONS);
   }
 
   /**

@@ -121,7 +121,7 @@ describe('aggregate-trading-rewards', () => {
       TradingRewardAggregationPeriod.DAILY,
       TradingRewardAggregationPeriod.WEEKLY,
       TradingRewardAggregationPeriod.MONTHLY,
-    ])('Successfully returns interval if cache is empty and no aggregations', async (
+    ])('Successfully returns interval if cache is empty no aggregations, and no trading rewards', async (
       period: TradingRewardAggregationPeriod,
     ) => {
       const firstBlockTime: DateTime = DateTime.fromISO(
@@ -141,7 +141,7 @@ describe('aggregate-trading-rewards', () => {
     });
 
     it(
-      'Successfully returns interval when cache is empty and no',
+      'Successfully returns interval when cache is empty and no aggregation for the period and trading reward',
       async () => {
         await TradingRewardAggregationTable.create({
           ...defaultMonthlyTradingRewardAggregation,
@@ -163,6 +163,35 @@ describe('aggregate-trading-rewards', () => {
             milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS,
           })),
         );
+      },
+    );
+
+    it(
+      'Successfully returns interval when cache is empty and no aggregation and trading reward exists',
+      async () => {
+        await Promise.all([
+          TradingRewardTable.create({
+            address: testConstants.defaultAddress,
+            blockTime: startedAt.plus({ minutes: 2, seconds: 20 }).toISO(), // random constants
+            blockHeight: '1',
+            amount: '10',
+          }),
+          createBlockWithTime(startedAt.plus({ hours: 10 })),
+        ]);
+        const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+          TradingRewardAggregationPeriod.MONTHLY,
+        );
+        const interval:
+        Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
+
+        expect(interval).toEqual(Interval.fromDateTimes(
+          startedAt.plus({ minutes: 2, seconds: 20 }),
+          startedAt.plus({
+            minutes: 2,
+            seconds: 20,
+            milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS,
+          }),
+        ));
       },
     );
 
