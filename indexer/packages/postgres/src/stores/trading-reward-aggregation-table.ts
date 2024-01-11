@@ -30,9 +30,12 @@ export function uuid(
 export async function findAll(
   {
     address,
+    addresses,
     startedAtHeight,
     period,
     limit,
+    startedAtBeforeOrAt,
+    startedAtHeightBeforeOrAt,
   }: TradingRewardAggregationQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
@@ -40,9 +43,12 @@ export async function findAll(
   verifyAllRequiredFields(
     {
       address,
+      addresses,
       startedAtHeight,
       period,
       limit,
+      startedAtBeforeOrAt,
+      startedAtHeightBeforeOrAt,
     } as QueryConfig,
     requiredFields,
   );
@@ -57,12 +63,28 @@ export async function findAll(
     baseQuery = baseQuery.where(TradingRewardAggregationColumns.address, address);
   }
 
+  if (addresses) {
+    baseQuery = baseQuery.whereIn(TradingRewardAggregationColumns.address, addresses);
+  }
+
   if (startedAtHeight) {
     baseQuery = baseQuery.where(TradingRewardAggregationColumns.startedAtHeight, startedAtHeight);
   }
 
   if (period) {
     baseQuery = baseQuery.where(TradingRewardAggregationColumns.period, period);
+  }
+
+  if (startedAtBeforeOrAt) {
+    baseQuery = baseQuery.where(TradingRewardAggregationColumns.startedAt, '<=', startedAtBeforeOrAt);
+  }
+
+  if (startedAtHeightBeforeOrAt) {
+    baseQuery = baseQuery.where(
+      TradingRewardAggregationColumns.startedAtHeight,
+      '<=',
+      startedAtHeightBeforeOrAt,
+    );
   }
 
   if (options.orderBy !== undefined) {

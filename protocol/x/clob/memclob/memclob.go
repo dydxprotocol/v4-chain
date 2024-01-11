@@ -216,6 +216,20 @@ func (m *MemClobPriceTimePriority) GetSubaccountOrders(
 	)
 }
 
+// InsertZeroFillDeleveragingIntoOperationsQueue inserts a zero-fill deleveraging operation
+// into the operations queue. This is used to signify that a subaccount has negative TNC and
+// withdrawals should be disabled.
+func (m *MemClobPriceTimePriority) InsertZeroFillDeleveragingIntoOperationsQueue(
+	ctx sdk.Context,
+	subaccountId satypes.SubaccountId,
+	perpetualId uint32,
+) {
+	m.operationsToPropose.AddZeroFillDeleveragingToOperationsQueue(
+		subaccountId,
+		perpetualId,
+	)
+}
+
 // mustUpdateMemclobStateWithMatches updates the memclob state by applying matches to all bookkeeping data structures.
 // Namely, it will perform the following operations:
 //   - Append all newly-matched orders to the operations queue, along with all new matches.

@@ -141,6 +141,10 @@ type PerpetualsKeeper interface {
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
 }
 
+type PricesKeeper interface {
+	GetMarketParam(ctx sdk.Context, id uint32) (param pricestypes.MarketParam, exists bool)
+}
+
 type StatsKeeper interface {
 	RecordFill(ctx sdk.Context, takerAddress string, makerAddress string, notional *big.Int)
 }

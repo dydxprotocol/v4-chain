@@ -11,7 +11,7 @@ import {
   FundingIndexUpdatesTable,
 } from '@dydxprotocol-indexer/postgres';
 
-import createPnlTicksTask, { normalizeStartTime } from '../../src/tasks/create-pnl-ticks';
+import createPnlTicksTask from '../../src/tasks/create-pnl-ticks';
 import { LatestAccountPnlTicksCache, PnlTickForSubaccounts, redis } from '@dydxprotocol-indexer/redis';
 import { DateTime } from 'luxon';
 import config from '../../src/config';
@@ -24,6 +24,14 @@ describe('create-pnl-ticks', () => {
     [testConstants.defaultSubaccountId]: {
       ...testConstants.defaultPnlTick,
       createdAt: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
+      blockTime: DateTime.utc(2022, 6, 1, 0, 0, 0).toISO(),
+    },
+  };
+  const existingPnlTicksNeedsUpdate: PnlTickForSubaccounts = {
+    [testConstants.defaultSubaccountId]: {
+      ...testConstants.defaultPnlTick,
+      createdAt: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO(),
+      blockTime: DateTime.utc(2022, 5, 31, 23, 59, 0).toISO(),
     },
   };
   const dateTime: DateTime = DateTime.utc(2022, 6, 1, 0, 30, 0);
@@ -123,18 +131,6 @@ describe('create-pnl-ticks', () => {
     );
   });
 
-  it('normalizeStartTime', () => {
-    const time: Date = new Date('2021-01-09T20:00:50.000Z');
-    // 1 hour
-    config.PNL_TICK_UPDATE_INTERVAL_MS = 1000 * 60 * 60;
-    const result1: Date = normalizeStartTime(time);
-    expect(result1.toISOString()).toBe('2021-01-09T20:00:00.000Z');
-    // 1 day
-    config.PNL_TICK_UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 24;
-    const result2: Date = normalizeStartTime(time);
-    expect(result2.toISOString()).toBe('2021-01-09T00:00:00.000Z');
-  });
-
   it('succeeds with no prior pnl ticks and open perpetual positions', async () => {
     const date: number = new Date(2023, 4, 18, 0, 0, 0).valueOf();
     jest.spyOn(Date, 'now').mockImplementation(() => date);
@@ -179,6 +175,58 @@ describe('create-pnl-ticks', () => {
       ]),
     );
   });
+
+  it(
+    'succeeds with prior pnl ticks and open perpetual positions, updates pnl correctly',
+    async () => {
+      const date: number = new Date(2023, 4, 18, 0, 0, 0).valueOf();
+      jest.spyOn(Date, 'now').mockImplementation(() => date);
+      config.PNL_TICK_UPDATE_INTERVAL_MS = 3_600_000;
+      jest.spyOn(DateTime, 'utc').mockImplementation(() => dateTime);
+      await LatestAccountPnlTicksCache.set(
+        existingPnlTicksNeedsUpdate,
+        redisClient,
+      );
+      await Promise.all([
+        PerpetualPositionTable.create(testConstants.defaultPerpetualPosition),
+        PerpetualPositionTable.create({
+          ...testConstants.defaultPerpetualPosition,
+          perpetualId: testConstants.defaultPerpetualMarket2.id,
+          openEventId: testConstants.defaultTendermintEventId2,
+        }),
+      ]);
+      await createPnlTicksTask();
+      const pnlTicks: PnlTicksFromDatabase[] = await PnlTicksTable.findAll(
+        {},
+        [],
+        {},
+      );
+      expect(pnlTicks.length).toEqual(2);
+      expect(pnlTicks).toEqual(
+        expect.arrayContaining([
+          {
+            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId2, dateTime.toISO()),
+            createdAt: dateTime.toISO(),
+            blockHeight: '5',
+            blockTime: testConstants.defaultBlock.time,
+            equity: '0.000000',
+            netTransfers: '20.500000',
+            subaccountId: testConstants.defaultSubaccountId2,
+            totalPnl: '-20.500000',
+          },
+          {
+            id: PnlTicksTable.uuid(testConstants.defaultSubaccountId, dateTime.toISO()),
+            createdAt: dateTime.toISO(),
+            blockHeight: '5',
+            blockTime: testConstants.defaultBlock.time,
+            equity: '105000.000000',
+            netTransfers: '-20.500000',
+            subaccountId: testConstants.defaultSubaccountId,
+            totalPnl: '105020.500000',
+          },
+        ]),
+      );
+    });
 
   it(
     'succeeds with prior pnl ticks and open perpetual positions, respects PNL_TICK_UPDATE_INTERVAL_MS',

@@ -18,6 +18,15 @@ export const CheckSubaccountSchema = checkSchema({
   },
 });
 
+export const checkAddressSchemaRecord: Record<string, ParamSchema> = {
+  address: {
+    in: ['params'],
+    isString: true,
+  },
+};
+
+export const CheckAddressSchema = checkSchema(checkAddressSchemaRecord);
+
 const limitSchemaRecord: Record<string, ParamSchema> = {
   limit: {
     in: ['query'],
@@ -126,4 +135,22 @@ export const CheckTickerParamSchema = checkSchema({
 
 export const CheckTickerOptionalQuerySchema = checkSchema({
   ticker: checkTickerOptionalQuerySchema,
+});
+
+export const CheckHistoricalBlockTradingRewardsSchema = checkSchema({
+  ...checkAddressSchemaRecord,
+  ...limitSchemaRecord,
+  startingBeforeOrAt: {
+    in: ['query'],
+    optional: true,
+    isISO8601: true,
+  },
+  startingBeforeOrAtHeight: {
+    in: ['query'],
+    optional: true,
+    isInt: {
+      options: { gt: -1 },
+    },
+    errorMessage: 'startingBeforeOrAtHeight must be a non-negative integer',
+  },
 });

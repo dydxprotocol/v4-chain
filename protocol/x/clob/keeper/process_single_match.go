@@ -454,6 +454,9 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
+	// Update the last trade price for the perpetual.
+	k.SetTradePricesForPerpetual(ctx, perpetualId, matchWithOrders.MakerOrder.GetOrderSubticks())
+
 	// Process fill in x/stats and x/rewards.
 	k.rewardsKeeper.AddRewardSharesForFill(
 		ctx,

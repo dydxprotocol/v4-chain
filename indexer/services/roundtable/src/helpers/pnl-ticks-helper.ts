@@ -3,6 +3,7 @@ import {
   AssetPositionTable,
   FundingIndexMap,
   FundingIndexUpdatesTable,
+  helpers,
   IsoString,
   OraclePriceTable,
   PerpetualPositionFromDatabase,
@@ -15,7 +16,6 @@ import {
   SubaccountTable,
   SubaccountToPerpetualPositionsMap,
   TransferTable,
-  helpers,
 } from '@dydxprotocol-indexer/postgres';
 import { LatestAccountPnlTicksCache, PnlTickForSubaccounts } from '@dydxprotocol-indexer/redis';
 import Big from 'big.js';
@@ -26,6 +26,23 @@ import config from '../config';
 import { USDC_ASSET_ID, ZERO } from '../lib/constants';
 import { redisClient } from './redis';
 import { SubaccountUsdcTransferMap } from './types';
+
+/**
+ * Normalizes a time to the nearest PNL_TICK_UPDATE_INTERVAL_MS.
+ * If PNL_TICK_UPDATE_INTERVAL_MS is set to 1 hour, then 12:01:00 -> 12:00:00.
+ *
+ * @param time
+ */
+export function normalizeStartTime(
+  time: Date,
+): Date {
+  const epochMs: number = time.getTime();
+  const normalizedTimeMs: number = epochMs - (
+    epochMs % config.PNL_TICK_UPDATE_INTERVAL_MS
+  );
+
+  return new Date(normalizedTimeMs);
+}
 
 /**
  * Gets a batch of new pnl ticks to write to the database and set in the cache.
@@ -62,13 +79,7 @@ export async function getPnlTicksCreateObjects(
   );
   // get accounts to update based on last updated block height
   const accountsToUpdate: string[] = [
-    ..._.keys(accountToLastUpdatedBlockTime).filter(
-      (accountId) => {
-        const lastUpdatedBlockTime: string = accountToLastUpdatedBlockTime[accountId];
-        return new Date(blockTime).getTime() - new Date(lastUpdatedBlockTime).getTime() >=
-          config.PNL_TICK_UPDATE_INTERVAL_MS;
-      },
-    ),
+    ...getAccountsToUpdate(accountToLastUpdatedBlockTime, blockTime),
     ...newSubaccountIds,
   ];
   stats.gauge(
@@ -164,6 +175,34 @@ export async function getPnlTicksCreateObjects(
     new Date().getTime() - computePnlStart,
   );
   return newTicksToCreate;
+}
+
+/**
+ * Gets a list of subaccounts that have not been updated this hour.
+ *
+ * @param mostRecentPnlTicks
+ * @param blockTime
+ */
+export function getAccountsToUpdate(
+  accountToLastUpdatedBlockTime: _.Dictionary<IsoString>,
+  blockTime: IsoString,
+): string[] {
+  // get accounts to update based on last updated block time
+  const accountsToUpdate: string[] = [
+    ..._.keys(accountToLastUpdatedBlockTime).filter(
+      (accountId) => {
+        const normalizedBlockTime: Date = normalizeStartTime(
+          new Date(blockTime),
+        );  // 12:00:01 -> 12:00:00
+        const lastUpdatedBlockTime = accountToLastUpdatedBlockTime[accountId];
+        const normalizedLastUpdatedBlockTime = normalizeStartTime(
+          new Date(lastUpdatedBlockTime),
+        );  // 12:00:01 -> 12:00:00
+        return normalizedBlockTime.getTime() !== normalizedLastUpdatedBlockTime.getTime();
+      },
+    ),
+  ];
+  return accountsToUpdate;
 }
 
 /**

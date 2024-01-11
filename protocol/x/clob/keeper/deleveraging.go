@@ -188,6 +188,73 @@ func (k Keeper) CanDeleverageSubaccount(
 	return false, clobPair.Status == types.ClobPair_STATUS_FINAL_SETTLEMENT, nil
 }
 
+// GateWithdrawalsIfNegativeTncSubaccountSeen gates withdrawals if a negative TNC subaccount exists.
+// It does this by inserting a zero-fill deleveraging operation into the operations queue iff any of
+// the provided negative TNC subaccounts are still negative TNC.
+func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
+	ctx sdk.Context,
+	negativeTncSubaccountIds []satypes.SubaccountId,
+) (err error) {
+	defer metrics.ModuleMeasureSince(
+		types.ModuleName,
+		metrics.GateWithdrawalsIfNegativeTncSubaccountSeen,
+		time.Now(),
+	)
+	metrics.IncrCounter(
+		metrics.GateWithdrawalsIfNegativeTncSubaccountSeen,
+		1,
+	)
+
+	foundNegativeTncSubaccount := false
+	var negativeTncSubaccountId satypes.SubaccountId
+	for _, subaccountId := range negativeTncSubaccountIds {
+		bigNetCollateral,
+			_,
+			_,
+			err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+			ctx,
+			satypes.Update{SubaccountId: subaccountId},
+		)
+		if err != nil {
+			return err
+		}
+
+		// If the subaccount has negative TNC, mark that a negative TNC subaccount was found.
+		if bigNetCollateral.Sign() == -1 {
+			foundNegativeTncSubaccount = true
+			negativeTncSubaccountId = subaccountId
+			break
+		}
+	}
+
+	if !foundNegativeTncSubaccount {
+		return nil
+	}
+
+	// A negative TNC subaccount was found, therefore insert a zero-fill deleveraging operation into
+	// the operations queue to indicate withdrawals should be gated.
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, negativeTncSubaccountId)
+	perpetualPositions := subaccount.GetPerpetualPositions()
+	if len(perpetualPositions) == 0 {
+		return errorsmod.Wrapf(
+			types.ErrNoPerpetualPositionsToLiquidate,
+			"GateWithdrawalsIfNegativeTncSubaccountSeen: subaccount has no open positions: (%s)",
+			lib.MaybeGetJsonString(subaccount),
+		)
+	}
+	perpetualId := subaccount.PerpetualPositions[0].PerpetualId
+	k.MemClob.InsertZeroFillDeleveragingIntoOperationsQueue(ctx, negativeTncSubaccountId, perpetualId)
+	metrics.IncrCountMetricWithLabels(
+		types.ModuleName,
+		metrics.SubaccountsNegativeTncSubaccountSeen,
+		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		metrics.GetLabelForBoolValue(metrics.IsLong, subaccount.PerpetualPositions[0].GetIsLong()),
+		metrics.GetLabelForBoolValue(metrics.DeliverTx, false),
+	)
+
+	return nil
+}
+
 // IsValidInsuranceFundDelta returns true if the insurance fund has enough funds to cover the insurance
 // fund delta. Specifically, this function returns true if either of the following are true:
 // - The `insuranceFundDelta` is non-negative.

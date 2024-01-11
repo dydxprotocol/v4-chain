@@ -25,6 +25,8 @@ import {
   getNewPnlTick,
   getPnlTicksCreateObjects,
   getUsdcTransfersSinceLastPnlTick,
+  getAccountsToUpdate,
+  normalizeStartTime,
 } from '../../src/helpers/pnl-ticks-helper';
 import { defaultPnlTickForSubaccounts } from '../../src/helpers/constants';
 import Big from 'big.js';
@@ -35,6 +37,7 @@ import { ZERO } from '../../src/lib/constants';
 import { SubaccountUsdcTransferMap } from '../../src/helpers/types';
 import config from '../../src/config';
 import _ from 'lodash';
+import { ONE_HOUR_IN_MILLISECONDS } from '@dydxprotocol-indexer/base';
 
 describe('pnl-ticks-helper', () => {
   const positions: PerpetualPositionFromDatabase[] = [
@@ -226,6 +229,38 @@ describe('pnl-ticks-helper', () => {
       [testConstants.defaultSubaccountId]: new Big('-20.5'),
       [testConstants.defaultSubaccountId2]: new Big('20.5'),
     }));
+  });
+
+  it('normalizeStartTime', () => {
+    const time: Date = new Date('2021-01-09T20:00:50.000Z');
+    // 1 hour
+    config.PNL_TICK_UPDATE_INTERVAL_MS = 1000 * 60 * 60;
+    const result1: Date = normalizeStartTime(time);
+    expect(result1.toISOString()).toBe('2021-01-09T20:00:00.000Z');
+    // 1 day
+    config.PNL_TICK_UPDATE_INTERVAL_MS = 1000 * 60 * 60 * 24;
+    const result2: Date = normalizeStartTime(time);
+    expect(result2.toISOString()).toBe('2021-01-09T00:00:00.000Z');
+  });
+
+  it('getAccountsToUpdate', () => {
+    const accountToLastUpdatedBlockTime: _.Dictionary<IsoString> = {
+      account1: '2024-01-01T10:00:00Z',
+      account2: '2024-01-01T11:00:00Z',
+      account3: '2024-01-01T11:01:00Z',
+      account4: '2024-01-01T11:10:00Z',
+      account5: '2024-01-01T12:00:00Z',
+      account6: '2024-01-01T12:00:10Z',
+    };
+    const blockTime: IsoString = '2024-01-01T12:01:00Z';
+    config.PNL_TICK_UPDATE_INTERVAL_MS = ONE_HOUR_IN_MILLISECONDS;
+
+    const expectedAccountsToUpdate: string[] = ['account1', 'account2', 'account3', 'account4'];
+    const accountsToUpdate: string[] = getAccountsToUpdate(
+      accountToLastUpdatedBlockTime,
+      blockTime,
+    );
+    expect(accountsToUpdate).toEqual(expectedAccountsToUpdate);
   });
 
   it('calculateEquity', () => {

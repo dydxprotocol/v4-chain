@@ -1,18 +1,23 @@
 import {
   BlockTable,
+  IsoString,
   TradingRewardAggregationCreateObject,
   TradingRewardAggregationFromDatabase,
   TradingRewardAggregationPeriod,
   TradingRewardAggregationTable,
-  dbHelpers, testConstants, testMocks,
+  TradingRewardCreateObject,
+  TradingRewardTable,
+  dbHelpers,
+  testConstants,
+  testConversionHelpers,
+  testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import generateTaskFromPeriod, { AggregateTradingReward } from '../../src/tasks/aggregate-trading-rewards';
 import { logger } from '@dydxprotocol-indexer/base';
 import { DateTime, Interval } from 'luxon';
 import { UTC_OPTIONS } from '../../src/lib/constants';
-import { deleteAllAsync } from '@dydxprotocol-indexer/redis/build/src/helpers/redis';
 import { redisClient } from '../../src/helpers/redis';
-import { AggregateTradingRewardsProcessedCache } from '@dydxprotocol-indexer/redis';
+import { AggregateTradingRewardsProcessedCache, redis } from '@dydxprotocol-indexer/redis';
 import config from '../../src/config';
 
 describe('aggregate-trading-rewards', () => {
@@ -29,7 +34,7 @@ describe('aggregate-trading-rewards', () => {
 
   afterEach(async () => {
     await dbHelpers.clearData();
-    await deleteAllAsync(redisClient);
+    await redis.deleteAllAsync(redisClient);
     jest.resetAllMocks();
   });
 
@@ -47,14 +52,14 @@ describe('aggregate-trading-rewards', () => {
     endedAt: startedAt2.toISO(),
     endedAtHeight: '10000', // ignored field for the purposes of this test
     period: TradingRewardAggregationPeriod.MONTHLY,
-    amount: '10',
+    amount: testConversionHelpers.convertToDenomScale('10'),
   };
   const defaultMonthlyTradingRewardAggregation2: TradingRewardAggregationCreateObject = {
     address: testConstants.defaultAddress,
     startedAt: startedAt2.toISO(),
     startedAtHeight: testConstants.defaultBlock2.blockHeight,
     period: TradingRewardAggregationPeriod.MONTHLY,
-    amount: '10',
+    amount: testConversionHelpers.convertToDenomScale('10'),
   };
 
   describe('maybeDeleteIncompleteAggregatedTradingReward', () => {
@@ -72,12 +77,7 @@ describe('aggregate-trading-rewards', () => {
           TradingRewardAggregationPeriod.MONTHLY,
         );
         await aggregateTradingReward.maybeDeleteIncompleteAggregatedTradingReward();
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(1);
+        await validateNumberOfAggregations(1);
       },
     );
 
@@ -98,12 +98,7 @@ describe('aggregate-trading-rewards', () => {
         );
         await aggregateTradingReward.maybeDeleteIncompleteAggregatedTradingReward();
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       },
     );
   });
@@ -193,12 +188,7 @@ describe('aggregate-trading-rewards', () => {
           startedAt2.plus({ milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS }),
         ));
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       });
 
     it(
@@ -226,12 +216,7 @@ describe('aggregate-trading-rewards', () => {
         Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).toEqual(Interval.fromDateTimes(endedAt2, endedAt2));
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       });
 
     it(
@@ -259,12 +244,7 @@ describe('aggregate-trading-rewards', () => {
         Interval = await aggregateTradingReward.getTradingRewardDataToProcessInterval();
         expect(interval).toEqual(Interval.fromDateTimes(endedAt2, endedAt2.plus({ minutes: 1 })));
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       });
 
     it(
@@ -295,12 +275,7 @@ describe('aggregate-trading-rewards', () => {
           endedAt2.plus({ milliseconds: config.AGGREGATE_TRADING_REWARDS_MAX_INTERVAL_SIZE_MS }),
         ));
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       });
 
     it(
@@ -331,20 +306,205 @@ describe('aggregate-trading-rewards', () => {
           endedAt2.plus({ days: 1 })),
         );
 
-        const aggregations:
-        TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll(
-          {},
-          [],
-        );
-        expect(aggregations.length).toEqual(2);
+        await validateNumberOfAggregations(2);
       });
   });
 
   describe('runTask', () => {
+    beforeEach(async () => {
+      // In the tests below we have block at the following time:
+      // - 3 at 1/1/24 00:00:30
+      // - 4 at 1/1/24 23:00:30
+      // - 3 at 1/2/24 00:00:30
+      await Promise.all([
+        BlockTable.create({
+          blockHeight: '3',
+          time: thirdBlockTime,
+        }),
+        BlockTable.create({
+          blockHeight: '4',
+          time: fourthBlockTime,
+        }),
+        BlockTable.create({
+          blockHeight: '5',
+          time: fifthBlockTime,
+        }),
+      ]);
+    });
+
+    const thirdBlockTime: IsoString = startedAt.plus({ seconds: 30 }).toISO();
+    const fourthBlockTime: IsoString = startedAt.plus({ hours: 23, seconds: 30 }).toISO();
+    const fifthBlockTime: IsoString = startedAt.plus({ day: 1, seconds: 30 }).toISO();
+    const defaultTradingReward: TradingRewardCreateObject = {
+      address: testConstants.defaultAddress,
+      blockTime: thirdBlockTime,
+      blockHeight: '3',
+      amount: testConversionHelpers.convertToDenomScale('10'),
+    };
+
+    const intervalToBeProcessed: Interval = Interval.fromDateTimes(
+      startedAt,
+      startedAt.plus({ hours: 1 }),
+    );
+    const defaultCreatedTradingRewardAggregation: TradingRewardAggregationFromDatabase = {
+      id: TradingRewardAggregationTable.uuid(
+        testConstants.defaultAddress,
+        TradingRewardAggregationPeriod.DAILY,
+        '3',
+      ),
+      address: testConstants.defaultAddress,
+      startedAt: startedAt.toISO(),
+      startedAtHeight: '3',
+      period: TradingRewardAggregationPeriod.DAILY,
+      amount: testConversionHelpers.convertToDenomScale('10'),
+    };
+
     it('Successfully logs and exits if there are no blocks in the database', async () => {
       await dbHelpers.clearData();
-      await expect(generateTaskFromPeriod(TradingRewardAggregationPeriod.MONTHLY)())
+      await expect(generateTaskFromPeriod(TradingRewardAggregationPeriod.DAILY)())
         .rejects.toEqual(new Error('Unable to find latest block'));
+    });
+
+    it('Successfully creates new aggregations', async () => {
+      await Promise.all([
+        TradingRewardTable.create(defaultTradingReward),
+        AggregateTradingRewardsProcessedCache.setProcessedTime(
+          TradingRewardAggregationPeriod.DAILY,
+          intervalToBeProcessed.start.toISO(),
+          redisClient,
+        ),
+      ]);
+
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+        TradingRewardAggregationPeriod.DAILY,
+      );
+      await aggregateTradingReward.runTask();
+
+      await expectAggregateTradingRewardsProcessedCache(
+        TradingRewardAggregationPeriod.DAILY,
+        intervalToBeProcessed.end.toISO(),
+      );
+      await validateNumberOfAggregations(1);
+      await validateAggregationWithExpectedValue(defaultCreatedTradingRewardAggregation);
+    });
+
+    it('Successfully updates aggregation amounts', async () => {
+      await Promise.all([
+        TradingRewardTable.create(defaultTradingReward),
+        TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
+        AggregateTradingRewardsProcessedCache.setProcessedTime(
+          TradingRewardAggregationPeriod.DAILY,
+          intervalToBeProcessed.start.toISO(),
+          redisClient,
+        ),
+      ]);
+
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+        TradingRewardAggregationPeriod.DAILY,
+      );
+      await aggregateTradingReward.runTask();
+
+      await expectAggregateTradingRewardsProcessedCache(
+        TradingRewardAggregationPeriod.DAILY,
+        intervalToBeProcessed.end.toISO(),
+      );
+      await validateNumberOfAggregations(1);
+      await validateAggregationWithExpectedValue({
+        ...defaultCreatedTradingRewardAggregation,
+        amount: testConversionHelpers.convertToDenomScale('20'),
+      });
+    });
+
+    it('Successfully creates new aggregations and sets endAt and endAtHeight', async () => {
+      await Promise.all([
+        TradingRewardTable.create({
+          ...defaultTradingReward,
+          blockTime: fourthBlockTime,
+          blockHeight: '4',
+        }),
+        AggregateTradingRewardsProcessedCache.setProcessedTime(
+          TradingRewardAggregationPeriod.DAILY,
+          startedAt.plus({ hours: 23 }).toISO(),
+          redisClient,
+        ),
+      ]);
+
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+        TradingRewardAggregationPeriod.DAILY,
+      );
+      await aggregateTradingReward.runTask();
+
+      await expectAggregateTradingRewardsProcessedCache(
+        TradingRewardAggregationPeriod.DAILY,
+        startedAt.plus({ days: 1 }).toISO(),
+      );
+      await validateNumberOfAggregations(1);
+      await validateAggregationWithExpectedValue({
+        ...defaultCreatedTradingRewardAggregation,
+        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAtHeight: '4',
+      });
+    });
+
+    it('Successfully updates aggregation amount and sets endAt and endAtHeight', async () => {
+      await Promise.all([
+        TradingRewardTable.create({
+          ...defaultTradingReward,
+          blockTime: fourthBlockTime,
+          blockHeight: '4',
+        }),
+        TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
+        AggregateTradingRewardsProcessedCache.setProcessedTime(
+          TradingRewardAggregationPeriod.DAILY,
+          startedAt.plus({ hours: 23 }).toISO(),
+          redisClient,
+        ),
+      ]);
+
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+        TradingRewardAggregationPeriod.DAILY,
+      );
+      await aggregateTradingReward.runTask();
+
+      await expectAggregateTradingRewardsProcessedCache(
+        TradingRewardAggregationPeriod.DAILY,
+        startedAt.plus({ days: 1 }).toISO(),
+      );
+      await validateNumberOfAggregations(1);
+      await validateAggregationWithExpectedValue({
+        ...defaultCreatedTradingRewardAggregation,
+        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAtHeight: '4',
+        amount: testConversionHelpers.convertToDenomScale('20'),
+      });
+    });
+
+    it('Successfully updates aggregation with no amount update and sets endAt and endAtHeight', async () => {
+      await Promise.all([
+        TradingRewardAggregationTable.create(defaultCreatedTradingRewardAggregation),
+        AggregateTradingRewardsProcessedCache.setProcessedTime(
+          TradingRewardAggregationPeriod.DAILY,
+          startedAt.plus({ hours: 23 }).toISO(),
+          redisClient,
+        ),
+      ]);
+
+      const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
+        TradingRewardAggregationPeriod.DAILY,
+      );
+      await aggregateTradingReward.runTask();
+
+      await expectAggregateTradingRewardsProcessedCache(
+        TradingRewardAggregationPeriod.DAILY,
+        startedAt.plus({ days: 1 }).toISO(),
+      );
+      await validateNumberOfAggregations(1);
+      await validateAggregationWithExpectedValue({
+        ...defaultCreatedTradingRewardAggregation,
+        endedAt: startedAt.plus({ days: 1 }).toISO(),
+        endedAtHeight: '4',
+        amount: testConversionHelpers.convertToDenomScale('10'),
+      });
     });
   });
 });
@@ -354,4 +514,34 @@ async function createBlockWithTime(time: DateTime): Promise<void> {
     blockHeight: '3',
     time: time.toISO(),
   });
+}
+
+async function validateNumberOfAggregations(
+  expectedNumberOfAggregations: number,
+): Promise<void> {
+  const aggregations:
+  TradingRewardAggregationFromDatabase[] = await TradingRewardAggregationTable.findAll({}, []);
+  expect(aggregations.length).toEqual(expectedNumberOfAggregations);
+}
+
+async function validateAggregationWithExpectedValue(
+  expectedAggregation: TradingRewardAggregationFromDatabase,
+): Promise<void> {
+  const aggregation:
+  TradingRewardAggregationFromDatabase | undefined = await TradingRewardAggregationTable.findById(
+    expectedAggregation.id,
+  );
+
+  expect(aggregation).toEqual(expect.objectContaining(expectedAggregation));
+}
+
+async function expectAggregateTradingRewardsProcessedCache(
+  period: TradingRewardAggregationPeriod,
+  processedTime: string,
+): Promise<void> {
+  const cacheValue: string | null = await AggregateTradingRewardsProcessedCache.getProcessedTime(
+    period,
+    redisClient,
+  );
+  expect(cacheValue).toEqual(processedTime);
 }

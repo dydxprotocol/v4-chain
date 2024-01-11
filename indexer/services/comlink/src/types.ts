@@ -18,6 +18,7 @@ import {
   PositionSide,
   SubaccountFromDatabase,
   TradeType,
+  TradingRewardAggregationPeriod,
   TransferType,
 } from '@dydxprotocol-indexer/postgres';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
@@ -401,4 +402,47 @@ export interface ComplianceRequest extends AddressRequest {}
 export enum BlockedCode {
   GEOBLOCKED = 'GEOBLOCKED',
   COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
+}
+
+/* ------- HISTORICAL TRADING REWARD TYPES ------- */
+
+export interface HistoricalTradingRewardAggregationRequest extends AddressRequest, LimitRequest {
+  period: TradingRewardAggregationPeriod,
+  startingBeforeOrAt: IsoString,
+  startingBeforeOrAtHeight: string,
+}
+
+export interface HistoricalTradingRewardAggregationsResponse {
+  // Indexer will not fill in empty periods, if there is no data after this period,
+  // Indexer will return an empty list. Will return in descending order, the most
+  // recent at the start
+  rewards: HistoricalTradingRewardAggregation[],
+}
+
+export interface HistoricalTradingRewardAggregation {
+  tradingReward: string, // i.e. '100.1' for 100.1 token earned through trading rewards
+  startedAt: IsoString, // Start of the aggregation period, inclusive
+  startedAtHeight: string, // first block included in the aggregation, inclusive
+  endedAt?: IsoString, // End of the aggregation period, exclusive
+  endedAtHeight?: string, // last block included in the aggregation, inclusive
+  period: TradingRewardAggregationPeriod,
+}
+
+/* ------- HISTORICAL BLOCK TRADING REWARD TYPES ------- */
+export interface HistoricalBlockTradingRewardRequest extends AddressRequest, LimitRequest {
+  startingBeforeOrAt: IsoString,
+  startingBeforeOrAtHeight: string,
+}
+
+export interface HistoricalBlockTradingRewardsResponse {
+  // Indexer will not fill in empty periods, if there is no data after this period,
+  // Indexer will return an empty list. Will return in descending order, the most
+  // recent at the start
+  rewards: HistoricalBlockTradingReward[],
+}
+
+export interface HistoricalBlockTradingReward {
+  tradingReward: string, // i.e. '100.1' for 100.1 token earned through trading rewards
+  createdAt: IsoString,
+  createdAtHeight: string,
 }

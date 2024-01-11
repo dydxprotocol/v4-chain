@@ -3,17 +3,27 @@ import {
   ONE_MINUTE_IN_MILLISECONDS,
   floorDate,
   logger,
+  runFuncWithTimingStat,
 } from '@dydxprotocol-indexer/base';
 import {
   BlockFromDatabase,
   BlockTable,
   IsoString,
+  IsolationLevel,
+  TradingRewardAggregationColumns,
+  TradingRewardAggregationCreateObject,
   TradingRewardAggregationFromDatabase,
   TradingRewardAggregationPeriod,
   TradingRewardAggregationTable,
+  TradingRewardAggregationUpdateObject,
+  TradingRewardColumns,
   TradingRewardFromDatabase,
+  TradingRewardTable,
+  Transaction,
 } from '@dydxprotocol-indexer/postgres';
 import { AggregateTradingRewardsProcessedCache } from '@dydxprotocol-indexer/redis';
+import Big from 'big.js';
+import _ from 'lodash';
 import { DateTime, Interval } from 'luxon';
 
 import config from '../config';
@@ -26,8 +36,16 @@ import { UTC_OPTIONS } from '../lib/constants';
  * It retrieves trading data from the database, calculates the rewards, and stores the aggregated
  * results.
  */
-interface SortedTradingRewardData {
-  [address: string]: TradingRewardFromDatabase[];
+type IntervalTradingRewardsByAddress = _.Dictionary<string>;
+interface AggregationUpdateAndCreateObjects {
+  updateObjects: TradingRewardAggregationUpdateObject[];
+  createObjects: TradingRewardAggregationCreateObject[];
+}
+
+enum DateTimeUnit {
+  DAY = 'day',
+  WEEK = 'week',
+  MONTH = 'month',
 }
 
 export default function generateTaskFromPeriod(
@@ -56,16 +74,16 @@ export class AggregateTradingReward {
       end: interval.end.toISO(),
     });
 
-    const tradingRewardData:
-    TradingRewardFromDatabase[] = await this.getTradingRewardDataToProcess(interval);
-    const sortedTradingRewardData: SortedTradingRewardData = this.sortTradingRewardData(
-      tradingRewardData,
+    const intervalTradingRewardsByAddress:
+    IntervalTradingRewardsByAddress = await runFuncWithTimingStat(
+      this.getIntervalTradingRewardsByAddress(
+        interval,
+      ),
+      this.generateTimingStatsOptions('getIntervalTradingRewardsByAddress'),
     );
-    await this.updateTradingRewardsAggregation(sortedTradingRewardData);
-    await AggregateTradingRewardsProcessedCache.setProcessedTime(
-      this.period,
+    await this.updateTradingRewardsAggregation(interval, intervalTradingRewardsByAddress);
+    await this.setProcessedTime(
       interval.end.toISO(),
-      redisClient,
     );
   }
 
@@ -88,7 +106,10 @@ export class AggregateTradingReward {
 
     // endedAt is only set when the entire interval has been processed for an aggregation
     if (latestAggregation !== undefined && latestAggregation.endedAt === null) {
-      await this.deleteIncompleteAggregatedTradingReward(latestAggregation);
+      await runFuncWithTimingStat(
+        this.deleteIncompleteAggregatedTradingReward(latestAggregation),
+        this.generateTimingStatsOptions('deleteIncompleteAggregatedTradingReward'),
+      );
     }
   }
 
@@ -138,10 +159,8 @@ export class AggregateTradingReward {
         message: 'Resetting AggregateTradingRewardsProcessedCache',
       });
       const nextStartTime: DateTime = await this.getNextIntervalStartWhenCacheEmpty();
-      await AggregateTradingRewardsProcessedCache.setProcessedTime(
-        this.period,
+      await this.setProcessedTime(
         nextStartTime.toISO(),
-        redisClient,
       );
 
       return this.generateInterval(nextStartTime, latestBlock);
@@ -213,23 +232,313 @@ export class AggregateTradingReward {
     return Interval.fromDateTimes(startTime, endDateTime);
   }
 
-  private async getTradingRewardDataToProcess(
-    _interval: Interval,
-  ): Promise<TradingRewardFromDatabase[]> {
-    // TODO: Implement
-    return Promise.resolve([]);
-  }
+  private async getIntervalTradingRewardsByAddress(
+    interval: Interval,
+  ): Promise<IntervalTradingRewardsByAddress> {
+    const tradingRewards: TradingRewardFromDatabase[] = await TradingRewardTable.findAll({
+      blockTimeAfterOrAt: interval.start.toISO(),
+      blockTimeBefore: interval.end.toISO(),
+    }, []);
 
-  private sortTradingRewardData(
-    _tradingRewardData: TradingRewardFromDatabase[],
-  ): SortedTradingRewardData {
-    // TODO: Implement
-    return {};
+    const tradingRewardsByAddress: _.Dictionary<TradingRewardFromDatabase[]> = _.groupBy(
+      tradingRewards,
+      TradingRewardColumns.address,
+    );
+
+    return _.mapValues(
+      tradingRewardsByAddress,
+      (tradingRewardsForAddress: TradingRewardFromDatabase[]) => {
+        return _.reduce(
+          tradingRewardsForAddress,
+          (sum: string, tradingReward: TradingRewardFromDatabase) => {
+            return Big(sum).plus(tradingReward.amount).toFixed();
+          },
+          '0',
+        );
+      },
+    );
   }
 
   private async updateTradingRewardsAggregation(
-    _sortedTradingRewardData: SortedTradingRewardData,
+    interval: Interval,
+    intervalTradingRewardsByAddress: IntervalTradingRewardsByAddress,
   ): Promise<void> {
-    // TODO: Implement
+    let aggregationUpdateAndCreateObjects:
+    AggregationUpdateAndCreateObjects = await this.getAggregationUpdateAndCreateObjectsFromInterval(
+      interval,
+      intervalTradingRewardsByAddress,
+    );
+
+    // If interval.end is the end of this.period, then we need to set the endedAt and endedAtHeight
+    // for all the aggregation objects.
+    if (this.isEndofPeriod(interval.end)) {
+      aggregationUpdateAndCreateObjects = await this.addEndedAtAndEndedAtHeightUpdates(
+        aggregationUpdateAndCreateObjects,
+        interval,
+      );
+    }
+
+    const txId: number = await Transaction.start();
+    await Transaction.setIsolationLevel(txId, IsolationLevel.READ_UNCOMMITTED);
+    try {
+      await this.createAndUpdateAggregations(aggregationUpdateAndCreateObjects, txId);
+      await Transaction.commit(txId);
+      logger.info({
+        at: 'aggregate-trading-rewards#updateTradingRewardsAggregation',
+        message: 'Updated trading rewards aggregation',
+        start: interval.start.toISO(),
+        end: interval.end.toISO(),
+      });
+    } catch (error) {
+      await Transaction.rollback(txId);
+      logger.info({
+        at: 'aggregate-trading-rewards#updateTradingRewardsAggregation',
+        message: 'Failed to update trading rewards aggregation',
+        error: error.message,
+        start: interval.start.toISO(),
+        end: interval.end.toISO(),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Generate all update and create objects for the interval, by aggregating all trading rewards
+   * for the interval.
+   */
+  private async getAggregationUpdateAndCreateObjectsFromInterval(
+    interval: Interval,
+    intervalTradingRewardsByAddress: IntervalTradingRewardsByAddress,
+  ): Promise<AggregationUpdateAndCreateObjects> {
+    const tradingRewardAddresses: string[] = Object.keys(intervalTradingRewardsByAddress);
+
+    const existingAggregateTradingRewards:
+    TradingRewardAggregationFromDatabase[] = await runFuncWithTimingStat(
+      TradingRewardAggregationTable.findAll({
+        addresses: tradingRewardAddresses,
+        period: this.period,
+      }, []),
+      this.generateTimingStatsOptions('findAllExistingAggregations'),
+    );
+    const existingAggregateTradingRewardsMap:
+    { [address: string]: TradingRewardAggregationFromDatabase } = _.keyBy(
+      existingAggregateTradingRewards,
+      TradingRewardAggregationColumns.address,
+    );
+
+    const startedAt: string = this.getStartedAt(interval);
+    const startedAtHeight: string = await this.getNextBlock(startedAt);
+    const aggregateTradingRewardsToUpdate: TradingRewardAggregationUpdateObject[] = _.intersection(
+      tradingRewardAddresses,
+      Object.keys(existingAggregateTradingRewardsMap),
+    ).map((address: string) => {
+      return {
+        id: TradingRewardAggregationTable.uuid(address, this.period, startedAtHeight),
+        amount: Big(intervalTradingRewardsByAddress[address])
+          .plus(existingAggregateTradingRewardsMap[address].amount).toFixed(),
+      };
+    });
+
+    const aggregateTradingRewardsToCreate: TradingRewardAggregationCreateObject[] = _.difference(
+      tradingRewardAddresses,
+      Object.keys(existingAggregateTradingRewardsMap),
+    ).map((address: string) => {
+      return {
+        address,
+        startedAt,
+        startedAtHeight,
+        period: this.period,
+        amount: intervalTradingRewardsByAddress[address],
+      };
+    });
+
+    return {
+      updateObjects: aggregateTradingRewardsToUpdate,
+      createObjects: aggregateTradingRewardsToCreate,
+    };
+  }
+
+  private getStartedAt(interval: Interval): IsoString {
+    return interval.start.startOf(this.getDateTimeUnit()).toISO();
+  }
+
+  private async getNextBlock(time: IsoString): Promise<string> {
+    const blocks: BlockFromDatabase[] = await BlockTable.findAll({
+      createdOnOrAfter: time,
+      limit: 1,
+    }, []);
+
+    if (blocks.length === 0) {
+      logger.error({
+        at: 'aggregate-trading-rewards#getStartedAtHeight',
+        message: 'No blocks found after time, this should never happen',
+        time,
+      });
+      throw new Error(`No blocks found after ${time}`);
+    }
+    return blocks[0].blockHeight;
+  }
+
+  private isEndofPeriod(endTime: DateTime): boolean {
+    return endTime.startOf(this.getDateTimeUnit()).toISO() === endTime.toISO();
+  }
+
+  private async addEndedAtAndEndedAtHeightUpdates(
+    aggregationUpdateAndCreateObjects: AggregationUpdateAndCreateObjects,
+    interval: Interval,
+  ): Promise<AggregationUpdateAndCreateObjects> {
+    const startedAt: string = this.getStartedAt(interval);
+    const startedAtHeight: string = await this.getNextBlock(startedAt);
+    const endedAt: IsoString = interval.end.toISO();
+    // endedAtHeight is the first block created before endedAt
+    const endedAtHeight: string = Big(await this.getNextBlock(endedAt)).minus(1).toFixed();
+
+    const allIncompleteAggregation: TradingRewardAggregationFromDatabase[] = await
+    TradingRewardAggregationTable.findAll({
+      period: this.period,
+      startedAtHeight,
+    }, []);
+    const allIncompleteAggregationAddresses: string[] = _.map(
+      allIncompleteAggregation,
+      TradingRewardAggregationColumns.address,
+    );
+
+    const otherAggregationAddresses: string[] = _.difference(
+      allIncompleteAggregationAddresses,
+      _.map(
+        aggregationUpdateAndCreateObjects.updateObjects,
+        TradingRewardAggregationColumns.address,
+      ),
+    );
+    const otherAggregationUpdateObjects: TradingRewardAggregationUpdateObject[] = _.map(
+      otherAggregationAddresses,
+      (address: string) => {
+        return {
+          id: TradingRewardAggregationTable.uuid(address, this.period, startedAtHeight),
+          endedAt,
+          endedAtHeight,
+        };
+      },
+    );
+    return {
+      createObjects: _.map(
+        aggregationUpdateAndCreateObjects.createObjects,
+        (createObject: TradingRewardAggregationCreateObject) => {
+          return {
+            ...createObject,
+            endedAt,
+            endedAtHeight,
+          };
+        },
+      ),
+      updateObjects: _.map(
+        aggregationUpdateAndCreateObjects.updateObjects,
+        (updateObject: TradingRewardAggregationUpdateObject) => {
+          return {
+            ...updateObject,
+            endedAt,
+            endedAtHeight,
+          } as TradingRewardAggregationUpdateObject;
+        },
+      ).concat(otherAggregationUpdateObjects),
+    };
+  }
+
+  private getDateTimeUnit(): DateTimeUnit {
+    switch (this.period) {
+      case TradingRewardAggregationPeriod.DAILY:
+        return DateTimeUnit.DAY;
+      case TradingRewardAggregationPeriod.WEEKLY:
+        return DateTimeUnit.WEEK;
+      case TradingRewardAggregationPeriod.MONTHLY:
+        return DateTimeUnit.WEEK;
+      default:
+        throw new Error(`Invalid period ${this.period}`);
+    }
+  }
+
+  private async createAndUpdateAggregations(
+    aggregationUpdateAndCreateObjects: AggregationUpdateAndCreateObjects,
+    txId: number,
+  ): Promise<void> {
+    const createObjectsChunks: TradingRewardAggregationCreateObject[][] = _.chunk(
+      aggregationUpdateAndCreateObjects.createObjects,
+      config.AGGREGATE_TRADING_REWARDS_CHUNK_SIZE,
+    );
+    for (const createObjectsChunk of createObjectsChunks) {
+      logger.info({
+        at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
+        message: 'Creating trading reward aggregations',
+        count: createObjectsChunk.length,
+        createObjectsChunk: JSON.stringify(createObjectsChunk),
+      });
+      await runFuncWithTimingStat(
+        Promise.all(_.map(
+          createObjectsChunk,
+          (createObject: TradingRewardAggregationCreateObject) => {
+            return TradingRewardAggregationTable.create(createObject, { txId });
+          },
+        )),
+        this.generateTimingStatsOptions('createChunk'),
+      );
+      logger.info({
+        at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
+        message: 'Created trading reward aggregations',
+        count: createObjectsChunk.length,
+      });
+    }
+
+    const updateObjectsChunks: TradingRewardAggregationUpdateObject[][] = _.chunk(
+      aggregationUpdateAndCreateObjects.updateObjects,
+      config.AGGREGATE_TRADING_REWARDS_CHUNK_SIZE,
+    );
+    for (const updateObjectsChunk of updateObjectsChunks) {
+      logger.info({
+        at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
+        message: 'Updating trading reward aggregations',
+        count: updateObjectsChunk.length,
+        updateObjectsChunk: JSON.stringify(updateObjectsChunk),
+      });
+      await runFuncWithTimingStat(
+        Promise.all(_.map(
+          updateObjectsChunk,
+          (updateObject: TradingRewardAggregationUpdateObject) => {
+            return TradingRewardAggregationTable.update(updateObject, { txId });
+          },
+        )),
+        this.generateTimingStatsOptions('updateChunk'),
+      );
+      logger.info({
+        at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
+        message: 'Updated trading reward aggregations',
+        count: updateObjectsChunk.length,
+      });
+    }
+  }
+
+  private async setProcessedTime(processedTime: IsoString): Promise<void> {
+    logger.info({
+      at: 'aggregate-trading-rewards#setProcessedTime',
+      message: 'Setting processed time',
+      processedTime,
+    });
+    await AggregateTradingRewardsProcessedCache.setProcessedTime(
+      this.period,
+      processedTime,
+      redisClient,
+    );
+    logger.info({
+      at: 'aggregate-trading-rewards#setProcessedTime',
+      message: 'Set processed time',
+      processedTime,
+    });
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  protected generateTimingStatsOptions(fnName: string): any {
+    return {
+      taskName: 'aggregate-trading-rewards',
+      fnName,
+    };
   }
 }
