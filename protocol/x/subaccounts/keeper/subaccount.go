@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"errors"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"time"
+
+	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
@@ -483,8 +484,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
 
-	// Block all withdrawals and transfers if there was a negative TNC subaccount seen within the
-	// last `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`.
+	// Block all withdrawals and transfers if either of the following is true within the last
+	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
+	// - There was a negative TNC subaccount seen.
+	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
 		lastBlockNegativeTncSubaccountSeen, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
 		currentBlock := uint32(ctx.BlockHeight())
@@ -501,8 +504,26 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			)
 		}
 
-		if exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
-			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS {
+		// Panic if the current block is less than the last block a chain outage was seen.
+		downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(ctx, 5*time.Minute)
+		if currentBlock < downtimeInfo.BlockInfo.Height {
+			panic(
+				fmt.Sprintf(
+					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
+						"block a chain outage was seen (%d)",
+					currentBlock,
+					downtimeInfo.BlockInfo.Height,
+				),
+			)
+		}
+
+		negativeTncSubaccountSeen := exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
+			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
+		// TODO: update this to check for existence.
+		chainOutageSeen := currentBlock-downtimeInfo.BlockInfo.Height <
+			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
+
+		if negativeTncSubaccountSeen || chainOutageSeen {
 			success = false
 			for i := range settledUpdates {
 				successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
@@ -511,6 +532,8 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				metrics.SubaccountWithdrawalsAndTransfersBlocked,
 				1,
 				metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
+				metrics.GetLabelForBoolValue(metrics.SubaccountsNegativeTncSubaccountSeen, negativeTncSubaccountSeen),
+				metrics.GetLabelForBoolValue(metrics.SubaccountsChainOutageSeen, chainOutageSeen),
 			)
 			return success, successPerUpdate, nil
 		}

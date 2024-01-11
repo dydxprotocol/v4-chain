@@ -1,9 +1,10 @@
 package keeper
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
 	"math/big"
 	"testing"
+
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
@@ -21,6 +22,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	perpskeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -84,6 +86,7 @@ func createSubaccountsKeeper(
 	ak *asskeeper.Keeper,
 	bk types.BankKeeper,
 	pk *perpskeeper.Keeper,
+	btk *blocktimekeeper.Keeper,
 	transientStoreKey storetypes.StoreKey,
 	msgSenderEnabled bool,
 ) (*keeper.Keeper, storetypes.StoreKey) {
@@ -101,6 +104,7 @@ func createSubaccountsKeeper(
 		ak,
 		bk,
 		pk,
+		btk,
 		mockIndexerEventsManager,
 	)
 

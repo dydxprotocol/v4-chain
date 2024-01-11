@@ -904,6 +904,7 @@ func New(
 		app.AssetsKeeper,
 		app.BankKeeper,
 		app.PerpetualsKeeper,
+		app.BlockTimeKeeper,
 		app.IndexerEventManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
