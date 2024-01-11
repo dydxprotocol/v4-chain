@@ -322,6 +322,7 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 
 // TriggerOrdersWithPrice triggers all untriggered conditional orders using the given price. It returns
 // a list of order ids that were triggered. This function is called in EndBlocker.
+// It removes all triggered conditional orders from the `UntriggeredConditionalOrders ` struct.
 func (k Keeper) TriggerOrdersWithPrice(
 	ctx sdk.Context,
 	untriggered *UntriggeredConditionalOrders,
