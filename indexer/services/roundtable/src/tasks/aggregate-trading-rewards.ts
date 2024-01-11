@@ -173,10 +173,10 @@ export class AggregateTradingReward {
 
   /**
    * Returns the start time of the next interval to process if the
-   * AggregateTradingRewardProcessedCache is empty. 
+   * AggregateTradingRewardProcessedCache is empty.
    * - If there is a most recent complete aggregation for this period,
    * returns the end time of the most recent aggregation.
-   * - If there is a trading reward in the database, 
+   * - If there is a trading reward in the database,
    * returns the block time of the trading reward.
    * - Otherwise returns the start time of the first block in the database.
    */
