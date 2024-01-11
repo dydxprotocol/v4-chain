@@ -286,11 +286,59 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (triggeredConditi
 				),
 			)
 		}
+
+		// Trigger conditional orders using the oracle price.
 		currentOraclePriceSubticksRat := k.GetOraclePriceSubticksRat(ctx, clobPair)
 		triggeredOrderIds := untriggeredConditionalOrders.PollTriggeredConditionalOrders(
 			currentOraclePriceSubticksRat,
 		)
 		triggeredConditionalOrderIds = append(triggeredConditionalOrderIds, triggeredOrderIds...)
+
+		// Trigger conditional orders using the last traded price.
+		perpetualId := clobPair.MustGetPerpetualId()
+		minTradePriceSubticks, maxTradePriceSubticks, found := k.GetTradePricesForPerpetual(ctx, perpetualId)
+		if found {
+			// Get the perpetual.
+			perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+			if err != nil {
+				panic(
+					fmt.Errorf(
+						"EndBlocker: untriggeredConditionalOrders failed to find perpetualId %+v",
+						perpetualId,
+					),
+				)
+			}
+
+			// Get the market param.
+			marketParam, exists := k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
+			if !exists {
+				panic(
+					fmt.Errorf(
+						"EndBlocker: untriggeredConditionalOrders failed to find marketParam %+v",
+						perpetual.Params.MarketId,
+					),
+				)
+			}
+
+			// Calculate the max allowed range.
+			maxAllowedRange := lib.BigRatMulPpm(currentOraclePriceSubticksRat, marketParam.MinPriceChangePpm)
+			maxAllowedRange.Mul(maxAllowedRange, new(big.Rat).SetUint64(types.ConditionalOrderTriggerMultiplier))
+
+			upperBound := new(big.Rat).Add(currentOraclePriceSubticksRat, maxAllowedRange)
+			lowerBound := new(big.Rat).Sub(currentOraclePriceSubticksRat, maxAllowedRange)
+
+			for _, price := range []types.Subticks{minTradePriceSubticks, maxTradePriceSubticks} {
+				// Clamp the min and max trade prices to the upper and lower bounds.
+				clampedTradePrice := lib.BigRatClamp(
+					new(big.Rat).SetUint64(price.ToUint64()),
+					lowerBound,
+					upperBound,
+				)
+				triggeredOrderIds := untriggeredConditionalOrders.PollTriggeredConditionalOrders(clampedTradePrice)
+				triggeredConditionalOrderIds = append(triggeredConditionalOrderIds, triggeredOrderIds...)
+			}
+		}
+
 		// Set the modified untriggeredConditionalOrders back on the keeper field.
 		k.UntriggeredConditionalOrders[clobPairId] = untriggeredConditionalOrders
 	}

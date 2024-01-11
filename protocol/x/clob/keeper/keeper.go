@@ -37,6 +37,7 @@ type (
 		blockTimeKeeper     types.BlockTimeKeeper
 		feeTiersKeeper      types.FeeTiersKeeper
 		perpetualsKeeper    types.PerpetualsKeeper
+		pricesKeeper        types.PricesKeeper
 		statsKeeper         types.StatsKeeper
 		rewardsKeeper       types.RewardsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
@@ -77,6 +78,7 @@ func NewKeeper(
 	bankKeeper types.BankKeeper,
 	feeTiersKeeper types.FeeTiersKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
+	pricesKeeper types.PricesKeeper,
 	statsKeeper types.StatsKeeper,
 	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
@@ -101,6 +103,7 @@ func NewKeeper(
 		bankKeeper:                   bankKeeper,
 		feeTiersKeeper:               feeTiersKeeper,
 		perpetualsKeeper:             perpetualsKeeper,
+		pricesKeeper:                 pricesKeeper,
 		statsKeeper:                  statsKeeper,
 		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
