@@ -376,7 +376,7 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.37.3-0.20230908230338-65f7a2f25c18
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20231025201005-bef8a051e94f
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.47.5-0.20240111163003-128eb0a555af
 	// Cosmos SDK 0.47.x upgrade guide (https://github.com/cosmos/cosmos-sdk/blob/main/UPGRADING.md#replaces) mentions
 	// that there are stability issues. See https://github.com/cosmos/cosmos-sdk/issues/14949 and
 	// https://github.com/ethereum/go-ethereum/pull/25413 for further context.
