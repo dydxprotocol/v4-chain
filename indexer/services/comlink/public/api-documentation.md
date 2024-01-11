@@ -659,6 +659,83 @@ fetch('https://dydx-testnet.imperator.co/v4/height',
 This operation does not require authentication
 </aside>
 
+## GetTradingRewards
+
+<a id="opIdGetTradingRewards"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/historicalBlockTradingRewards/{address}', params={
+  'limit': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/historicalBlockTradingRewards/{address}?limit=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /historicalBlockTradingRewards/{address}`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+|limit|query|number(double)|true|none|
+|startingBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|startingBeforeOrAtHeight|query|string|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "rewards": [
+    {
+      "tradingReward": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[HistoricalBlockTradingRewardsResponse](#schemahistoricalblocktradingrewardsresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetHistoricalFunding
 
 <a id="opIdGetHistoricalFunding"></a>
@@ -818,6 +895,95 @@ fetch('https://dydx-testnet.imperator.co/v4/historical-pnl?address=string&subacc
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
 |200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[HistoricalPnlResponse](#schemahistoricalpnlresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetAggregations
+
+<a id="opIdGetAggregations"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/historicalTradingRewardAggregations/{address}', params={
+  'period': 'DAILY',  'limit': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/historicalTradingRewardAggregations/{address}?period=DAILY&limit=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /historicalTradingRewardAggregations/{address}`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+|period|query|[TradingRewardAggregationPeriod](#schematradingrewardaggregationperiod)|true|none|
+|limit|query|number(double)|true|none|
+|startingBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|startingBeforeOrAtHeight|query|string|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|period|DAILY|
+|period|WEEKLY|
+|period|MONTHLY|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "rewards": [
+    {
+      "tradingReward": "string",
+      "startedAt": "string",
+      "startedAtHeight": "string",
+      "endedAt": "string",
+      "endedAtHeight": "string",
+      "period": "DAILY"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[HistoricalTradingRewardAggregationsResponse](#schemahistoricaltradingrewardaggregationsresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -2450,6 +2616,56 @@ This operation does not require authentication
 |height|string|true|none|none|
 |time|[IsoString](#schemaisostring)|true|none|none|
 
+## HistoricalBlockTradingReward
+
+<a id="schemahistoricalblocktradingreward"></a>
+<a id="schema_HistoricalBlockTradingReward"></a>
+<a id="tocShistoricalblocktradingreward"></a>
+<a id="tocshistoricalblocktradingreward"></a>
+
+```json
+{
+  "tradingReward": "string",
+  "createdAt": "string",
+  "createdAtHeight": "string"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|tradingReward|string|true|none|none|
+|createdAt|[IsoString](#schemaisostring)|true|none|none|
+|createdAtHeight|string|true|none|none|
+
+## HistoricalBlockTradingRewardsResponse
+
+<a id="schemahistoricalblocktradingrewardsresponse"></a>
+<a id="schema_HistoricalBlockTradingRewardsResponse"></a>
+<a id="tocShistoricalblocktradingrewardsresponse"></a>
+<a id="tocshistoricalblocktradingrewardsresponse"></a>
+
+```json
+{
+  "rewards": [
+    {
+      "tradingReward": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|rewards|[[HistoricalBlockTradingReward](#schemahistoricalblocktradingreward)]|true|none|none|
+
 ## HistoricalFundingResponseObject
 
 <a id="schemahistoricalfundingresponseobject"></a>
@@ -2570,6 +2786,91 @@ This operation does not require authentication
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
 |historicalPnl|[[PnlTicksResponseObject](#schemapnlticksresponseobject)]|true|none|none|
+
+## TradingRewardAggregationPeriod
+
+<a id="schematradingrewardaggregationperiod"></a>
+<a id="schema_TradingRewardAggregationPeriod"></a>
+<a id="tocStradingrewardaggregationperiod"></a>
+<a id="tocstradingrewardaggregationperiod"></a>
+
+```json
+"DAILY"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|DAILY|
+|*anonymous*|WEEKLY|
+|*anonymous*|MONTHLY|
+
+## HistoricalTradingRewardAggregation
+
+<a id="schemahistoricaltradingrewardaggregation"></a>
+<a id="schema_HistoricalTradingRewardAggregation"></a>
+<a id="tocShistoricaltradingrewardaggregation"></a>
+<a id="tocshistoricaltradingrewardaggregation"></a>
+
+```json
+{
+  "tradingReward": "string",
+  "startedAt": "string",
+  "startedAtHeight": "string",
+  "endedAt": "string",
+  "endedAtHeight": "string",
+  "period": "DAILY"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|tradingReward|string|true|none|none|
+|startedAt|[IsoString](#schemaisostring)|true|none|none|
+|startedAtHeight|string|true|none|none|
+|endedAt|[IsoString](#schemaisostring)|false|none|none|
+|endedAtHeight|string|false|none|none|
+|period|[TradingRewardAggregationPeriod](#schematradingrewardaggregationperiod)|true|none|none|
+
+## HistoricalTradingRewardAggregationsResponse
+
+<a id="schemahistoricaltradingrewardaggregationsresponse"></a>
+<a id="schema_HistoricalTradingRewardAggregationsResponse"></a>
+<a id="tocShistoricaltradingrewardaggregationsresponse"></a>
+<a id="tocshistoricaltradingrewardaggregationsresponse"></a>
+
+```json
+{
+  "rewards": [
+    {
+      "tradingReward": "string",
+      "startedAt": "string",
+      "startedAtHeight": "string",
+      "endedAt": "string",
+      "endedAtHeight": "string",
+      "period": "DAILY"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|rewards|[[HistoricalTradingRewardAggregation](#schemahistoricaltradingrewardaggregation)]|true|none|none|
 
 ## OrderbookResponsePriceLevel
 

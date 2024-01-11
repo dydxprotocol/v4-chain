@@ -424,6 +424,41 @@
         "type": "object",
         "additionalProperties": false
       },
+      "HistoricalBlockTradingReward": {
+        "properties": {
+          "tradingReward": {
+            "type": "string"
+          },
+          "createdAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "createdAtHeight": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tradingReward",
+          "createdAt",
+          "createdAtHeight"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalBlockTradingRewardsResponse": {
+        "properties": {
+          "rewards": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalBlockTradingReward"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rewards"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "HistoricalFundingResponseObject": {
         "properties": {
           "ticker": {
@@ -518,6 +553,59 @@
         },
         "required": [
           "historicalPnl"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "TradingRewardAggregationPeriod": {
+        "enum": [
+          "DAILY",
+          "WEEKLY",
+          "MONTHLY"
+        ],
+        "type": "string"
+      },
+      "HistoricalTradingRewardAggregation": {
+        "properties": {
+          "tradingReward": {
+            "type": "string"
+          },
+          "startedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "startedAtHeight": {
+            "type": "string"
+          },
+          "endedAt": {
+            "$ref": "#/components/schemas/IsoString"
+          },
+          "endedAtHeight": {
+            "type": "string"
+          },
+          "period": {
+            "$ref": "#/components/schemas/TradingRewardAggregationPeriod"
+          }
+        },
+        "required": [
+          "tradingReward",
+          "startedAt",
+          "startedAtHeight",
+          "period"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
+      "HistoricalTradingRewardAggregationsResponse": {
+        "properties": {
+          "rewards": {
+            "items": {
+              "$ref": "#/components/schemas/HistoricalTradingRewardAggregation"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "rewards"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1309,6 +1397,59 @@
         "parameters": []
       }
     },
+    "/historicalBlockTradingRewards/{address}": {
+      "get": {
+        "operationId": "GetTradingRewards",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalBlockTradingRewardsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startingBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startingBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
     "/historicalFunding/{ticker}": {
       "get": {
         "operationId": "GetHistoricalFunding",
@@ -1438,6 +1579,67 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/historicalTradingRewardAggregations/{address}": {
+      "get": {
+        "operationId": "GetAggregations",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoricalTradingRewardAggregationsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "period",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TradingRewardAggregationPeriod"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startingBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "startingBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ]

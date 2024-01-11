@@ -79,6 +79,9 @@ export enum QueryableField {
   BLOCK_TIME_AFTER_OR_AT = 'blockTimeAfterOrAt',
   BLOCK_TIME_BEFORE = 'blockTimeBefore',
   ADDRESSES = 'addresses',
+  BLOCK_HEIGHT_BEFORE_OR_AT = 'blockHeightBeforeOrAt',
+  STARTED_AT_BEFORE_OR_AT = 'startedAtBeforeOrAt',
+  STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
 }
 
 export interface QueryConfig {
@@ -280,6 +283,7 @@ export interface TradingRewardQueryConfig extends QueryConfig {
   [QueryableField.BLOCK_TIME_BEFORE_OR_AT]?: IsoString;
   [QueryableField.BLOCK_TIME_AFTER_OR_AT]?: IsoString;
   [QueryableField.BLOCK_TIME_BEFORE]?: IsoString;
+  [QueryableField.BLOCK_HEIGHT_BEFORE_OR_AT]?: IsoString;
 }
 
 export interface TradingRewardAggregationQueryConfig extends QueryConfig {
@@ -288,4 +292,6 @@ export interface TradingRewardAggregationQueryConfig extends QueryConfig {
   [QueryableField.STARTED_AT_HEIGHT]?: string;
   [QueryableField.STARTED_AT_HEIGHT_OR_AFTER]?: string;
   [QueryableField.PERIOD]?: TradingRewardAggregationPeriod;
+  [QueryableField.STARTED_AT_BEFORE_OR_AT]?: IsoString;
+  [QueryableField.STARTED_AT_HEIGHT_BEFORE_OR_AT]?: string;
 }
