@@ -23,8 +23,10 @@ const (
 	SubaccountsNegativeTncSubaccountSeen               = "negative_tnc_subaccount_seen"
 
 	// Gauges
-	InsuranceFundBalance = "insurance_fund_balance"
-	ClobMev              = "clob_mev"
+	InsuranceFundBalance             = "insurance_fund_balance"
+	ClobMev                          = "clob_mev"
+	ClobConditionalOrderTriggerPrice = "clob_conditional_order_trigger_price"
+	ClobConditionalOrderTriggered    = "clob_conditional_order_triggered"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
