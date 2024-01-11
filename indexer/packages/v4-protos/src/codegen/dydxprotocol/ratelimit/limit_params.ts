@@ -1,3 +1,4 @@
+import { Duration, DurationSDKType } from "../../google/protobuf/duration";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** LimitParams defines rate limit params on a denom. */
@@ -34,10 +35,10 @@ export interface LimitParamsSDKType {
 
 export interface Limiter {
   /**
-   * period_sec is the rolling time period for which the limit applies
+   * period is the rolling time period for which the limit applies
    * e.g. 3600 (an hour)
    */
-  periodSec: number;
+  period?: Duration;
   /**
    * baseline_minimum is the minimum maximum withdrawal coin amount within the
    * time period.
@@ -57,10 +58,10 @@ export interface Limiter {
 
 export interface LimiterSDKType {
   /**
-   * period_sec is the rolling time period for which the limit applies
+   * period is the rolling time period for which the limit applies
    * e.g. 3600 (an hour)
    */
-  period_sec: number;
+  period?: DurationSDKType;
   /**
    * baseline_minimum is the minimum maximum withdrawal coin amount within the
    * time period.
@@ -134,7 +135,7 @@ export const LimitParams = {
 
 function createBaseLimiter(): Limiter {
   return {
-    periodSec: 0,
+    period: undefined,
     baselineMinimum: new Uint8Array(),
     baselineTvlPpm: 0
   };
@@ -142,8 +143,8 @@ function createBaseLimiter(): Limiter {
 
 export const Limiter = {
   encode(message: Limiter, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.periodSec !== 0) {
-      writer.uint32(16).uint32(message.periodSec);
+    if (message.period !== undefined) {
+      Duration.encode(message.period, writer.uint32(10).fork()).ldelim();
     }
 
     if (message.baselineMinimum.length !== 0) {
@@ -166,8 +167,8 @@ export const Limiter = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 2:
-          message.periodSec = reader.uint32();
+        case 1:
+          message.period = Duration.decode(reader, reader.uint32());
           break;
 
         case 3:
@@ -189,7 +190,7 @@ export const Limiter = {
 
   fromPartial(object: DeepPartial<Limiter>): Limiter {
     const message = createBaseLimiter();
-    message.periodSec = object.periodSec ?? 0;
+    message.period = object.period !== undefined && object.period !== null ? Duration.fromPartial(object.period) : undefined;
     message.baselineMinimum = object.baselineMinimum ?? new Uint8Array();
     message.baselineTvlPpm = object.baselineTvlPpm ?? 0;
     return message;

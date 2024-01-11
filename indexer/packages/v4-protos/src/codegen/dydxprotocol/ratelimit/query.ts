@@ -1,4 +1,5 @@
 import { LimitParams, LimitParamsSDKType } from "./limit_params";
+import { Duration, DurationSDKType } from "../../google/protobuf/duration";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** ListLimitParamsRequest is a request type of the ListLimitParams RPC method. */
@@ -46,13 +47,13 @@ export interface QueryCapacityByDenomRequestSDKType {
 /** CapacityResult is a specific rate limit for a denom. */
 
 export interface CapacityResult {
-  periodSec: number;
+  period?: Duration;
   capacity: Uint8Array;
 }
 /** CapacityResult is a specific rate limit for a denom. */
 
 export interface CapacityResultSDKType {
-  period_sec: number;
+  period?: DurationSDKType;
   capacity: Uint8Array;
 }
 /**
@@ -206,15 +207,15 @@ export const QueryCapacityByDenomRequest = {
 
 function createBaseCapacityResult(): CapacityResult {
   return {
-    periodSec: 0,
+    period: undefined,
     capacity: new Uint8Array()
   };
 }
 
 export const CapacityResult = {
   encode(message: CapacityResult, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.periodSec !== 0) {
-      writer.uint32(8).uint32(message.periodSec);
+    if (message.period !== undefined) {
+      Duration.encode(message.period, writer.uint32(10).fork()).ldelim();
     }
 
     if (message.capacity.length !== 0) {
@@ -234,7 +235,7 @@ export const CapacityResult = {
 
       switch (tag >>> 3) {
         case 1:
-          message.periodSec = reader.uint32();
+          message.period = Duration.decode(reader, reader.uint32());
           break;
 
         case 2:
@@ -252,7 +253,7 @@ export const CapacityResult = {
 
   fromPartial(object: DeepPartial<CapacityResult>): CapacityResult {
     const message = createBaseCapacityResult();
-    message.periodSec = object.periodSec ?? 0;
+    message.period = object.period !== undefined && object.period !== null ? Duration.fromPartial(object.period) : undefined;
     message.capacity = object.capacity ?? new Uint8Array();
     return message;
   }

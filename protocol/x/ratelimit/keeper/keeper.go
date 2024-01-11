@@ -259,25 +259,24 @@ func (k Keeper) updateCapacityForLimitParams(
 	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 
 	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
-	if len(capacityList) != len(limitParams.Limiters) {
-		// This violates an invariant. Since this is in the `EndBlocker`, we log an error instead of panicking.
-		k.Logger(ctx).Error(
-			fmt.Sprintf(
-				"denom (%s) capacity list length (%v) != limiters length (%v); skipping capacity update",
-				limitParams.Denom,
-				len(capacityList),
-				len(limitParams.Limiters),
-			),
-		)
-		return
-	}
 
-	newCapacityList := ratelimitutil.CalculateNewCapacityList(
+	newCapacityList, err := ratelimitutil.CalculateNewCapacityList(
 		tvl.Amount.BigInt(),
 		limitParams,
 		capacityList,
 		timeSinceLastBlock,
 	)
+
+	if err != nil {
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"error calculating new capacity list for denom %v: %v. Skipping update.",
+				limitParams.Denom,
+				err,
+			),
+		)
+		return
+	}
 
 	k.SetDenomCapacity(ctx, types.DenomCapacity{
 		Denom:        limitParams.Denom,

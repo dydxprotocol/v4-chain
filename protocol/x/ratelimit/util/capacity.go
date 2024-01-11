@@ -4,13 +4,14 @@ import (
 	"math/big"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 )
 
 // CalculateNewCapacityList calculates the new capacity list for the given current `tvl` and `limitParams“.
-// Input invariant: `len(prevCapapcityList) == len(limitParams.Limiters)`
+// Input invariant: `len(prevCapacityList) == len(limitParams.Limiters)`
 // Detailed math for calculating the updated capacity:
 //
 //	`baseline = max(baseline_minimum, baseline_tvl_ppm * tvl)`
@@ -28,18 +29,32 @@ import (
 func CalculateNewCapacityList(
 	bigTvl *big.Int,
 	limitParams types.LimitParams,
-	prevCapapcityList []dtypes.SerializableInt,
+	prevCapacityList []dtypes.SerializableInt,
 	timeSinceLastBlock time.Duration,
-) (newCapacityList []dtypes.SerializableInt) {
+) (
+	newCapacityList []dtypes.SerializableInt,
+	err error,
+) {
 	// Declare new capacity list to be populated.
-	newCapacityList = make([]dtypes.SerializableInt, len(prevCapapcityList))
+	newCapacityList = make([]dtypes.SerializableInt, len(prevCapacityList))
+
+	if len(limitParams.Limiters) != len(prevCapacityList) {
+		// This violates an invariant. Since this is in the `EndBlocker`, we return an error instead of panicking.
+		return nil, errorsmod.Wrapf(
+			types.ErrMismatchedCapacityLimitersLength,
+			"denom = %v, len(limiters) = %v, len(prevCapacityList) = %v",
+			limitParams.Denom,
+			len(limitParams.Limiters),
+			len(prevCapacityList),
+		)
+	}
 
 	for i, limiter := range limitParams.Limiters {
 		// For each limiter, calculate the current baseline.
 		baseline := GetBaseline(bigTvl, limiter)
 
 		capacityMinusBaseline := new(big.Int).Sub(
-			prevCapapcityList[i].BigInt(), // array access is safe because of input invariant
+			prevCapacityList[i].BigInt(), // array access is safe because of input invariant
 			baseline,
 		)
 
@@ -52,45 +67,37 @@ func CalculateNewCapacityList(
 		)
 
 		// Calculate right operand: `time_since_last_block / period`
-		periodMilli := new(big.Int).Mul(
-			new(big.Int).SetUint64(uint64(limiter.PeriodSec)),
-			big.NewInt(1000),
-		)
-		operandR := new(big.Rat).SetFrac(
-			new(big.Int).SetInt64(timeSinceLastBlock.Milliseconds()),
-			periodMilli,
+		operandR := new(big.Rat).SetFrac64(
+			timeSinceLastBlock.Milliseconds(),
+			limiter.Period.Milliseconds(),
 		)
 
 		// Calculate: `capacity_diff = max(baseline, capacity-baseline) * (time_since_last_block / period)`
 		// Since both operands > 0, `capacity_diff` is positive or zero (due to rounding).
-		capacityDiff := new(big.Rat).Mul(
-			operandL,
-			operandR,
-		)
+		capacityDiffRat := new(big.Rat).Mul(operandL, operandR)
+		capacityDiff := lib.BigRatRound(capacityDiffRat, false) // rounds down `capacity_diff`
 
-		bigRatcapacityMinusBaseline := new(big.Rat).SetInt(capacityMinusBaseline)
-
-		if new(big.Rat).Abs(bigRatcapacityMinusBaseline).Cmp(capacityDiff) < 0 {
+		if new(big.Int).Abs(capacityMinusBaseline).Cmp(capacityDiff) <= 0 {
 			// if `abs(capacity - baseline) < capacity_diff` then `capacity = baseline``
 			newCapacityList[i] = dtypes.NewIntFromBigInt(baseline)
 		} else if capacityMinusBaseline.Sign() < 0 {
 			// else if `capacity < baseline` then `capacity += capacity_diff`
 			newCapacityList[i] = dtypes.NewIntFromBigInt(
 				new(big.Int).Add(
-					prevCapapcityList[i].BigInt(),
-					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
+					prevCapacityList[i].BigInt(),
+					capacityDiff,
 				),
 			)
 		} else {
 			// else `capacity -= capacity_diff`
 			newCapacityList[i] = dtypes.NewIntFromBigInt(
 				new(big.Int).Sub(
-					prevCapapcityList[i].BigInt(),
-					lib.BigRatRound(capacityDiff, false), // rounds down `capacity_diff`
+					prevCapacityList[i].BigInt(),
+					capacityDiff,
 				),
 			)
 		}
 	}
 
-	return newCapacityList
+	return newCapacityList, nil
 }

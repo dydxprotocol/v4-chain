@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -20,6 +21,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 		prevCapapcityList    []dtypes.SerializableInt
 		expectedCapacityList []dtypes.SerializableInt
 		timeSinceLastBlock   time.Duration
+		expectedErr          error
 	}{
 		"Prev capacity equals baseline": {
 			bigTvl: big.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
@@ -28,13 +30,13 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = 25M * 1% = 250k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
 					// baseline = 25M * 10% = 2.5M tokens
 					{
-						PeriodSec:       86_400,
+						Period:          86_400 * time.Second,
 						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
 						BaselineTvlPpm:  100_000,                          // 10%
 					},
@@ -57,13 +59,13 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = 25M * 1% = 250k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
 					// baseline = 25M * 10% = 2.5M tokens
 					{
-						PeriodSec:       86_400,
+						Period:          86_400 * time.Second,
 						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
 						BaselineTvlPpm:  100_000,                          // 10%
 					},
@@ -86,7 +88,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = 25M * 1% = 250k tokens
 					{
-						PeriodSec: 3_600,
+						Period: 3_600 * time.Second,
 						BaselineMinimum: dtypes.NewIntFromBigInt(
 							big_testutil.Int64MulPow10(100_000, 18), // 100k tokens(assuming 18 decimals)
 						),
@@ -94,7 +96,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 					},
 					// baseline = 25M * 10% = 2.5M tokens
 					{
-						PeriodSec: 86_400,
+						Period: 86_400 * time.Second,
 						BaselineMinimum: dtypes.NewIntFromBigInt(
 							big_testutil.Int64MulPow10(1_000_000, 18), // 1M tokens(assuming 18 decimals)
 						),
@@ -127,13 +129,13 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = baseline minimum = 100k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
 					// baseline = baseline minimum = 1M tokens
 					{
-						PeriodSec:       86_400,
+						Period:          86_400 * time.Second,
 						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
 						BaselineTvlPpm:  100_000,                          // 10%
 					},
@@ -156,7 +158,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = baseline minimum = 100k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
@@ -177,7 +179,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = baseline minimum = 100k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
@@ -198,13 +200,13 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = 200k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
 					// baseline = 2M tokens
 					{
-						PeriodSec:       86_400,
+						Period:          86_400 * time.Second,
 						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
 						BaselineTvlPpm:  100_000,                          // 10%
 					},
@@ -227,13 +229,13 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				Limiters: []types.Limiter{
 					// baseline = 200k tokens
 					{
-						PeriodSec:       3_600,
+						Period:          3_600 * time.Second,
 						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
 						BaselineTvlPpm:  10_000,                         // 1%
 					},
 					// baseline = 2M tokens
 					{
-						PeriodSec:       86_400,
+						Period:          86_400 * time.Second,
 						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
 						BaselineTvlPpm:  100_000,                          // 10%
 					},
@@ -249,18 +251,57 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				dtypes.NewInt(1_200_026_620_370), //  recovered by 1.15/86400 * 2M ~= 26.62
 			},
 		},
+		"Error: len(capacityList) != len(limiters)": {
+			bigTvl: big.NewInt(25_000_000_000_000), // 25M token (assuming 6 decimals)
+			limitParams: types.LimitParams{
+				Denom: testDenom,
+				Limiters: []types.Limiter{
+					// baseline = 25M * 1% = 250k tokens
+					{
+						Period:          3_600 * time.Second,
+						BaselineMinimum: dtypes.NewInt(100_000_000_000), // 100k tokens (assuming 6 decimals)
+						BaselineTvlPpm:  10_000,                         // 1%
+					},
+					// baseline = 25M * 10% = 2.5M tokens
+					{
+						Period:          86_400 * time.Second,
+						BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1M tokens (assuming 6 decimals)
+						BaselineTvlPpm:  100_000,                          // 10%
+					},
+				},
+			},
+			timeSinceLastBlock: time.Second + 90*time.Millisecond, // 1.09 second
+			prevCapapcityList: []dtypes.SerializableInt{
+				dtypes.NewInt(99_000_000_000),
+				dtypes.NewInt(990_000_000_000),
+				dtypes.NewInt(0),
+			},
+			expectedErr: errorsmod.Wrapf(
+				types.ErrMismatchedCapacityLimitersLength,
+				"denom = %v, len(limiters) = %v, len(prevCapacityList) = %v",
+				testDenom,
+				2,
+				3,
+			),
+		},
 	}
 
 	// Run tests.
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			newCapacityList := util.CalculateNewCapacityList(
+			newCapacityList, err := util.CalculateNewCapacityList(
 				tc.bigTvl,
 				tc.limitParams,
 				tc.prevCapapcityList,
 				tc.timeSinceLastBlock,
 			)
 
+			if tc.expectedErr != nil {
+				require.Error(t, tc.expectedErr, err)
+				return
+			}
+
+			require.NoError(t, err)
 			require.Equal(t,
 				tc.expectedCapacityList,
 				newCapacityList,

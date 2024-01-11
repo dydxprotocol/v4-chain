@@ -16,4 +16,9 @@ var (
 		1002,
 		"withdrawal amount would exceed rate-limit capacity",
 	)
+	ErrMismatchedCapacityLimitersLength = errorsmod.Register(
+		ModuleName,
+		1003,
+		"capacity list length does not match number of limiters",
+	)
 )
