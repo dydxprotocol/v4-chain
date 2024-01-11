@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -338,7 +337,7 @@ func (k Keeper) TriggerOrdersWithPrice(
 		metrics.GetLabelForStringValue(metrics.Type, priceType),
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
-	telemetry.SetGaugeWithLabels([]string{metrics.ClobConditionalOrderTriggerPrice}, priceFloat, labels)
+	metrics.SetGaugeWithLabels(metrics.ClobConditionalOrderTriggerPrice, priceFloat, labels...)
 
 	// State write - move the conditional order placement in state from untriggered to triggered state.
 	// Emit an event for each triggered conditional order.
@@ -358,10 +357,10 @@ func (k Keeper) TriggerOrdersWithPrice(
 			),
 		)
 
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.ConditionalOrderTriggered, metrics.Count},
-			1,
-			append(orderId.GetOrderIdLabels(), labels...),
+		metrics.IncrCountMetricWithLabels(
+			types.ModuleName,
+			metrics.ClobConditionalOrderTriggered,
+			append(orderId.GetOrderIdLabels(), labels...)...,
 		)
 	}
 	return triggeredOrderIds
