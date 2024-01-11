@@ -18,7 +18,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 	tests := map[string]struct {
 		bigTvl               *big.Int
 		limitParams          types.LimitParams
-		prevCapapcityList    []dtypes.SerializableInt
+		prevCapacityList     []dtypes.SerializableInt
 		expectedCapacityList []dtypes.SerializableInt
 		timeSinceLastBlock   time.Duration
 		expectedErr          error
@@ -43,7 +43,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second,
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(250_000_000_000),   // 250k tokens, which equals baseline
 				dtypes.NewInt(2_500_000_000_000), // 2.5M tokens, which equals baseline
 			},
@@ -72,7 +72,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second + 90*time.Millisecond, // 1.09 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(99_000_000_000),  // 99k tokens, < baseline (250k)
 				dtypes.NewInt(990_000_000_000), // 0.99M tokens, < baseline (2.5M)
 			},
@@ -105,7 +105,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second,
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewIntFromBigInt(
 					big_testutil.Int64MulPow10(99_000, 18),
 				), // 99k tokens < baseline (250k)
@@ -142,7 +142,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second + 150*time.Millisecond, // 1.15 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(0),
 				dtypes.NewInt(0),
 			},
@@ -165,7 +165,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: 12 * time.Second, // 12 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(0),
 			},
 			expectedCapacityList: []dtypes.SerializableInt{
@@ -186,7 +186,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: 12 * time.Second, // 12 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(200_000_000_000),
 			},
 			expectedCapacityList: []dtypes.SerializableInt{
@@ -213,7 +213,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second + 150*time.Millisecond, // 1.15 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(329_000_000_000),
 				dtypes.NewInt(3_500_000_000_000),
 			},
@@ -242,7 +242,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second + 150*time.Millisecond, // 1.15 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(629_000_000_000),   // > 2 * baseline
 				dtypes.NewInt(1_200_000_000_000), // < baseline
 			},
@@ -271,7 +271,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 				},
 			},
 			timeSinceLastBlock: time.Second + 90*time.Millisecond, // 1.09 second
-			prevCapapcityList: []dtypes.SerializableInt{
+			prevCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(99_000_000_000),
 				dtypes.NewInt(990_000_000_000),
 				dtypes.NewInt(0),
@@ -292,7 +292,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 			newCapacityList, err := util.CalculateNewCapacityList(
 				tc.bigTvl,
 				tc.limitParams,
-				tc.prevCapapcityList,
+				tc.prevCapacityList,
 				tc.timeSinceLastBlock,
 			)
 
