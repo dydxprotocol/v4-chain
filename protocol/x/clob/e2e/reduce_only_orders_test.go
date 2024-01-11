@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -373,98 +372,14 @@ func TestReduceOnlyOrderFailure(t *testing.T) {
 
 func TestReduceOnlyOrderReplacement(t *testing.T) {
 	tests := map[string]struct {
-		subaccounts []satypes.Subaccount
-		firstOrders []clobtypes.Order
-
-		modifyFillAmountStateAfterFirstBlock func(ctx sdk.Context, tApp *testapp.TestApp)
-
+		subaccounts        []satypes.Subaccount
+		firstOrders        []clobtypes.Order
 		secondOrders       []clobtypes.Order
 		secondOrdersErrors []string
+
+		expectedOrderFillAmounts map[uint32]map[clobtypes.OrderId]uint64
 	}{
-		`A long position gets partially filled by sell order A to a short position.
-		Order A is replaced by a BUY-side FOK reduce only order, which is an invalid replacement because
-		original order was partially filled.`: {
-			subaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
-						},
-					},
-				},
-			},
-
-			// Regular order on the opposite side of the following replacement RO order.
-			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20,
-			},
-
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Sell 80 quantums of the original order.
-				// In state, the amount of BTC is still 60 quantums long.
-				// After this partial fill, the net amount of btc is 60 quantums long - 80 quantums = 20 quantums short.
-				// Thus, only buy reduce only orders are valid to reduce the short position size.
-				tApp.App.ClobKeeper.SetOrderFillAmount(
-					ctx,
-					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20.OrderId,
-					satypes.BaseQuantums(80),
-					uint32(22),
-				)
-			},
-
-			secondOrders: []clobtypes.Order{
-				// Currently, IOC/FOK replacement orders for orders that are partially filled are not allowed.
-				// Because the order was partially filled, this results in a ErrInvalidReplacement error.
-				// If IOC/FOK replacement orders were allowed, this buy RO order should fail because the
-				// current position size is 20 quantums short even though in state, there is 60 quantums long.
-				constants.Order_Alice_Num1_Id0_Clob0_Buy110_Price50000_GTB21_FOK_RO,
-			},
-			secondOrdersErrors: []string{
-				clobtypes.ErrInvalidReplacement.Error(),
-			},
-		},
-		`A long position and sell order A with 0 fills is replaced by a BUY-side FOK reduce only order,
-		 which is a valid replacement. Fails validation because it would increase position size.`: {
-			subaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
-						},
-					},
-				},
-			},
-
-			// Regular order on the opposite side of the following replacement RO order.
-			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20,
-			},
-
-			// No fills.
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {},
-
-			secondOrders: []clobtypes.Order{
-				// Since the original order had no fills, this IOC/FOK order passes through.
-				// But it is invalid because it would increase the positive perpetual position.
-				constants.Order_Alice_Num1_Id0_Clob0_Buy110_Price50000_GTB21_FOK_RO,
-			},
-			secondOrdersErrors: []string{
-				clobtypes.ErrReduceOnlyWouldIncreasePositionSize.Error(),
-			},
-		},
-		`A long position and sell order A with 0 fills is replaced by a BUY-side FOK reduce only order,
-		which is a valid replacement. Replacement order would decrease position size. Fails because FOK
-		order is not fully filled.`: {
+		`A regular order is partially filled. Replacement FOK RO order fails because it is immediate execution.`: {
 			subaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Alice_Num1,
@@ -481,32 +396,181 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				constants.Carl_Num0_100000USD,
 			},
 
-			// Regular order on the opposite side of the following replacement RO order.
-			// Won't match Carl's order.
 			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price100000_GTB20,
+				// Regular order on the opposite side of the following replacement RO order.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20,
+				// Partial match for the above order. 70 quantums are matched. Thus, current position size
+				// for Alice is 60 quantums long - 70 quantums = 10 quantums short.
+				constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10,
 			},
 
-			// No fills.
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {},
+			secondOrders: []clobtypes.Order{
+				// Currently, IOC/FOK replacement orders for orders that are partially filled are not allowed.
+				// Because the order was partially filled, this results in a ErrInvalidReplacement error.
+				// If IOC/FOK replacement orders were allowed, this buy RO order should succeed because the
+				// current position size is 10 quantums short, and buying reduces a short position.
+				constants.Order_Alice_Num1_Id0_Clob0_Buy110_Price50000_GTB21_FOK_RO,
+			},
+			secondOrdersErrors: []string{
+				clobtypes.ErrInvalidReplacement.Error(),
+			},
+
+			expectedOrderFillAmounts: map[uint32]map[clobtypes.OrderId]uint64{
+				2: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20.OrderId: 70,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10.OrderId:    70,
+				},
+				3: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20.OrderId: 70,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10.OrderId:    70,
+				},
+			},
+		},
+		`A regular order is partially filled. Replacement IOC RO order fails because it is immediate execution.`: {
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
+						},
+					},
+				},
+				constants.Carl_Num0_100000USD,
+			},
+
+			firstOrders: []clobtypes.Order{
+				// Regular order on the opposite side of the following replacement RO order.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20,
+				// Partial match for the above order. 70 quantums are matched. Thus, current position size
+				// for Alice is 60 quantums long - 70 quantums = 10 quantums short.
+				constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10,
+			},
 
 			secondOrders: []clobtypes.Order{
-				// An order that would match the below FOK order.
-				constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB20,
-				// Since the original order had no fills, this IOC/FOK order passes through.
-				// It is valid because it reduces the position size.
-				// However, it is resized to 60 because the current position size is 60.
-				// Thus, it fails because this FOK order is not fully filled.
+				// Currently, IOC/FOK replacement orders for orders that are partially filled are not allowed.
+				// Because the order was partially filled, this results in a ErrInvalidReplacement error.
+				// If IOC/FOK replacement orders were allowed, this buy RO order should succeed because the
+				// current position size is 10 quantums short, and buying reduces a short position.
+				constants.Order_Alice_Num1_Id0_Clob0_Buy110_Price50000_GTB21_IOC_RO,
+			},
+			secondOrdersErrors: []string{
+				clobtypes.ErrInvalidReplacement.Error(),
+			},
+
+			expectedOrderFillAmounts: map[uint32]map[clobtypes.OrderId]uint64{
+				2: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20.OrderId: 70,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10.OrderId:    70,
+				},
+				3: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price500000_GTB20.OrderId: 70,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy70_Price500000_GTB10.OrderId:    70,
+				},
+			},
+		},
+		`Position size is long. A regular order is placed but not filled. Replacement Sell FOK RO
+		 reduces current long position size, but fails because it is resized to a smaller size due to
+		 current position size.`: {
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
+						},
+					},
+				},
+				constants.Carl_Num0_100000USD,
+			},
+
+			firstOrders: []clobtypes.Order{
+				// Regular order on the opposite side of the following replacement RO order.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20,
+			},
+
+			secondOrders: []clobtypes.Order{
+				// Full match for the below order.
+				constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10,
+				// The original order being replaced has no partial fills. This sell RO order should succeed because the
+				// current position size is 60 quantums long, and selling reduces a long position. However,
+				// the RO property resizes the order to the current position size (60) and thus the FOK order
+				// cannot be fully filled and errors out.
 				constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_FOK_RO,
 			},
 			secondOrdersErrors: []string{
 				"",
 				clobtypes.ErrFokOrderCouldNotBeFullyFilled.Error(),
 			},
+
+			expectedOrderFillAmounts: map[uint32]map[clobtypes.OrderId]uint64{
+				2: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20.OrderId: 0,
+				},
+				3: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_FOK_RO.OrderId: 0,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10.OrderId:          0,
+				},
+			},
 		},
-		`A long position and sell order A with 0 fills is replaced by a BUY-side IOC reduce only order,
-		which is a valid replacement. Passes validation because it would decrease position size. IOC
-		order is resized and succeeds to zero out all subaccount positions.`: {
+		`Position size is long. A regular order is placed but not filled. Replacement Sell FOK RO
+		reduces current long position size, and succeeds because subaccount has enough position
+		to not resize the order smaller.`: {
+			subaccounts: []satypes.Subaccount{
+				{
+					Id: &constants.Alice_Num1,
+					AssetPositions: []*satypes.AssetPosition{
+						&constants.Usdc_Asset_100_000,
+					},
+					PerpetualPositions: []*satypes.PerpetualPosition{
+						{
+							PerpetualId: 0,
+							Quantums:    dtypes.NewInt(110), // 110 quantums of BTC long
+						},
+					},
+				},
+				constants.Carl_Num0_100000USD,
+			},
+
+			firstOrders: []clobtypes.Order{
+				// Regular order on the opposite side of the following replacement RO order.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20,
+			},
+
+			secondOrders: []clobtypes.Order{
+				// Full match for the below order.
+				constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10,
+				// The original order being replaced has no partial fills. This sell RO order should succeed because the
+				// current position size is 110 quantums long, and selling reduces a long position. RO property of the
+				// order does not resize the order and order succeeds for full amount.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_FOK_RO,
+			},
+			secondOrdersErrors: []string{
+				"",
+				"",
+			},
+
+			expectedOrderFillAmounts: map[uint32]map[clobtypes.OrderId]uint64{
+				2: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20.OrderId: 0,
+				},
+				3: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_FOK_RO.OrderId: 110,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10.OrderId:          110,
+				},
+			},
+		},
+		`Position size is long. A regular order is placed but not filled. Replacement Sell IOC RO
+		reduces current long position size, but is resized to a smaller size due to current position size
+		and partially filled.`: {
 			subaccounts: []satypes.Subaccount{
 				{
 					Id: &constants.Alice_Num1,
@@ -523,115 +587,33 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 				constants.Carl_Num0_100000USD,
 			},
 
-			// Regular order on the opposite side of the following replacement RO order.
-			// Won't match Carl's order.
 			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price100000_GTB20,
+				// Regular order on the opposite side of the following replacement RO order.
+				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20,
 			},
 
-			// No fills.
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {},
-
 			secondOrders: []clobtypes.Order{
-				// An order that would match the below FOK order.
-				constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB20,
-				// Since the original order had no fills, this IOC/FOK order passes through.
-				// It is valid because it reduces the position size.
-				// However, it is resized to 60 because the current position size is 60.
-				// Succeeds and matches above order.
+				// Full match for the below order.
+				constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10,
+				// The original order being replaced has no partial fills. This sell RO order should succeed because the
+				// current position size is 60 quantums long, and selling reduces a long position.
+				// The RO property resizes the order to the current position size (60) and thus the IOC order
+				// is partially filled.
 				constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_IOC_RO,
 			},
 			secondOrdersErrors: []string{
 				"",
 				"",
 			},
-		},
-		`A long position gets partially filled by sell order A to a long position.
-		Order A is replaced by a BUY-side FOK reduce only order, which is an invalid replacement because
-		it would increase the long position size.`: {
-			subaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
-						},
-					},
+
+			expectedOrderFillAmounts: map[uint32]map[clobtypes.OrderId]uint64{
+				2: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price51000_GTB20.OrderId: 0,
 				},
-			},
-
-			// Regular order on the opposite side of the following replacement RO order.
-			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20,
-			},
-
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Sell 20 quantums of the original order.
-				// In state, the amount of BTC is still 60 quantums long.
-				// After this partial fill, the net amount of btc is 60 quantums long - 20 quantums = 40 quantums long.
-				// Thus, only sell reduce only orders are valid to reduce the short position size.
-				tApp.App.ClobKeeper.SetOrderFillAmount(
-					ctx,
-					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20.OrderId,
-					satypes.BaseQuantums(20),
-					uint32(22),
-				)
-			},
-
-			secondOrders: []clobtypes.Order{
-				// Invalid because it would increase the positive position size.
-				constants.Order_Alice_Num1_Id0_Clob0_Buy110_Price50000_GTB21_FOK_RO,
-			},
-			secondOrdersErrors: []string{
-				clobtypes.ErrReduceOnlyWouldIncreasePositionSize.Error(),
-			},
-		},
-		`A long position gets partially filled by sell order A to a long position.
-		Order A is replaced by a SELL-side FOK reduce only order, which would reduce position size.
-		However, it is an invalid replacement because the original order was already partially filled.`: {
-			subaccounts: []satypes.Subaccount{
-				{
-					Id: &constants.Alice_Num1,
-					AssetPositions: []*satypes.AssetPosition{
-						&constants.Usdc_Asset_100_000,
-					},
-					PerpetualPositions: []*satypes.PerpetualPosition{
-						{
-							PerpetualId: 0,
-							Quantums:    dtypes.NewInt(60), // 60 quantums of BTC long
-						},
-					},
+				3: {
+					constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_IOC_RO.OrderId: 60,
+					constants.Order_Carl_Num0_Id0_Clob0_Buy110_Price50000_GTB10.OrderId:          60,
 				},
-			},
-
-			// Regular order on the opposite side of the following replacement RO order.
-			firstOrders: []clobtypes.Order{
-				constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20,
-			},
-
-			modifyFillAmountStateAfterFirstBlock: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Sell 20 quantums of the original order.
-				// In state, the amount of BTC is still 60 quantums long.
-				// After this partial fill, the net amount of btc is 60 quantums long - 20 quantums = 40 quantums long.
-				// Thus, only sell reduce only orders are valid to reduce the short position size.
-				tApp.App.ClobKeeper.SetOrderFillAmount(
-					ctx,
-					constants.Order_Alice_Num1_Id0_Clob0_Sell100_Price50000_GTB20.OrderId,
-					satypes.BaseQuantums(20),
-					uint32(22),
-				)
-			},
-
-			secondOrders: []clobtypes.Order{
-				// Reduces position size, however is invalid replacement because of partial fills.
-				constants.Order_Alice_Num1_Id0_Clob0_Sell110_Price50000_GTB21_FOK_RO,
-			},
-			secondOrdersErrors: []string{
-				clobtypes.ErrInvalidReplacement.Error(),
 			},
 		},
 	}
@@ -651,7 +633,7 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 					}
 					return genesis
 				}).
-				WithNonDeterminismChecksEnabled(false).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(false).
 				Build()
 			ctx := tApp.InitChain()
 
@@ -666,9 +648,20 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
-			// modify fill amounts
-			if tc.modifyFillAmountStateAfterFirstBlock != nil {
-				tc.modifyFillAmountStateAfterFirstBlock(ctx, tApp)
+			// Advance the block to persist matches.
+			ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+
+			// validate order fill amounts.
+			if orderMap, exists := tc.expectedOrderFillAmounts[2]; exists {
+				for orderId, expectedFillAmount := range orderMap {
+					exists, actualFillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+					if expectedFillAmount == 0 {
+						require.False(t, exists)
+					} else {
+						require.True(t, exists)
+						require.Equal(t, expectedFillAmount, actualFillAmount.ToUint64())
+					}
+				}
 			}
 
 			// place second set of orders.
@@ -689,6 +682,22 @@ func TestReduceOnlyOrderReplacement(t *testing.T) {
 							resp.Log,
 							tc.secondOrdersErrors[idx],
 						)
+					}
+				}
+			}
+
+			// Advance the block to persist matches.
+			ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+
+			// validate order fill amounts.
+			if orderMap, exists := tc.expectedOrderFillAmounts[3]; exists {
+				for orderId, expectedFillAmount := range orderMap {
+					exists, actualFillAmount, _ := tApp.App.ClobKeeper.GetOrderFillAmount(ctx, orderId)
+					if expectedFillAmount == 0 {
+						require.False(t, exists)
+					} else {
+						require.True(t, exists)
+						require.Equal(t, expectedFillAmount, actualFillAmount.ToUint64())
 					}
 				}
 			}

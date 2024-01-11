@@ -1357,19 +1357,10 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
 	// as that will be validated if the order is matched.
 	// The subaccount's current position size is defined as is the current state size + any partial fills
-	// that might have occured as a result of this reduce only order replacing another partially filled order.
+	// that might have occurred as a result of this reduce only order replacing another partially filled order.
+	// Partial fills should be already recorded in state since order matching is optimistic and writes to state.
 	if order.IsReduceOnly() {
 		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
-		existingOrderFillAmountExists, existingOrderFillAmount, _ := m.clobKeeper.GetOrderFillAmount(ctx, orderId)
-		// If there exists an pre existing order fill, add it to position size in state to get current position size.
-		if existingOrderFillAmountExists && restingOrderExists {
-			existingOrderFillAmountBigInt := existingOrderFillAmount.ToBigInt()
-			if !existingRestingOrder.IsBuy() {
-				existingOrderFillAmountBigInt.Neg(existingOrderFillAmountBigInt)
-			}
-			existingPositionSize.Add(existingPositionSize, existingOrderFillAmountBigInt)
-		}
-
 		orderSize := order.GetBigQuantums()
 
 		// If the reduce-only order is not on the opposite side of the existing position size,
