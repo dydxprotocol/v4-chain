@@ -68,6 +68,7 @@ async function start(): Promise<void> {
       createPnlTicksTask,
       'create_pnl_ticks',
       config.LOOPS_INTERVAL_MS_PNL_TICKS,
+      config.PNL_TICK_UPDATE_LOCK_MULTIPLIER,
     );
   }
 
