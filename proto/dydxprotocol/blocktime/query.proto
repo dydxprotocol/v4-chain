@@ -23,7 +23,8 @@ service Query {
   // Queries all recorded downtime info.
   rpc AllDowntimeInfo(QueryAllDowntimeInfoRequest)
       returns (QueryAllDowntimeInfoResponse) {
-    option (google.api.http).get = "/dydxprotocol/v4/blocktime/all_downtime_info";
+    option (google.api.http).get =
+        "/dydxprotocol/v4/blocktime/all_downtime_info";
   }
 }
 
