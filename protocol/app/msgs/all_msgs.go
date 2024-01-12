@@ -14,6 +14,15 @@ var (
 		"/cosmos.auth.v1beta1.ModuleCredential": {},
 		"/cosmos.auth.v1beta1.MsgUpdateParams":  {},
 
+		// authz
+		"/cosmos.authz.v1beta1.GenericAuthorization": {},
+		"/cosmos.authz.v1beta1.MsgExec":              {},
+		"/cosmos.authz.v1beta1.MsgExecResponse":      {},
+		"/cosmos.authz.v1beta1.MsgGrant":             {},
+		"/cosmos.authz.v1beta1.MsgGrantResponse":     {},
+		"/cosmos.authz.v1beta1.MsgRevoke":            {},
+		"/cosmos.authz.v1beta1.MsgRevokeResponse":    {},
+
 		// bank
 		"/cosmos.bank.v1beta1.MsgMultiSend":              {},
 		"/cosmos.bank.v1beta1.MsgMultiSendResponse":      {},

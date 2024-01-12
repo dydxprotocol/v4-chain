@@ -23,6 +23,9 @@
     },
     "accounts": []
   },
+  "authz": {
+    "authorization": []
+  },
   "bank": {
     "params": {
       "send_enabled": [],

@@ -4,6 +4,7 @@ import (
 	evidence "cosmossdk.io/x/evidence/types"
 	feegrant "cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -26,6 +27,13 @@ var (
 		"/cosmos.auth.v1beta1.BaseAccount":      nil,
 		"/cosmos.auth.v1beta1.ModuleAccount":    nil,
 		"/cosmos.auth.v1beta1.ModuleCredential": nil,
+
+		// authz
+		"/cosmos.authz.v1beta1.GenericAuthorization": nil,
+		"/cosmos.authz.v1beta1.MsgGrant":             &authz.MsgGrant{},
+		"/cosmos.authz.v1beta1.MsgGrantResponse":     nil,
+		"/cosmos.authz.v1beta1.MsgRevoke":            &authz.MsgRevoke{},
+		"/cosmos.authz.v1beta1.MsgRevokeResponse":    nil,
 
 		// bank
 		"/cosmos.bank.v1beta1.MsgMultiSend":         &bank.MsgMultiSend{},

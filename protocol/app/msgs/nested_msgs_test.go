@@ -11,6 +11,10 @@ import (
 
 func TestNestedMsgs_Key(t *testing.T) {
 	expectedMsgs := []string{
+		// authz
+		"/cosmos.authz.v1beta1.MsgExec",
+		"/cosmos.authz.v1beta1.MsgExecResponse",
+
 		// gov
 		"/cosmos.gov.v1.MsgSubmitProposal",
 		"/cosmos.gov.v1.MsgSubmitProposalResponse",
