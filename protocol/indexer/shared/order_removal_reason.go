@@ -40,6 +40,8 @@ func GetOrderRemovalReason(
 	orderError error,
 ) (OrderRemovalReason, error) {
 	switch {
+	case errors.Is(orderError, clobtypes.ErrReduceOnlyWouldIncreasePositionSize):
+		return OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE, nil
 	case errors.Is(orderError, clobtypes.ErrPostOnlyWouldCrossMakerOrder):
 		return OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER, nil
 	case errors.Is(orderError, clobtypes.ErrFokOrderCouldNotBeFullyFilled):
