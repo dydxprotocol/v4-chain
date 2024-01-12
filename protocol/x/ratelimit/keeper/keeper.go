@@ -27,6 +27,7 @@ type (
 		storeKey        storetypes.StoreKey
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
+		ics4Wrapper     types.ICS4Wrapper
 
 		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
@@ -38,6 +39,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
+	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
@@ -51,6 +53,8 @@ func NewKeeper(
 
 // ProcessWithdrawal processes an outbound IBC transfer,
 // by updating the capacity lists for the denom.
+// If any of the capacities are inefficient, returns an error which results in
+// transaction failing upstream.
 func (k Keeper) ProcessWithdrawal(
 	ctx sdk.Context,
 	denom string,
