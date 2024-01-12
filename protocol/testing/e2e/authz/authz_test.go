@@ -107,6 +107,56 @@ func TestAuthz(t *testing.T) {
 				}
 			},
 		},
+		`Success: Alice grants permission to Bob to place orders. Bob places some orders (note that
+			this does allow Bob to bypass the rate limiter)`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_100_000USD,
+				constants.Bob_Num0_100_000USD,
+			},
+
+			msgGrant: &authz.MsgGrant{
+				Granter: constants.AliceAccAddress.String(),
+				Grantee: constants.BobAccAddress.String(),
+				Grant: authz.Grant{
+					Authorization: newAny(
+						authz.NewGenericAuthorization(sdk.MsgTypeURL(&clobtypes.MsgPlaceOrder{})),
+					),
+				},
+			},
+
+			msgExec: &authz.MsgExec{
+				Grantee: constants.BobAccAddress.String(),
+				Msgs: []*codectypes.Any{
+					newAny(
+						&clobtypes.MsgPlaceOrder{
+							Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
+						},
+					),
+					newAny(
+						&clobtypes.MsgPlaceOrder{
+							Order: constants.LongTermOrder_Alice_Num0_Id1_Clob0_Buy1BTC_Price50000_GTBT15,
+						},
+					),
+				},
+			},
+
+			expectedMsgExecCheckTxSuccess:   true,
+			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
+			expectedMsgExecDeliverTxSuccess: true,
+			expectedMsgExecDeliverTxCode:    abcitypes.CodeTypeOK,
+
+			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
+				require.Equal(t, 2, len(tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)))
+				orders, err := tApp.App.ClobKeeper.MemClob.GetSubaccountOrders(
+					ctx,
+					0,
+					constants.Alice_Num0,
+					clobtypes.Order_SIDE_BUY,
+				)
+				require.NoError(t, err)
+				require.Equal(t, 2, len(orders))
+			},
+		},
 		"Fail (external): Bob tries to transfer from Alice's account without permission.": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
@@ -340,6 +390,19 @@ func TestAuthz(t *testing.T) {
 						genesisState.Subaccounts = tc.subaccounts
 					},
 				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *clobtypes.GenesisState) {
+						genesisState.BlockRateLimitConfig = clobtypes.BlockRateLimitConfiguration{
+							MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+								{
+									NumBlocks: 10,
+									Limit:     1,
+								},
+							},
+						}
+					},
+				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
@@ -401,13 +464,14 @@ func TestAuthz(t *testing.T) {
 						txResult := response.TxResults[1]
 						require.Equal(t, tc.expectedMsgExecDeliverTxSuccess, txResult.IsOK())
 						require.Equal(t, tc.expectedMsgExecDeliverTxCode, txResult.Code)
-						return true
+						return false
 					},
 				})
 			}
 
 			// Verify results.
 			if tc.verifyResults != nil {
+				ctx = tApp.AdvanceToBlock(uint32(ctx.BlockHeight())+1, testapp.AdvanceToBlockOptions{})
 				tc.verifyResults(ctx, tApp)
 			}
 		})
