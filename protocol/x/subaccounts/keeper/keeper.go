@@ -38,6 +38,7 @@ func NewKeeper(
 		assetsKeeper:        assetsKeeper,
 		bankKeeper:          bankKeeper,
 		perpetualsKeeper:    perpetualsKeeper,
+		blocktimeKeeper:     blocktimeKeeper,
 		indexerEventManager: indexerEventManager,
 	}
 }
