@@ -40,6 +40,7 @@ func SubaccountsKeepers(
 	accountKeeper *authkeeper.AccountKeeper,
 	bankKeeper *bankkeeper.BaseKeeper,
 	assetsKeeper *asskeeper.Keeper,
+	blocktimeKeeper *blocktimekeeper.Keeper,
 	storeKey storetypes.StoreKey,
 ) {
 	var mockTimeProvider *mocks.TimeProvider
@@ -57,6 +58,7 @@ func SubaccountsKeepers(
 		assetsKeeper, _ = createAssetsKeeper(stateStore, db, cdc, pricesKeeper, transientStoreKey, msgSenderEnabled)
 
 		accountKeeper, _ = createAccountKeeper(stateStore, db, cdc, registry)
+		blocktimeKeeper, _ = createBlockTimeKeeper(stateStore, db, cdc)
 
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
 		keeper, storeKey = createSubaccountsKeeper(
@@ -66,6 +68,7 @@ func SubaccountsKeepers(
 			assetsKeeper,
 			bankKeeper,
 			perpetualsKeeper,
+			blocktimeKeeper,
 			transientStoreKey,
 			msgSenderEnabled,
 		)
@@ -76,7 +79,7 @@ func SubaccountsKeepers(
 	// Mock time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
-	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, storeKey
+	return ctx, keeper, pricesKeeper, perpetualsKeeper, accountKeeper, bankKeeper, assetsKeeper, blocktimeKeeper, storeKey
 }
 
 func createSubaccountsKeeper(

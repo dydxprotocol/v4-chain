@@ -125,7 +125,7 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state and test parameters.
-			ctx, subaccountsKeeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, subaccountsKeeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 
 			// Set the tracer on the multistore to verify the performed writes are correct.
 			traceDecoder := &tracer.TraceDecoder{}
@@ -144,7 +144,7 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 
 func TestGetSetNegativeTncSubaccountSeenAtBlock_PanicsOnDecreasingBlock(t *testing.T) {
 	// Setup keeper state and test parameters.
-	ctx, subaccountsKeeper, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, subaccountsKeeper, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 
 	subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, 2)
 	require.PanicsWithValue(

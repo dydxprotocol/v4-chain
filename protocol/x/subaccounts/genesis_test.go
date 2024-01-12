@@ -34,7 +34,7 @@ func TestGenesis(t *testing.T) {
 		},
 	}
 
-	ctx, k, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
+	ctx, k, _, _, _, _, _, _, _ := keepertest.SubaccountsKeepers(t, true)
 	subaccounts.InitGenesis(ctx, *k, genesisState)
 	assertSubaccountUpdateEventsInIndexerBlock(t, k, ctx, 2)
 	got := subaccounts.ExportGenesis(ctx, *k)

@@ -137,7 +137,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
@@ -367,7 +367,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
@@ -561,7 +561,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.
@@ -734,7 +734,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
 			// Set up Subaccounts module account.

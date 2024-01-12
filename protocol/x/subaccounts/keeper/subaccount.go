@@ -519,8 +519,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		negativeTncSubaccountSeen := exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
 			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
-		// TODO: update this to check for existence.
-		chainOutageSeen := currentBlock-downtimeInfo.BlockInfo.Height <
+		chainOutageSeen := downtimeInfo.BlockInfo.Height > 0 && currentBlock-downtimeInfo.BlockInfo.Height <
 			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
 
 		if negativeTncSubaccountSeen || chainOutageSeen {
