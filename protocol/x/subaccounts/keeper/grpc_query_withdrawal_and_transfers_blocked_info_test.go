@@ -54,9 +54,10 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
-				NegativeTncSubaccountSeenAtBlock:        7,
-				ChainOutageSeenAtBlock:                  0,
-				WithdrawalsAndTransfersUnblockedAtBlock: 7 + types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				NegativeTncSubaccountSeenAtBlock: 7,
+				ChainOutageSeenAtBlock:           0,
+				WithdrawalsAndTransfersUnblockedAtBlock: 7 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
 		`Chain outage seen in state returns withdrawals and transfers unblocked after the delay`: {
@@ -86,9 +87,10 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
-				NegativeTncSubaccountSeenAtBlock:        0,
-				ChainOutageSeenAtBlock:                  25,
-				WithdrawalsAndTransfersUnblockedAtBlock: 25 + types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				NegativeTncSubaccountSeenAtBlock: 0,
+				ChainOutageSeenAtBlock:           25,
+				WithdrawalsAndTransfersUnblockedAtBlock: 25 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
@@ -120,9 +122,10 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
-				NegativeTncSubaccountSeenAtBlock:        27,
-				ChainOutageSeenAtBlock:                  25,
-				WithdrawalsAndTransfersUnblockedAtBlock: 27 + types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				NegativeTncSubaccountSeenAtBlock: 27,
+				ChainOutageSeenAtBlock:           25,
+				WithdrawalsAndTransfersUnblockedAtBlock: 27 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
@@ -154,9 +157,10 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
-				NegativeTncSubaccountSeenAtBlock:        37,
-				ChainOutageSeenAtBlock:                  47,
-				WithdrawalsAndTransfersUnblockedAtBlock: 47 + types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				NegativeTncSubaccountSeenAtBlock: 37,
+				ChainOutageSeenAtBlock:           47,
+				WithdrawalsAndTransfersUnblockedAtBlock: 47 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
@@ -188,9 +192,10 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
-				NegativeTncSubaccountSeenAtBlock:        3,
-				ChainOutageSeenAtBlock:                  3,
-				WithdrawalsAndTransfersUnblockedAtBlock: 3 + types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				NegativeTncSubaccountSeenAtBlock: 3,
+				ChainOutageSeenAtBlock:           3,
+				WithdrawalsAndTransfersUnblockedAtBlock: 3 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
 	} {
