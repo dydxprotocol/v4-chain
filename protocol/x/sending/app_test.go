@@ -10,7 +10,6 @@ import (
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/gogoproto/proto"
@@ -222,7 +221,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				// Check that DeliverTx fails on MsgCreateTransfer.
 				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 					ValidateFinalizeBlock: func(
-						context sdk.Context,
+						context sdktypes.Context,
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltChain bool) {
@@ -336,7 +335,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 func TestMsgDepositToSubaccount(t *testing.T) {
 	tests := map[string]struct {
 		// Account address.
-		accountAccAddress sdk.AccAddress
+		accountAccAddress sdktypes.AccAddress
 
 		// Subaccount ID.
 		subaccountId satypes.SubaccountId
@@ -533,7 +532,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 func TestMsgWithdrawFromSubaccount(t *testing.T) {
 	tests := map[string]struct {
 		// Account address.
-		accountAccAddress sdk.AccAddress
+		accountAccAddress sdktypes.AccAddress
 
 		// Subaccount ID.
 		subaccountId satypes.SubaccountId
@@ -565,7 +564,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 		},
 		// Withdrawing to a non-existent account will create that account and succeed.
 		"Withdraw from Bob subaccount to non-existent account": {
-			accountAccAddress: sdk.MustAccAddressFromBech32(sample_testutil.AccAddress()), // a newly generated account
+			accountAccAddress: sdktypes.MustAccAddressFromBech32(sample_testutil.AccAddress()), // a newly generated account
 			subaccountId:      constants.Bob_Num0,
 			quantums:          big.NewInt(7_000_000),
 			asset:             *constants.Usdc,
@@ -730,15 +729,15 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 func testNonExistentSender(
 	t *testing.T,
 	tApp *testapp.TestApp,
-	ctx sdk.Context,
-	message sdk.Msg,
+	ctx sdktypes.Context,
+	message sdktypes.Msg,
 	privKey cryptotypes.PrivKey,
 ) {
 	// Generate signed transaction.
 	signedTx, err := sims.GenSignedMockTx(
 		rand.NewRand(),
 		tApp.App.TxConfig(),
-		[]sdk.Msg{message},
+		[]sdktypes.Msg{message},
 		constants.TestFeeCoins_5Cents,
 		100_000, // gas
 		ctx.ChainID(),
@@ -766,7 +765,7 @@ func testNonExistentSender(
 // getSubaccountAssetQuantums returns the quantums of an asset that belongs to a subaccount.
 func getSubaccountAssetQuantums(
 	subaccountsKeeper satypes.SubaccountsKeeper,
-	ctx sdk.Context,
+	ctx sdktypes.Context,
 	subaccountId satypes.SubaccountId,
 	asset assetstypes.Asset,
 ) *big.Int {
