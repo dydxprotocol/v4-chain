@@ -532,7 +532,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				1,
 				metrics.GetLabelForStringValue(metrics.UpdateType, updateType.String()),
 				metrics.GetLabelForBoolValue(metrics.SubaccountsNegativeTncSubaccountSeen, negativeTncSubaccountSeen),
-				metrics.GetLabelForBoolValue(metrics.SubaccountsChainOutageSeen, chainOutageSeen),
+				metrics.GetLabelForBoolValue(metrics.ChainOutageSeen, chainOutageSeen),
 			)
 			return success, successPerUpdate, nil
 		}
