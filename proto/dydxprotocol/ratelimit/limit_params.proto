@@ -2,6 +2,7 @@ syntax = "proto3";
 package dydxprotocol.ratelimit;
 
 import "gogoproto/gogo.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
 
@@ -17,9 +18,10 @@ message LimitParams {
 
 // Limiter defines one rate-limiter on a specfic denom.
 message Limiter {
-  // period_sec is the rolling time period for which the limit applies
+  // period is the rolling time period for which the limit applies
   // e.g. 3600 (an hour)
-  uint32 period_sec = 2;
+  google.protobuf.Duration period = 1
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
   // baseline_minimum is the minimum maximum withdrawal coin amount within the
   // time period.
   // e.g. 100_000_000_000 uusdc for 100k USDC; 5e22 adv4tnt for 50k DV4TNT

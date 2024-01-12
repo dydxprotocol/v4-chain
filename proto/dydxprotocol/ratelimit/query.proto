@@ -4,6 +4,7 @@ package dydxprotocol.ratelimit;
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/ratelimit/limit_params.proto";
+import "google/protobuf/duration.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
 
@@ -36,7 +37,8 @@ message QueryCapacityByDenomRequest { string denom = 1; }
 
 // CapacityResult is a specific rate limit for a denom.
 message CapacityResult {
-  uint32 period_sec = 1;
+  google.protobuf.Duration period = 1
+      [ (gogoproto.nullable) = false, (gogoproto.stdduration) = true ];
   bytes capacity = 2 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",

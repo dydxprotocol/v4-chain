@@ -3,23 +3,29 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	gometrics "github.com/hashicorp/go-metrics"
 )
 
 type (
 	Keeper struct {
-		cdc        codec.BinaryCodec
-		storeKey   storetypes.StoreKey
-		bankKeeper types.BankKeeper
+		cdc             codec.BinaryCodec
+		storeKey        storetypes.StoreKey
+		bankKeeper      types.BankKeeper
+		blockTimeKeeper types.BlockTimeKeeper
 
 		// TODO(CORE-824): Implement `x/ratelimit` keeper
 
@@ -32,13 +38,15 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
+	blockTimeKeeper types.BlockTimeKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		bankKeeper:  bankKeeper,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:             cdc,
+		storeKey:        storeKey,
+		bankKeeper:      bankKeeper,
+		blockTimeKeeper: blockTimeKeeper,
+		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
 
@@ -116,28 +124,6 @@ func (k Keeper) ProcessDeposit(
 	})
 }
 
-// GetBaseline returns the current capacity baseline for the given limiter.
-// `baseline` formula:
-//
-//	baseline = max(baseline_minimum, baseline_tvl_ppm * current_tvl)
-func (k Keeper) GetBaseline(
-	ctx sdk.Context,
-	denom string,
-	limiter types.Limiter,
-) *big.Int {
-	// Get the current TVL.
-	supply := k.bankKeeper.GetSupply(ctx, denom)
-	currentTVL := supply.Amount.BigInt()
-
-	return lib.BigMax(
-		limiter.BaselineMinimum.BigInt(),
-		lib.BigIntMulPpm(
-			currentTVL,
-			limiter.BaselineTvlPpm,
-		),
-	)
-}
-
 // SetLimitParams sets `LimitParams` for the given denom.
 // Also overwrites the existing `DenomCapacity` object for the denom with a default `capacity_list` of the
 // same length as the `limiters` list. Each `capacity` is initialized to the current baseline.
@@ -161,11 +147,12 @@ func (k Keeper) SetLimitParams(
 		return
 	}
 
+	currentTvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
 	// Initialize the capacity list with the current baseline.
 	newCapacityList := make([]dtypes.SerializableInt, len(limitParams.Limiters))
 	for i, limiter := range limitParams.Limiters {
 		newCapacityList[i] = dtypes.NewIntFromBigInt(
-			k.GetBaseline(ctx, limitParams.Denom, limiter),
+			ratelimitutil.GetBaseline(currentTvl.Amount.BigInt(), limiter),
 		)
 	}
 	// Set correspondong `DenomCapacity` in state.
@@ -216,6 +203,85 @@ func (k Keeper) SetDenomCapacity(
 		b := k.cdc.MustMarshal(&denomCapacity)
 		store.Set(key, b)
 	}
+
+	// Emit telemetry for the new capacity list.
+	for i, capacity := range denomCapacity.CapacityList {
+		telemetry.SetGaugeWithLabels(
+			[]string{types.ModuleName, metrics.Capacity},
+			metrics.GetMetricValueFromBigInt(capacity.BigInt()),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(metrics.RateLimitDenom, denomCapacity.Denom),
+				metrics.GetLabelForIntValue(metrics.LimiterIndex, i),
+			},
+		)
+	}
+}
+
+// UpdateAllCapacitiesEndBlocker is called during the EndBlocker to update the capacity for all limit params.
+func (k Keeper) UpdateAllCapacitiesEndBlocker(
+	ctx sdk.Context,
+) {
+	timeSinceLastBlock := k.blockTimeKeeper.GetTimeSinceLastBlock(ctx)
+
+	if timeSinceLastBlock < 0 {
+		// This violates an invariant (current block time > prev block time).
+		// Since this is in the `EndBlocker`, we log an error instead of panicking.
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"timeSinceLastBlock (%v) <= 0; skipping UpdateAllCapacitiesEndBlocker",
+				timeSinceLastBlock,
+			),
+		)
+		return
+	}
+
+	// Iterate through all the limit params in state.
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var limitParams types.LimitParams
+		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
+		k.updateCapacityForLimitParams(ctx, limitParams, timeSinceLastBlock)
+	}
+}
+
+// updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
+// towards baseline.
+// Assumes that the `LimitParams` exist in state.
+func (k Keeper) updateCapacityForLimitParams(
+	ctx sdk.Context,
+	limitParams types.LimitParams,
+	timeSinceLastBlock time.Duration,
+) {
+	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+
+	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
+
+	newCapacityList, err := ratelimitutil.CalculateNewCapacityList(
+		tvl.Amount.BigInt(),
+		limitParams,
+		capacityList,
+		timeSinceLastBlock,
+	)
+
+	if err != nil {
+		k.Logger(ctx).Error(
+			fmt.Sprintf(
+				"error calculating new capacity list for denom %v: %v. Skipping update.",
+				limitParams.Denom,
+				err,
+			),
+		)
+		return
+	}
+
+	k.SetDenomCapacity(ctx, types.DenomCapacity{
+		Denom:        limitParams.Denom,
+		CapacityList: newCapacityList,
+	})
 }
 
 // GetDenomCapacity returns `DenomCapacity` for the given denom.

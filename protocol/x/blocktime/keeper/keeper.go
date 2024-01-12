@@ -79,6 +79,12 @@ func (k Keeper) GetPreviousBlockInfo(ctx sdk.Context) types.BlockInfo {
 	return info
 }
 
+// GetTimeSinceLastBlock returns the time delta between the current block time and the last block time.
+func (k Keeper) GetTimeSinceLastBlock(ctx sdk.Context) time.Duration {
+	prevBlockInfo := k.GetPreviousBlockInfo(ctx)
+	return ctx.BlockTime().Sub(prevBlockInfo.Timestamp)
+}
+
 func (k Keeper) SetPreviousBlockInfo(ctx sdk.Context, info *types.BlockInfo) {
 	store := ctx.KVStore(k.storeKey)
 	b := k.cdc.MustMarshal(info)

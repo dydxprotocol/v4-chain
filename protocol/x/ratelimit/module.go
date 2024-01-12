@@ -2,9 +2,10 @@ package ratelimit
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -151,7 +152,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
-	// TODO(CORE-824): Implement `EndBlocker` logic.
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	am.keeper.UpdateAllCapacitiesEndBlocker(sdkCtx)
 
 	return nil
 }

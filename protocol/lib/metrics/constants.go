@@ -400,6 +400,11 @@ const (
 	ValidatorNumFills              = "validator_num_fills"
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
+
+	// x/ratelimit
+	Capacity       = "capacity"
+	RateLimitDenom = "rate_limit_denom"
+	LimiterIndex   = "limiter_index"
 )
 
 const (
