@@ -153,8 +153,14 @@ func TestGetDowntimeInfoFor(t *testing.T) {
 		expectedDowntimeInfo types.AllDowntimeInfo_DowntimeInfo
 	}{
 		"smaller than all durations": {
-			duration:             5 * time.Second,
-			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{},
+			duration: 5 * time.Second,
+			expectedDowntimeInfo: types.AllDowntimeInfo_DowntimeInfo{
+				Duration: 0,
+				BlockInfo: types.BlockInfo{
+					Height:    40,
+					Timestamp: time.Unix(400, 0).UTC(),
+				},
+			},
 		},
 		"equal to duration": {
 			duration: 20 * time.Second,

@@ -120,10 +120,17 @@ func (k Keeper) UpdateAllDowntimeInfo(ctx sdk.Context) {
 
 // GetDowntimeInfoFor gets the DowntimeInfo for a specific duration. If the exact duration is not observed, it
 // returns the DowntimeInfo for the largest duration that is smaller than the input duration. If the input
-// duration is smaller than all observed durations, then return an empty DowntimeInfo.
+// duration is smaller than all observed durations, then return a DowntimeInfo with duration 0 and the current
+// block's info.
 func (k Keeper) GetDowntimeInfoFor(ctx sdk.Context, duration time.Duration) types.AllDowntimeInfo_DowntimeInfo {
 	allInfo := k.GetAllDowntimeInfo(ctx)
-	ret := types.AllDowntimeInfo_DowntimeInfo{}
+	ret := types.AllDowntimeInfo_DowntimeInfo{
+		Duration: 0,
+		BlockInfo: types.BlockInfo{
+			Height:    uint32(ctx.BlockHeight()),
+			Timestamp: ctx.BlockTime(),
+		},
+	}
 	for _, info := range allInfo.Infos {
 		if duration >= info.Duration {
 			ret = *info

@@ -489,11 +489,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// - There was a negative TNC subaccount seen.
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
-		if exists && currentBlock < lastBlockNegativeTncSubaccountSeen {
+		if negativeTncSubaccountExists && currentBlock < lastBlockNegativeTncSubaccountSeen {
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
@@ -506,7 +506,8 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		// Panic if the current block is less than the last block a chain outage was seen.
 		downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(ctx, 5*time.Minute)
-		if currentBlock < downtimeInfo.BlockInfo.Height {
+		chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
+		if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
@@ -517,9 +518,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			)
 		}
 
-		negativeTncSubaccountSeen := exists && currentBlock-lastBlockNegativeTncSubaccountSeen <
+		negativeTncSubaccountSeen := negativeTncSubaccountExists && currentBlock-lastBlockNegativeTncSubaccountSeen <
 			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
-		chainOutageSeen := downtimeInfo.BlockInfo.Height > 0 && currentBlock-downtimeInfo.BlockInfo.Height <
+		chainOutageSeen := chainOutageExists && currentBlock-downtimeInfo.BlockInfo.Height <
 			types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS
 
 		if negativeTncSubaccountSeen || chainOutageSeen {
