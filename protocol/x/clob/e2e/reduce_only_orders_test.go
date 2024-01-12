@@ -24,7 +24,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 		priceUpdateForFirstBlock  *prices.MsgUpdateMarketPrices
 		priceUpdateForSecondBlock *prices.MsgUpdateMarketPrices
 
-		crashingAppCheckTxNonDeterminsmChecksDisabled bool
+		crashingAppCheckTxNonDeterminismChecksDisabled bool
 
 		expectedInTriggeredStateAfterBlock map[uint32]map[clobtypes.OrderId]bool
 
@@ -234,7 +234,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 
 			// Crashing app checks have to be disabled because the FOK order will not match
 			// with an empty orderbook and fail to be placed.
-			crashingAppCheckTxNonDeterminsmChecksDisabled: true,
+			crashingAppCheckTxNonDeterminismChecksDisabled: true,
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
@@ -296,7 +296,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 			ordersForSecondBlock: []clobtypes.Order{},
 
 			// Crashing app checks don't need to be disabled since matches occur in same block.
-			crashingAppCheckTxNonDeterminsmChecksDisabled: false,
+			crashingAppCheckTxNonDeterminismChecksDisabled: false,
 
 			expectedOrderOnMemClob: map[clobtypes.OrderId]bool{
 				constants.Order_Carl_Num0_Id0_Clob0_Buy80_Price500000_GTB20.OrderId:          true,
@@ -485,7 +485,7 @@ func TestReduceOnlyOrders(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			tApp := testapp.NewTestAppBuilder(t).
-				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminsmChecksDisabled).
+				WithCrashingAppCheckTxNonDeterminismChecksEnabled(!tc.crashingAppCheckTxNonDeterminismChecksDisabled).
 				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
 					genesis = testapp.DefaultGenesis()
 					testapp.UpdateGenesisDocWithAppStateForModule(
