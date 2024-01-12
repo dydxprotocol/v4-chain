@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 )
 
@@ -12,6 +13,8 @@ func IsNestedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
 		// ------- CosmosSDK default modules
+		// authz
+		*authz.MsgExec,
 		// gov
 		*gov.MsgSubmitProposal:
 		return true
@@ -45,6 +48,8 @@ func getInnerMsgs(msg sdk.Msg) ([]sdk.Msg, error) {
 	case
 		*gov.MsgSubmitProposal:
 		return msg.GetMsgs()
+	case *authz.MsgExec:
+		return msg.GetMessages()
 	default:
 		return nil, fmt.Errorf("unsupported msg type: %T", msg)
 	}

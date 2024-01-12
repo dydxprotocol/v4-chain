@@ -85,6 +85,18 @@ func TestValidateNestedMsg(t *testing.T) {
 			msg:         testmsgs.MsgSubmitProposalWithDoubleNestedInner,
 			expectedErr: invalidInnerMsgErr_Nested,
 		},
+		"Invalid MsgExec: unsupported inner msg": {
+			msg:         &testmsgs.MsgExecWithUnsupportedInner,
+			expectedErr: invalidInnerMsgErr_Unsupported,
+		},
+		"Invalid MsgExec: app-injected inner msg": {
+			msg:         &testmsgs.MsgExecWithAppInjectedInner,
+			expectedErr: invalidInnerMsgErr_AppInjected,
+		},
+		"Invalid MsgExec: double-nested inner msg": {
+			msg:         &testmsgs.MsgExecWithDoubleNestedInner,
+			expectedErr: invalidInnerMsgErr_Nested,
+		},
 		"Valid: empty inner msg": {
 			msg:         testmsgs.MsgSubmitProposalWithEmptyInner,
 			expectedErr: nil,

@@ -3,6 +3,7 @@ package msgs
 import (
 	upgrade "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -31,6 +32,15 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(MsgSubmitProposalWithDoubleNestedInner)
 	MsgSubmitProposalWithDoubleNestedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+
+	_ = testTxBuilder.SetMsgs(&MsgExecWithUnsupportedInner)
+	MsgExecWithUnsupportedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+
+	_ = testTxBuilder.SetMsgs(&MsgExecWithAppInjectedInner)
+	MsgExecWithAppInjectedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+
+	_ = testTxBuilder.SetMsgs(&MsgExecWithDoubleNestedInner)
+	MsgExecWithDoubleNestedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 
 	_ = testTxBuilder.SetMsgs(MsgSubmitProposalWithUpgrade)
 	MsgSubmitProposalWithUpgradeTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
@@ -80,6 +90,25 @@ var (
 	MsgSubmitProposalWithDoubleNestedInner, _ = gov.NewMsgSubmitProposal(
 		[]sdk.Msg{MsgSubmitProposalWithUpgradeAndCancel}, nil, testProposer, testMetadata, testTitle, testSummary, false)
 	MsgSubmitProposalWithDoubleNestedInnerTxBytes []byte
+
+	// Invalid MsgExec
+	MsgExecWithUnsupportedInner = authz.NewMsgExec(
+		constants.AliceAccAddress,
+		[]sdk.Msg{GovBetaMsgSubmitProposal},
+	)
+	MsgExecWithUnsupportedInnerTxBytes []byte
+
+	MsgExecWithAppInjectedInner = authz.NewMsgExec(
+		constants.AliceAccAddress,
+		[]sdk.Msg{&prices.MsgUpdateMarketPrices{}},
+	)
+	MsgExecWithAppInjectedInnerTxBytes []byte
+
+	MsgExecWithDoubleNestedInner = authz.NewMsgExec(
+		constants.AliceAccAddress,
+		[]sdk.Msg{MsgSubmitProposalWithUpgradeAndCancel},
+	)
+	MsgExecWithDoubleNestedInnerTxBytes []byte
 
 	// Valid MsgSubmitProposals
 	MsgSubmitProposalWithUpgrade, _ = gov.NewMsgSubmitProposal(
