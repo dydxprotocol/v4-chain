@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
+func TestCalculateNewCapacityList(t *testing.T) {
 	testDenom := "testDenom"
 	tests := map[string]struct {
 		bigTvl               *big.Int
