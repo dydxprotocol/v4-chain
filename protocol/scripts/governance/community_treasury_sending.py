@@ -3,7 +3,7 @@ import decimal
 import json
 import sys
 
-# Note: value assumes that the token exponent is 18 (i.e. 1 full token = 1 * 10^18 native token denom
+# Note: value assumes that the token exponent is 18 (i.e. 1 full token = 1 * 10^18 native token denom)
 TOKEN_MULTIPLE = decimal.Decimal(1000000000000000000)
 
 
@@ -20,10 +20,8 @@ TOKEN_MULTIPLE = decimal.Decimal(1000000000000000000)
 TITLE="TODO: Fill in proposal title" 
 NATIVE_TOKEN_DENOM="adv4tnt" # TODO: Replace with production token 
 PROPOSAL_BODY="""
-TODO: Fill in proposal content. 
-Include detailed description of the proposal, links to governance discussion forums (if applicable).
-Any signal proposal in text should also be added here.
-""" 
+TODO: Include a brief summary of the proposal and link to relevant governance forum discussion
+"""
 ########################################################################## 
 ### END: Required proposal fields.                                     ###
 ### TODO: update above fields as needed                                ###
