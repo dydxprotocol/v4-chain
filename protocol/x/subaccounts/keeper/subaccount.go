@@ -505,7 +505,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 
 		// Panic if the current block is less than the last block a chain outage was seen.
-		fmt.Println("BLOCK TIME KEEPER:", k.blocktimeKeeper)
 		downtimeInfo := k.blocktimeKeeper.GetDowntimeInfoFor(ctx, 5*time.Minute)
 		chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
 		if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
