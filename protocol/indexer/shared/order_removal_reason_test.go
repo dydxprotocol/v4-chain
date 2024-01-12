@@ -44,6 +44,11 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 			expectedErr:    nil,
 		},
+		"Gets order removal reason for order error ErrReduceOnlyWouldIncreasePositionSize": {
+			orderError:     clobtypes.ErrReduceOnlyWouldIncreasePositionSize,
+			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			expectedErr:    nil,
+		},
 		"Returns error for order status Success": {
 			orderStatus:    clobtypes.Success,
 			orderError:     clobtypes.ErrNotImplemented,
