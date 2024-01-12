@@ -1367,17 +1367,13 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 		return types.ErrInvalidReplacement
 	}
 
-	// If the order is a reduce-only order, we should ensure the full size of the order does not increase the
-	// subaccount's current position size. Note that we intentionally do not validate that the reduce-only order
-	// does not change the subaccount's position _side_, and that will be validated if the order is matched.
-	// TODO(DEC-1228): use `MustValidateReduceOnlyOrder` and move this to `PerformStatefulOrderValidation`.
+	// If the order is a reduce-only order, we should ensure that the sign of the order size is the opposite of
+	// the current position size. Note that we do not validate the size/quantity of the reduce only order fill,
+	// as that will be validated if the order is matched.
+	// The subaccount's current position size is defined as the current state size + any partial fills
+	// that might have occurred as a result of this reduce only order replacing another partially filled order.
+	// Partial fills should be already recorded in state since order matching is optimistic and writes to state.
 	if order.IsReduceOnly() {
-		// If there exists an non-reduce only order with the same order id
-		// cancel the incoming reduce only order by returning an error.
-		if restingOrderExists && !existingRestingOrder.IsReduceOnly() {
-			return types.ErrReduceOnlyOrderReplacement
-		}
-
 		existingPositionSize := m.clobKeeper.GetStatePosition(ctx, orderId.SubaccountId, order.GetClobPairId())
 		orderSize := order.GetBigQuantums()
 
