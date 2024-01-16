@@ -105,7 +105,6 @@ type AppModule struct {
 	AppModuleBasic
 
 	keeper keeper.Keeper
-	// TODO(CORE-380): Add dependent keepers (prices, fee-tiers)
 }
 
 func NewAppModule(

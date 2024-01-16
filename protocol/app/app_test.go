@@ -42,6 +42,7 @@ import (
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -217,6 +218,7 @@ func TestModuleBasics(t *testing.T) {
 		sendingmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
+		ratelimitmodule.AppModuleBasic{},
 	)
 
 	expectedFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(defaultAppModuleBasics))

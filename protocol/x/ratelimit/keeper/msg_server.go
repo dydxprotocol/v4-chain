@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	errorsmod "cosmossdk.io/errors"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -33,24 +35,11 @@ func (k msgServer) SetLimitParams(
 		)
 	}
 
-	// TODO(CORE-825): Implement messages.
-
-	return &types.MsgSetLimitParamsResponse{}, nil
-}
-
-func (k msgServer) DeleteLimitParams(
-	goCtx context.Context,
-	msg *types.MsgDeleteLimitParams,
-) (*types.MsgDeleteLimitParamsResponse, error) {
-	if !k.HasAuthority(msg.Authority) {
-		return nil, errorsmod.Wrapf(
-			govtypes.ErrInvalidSigner,
-			"invalid authority %s",
-			msg.Authority,
-		)
+	// msg.LimitParams.Validate() is called in `Keeper.SetLimitParams`
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	if err := k.Keeper.SetLimitParams(ctx, msg.LimitParams); err != nil {
+		return nil, err
 	}
 
-	// TODO(CORE-825): Implement messages.
-
-	return &types.MsgDeleteLimitParamsResponse{}, nil
+	return &types.MsgSetLimitParamsResponse{}, nil
 }

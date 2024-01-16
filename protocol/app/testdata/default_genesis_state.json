@@ -374,6 +374,25 @@
       }
     ]
   },
+  "ratelimit": {
+    "limit_params_list": [
+      {
+        "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+        "limiters": [
+          {
+            "baseline_minimum": "100000000000",
+            "baseline_tvl_ppm": 10000,
+            "period": "3600s"
+          },
+          {
+            "baseline_minimum": "1000000000000",
+            "baseline_tvl_ppm": 100000,
+            "period": "86400s"
+          }
+        ]
+      }
+    ]
+  },
   "rewards": {
     "params": {
       "treasury_account": "rewards_treasury",

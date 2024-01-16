@@ -168,7 +168,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 				dtypes.NewInt(10_024_690_000_000), // ~5m tokens (20% of 50m)
 			},
 		},
-		"50m TVL, capactiy correctly initialized to 10% and 100%": {
+		"50m TVL, capactiy correctly initialized to 10% and 99%": {
 			denom: testDenom,
 			limiters: []types.Limiter{
 				{
@@ -179,7 +179,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 				{
 					Period:          86_400 * time.Second,
 					BaselineMinimum: dtypes.NewInt(1_000_000_000_000), // 1m tokens (assuming 6 decimals)
-					BaselineTvlPpm:  1_000_000,                        // 100%
+					BaselineTvlPpm:  990_000,                          // 99%
 				},
 			},
 			balances: []banktypes.Balance{
@@ -204,7 +204,7 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 			},
 			expectedCapacityList: []dtypes.SerializableInt{
 				dtypes.NewInt(5_000_000_000_000),  // 5m tokens (10% of 50m)
-				dtypes.NewInt(50_000_000_000_000), // 50m tokens (100% of 50m)
+				dtypes.NewInt(49_500_000_000_000), // 49.5m tokens (99% of 50m)
 			},
 		},
 	}
@@ -231,7 +231,8 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 			}
 
 			// Test SetLimitParams
-			k.SetLimitParams(ctx, limitParams)
+			err := k.SetLimitParams(ctx, limitParams)
+			require.NoError(t, err)
 
 			// Test GetLimitParams
 			gotLimitParams := k.GetLimitParams(ctx, tc.denom)
@@ -247,10 +248,11 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 			require.Equal(t, expectedDenomCapacity, gotDenomCapacity, "retrieved DenomCapacity does not match the set value")
 
 			// Set empty `LimitParams` for `testDenom`.
-			k.SetLimitParams(ctx, types.LimitParams{
+			err = k.SetLimitParams(ctx, types.LimitParams{
 				Denom:    tc.denom,
 				Limiters: []types.Limiter{}, // Empty list, results in deletion of the key.
 			})
+			require.NoError(t, err)
 
 			// Check that the key is deleted under `LimitParams` storage.
 			require.Equal(t,
@@ -394,7 +396,7 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 						{
 							Denom: testDenom,
 							Amount: sdkmath.NewIntFromBigInt(
-								big_testutil.Int64MulPow10(25, 24), // 25M tokens	(assuming 18 decimals)
+								big_testutil.Int64MulPow10(25, 24), // 25M tokens (assuming 18 decimals)
 							),
 						},
 					},
@@ -821,7 +823,8 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 
 			// Initialize limit params
 			for _, limitParams := range tc.limitParamsList {
-				k.SetLimitParams(ctx, limitParams)
+				err := k.SetLimitParams(ctx, limitParams)
+				require.NoError(t, err)
 			}
 
 			// Initialize denom capacity
@@ -845,4 +848,87 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestGetAllLimitParams(t *testing.T) {
+	denom4LimitParams := types.LimitParams{
+		Denom: "denom4",
+		Limiters: []types.Limiter{
+			{
+				Period:          3_600 * time.Second,
+				BaselineMinimum: dtypes.NewInt(100_000_000_000),
+				BaselineTvlPpm:  10_000,
+			},
+		},
+	}
+	denom3LimitParams := types.LimitParams{
+		Denom: "denom3",
+		Limiters: []types.Limiter{
+			{
+				Period:          24 * time.Hour,
+				BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+				BaselineTvlPpm:  100_000,
+			},
+		},
+	}
+	denom1LimitParams := types.LimitParams{
+		Denom: "denom1",
+		Limiters: []types.Limiter{
+			{
+				Period:          12 * time.Hour,
+				BaselineMinimum: dtypes.NewInt(123_456_789_000),
+				BaselineTvlPpm:  10_000,
+			},
+		},
+	}
+	denom2LimitParams := types.LimitParams{
+		Denom: "denom2",
+		Limiters: []types.Limiter{
+			{
+				Period:          72_000 * time.Second,
+				BaselineMinimum: dtypes.NewInt(100_000_000_000),
+				BaselineTvlPpm:  10_000,
+			},
+		},
+	}
+	testLimitParamsList := []types.LimitParams{
+		denom4LimitParams,
+		denom3LimitParams,
+		denom1LimitParams,
+		denom2LimitParams,
+	}
+
+	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+		genesis = testapp.DefaultGenesis()
+		testapp.UpdateGenesisDocWithAppStateForModule(
+			&genesis,
+			func(genesisState *types.GenesisState) {
+				// Empty genesis params for test
+				genesisState.LimitParamsList = []types.LimitParams{}
+			},
+		)
+		return genesis
+	}).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	// Initialize limit params
+	for _, limitParams := range testLimitParamsList {
+		err := k.SetLimitParams(ctx, limitParams)
+		require.NoError(t, err)
+	}
+
+	allLimitParams := k.GetAllLimitParams(ctx)
+
+	expectedLimitParamsList := []types.LimitParams{
+		denom1LimitParams,
+		denom2LimitParams,
+		denom3LimitParams,
+		denom4LimitParams,
+	}
+
+	require.Equal(t,
+		expectedLimitParamsList,
+		allLimitParams,
+	)
 }
