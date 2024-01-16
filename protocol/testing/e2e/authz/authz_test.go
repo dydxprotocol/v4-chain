@@ -127,6 +127,8 @@ func TestAuthz(t *testing.T) {
 			msgExec: &authz.MsgExec{
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
+					// The rate limiter is set to 1 order per 10 blocks, but this MsgExec contains
+					// two order placements.
 					newAny(
 						&clobtypes.MsgPlaceOrder{
 							Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
@@ -207,7 +209,7 @@ func TestAuthz(t *testing.T) {
 				}
 			},
 		},
-		"Fail (internal): Granting permissions to execute internal messages doesn't do anything": {
+		"Fail (internal): Granting permissions to execute internal messages doesn't allow execution": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,
