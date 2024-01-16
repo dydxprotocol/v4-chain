@@ -14,10 +14,21 @@ func TestNewRootCmd_UsesClientConfig(t *testing.T) {
 
 	config.SetupConfig()
 
+	// Set the client config to point to a fake chain id since this is a required option
+	{
+		option := cmd.GetOptionWithCustomStartCmd()
+		rootCmd := cmd.NewRootCmd(option, tempDir)
+
+		cmd.AddTendermintSubcommands(rootCmd)
+		cmd.AddInitCmdPostRunE(rootCmd)
+		rootCmd.SetArgs([]string{"config", "set", "client", "chain-id", "fakeChainId"})
+		require.NoError(t, svrcmd.Execute(rootCmd, app.AppDaemonName, tempDir))
+	}
+
 	// Set the client config to point to a fake address
 	{
 		option := cmd.GetOptionWithCustomStartCmd()
-		rootCmd := cmd.NewRootCmd(option)
+		rootCmd := cmd.NewRootCmd(option, tempDir)
 
 		cmd.AddTendermintSubcommands(rootCmd)
 		cmd.AddInitCmdPostRunE(rootCmd)
@@ -27,7 +38,7 @@ func TestNewRootCmd_UsesClientConfig(t *testing.T) {
 
 	// Run a query command (that will fail) to ensure that we are reading the client config
 	option := cmd.GetOptionWithCustomStartCmd()
-	rootCmd := cmd.NewRootCmd(option)
+	rootCmd := cmd.NewRootCmd(option, tempDir)
 
 	cmd.AddTendermintSubcommands(rootCmd)
 	cmd.AddInitCmdPostRunE(rootCmd)

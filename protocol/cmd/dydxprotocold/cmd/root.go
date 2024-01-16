@@ -61,9 +61,11 @@ const (
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
 func NewRootCmd(
 	option *RootCmdOption,
+	homeDir string,
 ) *cobra.Command {
 	return NewRootCmdWithInterceptors(
 		option,
+		homeDir,
 		func(serverCtxPtr *server.Context) {
 
 		},
@@ -78,6 +80,7 @@ func NewRootCmd(
 
 func NewRootCmdWithInterceptors(
 	option *RootCmdOption,
+	homeDir string,
 	serverCtxInterceptor func(serverCtxPtr *server.Context),
 	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
@@ -91,7 +94,7 @@ func NewRootCmdWithInterceptors(
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
-		WithHomeDir(dydxapp.DefaultNodeHome).
+		WithHomeDir(homeDir).
 		WithViper(EnvPrefix)
 
 	rootCmd := &cobra.Command{
