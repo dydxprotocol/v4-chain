@@ -1197,6 +1197,7 @@ func launchValidatorInDir(
 	option := cmd.GetOptionWithCustomStartCmd()
 	rootCmd := cmd.NewRootCmdWithInterceptors(
 		option,
+		validatorHomeDir,
 		// Inject the app options and logger
 		func(serverCtxPtr *server.Context) {
 			for key, value := range appOptions {
