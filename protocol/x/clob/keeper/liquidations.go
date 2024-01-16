@@ -10,6 +10,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -41,8 +42,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 ) {
 	lib.AssertCheckTxMode(ctx)
 
-	metrics.AddSample(
-		metrics.LiquidationsLiquidatableSubaccountIdsCount,
+	gometrics.AddSample(
+		[]string{
+			metrics.Liquidations,
+			metrics.LiquidatableSubaccountIds,
+			metrics.Count,
+		},
 		float32(len(subaccountIds)),
 	)
 
@@ -277,7 +282,7 @@ func (k Keeper) PlacePerpetualLiquidation(
 		perpetualId,
 	)
 
-	labels := []metrics.Label{
+	labels := []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 	}
 	if liquidationOrder.IsBuy() {
@@ -291,11 +296,10 @@ func (k Keeper) PlacePerpetualLiquidation(
 		new(big.Float).SetUint64(orderSizeOptimisticallyFilledFromMatchingQuantums.ToUint64()),
 		new(big.Float).SetUint64(liquidationOrder.GetBaseQuantums().ToUint64()),
 	).Float32()
-
-	metrics.AddSampleWithLabels(
-		metrics.LiquidationsPercentFilledDistribution,
+	gometrics.AddSampleWithLabels(
+		[]string{metrics.Liquidations, metrics.PercentFilled, metrics.Distribution},
 		percentFilled,
-		labels...,
+		labels,
 	)
 
 	if orderSizeOptimisticallyFilledFromMatchingQuantums == 0 {
@@ -318,16 +322,15 @@ func (k Keeper) PlacePerpetualLiquidation(
 		perpetualId,
 		liquidationOrder.GetBaseQuantums().ToBigInt(),
 	); err == nil {
-		metrics.IncrCounterWithLabels(
-			metrics.LiquidationsPlacePerpetualLiquidationQuoteQuantums,
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums},
 			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
-			labels...,
+			labels,
 		)
-
-		metrics.AddSampleWithLabels(
-			metrics.LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution,
+		gometrics.AddSampleWithLabels(
+			[]string{metrics.Liquidations, metrics.PlacePerpetualLiquidation, metrics.QuoteQuantums, metrics.Distribution},
 			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
-			labels...,
+			labels,
 		)
 	}
 
@@ -587,18 +590,19 @@ func (k Keeper) GetFillablePrice(
 		if !ctx.IsCheckTx() && !ctx.IsReCheckTx() {
 			callback = metrics.DeliverTx
 		}
-
-		metrics.IncrCounterWithLabels(
-			metrics.LiquidationsLiquidationMatchNegativeTNC,
+		telemetry.IncrCounterWithLabels(
+			[]string{metrics.Liquidations, metrics.LiquidationMatchNegativeTNC},
 			1,
-			metrics.GetLabelForIntValue(
-				metrics.PerpetualId,
-				int(perpetualId),
-			),
-			metrics.GetLabelForStringValue(
-				metrics.Callback,
-				callback,
-			),
+			[]gometrics.Label{
+				metrics.GetLabelForIntValue(
+					metrics.PerpetualId,
+					int(perpetualId),
+				),
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					callback,
+				),
+			},
 		)
 
 		ctx.Logger().Info(

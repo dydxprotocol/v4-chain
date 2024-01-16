@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -72,10 +73,10 @@ func EndBlocker(
 				),
 			),
 		)
-		metrics.IncrCounterWithLabels(
-			metrics.ClobExpiredStatefulOrders,
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.Expired, metrics.StatefulOrderRemoved, metrics.Count},
 			1,
-			orderId.GetOrderIdLabels()...,
+			orderId.GetOrderIdLabels(),
 		)
 	}
 
@@ -117,9 +118,10 @@ func EndBlocker(
 	keeper.PruneRateLimits(ctx)
 
 	// Emit relevant metrics at the end of every block.
-	metrics.SetGauge(
-		metrics.InsuranceFundBalance,
+	telemetry.SetGaugeWithLabels(
+		[]string{metrics.InsuranceFundBalance},
 		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
+		[]gometrics.Label{},
 	)
 }
 

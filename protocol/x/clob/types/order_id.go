@@ -6,6 +6,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
+	gometrics "github.com/armon/go-metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
@@ -173,8 +174,8 @@ func MustSortAndHaveNoDuplicates(orderIds []OrderId) {
 }
 
 // GetOrderIdLabels returns the telemetry labels of this order ID.
-func (o *OrderId) GetOrderIdLabels() []metrics.Label {
-	return []metrics.Label{
+func (o *OrderId) GetOrderIdLabels() []gometrics.Label {
+	return []gometrics.Label{
 		metrics.GetLabelForIntValue(metrics.OrderFlag, int(o.GetOrderFlags())),
 		metrics.GetLabelForIntValue(metrics.ClobPairId, int(o.GetClobPairId())),
 	}
