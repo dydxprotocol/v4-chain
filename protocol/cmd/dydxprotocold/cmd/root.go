@@ -145,7 +145,10 @@ func NewRootCmdWithInterceptors(
 	}
 
 	initRootCmd(rootCmd, option, encodingConfig, appInterceptor)
-
+	initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
+	if err != nil {
+		panic(err)
+	}
 	if err := autoCliOpts(encodingConfig, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
