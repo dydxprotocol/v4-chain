@@ -3,6 +3,7 @@ package metrics
 import (
 	"math/big"
 	"strconv"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -65,6 +66,25 @@ func GetLabelForStringValue(labelName string, labelValue string) gometrics.Label
 func GetMetricValueFromBigInt(i *big.Int) float32 {
 	r, _ := new(big.Float).SetInt(i).Float32()
 	return r
+}
+
+// ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
+// metric for a module with a given set of keys and labels.
+// NOTE: global labels are not included in this metric.
+func ModuleMeasureSinceWithLabels(
+	module string,
+	keys []string,
+	start time.Time,
+	labels []gometrics.Label,
+) {
+	gometrics.MeasureSinceWithLabels(
+		keys,
+		start.UTC(),
+		append(
+			[]gometrics.Label{telemetry.NewLabel(telemetry.MetricLabelNameModule, module)},
+			labels...,
+		),
+	)
 }
 
 // GetCallbackMetricFromCtx determines the callback metric based on the context. Note that DeliverTx is implied
