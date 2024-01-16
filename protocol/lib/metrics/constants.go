@@ -313,7 +313,6 @@ const (
 
 	// Liquidation.
 	ConstructLiquidationOrder             = "construct_liquidation_order"
-	InsuranceFundBalance                  = "insurance_fund_balance"
 	InsuranceFundDelta                    = "insurance_fund_delta"
 	Liquidations                          = "liquidations"
 	MaybeGetLiquidationOrder              = "maybe_get_liquidation_order"
