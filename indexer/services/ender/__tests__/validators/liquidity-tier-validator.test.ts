@@ -15,7 +15,6 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError } from '../helpers/validator-helpers';
 import { LiquidityTierValidator } from '../../src/validators/liquidity-tier-validator';
-import Long from 'long';
 
 describe('liquidity-tier-validator', () => {
   beforeEach(async () => {
