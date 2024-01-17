@@ -318,6 +318,14 @@ func assertAppPreconditions() {
 	}
 }
 
+// overrideWasmVariables overrides the wasm variables to:
+//   - allow for larger wasm files
+func overrideWasmVariables() {
+	// Override Wasm size limitation from WASMD.
+	wasmtypes.MaxWasmSize = 3 * 1024 * 1024
+	wasmtypes.MaxProposalWasmSize = wasmtypes.MaxWasmSize
+}
+
 // New returns a reference to an initialized blockchain app
 func New(
 	logger log.Logger,
@@ -328,6 +336,7 @@ func New(
 	baseAppOptions ...func(*baseapp.BaseApp),
 ) *App {
 	assertAppPreconditions()
+	overrideWasmVariables()
 
 	// dYdX specific command-line flags.
 	appFlags := flags.GetFlagValuesFromOptions(appOpts)
