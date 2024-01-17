@@ -226,7 +226,6 @@ export interface PerpetualMarketResponseObject {
   nextFundingRate: string;
   initialMarginFraction: string;
   maintenanceMarginFraction: string;
-  basePositionNotional: string;
   openInterest: string;
   atomicResolution: number;
   quantumConversionExponent: number;

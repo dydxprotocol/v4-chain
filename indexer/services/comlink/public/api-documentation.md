@@ -1410,7 +1410,6 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0',
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
-      "basePositionNotional": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -1430,7 +1429,6 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets?limit=0',
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
-      "basePositionNotional": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -3173,7 +3171,6 @@ or
   "nextFundingRate": "string",
   "initialMarginFraction": "string",
   "maintenanceMarginFraction": "string",
-  "basePositionNotional": "string",
   "openInterest": "string",
   "atomicResolution": 0,
   "quantumConversionExponent": 0,
@@ -3199,7 +3196,6 @@ or
 |nextFundingRate|string|true|none|none|
 |initialMarginFraction|string|true|none|none|
 |maintenanceMarginFraction|string|true|none|none|
-|basePositionNotional|string|true|none|none|
 |openInterest|string|true|none|none|
 |atomicResolution|number(double)|true|none|none|
 |quantumConversionExponent|number(double)|true|none|none|
@@ -3229,7 +3225,6 @@ or
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
-      "basePositionNotional": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,
@@ -3249,7 +3244,6 @@ or
       "nextFundingRate": "string",
       "initialMarginFraction": "string",
       "maintenanceMarginFraction": "string",
-      "basePositionNotional": "string",
       "openInterest": "string",
       "atomicResolution": 0,
       "quantumConversionExponent": 0,

@@ -1,6 +1,5 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import { IndexerTendermintEvent, LiquidityTierUpsertEventV1 } from '@dydxprotocol-indexer/v4-protos';
-import Long from 'long';
 
 import { Handler } from '../handlers/handler';
 import { LiquidityTierHandler } from '../handlers/liquidity-tier-handler';
@@ -12,15 +11,6 @@ export class LiquidityTierValidator extends Validator<LiquidityTierUpsertEventV1
       logger.error({
         at: `${this.constructor.name}#validate`,
         message: 'LiquidityTierUpsertEventV1 name is not populated',
-        blockHeight: this.block.height,
-        event: this.event,
-      });
-    }
-
-    if (this.event.basePositionNotional.eq(Long.fromValue(0))) {
-      logger.error({
-        at: `${this.constructor.name}#validate`,
-        message: 'LiquidityTierUpsertEventV1 basePositionNotional is not populated',
         blockHeight: this.block.height,
         event: this.event,
       });
