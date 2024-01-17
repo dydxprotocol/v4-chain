@@ -207,7 +207,6 @@ export interface TradingPerpetualMarketMessage {
   status?: PerpetualMarketStatus;
   initialMarginFraction?: string;
   maintenanceMarginFraction?: string;
-  basePositionNotional?: string;
   openInterest?: string;
   quantumConversionExponent?: number;
   atomicResolution?: number;

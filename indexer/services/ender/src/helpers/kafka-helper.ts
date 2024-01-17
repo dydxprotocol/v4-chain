@@ -326,7 +326,6 @@ export function generatePerpetualMarketMessage(
             Number(liquidityTier.maintenanceFractionPpm),
           ),
         ),
-        basePositionNotional: liquidityTier.basePositionNotional,
       };
     })
     .value();
