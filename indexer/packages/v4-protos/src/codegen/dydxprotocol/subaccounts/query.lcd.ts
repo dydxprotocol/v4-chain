@@ -1,6 +1,6 @@
 import { setPaginationParams } from "../../helpers";
 import { LCDClient } from "@osmonauts/lcd";
-import { QueryGetSubaccountRequest, QuerySubaccountResponseSDKType, QueryAllSubaccountRequest, QuerySubaccountAllResponseSDKType } from "./query";
+import { QueryGetSubaccountRequest, QuerySubaccountResponseSDKType, QueryAllSubaccountRequest, QuerySubaccountAllResponseSDKType, QueryGetWithdrawalAndTransfersBlockedInfoRequest, QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -12,6 +12,7 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.subaccount = this.subaccount.bind(this);
     this.subaccountAll = this.subaccountAll.bind(this);
+    this.getWithdrawalAndTransfersBlockedInfo = this.getWithdrawalAndTransfersBlockedInfo.bind(this);
   }
   /* Queries a Subaccount by id */
 
@@ -36,6 +37,14 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/subaccounts/subaccount`;
     return await this.req.get<QuerySubaccountAllResponseSDKType>(endpoint, options);
+  }
+  /* Queries information about whether withdrawal and transfers are blocked, and
+   if so which block they are re-enabled on. */
+
+
+  async getWithdrawalAndTransfersBlockedInfo(_params: QueryGetWithdrawalAndTransfersBlockedInfoRequest = {}): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType> {
+    const endpoint = `dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info`;
+    return await this.req.get<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType>(endpoint);
   }
 
 }

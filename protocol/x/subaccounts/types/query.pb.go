@@ -227,8 +227,8 @@ func (m *QuerySubaccountAllResponse) GetPagination() *query.PageResponse {
 	return nil
 }
 
-// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for fetching information about
-// whether withdrawals and transfers are blocked.
+// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
+// fetching information about whether withdrawals and transfers are blocked.
 type QueryGetWithdrawalAndTransfersBlockedInfoRequest struct {
 }
 
@@ -269,8 +269,8 @@ func (m *QueryGetWithdrawalAndTransfersBlockedInfoRequest) XXX_DiscardUnknown() 
 
 var xxx_messageInfo_QueryGetWithdrawalAndTransfersBlockedInfoRequest proto.InternalMessageInfo
 
-// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for fetching information about
-// whether withdrawals and transfers are blocked.
+// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
+// fetching information about whether withdrawals and transfers are blocked.
 type QueryGetWithdrawalAndTransfersBlockedInfoResponse struct {
 	NegativeTncSubaccountSeenAtBlock        uint32 `protobuf:"varint,1,opt,name=negative_tnc_subaccount_seen_at_block,json=negativeTncSubaccountSeenAtBlock,proto3" json:"negative_tnc_subaccount_seen_at_block,omitempty"`
 	ChainOutageSeenAtBlock                  uint32 `protobuf:"varint,2,opt,name=chain_outage_seen_at_block,json=chainOutageSeenAtBlock,proto3" json:"chain_outage_seen_at_block,omitempty"`
@@ -410,8 +410,8 @@ type QueryClient interface {
 	Subaccount(ctx context.Context, in *QueryGetSubaccountRequest, opts ...grpc.CallOption) (*QuerySubaccountResponse, error)
 	// Queries a list of Subaccount items.
 	SubaccountAll(ctx context.Context, in *QueryAllSubaccountRequest, opts ...grpc.CallOption) (*QuerySubaccountAllResponse, error)
-	// Queries information about whether withdrawal and transfers are blocked, and if so
-	// which block they are re-enabled on.
+	// Queries information about whether withdrawal and transfers are blocked, and
+	// if so which block they are re-enabled on.
 	GetWithdrawalAndTransfersBlockedInfo(ctx context.Context, in *QueryGetWithdrawalAndTransfersBlockedInfoRequest, opts ...grpc.CallOption) (*QueryGetWithdrawalAndTransfersBlockedInfoResponse, error)
 }
 
@@ -456,8 +456,8 @@ type QueryServer interface {
 	Subaccount(context.Context, *QueryGetSubaccountRequest) (*QuerySubaccountResponse, error)
 	// Queries a list of Subaccount items.
 	SubaccountAll(context.Context, *QueryAllSubaccountRequest) (*QuerySubaccountAllResponse, error)
-	// Queries information about whether withdrawal and transfers are blocked, and if so
-	// which block they are re-enabled on.
+	// Queries information about whether withdrawal and transfers are blocked, and
+	// if so which block they are re-enabled on.
 	GetWithdrawalAndTransfersBlockedInfo(context.Context, *QueryGetWithdrawalAndTransfersBlockedInfoRequest) (*QueryGetWithdrawalAndTransfersBlockedInfoResponse, error)
 }
 

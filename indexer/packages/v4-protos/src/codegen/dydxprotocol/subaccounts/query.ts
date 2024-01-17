@@ -46,6 +46,38 @@ export interface QuerySubaccountAllResponseSDKType {
   subaccount: SubaccountSDKType[];
   pagination?: PageResponseSDKType;
 }
+/**
+ * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
+ * fetching information about whether withdrawals and transfers are blocked.
+ */
+
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+/**
+ * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
+ * fetching information about whether withdrawals and transfers are blocked.
+ */
+
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {}
+/**
+ * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
+ * fetching information about whether withdrawals and transfers are blocked.
+ */
+
+export interface QueryGetWithdrawalAndTransfersBlockedInfoResponse {
+  negativeTncSubaccountSeenAtBlock: number;
+  chainOutageSeenAtBlock: number;
+  withdrawalsAndTransfersUnblockedAtBlock: number;
+}
+/**
+ * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
+ * fetching information about whether withdrawals and transfers are blocked.
+ */
+
+export interface QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType {
+  negative_tnc_subaccount_seen_at_block: number;
+  chain_outage_seen_at_block: number;
+  withdrawals_and_transfers_unblocked_at_block: number;
+}
 
 function createBaseQueryGetSubaccountRequest(): QueryGetSubaccountRequest {
   return {
@@ -242,6 +274,105 @@ export const QuerySubaccountAllResponse = {
     const message = createBaseQuerySubaccountAllResponse();
     message.subaccount = object.subaccount?.map(e => Subaccount.fromPartial(e)) || [];
     message.pagination = object.pagination !== undefined && object.pagination !== null ? PageResponse.fromPartial(object.pagination) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest(): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  return {};
+}
+
+export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
+  encode(_: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+    const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
+    return message;
+  }
+
+};
+
+function createBaseQueryGetWithdrawalAndTransfersBlockedInfoResponse(): QueryGetWithdrawalAndTransfersBlockedInfoResponse {
+  return {
+    negativeTncSubaccountSeenAtBlock: 0,
+    chainOutageSeenAtBlock: 0,
+    withdrawalsAndTransfersUnblockedAtBlock: 0
+  };
+}
+
+export const QueryGetWithdrawalAndTransfersBlockedInfoResponse = {
+  encode(message: QueryGetWithdrawalAndTransfersBlockedInfoResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.negativeTncSubaccountSeenAtBlock !== 0) {
+      writer.uint32(8).uint32(message.negativeTncSubaccountSeenAtBlock);
+    }
+
+    if (message.chainOutageSeenAtBlock !== 0) {
+      writer.uint32(16).uint32(message.chainOutageSeenAtBlock);
+    }
+
+    if (message.withdrawalsAndTransfersUnblockedAtBlock !== 0) {
+      writer.uint32(24).uint32(message.withdrawalsAndTransfersUnblockedAtBlock);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): QueryGetWithdrawalAndTransfersBlockedInfoResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.negativeTncSubaccountSeenAtBlock = reader.uint32();
+          break;
+
+        case 2:
+          message.chainOutageSeenAtBlock = reader.uint32();
+          break;
+
+        case 3:
+          message.withdrawalsAndTransfersUnblockedAtBlock = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoResponse>): QueryGetWithdrawalAndTransfersBlockedInfoResponse {
+    const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoResponse();
+    message.negativeTncSubaccountSeenAtBlock = object.negativeTncSubaccountSeenAtBlock ?? 0;
+    message.chainOutageSeenAtBlock = object.chainOutageSeenAtBlock ?? 0;
+    message.withdrawalsAndTransfersUnblockedAtBlock = object.withdrawalsAndTransfersUnblockedAtBlock ?? 0;
     return message;
   }
 
