@@ -8,6 +8,7 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -35,6 +36,7 @@ var (
 		govtypes.ModuleName:            {authtypes.Burner},
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		icatypes.ModuleName:            nil,
+		wasmtypes.ModuleName:           {authtypes.Burner},
 		// -------- dYdX custom module accounts --------
 		// bridge module account mints tokens for bridged funds.
 		bridgemoduletypes.ModuleName: {authtypes.Minter},

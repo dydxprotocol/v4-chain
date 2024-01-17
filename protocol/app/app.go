@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -84,6 +85,7 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
@@ -121,6 +123,10 @@ import (
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
+	"github.com/CosmWasm/wasmd/x/wasm"
+	wasmmodulekeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+
 	assetsmodule "github.com/dydxprotocol/v4-chain/protocol/x/assets"
 	assetsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	assetsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -279,6 +285,8 @@ type App struct {
 	SendingKeeper sendingmodulekeeper.Keeper
 
 	EpochsKeeper epochsmodulekeeper.Keeper
+
+	WasmKeeper wasmmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	ModuleManager *module.Manager
@@ -369,6 +377,7 @@ func New(
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
+		wasmtypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
@@ -544,6 +553,7 @@ func New(
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	scopedWasmKeeper := app.CapabilityKeeper.ScopeToModule(wasmtypes.ModuleName)
 
 	app.CapabilityKeeper.Seal()
 
@@ -619,6 +629,8 @@ func New(
 	// Ordering of `AddRoute` does not matter.
 	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
+	// TODO(hackathon): See if we need ibc route for wasm stack
+	// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L675-L678
 
 	app.IBCKeeper.SetRouter(ibcRouter)
 
@@ -973,6 +985,42 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	// CosmWasm
+	wasmDir := filepath.Join(homePath, "wasm")
+	wasmConfig, err := wasm.ReadWasmConfig(appOpts)
+	if err != nil {
+		panic(fmt.Sprintf("error while reading wasm config: %s", err))
+	}
+
+	// AllCapabilities returns all capabilities available with the current wasmvm
+	// See https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
+	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
+
+	app.WasmKeeper = wasmmodulekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.StakingKeeper,
+		distrkeeper.NewQuerier(app.DistrKeeper),
+		// TODO(hackathon): this one was meant to be IBC Fee keeper, but I see that we also use this
+		// ics4Wrapper in other places, with a note saying that this may be replaced with
+		// middleware such as ics29 fee
+		// https://github.com/CosmWasm/wasmd/blob/main/app/app.go#L640
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		scopedWasmKeeper,
+		app.TransferKeeper,
+		app.MsgServiceRouter(),
+		app.GRPCQueryRouter(),
+		wasmDir,
+		wasmConfig,
+		supportedFeatures,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		// TODO(hackathon): Add wasm opts
+	)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1037,6 +1085,15 @@ func New(
 		sendingModule,
 		delayMsgModule,
 		epochsModule,
+		wasm.NewAppModule(
+			appCodec,
+			&app.WasmKeeper,
+			app.StakingKeeper,
+			app.AccountKeeper,
+			app.BankKeeper,
+			app.MsgServiceRouter(),
+			app.getSubspace(wasmtypes.ModuleName),
+		),
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1079,6 +1136,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1117,6 +1175,7 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		wasmtypes.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
 
@@ -1158,6 +1217,11 @@ func New(
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		// NOTE: wasm module should be at the end as it can call other module functionality direct
+		// or via message dispatching during genesis phase.
+		// For example bank transfer, auth account check, staking, ...
+		// wasm after ibc transfer
+		wasmtypes.ModuleName,
 	)
 
 	// NOTE: by default, set migration order here to be the same as init genesis order,
@@ -1198,11 +1262,12 @@ func New(
 
 		// Auth must be migrated after staking.
 		authtypes.ModuleName,
+		wasmtypes.ModuleName,
 	)
 
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	err := app.ModuleManager.RegisterServices(app.configurator)
+	err = app.ModuleManager.RegisterServices(app.configurator)
 	if err != nil {
 		panic(err)
 	}
@@ -1222,6 +1287,10 @@ func New(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
+	// wasmd also comes with 2 custom ante handlers:
+	//  - CountTXDecorator adds the TX position in the block into the context and passes it to the contracts
+	//  - LimitSimulationGasDecorator prevents an "infinite gas" query
+	// TODO(hackathon): see if we need these custom ante handlers
 	app.setAnteHandler(encodingConfig.TxConfig)
 	app.SetMempool(mempool.NewNoOpMempool())
 	app.SetPreBlocker(app.PreBlocker)
@@ -1305,6 +1374,12 @@ func New(
 
 		// Hydrate the keeper in-memory data structures.
 		app.hydrateKeeperInMemoryDataStructures()
+
+		// Initialize pinned codes in wasmvm as they are not persisted there
+		uncachedCtx := app.BaseApp.NewUncachedContext(true, tmproto.Header{})
+		if err := app.WasmKeeper.InitializePinnedCodes(uncachedCtx); err != nil {
+			panic(fmt.Sprintf("failed initialize pinned codes %s", err))
+		}
 	}
 	app.initializeRateLimiters()
 
@@ -1631,6 +1706,8 @@ func initParamsKeeper(
 	paramsKeeper.Subspace(ibctransfertypes.ModuleName).WithKeyTable(ibctransfertypes.ParamKeyTable())
 	paramsKeeper.Subspace(icahosttypes.SubModuleName).WithKeyTable(icahosttypes.ParamKeyTable())
 	paramsKeeper.Subspace(icacontrollertypes.SubModuleName).WithKeyTable(icacontrollertypes.ParamKeyTable())
+
+	paramsKeeper.Subspace(wasmtypes.ModuleName)
 
 	return paramsKeeper
 }

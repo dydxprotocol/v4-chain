@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	"github.com/CosmWasm/wasmd/x/wasm"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/bank"
@@ -87,5 +88,7 @@ var (
 		delaymsgmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
+
+		wasm.AppModuleBasic{},
 	)
 )
