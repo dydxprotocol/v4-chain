@@ -1,4 +1,4 @@
-import { IntegerPattern, NonNegativeNumericPattern } from '../lib/validators';
+import { IntegerPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
