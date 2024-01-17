@@ -158,7 +158,7 @@ async function getImageDetail(
   event: APIGatewayEvent & AuxoEventJson,
 ): Promise<ImageDetail> {
   logger.info({
-    at: 'index#upgradeBazooka',
+    at: 'index#getImageDetail',
     message: 'Getting ecr images',
     repositoryName,
     event,
@@ -172,7 +172,7 @@ async function getImageDetail(
     ],
   }));
   logger.info({
-    at: 'index#upgradeBazooka',
+    at: 'index#getImageDetail',
     message: 'Successfully got ecr images',
     images,
     repositoryName,
@@ -181,7 +181,7 @@ async function getImageDetail(
 
   if (!images.imageDetails || images.imageDetails.length === 0) {
     logger.error({
-      at: 'index#upgradeBazooka',
+      at: 'index#getImageDetail',
       message: 'Unable to find ecr image',
       imageTag: event.upgrade_tag,
       repositoryName,
