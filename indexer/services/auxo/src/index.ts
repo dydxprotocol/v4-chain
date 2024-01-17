@@ -19,6 +19,7 @@ import {
   UpdateServiceCommandOutput,
 } from '@aws-sdk/client-ecs';
 import {
+  GetFunctionCommand,
   InvokeCommand,
   InvokeCommandOutput,
   LambdaClient,
@@ -45,6 +46,8 @@ import {
   EcsServiceNames,
   TaskDefinitionArnMap,
 } from './types';
+import {GetFunctionCommandOutput} from '@aws-sdk/client-lambda/dist-types/commands/GetFunctionCommand';
+import {LastUpdateStatus} from '@aws-sdk/client-lambda/dist-types/models/models_0';
 
 /**
  * Upgrades all services and run migrations
@@ -117,17 +120,37 @@ async function upgradeBazooka(
   });
 
   // Update Lambda function with the new image
-  const response: UpdateFunctionCodeCommandOutput = await lambda.send(
+  await lambda.send(
     new UpdateFunctionCodeCommand({
       FunctionName: BAZOOKA_LAMBDA_FUNCTION_NAME,
       ImageUri: imageUri,
     }),
   );
-  logger.info({
-    at: 'index#upgradeBazooka',
-    message: 'Successfully upgraded bazooka',
-    response,
-  });
+
+  // Polling to check the update status
+  let updateStatus: LastUpdateStatus | string = LastUpdateStatus.InProgress;
+  while (updateStatus === LastUpdateStatus.InProgress) {
+    const statusResponse: GetFunctionCommandOutput = await lambda.send(
+      new GetFunctionCommand({
+        FunctionName: BAZOOKA_LAMBDA_FUNCTION_NAME,
+      }),
+    );
+
+    updateStatus = statusResponse.Configuration!.LastUpdateStatus!;
+    if (updateStatus === LastUpdateStatus.Successful) {
+      logger.info({
+        at: 'index#upgradeBazooka',
+        message: 'Successfully upgraded bazooka',
+        response: statusResponse,
+      });
+      return;
+    } else if (updateStatus === LastUpdateStatus.Failed) {
+      throw new Error('Failed to upgrade bazooka');
+    }
+
+    // Wait for 5s before checking again
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 }
 
 async function getImageDetail(
