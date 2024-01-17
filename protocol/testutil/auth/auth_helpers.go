@@ -12,7 +12,12 @@ func CreateTestModuleAccount(
 	moduleName string,
 	permissions []string,
 ) {
-	modBaseAcc := authtypes.NewBaseAccount(authtypes.NewModuleAddress(moduleName), nil, 0, 0)
+	modBaseAcc := authtypes.NewBaseAccount(
+		authtypes.NewModuleAddress(moduleName),
+		nil,
+		accountKeeper.NextAccountNumber(ctx),
+		0,
+	)
 	modAcc := authtypes.NewModuleAccount(modBaseAcc, moduleName, permissions...)
 	accountKeeper.SetModuleAccount(ctx, modAcc)
 }
