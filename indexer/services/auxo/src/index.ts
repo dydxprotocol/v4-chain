@@ -24,7 +24,8 @@ import {
   InvokeCommandOutput,
   LambdaClient,
   UpdateFunctionCodeCommand,
-  UpdateFunctionCodeCommandOutput,
+  GetFunctionCommandOutput,
+  LastUpdateStatus,
 } from '@aws-sdk/client-lambda';
 import { logger, startBugsnag } from '@dydxprotocol-indexer/base';
 import {
@@ -46,8 +47,6 @@ import {
   EcsServiceNames,
   TaskDefinitionArnMap,
 } from './types';
-import {GetFunctionCommandOutput} from '@aws-sdk/client-lambda/dist-types/commands/GetFunctionCommand';
-import {LastUpdateStatus} from '@aws-sdk/client-lambda/dist-types/models/models_0';
 
 /**
  * Upgrades all services and run migrations
