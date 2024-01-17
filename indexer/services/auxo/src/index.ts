@@ -1,8 +1,5 @@
 import {
-  DescribeImagesCommand,
-  DescribeImagesCommandOutput,
-  ECRClient,
-  ImageDetail,
+  DescribeImagesCommand, DescribeImagesCommandOutput, ECRClient, ImageDetail,
 } from '@aws-sdk/client-ecr';
 import {
   ContainerDefinition,
@@ -20,19 +17,15 @@ import {
 } from '@aws-sdk/client-ecs';
 import {
   GetFunctionCommand,
+  GetFunctionCommandOutput,
   InvokeCommand,
   InvokeCommandOutput,
   LambdaClient,
-  UpdateFunctionCodeCommand,
-  GetFunctionCommandOutput,
   LastUpdateStatus,
+  UpdateFunctionCodeCommand,
 } from '@aws-sdk/client-lambda';
 import { logger, startBugsnag } from '@dydxprotocol-indexer/base';
-import {
-  APIGatewayEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import _ from 'lodash';
 
 import config from './config';
@@ -42,11 +35,7 @@ import {
   ECS_SERVICE_NAMES,
   SERVICE_NAME_SUFFIX,
 } from './constants';
-import {
-  AuxoEventJson,
-  EcsServiceNames,
-  TaskDefinitionArnMap,
-} from './types';
+import { AuxoEventJson, EcsServiceNames, TaskDefinitionArnMap } from './types';
 
 /**
  * Upgrades all services and run migrations
@@ -126,8 +115,18 @@ async function upgradeBazooka(
     }),
   );
 
-  // Polling to check the update status
+  // Wait for the lambda to be updated, with a timeout of 120s.
+  await Promise.race([
+    checkLambdaStatus(lambda),
+    sleep(120000),
+  ]);
+}
+
+async function checkLambdaStatus(
+  lambda: LambdaClient,
+): Promise<void> {
   let updateStatus: LastUpdateStatus | string = LastUpdateStatus.InProgress;
+
   while (updateStatus === LastUpdateStatus.InProgress) {
     const statusResponse: GetFunctionCommandOutput = await lambda.send(
       new GetFunctionCommand({
