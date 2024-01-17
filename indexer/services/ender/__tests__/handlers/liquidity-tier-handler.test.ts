@@ -11,10 +11,8 @@ import {
   LiquidityTiersFromDatabase,
   LiquidityTiersTable,
   Ordering,
-  QUOTE_CURRENCY_ATOMIC_RESOLUTION,
   TendermintEventTable,
   testConstants,
-  protocolTranslations,
   liquidityTierRefresher,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
@@ -176,10 +174,6 @@ export function expectLiquidityTier(
     name: event.name,
     initialMarginPpm: event.initialMarginPpm.toString(),
     maintenanceFractionPpm: event.maintenanceFractionPpm.toString(),
-    basePositionNotional: protocolTranslations.quantumsToHuman(
-      event.basePositionNotional.toString(),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(),
   }));
 }
 
@@ -241,10 +235,6 @@ function validateLiquidityTierRefresher(
     name: liquidityTierEvent.name,
     initialMarginPpm: liquidityTierEvent.initialMarginPpm.toString(),
     maintenanceFractionPpm: liquidityTierEvent.maintenanceFractionPpm.toString(),
-    basePositionNotional: protocolTranslations.quantumsToHuman(
-      liquidityTierEvent.basePositionNotional.toString(),
-      QUOTE_CURRENCY_ATOMIC_RESOLUTION,
-    ).toFixed(),
   });
 }
 

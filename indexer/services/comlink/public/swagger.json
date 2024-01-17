@@ -724,9 +724,6 @@
           "maintenanceMarginFraction": {
             "type": "string"
           },
-          "basePositionNotional": {
-            "type": "string"
-          },
           "openInterest": {
             "type": "string"
           },
@@ -764,7 +761,6 @@
           "nextFundingRate",
           "initialMarginFraction",
           "maintenanceMarginFraction",
-          "basePositionNotional",
           "openInterest",
           "atomicResolution",
           "quantumConversionExponent",
