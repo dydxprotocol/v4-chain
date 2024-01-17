@@ -1,7 +1,6 @@
 import {
   getAthenaTableCreationStatement,
   getExternalAthenaTableCreationStatement,
-  castToDouble,
 } from '../../helpers/sql';
 
 const TABLE_NAME: string = 'liquidity_tiers';
