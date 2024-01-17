@@ -195,7 +195,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 ) (err error) {
 	defer metrics.ModuleMeasureSince(
 		types.ModuleName,
-		metrics.GateWithdrawalsIfNegativeTncSubaccountSeen,
+		metrics.GateWithdrawalsIfNegativeTncSubaccountSeenLatency,
 		time.Now(),
 	)
 	metrics.IncrCounter(
