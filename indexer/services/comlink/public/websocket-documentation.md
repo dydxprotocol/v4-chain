@@ -811,7 +811,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "nextFundingRate": "0",
         "initialMarginFraction": "0.050000",
         "maintenanceMarginFraction": "0.030000",
-        "basePositionNotional": "1000",
         "basePositionSize": "0",
         "incrementalPositionSize": "0",
         "maxPositionSize": "0",
@@ -836,7 +835,6 @@ Returns everything from `v4/perpetualMarkets` endpoint.
         "nextFundingRate": "0",
         "initialMarginFraction": "0.050000",
         "maintenanceMarginFraction": "0.030000",
-        "basePositionNotional": "1000",
         "basePositionSize": "0",
         "incrementalPositionSize": "0",
         "maxPositionSize": "0",
@@ -883,7 +881,6 @@ interface TradingPerpetualMarketMessage {
   quoteAsset?: string;
   initialMarginFraction?: string;
   maintenanceMarginFraction?: string;
-  basePositionNotional?: string;
   basePositionSize?: string;
   incrementalPositionSize?: string;
   maxPositionSize?: string;

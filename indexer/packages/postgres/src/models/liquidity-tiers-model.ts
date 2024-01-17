@@ -21,14 +21,12 @@ export default class LiquidityTiersModel extends BaseModel {
         'name',
         'initialMarginPpm',
         'maintenanceFractionPpm',
-        'basePositionNotional',
       ],
       properties: {
         id: { type: 'integer' },
         name: { type: 'string' },
         initialMarginPpm: { type: 'string', pattern: IntegerPattern },
         maintenanceFractionPpm: { type: 'string', pattern: IntegerPattern },
-        basePositionNotional: { type: 'string', pattern: NonNegativeNumericPattern },
       },
     };
   }
@@ -45,7 +43,6 @@ export default class LiquidityTiersModel extends BaseModel {
       name: 'string',
       initialMarginPpm: 'string',
       maintenanceFractionPpm: 'string',
-      basePositionNotional: 'string',
     };
   }
 
@@ -58,6 +55,4 @@ export default class LiquidityTiersModel extends BaseModel {
   initialMarginPpm!: string;
 
   maintenanceFractionPpm!: string;
-
-  basePositionNotional!: string;
 }

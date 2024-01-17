@@ -9,15 +9,13 @@ const RAW_TABLE_COLUMNS: string = `
   \`id\` int,
   \`name\` string,
   \`initialMarginPpm\` bigint,
-  \`maintenanceFractionPpm\` bigint,
-  \`basePositionNotional\` decimal
+  \`maintenanceFractionPpm\` bigint
 `;
 const TABLE_COLUMNS: string = `
   "id",
   "name",
   "initialMarginPpm",
-  "maintenanceFractionPpm",
-  ${castToDouble('basePositionNotional')}
+  "maintenanceFractionPpm"
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {

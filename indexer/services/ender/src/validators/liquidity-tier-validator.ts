@@ -17,15 +17,6 @@ export class LiquidityTierValidator extends Validator<LiquidityTierUpsertEventV1
       });
     }
 
-    if (this.event.basePositionNotional.eq(Long.fromValue(0))) {
-      logger.error({
-        at: `${this.constructor.name}#validate`,
-        message: 'LiquidityTierUpsertEventV1 basePositionNotional is not populated',
-        blockHeight: this.block.height,
-        event: this.event,
-      });
-    }
-
     if (this.event.initialMarginPpm === 0) {
       return this.logAndThrowParseMessageError(
         'LiquidityTierUpsertEventV1 initialMarginPpm is not populated',
