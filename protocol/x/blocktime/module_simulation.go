@@ -22,11 +22,9 @@ var (
 )
 
 // GenerateGenesisState creates a randomized GenState of the module.
+// Note the blocktime module is intentionally initialized as empty to avoid triggering
+// chain outage withdrawal gating during simulation testing for withdrawals and transfers.
 func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
-	accs := make([]string, len(simState.Accounts))
-	for i, acc := range simState.Accounts {
-		accs[i] = acc.Address.String()
-	}
 	blocktimeGenesis := types.GenesisState{}
 	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&blocktimeGenesis)
 }
