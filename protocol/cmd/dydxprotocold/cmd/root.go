@@ -35,11 +35,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	"github.com/spf13/cast"
@@ -57,8 +55,8 @@ const (
 	flagIAVLCacheSize = "iavl-cache-size"
 )
 
-// TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 // NewRootCmd creates a new root command for `dydxprotocold`. It is called once in the main function.
+// TODO(DEC-1097): improve `cmd/` by adding tests, custom app configs, custom init cmd, and etc.
 func NewRootCmd(
 	option *RootCmdOption,
 	homeDir string,
@@ -85,12 +83,24 @@ func NewRootCmdWithInterceptors(
 	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) *cobra.Command {
-	encodingConfig := dydxapp.GetEncodingConfig()
+	tempApp := dydxapp.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
 	initClientCtx := client.Context{}.
-		WithCodec(encodingConfig.Codec).
-		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).
-		WithTxConfig(encodingConfig.TxConfig).
-		WithLegacyAmino(encodingConfig.Amino).
+		WithCodec(tempApp.AppCodec()).
+		WithInterfaceRegistry(tempApp.InterfaceRegistry()).
+		WithTxConfig(tempApp.TxConfig()).
+		WithLegacyAmino(tempApp.LegacyAmino()).
 		WithInput(os.Stdin).
 		WithAccountRetriever(types.AccountRetriever{}).
 		WithBroadcastMode(flags.BroadcastSync).
@@ -147,12 +157,12 @@ func NewRootCmdWithInterceptors(
 		SilenceUsage: true,
 	}
 
-	initRootCmd(rootCmd, option, encodingConfig, appInterceptor)
+	initRootCmd(tempApp, rootCmd, option, appInterceptor)
 	initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
 	if err != nil {
 		panic(err)
 	}
-	if err := autoCliOpts(encodingConfig, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
+	if err := autoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
 
@@ -161,30 +171,29 @@ func NewRootCmdWithInterceptors(
 
 // initRootCmd initializes the app's root command with useful commands.
 func initRootCmd(
+	tempApp *dydxapp.App,
 	rootCmd *cobra.Command,
 	option *RootCmdOption,
-	encodingConfig dydxapp.EncodingConfig,
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) {
-	gentxModule := basic_manager.ModuleBasics[genutiltypes.ModuleName].(genutil.AppModuleBasic)
 	valOperAddressCodec := address.NewBech32Codec(sdktypes.GetConfig().GetBech32ValidatorAddrPrefix())
 	rootCmd.AddCommand(
-		genutilcli.InitCmd(basic_manager.ModuleBasics, dydxapp.DefaultNodeHome),
+		genutilcli.InitCmd(tempApp.ModuleBasics, dydxapp.DefaultNodeHome),
 		genutilcli.CollectGenTxsCmd(
 			banktypes.GenesisBalancesIterator{},
 			dydxapp.DefaultNodeHome,
-			gentxModule.GenTxValidator,
+			genutiltypes.DefaultMessageValidator,
 			valOperAddressCodec,
 		),
 		genutilcli.MigrateGenesisCmd(genutilcli.MigrationMap),
 		genutilcli.GenTxCmd(
-			basic_manager.ModuleBasics,
-			encodingConfig.TxConfig,
+			tempApp.ModuleBasics,
+			tempApp.TxConfig(),
 			banktypes.GenesisBalancesIterator{},
 			dydxapp.DefaultNodeHome,
 			valOperAddressCodec,
 		),
-		genutilcli.ValidateGenesisCmd(basic_manager.ModuleBasics),
+		genutilcli.ValidateGenesisCmd(tempApp.ModuleBasics),
 		AddGenesisAccountCmd(dydxapp.DefaultNodeHome),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
@@ -222,17 +231,9 @@ func initRootCmd(
 // autoCliOpts returns options based upon the modules in the dYdX v4 app.
 //
 // Creates an instance of the application that is discarded to enumerate the modules.
-func autoCliOpts(encodingCfg dydxapp.EncodingConfig, initClientCtx client.Context) autocli.AppOptions {
-	app := dydxapp.New(
-		log.NewNopLogger(),
-		dbm.NewMemDB(),
-		nil,
-		true,
-		viper.New(),
-	)
-
+func autoCliOpts(tempApp *dydxapp.App, initClientCtx client.Context) autocli.AppOptions {
 	modules := make(map[string]appmodule.AppModule, 0)
-	for _, m := range app.ModuleManager.Modules {
+	for _, m := range tempApp.ModuleManager.Modules {
 		if moduleWithName, ok := m.(module.HasName); ok {
 			moduleName := moduleWithName.Name()
 			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
@@ -248,7 +249,7 @@ func autoCliOpts(encodingCfg dydxapp.EncodingConfig, initClientCtx client.Contex
 
 	return autocli.AppOptions{
 		Modules:               modules,
-		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.ModuleManager.Modules),
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(tempApp.ModuleManager.Modules),
 		AddressCodec:          authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32AccountAddrPrefix()),
 		ValidatorAddressCodec: authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32ValidatorAddrPrefix()),
 		ConsensusAddressCodec: authcodec.NewBech32Codec(sdktypes.GetConfig().GetBech32ConsensusAddrPrefix()),
