@@ -3,6 +3,7 @@ package middleware_test
 import (
 	"bytes"
 	"fmt"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
 	"testing"
 
@@ -42,6 +43,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			app := testapp.DefaultTestApp(nil)
 			// Restore the old logger after the test runs since middleware.Logger is a global variable.
 			oldLogger := middleware.Logger
 			defer func() { middleware.Logger = oldLogger }()
@@ -52,7 +54,7 @@ func TestRunTxPanicLoggingMiddleware(t *testing.T) {
 			func() {
 				defer func() {
 					if r := recover(); r != nil {
-						handler := middleware.NewRunTxPanicLoggingMiddleware()
+						handler := middleware.NewRunTxPanicLoggingMiddleware(app.ModuleBasics)
 						err := handler(r)
 						require.Nil(t, err)
 					}

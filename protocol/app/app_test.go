@@ -27,8 +27,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -196,7 +194,6 @@ func TestModuleBasics(t *testing.T) {
 		evidencemodule.AppModuleBasic{},
 		feegrantmodule.AppModuleBasic{},
 		ibc.AppModuleBasic{},
-		ibctm.AppModuleBasic{},
 		ica.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		transfer.AppModuleBasic{},
@@ -219,8 +216,10 @@ func TestModuleBasics(t *testing.T) {
 		epochsmodule.AppModuleBasic{},
 	)
 
+	app := testapp.DefaultTestApp(nil)
+
 	expectedFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(defaultAppModuleBasics))
-	actualFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(basic_manager.ModuleBasics))
+	actualFieldTypes := getMapFieldsAndTypes(reflect.ValueOf(app.ModuleBasics))
 	require.Equal(t, expectedFieldTypes, actualFieldTypes, "Module basics does not match expected")
 }
 

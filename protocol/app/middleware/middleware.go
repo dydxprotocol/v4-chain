@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	"os"
 	"runtime/debug"
 	"strings"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	kitlog "github.com/go-kit/log"
 )
 
@@ -16,13 +16,13 @@ var (
 	Logger = log.NewLogger(kitlog.NewSyncWriter(os.Stdout))
 )
 
-func NewRunTxPanicLoggingMiddleware() baseapp.RecoveryHandler {
+func NewRunTxPanicLoggingMiddleware(moduleBasics module.BasicManager) baseapp.RecoveryHandler {
 	return func(recoveryObj interface{}) error {
 		stack := string(debug.Stack())
 
 		var keyvals []interface{}
 
-		for _, module := range basic_manager.ModuleBasics {
+		for _, module := range moduleBasics {
 			fullModuleName := "/x/" + module.Name()
 			if strings.Contains(stack, fullModuleName) {
 				keyvals = append(keyvals, fullModuleName, "true")
