@@ -25,7 +25,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWithdrawalGating_BlocksThenUnblocks(t *testing.T) {
+func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T) {
 	tests := map[string]struct {
 		// State.
 		subaccounts                   []satypes.Subaccount
@@ -298,7 +298,7 @@ func TestWithdrawalGating_BlocksThenUnblocks(t *testing.T) {
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltchain bool) {
-						// Note the first TX is MsgProposeOperations, the second is all other TXs.
+						// Note the first TX is MsgProposedOperations, the second is all other TXs.
 						execResult := response.TxResults[1]
 						require.True(t, execResult.IsErr())
 						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)

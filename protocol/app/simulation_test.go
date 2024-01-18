@@ -3,13 +3,14 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
-	dbm "github.com/cosmos/cosmos-db"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	"io"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	dbm "github.com/cosmos/cosmos-db"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -48,6 +49,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -125,6 +127,7 @@ var genesisModuleOrder = []string{
 	vestmodule.ModuleName,
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
+	blocktimetypes.ModuleName,
 }
 
 var skippedGenesisModules = map[string]interface{}{
