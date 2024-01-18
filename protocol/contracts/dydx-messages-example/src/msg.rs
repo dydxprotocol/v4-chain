@@ -23,6 +23,9 @@ pub enum ExecuteMsg {
         //quantity: Option<Vec<Coin>>,
     },
     Refund {},
+    QueryPrice {
+        id: u32,
+    }
 }
 
 #[cw_serde]

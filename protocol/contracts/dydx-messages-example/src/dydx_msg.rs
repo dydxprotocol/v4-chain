@@ -6,6 +6,7 @@ use cosmwasm_std::{
   CosmosMsg,
   CustomMsg,
 };
+use dydx_cosmwasm::MarketPriceResponse;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 pub struct SubaccountId {
@@ -34,6 +35,9 @@ pub enum SendingMsg {
     asset_id: u32,
     quantums: u64,
   },
+  QueryPrice {
+    price: MarketPriceResponse,
+  }
 }
 
 impl From<SendingMsg> for CosmosMsg<SendingMsg> {
@@ -47,7 +51,7 @@ impl CustomMsg for SendingMsg {}
 #[cfg(test)]
 mod tests {
   use super::*;
-  
+
   #[test]
   fn sending_msg_serializes_to_correct_json() {
     let msg: SendingMsg = SendingMsg::CreateTransfer {

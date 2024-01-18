@@ -3,12 +3,15 @@ use cosmwasm_std::{
     entry_point, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
     StdResult
 };
+use cosmwasm_std::{Event, QuerierWrapper, Response};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG};
 use cw2::set_contract_version;
 use crate::dydx_msg::{SendingMsg, SubaccountId};
+use dydx_cosmwasm::{DydxQueryWrapper, MarketPriceResponse};
+use dydx_cosmwasm::DydxQuerier;
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:dydx-messages-example";
@@ -49,6 +52,7 @@ pub fn execute(
     match msg {
         ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
         ExecuteMsg::Refund {} => execute_refund(deps, env, info),
+        ExecuteMsg::QueryPrice { id} => handle_market_price_query(deps, env, info, id),
     }
 }
 
@@ -83,6 +87,37 @@ fn execute_approve(
         balance
     };
     Ok(send_tokens(env.contract.address, config.recipient, amount, "approve"))
+}
+
+fn handle_market_price_query(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    market_id: u32
+) -> Result<Response<SendingMsg>, ContractError> {
+    // Query the market price
+    let querier_wrapper = QuerierWrapper::<DydxQueryWrapper>::new(&deps.as_ref().querier);
+    let querier = DydxQuerier::new(&querier_wrapper);
+    let market_price = querier.query_market_price(market_id);
+
+    match querier.query_market_price(market_id) {
+        Ok(market_price_response) => {
+            // Return a successful response
+            // Emit an event with the market price and a custom message
+            let event = Event::new("market_price_event")
+                .add_attribute("method", "handle_market_price_query")
+                .add_attribute("market_id", market_id.to_string())
+                .add_attribute("market_price", format!("{:?}", market_price))
+                .add_attribute("custom_msg", "CosmWasm wahoo");
+            let price = SendingMsg::QueryPrice {
+                price: market_price_response,
+            };
+            Ok(Response::new().add_event(event).add_message(price))
+        },
+        Err(error) => {
+            return Err(ContractError::Expired { expiration });
+        }
+    }
 }
 
 fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response<SendingMsg>, ContractError> {
