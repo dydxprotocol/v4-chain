@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	PricesRoute = "prices"
+	PricesRoute      = "prices"
+	SubaccountsRoute = "subaccounts"
 )
 
 type DydxQueryWrapper struct {
@@ -28,6 +29,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 		switch contractQuery.Route {
 		case PricesRoute:
 			return qp.HandleMarketPriceQuery(ctx, contractQuery.QueryData)
+		case SubaccountsRoute:
+			return qp.HandleSubaccountsQuery(ctx, contractQuery.QueryData)
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "Unknown Dydx Wasm Query Route"}
 		}
