@@ -46,7 +46,6 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	exportedtypes "github.com/cosmos/ibc-go/v8/modules/core/exported"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -241,7 +240,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		b,
 		os.Stdout,
 		dydxApp.GetBaseApp(),
-		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		AppStateFn(dydxApp.App, dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -313,7 +312,7 @@ func TestFullAppSimulation(t *testing.T) {
 		t,
 		os.Stdout,
 		dydxApp.GetBaseApp(),
-		AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+		AppStateFn(dydxApp.App, dydxApp.SimulationManager()),
 		simtypes.RandomAccounts,
 		simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 		app.ModuleAccountAddrs(),
@@ -389,7 +388,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				t,
 				os.Stdout,
 				dydxApp.GetBaseApp(),
-				AppStateFn(dydxApp.AppCodec(), dydxApp.SimulationManager()),
+				AppStateFn(dydxApp.App, dydxApp.SimulationManager()),
 				simtypes.RandomAccounts,
 				simtestutil.SimulationOperations(dydxApp, dydxApp.AppCodec(), config),
 				app.ModuleAccountAddrs(),
@@ -431,7 +430,7 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 // AppStateFn returns the initial application state using a genesis or the simulation parameters.
 // It panics if the user provides files for both of them.
 // If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simtypes.AppStateFn {
+func AppStateFn(app *app.App, simManager *module.SimulationManager) simtypes.AppStateFn {
 	return func(r *rand.Rand, accs []simtypes.Account, config simtypes.Config,
 	) (appState json.RawMessage, simAccs []simtypes.Account, chainID string, genesisTimestamp time.Time) {
 		if simcli.FlagGenesisTimeValue == 0 {
@@ -447,7 +446,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 
 		case config.GenesisFile != "":
 			// override the default chain-id from app to set it later to the config
-			genesisDoc, accounts := AppStateFromGenesisFileFn(r, cdc, config.GenesisFile)
+			genesisDoc, accounts := AppStateFromGenesisFileFn(r, app.AppCodec(), config.GenesisFile)
 
 			if simcli.FlagGenesisTimeValue == 0 {
 				// use genesis timestamp if no custom timestamp is provided (i.e no random timestamp)
@@ -469,11 +468,11 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			if err != nil {
 				panic(err)
 			}
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, app, accs, genesisTimestamp, appParams)
 
 		default:
 			appParams := make(simtypes.AppParams)
-			appState, simAccs = AppStateRandomizedFn(simManager, r, cdc, accs, genesisTimestamp, appParams)
+			appState, simAccs = AppStateRandomizedFn(simManager, r, app, accs, genesisTimestamp, appParams)
 		}
 
 		rawState := make(map[string]json.RawMessage)
@@ -488,7 +487,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		}
 
 		stakingState := new(stakingtypes.GenesisState)
-		err = cdc.UnmarshalJSON(stakingStateBz, stakingState)
+		err = app.AppCodec().UnmarshalJSON(stakingStateBz, stakingState)
 		if err != nil {
 			panic(err)
 		}
@@ -508,7 +507,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 			panic("bank genesis state is missing")
 		}
 		bankState := new(banktypes.GenesisState)
-		err = cdc.UnmarshalJSON(bankStateBz, bankState)
+		err = app.AppCodec().UnmarshalJSON(bankStateBz, bankState)
 		if err != nil {
 			panic(err)
 		}
@@ -529,8 +528,8 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		}
 
 		// change appState back
-		rawState[stakingtypes.ModuleName] = cdc.MustMarshalJSON(stakingState)
-		rawState[banktypes.ModuleName] = cdc.MustMarshalJSON(bankState)
+		rawState[stakingtypes.ModuleName] = app.AppCodec().MustMarshalJSON(stakingState)
+		rawState[banktypes.ModuleName] = app.AppCodec().MustMarshalJSON(bankState)
 
 		// replace appstate
 		appState, err = json.Marshal(rawState)
@@ -544,13 +543,14 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 // AppStateRandomizedFn creates calls each module's GenesisState generator function
 // and creates the simulation params
 func AppStateRandomizedFn(
-	simManager *module.SimulationManager, r *rand.Rand, cdc codec.JSONCodec,
+	simManager *module.SimulationManager, r *rand.Rand, app *app.App,
 	accs []simtypes.Account, genesisTimestamp time.Time, appParams simtypes.AppParams,
 ) (json.RawMessage, []simtypes.Account) {
 	numAccs := int64(len(accs))
+
 	// TODO(ignore - from CosmosSDK)
 	// in case runtime.RegisterModules(...) is used, the genesis state of the module won't be reflected here
-	genesisState := basic_manager.ModuleBasics.DefaultGenesis(cdc)
+	genesisState := app.DefaultGenesis()
 
 	// generate a random amount of initial stake coins and a random initial
 	// number of bonded accounts
@@ -592,7 +592,7 @@ func AppStateRandomizedFn(
 
 	simState := &module.SimulationState{
 		AppParams:    appParams,
-		Cdc:          cdc,
+		Cdc:          app.AppCodec(),
 		Rand:         r,
 		GenState:     genesisState,
 		Accounts:     accs,

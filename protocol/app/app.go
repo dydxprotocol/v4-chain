@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"io"
 	"math/big"
 	"net/http"
@@ -94,6 +93,7 @@ import (
 	// App
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
+	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 
@@ -332,13 +332,10 @@ func New(
 
 	initDatadogProfiler(logger, appFlags.DdAgentHost, appFlags.DdTraceAgentPort)
 
-	encodingConfig := GetEncodingConfig()
-
-	appCodec := encodingConfig.Codec
-	legacyAmino := encodingConfig.Amino
-	cdc := encodingConfig.Amino
-	interfaceRegistry := encodingConfig.InterfaceRegistry
-	txConfig := encodingConfig.TxConfig
+	interfaceRegistry := custommodule.InterfaceRegistry
+	appCodec := codec.NewProtoCodec(interfaceRegistry)
+	legacyAmino := codec.NewLegacyAmino()
+	txConfig := authtx.NewTxConfig(appCodec, authtx.DefaultSignModes)
 
 	bApp := baseapp.NewBaseApp(AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
@@ -382,7 +379,7 @@ func New(
 
 	app := &App{
 		BaseApp:           bApp,
-		cdc:               cdc,
+		cdc:               legacyAmino,
 		appCodec:          appCodec,
 		txConfig:          txConfig,
 		interfaceRegistry: interfaceRegistry,
@@ -402,7 +399,7 @@ func New(
 		},
 	)
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
+	app.ParamsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
@@ -986,7 +983,7 @@ func New(
 	app.ModuleManager = module.NewManager(
 		genutil.NewAppModule(
 			app.AccountKeeper, app.StakingKeeper, app.BaseApp,
-			encodingConfig.TxConfig,
+			txConfig,
 		),
 		auth.NewAppModule(appCodec, app.AccountKeeper, nil, app.getSubspace(authtypes.ModuleName)),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.getSubspace(banktypes.ModuleName)),
@@ -1040,6 +1037,17 @@ func New(
 		delayMsgModule,
 		epochsModule,
 	)
+	// Setup ModuleBasics as soon as possible after creating the ModuleManager.
+	// This allows us to register the remaining interfaces before we configure the
+	// services associated with the ModuleManager.
+	app.ModuleBasics = module.NewBasicManagerFromManager(
+		app.ModuleManager,
+		map[string]module.AppModuleBasic{
+			custommodule.SlashingModuleBasic{}.Name(): custommodule.SlashingModuleBasic{},
+		},
+	)
+	// Skipping `ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)` because it's not needed.
+	custommodule.RegisterInterfacesGlobally(app.ModuleBasics)
 
 	app.ModuleManager.SetOrderPreBlockers(
 		upgradetypes.ModuleName,
@@ -1205,12 +1213,6 @@ func New(
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err := app.ModuleManager.RegisterServices(app.configurator)
-	app.ModuleBasics = module.NewBasicManagerFromManager(
-		app.ModuleManager,
-		map[string]module.AppModuleBasic{
-			custommodule.SlashingModuleBasic{}.Name(): custommodule.SlashingModuleBasic{},
-		},
-	)
 	if err != nil {
 		panic(err)
 	}
@@ -1230,7 +1232,7 @@ func New(
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
-	app.setAnteHandler(encodingConfig.TxConfig)
+	app.setAnteHandler(txConfig)
 	app.SetMempool(mempool.NewNoOpMempool())
 	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
