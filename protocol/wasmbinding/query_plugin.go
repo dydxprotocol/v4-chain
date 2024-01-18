@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	OracleRoute = "oracle"
+	PricesRoute = "prices"
 )
 
 type DydxQueryWrapper struct {
@@ -26,8 +26,8 @@ func CustomQuerier(qp *QueryPlugin) func(ctx sdk.Context, request json.RawMessag
 			return nil, errorsmod.Wrap(err, "Error parsing request data")
 		}
 		switch contractQuery.Route {
-		case OracleRoute:
-			return qp.HandleOracleQuery(ctx, contractQuery.QueryData)
+		case PricesRoute:
+			return qp.HandleMarketPriceQuery(ctx, contractQuery.QueryData)
 		default:
 			return nil, wasmvmtypes.UnsupportedRequest{Kind: "Unknown Dydx Wasm Query Route"}
 		}

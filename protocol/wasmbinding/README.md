@@ -8,4 +8,4 @@ This package provides first class support for:
   - CreateTransfer
   - DepositToSubaccount
 - Queries
-  - OraclePrice
+  - MarketPrice
