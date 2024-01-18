@@ -21,6 +21,54 @@ pub struct Transfer {
   pub amount: u64,
 }
 
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u32)]
+pub enum OrderSide {
+  Unspecified = 0,
+  Buy = 1,
+  Sell = 2,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u32)]
+pub enum OrderTimeInForce {
+  Unspecified = 0,
+  Ioc = 1,
+  PostOnly = 2,
+  FillOrKill = 3,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[repr(u32)]
+pub enum OrderConditionType {
+  Unspecified = 0,
+  StopLoss = 1,
+  TakeProfit = 2,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct OrderId {
+  pub subaccount_id: SubaccountId,
+  pub client_id: u32,
+  pub order_flags: u32,
+  pub clob_pair_id: u32,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+pub struct Order {
+  pub order_id: OrderId,
+  pub side: OrderSide,
+  pub quantums: u64,
+  pub subticks: u64,
+  pub good_til_block: Option<u32>,
+  pub good_til_block_time: Option<u32>,
+  pub time_in_force: OrderTimeInForce,
+  pub reduce_only: bool,
+  pub client_metadata: u32,
+  pub condition_type: OrderConditionType,
+  pub conditional_order_trigger_subticks: u64,
+}
+
 #[non_exhaustive]
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
@@ -34,6 +82,9 @@ pub enum SendingMsg {
     asset_id: u32,
     quantums: u64,
   },
+  PlaceOrder {
+    order: Order,
+  }
 }
 
 impl From<SendingMsg> for CosmosMsg<SendingMsg> {
