@@ -1,6 +1,7 @@
 use cosmwasm_std::{QuerierWrapper, StdResult};
 
-use crate::query::{MarketPriceResponse, SubaccountResponse, DydxQuery, DydxQueryWrapper};
+use crate::proto_structs::MarketPrice;
+use crate::query::{DydxQuery, DydxQueryWrapper, SubaccountResponse};
 use crate::route::DydxRoute;
 
 /// This is a helper wrapper to easily use our custom queries
@@ -13,9 +14,9 @@ impl<'a> DydxQuerier<'a> {
         DydxQuerier { querier }
     }
 
-    pub fn query_market_price(&self, market_id: u32) -> StdResult<MarketPriceResponse> {
+    pub fn query_market_price(&self, market_id: u32) -> StdResult<MarketPrice> {
         let request = DydxQueryWrapper {
-            route: DydxRoute::Oracle,
+            route: DydxRoute::Prices,
             query_data: DydxQuery::MarketPrice { id: market_id },
         }
         .into();
