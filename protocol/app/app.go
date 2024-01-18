@@ -122,6 +122,9 @@ import (
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
+	// Cosmwasm
+	"github.com/dydxprotocol/v4-chain/protocol/wasmbinding"
+
 	// Modules
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmmodulekeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -1005,6 +1008,12 @@ func New(
 	// See https://github.com/CosmWasm/cosmwasm/blob/main/docs/CAPABILITIES-BUILT-IN.md
 	supportedFeatures := "iterator,staking,stargate,osmosis,cosmwasm_1_1,cosmwasm_1_2,cosmwasm_1_4"
 
+	wasmbinding.RegisterCustomPlugins(&app.PricesKeeper)
+
+	wasmOpts := []wasmmodulekeeper.Option{}
+
+	wasmOpts = append(wasmbinding.RegisterCustomPlugins(&app.PricesKeeper), wasmOpts...)
+
 	app.WasmKeeper = wasmmodulekeeper.NewKeeper(
 		appCodec,
 		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
@@ -1027,7 +1036,7 @@ func New(
 		wasmConfig,
 		supportedFeatures,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
-		// TODO(hackathon): Add wasm opts
+		wasmOpts...,
 	)
 
 	/****  Module Options ****/
