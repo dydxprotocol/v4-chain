@@ -11,7 +11,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -50,9 +49,6 @@ var (
 		vestmoduletypes.CommunityTreasuryAccountName: nil,
 		// community vester account vests funds into the community treasury.
 		vestmoduletypes.CommunityVesterAccountName: nil,
-		// delaymsg module account doesn't hold funds. It's used as the authority of
-		// delayed messages.
-		delaymsgtypes.ModuleName: nil,
 	}
 	// Blocked module accounts which cannot receive external funds.
 	// By default, all non-custom modules (except for gov) are blocked. This prevents

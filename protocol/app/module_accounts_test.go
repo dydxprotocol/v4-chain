@@ -12,7 +12,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -34,7 +33,6 @@ func TestModuleAccountsToAddresses(t *testing.T) {
 		rewardsmoduletypes.VesterAccountName:         "dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp",
 		vestmoduletypes.CommunityTreasuryAccountName: "dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn",
 		vestmoduletypes.CommunityVesterAccountName:   "dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk",
-		delaymsgtypes.ModuleName:                     "dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr",
 		icatypes.ModuleName:                          "dydx1vlthgax23ca9syk7xgaz347xmf4nunefw3cnv8",
 	}
 
@@ -74,7 +72,6 @@ func TestMaccPerms(t *testing.T) {
 		"rewards_vester":         nil,
 		"community_treasury":     nil,
 		"community_vester":       nil,
-		"delaymsg":               nil,
 	}
 	require.Equal(t, expectedMaccPerms, maccPerms, "default macc perms list does not match expected")
 }
@@ -95,7 +92,6 @@ func TestModuleAccountAddrs(t *testing.T) {
 		"dydx1ltyc6y4skclzafvpznpt2qjwmfwgsndp458rmp": true, // x/rewards.vester
 		"dydx15ztc7xy42tn2ukkc0qjthkucw9ac63pgp70urn": true, // x/vest.communityTreasury
 		"dydx1wxje320an3karyc6mjw4zghs300dmrjkwn7xtk": true, // x/vest.communityVester
-		"dydx1mkkvp26dngu6n8rmalaxyp3gwkjuzztq5zx6tr": true, // x/delaymsg
 	}
 
 	require.Equal(t, expectedModuleAccAddresses, app.ModuleAccountAddrs())
