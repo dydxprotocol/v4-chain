@@ -7,9 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	errorsmod "github.com/pkg/errors"
 
-	bindings "github.com/dydxprotocol/v4-chain/protocol/wasmbinding/bindings"
-
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 type QueryPlugin struct {
@@ -23,24 +22,24 @@ func NewQueryPlugin(pk *priceskeeper.Keeper) *QueryPlugin {
 	}
 }
 
-func (qp QueryPlugin) HandleOracleQuery(ctx sdk.Context, queryData json.RawMessage) ([]byte, error) {
-	var parsedQuery bindings.DydxOracleQuery
+func (qp QueryPlugin) HandleMarketPriceQuery(ctx sdk.Context, queryData json.RawMessage) ([]byte, error) {
+	var parsedQuery pricestypes.QueryMarketPriceRequest
 	if err := json.Unmarshal(queryData, &parsedQuery); err != nil {
-		return nil, errorsmod.Wrap(err, "Error parsing DydxOracleQuery")
+		return nil, errorsmod.Wrap(err, "Error parsing DydxMarketPriceQuery")
 	}
 
-	marketPrice, err := qp.pricesKeeper.GetMarketPrice(ctx, parsedQuery.MarketId)
+	marketPrice, err := qp.pricesKeeper.GetMarketPrice(ctx, parsedQuery.Id)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, fmt.Sprintf("Error getting price for market %d", parsedQuery.MarketId))
+		return nil, errorsmod.Wrap(err, fmt.Sprintf("Error getting price for market %d", parsedQuery.Id))
 	}
 
-	res := bindings.WasmOracleQueryResponse{
-		Price:    marketPrice.Price,
-		Exponent: marketPrice.Exponent,
+	res := pricestypes.QueryMarketPriceResponse{
+		MarketPrice: marketPrice,
 	}
+
 	bz, err := json.Marshal(res)
 	if err != nil {
-		return nil, errorsmod.Wrap(err, "Error encoding WasmOracleQueryResponse as JSON")
+		return nil, errorsmod.Wrap(err, "Error encoding MarketPrice as JSON")
 	}
 
 	return bz, nil
