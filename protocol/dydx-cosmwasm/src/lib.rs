@@ -1,3 +1,4 @@
+mod msg;
 mod querier;
 mod query;
 mod route;
@@ -5,6 +6,7 @@ mod proto_structs;
 mod bytes_helper;
 mod response_helper;
 
+pub use msg::{SendingMsg, SubaccountId, Transfer};
 pub use querier::DydxQuerier;
 pub use query::{
     MarketPriceResponse, DydxQuery, DydxQueryWrapper,
