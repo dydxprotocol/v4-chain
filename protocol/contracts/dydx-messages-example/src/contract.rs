@@ -46,6 +46,7 @@ pub fn execute(
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response<SendingMsg>, ContractError> {
+//) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
         ExecuteMsg::Refund {} => execute_refund(deps, env, info),
@@ -57,7 +58,9 @@ fn execute_approve(
     env: Env,
     info: MessageInfo,
     quantity: Option<u64>,
+    //quantity: Option<Vec<Coin>>,
 ) -> Result<Response<SendingMsg>, ContractError> {
+//) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if info.sender != config.arbiter {
         return Err(ContractError::Unauthorized {});
@@ -71,6 +74,7 @@ fn execute_approve(
     }
 
     let balance = deps.querier.query_balance(&env.contract.address, "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5".to_string())?.amount.u128() as u64;
+    //let balance = deps.querier.query_all_balances(&env.contract.address)?;
 
     let amount = if let Some(quantity) = quantity {
         quantity
@@ -84,6 +88,7 @@ fn execute_approve(
 }
 
 fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response<SendingMsg>, ContractError> {
+//fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     // anyone can try to refund, as long as the contract is expired
     if let Some(expiration) = config.expiration {
@@ -97,11 +102,13 @@ fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Respons
     // Querier guarantees to return up-to-date data, including funds sent in this handle message
     // https://github.com/CosmWasm/wasmd/blob/master/x/wasm/internal/keeper/keeper.go#L185-L192
     let balance = deps.querier.query_balance(&env.contract.address, "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5".to_string())?.amount.u128() as u64;
+    //let balance = deps.querier.query_all_balances(&env.contract.address)?;
     Ok(send_tokens(env.contract.address, config.source, balance, "refund"))
 }
 
 // this is a helper to move the tokens, so the business logic is easy to read
 fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) -> Response<SendingMsg> {
+//fn send_tokens(from_address: Addr, to_address: Addr, amount: Vec<Coin>, action: &str) -> Response {
     let deposit = SendingMsg::DepositToSubaccount {
         sender: from_address.clone().into(),
         recipient: SubaccountId {
@@ -116,7 +123,7 @@ fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) 
         amount: Vec::new(),
     };
     Response::new()
-        .add_message(deposit)
+        .add_message(bankSend)
         .add_attribute("action", action)
         .add_attribute("to", to_address)
 }

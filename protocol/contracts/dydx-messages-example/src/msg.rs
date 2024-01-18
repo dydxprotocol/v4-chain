@@ -20,6 +20,7 @@ pub enum ExecuteMsg {
     Approve {
         // release some coins - if quantity is None, release all coins in balance
         quantity: Option<u64>,
+        //quantity: Option<Vec<Coin>>,
     },
     Refund {},
 }
