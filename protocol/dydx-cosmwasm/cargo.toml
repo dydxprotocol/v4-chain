@@ -9,6 +9,7 @@ readme = "README.md"
 backtraces = ["cosmwasm-std/backtraces"]
 
 [dependencies]
+num-bigint = "0.4.0"
 cosmwasm-std = "1.1"
 schemars = "0.8.3"
 serde = { version = "1.0.127", default-features = false, features = ["derive"] }
