@@ -9,3 +9,4 @@ This package provides first class support for:
   - DepositToSubaccount
 - Queries
   - MarketPrice
+  - Subaccounts
