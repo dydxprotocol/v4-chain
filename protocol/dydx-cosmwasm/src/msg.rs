@@ -5,6 +5,7 @@ use cosmwasm_std::{
   to_json_binary,
   CosmosMsg,
   CustomMsg,
+  CustomQuery,
 };
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]

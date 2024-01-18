@@ -1,14 +1,15 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::{
     entry_point, to_binary, Addr, BankMsg, Binary, Coin, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult
+    StdResult,
+    QueryResponse,
 };
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG};
 use cw2::set_contract_version;
-use dydx_cosmwasm::{SendingMsg, SubaccountId};
+use dydx_cosmwasm::{SendingMsg, SubaccountId, DydxQuerier, MarketPrice, DydxQueryWrapper};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:dydx-messages-example";
@@ -120,13 +121,23 @@ fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) 
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps<DydxQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::MarketPrice { id } => to_binary(&query_price(deps, id)?),
         QueryMsg::Arbiter {} => to_binary(&query_arbiter(deps)?),
     }
 }
 
-fn query_arbiter(deps: Deps) -> StdResult<ArbiterResponse> {
+fn query_price(
+    deps: Deps<DydxQueryWrapper>,
+    id: u32,
+) -> StdResult<MarketPrice> {
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_market_price(id);
+    Ok(res?)
+}
+
+fn query_arbiter(deps: Deps<DydxQueryWrapper>) -> StdResult<ArbiterResponse> {
     let config = CONFIG.load(deps.storage)?;
     let addr = config.arbiter;
     Ok(ArbiterResponse { arbiter: addr })

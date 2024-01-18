@@ -1,6 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
 use cw_utils::Expiration;
+use dydx_cosmwasm::MarketPrice;
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -31,6 +32,10 @@ pub enum QueryMsg {
     /// Returns a human-readable representation of the arbiter.
     #[returns(ArbiterResponse)]
     Arbiter {},
+    #[returns(MarketPrice)]
+    MarketPrice {
+        id: u32,
+    }
 }
 
 #[cw_serde]

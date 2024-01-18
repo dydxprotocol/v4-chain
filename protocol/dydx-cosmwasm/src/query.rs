@@ -31,11 +31,6 @@ pub enum DydxQuery {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct MarketPriceResponse {
-    pub market_price: MarketPrice,
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct SubaccountResponse {
     pub subaccount: Subaccount,
 }
