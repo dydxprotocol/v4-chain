@@ -8,7 +8,7 @@ use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::state::{Config, CONFIG};
 use cw2::set_contract_version;
-use crate::dydx_msg::{SendingMsg, SubaccountId};
+use dydx_cosmwasm::{SendingMsg, SubaccountId};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:dydx-messages-example";
