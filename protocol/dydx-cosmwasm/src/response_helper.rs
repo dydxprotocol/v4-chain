@@ -27,7 +27,7 @@ pub struct SubaccountBigInt {
 }
 
 // Function to transform Subaccount to SubaccountBigInt
-fn transform_subaccount(subaccount: Subaccount) -> SubaccountBigInt {
+pub fn transform_subaccount(subaccount: Subaccount) -> SubaccountBigInt {
     SubaccountBigInt {
         id: subaccount.id,
         asset_positions: subaccount.asset_positions.into_iter().map(|ap| {
