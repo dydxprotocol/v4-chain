@@ -1,12 +1,14 @@
 package bank
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"fmt"
+
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
@@ -23,12 +25,7 @@ func GetModuleAccUsdcBalance(
 	balance int64,
 	err error,
 ) {
-	moduleAddress, err := codec.InterfaceRegistry().SigningContext().AddressCodec().BytesToString(
-		[]byte(moduleName),
-	)
-	if err != nil {
-		return 0, err
-	}
+	moduleAddress := authtypes.NewModuleAddress(moduleName)
 	resp, err := testutil.GetRequest(fmt.Sprintf(
 		"%s/cosmos/bank/v1beta1/balances/%s",
 		val.APIAddress,

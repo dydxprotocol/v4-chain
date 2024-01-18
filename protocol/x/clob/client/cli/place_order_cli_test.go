@@ -48,7 +48,6 @@ type PlaceOrderIntegrationTestSuite struct {
 }
 
 func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
-	t.Skip("TODO(CORE-538): Resolve why bank balance for subaccounts module is not found.")
 	// Deterministic Mnemonic.
 	validatorMnemonic := constants.AliceMnenomic
 
