@@ -1,6 +1,7 @@
 use core::fmt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_repr::*;
 use cosmwasm_std::{
   to_json_binary,
   CosmosMsg,
@@ -22,7 +23,7 @@ pub struct Transfer {
   pub amount: u64,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u32)]
 pub enum OrderSide {
   Unspecified = 0,
@@ -30,7 +31,7 @@ pub enum OrderSide {
   Sell = 2,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u32)]
 pub enum OrderTimeInForce {
   Unspecified = 0,
@@ -39,7 +40,7 @@ pub enum OrderTimeInForce {
   FillOrKill = 3,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
+#[derive(Serialize_repr, Deserialize_repr, Clone, Debug, PartialEq, Eq, JsonSchema)]
 #[repr(u32)]
 pub enum OrderConditionType {
   Unspecified = 0,
@@ -61,7 +62,9 @@ pub struct Order {
   pub side: OrderSide,
   pub quantums: u64,
   pub subticks: u64,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub good_til_block: Option<u32>,
+  #[serde(skip_serializing_if = "Option::is_none")]
   pub good_til_block_time: Option<u32>,
   pub time_in_force: OrderTimeInForce,
   pub reduce_only: bool,
@@ -135,6 +138,35 @@ mod tests {
     assert_eq!(
       String::from_utf8_lossy(&json),
       r#"{"deposit_to_subaccount":{"sender":"a","recipient":{"owner":"b","number":0},"asset_id":0,"quantums":10000000000}}"#
+    );
+
+    let msg: SendingMsg = SendingMsg::PlaceOrder {
+      order: Order {
+        order_id: OrderId {
+          subaccount_id: SubaccountId {
+            owner: "a".to_string(),
+            number: 0,
+          },
+          client_id: 123,
+          order_flags: 64,
+          clob_pair_id: 0,
+        },
+        side: OrderSide::Buy,
+        quantums: 5,
+        subticks: 5,
+        good_til_block: None,
+        good_til_block_time: Some(10),
+        time_in_force: OrderTimeInForce::Unspecified,
+        reduce_only: false,
+        client_metadata: 0,
+        condition_type: OrderConditionType::Unspecified,
+        conditional_order_trigger_subticks: 0,
+      },
+    };
+    let json = to_json_binary(&msg).unwrap();
+    assert_eq!(
+      String::from_utf8_lossy(&json),
+      r#"{"place_order":{"order":{"order_id":{"subaccount_id":{"owner":"a","number":0},"client_id":123,"order_flags":64,"clob_pair_id":0},"side":1,"quantums":5,"subticks":5,"good_til_block_time":10,"time_in_force":0,"reduce_only":false,"client_metadata":0,"condition_type":0,"conditional_order_trigger_subticks":0}}}"#
     );
   }
 }
