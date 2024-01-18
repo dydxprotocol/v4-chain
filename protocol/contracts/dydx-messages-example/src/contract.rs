@@ -1,10 +1,11 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::{
-    Addr, BankMsg, Binary, Coin, Deps, DepsMut, entry_point, Env, MessageInfo, Response, StdResult,
+    Addr, BankMsg, Binary, Coin, Deps, DepsMut, entry_point, Env, MessageInfo, QueryResponse, Response,
+    StdResult,
     to_binary,
 };
 use cw2::set_contract_version;
-use dydx_cosmwasm::{Order, OrderId, SendingMsg, SubaccountId};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, SendingMsg, SubaccountId};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -172,13 +173,23 @@ fn place_order(deps: DepsMut, order: Order) -> Result<Response<SendingMsg>, Cont
 }
 
 #[cfg_attr(not(feature = "library"), entry_point)]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps<DydxQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
+        QueryMsg::MarketPrice { id } => to_binary(&query_price(deps, id)?),
         QueryMsg::Arbiter {} => to_binary(&query_arbiter(deps)?),
     }
 }
 
-fn query_arbiter(deps: Deps) -> StdResult<ArbiterResponse> {
+fn query_price(
+    deps: Deps<DydxQueryWrapper>,
+    id: u32,
+) -> StdResult<MarketPrice> {
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_market_price(id);
+    Ok(res?)
+}
+
+fn query_arbiter(deps: Deps<DydxQueryWrapper>) -> StdResult<ArbiterResponse> {
     let config = CONFIG.load(deps.storage)?;
     let addr = config.arbiter;
     Ok(ArbiterResponse { arbiter: addr })

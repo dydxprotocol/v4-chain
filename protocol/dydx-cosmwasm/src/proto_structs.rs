@@ -4,9 +4,13 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 pub struct MarketPrice {
-    pub id: u32,
+    // TODO: Missing "Id" field compared to pricestypes.MarketPrice
+    // Adding `Id` field leads to this error when querying the contract:
+    // `Error parsing into type dydx_cosmwasm::proto_structs::MarketPrice: missing field `id`: query wasm contract failed: unknown request`
+    // Suspect it's failing due to parse the query since `Id` being tested is `0`.
+    // We don't need `Id` in the response, so leaving it out for now.
     pub exponent: i32,
-    pub price: Uint64,
+    pub price: i64,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]

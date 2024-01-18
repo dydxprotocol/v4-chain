@@ -36,11 +36,7 @@ func (qp QueryPlugin) HandleMarketPriceQuery(ctx sdk.Context, queryData json.Raw
 		return nil, errorsmod.Wrap(err, fmt.Sprintf("Error getting price for market %d", parsedQuery.Id))
 	}
 
-	res := pricestypes.QueryMarketPriceResponse{
-		MarketPrice: marketPrice,
-	}
-
-	bz, err := json.Marshal(res)
+	bz, err := json.Marshal(marketPrice)
 	if err != nil {
 		return nil, errorsmod.Wrap(err, "Error encoding MarketPrice as JSON")
 	}
