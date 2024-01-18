@@ -1,8 +1,9 @@
 mod querier;
 mod query;
 mod route;
-mod dydx_types;
 mod proto_structs;
+mod bytes_helper;
+mod response_helper;
 
 pub use querier::DydxQuerier;
 pub use query::{
