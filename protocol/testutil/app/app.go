@@ -1059,12 +1059,10 @@ func newTestingLogger() cmtlog.Logger {
 //
 // This method is thread-safe.
 func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseCheckTx {
-	// TODO(CORE-538): Expose the updated CheckTx API that uses pointers and returns errors to tests.
-
 	tApp.panicIfChainIsHalted()
 	res, err := tApp.App.CheckTx(&req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
-	// https://github.com/dydxprotocol/cometbft/blob/4d4d3b0/mempool/v0/clist_mempool.go#L416
+	// https://github.com/dydxprotocol/cometbft/blob/5e6c4b6/mempool/clist_mempool.go#L441
 	if err == nil && res.IsOK() && !mempool.IsShortTermClobOrderTransaction(req.Tx, newTestingLogger()) {
 		// We want to ensure that we hold the lock only for updating passingCheckTxs so that App.CheckTx can execute
 		// concurrently.
