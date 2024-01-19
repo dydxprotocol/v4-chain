@@ -180,7 +180,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				false,
 				true, // taker order fails collateralization check during matching
 			},
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 		"under-collateralized conditional taker when adding to book is removed": {
@@ -209,7 +209,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 				false,
 				true, // taker order fails add-to-orderbook collateralization check
 			},
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 		"under-collateralized conditional maker is removed": {
@@ -237,7 +237,7 @@ func TestConditionalOrderRemoval(t *testing.T) {
 			expectedOrderRemovals: []bool{
 				true, // maker is under-collateralized
 			},
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 	}
@@ -805,7 +805,7 @@ func TestOrderRemoval(t *testing.T) {
 
 			expectedFirstOrderRemoved:  false,
 			expectedSecondOrderRemoved: true, // taker order fails collateralization check during matching
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 		"under-collateralized taker when adding to book is removed": {
@@ -826,7 +826,7 @@ func TestOrderRemoval(t *testing.T) {
 
 			expectedFirstOrderRemoved:  false,
 			expectedSecondOrderRemoved: true, // taker order fails add-to-orderbook collateralization check
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 		"under-collateralized maker is removed": {
@@ -846,7 +846,7 @@ func TestOrderRemoval(t *testing.T) {
 
 			expectedFirstOrderRemoved:  true, // maker is under-collateralized
 			expectedSecondOrderRemoved: false,
-			// TODO(CORE-538): Re-enable determinism checks once non-determinism issue is found and resolved.
+			// TODO(CORE-858): Re-enable determinism checks once non-determinism issue is found and resolved.
 			disableNonDeterminismChecks: true,
 		},
 	}
