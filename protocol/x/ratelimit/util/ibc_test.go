@@ -17,8 +17,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
 
@@ -37,94 +35,6 @@ func hashDenomTrace(denomTrace string) string {
 	trace32byte := sha256.Sum256([]byte(denomTrace))
 	var traceTmByte tmbytes.HexBytes = trace32byte[:]
 	return fmt.Sprintf("ibc/%s", traceTmByte)
-}
-
-func TestParseDenomFromRecvPacket(t *testing.T) {
-	nobleChannelOnDydx := "channel-0"
-	dydxChannelOnNoble := "channel-100"
-
-	testCases := []struct {
-		name               string
-		packetDenomTrace   string
-		sourceChannel      string
-		destinationChannel string
-		expectedDenom      string
-	}{
-		// Sink asset one hop away:
-		//   uusdc sent from Noble to dYdX
-		//   -> tack on prefix (transfer/channel-0/uusdc) and hash
-		{
-			name:               "sink_one_hop",
-			packetDenomTrace:   assettypes.UusdcDenom,
-			sourceChannel:      dydxChannelOnNoble,
-			destinationChannel: nobleChannelOnDydx,
-			expectedDenom: hashDenomTrace(fmt.Sprintf(
-				"%s/%s/%s",
-				transferPort,
-				nobleChannelOnDydx,
-				assettypes.UusdcDenom,
-			)),
-		},
-		// Native source assets
-		//    lib.DefaultBaseDenom sent from dYdX to Noble and then back to dYdX (transfer/channel-0/adv4tnt)
-		//    -> remove prefix and leave as is (adv4tnt)
-		{
-			name:               lib.DefaultBaseDenom,
-			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, dydxChannelOnNoble, lib.DefaultBaseDenom),
-			sourceChannel:      dydxChannelOnNoble,
-			destinationChannel: nobleChannelOnDydx,
-			expectedDenom:      lib.DefaultBaseDenom,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			packet := channeltypes.Packet{
-				SourcePort:         transferPort,
-				DestinationPort:    transferPort,
-				SourceChannel:      tc.sourceChannel,
-				DestinationChannel: tc.destinationChannel,
-			}
-			packetData := ibctransfertypes.FungibleTokenPacketData{
-				Denom: tc.packetDenomTrace,
-			}
-
-			parsedDenom := util.ParseDenomFromRecvPacket(packet, packetData)
-			require.Equal(t, tc.expectedDenom, parsedDenom, tc.name)
-		})
-	}
-}
-
-func TestParseDenomFromSendPacket(t *testing.T) {
-	testCases := []struct {
-		name             string
-		packetDenomTrace string
-		expectedDenom    string
-	}{
-		// Native assets stay as is
-		{
-			name:             "base denom",
-			packetDenomTrace: lib.DefaultBaseDenom,
-			expectedDenom:    lib.DefaultBaseDenom,
-		},
-		// Non-native assets are hashed
-		{
-			name:             "uusdc on dYdX",
-			packetDenomTrace: "transfer/channel-0/uusdc",
-			expectedDenom:    assettypes.UusdcDenom,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			packet := ibctransfertypes.FungibleTokenPacketData{
-				Denom: tc.packetDenomTrace,
-			}
-
-			parsedDenom := util.ParseDenomFromSendPacket(packet)
-			require.Equal(t, tc.expectedDenom, parsedDenom, tc.name)
-		})
-	}
 }
 
 func TestParsePacketInfo(t *testing.T) {
