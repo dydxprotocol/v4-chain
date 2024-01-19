@@ -1,7 +1,7 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
 import { QueryClient, createProtobufRpcClient } from "@cosmjs/stargate";
-import { QueryGetSubaccountRequest, QuerySubaccountResponse, QueryAllSubaccountRequest, QuerySubaccountAllResponse } from "./query";
+import { QueryGetSubaccountRequest, QuerySubaccountResponse, QueryAllSubaccountRequest, QuerySubaccountAllResponse, QueryGetWithdrawalAndTransfersBlockedInfoRequest, QueryGetWithdrawalAndTransfersBlockedInfoResponse } from "./query";
 /** Query defines the gRPC querier service. */
 
 export interface Query {
@@ -10,6 +10,12 @@ export interface Query {
   /** Queries a list of Subaccount items. */
 
   subaccountAll(request?: QueryAllSubaccountRequest): Promise<QuerySubaccountAllResponse>;
+  /**
+   * Queries information about whether withdrawal and transfers are blocked, and
+   * if so which block they are re-enabled on.
+   */
+
+  getWithdrawalAndTransfersBlockedInfo(request?: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -18,6 +24,7 @@ export class QueryClientImpl implements Query {
     this.rpc = rpc;
     this.subaccount = this.subaccount.bind(this);
     this.subaccountAll = this.subaccountAll.bind(this);
+    this.getWithdrawalAndTransfersBlockedInfo = this.getWithdrawalAndTransfersBlockedInfo.bind(this);
   }
 
   subaccount(request: QueryGetSubaccountRequest): Promise<QuerySubaccountResponse> {
@@ -34,6 +41,12 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QuerySubaccountAllResponse.decode(new _m0.Reader(data)));
   }
 
+  getWithdrawalAndTransfersBlockedInfo(request: QueryGetWithdrawalAndTransfersBlockedInfoRequest = {}): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
+    const data = QueryGetWithdrawalAndTransfersBlockedInfoRequest.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.subaccounts.Query", "GetWithdrawalAndTransfersBlockedInfo", data);
+    return promise.then(data => QueryGetWithdrawalAndTransfersBlockedInfoResponse.decode(new _m0.Reader(data)));
+  }
+
 }
 export const createRpcQueryExtension = (base: QueryClient) => {
   const rpc = createProtobufRpcClient(base);
@@ -45,6 +58,10 @@ export const createRpcQueryExtension = (base: QueryClient) => {
 
     subaccountAll(request?: QueryAllSubaccountRequest): Promise<QuerySubaccountAllResponse> {
       return queryService.subaccountAll(request);
+    },
+
+    getWithdrawalAndTransfersBlockedInfo(request?: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
+      return queryService.getWithdrawalAndTransfersBlockedInfo(request);
     }
 
   };
