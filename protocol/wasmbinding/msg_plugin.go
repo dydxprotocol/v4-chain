@@ -2,12 +2,17 @@ package wasmbinding
 
 import (
 	"encoding/json"
+	"fmt"
+	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	bindings "github.com/dydxprotocol/v4-chain/protocol/wasmbinding/bindings"
 
 	sendingkeeper "github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
@@ -205,15 +210,64 @@ func (m *CustomMessenger) placeOrder(
 		order.GoodTilOneof = &clobtypes.Order_GoodTilBlock{
 			GoodTilBlock: placeOrder.Order.GoodTilBlock,
 		}
-		_, _, err = m.clob.PlaceShortTermOrder(
-			ctx,
-			&clobtypes.MsgPlaceOrder{Order: order},
-		)
+		// Only process short term orders in CheckTx because short term order placements
+		// are never on chain.
+		if ctx.IsCheckTx() {
+			fmt.Println("Placing short term order")
+			_, _, err = m.clob.PlaceShortTermOrder(ctx, &clobtypes.MsgPlaceOrder{Order: order})
+		}
 	} else {
 		order.GoodTilOneof = &clobtypes.Order_GoodTilBlockTime{
-			GoodTilBlockTime: placeOrder.Order.GoodTilBlockTime,
+			GoodTilBlockTime: lib.MustConvertIntegerToUint32(time.Now().Unix() + 60*60),
 		}
-		return nil, nil, clobtypes.ErrNotImplemented
+
+		if ctx.IsCheckTx() || ctx.IsReCheckTx() {
+			// We don't process stateful orders in CheckTx, so do nothing.
+			return nil, nil, nil
+		}
+
+		fmt.Println("Placing stateful order")
+		processProposerMatchesEvents := m.clob.GetProcessProposerMatchesEvents(ctx)
+
+		if err := m.clob.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{Order: order}); err != nil {
+			return nil, nil, err
+		}
+
+		if order.IsConditionalOrder() {
+			m.clob.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewConditionalOrderPlacementEvent(
+						order,
+					),
+				),
+			)
+			processProposerMatchesEvents.PlacedConditionalOrderIds = append(
+				processProposerMatchesEvents.PlacedConditionalOrderIds,
+				order.OrderId,
+			)
+		} else {
+			m.clob.GetIndexerEventManager().AddTxnEvent(
+				ctx,
+				indexerevents.SubtypeStatefulOrder,
+				indexerevents.StatefulOrderEventVersion,
+				indexer_manager.GetBytes(
+					indexerevents.NewLongTermOrderPlacementEvent(
+						order,
+					),
+				),
+			)
+			processProposerMatchesEvents.PlacedLongTermOrderIds = append(
+				processProposerMatchesEvents.PlacedLongTermOrderIds,
+				order.OrderId,
+			)
+		}
+		m.clob.MustSetProcessProposerMatchesEvents(
+			ctx,
+			processProposerMatchesEvents,
+		)
 	}
 
 	return nil, nil, err
