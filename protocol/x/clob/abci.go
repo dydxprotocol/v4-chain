@@ -14,7 +14,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	gometrics "github.com/hashicorp/go-metrics"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -73,10 +72,10 @@ func EndBlocker(
 				),
 			),
 		)
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.Expired, metrics.StatefulOrderRemoved, metrics.Count},
+		metrics.IncrCounterWithLabels(
+			metrics.ClobExpiredStatefulOrders,
 			1,
-			orderId.GetOrderIdLabels(),
+			orderId.GetOrderIdLabels()...,
 		)
 	}
 
@@ -118,10 +117,9 @@ func EndBlocker(
 	keeper.PruneRateLimits(ctx)
 
 	// Emit relevant metrics at the end of every block.
-	telemetry.SetGaugeWithLabels(
-		[]string{metrics.InsuranceFundBalance},
+	metrics.SetGauge(
+		metrics.InsuranceFundBalance,
 		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
-		[]gometrics.Label{},
 	)
 }
 
