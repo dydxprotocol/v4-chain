@@ -11,6 +11,7 @@ const (
 const (
 	Module              = "module"
 	TxMode              = "tx_mode"
+	Operation           = "operation"
 	OperationsQueue     = "operations_queue"
 	Callback            = "callback"
 	BlockHeight         = "block_height"
@@ -18,6 +19,8 @@ const (
 	ProposerConsAddress = "proposer_cons_address"
 	Handler             = "handler"
 	Tx                  = "tx"
+	Order               = "order"
+	OrderId             = "order_id"
 	OrderHash           = "order_hash"
 	OrderStatus         = "order_status"
 	Subaccount          = "subaccount"
