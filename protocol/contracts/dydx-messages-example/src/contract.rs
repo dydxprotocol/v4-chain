@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_binary,
 };
 use cw2::set_contract_version;
-use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId, OrderSide};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -42,7 +42,7 @@ pub fn instantiate(
 
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
-    deps: DepsMut,
+    deps: DepsMut<DydxQueryWrapper>,
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
@@ -65,7 +65,7 @@ pub fn execute(
             client_metadata,
             condition_type,
             conditional_order_trigger_subticks,
-        } => execute_place_order(
+        } => execute_market_make(
             deps,
             Order {
                 order_id: OrderId {
@@ -90,7 +90,7 @@ pub fn execute(
 }
 
 fn execute_approve(
-    deps: DepsMut,
+    deps: DepsMut<DydxQueryWrapper>,
     env: Env,
     info: MessageInfo,
     quantity: Option<u64>,
@@ -122,18 +122,42 @@ fn execute_approve(
     Ok(send_tokens(env.contract.address, config.recipient, amount, "approve"))
 }
 
-fn execute_place_order(
-    deps: DepsMut,
+fn execute_market_make(
+    deps: DepsMut<DydxQueryWrapper>,
     order: Order,
 ) -> Result<Response<DydxMsg>, ContractError> {
-    let place_order_msg = DydxMsg::PlaceOrder { order };
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_market_price(order.order_id.clob_pair_id);
+    let market_price = res.unwrap();
 
+    // Hard-code some values for BTC.
+    let exponent = market_price.exponent - (-9) + (-10) - (-6);
+    let subticks = market_price.price as f64 * (10i64 as f64).powi(exponent);
+    // Round to the nearest multiple.
+    let buy_price = subticks * 0.99;
+    let sell_price = subticks * 1.01;
+    let rounded_buy_subticks = (buy_price.round() as u64) / 100000 * 100000;
+    let rounded_sell_subticks = (sell_price.round() as u64) / 100000 * 100000;
+
+    // Construct the buy order.
+    let mut buy_order = order.clone();
+    buy_order.subticks = rounded_buy_subticks;
+    buy_order.side = OrderSide::Buy;
+    let buy_order_msg = DydxMsg::PlaceOrder { order: buy_order };
+
+    // Construct the sell order.
+    let mut sell_order = order.clone();
+    sell_order.subticks = rounded_sell_subticks;
+    sell_order.side = OrderSide::Sell;
+    let sell_order_msg = DydxMsg::PlaceOrder { order: sell_order };
+
+    // Market make!
     Ok(Response::new()
-        .add_message(place_order_msg)
+        .add_messages(vec![buy_order_msg, sell_order_msg])
         .add_attribute("action", "place_order"))
 }
 
-fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response<DydxMsg>, ContractError> {
+fn execute_refund(deps: DepsMut<DydxQueryWrapper>, env: Env, _info: MessageInfo) -> Result<Response<DydxMsg>, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     // anyone can try to refund, as long as the contract is expired
     if let Some(expiration) = config.expiration {

@@ -213,7 +213,7 @@ func (m *CustomMessenger) placeOrder(
 		// Only process short term orders in CheckTx because short term order placements
 		// are never on chain.
 		if ctx.IsCheckTx() {
-			fmt.Println("Placing short term order")
+			fmt.Printf("Placing short term order: %+v\n", order)
 			_, _, err = m.clob.PlaceShortTermOrder(ctx, &clobtypes.MsgPlaceOrder{Order: order})
 		}
 	} else {
@@ -226,7 +226,7 @@ func (m *CustomMessenger) placeOrder(
 			return nil, nil, nil
 		}
 
-		fmt.Println("Placing stateful order")
+		fmt.Printf("Placing stateful order: %+v\n", order)
 		processProposerMatchesEvents := m.clob.GetProcessProposerMatchesEvents(ctx)
 
 		if err := m.clob.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{Order: order}); err != nil {
