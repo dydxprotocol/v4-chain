@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_binary,
 };
 use cw2::set_contract_version;
-use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, SendingMsg, SubaccountId};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -46,7 +46,7 @@ pub fn execute(
     env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
-) -> Result<Response<SendingMsg>, ContractError> {
+) -> Result<Response<DydxMsg>, ContractError> {
     match msg {
         ExecuteMsg::Approve { quantity } => execute_approve(deps, env, info, quantity),
         ExecuteMsg::Refund {} => execute_refund(deps, env, info),
@@ -95,7 +95,7 @@ fn execute_approve(
     info: MessageInfo,
     quantity: Option<u64>,
     //quantity: Option<Vec<Coin>>,
-) -> Result<Response<SendingMsg>, ContractError> {
+) -> Result<Response<DydxMsg>, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     if info.sender != config.arbiter {
         return Err(ContractError::Unauthorized {});
@@ -125,15 +125,15 @@ fn execute_approve(
 fn execute_place_order(
     deps: DepsMut,
     order: Order,
-) -> Result<Response<SendingMsg>, ContractError> {
-    let place_order_msg = SendingMsg::PlaceOrder { order };
+) -> Result<Response<DydxMsg>, ContractError> {
+    let place_order_msg = DydxMsg::PlaceOrder { order };
 
     Ok(Response::new()
         .add_message(place_order_msg)
         .add_attribute("action", "place_order"))
 }
 
-fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response<SendingMsg>, ContractError> {
+fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Response<DydxMsg>, ContractError> {
     let config = CONFIG.load(deps.storage)?;
     // anyone can try to refund, as long as the contract is expired
     if let Some(expiration) = config.expiration {
@@ -151,8 +151,8 @@ fn execute_refund(deps: DepsMut, env: Env, _info: MessageInfo) -> Result<Respons
 }
 
 // this is a helper to move the tokens, so the business logic is easy to read
-fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) -> Response<SendingMsg> {
-    let deposit = SendingMsg::DepositToSubaccount {
+fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) -> Response<DydxMsg> {
+    let deposit = DydxMsg::DepositToSubaccount {
         sender: from_address.clone().into(),
         recipient: SubaccountId {
             owner: to_address.clone().into(),
@@ -167,8 +167,8 @@ fn send_tokens(from_address: Addr, to_address: Addr, amount: u64, action: &str) 
         .add_attribute("to", to_address)
 }
 
-fn place_order(deps: DepsMut, order: Order) -> Result<Response<SendingMsg>, ContractError> {
-    let msg = SendingMsg::PlaceOrder { order };
+fn place_order(deps: DepsMut, order: Order) -> Result<Response<DydxMsg>, ContractError> {
+    let msg = DydxMsg::PlaceOrder { order };
     Ok(Response::new().add_message(msg).add_attribute("action", "place_order"))
 }
 
