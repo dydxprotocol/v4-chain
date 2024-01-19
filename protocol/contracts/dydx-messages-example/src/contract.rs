@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_binary,
 };
 use cw2::set_contract_version;
-use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId, OrderSide};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Subaccount, Order, OrderId, DydxMsg, SubaccountId, OrderSide, SubaccountResponse};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -200,6 +200,7 @@ fn place_order(deps: DepsMut, order: Order) -> Result<Response<DydxMsg>, Contrac
 pub fn query(deps: Deps<DydxQueryWrapper>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
         QueryMsg::MarketPrice { id } => to_binary(&query_price(deps, id)?),
+        QueryMsg::Subaccount { address, subaccountNumber } => to_binary(&query_subaccount(deps, address, subaccountNumber)?),
         QueryMsg::Arbiter {} => to_binary(&query_arbiter(deps)?),
     }
 }
@@ -210,6 +211,16 @@ fn query_price(
 ) -> StdResult<MarketPrice> {
     let querier = DydxQuerier::new(&deps.querier);
     let res = querier.query_market_price(id);
+    Ok(res?)
+}
+
+fn query_subaccount(
+    deps: Deps<DydxQueryWrapper>,
+    address: String,
+    subaccountNumber: u32,
+) -> StdResult<SubaccountResponse> {
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_subaccount(address, subaccountNumber);
     Ok(res?)
 }
 

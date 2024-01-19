@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
 use cw_utils::Expiration;
-use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, MarketPrice};
+use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, MarketPrice, Subaccount};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -51,6 +51,11 @@ pub enum QueryMsg {
     #[returns(MarketPrice)]
     MarketPrice {
         id: u32,
+    },
+    #[returns(SubaccountResponse)]
+    Subaccount {
+        address: String,
+        subaccountNumber: u32,
     }
 }
 
