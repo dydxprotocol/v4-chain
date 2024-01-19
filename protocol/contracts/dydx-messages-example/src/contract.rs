@@ -132,10 +132,10 @@ fn execute_market_make(
 
     // Hard-code some values for BTC.
     let exponent = market_price.exponent - (-9) + (-10) - (-6);
-    let subticks = market_price.price * 10i64.pow(exponent as u32);
+    let subticks = market_price.price as f64 * (10i64 as f64).powi(exponent);
     // Round to the nearest multiple.
-    let buy_price = subticks as f64 * 0.99;
-    let sell_price = subticks as f64 * 1.01;
+    let buy_price = subticks * 0.99;
+    let sell_price = subticks * 1.01;
     let rounded_buy_subticks = (buy_price.round() as u64) / 100000 * 100000;
     let rounded_sell_subticks = (sell_price.round() as u64) / 100000 * 100000;
 
