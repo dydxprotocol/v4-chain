@@ -6,7 +6,7 @@ mod proto_structs;
 mod bytes_helper;
 mod response_helper;
 
-pub use msg::{SendingMsg, SubaccountId, Transfer};
+pub use msg::{DydxMsg, SubaccountId, Transfer, Order, OrderSide, OrderTimeInForce, OrderConditionType, OrderId};
 pub use querier::DydxQuerier;
 pub use query::{
     DydxQuery, DydxQueryWrapper,

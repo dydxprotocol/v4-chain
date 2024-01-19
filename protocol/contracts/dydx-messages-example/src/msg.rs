@@ -1,7 +1,7 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Addr, Coin};
 use cw_utils::Expiration;
-use dydx_cosmwasm::MarketPrice;
+use dydx_cosmwasm::{OrderConditionType, OrderSide, OrderTimeInForce, SubaccountId, MarketPrice};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -24,6 +24,22 @@ pub enum ExecuteMsg {
         //quantity: Option<Vec<Coin>>,
     },
     Refund {},
+    PlaceOrder {
+        subaccount_id: SubaccountId,
+        client_id: u32,
+        order_flags: u32,
+        clob_pair_id: u32,
+        side: OrderSide,
+        quantums: u64,
+        subticks: u64,
+        good_til_block: Option<u32>,
+        good_til_block_time: Option<u32>,
+        time_in_force: OrderTimeInForce,
+        reduce_only: bool,
+        client_metadata: u32,
+        condition_type: OrderConditionType,
+        conditional_order_trigger_subticks: u64,
+    }
 }
 
 #[cw_serde]
