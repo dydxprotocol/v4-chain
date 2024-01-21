@@ -3,14 +3,9 @@ package app
 import (
 	"bytes"
 	"context"
-	"cosmossdk.io/log"
-	"cosmossdk.io/store/rootmulti"
-	storetypes "cosmossdk.io/store/types"
 	"encoding/json"
 	"errors"
 	"fmt"
-	cmtlog "github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cosmos/cosmos-db"
 	"math"
 	"math/rand"
 	"os"
@@ -19,6 +14,12 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"cosmossdk.io/log"
+	"cosmossdk.io/store/rootmulti"
+	storetypes "cosmossdk.io/store/types"
+	cmtlog "github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cosmos/cosmos-db"
 
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
@@ -1079,7 +1080,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 		require.Truef(
 			tApp.builder.t,
 			res.Code == parallelRes.Code && ((err == nil && parallelErr == nil) || (err != nil && parallelErr != nil)),
-			"Non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
+			"Parallel app non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
 			res,
 			err,
 			parallelRes,
@@ -1093,7 +1094,7 @@ func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseChe
 			require.Truef(
 				tApp.builder.t,
 				res.Code == crashingRes.Code && ((err == nil && crashingErr == nil) || (err != nil && crashingErr != nil)),
-				"Non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
+				"Crashing app non-determinism detected during CheckTx, expected %+v with err %+v, got %+v with err %+v.",
 				res,
 				err,
 				crashingRes,
@@ -1196,6 +1197,7 @@ func launchValidatorInDir(
 	option := cmd.GetOptionWithCustomStartCmd()
 	rootCmd := cmd.NewRootCmdWithInterceptors(
 		option,
+		validatorHomeDir,
 		// Inject the app options and logger
 		func(serverCtxPtr *server.Context) {
 			for key, value := range appOptions {

@@ -114,7 +114,7 @@ services:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
 
   datadog-agent:
-    image: datadog/agent:7
+    image: public.ecr.aws/datadog/agent:7
     environment:
       # See https://docs.datadoghq.com/containers/docker/?tab=standard#environment-variables for agent configuration
       - DD_API_KEY=${DD_API_KEY}

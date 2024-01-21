@@ -21,10 +21,14 @@ const (
 	LiquidationsLiquidationMatchNegativeTNC            = "liquidations_liquidation_match_negative_tnc"
 	ClobMevErrorCount                                  = "clob_mev_error_count"
 	SubaccountsNegativeTncSubaccountSeen               = "negative_tnc_subaccount_seen"
+	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
+	ChainOutageSeen                                    = "chain_outage_seen"
 
 	// Gauges
-	InsuranceFundBalance = "insurance_fund_balance"
-	ClobMev              = "clob_mev"
+	InsuranceFundBalance             = "insurance_fund_balance"
+	ClobMev                          = "clob_mev"
+	ClobConditionalOrderTriggerPrice = "clob_conditional_order_trigger_price"
+	ClobConditionalOrderTriggered    = "clob_conditional_order_triggered"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
@@ -39,14 +43,14 @@ const (
 	LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution = "liquidations_place_perpetual_liquidation_quote_quantums_distribution"
 
 	// Measure Since
-	ClobOffsettingSubaccountPerpetualPosition  = "clob_offsetting_subaccount_perpetual_position"
-	DaemonGetPreviousBlockInfoLatency          = "daemon_get_previous_block_info_latency"
-	DaemonGetAllMarketPricesLatency            = "daemon_get_all_market_prices_latency"
-	DaemonGetMarketPricesPaginatedLatency      = "daemon_get_market_prices_paginated_latency"
-	DaemonGetAllLiquidityTiersLatency          = "daemon_get_all_liquidity_tiers_latency"
-	DaemonGetLiquidityTiersPaginatedLatency    = "daemon_get_liquidity_tiers_paginated_latency"
-	DaemonGetAllPerpetualsLatency              = "daemon_get_all_perpetuals_latency"
-	DaemonGetPerpetualsPaginatedLatency        = "daemon_get_perpetuals_paginated_latency"
-	MevLatency                                 = "mev_latency"
-	GateWithdrawalsIfNegativeTncSubaccountSeen = "gate_withdrawals_if_negative_tnc_subaccount_seen"
+	ClobOffsettingSubaccountPerpetualPosition         = "clob_offsetting_subaccount_perpetual_position"
+	DaemonGetPreviousBlockInfoLatency                 = "daemon_get_previous_block_info_latency"
+	DaemonGetAllMarketPricesLatency                   = "daemon_get_all_market_prices_latency"
+	DaemonGetMarketPricesPaginatedLatency             = "daemon_get_market_prices_paginated_latency"
+	DaemonGetAllLiquidityTiersLatency                 = "daemon_get_all_liquidity_tiers_latency"
+	DaemonGetLiquidityTiersPaginatedLatency           = "daemon_get_liquidity_tiers_paginated_latency"
+	DaemonGetAllPerpetualsLatency                     = "daemon_get_all_perpetuals_latency"
+	DaemonGetPerpetualsPaginatedLatency               = "daemon_get_perpetuals_paginated_latency"
+	MevLatency                                        = "mev_latency"
+	GateWithdrawalsIfNegativeTncSubaccountSeenLatency = "gate_withdrawals_if_negative_tnc_subaccount_seen_latency"
 )

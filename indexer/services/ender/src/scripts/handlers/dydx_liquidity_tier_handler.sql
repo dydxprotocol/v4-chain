@@ -15,7 +15,6 @@ BEGIN
     liquidity_tier_record."name" = event_data->>'name';
     liquidity_tier_record."initialMarginPpm" = (event_data->'initialMarginPpm')::bigint;
     liquidity_tier_record."maintenanceFractionPpm" = (event_data->'maintenanceFractionPpm')::bigint;
-    liquidity_tier_record."basePositionNotional" = dydx_trim_scale(power(10, -6)::numeric * dydx_from_jsonlib_long(event_data->'basePositionNotional'));
 
     INSERT INTO liquidity_tiers
     VALUES (liquidity_tier_record.*)
@@ -24,8 +23,7 @@ BEGIN
         SET
             "name" = liquidity_tier_record."name",
             "initialMarginPpm" = liquidity_tier_record."initialMarginPpm",
-            "maintenanceFractionPpm" = liquidity_tier_record."maintenanceFractionPpm",
-            "basePositionNotional" = liquidity_tier_record."basePositionNotional"
+            "maintenanceFractionPpm" = liquidity_tier_record."maintenanceFractionPpm"
     RETURNING * INTO liquidity_tier_record;
 
     RETURN jsonb_build_object(

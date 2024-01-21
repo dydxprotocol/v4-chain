@@ -1,5 +1,4 @@
 {
-  "07-tendermint": null,
   "assets": {
     "assets": [
       {
@@ -96,6 +95,7 @@
       "stateful_order_equity_tiers": []
     }
   },
+  "consensus": null,
   "crisis": {
     "constant_fee": {
       "denom": "stake",
@@ -336,6 +336,7 @@
       "port": "icahost"
     }
   },
+  "params": null,
   "perpetuals": {
     "perpetuals": [],
     "liquidity_tiers": [],

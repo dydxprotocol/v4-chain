@@ -1,5 +1,4 @@
-// Originally forked from https://github.com/cosmos/iavl/blob/v0.20.0/cmd/iaviewer/main.go
-// TODO(CORE-538): Update this fork for Cosmos 0.50 upgrade.
+// Originally forked from https://github.com/cosmos/iavl/blob/v1.0.0/cmd/iaviewer/main.go
 package main
 
 import (

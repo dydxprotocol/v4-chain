@@ -5,7 +5,6 @@ export interface LiquidityTiersCreateObject {
   name: string,
   initialMarginPpm: string,
   maintenanceFractionPpm: string,
-  basePositionNotional: string,
 }
 
 export interface LiquidityTiersUpdateObject {
@@ -13,7 +12,6 @@ export interface LiquidityTiersUpdateObject {
   name?: string,
   initialMarginPpm?: string,
   maintenanceFractionPpm?: string,
-  basePositionNotional?: string,
 }
 
 export enum LiquidityTiersColumns {
@@ -21,5 +19,4 @@ export enum LiquidityTiersColumns {
   name = 'name',
   initialMarginPpm = 'initialMarginPpm',
   maintenanceFractionPpm = 'maintenanceFractionPpm',
-  basePositionNotional = 'basePositionNotional',
 }

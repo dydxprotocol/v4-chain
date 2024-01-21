@@ -71,6 +71,7 @@ export class AggregateTradingReward {
     logger.info({
       at: 'aggregate-trading-rewards#runTask',
       message: 'Generated interval to aggregate trading rewards',
+      period: this.period,
       start: interval.start.toISO(),
       end: interval.end.toISO(),
     });
@@ -126,6 +127,7 @@ export class AggregateTradingReward {
     logger.info({
       at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
       message: `Deleting the latest ${this.period} aggregated trading rewards.`,
+      period: this.period,
     });
     await TradingRewardAggregationTable.deleteAll({
       period: this.period,
@@ -134,6 +136,7 @@ export class AggregateTradingReward {
     logger.info({
       at: 'aggregate-trading-rewards#deleteIncompleteAggregatedTradingReward',
       message: `Deleted the last ${this.period} aggregated trading rewards`,
+      period: this.period,
       height: latestAggregation.startedAtHeight,
       time: latestAggregation.startedAt,
     });
@@ -158,6 +161,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#getTradingRewardDataToProcessInterval',
         message: 'AggregateTradingRewardsProcessedCache is empty',
+        period: this.period,
       });
       const nextStartTime: DateTime = await this.getNextIntervalStartWhenCacheEmpty();
       await this.setProcessedTime(
@@ -194,16 +198,12 @@ export class AggregateTradingReward {
       limit: 1,
     }, [], { orderBy: [[TradingRewardColumns.blockTime, Ordering.ASC]] });
     if (firstTradingReward.length === 0) {
-      logger.info({
+      logger.error({
         at: 'aggregate-trading-rewards#getNextIntervalStartWhenCacheEmpty',
-        message: 'No trading rewards in database, relying on first block time to pick first start time',
+        message: 'No trading rewards in database',
+        period: this.period,
       });
-      // Since we were able to find the latest block, we assume we can find the first block
-      const firstBlock: BlockFromDatabase[] = await BlockTable.findAll({
-        blockHeight: ['1'],
-        limit: 1,
-      }, []);
-      return DateTime.fromISO(firstBlock[0].time, UTC_OPTIONS);
+      throw new Error('No trading rewards in database');
     }
 
     return DateTime.fromISO(firstTradingReward[0].blockTime, UTC_OPTIONS);
@@ -301,6 +301,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#updateTradingRewardsAggregation',
         message: 'Updated trading rewards aggregation',
+        period: this.period,
         start: interval.start.toISO(),
         end: interval.end.toISO(),
       });
@@ -309,6 +310,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#updateTradingRewardsAggregation',
         message: 'Failed to update trading rewards aggregation',
+        period: this.period,
         error: error.message,
         start: interval.start.toISO(),
         end: interval.end.toISO(),
@@ -387,6 +389,7 @@ export class AggregateTradingReward {
       logger.error({
         at: 'aggregate-trading-rewards#getStartedAtHeight',
         message: 'No blocks found after time, this should never happen',
+        period: this.period,
         time,
       });
       throw new Error(`No blocks found after ${time}`);
@@ -484,6 +487,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
         message: 'Creating trading reward aggregations',
+        period: this.period,
         count: createObjectsChunk.length,
         createObjectsChunk: JSON.stringify(createObjectsChunk),
       });
@@ -499,6 +503,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
         message: 'Created trading reward aggregations',
+        period: this.period,
         count: createObjectsChunk.length,
       });
     }
@@ -511,6 +516,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
         message: 'Updating trading reward aggregations',
+        period: this.period,
         count: updateObjectsChunk.length,
         updateObjectsChunk: JSON.stringify(updateObjectsChunk),
       });
@@ -526,6 +532,7 @@ export class AggregateTradingReward {
       logger.info({
         at: 'aggregate-trading-rewards#setAggregationUpdateAndCreateObjects',
         message: 'Updated trading reward aggregations',
+        period: this.period,
         count: updateObjectsChunk.length,
       });
     }
@@ -535,6 +542,7 @@ export class AggregateTradingReward {
     logger.info({
       at: 'aggregate-trading-rewards#setProcessedTime',
       message: 'Setting processed time',
+      period: this.period,
       processedTime,
     });
     await AggregateTradingRewardsProcessedCache.setProcessedTime(
@@ -545,6 +553,7 @@ export class AggregateTradingReward {
     logger.info({
       at: 'aggregate-trading-rewards#setProcessedTime',
       message: 'Set processed time',
+      period: this.period,
       processedTime,
     });
   }

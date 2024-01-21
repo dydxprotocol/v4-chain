@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"io"
 	"math/big"
 	"net/http"
@@ -94,7 +95,6 @@ import (
 	"google.golang.org/grpc"
 
 	// App
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
@@ -286,6 +286,7 @@ type App struct {
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	ModuleManager *module.Manager
+	ModuleBasics  module.BasicManager
 
 	// module configurator
 	configurator module.Configurator
@@ -610,10 +611,22 @@ func New(
 	transferModule := transfer.NewAppModule(app.TransferKeeper)
 	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
 
+	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
+		appCodec,
+		keys[blocktimemoduletypes.StoreKey],
+		// set the governance and delaymsg module accounts as the authority for conducting upgrades
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
+
 	app.RatelimitKeeper = *ratelimitmodulekeeper.NewKeeper(
 		appCodec,
 		keys[ratelimitmoduletypes.StoreKey],
 		app.BankKeeper,
+		app.BlockTimeKeeper,
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -814,17 +827,6 @@ func New(
 	)
 	assetsModule := assetsmodule.NewAppModule(appCodec, app.AssetsKeeper)
 
-	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
-		appCodec,
-		keys[blocktimemoduletypes.StoreKey],
-		// set the governance and delaymsg module accounts as the authority for conducting upgrades
-		[]string{
-			lib.GovModuleAddress.String(),
-			delaymsgmoduletypes.ModuleAddress.String(),
-		},
-	)
-	blockTimeModule := blocktimemodule.NewAppModule(appCodec, app.BlockTimeKeeper)
-
 	app.DelayMsgKeeper = *delaymsgmodulekeeper.NewKeeper(
 		appCodec,
 		keys[delaymsgmoduletypes.StoreKey],
@@ -925,6 +927,7 @@ func New(
 		app.AssetsKeeper,
 		app.BankKeeper,
 		app.PerpetualsKeeper,
+		app.BlockTimeKeeper,
 		app.IndexerEventManager,
 	)
 	subaccountsModule := subaccountsmodule.NewAppModule(
@@ -1229,6 +1232,12 @@ func New(
 	app.ModuleManager.RegisterInvariants(app.CrisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 	err := app.ModuleManager.RegisterServices(app.configurator)
+	app.ModuleBasics = module.NewBasicManagerFromManager(
+		app.ModuleManager,
+		map[string]module.AppModuleBasic{
+			custommodule.SlashingModuleBasic{}.Name(): custommodule.SlashingModuleBasic{},
+		},
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -1307,7 +1316,7 @@ func New(
 	// based on execution context such as the block proposer, the logger used by the logging middleware is
 	// stored in a global variable and can be overwritten as necessary.
 	middleware.Logger = logger
-	app.AddRunTxRecoveryHandler(middleware.NewRunTxPanicLoggingMiddleware())
+	app.AddRunTxRecoveryHandler(middleware.NewRunTxPanicLoggingMiddleware(app.ModuleBasics))
 
 	// Set handlers and store loaders for upgrades.
 	app.setupUpgradeHandlers()
@@ -1524,7 +1533,7 @@ func (app *App) TxConfig() client.TxConfig {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (app *App) DefaultGenesis() map[string]json.RawMessage {
-	return basic_manager.ModuleBasics.DefaultGenesis(app.appCodec)
+	return app.ModuleBasics.DefaultGenesis(app.appCodec)
 }
 
 // getSubspace returns a param subspace for a given module name.
@@ -1548,7 +1557,7 @@ func (app *App) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	// Register grpc-gateway routes for all modules.
-	module.NewBasicManagerFromManager(app.ModuleManager, nil).RegisterGRPCGatewayRoutes(
+	app.ModuleBasics.RegisterGRPCGatewayRoutes(
 		clientCtx,
 		apiSvr.GRPCGatewayRouter,
 	)

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
@@ -27,10 +26,6 @@ import (
 )
 
 func TestRecordMevMetrics(t *testing.T) {
-	t.Skip("TODO(CORE-538): The issue is that the mock interactions have changed and we error out with " +
-		"'mock: I don't know what to return because the method call was unexpected.'. Swap to use testapp to " +
-		"initialize or update mock interactions.")
-
 	// Set the maximum spread to 10%.
 	keeper.MAX_SPREAD_BEFORE_FALLING_BACK_TO_ORACLE = new(big.Rat).SetFrac64(1, 10)
 
@@ -967,7 +962,7 @@ func TestRecordMevMetrics(t *testing.T) {
 			require.NoError(t, err)
 			mockStakingKeeper := &mocks.ProcessStakingKeeper{}
 			mockStakingKeeper.On("GetValidatorByConsAddr", mock.Anything, constants.AliceConsAddress).
-				Return(aliceValidator, true)
+				Return(aliceValidator, nil)
 
 			mockPerpetualKeeper := &mocks.ProcessPerpetualKeeper{}
 			if tc.setupPerpetualKeeperMocks != nil {

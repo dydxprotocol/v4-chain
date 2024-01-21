@@ -176,7 +176,6 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
 // The account which places the orders is also the validator's AccAddress.
 func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
-	s.T().Skip("TODO(CORE-538): Resolve why bank balance for subaccounts module is not found.")
 	val := s.network.Validators[0]
 	ctx := val.ClientCtx
 
@@ -294,7 +293,6 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 // The subaccounts are then queried and assertions are performed on their QuoteBalance and PerpetualPositions.
 // The account which places the orders is also the validator's AccAddress.
 func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
-	s.T().Skip("TODO(CORE-538): Resolve why bank balance for subaccounts module is not found.")
 	val := s.network.Validators[0]
 	ctx := val.ClientCtx
 

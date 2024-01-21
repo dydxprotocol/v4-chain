@@ -22,6 +22,15 @@ service Query {
       returns (QuerySubaccountAllResponse) {
     option (google.api.http).get = "/dydxprotocol/subaccounts/subaccount";
   }
+
+  // Queries information about whether withdrawal and transfers are blocked, and
+  // if so which block they are re-enabled on.
+  rpc GetWithdrawalAndTransfersBlockedInfo(
+      QueryGetWithdrawalAndTransfersBlockedInfoRequest)
+      returns (QueryGetWithdrawalAndTransfersBlockedInfoResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info";
+  }
 }
 
 // QueryGetSubaccountRequest is request type for the Query RPC method.
@@ -44,4 +53,16 @@ message QueryAllSubaccountRequest {
 message QuerySubaccountAllResponse {
   repeated Subaccount subaccount = 1 [ (gogoproto.nullable) = false ];
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
+// fetching information about whether withdrawals and transfers are blocked.
+message QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+
+// QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
+// fetching information about whether withdrawals and transfers are blocked.
+message QueryGetWithdrawalAndTransfersBlockedInfoResponse {
+  uint32 negative_tnc_subaccount_seen_at_block = 1;
+  uint32 chain_outage_seen_at_block = 2;
+  uint32 withdrawals_and_transfers_unblocked_at_block = 3;
 }

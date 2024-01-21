@@ -179,7 +179,6 @@ export interface LiquidityTiersFromDatabase {
   name: string;
   initialMarginPpm: string;
   maintenanceFractionPpm: string;
-  basePositionNotional: string;
 }
 
 export interface CandleFromDatabase extends IdBasedModelFromDatabase {

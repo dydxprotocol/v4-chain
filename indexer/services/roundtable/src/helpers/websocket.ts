@@ -30,7 +30,6 @@ export function getMarginFields(
 ): {
   initialMarginFraction: string,
   maintenanceMarginFraction: string,
-  basePositionNotional: string,
 } {
 
   if (liquidityTiers[perpetualMarket.liquidityTierId] === undefined) {
@@ -45,7 +44,6 @@ export function getMarginFields(
         Number(liquidityTier.maintenanceFractionPpm),
       ),
     ),
-    basePositionNotional: liquidityTier.basePositionNotional,
   };
 }
 

@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	"testing"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
@@ -55,6 +56,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
 		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+		blockTimeKeeper, _ := createBlockTimeKeeper(stateStore, db, cdc)
 		ks.PricesKeeper, _, _, _, mockTimeProvider = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 		ks.PerpetualsKeeper, _ = createPerpetualsKeeper(
 			stateStore,
@@ -82,6 +84,7 @@ func SendingKeepersWithSubaccountsKeeper(t testing.TB, saKeeper types.Subaccount
 				ks.AssetsKeeper,
 				ks.BankKeeper,
 				ks.PerpetualsKeeper,
+				blockTimeKeeper,
 				transientStoreKey,
 				true,
 			)

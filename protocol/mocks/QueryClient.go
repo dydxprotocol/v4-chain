@@ -393,6 +393,39 @@ func (_m *QueryClient) EquityTierLimitConfiguration(ctx context.Context, in *clo
 	return r0, r1
 }
 
+// GetWithdrawalAndTransfersBlockedInfo provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) GetWithdrawalAndTransfersBlockedInfo(ctx context.Context, in *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, opts ...grpc.CallOption) (*subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, ...grpc.CallOption) (*subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, ...grpc.CallOption) *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoResponse)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *subaccountstypes.QueryGetWithdrawalAndTransfersBlockedInfoRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // LiquidateSubaccounts provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) LiquidateSubaccounts(ctx context.Context, in *liquidationapi.LiquidateSubaccountsRequest, opts ...grpc.CallOption) (*liquidationapi.LiquidateSubaccountsResponse, error) {
 	_va := make([]interface{}, len(opts))

@@ -85,6 +85,7 @@ function edit_genesis() {
 
 	# Update gov module.
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_deposit.[0].denom' -v "$NATIVE_TOKEN"
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_min_deposit.[0].denom' -v "$NATIVE_TOKEN"
 	# reduced deposit period
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.max_deposit_period' -v '300s'
 	# reduced voting period
@@ -92,6 +93,10 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v '300s'
 	# set initial deposit ratio to prevent spamming
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.min_initial_deposit_ratio' -v '0.20000' # 20%
+	# setting to 1 disables cancelling proposals
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.proposal_cancel_ratio' -v '1'
+	# require 75% of votes for an expedited proposal to pass
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_threshold' -v '0.75000' # 75%
 
 	# Update staking module.
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days

@@ -483,7 +483,6 @@ export const defaultLiquidityTier: LiquidityTiersCreateObject = {
   name: 'Large-Cap',
   initialMarginPpm: '50000',  // 5%
   maintenanceFractionPpm: '600000',  // 60%
-  basePositionNotional: '1000000',
 };
 
 export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
@@ -491,7 +490,6 @@ export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
   name: 'Mid-Cap',
   initialMarginPpm: '100000',  // 10%
   maintenanceFractionPpm: '500000',  // 50%
-  basePositionNotional: '1000',
 };
 
 // ============== OraclePrices ==============

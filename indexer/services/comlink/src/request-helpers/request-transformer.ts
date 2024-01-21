@@ -288,7 +288,6 @@ export function perpetualMarketToResponseObject(
         Number(liquidityTier.maintenanceFractionPpm),
       ),
     ),
-    basePositionNotional: liquidityTier.basePositionNotional,
     openInterest: perpetualMarket.openInterest,
     atomicResolution: perpetualMarket.atomicResolution,
     quantumConversionExponent: perpetualMarket.quantumConversionExponent,

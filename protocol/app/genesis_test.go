@@ -2,16 +2,16 @@ package app_test
 
 import (
 	"encoding/json"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"os"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultGenesisState(t *testing.T) {
-	encodingConfig := app.GetEncodingConfig()
-	defaultGenesisState := app.NewDefaultGenesisState(encodingConfig.Codec)
+	app := testapp.DefaultTestApp(nil)
+	defaultGenesisState := app.DefaultGenesis()
 	humanReadableDefaultGenesisState, jsonUnmarshalErr := json.Marshal(&defaultGenesisState)
 
 	expectedDefaultGenesisState, fileReadErr := os.ReadFile("testdata/default_genesis_state.json")

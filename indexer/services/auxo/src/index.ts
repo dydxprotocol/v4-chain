@@ -1,8 +1,5 @@
 import {
-  DescribeImagesCommand,
-  DescribeImagesCommandOutput,
-  ECRClient,
-  ImageDetail,
+  DescribeImagesCommand, DescribeImagesCommandOutput, ECRClient, ImageDetail,
 } from '@aws-sdk/client-ecr';
 import {
   ContainerDefinition,
@@ -19,18 +16,16 @@ import {
   UpdateServiceCommandOutput,
 } from '@aws-sdk/client-ecs';
 import {
+  GetFunctionCommand,
+  GetFunctionCommandOutput,
   InvokeCommand,
   InvokeCommandOutput,
   LambdaClient,
+  LastUpdateStatus,
   UpdateFunctionCodeCommand,
-  UpdateFunctionCodeCommandOutput,
 } from '@aws-sdk/client-lambda';
 import { logger, startBugsnag } from '@dydxprotocol-indexer/base';
-import {
-  APIGatewayEvent,
-  APIGatewayProxyResult,
-  Context,
-} from 'aws-lambda';
+import { APIGatewayEvent, APIGatewayProxyResult, Context } from 'aws-lambda';
 import _ from 'lodash';
 
 import config from './config';
@@ -40,11 +35,7 @@ import {
   ECS_SERVICE_NAMES,
   SERVICE_NAME_SUFFIX,
 } from './constants';
-import {
-  AuxoEventJson,
-  EcsServiceNames,
-  TaskDefinitionArnMap,
-} from './types';
+import { AuxoEventJson, EcsServiceNames, TaskDefinitionArnMap } from './types';
 
 /**
  * Upgrades all services and run migrations
@@ -117,17 +108,47 @@ async function upgradeBazooka(
   });
 
   // Update Lambda function with the new image
-  const response: UpdateFunctionCodeCommandOutput = await lambda.send(
+  await lambda.send(
     new UpdateFunctionCodeCommand({
       FunctionName: BAZOOKA_LAMBDA_FUNCTION_NAME,
       ImageUri: imageUri,
     }),
   );
-  logger.info({
-    at: 'index#upgradeBazooka',
-    message: 'Successfully upgraded bazooka',
-    response,
-  });
+
+  // Wait for the lambda to be updated, with a timeout of 120s.
+  await Promise.race([
+    checkLambdaStatus(lambda),
+    sleep(120000),
+  ]);
+}
+
+async function checkLambdaStatus(
+  lambda: LambdaClient,
+): Promise<void> {
+  let updateStatus: LastUpdateStatus | string = LastUpdateStatus.InProgress;
+
+  while (updateStatus === LastUpdateStatus.InProgress) {
+    const statusResponse: GetFunctionCommandOutput = await lambda.send(
+      new GetFunctionCommand({
+        FunctionName: BAZOOKA_LAMBDA_FUNCTION_NAME,
+      }),
+    );
+
+    updateStatus = statusResponse.Configuration!.LastUpdateStatus!;
+    if (updateStatus === LastUpdateStatus.Successful) {
+      logger.info({
+        at: 'index#upgradeBazooka',
+        message: 'Successfully upgraded bazooka',
+        response: statusResponse,
+      });
+      return;
+    } else if (updateStatus === LastUpdateStatus.Failed) {
+      throw new Error('Failed to upgrade bazooka');
+    }
+
+    // Wait for 5s before checking again
+    await new Promise((resolve) => setTimeout(resolve, 5000));
+  }
 }
 
 async function getImageDetail(
@@ -136,7 +157,7 @@ async function getImageDetail(
   event: APIGatewayEvent & AuxoEventJson,
 ): Promise<ImageDetail> {
   logger.info({
-    at: 'index#upgradeBazooka',
+    at: 'index#getImageDetail',
     message: 'Getting ecr images',
     repositoryName,
     event,
@@ -150,7 +171,7 @@ async function getImageDetail(
     ],
   }));
   logger.info({
-    at: 'index#upgradeBazooka',
+    at: 'index#getImageDetail',
     message: 'Successfully got ecr images',
     images,
     repositoryName,
@@ -159,7 +180,7 @@ async function getImageDetail(
 
   if (!images.imageDetails || images.imageDetails.length === 0) {
     logger.error({
-      at: 'index#upgradeBazooka',
+      at: 'index#getImageDetail',
       message: 'Unable to find ecr image',
       imageTag: event.upgrade_tag,
       repositoryName,

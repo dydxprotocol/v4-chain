@@ -31,6 +31,7 @@ const (
 	SampleRate       = "sample_rate"
 	SequenceNumber   = "sequence_number"
 	Success          = "success"
+	Type             = "type"
 	Valid            = "valid"
 	ValidateBasic    = "validate_basic"
 	CheckTx          = "check_tx"
@@ -119,6 +120,8 @@ const (
 	Hydrate                                                 = "hydrate"
 	IsLong                                                  = "is_long"
 	IterateOverPendingMatches                               = "iterate_over_pending_matches"
+	MaxTradePrice                                           = "max_trade_price"
+	MinTradePrice                                           = "min_trade_price"
 	MemClobReplayOperations                                 = "memclob_replay_operations"
 	MemClobPurgeInvalidState                                = "memclob_purge_invalid_state"
 	NumConditionalOrderRemovals                             = "num_conditional_order_removals"
@@ -397,6 +400,11 @@ const (
 	ValidatorNumFills              = "validator_num_fills"
 	ValidatorNumMatchedTakerOrders = "validator_num_matched_taker_orders"
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
+
+	// x/ratelimit
+	Capacity       = "capacity"
+	RateLimitDenom = "rate_limit_denom"
+	LimiterIndex   = "limiter_index"
 )
 
 const (

@@ -273,15 +273,6 @@ func (k Keeper) MustTriggerConditionalOrder(
 	// Delete the `StatefulOrderPlacement` from Untriggered state store/memstore.
 	untriggeredConditionalOrderStore.Delete(orderKey)
 	untriggeredConditionalOrderMemStore.Delete(orderKey)
-
-	telemetry.IncrCounterWithLabels(
-		[]string{types.ModuleName, metrics.ConditionalOrderTriggered, metrics.Count},
-		1,
-		append(
-			orderId.GetOrderIdLabels(),
-			metrics.GetLabelForIntValue(metrics.ClobPairId, int(orderId.GetClobPairId())),
-		),
-	)
 }
 
 // MustAddOrderToStatefulOrdersTimeSlice adds a new `OrderId` to an existing time slice, or creates a new time slice

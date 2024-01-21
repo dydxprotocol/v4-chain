@@ -4,13 +4,15 @@ import (
 	"bytes"
 	"math/big"
 	"testing"
+	"time"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -24,6 +26,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sample_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -217,7 +221,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 				// Check that DeliverTx fails on MsgCreateTransfer.
 				tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
 					ValidateFinalizeBlock: func(
-						context sdk.Context,
+						context sdktypes.Context,
 						request abcitypes.RequestFinalizeBlock,
 						response abcitypes.ResponseFinalizeBlock,
 					) (haltChain bool) {
@@ -331,7 +335,7 @@ func TestMsgCreateTransfer(t *testing.T) {
 func TestMsgDepositToSubaccount(t *testing.T) {
 	tests := map[string]struct {
 		// Account address.
-		accountAccAddress sdk.AccAddress
+		accountAccAddress sdktypes.AccAddress
 
 		// Subaccount ID.
 		subaccountId satypes.SubaccountId
@@ -528,7 +532,7 @@ func TestMsgDepositToSubaccount_NonExistentAccount(t *testing.T) {
 func TestMsgWithdrawFromSubaccount(t *testing.T) {
 	tests := map[string]struct {
 		// Account address.
-		accountAccAddress sdk.AccAddress
+		accountAccAddress sdktypes.AccAddress
 
 		// Subaccount ID.
 		subaccountId satypes.SubaccountId
@@ -560,7 +564,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 		},
 		// Withdrawing to a non-existent account will create that account and succeed.
 		"Withdraw from Bob subaccount to non-existent account": {
-			accountAccAddress: sdk.MustAccAddressFromBech32(sample_testutil.AccAddress()), // a newly generated account
+			accountAccAddress: sdktypes.MustAccAddressFromBech32(sample_testutil.AccAddress()), // a newly generated account
 			subaccountId:      constants.Bob_Num0,
 			quantums:          big.NewInt(7_000_000),
 			asset:             *constants.Usdc,
@@ -725,15 +729,15 @@ func TestMsgWithdrawFromSubaccount_NonExistentSubaccount(t *testing.T) {
 func testNonExistentSender(
 	t *testing.T,
 	tApp *testapp.TestApp,
-	ctx sdk.Context,
-	message sdk.Msg,
+	ctx sdktypes.Context,
+	message sdktypes.Msg,
 	privKey cryptotypes.PrivKey,
 ) {
 	// Generate signed transaction.
 	signedTx, err := sims.GenSignedMockTx(
 		rand.NewRand(),
 		tApp.App.TxConfig(),
-		[]sdk.Msg{message},
+		[]sdktypes.Msg{message},
 		constants.TestFeeCoins_5Cents,
 		100_000, // gas
 		ctx.ChainID(),
@@ -761,7 +765,7 @@ func testNonExistentSender(
 // getSubaccountAssetQuantums returns the quantums of an asset that belongs to a subaccount.
 func getSubaccountAssetQuantums(
 	subaccountsKeeper satypes.SubaccountsKeeper,
-	ctx sdk.Context,
+	ctx sdktypes.Context,
 	subaccountId satypes.SubaccountId,
 	asset assetstypes.Asset,
 ) *big.Int {
@@ -772,4 +776,204 @@ func getSubaccountAssetQuantums(
 		}
 	}
 	return big.NewInt(0) // by default, subaccount has 0 of this `asset`.
+}
+
+func TestWithdrawalGating_ChainOutage(t *testing.T) {
+	tests := map[string]struct {
+		// State.
+		subaccount satypes.Subaccount
+
+		// Parameters.
+		secondsBetweenBlocks uint32
+
+		// Configuration.
+		isWithdrawal bool
+
+		// Expectations.
+		expectedWithdrawalsGated bool
+	}{
+		`5 minutes passes between blocks and withdrawals are gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
+
+			secondsBetweenBlocks: 60 * 5,
+
+			isWithdrawal: true,
+
+			expectedWithdrawalsGated: true,
+		},
+		`30 minutes passes between blocks and transfers are gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
+
+			secondsBetweenBlocks: 60 * 30,
+
+			isWithdrawal: false,
+
+			expectedWithdrawalsGated: true,
+		},
+		`Under 5 minutes passes between blocks and withdrawals are not gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
+
+			secondsBetweenBlocks: 299,
+
+			isWithdrawal: true,
+
+			expectedWithdrawalsGated: false,
+		},
+		`Under 5 minutes passes between blocks and transfers are not gated after the chain restarts`: {
+			subaccount: constants.Dave_Num1_10_000USD,
+
+			secondsBetweenBlocks: 299,
+
+			isWithdrawal: false,
+
+			expectedWithdrawalsGated: false,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *assetstypes.GenesisState) {
+						genesisState.Assets = []assetstypes.Asset{
+							*constants.Usdc,
+						}
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *prices.GenesisState) {
+						// Set oracle prices in the genesis.
+						pricesGenesis := constants.TestPricesGenesisState
+						*genesisState = pricesGenesis
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *perptypes.GenesisState) {
+						genesisState.Params = constants.PerpetualsGenesisParams
+						genesisState.LiquidityTiers = constants.LiquidityTiers
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{tc.subaccount}
+					},
+				)
+				return genesis
+			}).Build()
+
+			startTime := time.Unix(10, 0).UTC()
+			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{
+				BlockTime: startTime,
+			})
+
+			// Move forward in time by the specified time delta.
+			ctx := tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{
+				BlockTime: startTime.Add((time.Duration(tc.secondsBetweenBlocks) * time.Second)),
+			})
+
+			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.
+			var msg proto.Message
+			quantumsToTransferOrWithdraw := uint64(1)
+			if tc.isWithdrawal {
+				withdrawMsg := sendingtypes.MsgWithdrawFromSubaccount{
+					Sender:    *tc.subaccount.Id,
+					Recipient: tc.subaccount.Id.Owner,
+					AssetId:   constants.Usdc.Id,
+					Quantums:  quantumsToTransferOrWithdraw,
+				}
+				msg = &withdrawMsg
+			} else {
+				transferMsg := sendingtypes.MsgCreateTransfer{
+					Transfer: &sendingtypes.Transfer{
+						Sender:    *tc.subaccount.Id,
+						Recipient: constants.Bob_Num0,
+						AssetId:   constants.Usdc.Id,
+						Amount:    quantumsToTransferOrWithdraw,
+					},
+				}
+				msg = &transferMsg
+			}
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: tc.subaccount.Id.Owner,
+					Gas:                  1000000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				msg,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+
+			// If transfers and withdrawals should not be gated, verify the withdrawal succeeds and
+			// the subaccount balance is updated.
+			if !tc.expectedWithdrawalsGated {
+				ctx = tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+				foundSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *tc.subaccount.Id)
+				require.Equal(
+					t,
+					tc.subaccount.GetAssetPositions()[0].Quantums.BigInt().Uint64()-quantumsToTransferOrWithdraw,
+					foundSubaccount.GetAssetPositions()[0].Quantums.BigInt().Uint64(),
+				)
+
+				return
+			}
+
+			// Transfers and withdrawals should be gated, therefore verify that the withdrawal fails and
+			// the subaccount balance is unchanged.
+			ctx = tApp.AdvanceToBlock(
+				4,
+				testapp.AdvanceToBlockOptions{
+					ValidateFinalizeBlock: func(
+						ctx sdktypes.Context,
+						request abcitypes.RequestFinalizeBlock,
+						response abcitypes.ResponseFinalizeBlock,
+					) (haltchain bool) {
+						// Note the first TX is MsgProposedOperations, the second is all other TXs.
+						execResult := response.TxResults[1]
+						require.True(t, execResult.IsErr())
+						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
+						require.Contains(t, execResult.Log, "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates")
+						return false
+					},
+				},
+			)
+			foundSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *tc.subaccount.Id)
+			require.Equal(
+				t,
+				tc.subaccount.GetAssetPositions()[0].Quantums,
+				foundSubaccount.GetAssetPositions()[0].Quantums,
+			)
+
+			// Verify that transfers and withdrawals are unblocked after the withdrawal gating period passes.
+			tApp.AdvanceToBlock(
+				4+satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+1,
+				testapp.AdvanceToBlockOptions{},
+			)
+			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: tc.subaccount.Id.Owner,
+					Gas:                  1000000,
+					FeeAmt:               constants.TestFeeCoins_5Cents,
+				},
+				msg,
+			) {
+				resp := tApp.CheckTx(checkTx)
+				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			}
+			tApp.AdvanceToBlock(
+				4+satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+2,
+				testapp.AdvanceToBlockOptions{},
+			)
+		})
+	}
 }

@@ -3,6 +3,7 @@ package containertest
 import (
 	"context"
 	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"time"
 
 	comethttp "github.com/cometbft/cometbft/rpc/client/http"
@@ -104,7 +105,7 @@ func (n *Node) getContextForBroadcastTx(signer string) (*client.Context, *pflag.
 		WithViper(cmd.EnvPrefix)
 
 	option := cmd.GetOptionWithCustomStartCmd()
-	rootCmd := cmd.NewRootCmd(option)
+	rootCmd := cmd.NewRootCmd(option, app.DefaultNodeHome)
 	flags.AddTxFlagsToCmd(rootCmd)
 	flags := rootCmd.Flags()
 
