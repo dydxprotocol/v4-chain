@@ -2,9 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"math/big"
 	"testing"
+
+	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -97,12 +98,12 @@ func TestAddUntriggeredConditionalOrder(t *testing.T) {
 				untriggeredConditionalOrders.AddUntriggeredConditionalOrder(order)
 			}
 
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
 			)
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
@@ -205,12 +206,12 @@ func TestRemoveUntriggeredConditionalOrders(t *testing.T) {
 
 			untriggeredConditionalOrders.RemoveUntriggeredConditionalOrders(tc.conditionalOrderIdsToExpire)
 
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
 			)
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
@@ -418,18 +419,18 @@ func TestPollTriggeredConditionalOrders(t *testing.T) {
 				tc.currentSubticks,
 			)
 
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedTriggeredOrderIds,
 				triggeredOrderIds,
 			)
 
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceGTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
 			)
-			require.Equal(
+			require.ElementsMatch(
 				t,
 				tc.expectedOrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				untriggeredConditionalOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,

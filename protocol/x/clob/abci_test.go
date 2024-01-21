@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"container/heap"
 	"errors"
 	"fmt"
 	"math/big"
@@ -284,6 +285,12 @@ func TestEndBlocker_Success(t *testing.T) {
 					},
 				}
 
+				// heapify.
+				for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
+					heap.Init(&untrigCondOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice)
+					heap.Init(&untrigCondOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice)
+				}
+
 				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
 					ctx,
 					types.ProcessProposerMatchesEvents{
@@ -419,6 +426,12 @@ func TestEndBlocker_Success(t *testing.T) {
 							constants.ConditionalOrder_Alice_Num0_Id3_Clob1_Buy25_Price10_GTBT15_StopLoss20,
 						},
 					},
+				}
+
+				// heapify.
+				for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
+					heap.Init(&untrigCondOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice)
+					heap.Init(&untrigCondOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice)
 				}
 
 				for _, untrigCondOrders := range ks.ClobKeeper.UntriggeredConditionalOrders {
@@ -840,11 +853,26 @@ func TestEndBlocker_Success(t *testing.T) {
 			}
 
 			if tc.expectedUntriggeredConditionalOrders != nil {
+				// Make sure two maps have the same size.
 				require.Equal(
 					t,
-					tc.expectedUntriggeredConditionalOrders,
-					ks.ClobKeeper.UntriggeredConditionalOrders,
+					len(tc.expectedUntriggeredConditionalOrders),
+					len(ks.ClobKeeper.UntriggeredConditionalOrders),
 				)
+
+				// Make sure elements match.
+				for clobPairId, expectedUntriggered := range tc.expectedUntriggeredConditionalOrders {
+					require.ElementsMatch(
+						t,
+						expectedUntriggered.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
+						ks.ClobKeeper.UntriggeredConditionalOrders[clobPairId].OrdersToTriggerWhenOraclePriceGTETriggerPrice,
+					)
+					require.ElementsMatch(
+						t,
+						expectedUntriggered.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
+						ks.ClobKeeper.UntriggeredConditionalOrders[clobPairId].OrdersToTriggerWhenOraclePriceLTETriggerPrice,
+					)
+				}
 			}
 
 			// Assert that the necessary off-chain indexer events have been added.

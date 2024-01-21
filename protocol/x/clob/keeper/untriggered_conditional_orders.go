@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"container/heap"
 	"fmt"
 	"math/big"
 
@@ -25,12 +26,12 @@ type UntriggeredConditionalOrders struct {
 	// All untriggered take profit buy orders and stop loss sell orders sorted by time priority.
 	// These orders will be triggered when the oracle price goes lower than or equal to the trigger price.
 	// This array functions like a max heap.
-	OrdersToTriggerWhenOraclePriceLTETriggerPrice []types.Order
+	OrdersToTriggerWhenOraclePriceLTETriggerPrice types.MaxConditionalOrderHeap
 
 	// All untriggered take profit sell orders and stop loss buy orders sorted by time priority.
 	// These orders will be triggered when the oracle price goes greater than or equal to the trigger price.
 	// This array functions like a min heap.
-	OrdersToTriggerWhenOraclePriceGTETriggerPrice []types.Order
+	OrdersToTriggerWhenOraclePriceGTETriggerPrice types.MinConditionalOrderHeap
 }
 
 func (k Keeper) NewUntriggeredConditionalOrders() *UntriggeredConditionalOrders {
@@ -94,13 +95,13 @@ func (untriggeredOrders *UntriggeredConditionalOrders) AddUntriggeredConditional
 
 	if order.IsTakeProfitOrder() {
 		if order.IsBuy() {
-			untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice = append(
-				untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
+			heap.Push(
+				&untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				order,
 			)
 		} else {
-			untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice = append(
-				untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
+			heap.Push(
+				&untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
 				order,
 			)
 		}
@@ -108,13 +109,13 @@ func (untriggeredOrders *UntriggeredConditionalOrders) AddUntriggeredConditional
 
 	if order.IsStopLossOrder() {
 		if order.IsBuy() {
-			untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice = append(
-				untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
+			heap.Push(
+				&untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice,
 				order,
 			)
 		} else {
-			untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice = append(
-				untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
+			heap.Push(
+				&untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice,
 				order,
 			)
 		}
@@ -215,6 +216,10 @@ func (untriggeredOrders *UntriggeredConditionalOrders) RemoveUntriggeredConditio
 		}
 	}
 	untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice = newOrdersToTriggerWhenOraclePriceGTETriggerPrice
+
+	// heapify.
+	heap.Init(&untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice)
+	heap.Init(&untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice)
 }
 
 // PollTriggeredConditionalOrders removes all triggered conditional orders from the
@@ -226,38 +231,36 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 	oraclePriceSubticksRat *big.Rat,
 ) []types.OrderId {
 	triggeredOrderIds := make([]types.OrderId, 0)
-	pessimisticLTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, true).Uint64())
+
 	// For the lte array, find all orders that are triggered when oracle price goes lower
 	// than or equal to the trigger price.
+	pessimisticLTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, true).Uint64())
+	for untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice.Len() > 0 {
+		order := untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice[0]
 
-	newOrdersToTriggerWhenOraclePriceLTETriggerPrice := make([]types.Order, 0)
-	for _, order := range untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice {
-		if order.CanTrigger(pessimisticLTESubticks) {
-			triggeredOrderIds = append(triggeredOrderIds, order.OrderId)
-		} else {
-			newOrdersToTriggerWhenOraclePriceLTETriggerPrice = append(
-				newOrdersToTriggerWhenOraclePriceLTETriggerPrice,
-				order,
-			)
+		if !order.CanTrigger(pessimisticLTESubticks) {
+			break
 		}
-	}
-	untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice = newOrdersToTriggerWhenOraclePriceLTETriggerPrice
 
-	pessimisticGTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, false).Uint64())
+		// Pop the order from the heap.
+		heap.Pop(&untriggeredOrders.OrdersToTriggerWhenOraclePriceLTETriggerPrice)
+		triggeredOrderIds = append(triggeredOrderIds, order.OrderId)
+	}
+
 	// For the gte array, find all orders that are triggered when oracle price goes greater
 	// than or equal to the trigger price.
-	newOrdersToTriggerWhenOraclePriceGTETriggerPrice := make([]types.Order, 0)
-	for _, order := range untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice {
-		if order.CanTrigger(pessimisticGTESubticks) {
-			triggeredOrderIds = append(triggeredOrderIds, order.OrderId)
-		} else {
-			newOrdersToTriggerWhenOraclePriceGTETriggerPrice = append(
-				newOrdersToTriggerWhenOraclePriceGTETriggerPrice,
-				order,
-			)
+	pessimisticGTESubticks := types.Subticks(lib.BigRatRound(oraclePriceSubticksRat, false).Uint64())
+	for untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice.Len() > 0 {
+		order := untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice[0]
+
+		if !order.CanTrigger(pessimisticGTESubticks) {
+			break
 		}
+
+		// Pop the order from the heap.
+		heap.Pop(&untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice)
+		triggeredOrderIds = append(triggeredOrderIds, order.OrderId)
 	}
-	untriggeredOrders.OrdersToTriggerWhenOraclePriceGTETriggerPrice = newOrdersToTriggerWhenOraclePriceGTETriggerPrice
 
 	return triggeredOrderIds
 }
