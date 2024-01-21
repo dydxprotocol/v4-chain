@@ -18,6 +18,14 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 )
 
+// Parses the following information from a packet needed for transfer rate limit:
+// - channelID
+// - denom
+// - amount
+//
+// This function is similar to Stride's implementation below except it ignores the `Sender`
+// and `Receiver` information.
+// https://github.com/Stride-Labs/stride/blob/eb3564c7/x/ratelimit/keeper/packet.go#L127
 func ParsePacketInfo(
 	packet channeltypes.Packet,
 	direction types.PacketDirection,
@@ -60,7 +68,7 @@ func ParsePacketInfo(
 }
 
 // UnpackAcknowledgementResponseForTransfer unmarshals Acknowledgements for IBC transfers, determines the status of the
-// acknowledgement (success or failure), and, if applicable, assembles the message responses
+// acknowledgement (success or failure).
 func UnpackAcknowledgementResponseForTransfer(
 	ctx sdk.Context,
 	logger log.Logger,

@@ -35,7 +35,9 @@ func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 	}
 }
 
-// OnChanOpenInit implements the IBCMiddleware interface
+// OnChanOpenInit implements the IBCMiddleware interface.
+// Use default implementaion of the underlying IBC application, since rate-limiting logic
+// doesn't require customized logic at channel initialization.
 func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
 	connectionHops []string,
@@ -58,6 +60,8 @@ func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 }
 
 // OnChanOpenTry implements the IBCMiddleware interface
+// Use default implementaion of the underlying IBC application, since rate-limiting logic
+// doesn't require customized logic at channel opening.
 func (im IBCMiddleware) OnChanOpenTry(
 	ctx sdk.Context,
 	order channeltypes.Order,
@@ -118,6 +122,11 @@ func (im IBCMiddleware) OnChanCloseConfirm(
 }
 
 // OnRecvPacket implements the IBCMiddleware interface
+// Called on the receiver chain when a relayer pick up the `SendPacket` event from sender chain and relayer
+// to the receiver chain. On dYdX chain, this signals an inbound IBC transfer.
+// Does the following:
+// - Call `ProcessDeposit` to update `capacity` for the token received.
+// - Invoke `OnRecvPacket` callback on IBC transfer module.
 func (im IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
 	packet channeltypes.Packet,

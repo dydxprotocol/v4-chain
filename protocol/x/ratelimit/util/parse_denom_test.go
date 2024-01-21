@@ -14,7 +14,11 @@ import (
 
 func TestParseDenomFromRecvPacket(t *testing.T) {
 	nobleChannelOnDydx := "channel-0"
+	nobleChannelOnOsmo := "channel-200"
+	osmoChannelOnDydx := "channel-5"
 	dydxChannelOnNoble := "channel-100"
+	dydxChannelOnOsmo := "channel-101"
+	originalUsdcDenom := "uusdc"
 
 	testCases := []struct {
 		name               string
@@ -47,6 +51,26 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 			sourceChannel:      dydxChannelOnNoble,
 			destinationChannel: nobleChannelOnDydx,
 			expectedDenom:      lib.DefaultBaseDenom,
+		},
+		// Sink asset two hops away:
+		//   uusdc sent from Noble to Osmosis to dYdX (transfer/channel-200/uusdc)
+		//   -> tack on prefix (transfer/channel-0/transfer/channel-200/uusdc) and hash
+		{
+			name:               "sink_two_hops",
+			packetDenomTrace:   fmt.Sprintf("%s/%s/%s", transferPort, nobleChannelOnOsmo, originalUsdcDenom),
+			sourceChannel:      dydxChannelOnOsmo,
+			destinationChannel: osmoChannelOnDydx,
+			expectedDenom: hashDenomTrace(
+				fmt.Sprintf(
+					"%s/%s/%s/%s/%s",
+					"foo",
+					//transferPort,
+					osmoChannelOnDydx,
+					transferPort,
+					nobleChannelOnOsmo,
+					originalUsdcDenom,
+				),
+			),
 		},
 	}
 
@@ -98,4 +122,6 @@ func TestParseDenomFromSendPacket(t *testing.T) {
 			require.Equal(t, tc.expectedDenom, parsedDenom, tc.name)
 		})
 	}
+
+	require.True(t, false)
 }

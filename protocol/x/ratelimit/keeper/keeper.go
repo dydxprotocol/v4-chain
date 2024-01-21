@@ -47,6 +47,7 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
+		ics4Wrapper:     ics4Wrapper,
 		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
