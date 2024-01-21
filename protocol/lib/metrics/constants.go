@@ -34,6 +34,7 @@ const (
 	Type             = "type"
 	Valid            = "valid"
 	ValidateBasic    = "validate_basic"
+	Ante             = "ante"
 	CheckTx          = "check_tx"
 	ReCheckTx        = "recheck_tx"
 	DeliverTx        = "deliver_tx"
@@ -405,6 +406,10 @@ const (
 	Capacity       = "capacity"
 	RateLimitDenom = "rate_limit_denom"
 	LimiterIndex   = "limiter_index"
+
+	// x/authz
+	MsgExec  = "msg_exec"
+	InnerMsg = "inner_msg"
 )
 
 const (

@@ -1,18 +1,20 @@
 package authz_test
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	sdkmath "cosmossdk.io/math"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/authz"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/proto"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
@@ -20,9 +22,8 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -49,7 +50,7 @@ func TestAuthz(t *testing.T) {
 
 		verifyResults func(ctx sdk.Context, tApp *testapp.TestApp)
 	}{
-		"Success: Alice grants permission to Bob to transfer from her account. Bob transfers from Alice's account.": {
+		"Success: Alice grants permission to Bob to send from her account. Bob sends from Alice's account.": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,
@@ -60,7 +61,7 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Grant: authz.Grant{
 					Authorization: newAny(
-						authz.NewGenericAuthorization(sdk.MsgTypeURL(&sendingtypes.MsgCreateTransfer{})),
+						authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgSend{})),
 					),
 				},
 			},
@@ -69,12 +70,11 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
 					newAny(
-						&sendingtypes.MsgCreateTransfer{
-							Transfer: &sendingtypes.Transfer{
-								Sender:    constants.Alice_Num0,
-								Recipient: constants.Bob_Num0,
-								AssetId:   0,
-								Amount:    10_000_000_000, // $10,000
+						&banktypes.MsgSend{
+							FromAddress: constants.AliceAccAddress.String(),
+							ToAddress:   constants.BobAccAddress.String(),
+							Amount: []sdk.Coin{
+								sdk.NewCoin(assetstypes.AssetUsdc.Denom, sdkmath.NewInt(1)),
 							},
 						},
 					),
@@ -87,79 +87,37 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecDeliverTxCode:    abcitypes.CodeTypeOK,
 
 			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				expectedSubaccounts := []satypes.Subaccount{
-					{
-						Id: &constants.Alice_Num0,
-						AssetPositions: testutil.CreateUsdcAssetPosition(
-							big.NewInt(90_000_000_000),
-						),
-					},
-					{
-						Id: &constants.Bob_Num0,
-						AssetPositions: testutil.CreateUsdcAssetPosition(
-							big.NewInt(110_000_000_000),
-						),
-					},
-				}
-				for _, subaccount := range expectedSubaccounts {
-					actualSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount.Id)
-					require.Equal(t, subaccount, actualSubaccount)
-				}
-			},
-		},
-		`Success: Alice grants permission to Bob to place orders. Bob places some orders (note that
-			this does allow Bob to bypass the rate limiter)`: {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_100_000USD,
-				constants.Bob_Num0_100_000USD,
-			},
-
-			msgGrant: &authz.MsgGrant{
-				Granter: constants.AliceAccAddress.String(),
-				Grantee: constants.BobAccAddress.String(),
-				Grant: authz.Grant{
-					Authorization: newAny(
-						authz.NewGenericAuthorization(sdk.MsgTypeURL(&clobtypes.MsgPlaceOrder{})),
-					),
-				},
-			},
-
-			msgExec: &authz.MsgExec{
-				Grantee: constants.BobAccAddress.String(),
-				Msgs: []*codectypes.Any{
-					// The rate limiter is set to 1 order per 10 blocks, but this MsgExec contains
-					// two order placements.
-					newAny(
-						&clobtypes.MsgPlaceOrder{
-							Order: constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTBT15,
-						},
-					),
-					newAny(
-						&clobtypes.MsgPlaceOrder{
-							Order: constants.LongTermOrder_Alice_Num0_Id1_Clob0_Buy1BTC_Price50000_GTBT15,
-						},
-					),
-				},
-			},
-
-			expectedMsgExecCheckTxSuccess:   true,
-			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
-			expectedMsgExecDeliverTxSuccess: true,
-			expectedMsgExecDeliverTxCode:    abcitypes.CodeTypeOK,
-
-			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				require.Equal(t, 2, len(tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)))
-				orders, err := tApp.App.ClobKeeper.MemClob.GetSubaccountOrders(
+				aliceBalance := tApp.App.BankKeeper.GetBalance(
 					ctx,
-					0,
-					constants.Alice_Num0,
-					clobtypes.Order_SIDE_BUY,
+					constants.AliceAccAddress,
+					assetstypes.AssetUsdc.Denom,
 				)
-				require.NoError(t, err)
-				require.Equal(t, 2, len(orders))
+				require.Equal(
+					t,
+					sdk.NewCoin(
+						assetstypes.AssetUsdc.Denom,
+						// Alice paid 5 cents in fees for MsgGrant.
+						sdkmath.NewInt(100000000000000000-50000-1),
+					),
+					aliceBalance,
+				)
+				bobBalance := tApp.App.BankKeeper.GetBalance(
+					ctx,
+					constants.BobAccAddress,
+					assetstypes.AssetUsdc.Denom,
+				)
+				require.Equal(
+					t,
+					sdk.NewCoin(
+						assetstypes.AssetUsdc.Denom,
+						// Bob paid 5 cents in fees for MsgExec.
+						sdkmath.NewInt(100000000000000000-50000+1),
+					),
+					bobBalance,
+				)
 			},
 		},
-		"Fail (external): Bob tries to transfer from Alice's account without permission.": {
+		"Fail (external): Bob tries to vote on behalf of Alice without permission.": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,
@@ -171,13 +129,9 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
 					newAny(
-						&sendingtypes.MsgCreateTransfer{
-							Transfer: &sendingtypes.Transfer{
-								Sender:    constants.Alice_Num0,
-								Recipient: constants.Bob_Num0,
-								AssetId:   0,
-								Amount:    10_000_000_000, // $10,000
-							},
+						&govtypesv1.MsgVote{
+							ProposalId: 0,
+							Voter:      constants.AliceAccAddress.String(),
 						},
 					),
 				},
@@ -187,27 +141,6 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
 			expectedMsgExecDeliverTxSuccess: false,
 			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
-
-			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				expectedSubaccounts := []satypes.Subaccount{
-					{
-						Id: &constants.Alice_Num0,
-						AssetPositions: testutil.CreateUsdcAssetPosition(
-							big.NewInt(100_000_000_000),
-						),
-					},
-					{
-						Id: &constants.Bob_Num0,
-						AssetPositions: testutil.CreateUsdcAssetPosition(
-							big.NewInt(100_000_000_000),
-						),
-					},
-				}
-				for _, subaccount := range expectedSubaccounts {
-					actualSubaccount := tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *subaccount.Id)
-					require.Equal(t, subaccount, actualSubaccount)
-				}
-			},
 		},
 		"Fail (internal): Granting permissions to execute internal messages doesn't allow execution": {
 			subaccounts: []satypes.Subaccount{
@@ -220,7 +153,7 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Grant: authz.Grant{
 					Authorization: newAny(
-						authz.NewGenericAuthorization(sdk.MsgTypeURL(&clobtypes.MsgCreateClobPair{})),
+						authz.NewGenericAuthorization(sdk.MsgTypeURL(&banktypes.MsgUpdateParams{})),
 					),
 				},
 			},
@@ -229,9 +162,8 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
 					newAny(
-						&clobtypes.MsgCreateClobPair{
+						&banktypes.MsgUpdateParams{
 							Authority: lib.GovModuleAddress.String(),
-							ClobPair:  constants.ClobPair_Btc2,
 						},
 					),
 				},
@@ -241,13 +173,8 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
 			expectedMsgExecDeliverTxSuccess: false,
 			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
-
-			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Verify no clob pairs were created.
-				require.Equal(t, 2, len(tApp.App.ClobKeeper.GetAllClobPairs(ctx)))
-			},
 		},
-		"Fail (internal): Bob tries to create a new clob pair (authority = gov)": {
+		"Fail (internal): Bob tries to update gov params (authority = gov)": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,
@@ -259,10 +186,9 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
 					newAny(
-						&clobtypes.MsgCreateClobPair{
+						&govtypesv1.MsgUpdateParams{
 							// Authority = gov
 							Authority: lib.GovModuleAddress.String(),
-							ClobPair:  constants.ClobPair_Btc2,
 						},
 					),
 				},
@@ -272,13 +198,8 @@ func TestAuthz(t *testing.T) {
 			expectedMsgExecCheckTxCode:      abcitypes.CodeTypeOK,
 			expectedMsgExecDeliverTxSuccess: false,
 			expectedMsgExecDeliverTxCode:    authz.ErrNoAuthorizationFound.ABCICode(),
-
-			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Verify no clob pairs were created.
-				require.Equal(t, 2, len(tApp.App.ClobKeeper.GetAllClobPairs(ctx)))
-			},
 		},
-		"Fail (internal): Bob tries to create a new clob pair (authority = bob)": {
+		"Fail (internal): Bob tries to update gov params (authority = bob)": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_100_000USD,
 				constants.Bob_Num0_100_000USD,
@@ -290,10 +211,9 @@ func TestAuthz(t *testing.T) {
 				Grantee: constants.BobAccAddress.String(),
 				Msgs: []*codectypes.Any{
 					newAny(
-						&clobtypes.MsgCreateClobPair{
+						&govtypesv1.MsgUpdateParams{
 							// Authority = bob
 							Authority: constants.BobAccAddress.String(),
-							ClobPair:  constants.ClobPair_Btc2,
 						},
 					),
 				},
@@ -305,11 +225,6 @@ func TestAuthz(t *testing.T) {
 			// This fails because Bob is not authorized to create clob pairs (not in the
 			// list of authorities defined in clobkeeper.authorities).
 			expectedMsgExecDeliverTxCode: govtypes.ErrInvalidSigner.ABCICode(),
-
-			verifyResults: func(ctx sdk.Context, tApp *testapp.TestApp) {
-				// Verify no clob pairs were created.
-				require.Equal(t, 2, len(tApp.App.ClobKeeper.GetAllClobPairs(ctx)))
-			},
 		},
 		//
 		// Below tests fail during CheckTx since the ante handler would reject these transactions.
@@ -367,6 +282,26 @@ func TestAuthz(t *testing.T) {
 				Msgs: []*codectypes.Any{
 					newAny(
 						&icacontrollertypes.MsgUpdateParams{},
+					),
+				},
+			},
+
+			expectedMsgExecCheckTxSuccess: false,
+			expectedMsgExecCheckTxCode:    sdkerrors.ErrInvalidRequest.ABCICode(),
+		},
+		"Fail (dydx custom): Bob wraps dydx messages": {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_100_000USD,
+				constants.Bob_Num0_100_000USD,
+			},
+
+			msgGrant: nil,
+
+			msgExec: &authz.MsgExec{
+				Grantee: constants.BobAccAddress.String(),
+				Msgs: []*codectypes.Any{
+					newAny(
+						&clobtypes.MsgPlaceOrder{},
 					),
 				},
 			},
