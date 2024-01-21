@@ -5,7 +5,6 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 )
 
@@ -23,7 +22,6 @@ var Upgrade = upgrades.Upgrade{
 
 			// Add new ICA stores that are needed by ICA host types as of v8.
 			icacontrollertypes.StoreKey,
-			icahosttypes.StoreKey,
 
 			// Add authz module to allow granting arbitrary privileges from one account to another acocunt.
 			authzkeeper.StoreKey,
