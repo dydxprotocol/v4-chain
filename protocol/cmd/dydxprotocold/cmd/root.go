@@ -37,6 +37,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
@@ -224,8 +225,7 @@ func initRootCmd(
 		keys.Commands(),
 	)
 
-	// TODO(CORE-852) add rosetta commands
-	// rootCmd.AddCommand(rosettaCmd.RosettaCommand(encodingConfig.InterfaceRegistry, encodingConfig.Codec))
+	rootCmd.AddCommand(rosettaCmd.RosettaCommand(tempApp.InterfaceRegistry(), tempApp.AppCodec()))
 }
 
 // autoCliOpts returns options based upon the modules in the dYdX v4 app.
