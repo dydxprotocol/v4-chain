@@ -2,16 +2,17 @@ package keeper
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"sort"
 	"time"
 
-	"cosmossdk.io/log"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+
 	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -40,7 +41,11 @@ func (k Keeper) GetValidMarketPriceUpdates(
 	// 1. Get all markets from state.
 	allMarketParamPrices, err := k.GetAllMarketParamPrices(ctx)
 	if err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf("error getting all market param prices: %v", err))
+		log.ErrorLogWithError(
+			ctx,
+			"error getting all market param prices",
+			err,
+		)
 		// If there is an error, return an empty list of price updates. We don't want to introduce
 		// liveness issues due to an error in market state.
 	}
@@ -68,7 +73,8 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// there will be a delay in populating index prices after network genesis or a network restart, or when a
 			// market is created, it takes the daemon some time to warm up.
 			if !k.IsRecentlyAvailable(ctx, marketId) {
-				k.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					"Index price for market does not exist",
 					constants.MarketIdLogKey,
 					marketId,
@@ -81,7 +87,8 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		// error.
 		if indexPrice == 0 {
 			metrics.IncrCountMetricWithLabels(types.ModuleName, metrics.IndexPriceIsZero, marketMetricsLabel)
-			k.Logger(ctx).Error(
+			log.ErrorLog(
+				ctx,
 				"Unexpected error: index price for market is zero",
 				constants.MarketIdLogKey,
 				marketId,
@@ -98,7 +105,12 @@ func (k Keeper) GetValidMarketPriceUpdates(
 			// restart, or when a market is created, because they depend on present index prices, and it takes the
 			// daemon some time to warm up.
 			if !k.IsRecentlyAvailable(ctx, marketId) {
-				k.Logger(ctx).Error(fmt.Sprintf("Smoothed price for market (%v) does not exist", marketId))
+				log.ErrorLog(
+					ctx,
+					"Smoothed price for market does not exist",
+					constants.MarketIdLogKey,
+					marketId,
+				)
 			}
 			historicalSmoothedPrices = []uint64{indexPrice}
 		}
@@ -117,7 +129,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 		// decision / amount.
 		if isAboveRequiredMinPriceChange(marketParamPrice, indexPrice) {
 			logPriceUpdateBehavior(
-				k.Logger(ctx),
+				ctx,
 				marketParamPrice,
 				proposalPrice,
 				indexPrice,
@@ -148,7 +160,7 @@ func (k Keeper) GetValidMarketPriceUpdates(
 }
 
 func logPriceUpdateBehavior(
-	logger log.Logger,
+	ctx sdk.Context,
 	marketParamPrice types.MarketParamPrice,
 	proposalPrice uint64,
 	indexPrice uint64,
@@ -174,15 +186,18 @@ func logPriceUpdateBehavior(
 			labels...,
 		)
 	}
-	logger.Info(fmt.Sprintf(
-		"Proposal price (%v) %v for market (%v), index price (%v), oracle price (%v), min price change (%v)",
-		proposalPrice,
-		loggingVerb,
-		marketParamPrice.Param.Id,
-		indexPrice,
-		marketParamPrice.Price.Price,
-		getMinPriceChangeAmountForMarket(marketParamPrice),
-	))
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf(
+			"Proposal price (%v) %v for market (%v), index price (%v), oracle price (%v), min price change (%v)",
+			proposalPrice,
+			loggingVerb,
+			marketParamPrice.Param.Id,
+			indexPrice,
+			marketParamPrice.Price.Price,
+			getMinPriceChangeAmountForMarket(marketParamPrice),
+		),
+	)
 }
 
 type proposeCancellationReason struct {

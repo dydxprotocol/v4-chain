@@ -6,18 +6,18 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	cosmoslog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -78,8 +78,8 @@ func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
+	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
@@ -150,7 +150,11 @@ func (k Keeper) AddRewardSharesForFill(
 			takerAddress,
 			takerWeight,
 		); err != nil {
-			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+			log.ErrorLogWithError(
+				ctx,
+				"Failed to add rewards share to address",
+				err,
+			)
 		}
 	}
 
@@ -163,7 +167,11 @@ func (k Keeper) AddRewardSharesForFill(
 			makerAddress,
 			makerWeight,
 		); err != nil {
-			k.Logger(ctx).Error("Failed to add rewards share to address", constants.ErrorLogKey, err)
+			log.ErrorLogWithError(
+				ctx,
+				"Failed to add rewards share to address",
+				err,
+			)
 		}
 	}
 }
@@ -340,14 +348,14 @@ func (k Keeper) ProcessRewardsForBlock(
 				},
 			},
 		); err != nil {
-			k.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"Failed to send reward tokens from treasury account to address",
+				err,
 				"treasury_account",
 				params.TreasuryAccount,
 				"address",
 				share.Address,
-				constants.ErrorLogKey,
-				err,
 			)
 		} else {
 			rewardIndexerEvent.TradingRewards = append(rewardIndexerEvent.TradingRewards,
