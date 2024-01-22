@@ -3,7 +3,6 @@ package wasmbinding
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 
 	errorsmod "cosmossdk.io/errors"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -218,7 +217,7 @@ func (m *CustomMessenger) placeOrder(
 		}
 	} else {
 		order.GoodTilOneof = &clobtypes.Order_GoodTilBlockTime{
-			GoodTilBlockTime: lib.MustConvertIntegerToUint32(time.Now().Unix() + 60*60),
+			GoodTilBlockTime: lib.MustConvertIntegerToUint32(1705794828),
 		}
 
 		if ctx.IsCheckTx() || ctx.IsReCheckTx() {

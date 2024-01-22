@@ -5,7 +5,7 @@ use cosmwasm_std::{
     to_binary,
 };
 use cw2::set_contract_version;
-use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId, OrderSide};
+use dydx_cosmwasm::{DydxQuerier, DydxQueryWrapper, MarketPrice, Order, OrderId, DydxMsg, SubaccountId, OrderSide, OrderTimeInForce, OrderConditionType};
 
 use crate::error::ContractError;
 use crate::msg::{ArbiterResponse, ExecuteMsg, InstantiateMsg, QueryMsg};
@@ -86,6 +86,20 @@ pub fn execute(
                 conditional_order_trigger_subticks,
             },
         ),
+        ExecuteMsg::MarketMake {
+            client_id,
+        } => execute_market_make_2(
+            deps,
+            env,
+            client_id,
+        ),
+        ExecuteMsg::MarketTake {
+            client_id,
+        } => execute_market_take_2(
+            deps,
+            env,
+            client_id,
+        ),
     }
 }
 
@@ -130,12 +144,14 @@ fn execute_market_make(
     let res = querier.query_market_price(order.order_id.clob_pair_id);
     let market_price = res.unwrap();
 
+    let client_id = order.order_id.client_id;
+
     // Hard-code some values for BTC.
     let exponent = market_price.exponent - (-9) + (-10) - (-6);
-    let subticks = market_price.price as f64 * (10i64 as f64).powi(exponent);
+    let subticks = market_price.price * 10i64.pow(exponent as u32);
     // Round to the nearest multiple.
-    let buy_price = subticks * 0.99;
-    let sell_price = subticks * 1.01;
+    let buy_price = subticks as f64 * 0.99;
+    let sell_price = subticks as f64 * 1.01;
     let rounded_buy_subticks = (buy_price.round() as u64) / 100000 * 100000;
     let rounded_sell_subticks = (sell_price.round() as u64) / 100000 * 100000;
 
@@ -149,12 +165,131 @@ fn execute_market_make(
     let mut sell_order = order.clone();
     sell_order.subticks = rounded_sell_subticks;
     sell_order.side = OrderSide::Sell;
+    sell_order.order_id.client_id = client_id + 1;
     let sell_order_msg = DydxMsg::PlaceOrder { order: sell_order };
 
     // Market make!
     Ok(Response::new()
         .add_messages(vec![buy_order_msg, sell_order_msg])
         .add_attribute("action", "place_order"))
+}
+
+fn execute_market_make_2(
+    deps: DepsMut<DydxQueryWrapper>,
+    env: Env,
+    client_id: u32,
+) -> Result<Response<DydxMsg>, ContractError> {
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_market_price(0);
+    let market_price = res.unwrap();
+
+    let basic_order = Order {
+        order_id: OrderId {
+            subaccount_id: SubaccountId {
+              owner: env.contract.address.clone().into(),
+              number: 0,
+            },
+            client_id,
+            order_flags: 64,
+            clob_pair_id: 0,
+          },
+          side: OrderSide::Buy,
+          quantums: 48300000000,
+          subticks: 5,
+          good_til_block: None,
+          good_til_block_time: Some(1705616300),
+          time_in_force: OrderTimeInForce::Unspecified,
+          reduce_only: false,
+          client_metadata: 0,
+          condition_type: OrderConditionType::Unspecified,
+          conditional_order_trigger_subticks: 0,
+        };
+
+    // Hard-code some values for BTC.
+    let exponent = market_price.exponent - (-9) + (-10) - (-6);
+    let subticks = market_price.price * 10i64.pow(exponent as u32);
+    // Round to the nearest multiple.
+    let buy_price = subticks as f64 * 0.90;
+    let sell_price = subticks as f64 * 1.10;
+    let rounded_buy_subticks = (buy_price.round() as u64) / 100000 * 100000;
+    let rounded_sell_subticks = (sell_price.round() as u64) / 100000 * 100000;
+
+    // Construct the buy order.
+    let mut buy_order = basic_order.clone();
+    buy_order.subticks = rounded_buy_subticks;
+    buy_order.side = OrderSide::Buy;
+    let buy_order_msg = DydxMsg::PlaceOrder { order: buy_order };
+
+    // Construct the sell order.
+    let mut sell_order = basic_order.clone();
+    sell_order.subticks = rounded_sell_subticks;
+    sell_order.side = OrderSide::Sell;
+    sell_order.order_id.client_id = client_id + 1;
+    let sell_order_msg = DydxMsg::PlaceOrder { order: sell_order };
+
+    // Market make!
+    Ok(Response::new()
+        .add_messages(vec![buy_order_msg, sell_order_msg])
+        .add_attribute("action", "market_take_2"))
+}
+
+fn execute_market_take_2(
+    deps: DepsMut<DydxQueryWrapper>,
+    env: Env,
+    client_id: u32,
+) -> Result<Response<DydxMsg>, ContractError> {
+    let querier = DydxQuerier::new(&deps.querier);
+    let res = querier.query_market_price(0);
+    let market_price = res.unwrap();
+
+    let basic_order = Order {
+        order_id: OrderId {
+            subaccount_id: SubaccountId {
+              owner: env.contract.address.clone().into(),
+              number: 0,
+            },
+            client_id,
+            order_flags: 64,
+            clob_pair_id: 0,
+          },
+          side: OrderSide::Buy,
+          quantums: 3760000000,
+          subticks: 5,
+          good_til_block: None,
+          good_til_block_time: Some(1705616300),
+          time_in_force: OrderTimeInForce::Unspecified,
+          reduce_only: false,
+          client_metadata: 0,
+          condition_type: OrderConditionType::Unspecified,
+          conditional_order_trigger_subticks: 0,
+        };
+
+    // Hard-code some values for BTC.
+    let exponent = market_price.exponent - (-9) + (-10) - (-6);
+    let subticks = market_price.price * 10i64.pow(exponent as u32);
+    // Round to the nearest multiple.
+    let buy_price = subticks as f64 * 1.05;
+    let sell_price = subticks as f64 * 0.95;
+    let rounded_buy_subticks = (buy_price.round() as u64) / 100000 * 100000;
+    let rounded_sell_subticks = (sell_price.round() as u64) / 100000 * 100000;
+
+    // Construct the buy order.
+    let mut buy_order = basic_order.clone();
+    buy_order.subticks = rounded_buy_subticks;
+    buy_order.side = OrderSide::Buy;
+    let buy_order_msg = DydxMsg::PlaceOrder { order: buy_order };
+
+    // Construct the sell order.
+    let mut sell_order = basic_order.clone();
+    sell_order.subticks = rounded_sell_subticks;
+    sell_order.side = OrderSide::Sell;
+    sell_order.order_id.client_id = client_id + 1;
+    let sell_order_msg = DydxMsg::PlaceOrder { order: sell_order };
+
+    // Market make!
+    Ok(Response::new()
+        .add_messages(vec![buy_order_msg, sell_order_msg])
+        .add_attribute("action", "market_make_2"))
 }
 
 fn execute_refund(deps: DepsMut<DydxQueryWrapper>, env: Env, _info: MessageInfo) -> Result<Response<DydxMsg>, ContractError> {

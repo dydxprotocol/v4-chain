@@ -39,7 +39,13 @@ pub enum ExecuteMsg {
         client_metadata: u32,
         condition_type: OrderConditionType,
         conditional_order_trigger_subticks: u64,
-    }
+    },
+    MarketMake {
+        client_id: u32,
+    },
+    MarketTake {
+        client_id: u32,
+    },
 }
 
 #[cw_serde]
