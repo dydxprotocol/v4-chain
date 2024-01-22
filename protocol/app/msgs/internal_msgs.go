@@ -23,6 +23,7 @@ import (
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -131,6 +132,10 @@ var (
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  nil,
+
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},

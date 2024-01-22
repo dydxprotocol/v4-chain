@@ -20,9 +20,8 @@ message MsgSetLimitParams {
   string authority = 1;
 
   // Defines the parameters to set. All parameters must be supplied.
-  LimitParams limit_params = 2  [ (gogoproto.nullable) = false ];
+  LimitParams limit_params = 2 [ (gogoproto.nullable) = false ];
 }
 
 // MsgSetLimitParamsResponse is the Msg/SetLimitParams response type.
 message MsgSetLimitParamsResponse {}
-

@@ -113,6 +113,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.prices.MsgUpdateMarketParam",
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
 
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams",
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
+
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",
 		"/dydxprotocol.rewards.MsgUpdateParamsResponse",
