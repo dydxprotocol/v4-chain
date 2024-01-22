@@ -63,8 +63,7 @@ func TestParseDenomFromRecvPacket(t *testing.T) {
 			expectedDenom: hashDenomTrace(
 				fmt.Sprintf(
 					"%s/%s/%s/%s/%s",
-					"foo",
-					//transferPort,
+					transferPort,
 					osmoChannelOnDydx,
 					transferPort,
 					nobleChannelOnOsmo,
@@ -122,6 +121,4 @@ func TestParseDenomFromSendPacket(t *testing.T) {
 			require.Equal(t, tc.expectedDenom, parsedDenom, tc.name)
 		})
 	}
-
-	require.True(t, false)
 }
