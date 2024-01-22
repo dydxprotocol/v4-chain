@@ -2,14 +2,17 @@ package main
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/spf13/viper"
 	"log"
 	"math/big"
 	"sort"
 
+	sdklog "cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
+	dbm "github.com/cosmos/cosmos-db"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -128,8 +131,19 @@ func main() {
 	}
 
 	// ------------ OUTPUT ------------
-
-	cdc := app.GetEncodingConfig().Codec
+	tempApp := app.New(
+		sdklog.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	cdc := tempApp.AppCodec()
 
 	// Print total amount bridged.
 	fmt.Printf("Total amount bridged: %s\n", totalAmountBridged.String())

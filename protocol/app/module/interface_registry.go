@@ -6,12 +6,17 @@ import (
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 	gogoproto "github.com/cosmos/gogoproto/proto"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
+	"sync"
 )
 
+// TODO(CORE-857): Move away from a global interface registry as this causes each instance of the application
+// to step on each others implementation details.
 var InterfaceRegistry types.InterfaceRegistry
+var registerInterfacesOnce sync.Once
 
 func getLegacyMsgSignerFn(path []string) func(msg proto.Message) ([][]byte, error) {
 	if len(path) == 0 {
@@ -63,6 +68,14 @@ func init() {
 	); err != nil {
 		panic(err)
 	}
+}
+
+// TODO(CORE-857): Move away from a global interface registry as this causes each instance of the application
+// to step on each others implementation details.
+func RegisterInterfacesGlobally(moduleBasics module.BasicManager) {
+	registerInterfacesOnce.Do(func() {
+		moduleBasics.RegisterInterfaces(InterfaceRegistry)
+	})
 }
 
 func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.InterfaceRegistry, error) {

@@ -1,7 +1,10 @@
 package main
 
 import (
+	sdklog "cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/spf13/viper"
 	"reflect"
 
 	app "github.com/dydxprotocol/v4-chain/protocol/app"
@@ -9,7 +12,19 @@ import (
 )
 
 func protoUnmarshaller[M proto.Message](b []byte) string {
-	cdc := app.GetEncodingConfig().Codec
+	tempApp := app.New(
+		sdklog.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	cdc := tempApp.AppCodec()
 	var m M
 	// TODO: avoid reflection?
 	msgType := reflect.TypeOf(m).Elem()

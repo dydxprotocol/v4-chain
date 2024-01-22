@@ -2,6 +2,8 @@ package tx
 
 import (
 	"context"
+	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -9,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	xauthsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/spf13/viper"
 )
 
 // CreateTestTx is a helper function to create a tx given multiple inputs.
@@ -19,8 +22,19 @@ func CreateTestTx(
 	chainID string,
 	msgs []sdk.Msg,
 ) (xauthsigning.Tx, error) {
-	encodingConfig := app.GetEncodingConfig()
-	clientCtx := client.Context{}.WithTxConfig(encodingConfig.TxConfig)
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	clientCtx := client.Context{}.WithTxConfig(tempApp.TxConfig())
 	txBuilder := clientCtx.TxConfig.NewTxBuilder()
 	err := txBuilder.SetMsgs(msgs...)
 	if err != nil {

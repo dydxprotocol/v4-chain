@@ -2,6 +2,7 @@ package network
 
 import (
 	"fmt"
+	"github.com/spf13/viper"
 	"os"
 	"os/signal"
 	"syscall"
@@ -21,7 +22,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/ci"
 	"github.com/gofrs/flock"
@@ -130,12 +130,23 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 		onNewApp = options.OnNewApp
 	}
 
-	encoding := app.GetEncodingConfig()
+	tempApp := app.New(
+		log.NewNopLogger(),
+		dbm.NewMemDB(),
+		nil,
+		true,
+		viper.New(),
+	)
+	defer func() {
+		if err := tempApp.Close(); err != nil {
+			panic(err)
+		}
+	}()
 	return network.Config{
-		Codec:             encoding.Codec,
-		TxConfig:          encoding.TxConfig,
-		LegacyAmino:       encoding.Amino,
-		InterfaceRegistry: encoding.InterfaceRegistry,
+		Codec:             tempApp.AppCodec(),
+		TxConfig:          tempApp.TxConfig(),
+		LegacyAmino:       tempApp.LegacyAmino(),
+		InterfaceRegistry: tempApp.InterfaceRegistry(),
 		AccountRetriever:  authtypes.AccountRetriever{},
 		AppConstructor: func(val network.ValidatorI) servertypes.Application {
 			onNewApp(val)
@@ -154,7 +165,7 @@ func DefaultConfig(options *NetworkConfigOptions) network.Config {
 				baseapp.SetChainID("dydxprotocol"),
 			)
 		},
-		GenesisState:    basic_manager.ModuleBasics.DefaultGenesis(encoding.Codec),
+		GenesisState:    tempApp.DefaultGenesis(),
 		TimeoutCommit:   2 * time.Second,
 		ChainID:         "dydxprotocol",
 		NumValidators:   1,

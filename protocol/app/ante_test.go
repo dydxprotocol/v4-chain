@@ -10,13 +10,12 @@ import (
 )
 
 func newHandlerOptions() app.HandlerOptions {
-	encodingConfig := app.GetEncodingConfig()
 	dydxApp := testApp.DefaultTestApp(nil)
 	return app.HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper:   dydxApp.AccountKeeper,
 			BankKeeper:      dydxApp.BankKeeper,
-			SignModeHandler: encodingConfig.TxConfig.SignModeHandler(),
+			SignModeHandler: dydxApp.TxConfig().SignModeHandler(),
 			FeegrantKeeper:  dydxApp.FeeGrantKeeper,
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
 		},
