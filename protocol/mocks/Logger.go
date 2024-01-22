@@ -52,6 +52,14 @@ func (_m *Logger) Info(msg string, keyVals ...interface{}) {
 	_m.Called(_ca...)
 }
 
+// Warn provides a mock function with given fields: msg, keyVals
+func (_m *Logger) Warn(msg string, keyVals ...interface{}) {
+	var _ca []interface{}
+	_ca = append(_ca, msg)
+	_ca = append(_ca, keyVals...)
+	_m.Called(_ca...)
+}
+
 // With provides a mock function with given fields: keyVals
 func (_m *Logger) With(keyVals ...interface{}) log.Logger {
 	var _ca []interface{}
