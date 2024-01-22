@@ -12,8 +12,6 @@ const (
 )
 
 // TestLogger returns a logger instance and a buffer where all logs are written to.
-// TODO(CORE-538): See if we can get rid of this method in favor of the Cosmos Logger now
-// (which uses zerolog under the hood).
 func TestLogger() (log.Logger, *bytes.Buffer) {
 	var logBuffer bytes.Buffer
 	return log.NewLogger(kitlog.NewSyncWriter(&logBuffer)), &logBuffer
