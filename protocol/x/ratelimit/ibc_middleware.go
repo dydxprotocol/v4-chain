@@ -36,7 +36,7 @@ func NewIBCMiddleware(k keeper.Keeper, app porttypes.IBCModule) IBCMiddleware {
 }
 
 // OnChanOpenInit implements the IBCMiddleware interface.
-// Use default implementaion of the underlying IBC application, since rate-limiting logic
+// Use default implementation of the underlying IBC application, since rate-limiting logic
 // doesn't require customized logic at channel initialization.
 func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 	order channeltypes.Order,
@@ -60,7 +60,7 @@ func (im IBCMiddleware) OnChanOpenInit(ctx sdk.Context,
 }
 
 // OnChanOpenTry implements the IBCMiddleware interface
-// Use default implementaion of the underlying IBC application, since rate-limiting logic
+// Use default implementation of the underlying IBC application, since rate-limiting logic
 // doesn't require customized logic at channel opening.
 func (im IBCMiddleware) OnChanOpenTry(
 	ctx sdk.Context,
