@@ -46,12 +46,9 @@ jobs:
         pnpm run build:all
       working-directory: ./indexer
 
-    - name: Build and Start Docker Compose
-      run: |
-        cd ../protocol
-        make e2etest-build-image
-        cd ../e2e-testing
-        docker compose -f docker-compose-e2e-test-remote up -d
+    - name: Build
+      run: make e2etest-build-image
+      working-directory: ./protocol
 
   build_and_test:
     needs: setup
@@ -100,6 +97,10 @@ jobs:
         NODE_ENV: development
       run: |
         cd packages/postgres && pnpm run migrate
+
+    - name: Docker Compose
+      run: docker compose -f docker-compose-e2e-test-remote.yml up -d
+      working-directory: ./e2e-testing
 
     - name: Build and Test
       run: |
