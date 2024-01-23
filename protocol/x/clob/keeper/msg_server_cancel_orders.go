@@ -22,7 +22,7 @@ func (k msgServer) CancelOrder(
 	goCtx context.Context,
 	msg *types.MsgCancelOrder,
 ) (resp *types.MsgCancelOrderResponse, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,

@@ -2,10 +2,11 @@ package epochs
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -16,6 +17,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -145,7 +147,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the epochs module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyBeginBlocker)
-	BeginBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	BeginBlocker(sdkCtx, am.keeper)
 	return nil
 }

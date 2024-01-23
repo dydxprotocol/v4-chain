@@ -2,9 +2,9 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/abci"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -30,13 +30,22 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	for _, id := range blockMessageIds.Ids {
 		delayedMsg, found := k.GetMessage(ctx, id)
 		if !found {
-			k.Logger(ctx).Error("delayed message not found", types.IdLogKey, id)
+			log.ErrorLog(
+				ctx,
+				"delayed message not found",
+				types.IdLogKey, id,
+			)
 			continue
 		}
 
 		msg, err := delayedMsg.GetMessage()
 		if err != nil {
-			k.Logger(ctx).Error("failed to decode delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
+			log.ErrorLogWithError(
+				ctx,
+				"failed to decode delayed message",
+				err,
+				types.IdLogKey, id,
+			)
 			continue
 		}
 
@@ -51,16 +60,13 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 			events = append(events, res.GetEvents()...)
 			return nil
 		}); err != nil {
-			k.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"failed to execute delayed message",
-				types.IdLogKey,
-				id,
-				constants.ErrorLogKey,
 				err,
-				types.MessageContentLogKey,
-				msg.String(),
-				types.MessageTypeUrlLogKey,
-				delayedMsg.Msg.TypeUrl,
+				types.IdLogKey, id,
+				types.MessageContentLogKey, msg.String(),
+				types.MessageTypeUrlLogKey, delayedMsg.Msg.TypeUrl,
 			)
 		}
 	}
@@ -71,7 +77,12 @@ func DispatchMessagesForBlock(k types.DelayMsgKeeper, ctx sdk.Context) {
 	// Delete executed messages.
 	for _, id := range blockMessageIds.Ids {
 		if err := k.DeleteMessage(ctx, id); err != nil {
-			k.Logger(ctx).Error("failed to delete delayed message", types.IdLogKey, id, constants.ErrorLogKey, err)
+			log.ErrorLogWithError(
+				ctx,
+				"failed to delete delayed message",
+				err,
+				types.IdLogKey, id,
+			)
 		}
 	}
 }

@@ -2,13 +2,14 @@ package keeper
 
 import (
 	"context"
+
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -41,7 +42,7 @@ func (k msgServer) CreateOracleMarket(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Use zero oracle price to create the new market.
 	// Note that valid oracle price updates cannot be zero (checked in MsgUpdateMarketPrices.ValidateBasic),

@@ -2,9 +2,10 @@ package delaymsg
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -14,6 +15,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
@@ -144,6 +146,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // EndBlock executes all ABCI EndBlock logic respective to the delaymsg module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+	EndBlocker(sdkCtx, am.keeper)
 	return nil
 }

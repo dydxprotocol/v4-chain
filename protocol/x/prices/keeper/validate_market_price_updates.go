@@ -1,11 +1,13 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
-	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"math/big"
 	"time"
+
+	errorsmod "cosmossdk.io/errors"
+	errorlib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -150,7 +152,10 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 			metrics.MissingPriceUpdates,
 			metrics.Count,
 		)
-		k.Logger(ctx).Info(fmt.Sprintf("markets were not included in the price updates: %+v", missingMarketIds))
+		log.InfoLog(
+			ctx,
+			fmt.Sprintf("markets were not included in the price updates: %+v", missingMarketIds),
+		)
 	}
 
 	return nil

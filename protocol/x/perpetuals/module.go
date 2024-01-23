@@ -2,10 +2,12 @@ package perpetuals
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/core/appmodule"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -148,6 +150,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
-	EndBlocker(sdk.UnwrapSDKContext(ctx), am.keeper)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+	EndBlocker(sdkCtx, am.keeper)
 	return nil
 }

@@ -9,8 +9,10 @@ const (
 // Do not have anything generic in here. For example, `Status` is too vague
 // and can be clarified as `OrderStatus` or `DaemonHealthStatus`.
 const (
+	Address             = "address"
 	Module              = "module"
 	TxMode              = "tx_mode"
+	Operation           = "operation"
 	OperationsQueue     = "operations_queue"
 	Callback            = "callback"
 	BlockHeight         = "block_height"
@@ -18,6 +20,8 @@ const (
 	ProposerConsAddress = "proposer_cons_address"
 	Handler             = "handler"
 	Tx                  = "tx"
+	Order               = "order"
+	OrderId             = "order_id"
 	OrderHash           = "order_hash"
 	OrderStatus         = "order_status"
 	Subaccount          = "subaccount"
@@ -26,6 +30,7 @@ const (
 	StackTrace          = "stack_trace"
 	Proposer            = "proposer"
 	PrunableBlockHeight = "prunable_block_height"
+	StatusCode          = "status_code"
 
 	OrderSizeOptimisticallyFilledFromMatchingQuantums = "order_size_optimistically_filled_from_matching_quantums"
 	NewLocalValidatorOperationsQueue                  = "new_local_validator_operations_queue"

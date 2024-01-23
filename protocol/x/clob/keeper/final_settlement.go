@@ -5,6 +5,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -29,11 +30,14 @@ func (k Keeper) mustCancelStatefulOrdersForFinalSettlement(ctx sdk.Context, clob
 	// rather than halt the chain.
 	removeStatefulOrderWithoutPanicing := func(ctx sdk.Context, orderId types.OrderId) {
 		defer func() {
-			if r := recover(); r != nil {
-				k.Logger(ctx).Error(
-					"mustCancelStatefulOrdersForFinalSettlement: Failed to remove stateful order with OrderId %+v: %v",
+			if err := recover(); err != nil {
+				log.ErrorLog(
+					ctx,
+					"mustCancelStatefulOrdersForFinalSettlement: Failed to remove stateful order",
+					"orderId",
 					orderId,
-					r,
+					"error",
+					err,
 				)
 			}
 		}()

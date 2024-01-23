@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
@@ -23,7 +23,7 @@ func (k msgServer) DelayMessage(
 	goCtx context.Context,
 	msg *types.MsgDelayMessage,
 ) (*types.MsgDelayMessageResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	// x/delaymsg accepts messages that may have been created by other modules. In this case, the
 	// ValidateBasic method of the message will not have been called. We call it here to ensure
 	// that the message is valid before continuing.

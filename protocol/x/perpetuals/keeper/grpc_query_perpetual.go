@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +22,7 @@ func (k Keeper) AllPerpetuals(
 	}
 
 	var perpetuals []types.Perpetual
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	store := ctx.KVStore(k.storeKey)
 	perpetualStore := prefix.NewStore(store, []byte(types.PerpetualKeyPrefix))
@@ -48,7 +48,7 @@ func (k Keeper) Perpetual(c context.Context, req *types.QueryPerpetualRequest) (
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	val, err := k.GetPerpetual(
 		ctx,

@@ -15,6 +15,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -152,7 +153,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	am.keeper.UpdateAllCapacitiesEndBlocker(sdkCtx)
 
 	return nil
