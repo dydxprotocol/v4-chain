@@ -105,7 +105,7 @@ export async function findAll(
 
 export async function getSubaccountsWithTransfers(
   createdBeforeOrAtHeight: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<SubaccountFromDatabase[]> {
   const queryString: string = `
     SELECT *

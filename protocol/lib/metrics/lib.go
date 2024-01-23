@@ -69,3 +69,24 @@ func ModuleMeasureSince(module string, key string, start time.Time) {
 		key,
 	)
 }
+
+// ModuleMeasureSinceWithLabels provides a short hand method for emitting a time measure
+// metric for a module with labels. Global labels are not included in this metric.
+// Please try to use `AddSampleWithLabels` instead.
+// TODO(CLOB-1022) Roll our own calculations for timing on top of AddSample instead
+// of using MeasureSince.
+func ModuleMeasureSinceWithLabels(
+	module string,
+	keys []string,
+	start time.Time,
+	labels []gometrics.Label,
+) {
+	gometrics.MeasureSinceWithLabels(
+		keys,
+		start.UTC(),
+		append(
+			[]gometrics.Label{telemetry.NewLabel(telemetry.MetricLabelNameModule, module)},
+			labels...,
+		),
+	)
+}

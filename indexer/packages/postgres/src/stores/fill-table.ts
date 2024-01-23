@@ -498,7 +498,7 @@ export async function getOpenSizeWithFundingIndex(
 export async function getClobPairs(
   subaccountId: string,
   effectiveBeforeOrAtHeight: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<string[]> {
   const baseQuery: QueryBuilder<FillModel> = setupBaseQuery<
     FillModel>(

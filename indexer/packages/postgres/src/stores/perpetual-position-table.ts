@@ -232,7 +232,7 @@ export async function findOpenPositionsForSubaccounts(
 export async function closePosition(
   existingPosition: PerpetualPositionFromDatabase,
   perpetualPositionCloseObject: PerpetualPositionCloseObject,
-  options: Options = {},
+  options: Options = { txId: undefined },
 ): Promise<PerpetualPositionFromDatabase | undefined> {
   const updateObject: PerpetualPositionUpdateObject = closePositionUpdateObject(
     existingPosition,
@@ -315,7 +315,7 @@ export async function getOpenInterestLong(perpetualMarketIds: string[]): Promise
 
 export async function bulkCreate(
   positions: PerpetualPositionCreateObject[],
-  options: Options = {},
+  options: Options = { txId: undefined },
 ): Promise<PerpetualPositionFromDatabase[]> {
   const perpetualPositionsToCreate:
   PerpetualPositionCreateObject[] = _.map(positions, (position: PerpetualPositionCreateObject) => {
@@ -349,7 +349,7 @@ export async function bulkCreate(
  */
 export async function bulkUpdateSubaccountFields(
   positions: PerpetualPositionSubaccountUpdateObject[],
-  options: Options = {},
+  options: Options = { txId: undefined },
 ): Promise<void> {
   if (positions.length === 0) {
     return;
