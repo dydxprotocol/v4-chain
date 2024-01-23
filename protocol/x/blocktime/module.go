@@ -15,6 +15,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -146,14 +147,15 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the blocktime module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	am.keeper.UpdateAllDowntimeInfo(sdk.UnwrapSDKContext(ctx))
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+	am.keeper.UpdateAllDowntimeInfo(sdkCtx)
 	return nil
 }
 
 // EndBlock executes all ABCI EndBlock logic respective to the blocktime module. It
 // returns no validator updates.
 func (am AppModule) EndBlock(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	am.keeper.SetPreviousBlockInfo(sdkCtx, &types.BlockInfo{
 		Height:    uint32(sdkCtx.BlockHeight()),
 		Timestamp: sdkCtx.BlockTime(),
