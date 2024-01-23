@@ -94,6 +94,10 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 		),
 	)
 
+	ctx.EventManager().EmitEvent(
+		types.NewEpochEvent(ctx, epoch, currentTick),
+	)
+
 	// Stat latest epoch number.
 	telemetry.SetGaugeWithLabels(
 		[]string{types.ModuleName, types.AttributeKeyEpochNumber},
