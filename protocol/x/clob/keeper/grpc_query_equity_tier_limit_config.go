@@ -5,7 +5,7 @@ import (
 
 	"google.golang.org/grpc/status"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"google.golang.org/grpc/codes"
 )
@@ -17,7 +17,7 @@ func (k Keeper) EquityTierLimitConfiguration(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	return &types.QueryEquityTierLimitConfigurationResponse{
 		EquityTierLimitConfig: k.GetEquityTierLimitConfiguration(ctx),

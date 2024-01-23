@@ -2,10 +2,11 @@ package clob
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -18,6 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -166,7 +168,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 func (am AppModule) BeginBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyBeginBlocker)
 	BeginBlocker(
-		sdk.UnwrapSDKContext(ctx),
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		am.keeper,
 	)
 	return nil
@@ -177,7 +179,7 @@ func (am AppModule) BeginBlock(ctx context.Context) error {
 func (am AppModule) EndBlock(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
 	EndBlocker(
-		sdk.UnwrapSDKContext(ctx),
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		*am.keeper,
 	)
 	return nil
@@ -187,7 +189,7 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 func (am AppModule) PrepareCheckState(ctx context.Context) error {
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
 	PrepareCheckState(
-		sdk.UnwrapSDKContext(ctx),
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		am.keeper,
 	)
 	return nil

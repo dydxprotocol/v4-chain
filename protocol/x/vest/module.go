@@ -2,9 +2,10 @@ package vest
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -14,6 +15,7 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -151,6 +153,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock contains the logic that is automatically triggered at the beginning of each block
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	am.keeper.ProcessVesting(sdk.UnwrapSDKContext(ctx))
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
+	am.keeper.ProcessVesting(sdkCtx)
 	return nil
 }

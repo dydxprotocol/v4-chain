@@ -14,7 +14,7 @@ func (k msgServer) ProposedOperations(
 	goCtx context.Context,
 	msg *types.MsgProposedOperations,
 ) (resp *types.MsgProposedOperationsResponse, err error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,

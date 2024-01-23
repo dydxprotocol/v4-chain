@@ -2,11 +2,12 @@ package keeper
 
 import (
 	"context"
+
 	errorsmod "cosmossdk.io/errors"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 )
 
@@ -34,7 +35,7 @@ func (k msgServer) SetVestEntry(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	if err := k.Keeper.SetVestEntry(ctx, msg.Entry); err != nil {
 		return nil, err
 	}
@@ -54,7 +55,7 @@ func (k msgServer) DeleteVestEntry(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 	err := k.Keeper.DeleteVestEntry(ctx, msg.VesterAccount)
 	if err != nil {
 		return nil, err

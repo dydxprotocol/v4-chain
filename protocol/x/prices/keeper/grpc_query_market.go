@@ -5,8 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -21,7 +21,7 @@ func (k Keeper) AllMarketPrices(
 	}
 
 	var marketPrices []types.MarketPrice
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	marketPriceStore := k.getMarketPriceStore(ctx)
 
@@ -52,7 +52,7 @@ func (k Keeper) MarketPrice(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	val, err := k.GetMarketPrice(
 		ctx,
@@ -78,7 +78,7 @@ func (k Keeper) AllMarketParams(
 	}
 
 	var marketParams []types.MarketParam
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	marketParamStore := k.getMarketParamStore(ctx)
 
@@ -109,7 +109,7 @@ func (k Keeper) MarketParam(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	val, exists := k.GetMarketParam(
 		ctx,
