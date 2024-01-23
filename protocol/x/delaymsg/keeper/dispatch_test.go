@@ -128,9 +128,6 @@ func setupMockKeeperMessageNotFound(t *testing.T, ctx sdk.Context, k *mocks.Dela
 	msgRouter := mockSuccessRouter(ctx)
 	k.On("Router").Return(msgRouter).Times(2)
 
-	// For error logging.
-	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
-
 	// 2 message executions are persisted.
 	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
 	cms.On("Write").Return(nil).Times(2)
@@ -169,9 +166,6 @@ func setupMockKeeperExecutionFailure(t *testing.T, ctx sdk.Context, k *mocks.Del
 	k.On("Router").Return(failureRouter).Times(1)
 	k.On("Router").Return(successRouter).Times(2)
 
-	// For error logging.
-	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
-
 	// 2 message executions are persisted.
 	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
 	cms.On("Write").Return(nil).Times(2)
@@ -209,9 +203,6 @@ func setupMockKeeperMessageHandlerPanic(t *testing.T, ctx sdk.Context, k *mocks.
 	panicRouter := mockPanickingRouter(ctx)
 	k.On("Router").Return(panicRouter).Times(1)
 	k.On("Router").Return(successRouter).Times(2)
-
-	// For error logging.
-	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
 
 	// 2 message executions are persisted.
 	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
@@ -255,9 +246,6 @@ func setupMockKeeperDecodeFailure(t *testing.T, ctx sdk.Context, k *mocks.DelayM
 	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
 	cms.On("Write").Return(nil).Times(2)
 
-	// For error logging.
-	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
-
 	// All deletes are called. 2nd delete fails.
 	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
 	k.On("DeleteMessage", ctx, uint32(1)).Return(nil).Once()
@@ -292,9 +280,6 @@ func setupMockKeeperDeletionFailure(t *testing.T, ctx sdk.Context, k *mocks.Dela
 	// All message executions are persisted.
 	cms := ctx.MultiStore().CacheMultiStore().(*mocks.CacheMultiStore)
 	cms.On("Write").Return(nil).Times(3)
-
-	// For error logging.
-	k.On("Logger", ctx).Return(log.NewNopLogger()).Times(1)
 
 	// All deletes are called. 2nd delete fails.
 	k.On("DeleteMessage", ctx, uint32(0)).Return(nil).Once()
