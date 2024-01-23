@@ -1,0 +1,71 @@
+name: e2e test Build, Test & Coverage
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - 'indexer/**'
+      - 'e2e-testing/**'
+      - 'protocol/**'
+  push:
+    branches:
+      - main
+      - 'wl/**'  # e.g. wl/test
+    paths:
+      - 'indexer/**'
+      - 'e2e-testing/**'
+      - 'protocol/**'
+
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./e2e-testing
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install pnpm
+        run:
+          npm install -g pnpm@6.34.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and install Indexer
+        run: |
+          pnpm install --loglevel warn --frozen-lockfile
+          pnpm run build:all
+        working-directory: ./indexer
+
+    - name: Build and Start Docker Compose
+      run: |
+        cd ../protocol
+        make e2etest-build-image
+        cd ../e2e-testing
+        docker compose -f docker-compose-e2e-test.yml up -d
+
+  build_and_test:
+    needs: setup
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./e2e-testing
+
+    steps:
+    - name: Build and Test
+      run: |
+        pnpm build
+        pnpm test
