@@ -72,13 +72,19 @@ message MsgProposedOperations {
 message MsgProposedOperationsResponse {}
 
 // MsgPlaceOrder is a request type used for placing orders.
-message MsgPlaceOrder { Order order = 1 [ (gogoproto.nullable) = false ]; }
+message MsgPlaceOrder {
+  option (cosmos.msg.v1.signer) = "order";
+
+  Order order = 1 [ (gogoproto.nullable) = false ];
+}
 
 // MsgPlaceOrderResponse is a response type used for placing orders.
 message MsgPlaceOrderResponse {}
 
 // MsgCancelOrder is a request type used for canceling orders.
 message MsgCancelOrder {
+  option (cosmos.msg.v1.signer) = "order_id";
+
   OrderId order_id = 1 [ (gogoproto.nullable) = false ];
   // Information about when the order cancellation expires.
   oneof good_til_oneof {
