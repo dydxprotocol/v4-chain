@@ -2,17 +2,13 @@ name: e2e test Build, Test & Coverage
 on:  # yamllint disable-line rule:truthy
   pull_request:
     paths:
-      - 'indexer/**'
-      - 'e2e-testing/**'
-      - 'protocol/**'
+      - '**'
   push:
     branches:
       - main
       - 'wl/**'  # e.g. wl/test
     paths:
-      - 'indexer/**'
-      - 'e2e-testing/**'
-      - 'protocol/**'
+      - '**'
 
 # Ensure only a single instance of this workflow is running, and cancel any that are in-progress
 # before this workflow instance starts
