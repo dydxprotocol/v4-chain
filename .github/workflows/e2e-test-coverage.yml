@@ -95,8 +95,8 @@ jobs:
       env:
         DB_PORT: 5435
         NODE_ENV: development
-      run: |
-        cd packages/postgres && pnpm run migrate
+      run: cd packages/postgres && pnpm run migrate
+      working-directory: ./indexer
 
     - name: Docker Compose
       run: docker compose -f docker-compose-e2e-test-remote.yml up -d
