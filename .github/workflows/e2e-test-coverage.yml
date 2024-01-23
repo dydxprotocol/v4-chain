@@ -65,18 +65,19 @@ jobs:
         image: postgres:12-alpine
         env:
           POSTGRES_PASSWORD: dydxserver123
-          POSTGRES_USER: dydx_test
+          POSTGRES_USER: dydx_dev
+          DATADOG_POSTGRES_PASSWORD: dydxserver123
         ports:
-          - 5432:5432
+          - 5435:5432
       redis:
         image: redis:5.0.6-alpine
         ports: 
-          - 6379:6379
+          - 6382:6379
       kafka:
         image: blacktop/kafka:2.6
         env:
-          KAFKA_ADVERTISED_HOST_NAME: localhost
-          KAFKA_CREATE_TOPICS: 
+          KAFKA_ADVERTISED_HOST_NAME: kafka
+          KAFKA_CREATE_TOPICS:
             "to-ender:1:1,\
             to-vulcan:1:1,\
             to-websockets-orderbooks:1:1,\
@@ -84,10 +85,22 @@ jobs:
             to-websockets-trades:1:1,\
             to-websockets-markets:1:1,\
             to-websockets-candles:1:1"
+          KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:29092
+          KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL_SAME_HOST://localhost:29092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
         ports:
           - 9092:9092
 
     steps:
+    - name: Setup database
+      id: setup-database
+      env:
+        DB_PORT: 5435
+        NODE_ENV: development
+      run: |
+        cd packages/postgres && pnpm run migrate
+
     - name: Build and Test
       run: |
         pnpm build
