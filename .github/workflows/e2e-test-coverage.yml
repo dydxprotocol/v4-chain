@@ -34,17 +34,17 @@ jobs:
         node-version: 16
 
     - name: Install pnpm
-        run:
-          npm install -g pnpm@6.34.0
+      run:
+        npm install -g pnpm@6.34.0
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
 
     - name: Build and install Indexer
-        run: |
-          pnpm install --loglevel warn --frozen-lockfile
-          pnpm run build:all
-        working-directory: ./indexer
+      run: |
+        pnpm install --loglevel warn --frozen-lockfile
+        pnpm run build:all
+      working-directory: ./indexer
 
     - name: Build and Start Docker Compose
       run: |
