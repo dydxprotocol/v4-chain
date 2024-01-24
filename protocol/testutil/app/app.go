@@ -44,6 +44,7 @@ import (
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	sdkproto "github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
@@ -1260,7 +1261,7 @@ func launchValidatorInDir(
 		tmcfg.LogFormatPlain,
 		"The logging format (json|plain)",
 	)
-	executor := tmcli.PrepareBaseCmd(rootCmd, app.AppDaemonName, app.DefaultNodeHome)
+	executor := tmcli.PrepareBaseCmd(rootCmd, appconstants.AppDaemonName, app.DefaultNodeHome)
 	// We need to launch the root command in a separate go routine since it only returns once the app is shutdown.
 	// So we wait for either the app to be captured representing a successful start or capture an error.
 	go func() {

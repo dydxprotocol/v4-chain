@@ -20,6 +20,7 @@ var (
 	invalidInnerMsgErr_Unsupported = fmt.Errorf("Invalid nested msg: unsupported msg type")
 	invalidInnerMsgErr_AppInjected = fmt.Errorf("Invalid nested msg: app-injected msg type")
 	invalidInnerMsgErr_Nested      = fmt.Errorf("Invalid nested msg: double-nested msg type")
+	invalidInnerMsgErr_Dydx        = fmt.Errorf("Invalid nested msg for MsgExec: dydx msg type")
 )
 
 func TestIsNestedMsg_Empty(t *testing.T) {
@@ -64,6 +65,40 @@ func TestIsNestedMsg_Valid(t *testing.T) {
 	}
 }
 
+func TestIsDydxMsg_Invalid(t *testing.T) {
+	allDydxMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+		appmsgs.AppInjectedMsgSamples,
+		appmsgs.NormalMsgsDydxCustom,
+		appmsgs.InternalMsgSamplesDydxCustom,
+	)
+	allMsgsMinusDydx := lib.MergeAllMapsMustHaveDistinctKeys(appmsgs.AllowMsgs, appmsgs.DisallowMsgs)
+	for key := range allDydxMsgs {
+		delete(allMsgsMinusDydx, key)
+	}
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allMsgsMinusDydx)
+
+	for _, sampleMsg := range allNonNilSampleMsgs {
+		t.Run(sampleMsg.Name, func(t *testing.T) {
+			require.False(t, ante.IsDydxMsg(sampleMsg.Msg))
+		})
+	}
+}
+
+func TestIsDydxMsg_Valid(t *testing.T) {
+	allDydxMsgs := lib.MergeAllMapsMustHaveDistinctKeys(
+		appmsgs.AppInjectedMsgSamples,
+		appmsgs.NormalMsgsDydxCustom,
+		appmsgs.InternalMsgSamplesDydxCustom,
+	)
+	allNonNilSampleMsgs := testmsgs.GetNonNilSampleMsgs(allDydxMsgs)
+
+	for _, sampleMsg := range allNonNilSampleMsgs {
+		t.Run(sampleMsg.Name, func(t *testing.T) {
+			require.True(t, ante.IsDydxMsg(sampleMsg.Msg))
+		})
+	}
+}
+
 func TestValidateNestedMsg(t *testing.T) {
 	tests := map[string]struct {
 		msg         sdk.Msg
@@ -96,6 +131,10 @@ func TestValidateNestedMsg(t *testing.T) {
 		"Invalid MsgExec: double-nested inner msg": {
 			msg:         &testmsgs.MsgExecWithDoubleNestedInner,
 			expectedErr: invalidInnerMsgErr_Nested,
+		},
+		"Invalid MsgExec: dydx custom msg": {
+			msg:         &testmsgs.MsgExecWithDydxMessage,
+			expectedErr: invalidInnerMsgErr_Dydx,
 		},
 		"Valid: empty inner msg": {
 			msg:         testmsgs.MsgSubmitProposalWithEmptyInner,

@@ -9,6 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 func init() {
@@ -41,6 +42,9 @@ func init() {
 
 	_ = testTxBuilder.SetMsgs(&MsgExecWithDoubleNestedInner)
 	MsgExecWithDoubleNestedInnerTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
+
+	_ = testTxBuilder.SetMsgs(&MsgExecWithDydxMessage)
+	MsgExecWithDydxMessageTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
 
 	_ = testTxBuilder.SetMsgs(MsgSubmitProposalWithUpgrade)
 	MsgSubmitProposalWithUpgradeTxBytes, _ = testEncodingCfg.TxConfig.TxEncoder()(testTxBuilder.GetTx())
@@ -109,6 +113,12 @@ var (
 		[]sdk.Msg{MsgSubmitProposalWithUpgradeAndCancel},
 	)
 	MsgExecWithDoubleNestedInnerTxBytes []byte
+
+	MsgExecWithDydxMessage = authz.NewMsgExec(
+		constants.AliceAccAddress,
+		[]sdk.Msg{&sending.MsgCreateTransfer{}},
+	)
+	MsgExecWithDydxMessageTxBytes []byte
 
 	// Valid MsgSubmitProposals
 	MsgSubmitProposalWithUpgrade, _ = gov.NewMsgSubmitProposal(

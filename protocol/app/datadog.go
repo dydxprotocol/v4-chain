@@ -10,6 +10,7 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/version"
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	errorspkg "github.com/pkg/errors"
 	"github.com/rs/zerolog"
@@ -28,9 +29,9 @@ func configureDatadogProfilerOptions(
 	err error,
 ) {
 	// Use a default application name unless overridden by the DD_SERVICE environment variable.
-	ddService = ServiceName
+	ddService = constants.ServiceName
 	if found := os.Getenv("DD_SERVICE"); found != "" {
-		logger.Info(fmt.Sprintf("DD_SERVICE defined, overriding default of '%s'.", ServiceName))
+		logger.Info(fmt.Sprintf("DD_SERVICE defined, overriding default of '%s'.", constants.ServiceName))
 		ddService = found
 	}
 

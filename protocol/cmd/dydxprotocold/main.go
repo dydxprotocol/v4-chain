@@ -6,6 +6,7 @@ import (
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
 )
 
@@ -18,7 +19,7 @@ func main() {
 	cmd.AddTendermintSubcommands(rootCmd)
 	cmd.AddInitCmdPostRunE(rootCmd)
 
-	if err := svrcmd.Execute(rootCmd, app.AppDaemonName, app.DefaultNodeHome); err != nil {
+	if err := svrcmd.Execute(rootCmd, constants.AppDaemonName, app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}
 }

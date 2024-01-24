@@ -7,10 +7,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
 
-const DYDX_MSG_PREFIX = "/dydxprotocol"
+const DYDX_MSG_PREFIX = "/" + constants.AppName
 
 // IsNestedMsg returns true if the given msg is a nested msg.
 func IsNestedMsg(msg sdk.Msg) bool {
@@ -69,7 +70,7 @@ func validateInnerMsg(msg sdk.Msg) error {
 			return fmt.Errorf("Invalid nested msg: double-nested msg type")
 		}
 
-		// 4.Reject nested dydxprotocol messages in `MsgExec`.
+		// 4. Reject nested dydxprotocol messages in `MsgExec`.
 		if _, ok := msg.(*authz.MsgExec); ok {
 			metrics.IncrCountMetricWithLabels(
 				metrics.Ante,
@@ -89,8 +90,7 @@ func validateInnerMsg(msg sdk.Msg) error {
 // getInnerMsgs returns the inner msgs of the given msg.
 func getInnerMsgs(msg sdk.Msg) ([]sdk.Msg, error) {
 	switch msg := msg.(type) {
-	case
-		*gov.MsgSubmitProposal:
+	case *gov.MsgSubmitProposal:
 		return msg.GetMsgs()
 	case *authz.MsgExec:
 		return msg.GetMessages()

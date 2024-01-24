@@ -13,7 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
@@ -82,7 +82,7 @@ func TestPlaceOrderIntegrationTestSuite(t *testing.T) {
 	})
 
 	cfg.Mnemonics = append(cfg.Mnemonics, validatorMnemonic)
-	cfg.ChainID = app.AppName
+	cfg.ChainID = appconstants.AppName
 
 	suite.Run(t, NewPlaceOrderIntegrationTestSuite(cfg, validatorAddress))
 }

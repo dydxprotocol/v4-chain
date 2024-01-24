@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"io"
 	"math/big"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+
+	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -95,6 +96,7 @@ import (
 	"google.golang.org/grpc"
 
 	// App
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
@@ -210,7 +212,7 @@ func init() {
 		panic(err)
 	}
 
-	DefaultNodeHome = filepath.Join(userHomeDir, "."+AppName)
+	DefaultNodeHome = filepath.Join(userHomeDir, "."+appconstants.AppName)
 
 	// Set DefaultPowerReduction to 1e18 to avoid overflow whe calculating
 	// consensus power.
@@ -344,7 +346,7 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	txConfig := encodingConfig.TxConfig
 
-	bApp := baseapp.NewBaseApp(AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
+	bApp := baseapp.NewBaseApp(appconstants.AppName, logger, db, txConfig.TxDecoder(), baseAppOptions...)
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)

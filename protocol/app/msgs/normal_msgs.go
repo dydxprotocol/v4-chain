@@ -16,13 +16,17 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 var (
 	// NormalMsgs are messages that can be submitted by external users.
-	NormalMsgs = map[string]sdk.Msg{
+	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom)
+
+	// Default modules
+	NormalMsgsDefault = map[string]sdk.Msg{
 		// auth
 		"/cosmos.auth.v1beta1.BaseAccount":      nil,
 		"/cosmos.auth.v1beta1.ModuleAccount":    nil,
@@ -132,24 +136,6 @@ var (
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal": nil,
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       nil,
 
-		// clob
-		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
-		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
-		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
-		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
-
-		// perpetuals
-
-		// prices
-
-		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":         nil,
-		"/dydxprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
-
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer":           &ibctransfer.MsgTransfer{},
 		"/ibc.applications.transfer.v1.MsgTransferResponse":   nil,
@@ -226,5 +212,26 @@ var (
 
 		// ica
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount": nil,
+	}
+
+	// Custom modules
+	NormalMsgsDydxCustom = map[string]sdk.Msg{
+		// clob
+		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
+		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
+		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
+		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+
+		// perpetuals
+
+		// prices
+
+		// sending
+		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
+		"/dydxprotocol.sending.MsgCreateTransferResponse":         nil,
+		"/dydxprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
+		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 	}
 )
