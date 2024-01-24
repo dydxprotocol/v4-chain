@@ -307,8 +307,8 @@ func (k Keeper) updateCapacityForDenom(
 	})
 }
 
-// GetLimiterCapacityListForDenom returns a list of `LimiterCapacity` which contain
-// both the limiter as well as the current capacity.
+// GetLimiterCapacityListForDenom returns a list of `LimiterCapacity`, which is a tuple of
+// (limiter, current_capacity), for the given denom.
 func (k Keeper) GetLimiterCapacityListForDenom(
 	ctx sdk.Context,
 	denom string,
