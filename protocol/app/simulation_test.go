@@ -3,13 +3,14 @@ package app_test
 import (
 	"encoding/json"
 	"fmt"
-	dbm "github.com/cosmos/cosmos-db"
-	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	"io"
 	"math/rand"
 	"os"
 	"testing"
 	"time"
+
+	dbm "github.com/cosmos/cosmos-db"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 
 	"cosmossdk.io/log"
 	"cosmossdk.io/math"
@@ -52,6 +53,7 @@ import (
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -114,6 +116,7 @@ var genesisModuleOrder = []string{
 	paramstypes.ModuleName,
 	exportedtypes.ModuleName,
 	evidencetypes.ModuleName,
+	ratelimitmodule.ModuleName,
 	ibctransfertypes.ModuleName,
 	icatypes.ModuleName,
 	pricestypes.ModuleName,
