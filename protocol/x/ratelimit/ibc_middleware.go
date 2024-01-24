@@ -125,7 +125,7 @@ func (im IBCMiddleware) OnChanCloseConfirm(
 // Called on the receiver chain when a relayer pick up the `SendPacket` event from sender chain and relayer
 // to the receiver chain. On dYdX chain, this signals an inbound IBC transfer.
 // Does the following:
-// - Call `ProcessDeposit` to update `capacity` for the token received.
+// - Call `IncrementCapacitiesForDenom` to update `capacity` for the token received.
 // - Invoke `OnRecvPacket` callback on IBC transfer module.
 func (im IBCMiddleware) OnRecvPacket(
 	ctx sdk.Context,
@@ -142,7 +142,7 @@ func (im IBCMiddleware) OnRecvPacket(
 	// If the `Recv` fails on the underlying transfer stack (e.g. Reciver is invalid), the state
 	// change is not committed.
 	// TODO(CORE-855): Add an E2E test for this.
-	im.keeper.ProcessDeposit(ctx, ibcTransferPacketInfo.Denom, ibcTransferPacketInfo.Amount)
+	im.keeper.IncrementCapacitiesForDenom(ctx, ibcTransferPacketInfo.Denom, ibcTransferPacketInfo.Amount)
 
 	return im.app.OnRecvPacket(ctx, packet, relayer)
 }

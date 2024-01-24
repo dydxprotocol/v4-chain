@@ -101,7 +101,7 @@ func (k Keeper) UndoSendPacket(
 		return
 	}
 	// Undo'ing a withdrawal is equivalent to processing a deposit.
-	k.ProcessDeposit(ctx, denom, amount)
+	k.IncrementCapacitiesForDenom(ctx, denom, amount)
 	k.RemovePendingSendPacket(ctx, channelId, sequence)
 }
 
@@ -130,7 +130,7 @@ func (k Keeper) SendPacket(
 		return sequence, err
 	}
 
-	err = k.SendRateLimitedPacket(ctx, channeltypes.Packet{
+	err = k.TrySendRateLimitedPacket(ctx, channeltypes.Packet{
 		Sequence:         sequence,
 		SourceChannel:    sourceChannel,
 		SourcePort:       sourcePort,
@@ -147,7 +147,7 @@ func (k Keeper) SendPacket(
 
 // Middleware implementation for SendPacket with rate limiting
 // Checks whether the rate limit has been exceeded - and if it hasn't, sends the packet
-func (k Keeper) SendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Packet) error {
+func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Packet) error {
 	packetInfo, err := util.ParsePacketInfo(packet, types.PACKET_SEND)
 	if err != nil {
 		return err

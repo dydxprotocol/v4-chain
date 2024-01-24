@@ -98,9 +98,27 @@ func (k Keeper) ProcessWithdrawal(
 	return nil
 }
 
-// ProcessDeposit processes a inbound IBC transfer,
+// UndoWithdrawal is a wrapper around `IncrementCapacitiesForDenom`.
+// It also emits telemetry for the amount of withdrawal undone.
+func (k Keeper) UndoWithdrawal(
+	ctx sdk.Context,
+	denom string,
+	amount *big.Int,
+) {
+	k.IncrementCapacitiesForDenom(ctx, denom, amount)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.UndoWithdrawAmount},
+		metrics.GetMetricValueFromBigInt(amount),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, denom),
+		},
+	)
+}
+
+// IncrementCapacitiesForDenom processes a inbound IBC transfer,
 // by updating the capacity lists for the denom.
-func (k Keeper) ProcessDeposit(
+func (k Keeper) IncrementCapacitiesForDenom(
 	ctx sdk.Context,
 	denom string,
 	amount *big.Int,

@@ -53,7 +53,7 @@ func ParsePacketInfo(
 		return types.IBCTransferPacketInfo{},
 			errorsmod.Wrapf(
 				sdkerrors.ErrInvalidRequest,
-				"Unable to cast packet amount '%s' to sdkmath.Int",
+				"Unable to cast packet amount '%s' to big.Int",
 				packetData.Amount,
 			)
 	}
