@@ -6,7 +6,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	cosmoslog "cosmossdk.io/log"
 	sdkmath "cosmossdk.io/math"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
@@ -14,8 +14,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -52,8 +52,8 @@ func (k Keeper) HasAuthority(authority string) bool {
 	return ok
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
+	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 // Process vesting for all vest entries. Intended to be called in BeginBlocker.
@@ -121,9 +121,9 @@ func (k Keeper) ProcessVesting(ctx sdk.Context) {
 				// This should never happen. However, if it does, we should not panic.
 				// ProcessVesting is called in BeginBlocker, and panicking in BeginBlocker could cause liveness issues.
 				// Instead, we generate an informative error log, emit an error metric, and continue.
-				k.Logger(ctx).Error(
+				log.ErrorLogWithError(
+					ctx,
 					"unexpected internal error: failed to transfer vest amount to treasury account",
-					constants.ErrorLogKey,
 					err,
 					"vester_account",
 					entry.VesterAccount,

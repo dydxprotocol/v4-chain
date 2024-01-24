@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"math/big"
 	"math/rand"
 	"sort"
 	"time"
+
+	storetypes "cosmossdk.io/store/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -414,10 +416,11 @@ func (k Keeper) GetAddPremiumVotes(
 ) {
 	newPremiumVotes, err := k.sampleAllPerpetuals(ctx)
 	if err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf(
-			"failed to sample perpetuals, err = %v",
+		log.ErrorLogWithError(
+			ctx,
+			"failed to sample perpetuals",
 			err,
-		))
+		)
 	}
 
 	telemetry.SetGauge(
@@ -459,10 +462,10 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		if !exists {
 			// Only log and increment stats if height is passed initialization period.
 			if ctx.BlockHeight() > pricestypes.PriceDaemonInitializationBlocks {
-				k.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					"Perpetual does not have valid index price. Skipping premium",
-					constants.MarketIdLogKey,
-					perp.Params.MarketId,
+					constants.MarketIdLogKey, perp.Params.MarketId,
 				)
 				telemetry.IncrCounterWithLabels(
 					[]string{
@@ -512,11 +515,14 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 
 		if premiumPpm == 0 {
 			// Do not include zero premiums in message.
-			k.Logger(ctx).Debug(
+
+			log.DebugLog(
+				ctx,
 				fmt.Sprintf(
 					"Perpetual (%d) has zero sampled premium. Not including in AddPremiumVotes message",
 					perp.Params.Id,
-				))
+				),
+			)
 			continue
 		}
 
@@ -548,11 +554,14 @@ func (k Keeper) GetRemoveSampleTailsFunc(
 		if totalRemoval == 0 {
 			return premiums
 		} else if totalRemoval >= int64(len(premiums)) {
-			k.Logger(ctx).Error(fmt.Sprintf(
-				"GetRemoveSampleTailsFunc: totalRemoval(%d) > length of premium samples (%d); skip removing",
-				totalRemoval,
-				len(premiums),
-			))
+			log.ErrorLog(
+				ctx,
+				fmt.Sprintf(
+					"GetRemoveSampleTailsFunc: totalRemoval(%d) > length of premium samples (%d); skip removing",
+					totalRemoval,
+					len(premiums),
+				),
+			)
 			return premiums
 		}
 
@@ -625,7 +634,8 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		premiumPpm, found := perpIdToPremiumPpm[perp.Params.Id]
 
 		if !found {
-			k.Logger(ctx).Info(
+			log.InfoLog(
+				ctx,
 				fmt.Sprintf(
 					"MaybeProcessNewFundingTickEpoch: No samples found for perpetual (%v) during `funding-tick` epoch\n",
 					perp.Params.Id,

@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"google.golang.org/grpc/codes"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	"google.golang.org/grpc/status"
 )
@@ -23,7 +23,7 @@ func (k Keeper) NextDelayedMessageId(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	nextDelayedMessageId := k.GetNextDelayedMessageId(ctx)
 
@@ -43,7 +43,7 @@ func (k Keeper) Message(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	delayedMessage, found := k.GetMessage(ctx, req.Id)
 
 	if !found {
@@ -67,7 +67,7 @@ func (k Keeper) BlockMessageIds(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	blockMessageIds, found := k.GetBlockMessageIds(ctx, req.BlockHeight)
 	if !found {

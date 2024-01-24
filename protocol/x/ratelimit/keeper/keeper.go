@@ -6,7 +6,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/log"
+	cosmoslog "cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,6 +14,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
@@ -226,7 +227,8 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	if timeSinceLastBlock < 0 {
 		// This violates an invariant (current block time > prev block time).
 		// Since this is in the `EndBlocker`, we log an error instead of panicking.
-		k.Logger(ctx).Error(
+		log.ErrorLog(
+			ctx,
 			fmt.Sprintf(
 				"timeSinceLastBlock (%v) <= 0; skipping UpdateAllCapacitiesEndBlocker",
 				timeSinceLastBlock,
@@ -268,12 +270,13 @@ func (k Keeper) updateCapacityForLimitParams(
 	)
 
 	if err != nil {
-		k.Logger(ctx).Error(
+		log.ErrorLogWithError(
+			ctx,
 			fmt.Sprintf(
-				"error calculating new capacity list for denom %v: %v. Skipping update.",
+				"error calculating new capacity list for denom %v. Skipping update.",
 				limitParams.Denom,
-				err,
 			),
+			err,
 		)
 		return
 	}
@@ -310,8 +313,8 @@ func (k Keeper) HasAuthority(authority string) bool {
 	return ok
 }
 
-func (k Keeper) Logger(ctx sdk.Context) log.Logger {
-	return ctx.Logger().With(log.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
+func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
+	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
 func (k Keeper) InitializeForGenesis(ctx sdk.Context) {

@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
 	"fmt"
+
+	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -82,12 +84,15 @@ func (k Keeper) MaybeStartNextEpoch(ctx sdk.Context, id types.EpochInfoName) (ne
 	epoch.CurrentEpochStartBlock = lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 	k.setEpochInfo(ctx, epoch)
 
-	k.Logger(ctx).Info(fmt.Sprintf(
-		"Starting new epoch for [%s], current block time = %d, new epoch info = %+v",
-		epoch.Name,
-		ctx.BlockTime().Unix(),
-		epoch,
-	))
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf(
+			"Starting new epoch for [%s], current block time = %d, new epoch info = %+v",
+			epoch.Name,
+			ctx.BlockTime().Unix(),
+			epoch,
+		),
+	)
 
 	ctx.EventManager().EmitEvent(
 		types.NewEpochEvent(ctx, epoch, currentTick),
@@ -120,12 +125,14 @@ func (k Keeper) CreateEpochInfo(ctx sdk.Context, epochInfo types.EpochInfo) erro
 	}
 
 	k.setEpochInfo(ctx, epochInfo)
-	k.Logger(ctx).Info(fmt.Sprintf(
-		"Created new epoch info (current block time = %v): %+v",
-		ctx.BlockTime().Unix(),
-		epochInfo),
+	log.InfoLog(
+		ctx,
+		fmt.Sprintf(
+			"Created new epoch info (current block time = %v): %+v",
+			ctx.BlockTime().Unix(),
+			epochInfo,
+		),
 	)
-
 	return nil
 }
 

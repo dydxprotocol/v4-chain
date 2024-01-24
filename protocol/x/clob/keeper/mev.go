@@ -68,6 +68,11 @@ func (k Keeper) RecordMevMetrics(
 	perpetualKeeper process.ProcessPerpetualKeeper,
 	msgProposedOperations *types.MsgProposedOperations,
 ) {
+	ctx = log.AddPersistentTagsToLogger(
+		ctx,
+		log.Module,
+		"x/clob/mev_telemetry",
+	)
 	defer metrics.ModuleMeasureSince(
 		types.ModuleName,
 		metrics.MevLatency,

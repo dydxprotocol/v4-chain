@@ -2,10 +2,12 @@ package rewards
 
 import (
 	"context"
-	"cosmossdk.io/core/appmodule"
 	"encoding/json"
 	"fmt"
+
+	"cosmossdk.io/core/appmodule"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -152,7 +154,7 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // EndBlock contains the logic that is automatically triggered at the end of each block
 func (am AppModule) EndBlock(ctx context.Context) error {
-	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	if err := am.keeper.ProcessRewardsForBlock(sdkCtx); err != nil {
 		// Panicking here will only happen due to misconfiguration of the rewards module,
 		// and will lead to consensus failure.

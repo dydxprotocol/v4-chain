@@ -103,8 +103,6 @@ func (k Keeper) UpdateAllDowntimeInfo(ctx sdk.Context) {
 		metrics.BlockTimeMs,
 	)
 
-	fmt.Println("\nBlock time delta\n: ", delta.String())
-
 	allInfo := k.GetAllDowntimeInfo(ctx)
 
 	for _, info := range allInfo.Infos {
@@ -117,7 +115,6 @@ func (k Keeper) UpdateAllDowntimeInfo(ctx sdk.Context) {
 			break
 		}
 	}
-	fmt.Println("\nSetting downtime info\n: ", allInfo)
 	k.SetAllDowntimeInfo(ctx, allInfo)
 }
 

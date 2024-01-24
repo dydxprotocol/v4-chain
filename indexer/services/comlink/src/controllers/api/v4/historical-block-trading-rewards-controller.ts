@@ -80,7 +80,6 @@ router.get(
         startingBeforeOrAt,
         startingBeforeOrAtHeight,
       );
-      console.log(`response: ${JSON.stringify(response)}`);
 
       return res.send(response);
     } catch (error) {

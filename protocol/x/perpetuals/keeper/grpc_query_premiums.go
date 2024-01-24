@@ -2,7 +2,8 @@ package keeper
 
 import (
 	"context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,8 +16,9 @@ func (k Keeper) PremiumVotes(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	premiumVotes := k.GetPremiumVotes(sdk.UnwrapSDKContext(c))
+	premiumVotes := k.GetPremiumVotes(ctx)
 
 	return &types.QueryPremiumVotesResponse{PremiumVotes: premiumVotes}, nil
 }
@@ -28,8 +30,9 @@ func (k Keeper) PremiumSamples(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	premiumSamples := k.GetPremiumSamples(sdk.UnwrapSDKContext(c))
+	premiumSamples := k.GetPremiumSamples(ctx)
 
 	return &types.QueryPremiumSamplesResponse{PremiumSamples: premiumSamples}, nil
 }

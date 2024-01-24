@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,8 +18,8 @@ func (k Keeper) AllLiquidityTiers(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
-	ctx := sdk.UnwrapSDKContext(c)
 	var liquidityTiers []types.LiquidityTier
 
 	store := ctx.KVStore(k.storeKey)

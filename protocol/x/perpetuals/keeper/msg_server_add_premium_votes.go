@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -13,7 +13,7 @@ func (k msgServer) AddPremiumVotes(
 	goCtx context.Context,
 	msg *types.MsgAddPremiumVotes,
 ) (*types.MsgAddPremiumVotesResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Validate.
 	if err := k.Keeper.PerformStatefulPremiumVotesValidation(ctx, msg); err != nil {

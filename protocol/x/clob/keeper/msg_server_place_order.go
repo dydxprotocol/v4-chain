@@ -23,7 +23,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	resp *types.MsgPlaceOrderResponse,
 	err error,
 ) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,

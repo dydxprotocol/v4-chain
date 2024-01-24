@@ -19,7 +19,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 )
 
-// TODO(CORE-538): Migrate to testapp
 func DelayMsgKeepers(
 	t testing.TB,
 ) (

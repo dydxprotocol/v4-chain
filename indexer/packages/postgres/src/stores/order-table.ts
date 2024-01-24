@@ -253,7 +253,7 @@ export async function findById(
 export async function findBySubaccountIdAndClobPair(
   subaccountId: string,
   clobPairId: string,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OrderFromDatabase[]> {
   const baseQuery: QueryBuilder<OrderModel> = setupBaseQuery<OrderModel>(
     OrderModel,
@@ -271,7 +271,7 @@ export async function findBySubaccountIdAndClobPairAfterHeight(
   subaccountId: string,
   clobPairId: string,
   height: number,
-  options: Options = {},
+  options: Options = DEFAULT_POSTGRES_OPTIONS,
 ): Promise<OrderFromDatabase[]> {
   const baseQuery: QueryBuilder<OrderModel> = setupBaseQuery<OrderModel>(
     OrderModel,

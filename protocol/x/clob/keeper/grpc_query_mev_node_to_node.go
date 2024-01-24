@@ -5,6 +5,7 @@ import (
 	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"google.golang.org/grpc/codes"
@@ -18,7 +19,7 @@ func (k Keeper) MevNodeToNodeCalculation(
 	*types.MevNodeToNodeCalculationResponse,
 	error,
 ) {
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	// Validate that the request is valid.
 	if err := validateMevNodeToNodeRequest(req); err != nil {

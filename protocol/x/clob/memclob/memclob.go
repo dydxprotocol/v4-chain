@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -887,7 +888,14 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 	defer func() {
 		if r := recover(); r != nil {
 			stackTrace := string(debug.Stack())
-			m.clobKeeper.Logger(ctx).Error("panic in replay operations", "panic", r, "stackTrace", stackTrace)
+			log.ErrorLog(
+				ctx,
+				"panic in replay operations",
+				log.StackTrace,
+				stackTrace,
+				log.Error,
+				r,
+			)
 		}
 	}()
 
@@ -925,7 +933,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				msg,
 			)
 
-			m.clobKeeper.Logger(ctx).Debug(
+			log.DebugLog(
+				ctx,
 				"Received new order",
 				"orderHash",
 				cmtlog.NewLazySprintf("%X", order.GetOrderHash()),
@@ -971,7 +980,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 			// and Order Removals (which, when replayed, can result in placements) should never precede a Preexisting
 			// Stateful Order operation.
 			if _, found := placedPreexistingStatefulOrderIds[*orderId]; found {
-				m.clobKeeper.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					"ReplayOperations: PreexistingStatefulOrder operation for order which was already placed",
 					metrics.OrderId, *orderId,
 					metrics.BlockHeight, ctx.BlockHeight()+1,
@@ -979,7 +989,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 				continue
 			}
 			if _, found := placedOrderRemovalOrderIds[*orderId]; found {
-				m.clobKeeper.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					"ReplayOperations: PreexistingStatefulOrder preceded by Order Removal",
 					metrics.OrderId, *orderId,
 					metrics.BlockHeight, ctx.BlockHeight()+1,
@@ -1021,7 +1032,8 @@ func (m *MemClobPriceTimePriority) ReplayOperations(
 
 			// Log an error if there are two Order Removals for the same OrderId
 			if _, found := placedOrderRemovalOrderIds[orderId]; found {
-				m.clobKeeper.Logger(ctx).Error(
+				log.ErrorLog(
+					ctx,
 					"ReplayOperations: OrderRemoval operation for order which was already removed",
 					metrics.OrderId, orderId,
 					metrics.BlockHeight, ctx.BlockHeight()+1,
@@ -1087,14 +1099,13 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 		case *types.InternalOperation_OrderRemoval:
 			loggerString = "ReplayOperations: PlaceOrder() returned an error for a removed stateful order which was re-placed."
 		}
-		m.clobKeeper.Logger(ctx).Debug(
+
+		log.DebugLog(
+			ctx,
 			loggerString,
-			"error",
-			err,
-			"operation",
-			operation,
-			"order",
-			order,
+			log.Error, err,
+			log.Operation, operation,
+			log.Order, order,
 		)
 
 		// If the order is dropped while adding it to the book, return an off-chain order remove
@@ -1721,12 +1732,11 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 			}
 
 			// Panic since this is an unknown error.
-			m.clobKeeper.Logger(ctx).Error(
+			log.ErrorLogWithError(
+				ctx,
 				"Unexpected error from `ProcessSingleMatch`",
-				"error",
 				err,
-				"matchWithOrders",
-				matchWithOrders,
+				"matchWithOrders", matchWithOrders,
 			)
 			panic(err)
 		}
@@ -2026,10 +2036,10 @@ func (m *MemClobPriceTimePriority) RemoveOrderIfFilled(
 	// stored past expiration, so the fill amount should exist in state immediately after being filled.
 	if !exists {
 		if orderId.IsShortTermOrder() {
-			m.clobKeeper.Logger(ctx).Error(
+			log.ErrorLog(
+				ctx,
 				"RemoveOrderIfFilled: filled Short-Term order ID has no fill amount",
-				"orderId",
-				orderId,
+				log.OrderId, orderId,
 			)
 		}
 		return
