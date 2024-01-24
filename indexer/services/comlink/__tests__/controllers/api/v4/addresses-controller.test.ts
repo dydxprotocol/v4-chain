@@ -9,6 +9,7 @@ import {
   FundingIndexUpdatesTable,
   BlockTable,
   liquidityTierRefresher,
+  SubaccountTable,
 } from '@dydxprotocol-indexer/postgres';
 import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
@@ -289,6 +290,43 @@ describe('addresses-controller#V4', () => {
           },
         ],
         totalTradingRewards: testConstants.defaultWallet.totalTradingRewards,
+      });
+      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1,
+        {
+          path: '/:address',
+          method: 'GET',
+        });
+    });
+
+    it('returns 0 for totalTradingRewards if no wallet exists', async () => {
+      await PerpetualPositionTable.create(
+        testConstants.defaultPerpetualPosition,
+      );
+
+      await SubaccountTable.create({
+        ...testConstants.defaultSubaccount,
+        address: testConstants.defaultWalletAddress,
+        subaccountNumber: 0,
+      });
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/addresses/${testConstants.defaultWalletAddress}`,
+      });
+
+      expect(response.body).toEqual({
+        subaccounts: [
+          {
+            address: testConstants.defaultWalletAddress,
+            subaccountNumber: 0,
+            equity: getFixedRepresentation(0),
+            freeCollateral: getFixedRepresentation(0),
+            marginEnabled: true,
+            assetPositions: {},
+            openPerpetualPositions: {},
+          },
+        ],
+        totalTradingRewards: '0',
       });
       expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1,
         {

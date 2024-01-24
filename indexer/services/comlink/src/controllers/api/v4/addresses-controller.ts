@@ -1,4 +1,4 @@
-import { logger, stats } from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetPositionFromDatabase,
   BlockTable,
@@ -102,15 +102,6 @@ class AddressesController extends Controller {
       throw new NotFoundError(`No subaccounts found for address ${address}`);
     }
 
-    if (wallet === undefined) {
-      logger.error({
-        at: 'AddressesController#getAddress',
-        message: 'No wallet found for address, but subaccounts found for address, this should never happen',
-        address,
-      });
-      throw new NotFoundError(`No wallet found for address ${address}`);
-    }
-
     const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
       .findFundingIndexMap(
         latestBlock.blockHeight,
@@ -169,7 +160,7 @@ class AddressesController extends Controller {
 
     return {
       subaccounts: subaccountResponses,
-      totalTradingRewards: wallet?.totalTradingRewards,
+      totalTradingRewards: wallet !== undefined ? wallet.totalTradingRewards : '0',
     };
   }
 

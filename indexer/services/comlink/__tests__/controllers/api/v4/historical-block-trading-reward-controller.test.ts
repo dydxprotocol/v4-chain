@@ -72,7 +72,6 @@ describe('historical-block-trading-reward-controller#V4', () => {
       const responseBody: HistoricalTradingRewardAggregationsResponse = response.body;
       const rewards: HistoricalTradingRewardAggregation[] = responseBody.rewards;
       expect(rewards.length).toEqual(2);
-      console.log(JSON.stringify(rewards));
       expect(rewards[0]).toEqual(tradingRewardToResponse(
         defaultTradingReward2,
       ));
