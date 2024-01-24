@@ -201,6 +201,10 @@ var (
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
 
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams":         {},
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": {},
+
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},
 		"/dydxprotocol.sending.MsgCreateTransferResponse":          {},

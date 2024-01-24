@@ -28,9 +28,7 @@ type (
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
 
-		// TODO(CORE-824): Implement `x/ratelimit` keeper
-
-		// the addresses capable of executing a MsgUpdateParams message.
+		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
 	}
 )
@@ -131,7 +129,11 @@ func (k Keeper) ProcessDeposit(
 func (k Keeper) SetLimitParams(
 	ctx sdk.Context,
 	limitParams types.LimitParams,
-) {
+) (err error) {
+	if err := limitParams.Validate(); err != nil {
+		return err
+	}
+
 	limitParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
 	denomCapacityStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomCapacityKeyPrefix))
 
@@ -164,6 +166,8 @@ func (k Keeper) SetLimitParams(
 
 	b := k.cdc.MustMarshal(&limitParams)
 	limitParamsStore.Set(denomKey, b)
+
+	return nil
 }
 
 // GetLimitParams returns `LimitParams` for the given denom.
@@ -238,14 +242,8 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	}
 
 	// Iterate through all the limit params in state.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
-	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var limitParams types.LimitParams
-		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
+	limitParams := k.GetAllLimitParams(ctx)
+	for _, limitParams := range limitParams {
 		k.updateCapacityForLimitParams(ctx, limitParams, timeSinceLastBlock)
 	}
 }
@@ -308,6 +306,22 @@ func (k Keeper) GetDenomCapacity(
 	return val
 }
 
+// GetAllLimitParams returns `LimitParams` stored in state
+func (k Keeper) GetAllLimitParams(ctx sdk.Context) (list []types.LimitParams) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.LimitParams
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
@@ -317,5 +331,4 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-}
+func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}

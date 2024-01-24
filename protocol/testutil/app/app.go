@@ -56,6 +56,7 @@ import (
 	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -195,7 +196,8 @@ type GenesisStates interface {
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
 		bridgetypes.GenesisState |
-		govtypesv1.GenesisState
+		govtypesv1.GenesisState |
+		ratelimittypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -245,6 +247,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = sendingtypes.ModuleName
 	case govtypesv1.GenesisState:
 		moduleName = govtypes.ModuleName
+	case ratelimittypes.GenesisState:
+		moduleName = ratelimittypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}

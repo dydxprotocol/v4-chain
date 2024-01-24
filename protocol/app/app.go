@@ -150,6 +150,7 @@ import (
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	pricesmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 	pricesmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	ratelimitmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
 	ratelimitmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
@@ -611,6 +612,7 @@ func New(
 			delaymsgmoduletypes.ModuleAddress.String(),
 		},
 	)
+	rateLimitModule := ratelimitmodule.NewAppModule(appCodec, app.RatelimitKeeper)
 
 	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
 
@@ -1039,6 +1041,7 @@ func New(
 		sendingModule,
 		delayMsgModule,
 		epochsModule,
+		rateLimitModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
