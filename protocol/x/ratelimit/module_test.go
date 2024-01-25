@@ -131,7 +131,8 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 	am := createAppModuleBasic(t)
 
 	cmd := am.GetQueryCmd()
-	require.Equal(t, "vest", cmd.Use)
-	require.Equal(t, 1, len(cmd.Commands()))
-	require.Equal(t, "vest-entry", cmd.Commands()[0].Name())
+	require.Equal(t, "ratelimit", cmd.Use)
+	require.Equal(t, 2, len(cmd.Commands()))
+	require.Equal(t, "capacity-by-denom", cmd.Commands()[0].Name())
+	require.Equal(t, "list-limit-params", cmd.Commands()[1].Name())
 }
