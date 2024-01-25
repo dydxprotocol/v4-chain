@@ -27,7 +27,7 @@ func (k Keeper) RemovePendingSendPacket(ctx sdk.Context, channelId string, seque
 	store.Delete(key)
 }
 
-// Sets the sequence number of a packet that was just sent
+// Sets a pending packet sequence number in the store
 func (k Keeper) SetPendingSendPacket(ctx sdk.Context, channelId string, sequence uint64) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingSendPacketPrefix))
 	key := types.GetPendingSendPacketKey(channelId, sequence)
@@ -100,8 +100,8 @@ func (k Keeper) UndoSendPacket(
 	if !k.HasPendingSendPacket(ctx, channelId, sequence) {
 		return
 	}
-	// Undo'ing a withdrawal is equivalent to processing a deposit.
-	k.IncrementCapacitiesForDenom(ctx, denom, amount)
+	// Undo'ing capacity change from the withdrawal.
+	k.UndoWithdrawal(ctx, denom, amount)
 	k.RemovePendingSendPacket(ctx, channelId, sequence)
 }
 
