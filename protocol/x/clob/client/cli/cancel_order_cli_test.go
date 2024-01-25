@@ -4,19 +4,19 @@ package cli_test
 
 import (
 	"fmt"
-	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	"math"
 	"math/big"
 	"testing"
 
+	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -87,7 +87,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 	})
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
-	s.cfg.ChainID = app.AppName
+	s.cfg.ChainID = appconstants.AppName
 
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)
 

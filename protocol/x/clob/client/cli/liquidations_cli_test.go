@@ -26,7 +26,7 @@ import (
 	sa_testutil "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/client/testutil"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
@@ -91,7 +91,7 @@ func TestLiquidationOrderIntegrationTestSuite(t *testing.T) {
 	})
 
 	cfg.Mnemonics = append(cfg.Mnemonics, validatorMnemonic)
-	cfg.ChainID = app.AppName
+	cfg.ChainID = appconstants.AppName
 
 	suite.Run(t, NewLiquidationsIntegrationTestSuite(cfg, validatorAddress))
 }

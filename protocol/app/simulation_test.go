@@ -34,6 +34,7 @@ import (
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
+	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	distributiontypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -108,6 +109,7 @@ func (app *SimApp) SimulationManager() *module.SimulationManager {
 var genesisModuleOrder = []string{
 	authtypes.ModuleName,
 	banktypes.ModuleName,
+	authz.ModuleName,
 	capabilitytypes.ModuleName,
 	feegranttypes.ModuleName,
 	govtypes.ModuleName,

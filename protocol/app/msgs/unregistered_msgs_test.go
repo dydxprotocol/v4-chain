@@ -14,8 +14,6 @@ func TestUnregisteredMsgs_Key(t *testing.T) {
 		// authz
 		"/cosmos.authz.v1.MsgExec",
 		"/cosmos.authz.v1.MsgExecResponse",
-		"/cosmos.authz.v1beta1.MsgExec",
-		"/cosmos.authz.v1beta1.MsgExecResponse",
 
 		// group
 		"/cosmos.group.v1.MsgSubmitProposal",

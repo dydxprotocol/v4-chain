@@ -4,16 +4,15 @@ package cli_test
 
 import (
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"path/filepath"
-	"time"
-
 	"testing"
+	"time"
 
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
@@ -106,7 +105,7 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 	})
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
-	s.cfg.ChainID = app.AppName
+	s.cfg.ChainID = appconstants.AppName
 
 	// Set min gas prices to zero so that we can submit transactions with zero gas price.
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)

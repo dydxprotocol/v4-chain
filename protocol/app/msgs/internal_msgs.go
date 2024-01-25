@@ -37,8 +37,14 @@ var (
 	// InternalMsgSamplesGovAuth are msgs that are used only used internally.
 	// GovAuth means that these messages must originate from the gov module and
 	// signed by gov module account.
-	InternalMsgSamplesGovAuth = map[string]sdk.Msg{
-		// ------- CosmosSDK default modules
+	// InternalMsgSamplesAll are msgs that are used only used internally.
+	InternalMsgSamplesGovAuth = lib.MergeAllMapsMustHaveDistinctKeys(
+		InternalMsgSamplesDefault,
+		InternalMsgSamplesDydxCustom,
+	)
+
+	// CosmosSDK default modules
+	InternalMsgSamplesDefault = map[string]sdk.Msg{
 		// auth
 		"/cosmos.auth.v1beta1.MsgUpdateParams": &auth.MsgUpdateParams{},
 
@@ -82,7 +88,19 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade":         &upgrade.MsgSoftwareUpgrade{},
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
 
-		// ------- Custom modules
+		// ibc
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
+		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
+	}
+
+	// Custom modules
+	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
@@ -154,15 +172,5 @@ var (
 		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
 		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
-
-		// ibc
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
-		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
 	}
 )

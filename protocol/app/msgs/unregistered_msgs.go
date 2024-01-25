@@ -4,10 +4,8 @@ var (
 	// UnregisteredMsgs are msgs that should not be registered with the app.
 	UnregisteredMsgs = map[string]struct{}{
 		// authz
-		"/cosmos.authz.v1.MsgExec":              {},
-		"/cosmos.authz.v1.MsgExecResponse":      {},
-		"/cosmos.authz.v1beta1.MsgExec":         {},
-		"/cosmos.authz.v1beta1.MsgExecResponse": {},
+		"/cosmos.authz.v1.MsgExec":         {},
+		"/cosmos.authz.v1.MsgExecResponse": {},
 
 		// group
 		"/cosmos.group.v1.MsgSubmitProposal":              {},
