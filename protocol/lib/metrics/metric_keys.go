@@ -44,6 +44,8 @@ const (
 
 	// Measure Since
 	ClobOffsettingSubaccountPerpetualPosition         = "clob_offsetting_subaccount_perpetual_position"
+	ClobMaybeTriggerConditionalOrders                 = "clob_maybe_trigger_conditional_orders"
+	ClobNumUntriggeredOrders                          = "clob_num_untriggered_orders"
 	DaemonGetPreviousBlockInfoLatency                 = "daemon_get_previous_block_info_latency"
 	DaemonGetAllMarketPricesLatency                   = "daemon_get_all_market_prices_latency"
 	DaemonGetMarketPricesPaginatedLatency             = "daemon_get_market_prices_paginated_latency"
