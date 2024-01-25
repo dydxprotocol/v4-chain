@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"encoding/json"
-	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"io"
 	"math/big"
 	"net/http"
@@ -12,6 +11,8 @@ import (
 	"runtime/debug"
 	"sync"
 	"time"
+
+	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -144,6 +145,9 @@ import (
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
 	feetiersmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	feetiersmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
+	govplusmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/govplus/keeper"
+	govplusmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	perpetualsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -252,6 +256,7 @@ type App struct {
 	RatelimitKeeper       ratelimitmodulekeeper.Keeper
 	FeeGrantKeeper        feegrantkeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
+	GovPlusKeeper         govplusmodulekeeper.Keeper
 
 	PricesKeeper pricesmodulekeeper.Keeper
 
@@ -977,6 +982,16 @@ func New(
 		app.SubaccountsKeeper,
 	)
 
+	app.GovPlusKeeper = *govplusmodulekeeper.NewKeeper(
+		appCodec,
+		keys[govplusmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	govPlusModule := govplusmodule.NewAppModule(appCodec, app.GovPlusKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1039,6 +1054,7 @@ func New(
 		subaccountsModule,
 		clobModule,
 		sendingModule,
+		govPlusModule,
 		delayMsgModule,
 		epochsModule,
 		rateLimitModule,
@@ -1083,6 +1099,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 	)
 
@@ -1121,6 +1138,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		epochsmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1162,6 +1180,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 	)
 
@@ -1199,6 +1218,7 @@ func New(
 		vestmoduletypes.ModuleName,
 		rewardsmoduletypes.ModuleName,
 		sendingmoduletypes.ModuleName,
+		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
 
 		// Auth must be migrated after staking.

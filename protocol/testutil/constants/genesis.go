@@ -844,6 +844,7 @@ const GenesisState = `{
       "starting_proposal_id": "1",
       "votes": []
     },
+    "govplus": {},
     "ibc": {
       "channel_genesis": {
         "ack_sequences": [],

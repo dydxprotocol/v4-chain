@@ -38,6 +38,7 @@ import (
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
+	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
@@ -213,6 +214,7 @@ func TestModuleBasics(t *testing.T) {
 		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
+		govplusmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
