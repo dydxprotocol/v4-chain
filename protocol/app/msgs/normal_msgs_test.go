@@ -75,8 +75,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
 		// gov
-		"/cosmos.gov.v1.MsgCancelProposal",
-		"/cosmos.gov.v1.MsgCancelProposalResponse",
 		"/cosmos.gov.v1.MsgDeposit",
 		"/cosmos.gov.v1.MsgDepositResponse",
 		"/cosmos.gov.v1.MsgVote",

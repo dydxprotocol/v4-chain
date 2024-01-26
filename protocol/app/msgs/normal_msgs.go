@@ -91,8 +91,6 @@ var (
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance":          nil,
 
 		// gov
-		"/cosmos.gov.v1.MsgCancelProposal":            &gov.MsgCancelProposal{},
-		"/cosmos.gov.v1.MsgCancelProposalResponse":    nil,
 		"/cosmos.gov.v1.MsgDeposit":                   &gov.MsgDeposit{},
 		"/cosmos.gov.v1.MsgDepositResponse":           nil,
 		"/cosmos.gov.v1.MsgVote":                      &gov.MsgVote{},
