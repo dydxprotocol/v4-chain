@@ -28,6 +28,7 @@ import (
 	clobmodule "github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
+	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
@@ -89,5 +90,6 @@ var (
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
+		govplusmodule.AppModuleBasic{},
 	)
 )

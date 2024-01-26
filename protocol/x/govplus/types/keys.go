@@ -6,5 +6,5 @@ const (
 	ModuleName = "govplus"
 
 	// StoreKey defines the primary module store key
-	StoreKey = ModuleName
+	StoreKey = "dydxgovplus"
 )

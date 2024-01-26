@@ -190,6 +190,10 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator":         {},
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},

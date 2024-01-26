@@ -1,6 +1,12 @@
 package keeper
 
 import (
+	"context"
+
+	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
 )
 
@@ -15,3 +21,40 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 }
 
 var _ types.MsgServer = msgServer{}
+
+func (k msgServer) SlashValidator(
+	goCtx context.Context,
+	msg *types.MsgSlashValidator,
+) (*types.MsgSlashValidatorResponse, error) {
+	if !k.HasAuthority(msg.Authority) {
+		return nil, errorsmod.Wrapf(
+			govtypes.ErrInvalidSigner,
+			"invalid authority %s",
+			msg.Authority,
+		)
+	}
+
+	consAddr, err := sdk.ConsAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, types.ErrValidatorAddress
+	}
+
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_, err = k.stakingKeeper.Slash(
+		ctx,
+		consAddr,
+		int64(msg.InfractionHeight),
+		msg.PowerAtInfractionHeight.BigInt().Int64(),
+		msg.SlashFactor,
+	)
+	if err != nil {
+		log.ErrorLogWithError(
+			ctx,
+			"error occured when slashing validator",
+			err,
+		)
+		panic(err)
+	}
+	return &types.MsgSlashValidatorResponse{}, nil
+}
