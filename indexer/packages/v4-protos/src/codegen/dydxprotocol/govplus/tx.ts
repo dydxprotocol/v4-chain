@@ -4,7 +4,7 @@ import { DeepPartial } from "../../helpers";
 
 export interface MsgSlashValidator {
   authority: string;
-  /** Address of the validator to slash */
+  /** Consensus address of the validator to slash */
 
   validatorAddress: string;
   /**
@@ -13,10 +13,13 @@ export interface MsgSlashValidator {
    * of the slash. For example, undelegating after this height will not escape
    * slashing. This height should be set to a recent height at the time of the
    * proposal to prevent delegators from undelegating during the vote period.
+   * i.e. infraction_height <= proposal submission height.
    * 
    * NB: At the time this message is applied, this height must have occured
    * equal to or less than an unbonding period in the past in order for the
    * slash to be effective.
+   * i.e. time(proposal pass height) - time(infraction_height) < unbonding
+   * period
    */
 
   infractionHeight: number;
@@ -38,7 +41,7 @@ export interface MsgSlashValidator {
 
 export interface MsgSlashValidatorSDKType {
   authority: string;
-  /** Address of the validator to slash */
+  /** Consensus address of the validator to slash */
 
   validator_address: string;
   /**
@@ -47,10 +50,13 @@ export interface MsgSlashValidatorSDKType {
    * of the slash. For example, undelegating after this height will not escape
    * slashing. This height should be set to a recent height at the time of the
    * proposal to prevent delegators from undelegating during the vote period.
+   * i.e. infraction_height <= proposal submission height.
    * 
    * NB: At the time this message is applied, this height must have occured
    * equal to or less than an unbonding period in the past in order for the
    * slash to be effective.
+   * i.e. time(proposal pass height) - time(infraction_height) < unbonding
+   * period
    */
 
   infraction_height: number;

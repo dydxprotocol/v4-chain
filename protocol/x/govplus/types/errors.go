@@ -10,4 +10,19 @@ var (
 		400,
 		"Could not convert validator consensus address from bech32",
 	)
+	ErrInvalidAuthority = errorsmod.Register(
+		ModuleName,
+		401,
+		"Authority is invalid",
+	)
+	ErrInvalidSlashFactor = errorsmod.Register(
+		ModuleName,
+		402,
+		"slash_factor must be between 0 and 1 inclusive",
+	)
+	ErrInvalidPowerAtInfractionHeight = errorsmod.Register(
+		ModuleName,
+		403,
+		"power_at_infraction_height must be positive",
+	)
 )

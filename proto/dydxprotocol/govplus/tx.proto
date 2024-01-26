@@ -17,22 +17,26 @@ service Msg {
 
 // MsgSlashValidator is the Msg/SlashValidator request type.
 message MsgSlashValidator {
-  // The address that controls the module (likely the gov module account).
+  // The address that controls the module (the gov module account).
   option (cosmos.msg.v1.signer) = "authority";
-  string authority = 1;
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 
-  // Address of the validator to slash
-  string validator_address = 2;
+  // Consensus address of the validator to slash
+  string validator_address = 2
+      [ (cosmos_proto.scalar) = "cosmos.ValidatorAddressString" ];
 
   // Colloquially, the height at which the validator is deemed to have
   // misbehaved. In practice, this is the height used to determine the targets
   // of the slash. For example, undelegating after this height will not escape
   // slashing. This height should be set to a recent height at the time of the
   // proposal to prevent delegators from undelegating during the vote period.
+  // i.e. infraction_height <= proposal submission height.
   //
   // NB: At the time this message is applied, this height must have occured
   // equal to or less than an unbonding period in the past in order for the
   // slash to be effective.
+  // i.e. time(proposal pass height) - time(infraction_height) < unbonding
+  // period
   uint32 infraction_height = 3;
 
   // Power of the validator at the specified height. Used to compute the slash

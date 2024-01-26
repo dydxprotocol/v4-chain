@@ -52,7 +52,6 @@ import (
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
-	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -132,7 +131,6 @@ var genesisModuleOrder = []string{
 	rewardsmodule.ModuleName,
 	epochstypes.ModuleName,
 	blocktimetypes.ModuleName,
-	govplusmodule.ModuleName,
 }
 
 var skippedGenesisModules = map[string]interface{}{

@@ -26,7 +26,7 @@ func TestMsgServer(t *testing.T) {
 	require.NotNil(t, ctx)
 }
 
-func TestSlashValidator_InvalidAuthority(t *testing.T) {
+func TestSlashValidator(t *testing.T) {
 	_, ms, ctx := setupMsgServer(t)
 
 	testCases := []struct {

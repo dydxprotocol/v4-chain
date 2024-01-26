@@ -40,21 +40,20 @@ func (k msgServer) SlashValidator(
 	}
 
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
 	_, err = k.stakingKeeper.Slash(
 		ctx,
 		consAddr,
-		int64(msg.InfractionHeight),
+		int64(msg.InfractionHeight), // Casting from uint32
 		msg.PowerAtInfractionHeight.BigInt().Int64(),
 		msg.SlashFactor,
 	)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
-			"error occured when slashing validator",
+			"error occurred when slashing validator",
 			err,
 		)
-		panic(err)
+		return nil, err
 	}
 	return &types.MsgSlashValidatorResponse{}, nil
 }
