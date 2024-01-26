@@ -29,6 +29,7 @@ func (app *App) setupUpgradeHandlers() {
 		v4_0_0.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
+			app.RatelimitKeeper,
 		),
 	)
 }
