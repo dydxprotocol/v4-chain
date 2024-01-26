@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	"math/big"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -270,6 +271,12 @@ func (untriggeredOrders *UntriggeredConditionalOrders) PollTriggeredConditionalO
 // to `ProcessProposerMatchesEvents.ConditionalOrderIdsTriggeredInLastBlock`.
 // This function is called in EndBlocker.
 func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrderIds []types.OrderId) {
+	defer metrics.ModuleMeasureSince(
+		types.ModuleName,
+		metrics.ClobMaybeTriggerConditionalOrders,
+		time.Now(),
+	)
+
 	// Sort the keys for the untriggered conditional orders struct. We need to trigger
 	// the conditional orders in an ordered way to have deterministic state writes.
 	sortedKeys := lib.GetSortedKeys[types.SortedClobPairId](k.UntriggeredConditionalOrders)
@@ -314,6 +321,16 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 
 		// Set the modified untriggeredConditionalOrders back on the keeper field.
 		k.UntriggeredConditionalOrders[clobPairId] = untriggered
+
+		// Gauge the number of untriggered orders.
+		metrics.SetGaugeWithLabels(
+			metrics.ClobNumUntriggeredOrders,
+			float32(
+				len(untriggered.OrdersToTriggerWhenOraclePriceGTETriggerPrice)+
+					len(untriggered.OrdersToTriggerWhenOraclePriceLTETriggerPrice),
+			),
+			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
+		)
 	}
 
 	return allTriggeredOrderIds

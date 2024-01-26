@@ -57,7 +57,7 @@ func (p *LimitParams) Validate() error {
 			return ErrInvalidBaselineMinimum
 		}
 
-		if limiter.BaselineTvlPpm == 0 || limiter.BaselineTvlPpm >= lib.OneMillion {
+		if limiter.BaselineTvlPpm == 0 || limiter.BaselineTvlPpm > lib.OneMillion {
 			return ErrInvalidBaselineTvlPpm
 		}
 	}

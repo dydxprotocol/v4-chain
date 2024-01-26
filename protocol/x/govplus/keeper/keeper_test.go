@@ -231,7 +231,8 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 			}
 
 			// Test SetLimitParams
-			k.SetLimitParams(ctx, limitParams)
+			err := k.SetLimitParams(ctx, limitParams)
+			require.NoError(t, err)
 
 			// Test GetLimitParams
 			gotLimitParams := k.GetLimitParams(ctx, tc.denom)
@@ -247,10 +248,11 @@ func TestSetGetLimitParams_Success(t *testing.T) {
 			require.Equal(t, expectedDenomCapacity, gotDenomCapacity, "retrieved DenomCapacity does not match the set value")
 
 			// Set empty `LimitParams` for `testDenom`.
-			k.SetLimitParams(ctx, types.LimitParams{
+			err = k.SetLimitParams(ctx, types.LimitParams{
 				Denom:    tc.denom,
 				Limiters: []types.Limiter{}, // Empty list, results in deletion of the key.
 			})
+			require.NoError(t, err)
 
 			// Check that the key is deleted under `LimitParams` storage.
 			require.Equal(t,
@@ -821,7 +823,8 @@ func TestUpdateAllCapacitiesEndBlocker(t *testing.T) {
 
 			// Initialize limit params
 			for _, limitParams := range tc.limitParamsList {
-				k.SetLimitParams(ctx, limitParams)
+				err := k.SetLimitParams(ctx, limitParams)
+				require.NoError(t, err)
 			}
 
 			// Initialize denom capacity
