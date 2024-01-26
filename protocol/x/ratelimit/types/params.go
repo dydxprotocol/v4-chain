@@ -23,21 +23,25 @@ var BigBaselineMinimum1Day = new(big.Int).Mul(
 	lib.BigPow10(-assettypes.UusdcDenomExponent),
 )
 
+var DefaultUsdcHourlyLimter = Limiter{
+	Period:          3600 * time.Second,
+	BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Hr),
+	BaselineTvlPpm:  10_000, // 1%
+}
+
+var DefaultUsdcDailyLimiter = Limiter{
+	Period:          24 * time.Hour,
+	BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Day),
+	BaselineTvlPpm:  100_000, // 10%
+}
+
 // DefaultUsdcRateLimitParams returns default rate-limit params for USDC.
 func DefaultUsdcRateLimitParams() LimitParams {
 	return LimitParams{
 		Denom: assettypes.UusdcDenom,
 		Limiters: []Limiter{
-			{
-				Period:          3600 * time.Second,
-				BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Hr),
-				BaselineTvlPpm:  10_000, // 1%
-			},
-			{
-				Period:          24 * time.Hour,
-				BaselineMinimum: dtypes.NewIntFromBigInt(BigBaselineMinimum1Day),
-				BaselineTvlPpm:  100_000, // 10%
-			},
+			DefaultUsdcHourlyLimter,
+			DefaultUsdcDailyLimiter,
 		},
 	}
 }

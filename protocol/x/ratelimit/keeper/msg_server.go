@@ -24,7 +24,7 @@ func NewMsgServerImpl(keeper Keeper) types.MsgServer {
 var _ types.MsgServer = msgServer{}
 
 func (k msgServer) SetLimitParams(
-	goCtx context.Context,
+	ctx context.Context,
 	msg *types.MsgSetLimitParams,
 ) (*types.MsgSetLimitParamsResponse, error) {
 	if !k.HasAuthority(msg.Authority) {
@@ -36,8 +36,8 @@ func (k msgServer) SetLimitParams(
 	}
 
 	// msg.LimitParams.Validate() is called in `Keeper.SetLimitParams`
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	if err := k.Keeper.SetLimitParams(ctx, msg.LimitParams); err != nil {
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	if err := k.Keeper.SetLimitParams(sdkCtx, msg.LimitParams); err != nil {
 		return nil, err
 	}
 

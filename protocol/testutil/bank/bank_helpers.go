@@ -89,3 +89,23 @@ func FundModuleAccount(
 
 	return bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, moduleName, amounts)
 }
+
+func FilterDenomFromBalances(
+	balances []banktypes.Balance,
+	denom string,
+) []banktypes.Balance {
+	newBalances := make([]banktypes.Balance, len(balances))
+	for i, balance := range balances {
+		newCoins := []sdk.Coin{}
+		for _, coin := range balance.Coins {
+			if coin.Denom != denom {
+				newCoins = append(newCoins, coin)
+			}
+		}
+		newBalances[i] = banktypes.Balance{
+			Address: balance.Address,
+			Coins:   newCoins,
+		}
+	}
+	return newBalances
+}

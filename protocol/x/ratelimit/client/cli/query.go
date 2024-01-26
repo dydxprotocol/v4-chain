@@ -20,7 +20,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 		RunE:                       client.ValidateCmd,
 	}
 
-	// TODO(CORE-823): implement query for `x/ratelimit`
+	cmd.AddCommand(CmdListLimitParams())
+	cmd.AddCommand(CmdQueryCapacityByDenom())
 
 	return cmd
 }
