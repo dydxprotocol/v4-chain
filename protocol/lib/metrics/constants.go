@@ -403,9 +403,10 @@ const (
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
 
 	// x/ratelimit
-	Capacity       = "capacity"
-	RateLimitDenom = "rate_limit_denom"
-	LimiterIndex   = "limiter_index"
+	Capacity           = "capacity"
+	RateLimitDenom     = "rate_limit_denom"
+	LimiterIndex       = "limiter_index"
+	UndoWithdrawAmount = "undo_withdraw_amount"
 
 	// x/authz
 	MsgExec  = "msg_exec"

@@ -569,11 +569,13 @@ func New(
 	// Set legacy router for backwards compatibility with gov v1beta1
 	govKeeper.SetLegacyRouter(govRouter)
 
-	// grant capabilities for the ibc, ibc-transfer and ICAHostKeeper modules
+	// grant capabilities for the ibc, ibc-transfer, ICAHostKeeper and ratelimit modules
 
 	scopedIBCKeeper := app.CapabilityKeeper.ScopeToModule(ibcexported.ModuleName)
 	scopedIBCTransferKeeper := app.CapabilityKeeper.ScopeToModule(ibctransfertypes.ModuleName)
 	scopedICAHostKeeper := app.CapabilityKeeper.ScopeToModule(icahosttypes.SubModuleName)
+	// scopedRatelimitKeeper is not used as an input to any other module.
+	app.CapabilityKeeper.ScopeToModule(ratelimitmoduletypes.ModuleName)
 
 	app.CapabilityKeeper.Seal()
 
@@ -602,22 +604,6 @@ func New(
 		lib.GovModuleAddress.String(),               // authority
 	)
 
-	// Create Transfer Keepers
-	app.TransferKeeper = ibctransferkeeper.NewKeeper(
-		appCodec,
-		keys[ibctransfertypes.StoreKey],
-		app.getSubspace(ibctransfertypes.ModuleName),
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.ChannelKeeper,
-		app.IBCKeeper.PortKeeper,
-		app.AccountKeeper,
-		app.BankKeeper,
-		scopedIBCTransferKeeper,
-		lib.GovModuleAddress.String(),
-	)
-	transferModule := transfer.NewAppModule(app.TransferKeeper)
-	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
-
 	app.BlockTimeKeeper = *blocktimemodulekeeper.NewKeeper(
 		appCodec,
 		keys[blocktimemoduletypes.StoreKey],
@@ -634,6 +620,7 @@ func New(
 		keys[ratelimitmoduletypes.StoreKey],
 		app.BankKeeper,
 		app.BlockTimeKeeper,
+		app.IBCKeeper.ChannelKeeper, // ICS4Wrapper
 		// set the governance and delaymsg module accounts as the authority for conducting upgrades
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -642,13 +629,31 @@ func New(
 	)
 	rateLimitModule := ratelimitmodule.NewAppModule(appCodec, app.RatelimitKeeper)
 
-	// TODO(CORE-834): Add ratelimitKeeper to the IBC transfer stack.
+	// Create Transfer Keepers
+	app.TransferKeeper = ibctransferkeeper.NewKeeper(
+		appCodec,
+		keys[ibctransfertypes.StoreKey],
+		app.getSubspace(ibctransfertypes.ModuleName),
+		app.RatelimitKeeper, // ICS4Wrapper
+		app.IBCKeeper.ChannelKeeper,
+		app.IBCKeeper.PortKeeper,
+		app.AccountKeeper,
+		app.BankKeeper,
+		scopedIBCTransferKeeper,
+		lib.GovModuleAddress.String(),
+	)
+	transferModule := transfer.NewAppModule(app.TransferKeeper)
+	transferIBCModule := transfer.NewIBCModule(app.TransferKeeper)
+
+	// Wrap the x/ratelimit middlware over the IBC Transfer module
+	var transferStack ibcporttypes.IBCModule = transferIBCModule
+	transferStack = ratelimitmodule.NewIBCMiddleware(app.RatelimitKeeper, transferStack)
 
 	icaHostIBCModule := icahost.NewIBCModule(app.ICAHostKeeper)
 	// Create static IBC router, add transfer route, then set and seal it
 	ibcRouter := ibcporttypes.NewRouter()
 	// Ordering of `AddRoute` does not matter.
-	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferIBCModule)
+	ibcRouter.AddRoute(ibctransfertypes.ModuleName, transferStack)
 	ibcRouter.AddRoute(icahosttypes.SubModuleName, icaHostIBCModule)
 
 	app.IBCKeeper.SetRouter(ibcRouter)
