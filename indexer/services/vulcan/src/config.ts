@@ -7,7 +7,6 @@ import {
   parseSchema,
   baseConfigSchema,
   parseBoolean,
-  ONE_SECOND_IN_MILLISECONDS,
 } from '@dydxprotocol-indexer/base';
 import {
   kafkaConfigSchema,
@@ -26,7 +25,7 @@ export const configSchema = {
     default: 20,
   }),
   KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
-    default: 3 * ONE_SECOND_IN_MILLISECONDS,
+    default: 3_000,
   }),
   FLUSH_KAFKA_MESSAGES_INTERVAL_MS: parseNumber({
     default: 10,

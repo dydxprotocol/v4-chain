@@ -20,9 +20,9 @@ export async function connect(): Promise<void> {
     fromBeginning: true,
   });
 
-  updateOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
-    return onMessage(message);
-  });
+  updateOnMessageFunction(
+    (_topic: string, message: KafkaMessage): Promise<void> => onMessage(message),
+  );
 
   logger.info({
     at: 'consumers#connect',
