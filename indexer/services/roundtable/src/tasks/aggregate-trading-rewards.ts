@@ -469,7 +469,7 @@ export class AggregateTradingReward {
       case TradingRewardAggregationPeriod.WEEKLY:
         return DateTimeUnit.WEEK;
       case TradingRewardAggregationPeriod.MONTHLY:
-        return DateTimeUnit.WEEK;
+        return DateTimeUnit.MONTH;
       default:
         throw new Error(`Invalid period ${this.period}`);
     }
