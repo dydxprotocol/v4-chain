@@ -11,8 +11,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/client/cli"
+	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,17 +43,17 @@ func setupNetwork(
 	return net, ctx
 }
 
-func TestQueryParams(t *testing.T) {
+func TestListLimiterParams(t *testing.T) {
 	net, ctx := setupNetwork(t)
 
 	out, err := clitestutil.ExecTestCLICmd(
 		ctx,
-		cli.CmdQueryParams(),
+		cli.CmdListLimitParams(),
 		[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
 	)
 
 	require.NoError(t, err)
-	var resp types.QueryParamsResponse
+	var resp types.ListLimitParamsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
-	require.Equal(t, types.DefaultGenesis().Params, resp.Params)
+	require.Equal(t, types.DefaultGenesis().LimitParamsList, resp.LimitParamsList)
 }

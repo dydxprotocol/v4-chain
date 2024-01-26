@@ -3,6 +3,8 @@ package ratelimit_test
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -95,7 +97,26 @@ func TestAppModuleBasic_RegisterGRPCGatewayRoutes(t *testing.T) {
 
 	am.RegisterGRPCGatewayRoutes(client.Context{}, router)
 
-	// TODO(CORE-823): implement query for `x/ratelimit`
+	// Expect NumMessages route registered
+	registeredRoutes := []string{
+		"/dydxprotocol/v4/ratelimit/list_limit_params",
+		"/dydxprotocol/v4/ratelimit/capacity_by_denom",
+	}
+
+	for _, route := range registeredRoutes {
+		recorder := httptest.NewRecorder()
+		req, err := http.NewRequest("GET", route, nil)
+		require.NoError(t, err)
+		router.ServeHTTP(recorder, req)
+		require.Contains(t, recorder.Body.String(), "no RPC client is defined in offline mode")
+	}
+
+	// Expect unexpected route not registered
+	recorder := httptest.NewRecorder()
+	req, err := http.NewRequest("GET", "/dydxprotocol/v4/ratelimit/foo/bar/baz", nil)
+	require.NoError(t, err)
+	router.ServeHTTP(recorder, req)
+	require.Equal(t, 404, recorder.Code)
 }
 
 func TestAppModuleBasic_GetTxCmd(t *testing.T) {
@@ -107,7 +128,10 @@ func TestAppModuleBasic_GetTxCmd(t *testing.T) {
 }
 
 func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
-	createAppModuleBasic(t)
+	am := createAppModuleBasic(t)
 
-	// TODO(CORE-823): implement query for `x/ratelimit`
+	cmd := am.GetQueryCmd()
+	require.Equal(t, "vest", cmd.Use)
+	require.Equal(t, 1, len(cmd.Commands()))
+	require.Equal(t, "vest-entry", cmd.Commands()[0].Name())
 }

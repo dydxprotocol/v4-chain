@@ -1,3 +1,4 @@
+import { Limiter, LimiterSDKType } from "./limit_params";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** DenomCapacity stores a list of rate limit capacity for a denom. */
@@ -31,6 +32,18 @@ export interface DenomCapacitySDKType {
    */
 
   capacity_list: Uint8Array[];
+}
+/** LimiterCapacity contains a pair of limiter and its corresponding capacity. */
+
+export interface LimiterCapacity {
+  limiter?: Limiter;
+  capacity: Uint8Array;
+}
+/** LimiterCapacity contains a pair of limiter and its corresponding capacity. */
+
+export interface LimiterCapacitySDKType {
+  limiter?: LimiterSDKType;
+  capacity: Uint8Array;
 }
 
 function createBaseDenomCapacity(): DenomCapacity {
@@ -83,6 +96,61 @@ export const DenomCapacity = {
     const message = createBaseDenomCapacity();
     message.denom = object.denom ?? "";
     message.capacityList = object.capacityList?.map(e => e) || [];
+    return message;
+  }
+
+};
+
+function createBaseLimiterCapacity(): LimiterCapacity {
+  return {
+    limiter: undefined,
+    capacity: new Uint8Array()
+  };
+}
+
+export const LimiterCapacity = {
+  encode(message: LimiterCapacity, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.limiter !== undefined) {
+      Limiter.encode(message.limiter, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.capacity.length !== 0) {
+      writer.uint32(18).bytes(message.capacity);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): LimiterCapacity {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseLimiterCapacity();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.limiter = Limiter.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.capacity = reader.bytes();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<LimiterCapacity>): LimiterCapacity {
+    const message = createBaseLimiterCapacity();
+    message.limiter = object.limiter !== undefined && object.limiter !== null ? Limiter.fromPartial(object.limiter) : undefined;
+    message.capacity = object.capacity ?? new Uint8Array();
     return message;
   }
 

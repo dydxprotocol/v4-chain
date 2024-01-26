@@ -267,45 +267,78 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	// Iterate through all the limit params in state.
 	limitParams := k.GetAllLimitParams(ctx)
 	for _, limitParams := range limitParams {
-		k.updateCapacityForLimitParams(ctx, limitParams, timeSinceLastBlock)
+		k.updateCapacityForDenom(ctx, limitParams.Denom, timeSinceLastBlock)
 	}
 }
 
 // updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
 // towards baseline.
 // Assumes that the `LimitParams` exist in state.
-func (k Keeper) updateCapacityForLimitParams(
+func (k Keeper) updateCapacityForDenom(
 	ctx sdk.Context,
-	limitParams types.LimitParams,
+	denom string,
 	timeSinceLastBlock time.Duration,
 ) {
-	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+	tvl := k.bankKeeper.GetSupply(ctx, denom)
 
-	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
-
-	newCapacityList, err := ratelimitutil.CalculateNewCapacityList(
-		tvl.Amount.BigInt(),
-		limitParams,
-		capacityList,
-		timeSinceLastBlock,
-	)
-
+	limiterCapacityList, err := k.GetLimiterCapacityListForDenom(ctx, denom)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
 			fmt.Sprintf(
-				"error calculating new capacity list for denom %v. Skipping update.",
-				limitParams.Denom,
+				"GetLimiterCapacityListForDenom(%v) returns error (skipping update): %v",
+				denom,
+				err,
 			),
 			err,
 		)
 		return
 	}
 
+	newCapacityList := ratelimitutil.CalculateNewCapacityList(
+		tvl.Amount.BigInt(),
+		limiterCapacityList,
+		timeSinceLastBlock,
+	)
+
 	k.SetDenomCapacity(ctx, types.DenomCapacity{
-		Denom:        limitParams.Denom,
+		Denom:        denom,
 		CapacityList: newCapacityList,
 	})
+}
+
+// GetLimiterCapacityListForDenom returns a list of `LimiterCapacity` which contain
+// both the limiter as well as the current capacity.
+func (k Keeper) GetLimiterCapacityListForDenom(
+	ctx sdk.Context,
+	denom string,
+) (
+	limiterCapacityList []types.LimiterCapacity,
+	err error,
+) {
+	limitParams := k.GetLimitParams(ctx, denom)
+	capacityList := k.GetDenomCapacity(ctx, denom).CapacityList
+
+	if len(limitParams.Limiters) != len(capacityList) {
+		// This breaks the invariant (len(limiters) == len(capacity_list)).
+		return nil, errorsmod.Wrapf(
+			types.ErrMismatchedCapacityLimitersLength,
+			"denom = %v, len(limiters) = %v, len(capacity_list) = %v",
+			denom,
+			len(limitParams.Limiters),
+			len(capacityList),
+		)
+	}
+
+	limiterCapacityList = make([]types.LimiterCapacity, len(capacityList))
+	for i, limiter := range limitParams.Limiters {
+		limiterCapacityList[i] = types.LimiterCapacity{
+			Limiter:  limiter,
+			Capacity: capacityList[i],
+		}
+	}
+
+	return limiterCapacityList, nil
 }
 
 // GetDenomCapacity returns `DenomCapacity` for the given denom.
