@@ -35,6 +35,7 @@ func TestQueryCapacityByDenom(t *testing.T) {
 	var resp types.QueryCapacityByDenomResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	require.Equal(t,
+		// LimiterCapacity resulting from default limiter params and 0 TVL.
 		[]types.LimiterCapacity{
 			{
 				Limiter: types.DefaultUsdcHourlyLimter,

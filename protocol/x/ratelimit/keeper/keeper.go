@@ -273,7 +273,6 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 
 // updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
 // towards baseline.
-// Assumes that the `LimitParams` exist in state.
 func (k Keeper) updateCapacityForDenom(
 	ctx sdk.Context,
 	denom string,

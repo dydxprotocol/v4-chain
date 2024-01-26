@@ -12,33 +12,33 @@ import (
 var _ types.QueryServer = Keeper{}
 
 func (k Keeper) ListLimitParams(
-	goCtx context.Context,
+	ctx context.Context,
 	req *types.ListLimitParamsRequest,
 ) (*types.ListLimitParamsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	return &types.ListLimitParamsResponse{
-		LimitParamsList: k.GetAllLimitParams(ctx),
+		LimitParamsList: k.GetAllLimitParams(sdkCtx),
 	}, nil
 }
 
 func (k Keeper) CapacityByDenom(
-	goCtx context.Context,
+	ctx context.Context,
 	req *types.QueryCapacityByDenomRequest,
 ) (*types.QueryCapacityByDenomResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
 
 	if err := sdk.ValidateDenom(req.Denom); err != nil {
 		return nil, status.Error(codes.InvalidArgument, err.Error())
 	}
 
-	limiterCapacityList, err := k.GetLimiterCapacityListForDenom(ctx, req.Denom)
+	limiterCapacityList, err := k.GetLimiterCapacityListForDenom(sdkCtx, req.Denom)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
