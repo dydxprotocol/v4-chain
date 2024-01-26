@@ -21,7 +21,12 @@ func CreateUpgradeHandler(
 		sdkCtx := sdk.UnwrapSDKContext(ctx)
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
-		rateLimitKeepr.SetLimitParams(sdkCtx, ratelimittypes.DefaultUsdcRateLimitParams())
+		if err := rateLimitKeepr.SetLimitParams(
+			sdkCtx,
+			ratelimittypes.DefaultUsdcRateLimitParams(),
+		); err != nil {
+			panic(fmt.Sprintf("failed to set default x/ratelimit params: %s", err))
+		}
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
