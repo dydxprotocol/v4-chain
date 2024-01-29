@@ -41,7 +41,7 @@ var (
 	}
 	PerpetualPosition_OneHundredthBTCShort = satypes.PerpetualPosition{
 		PerpetualId: 0,
-		Quantums:    dtypes.NewInt(-1_000_000), // 0.01 BTC, -$5,00 notional.
+		Quantums:    dtypes.NewInt(-1_000_000), // 0.01 BTC, -$500 notional.
 	}
 	PerpetualPosition_FourThousandthsBTCLong = satypes.PerpetualPosition{
 		PerpetualId: 0,
