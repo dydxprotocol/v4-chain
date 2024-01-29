@@ -24,15 +24,15 @@ export interface MsgSlashValidator {
 
   infractionHeight: number;
   /**
-   * Power of the validator at the specified height. Used to compute the slash
-   * amount. Note that this is not directly the token amount; it must be
-   * adjusted by power reduction to get consensus power.
+   * Tokens of the validator at the specified height. Used to compute the slash
+   * amount. The x/staking HistoricalInfo query endpoint can be used to find
+   * this.
    */
 
-  powerAtInfractionHeight: Uint8Array;
+  tokensAtInfractionHeight: Uint8Array;
   /**
    * Multiplier for how much of the validator's stake should be slashed.
-   * slash_factor * power = amount slashed
+   * slash_factor * tokens_at_infraction_height = tokens slashed
    */
 
   slashFactor: string;
@@ -61,15 +61,15 @@ export interface MsgSlashValidatorSDKType {
 
   infraction_height: number;
   /**
-   * Power of the validator at the specified height. Used to compute the slash
-   * amount. Note that this is not directly the token amount; it must be
-   * adjusted by power reduction to get consensus power.
+   * Tokens of the validator at the specified height. Used to compute the slash
+   * amount. The x/staking HistoricalInfo query endpoint can be used to find
+   * this.
    */
 
-  power_at_infraction_height: Uint8Array;
+  tokens_at_infraction_height: Uint8Array;
   /**
    * Multiplier for how much of the validator's stake should be slashed.
-   * slash_factor * power = amount slashed
+   * slash_factor * tokens_at_infraction_height = tokens slashed
    */
 
   slash_factor: string;
@@ -86,7 +86,7 @@ function createBaseMsgSlashValidator(): MsgSlashValidator {
     authority: "",
     validatorAddress: "",
     infractionHeight: 0,
-    powerAtInfractionHeight: new Uint8Array(),
+    tokensAtInfractionHeight: new Uint8Array(),
     slashFactor: ""
   };
 }
@@ -105,8 +105,8 @@ export const MsgSlashValidator = {
       writer.uint32(24).uint32(message.infractionHeight);
     }
 
-    if (message.powerAtInfractionHeight.length !== 0) {
-      writer.uint32(34).bytes(message.powerAtInfractionHeight);
+    if (message.tokensAtInfractionHeight.length !== 0) {
+      writer.uint32(34).bytes(message.tokensAtInfractionHeight);
     }
 
     if (message.slashFactor !== "") {
@@ -138,7 +138,7 @@ export const MsgSlashValidator = {
           break;
 
         case 4:
-          message.powerAtInfractionHeight = reader.bytes();
+          message.tokensAtInfractionHeight = reader.bytes();
           break;
 
         case 5:
@@ -159,7 +159,7 @@ export const MsgSlashValidator = {
     message.authority = object.authority ?? "";
     message.validatorAddress = object.validatorAddress ?? "";
     message.infractionHeight = object.infractionHeight ?? 0;
-    message.powerAtInfractionHeight = object.powerAtInfractionHeight ?? new Uint8Array();
+    message.tokensAtInfractionHeight = object.tokensAtInfractionHeight ?? new Uint8Array();
     message.slashFactor = object.slashFactor ?? "";
     return message;
   }

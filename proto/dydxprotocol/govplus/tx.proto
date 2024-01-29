@@ -39,17 +39,17 @@ message MsgSlashValidator {
   // period
   uint32 infraction_height = 3;
 
-  // Power of the validator at the specified height. Used to compute the slash
-  // amount. Note that this is not directly the token amount; it must be
-  // adjusted by power reduction to get consensus power.
-  bytes power_at_infraction_height = 4 [
+  // Tokens of the validator at the specified height. Used to compute the slash
+  // amount. The x/staking HistoricalInfo query endpoint can be used to find
+  // this.
+  bytes tokens_at_infraction_height = 4 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 
   // Multiplier for how much of the validator's stake should be slashed.
-  // slash_factor * power = amount slashed
+  // slash_factor * tokens_at_infraction_height = tokens slashed
   string slash_factor = 5 [
     (cosmos_proto.scalar) = "cosmos.Dec",
     (gogoproto.customtype) = "cosmossdk.io/math.LegacyDec",

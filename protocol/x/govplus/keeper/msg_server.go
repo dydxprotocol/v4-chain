@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
@@ -44,7 +45,8 @@ func (k msgServer) SlashValidator(
 		ctx,
 		consAddr,
 		int64(msg.InfractionHeight), // Casting from uint32
-		msg.PowerAtInfractionHeight.BigInt().Int64(),
+		sdk.TokensToConsensusPower(
+			sdkmath.NewIntFromBigInt(msg.TokensAtInfractionHeight.BigInt()), sdk.DefaultPowerReduction),
 		msg.SlashFactor,
 	)
 	if err != nil {

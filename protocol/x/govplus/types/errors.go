@@ -20,9 +20,9 @@ var (
 		402,
 		"slash_factor must be between 0 and 1 inclusive",
 	)
-	ErrInvalidPowerAtInfractionHeight = errorsmod.Register(
+	ErrInvalidTokensAtInfractionHeight = errorsmod.Register(
 		ModuleName,
 		403,
-		"power_at_infraction_height must be positive",
+		"tokens_at_infraction_height must be positive",
 	)
 )

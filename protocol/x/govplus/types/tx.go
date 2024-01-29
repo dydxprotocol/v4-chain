@@ -33,8 +33,8 @@ func (msg *MsgSlashValidator) ValidateBasic() error {
 		)
 	}
 
-	if msg.PowerAtInfractionHeight.BigInt().Cmp(big.NewInt(0)) != 1 {
-		return ErrInvalidPowerAtInfractionHeight
+	if msg.TokensAtInfractionHeight.BigInt().Cmp(big.NewInt(0)) != 1 {
+		return ErrInvalidTokensAtInfractionHeight
 	}
 
 	if msg.SlashFactor.IsNegative() || msg.SlashFactor.GT(math.LegacyNewDec(1)) {

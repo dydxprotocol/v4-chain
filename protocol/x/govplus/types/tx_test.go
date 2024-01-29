@@ -32,21 +32,21 @@ func TestValidateBasic(t *testing.T) {
 			},
 			expectedErr: types.ErrValidatorAddress,
 		},
-		"bad power at infraction height": {
+		"bad tokens at infraction height": {
 			msg: types.MsgSlashValidator{
-				Authority:               lib.GovModuleAddress.String(),
-				ValidatorAddress:        validConsensusAddress,
-				PowerAtInfractionHeight: dtypes.NewInt(-10),
-				SlashFactor:             math.LegacyMustNewDecFromStr("0.5"),
+				Authority:                lib.GovModuleAddress.String(),
+				ValidatorAddress:         validConsensusAddress,
+				TokensAtInfractionHeight: dtypes.NewInt(-10),
+				SlashFactor:              math.LegacyMustNewDecFromStr("0.5"),
 			},
-			expectedErr: types.ErrInvalidPowerAtInfractionHeight,
+			expectedErr: types.ErrInvalidTokensAtInfractionHeight,
 		},
 		"bad slash factor": {
 			msg: types.MsgSlashValidator{
-				Authority:               lib.GovModuleAddress.String(),
-				ValidatorAddress:        validConsensusAddress,
-				PowerAtInfractionHeight: dtypes.NewInt(100),
-				SlashFactor:             math.LegacyMustNewDecFromStr("1.1"),
+				Authority:                lib.GovModuleAddress.String(),
+				ValidatorAddress:         validConsensusAddress,
+				TokensAtInfractionHeight: dtypes.NewInt(100),
+				SlashFactor:              math.LegacyMustNewDecFromStr("1.1"),
 			},
 			expectedErr: types.ErrInvalidSlashFactor,
 		},
