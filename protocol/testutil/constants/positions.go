@@ -20,8 +20,9 @@ var (
 		FundingIndex: dtypes.NewInt(-1),
 	}
 	PerpetualPosition_OneBTCLong = satypes.PerpetualPosition{
-		PerpetualId: 0,
-		Quantums:    dtypes.NewInt(100_000_000), // 1 BTC, $50,000 notional.
+		PerpetualId:  0,
+		Quantums:     dtypes.NewInt(100_000_000), // 1 BTC, $50,000 notional.
+		FundingIndex: dtypes.NewInt(0),
 	}
 	PerpetualPosition_OneBTCShort = satypes.PerpetualPosition{
 		PerpetualId: 0,
@@ -52,8 +53,9 @@ var (
 		Quantums:    dtypes.NewInt(-400_000), // 0.004 BTC, -$200 notional.
 	}
 	PerpetualPosition_OneAndHalfBTCLong = satypes.PerpetualPosition{
-		PerpetualId: 0,
-		Quantums:    dtypes.NewInt(150_000_000), // 1.5 BTC, $75,000 notional.
+		PerpetualId:  0,
+		Quantums:     dtypes.NewInt(150_000_000), // 1.5 BTC, $75,000 notional.
+		FundingIndex: dtypes.NewInt(0),
 	}
 	PerpetualPosition_OneTenthEthLong = satypes.PerpetualPosition{
 		PerpetualId: 1,
