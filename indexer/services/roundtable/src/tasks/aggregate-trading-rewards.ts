@@ -329,11 +329,14 @@ export class AggregateTradingReward {
   ): Promise<AggregationUpdateAndCreateObjects> {
     const tradingRewardAddresses: string[] = Object.keys(intervalTradingRewardsByAddress);
 
+    const startedAt: string = this.getStartedAt(interval);
+    const startedAtHeight: string = await this.getNextBlock(startedAt);
     const existingAggregateTradingRewards:
     TradingRewardAggregationFromDatabase[] = await runFuncWithTimingStat(
       TradingRewardAggregationTable.findAll({
         addresses: tradingRewardAddresses,
         period: this.period,
+        startedAtHeight,
       }, []),
       this.generateTimingStatsOptions('findAllExistingAggregations'),
     );
@@ -343,8 +346,6 @@ export class AggregateTradingReward {
       TradingRewardAggregationColumns.address,
     );
 
-    const startedAt: string = this.getStartedAt(interval);
-    const startedAtHeight: string = await this.getNextBlock(startedAt);
     const aggregateTradingRewardsToUpdate: TradingRewardAggregationUpdateObject[] = _.intersection(
       tradingRewardAddresses,
       Object.keys(existingAggregateTradingRewardsMap),
