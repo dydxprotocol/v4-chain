@@ -84,7 +84,7 @@ export async function onBatch(
     batchProcessingTime,
     metricTags,
   );
-  stats.gauge(
+  stats.timing(
     'vulcan.batch_size',
     batch.messages.length,
     metricTags,

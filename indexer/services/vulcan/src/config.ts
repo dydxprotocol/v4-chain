@@ -21,9 +21,6 @@ export const configSchema = {
   ...redisConfigSchema,
 
   BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
-  KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY: parseNumber({
-    default: 20,
-  }),
   KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
     default: 3_000,
   }),
