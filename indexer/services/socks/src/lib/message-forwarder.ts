@@ -139,7 +139,16 @@ export class MessageForwarder {
 
     for (let i = 0; i < batch.messages.length; i++) {
       const message: KafkaMessage = batch.messages[i];
-      this.onMessage(topic, message);
+      try {
+        this.onMessage(topic, batch.messages[i]);
+      } catch (error) {
+        logger.error({
+          at: 'on-batch#onBatch',
+          message: 'Failed to process message',
+          kafkaMessage: safeJsonStringify(message),
+          error,
+        });
+      }
     }
 
     const batchProcessingTime: number = Date.now() - startTime;
