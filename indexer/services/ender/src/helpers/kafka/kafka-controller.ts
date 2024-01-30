@@ -1,6 +1,6 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
-  consumer, producer, TO_ENDER_TOPIC, addOnMessageFunction,
+  consumer, producer, TO_ENDER_TOPIC, updateOnMessageFunction,
 } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
@@ -20,9 +20,9 @@ export async function connect(): Promise<void> {
     fromBeginning: true,
   });
 
-  addOnMessageFunction((_topic: string, message: KafkaMessage): Promise<void> => {
-    return onMessage(message);
-  });
+  updateOnMessageFunction(
+    (_topic: string, message: KafkaMessage): Promise<void> => onMessage(message),
+  );
 
   logger.info({
     at: 'consumers#connect',
