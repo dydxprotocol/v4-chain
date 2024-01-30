@@ -385,6 +385,11 @@ describe('aggregate-trading-rewards', () => {
           intervalToBeProcessed.start.toISO(),
           redisClient,
         ),
+        TradingRewardAggregationTable.create({
+          ...defaultCreatedTradingRewardAggregation,
+          startedAt: intervalToBeProcessed.start.minus({ days: 1 }).toISO(),
+          startedAtHeight: '1',
+        }),
       ]);
 
       const aggregateTradingReward: AggregateTradingReward = new AggregateTradingReward(
@@ -396,7 +401,7 @@ describe('aggregate-trading-rewards', () => {
         TradingRewardAggregationPeriod.DAILY,
         intervalToBeProcessed.end.toISO(),
       );
-      await validateNumberOfAggregations(1);
+      await validateNumberOfAggregations(2);
       await validateAggregationWithExpectedValue(defaultCreatedTradingRewardAggregation);
     });
 

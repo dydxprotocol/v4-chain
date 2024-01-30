@@ -137,12 +137,12 @@ export async function create(
   return TradingRewardAggregationModel.query(
     Transaction.get(options.txId),
   ).insert({
+    ...aggregationToCreate,
     id: uuid(
       aggregationToCreate.address,
       aggregationToCreate.period,
       aggregationToCreate.startedAtHeight,
     ),
-    ...aggregationToCreate,
   }).returning('*');
 }
 
