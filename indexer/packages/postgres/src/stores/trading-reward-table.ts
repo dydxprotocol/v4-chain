@@ -107,8 +107,8 @@ export async function create(
   return TradingRewardModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(tradingRewardToCreate.address, tradingRewardToCreate.blockHeight),
     ...tradingRewardToCreate,
+    id: uuid(tradingRewardToCreate.address, tradingRewardToCreate.blockHeight),
   }).returning('*');
 }
 
