@@ -122,12 +122,12 @@ export async function create(
   return FundingIndexUpdatesModel.query(
     Transaction.get(options.txId),
   ).insert({
+    ...fundingIndexUpdateToCreate,
     id: uuid(
       fundingIndexUpdateToCreate.effectiveAtHeight,
       fundingIndexUpdateToCreate.eventId,
       fundingIndexUpdateToCreate.perpetualId,
     ),
-    ...fundingIndexUpdateToCreate,
   }).returning('*');
 }
 

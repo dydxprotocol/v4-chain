@@ -111,8 +111,8 @@ export async function create(
   return CandleModel.query(
     Transaction.get(options.txId),
   ).insert({
-    id: uuid(candle.startedAt, candle.ticker, candle.resolution),
     ...candle,
+    id: uuid(candle.startedAt, candle.ticker, candle.resolution),
   }).returning('*');
 }
 
