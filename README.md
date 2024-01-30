@@ -28,6 +28,14 @@ This repository contains the source code for the Cosmos SDK application responsi
 
 [dYdX Blog](https://dydx.exchange/blog#)
 
+# Third-party Clients
+
+[C++ Client](https://github.com/asnefedovv/dydx-v4-client-cpp)
+
+[Python Client](https://github.com/kaloureyes3/v4-clients/tree/main/v4-client-py)
+
+By clicking the above links to third-party clients, you will leave the dYdX Trading Inc. (“dYdX”) GitHub repository and join repositories made available by third parties, which are independent from and unaffiliated with dYdX. dYdX is not responsible for any action taken or content on third-party repositories.
+
 # Directory Structure
 
 `audits` — Audit reports live here.
