@@ -13,21 +13,24 @@ import (
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
+		cdc           codec.BinaryCodec
+		stakingKeeper types.StakingKeeper
+		storeKey      storetypes.StoreKey
+		authorities   map[string]struct{}
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
+	stakingKeeper types.StakingKeeper,
 	storeKey storetypes.StoreKey,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:           cdc,
+		stakingKeeper: stakingKeeper,
+		storeKey:      storeKey,
+		authorities:   lib.UniqueSliceToSet(authorities),
 	}
 }
 

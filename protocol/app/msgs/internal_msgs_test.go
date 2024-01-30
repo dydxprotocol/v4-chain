@@ -97,6 +97,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator",
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
+
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",

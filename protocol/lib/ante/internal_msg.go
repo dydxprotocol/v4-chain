@@ -20,6 +20,7 @@ import (
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	govplus "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -87,6 +88,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// feetiers
 		*feetiers.MsgUpdatePerpetualFeeParams,
+
+		// govplus
+		*govplus.MsgSlashValidator,
 
 		// perpetuals
 		*perpetuals.MsgCreatePerpetual,

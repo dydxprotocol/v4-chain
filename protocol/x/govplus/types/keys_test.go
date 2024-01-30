@@ -9,5 +9,5 @@ import (
 
 func TestModuleKeys(t *testing.T) {
 	require.Equal(t, "govplus", types.ModuleName)
-	require.Equal(t, "govplus", types.StoreKey)
+	require.Equal(t, "dydxgovplus", types.StoreKey)
 }

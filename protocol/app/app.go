@@ -391,6 +391,7 @@ func New(
 		sendingmoduletypes.StoreKey,
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
+		govplusmoduletypes.StoreKey,
 	)
 	tkeys := storetypes.NewTransientStoreKeys(
 		paramstypes.TStoreKey,
@@ -1012,6 +1013,7 @@ func New(
 
 	app.GovPlusKeeper = *govplusmodulekeeper.NewKeeper(
 		appCodec,
+		app.StakingKeeper,
 		keys[govplusmoduletypes.StoreKey],
 		[]string{
 			lib.GovModuleAddress.String(),
