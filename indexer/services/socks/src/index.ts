@@ -57,7 +57,7 @@ async function start(): Promise<void> {
   });
 
   await connectToKafka();
-  await startConsumer();
+  await startConsumer(config.BATCH_PROCESSING_ENABLED);
 
   const subscriptions: Subscriptions = new Subscriptions();
   index = new Index(wss, subscriptions);

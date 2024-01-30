@@ -4,8 +4,8 @@ import {
   InfoObject,
   safeJsonStringify,
 } from '@dydxprotocol-indexer/base';
-import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
-import { KafkaMessage } from 'kafkajs';
+import { updateOnMessageFunction, updateOnBatchFunction } from '@dydxprotocol-indexer/kafka';
+import { Batch, EachBatchPayload, KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 
 import config from '../config';
@@ -62,10 +62,24 @@ export class MessageForwarder {
     }
 
     // Kafkajs requires the function passed into `eachMessage` be an async function.
-    // eslint-disable-next-line @typescript-eslint/require-await
-    updateOnMessageFunction(async (topic, message): Promise<void> => {
-      return this.onMessage(topic, message);
-    });
+    if (config.BATCH_PROCESSING_ENABLED) {
+      logger.info({
+        at: 'consumers#connect',
+        message: 'Batch processing enabled',
+      });
+      // eslint-disable-next-line @typescript-eslint/require-await
+      updateOnBatchFunction(async (payload: EachBatchPayload) => this.onBatch(payload));
+    } else {
+      logger.info({
+        at: 'consumers#connect',
+        message: 'Batch processing disabled. Processing each message individually',
+      });
+      updateOnMessageFunction(async (
+        topic: string,
+        message: KafkaMessage,
+      // eslint-disable-next-line @typescript-eslint/require-await
+      ): Promise<void> => this.onMessage(topic, message));
+    }
 
     this.started = true;
     this.batchSending = setInterval(
@@ -82,6 +96,69 @@ export class MessageForwarder {
       throw new Error('MessageForwarder not started');
     }
     clearInterval(this.batchSending);
+  }
+
+  public onBatch(
+    payload: EachBatchPayload,
+  ): void {
+    const batch: Batch = payload.batch;
+    const topic: string = batch.topic;
+    const partition: string = batch.partition.toString();
+    const metricTags: Record<string, string> = { topic, partition };
+    if (batch.isEmpty()) {
+      logger.error({
+        at: 'on-batch#onBatch',
+        message: 'Empty batch',
+        ...metricTags,
+      });
+      return;
+    }
+
+    const startTime: number = Date.now();
+    const firstMessageTimestamp: number = Number(batch.messages[0].timestamp);
+    const batchTimeInQueue: number = startTime - firstMessageTimestamp;
+    const batchInfo = {
+      firstMessageTimestamp: new Date(firstMessageTimestamp).toISOString(),
+      batchTimeInQueue,
+      messagesInBatch: batch.messages.length,
+      firstOffset: batch.firstOffset(),
+      lastOffset: batch.lastOffset(),
+      ...metricTags,
+    };
+
+    logger.info({
+      at: 'on-batch#onBatch',
+      message: 'Received batch',
+      ...batchInfo,
+    });
+    stats.timing(
+      'socks.batch_time_in_queue',
+      batchTimeInQueue,
+      metricTags,
+    );
+
+    for (let i = 0; i < batch.messages.length; i++) {
+      const message: KafkaMessage = batch.messages[i];
+      this.onMessage(topic, message);
+    }
+
+    const batchProcessingTime: number = Date.now() - startTime;
+    logger.info({
+      at: 'on-batch#onBatch',
+      message: 'Finished Processing Batch',
+      batchProcessingTime,
+      ...batchInfo,
+    });
+    stats.timing(
+      'socks.batch_processing_time',
+      batchProcessingTime,
+      metricTags,
+    );
+    stats.timing(
+      'socks.batch_size',
+      batch.messages.length,
+      metricTags,
+    );
   }
 
   public onMessage(topic: string, message: KafkaMessage): void {
