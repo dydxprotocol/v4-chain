@@ -23,7 +23,6 @@ import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckLimitAndCreatedBeforeOrAtSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -77,7 +76,6 @@ class TradesController extends Controller {
 
 router.get(
   '/perpetualMarket/:ticker',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitAndCreatedBeforeOrAtSchema,
   ...checkSchema({
