@@ -91,6 +91,7 @@ export function setBulkRowsForUpdate<T extends string>({
   uuidColumns,
   booleanColumns,
   binaryColumns,
+  enumColumns,
 }: {
   objectArray: Partial<Record<T, string | number | boolean | Buffer | null>>[],
   columns: T[],
@@ -101,6 +102,7 @@ export function setBulkRowsForUpdate<T extends string>({
   uuidColumns?: T[],
   booleanColumns?: T[],
   binaryColumns?: T[],
+  enumColumns?: T[],
 }): string[] {
   return objectArray.map((object) => columns.map((col) => {
     if (stringColumns && stringColumns.includes(col)) {
@@ -124,6 +126,9 @@ export function setBulkRowsForUpdate<T extends string>({
     if (booleanColumns && booleanColumns.includes(col)) {
       return `${castNull(object[col])}`;
     }
+    if (enumColumns && enumColumns.includes(col)) {
+      return `${castEnumNull(object[col])}`;
+    }
     throw new Error(`Unsupported column for bulk update: ${col}`);
   }).join(', '));
 }
@@ -138,6 +143,18 @@ function castNull(
     return 'NULL';
   }
   return `${value}`;
+}
+
+/**
+ * If the value is null || undefined, return 'NULL'
+ */
+function castEnumNull(
+  value: Buffer | string | number | boolean | null | undefined,
+): string {
+  if (value === null || value === undefined) {
+    return 'NULL';
+  }
+  return `'${value}'`;
 }
 
 /**
