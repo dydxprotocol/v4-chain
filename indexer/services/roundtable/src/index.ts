@@ -16,6 +16,7 @@ import deleteOldFastSyncSnapshots from './tasks/delete-old-fast-sync-snapshots';
 import deleteZeroPriceLevelsTask from './tasks/delete-zero-price-levels';
 import marketUpdaterTask from './tasks/market-updater';
 import orderbookInstrumentationTask from './tasks/orderbook-instrumentation';
+import performComplianceStatusTransitionsTask from './tasks/perform-compliance-status-transitions';
 import removeExpiredOrdersTask from './tasks/remove-expired-orders';
 import removeOldOrderUpdatesTask from './tasks/remove-old-order-updates';
 import takeFastSyncSnapshotTask from './tasks/take-fast-sync-snapshot';
@@ -124,6 +125,12 @@ async function start(): Promise<void> {
     () => updateComplianceDataTask(complianceProvider),
     'update_compliance_data',
     config.LOOPS_INTERVAL_MS_UPDATE_COMPLIANCE_DATA,
+  );
+
+  startLoop(
+    () => performComplianceStatusTransitionsTask(),
+    'update_compliance_status',
+    config.LOOPS_INTERVAL_MS_PERFORM_COMPLIANCE_STATUS_TRANSITIONS,
   );
 
   if (config.LOOPS_ENABLED_TRACK_LAG) {
