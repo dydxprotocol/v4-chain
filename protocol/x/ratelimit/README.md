@@ -1,6 +1,6 @@
 <ins>**Attribution; Modification**.</ins>
 
-This module incorporates code from the [Stride](https://github.com/Stride-Labs/stride)'s `x/ratelimit` [module](https://github.com/Stride-Labs/stride/tree/main/x/ratelimit), which is subject to [this License](https://github.com/Stride-Labs/stride?tab=Apache-2.0-1-ov-file#readme) and has been modified by us.
+This module incorporates code from [Stride](https://github.com/Stride-Labs/stride)'s `x/ratelimit` [module](https://github.com/Stride-Labs/stride/tree/main/x/ratelimit), which is subject to [this License](https://github.com/Stride-Labs/stride?tab=Apache-2.0-1-ov-file#readme) and has been modified by us.
 
 The code from Stride Labs incorporated into this module includes code from [Osmosis](https://github.com/osmosis-labs/osmosis) provided under [this License](https://github.com/osmosis-labs/osmosis/blob/main/LICENSE).  
 
