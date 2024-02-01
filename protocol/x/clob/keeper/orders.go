@@ -140,7 +140,7 @@ func (k Keeper) PlaceShortTermOrder(
 	}
 
 	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
-	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
+	err = k.ValidateSubaccountEquityTierLimitForShortTermOrder(ctx, order)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -293,7 +293,7 @@ func (k Keeper) PlaceStatefulOrder(
 	}
 
 	// 3. Check that adding the order would not exceed the equity tier for the account.
-	if err := k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order); err != nil {
+	if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
 		return err
 	}
 

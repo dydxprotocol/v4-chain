@@ -53,10 +53,81 @@ func (k *Keeper) InitializeEquityTierLimit(
 	return nil
 }
 
-// ValidateSubaccountEquityTierLimitForNewOrder returns an error if adding the order would exceed the equity
-// tier limit on how many open orders a subaccount can have. Short-term fill-or-kill and immediate-or-cancel orders
-// never rest on the book and will always be allowed as they do not apply to the number of open orders that equity
-// tier limits enforce.
+// getEquityTierLimit returns the equity tier limit for a subaccount based on its net collateral.
+func (k Keeper) getEquityTierLimit(
+	ctx sdk.Context, subaccountId satypes.SubaccountId,
+	equityTierLimits []types.EquityTierLimit,
+) (types.EquityTierLimit, error) {
+
+	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+		ctx,
+		satypes.Update{
+			SubaccountId: subaccountId,
+		},
+	)
+	if err != nil {
+		return types.EquityTierLimit{}, err
+	}
+
+	var equityTierLimit types.EquityTierLimit
+	for _, limit := range equityTierLimits {
+		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
+			break
+		}
+		equityTierLimit = limit
+	}
+
+	// Return immediately if the amount the subaccount can open is 0
+	if equityTierLimit.Limit == 0 {
+		return types.EquityTierLimit{}, errorsmod.Wrapf(
+			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
+			"Opening order would exceed equity tier limit of %d, for subaccount %+v with net collateral %+v",
+			equityTierLimit.Limit,
+			subaccountId,
+			netCollateral,
+		)
+	}
+
+	return equityTierLimit, nil
+}
+
+// ValidateSubaccountEquityTierLimitForShortTermOrder returns an error if adding the order would exceed the equity
+// tier limit on how many short term open orders a subaccount can have. Short-term fill-or-kill and immediate-or-cancel
+// orders never rest on the book and will always be allowed as they do not apply to the number of open orders that
+// equity tier limits enforce.
+func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Context, order types.Order) error {
+	if order.RequiresImmediateExecution() {
+		return nil
+	}
+
+	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
+	if len(equityTierLimits) == 0 {
+		return nil
+	}
+
+	equityTierLimit, err := k.getEquityTierLimit(ctx, order.GetSubaccountId(), equityTierLimits)
+	if err != nil {
+		return err
+	}
+
+	// For short term orders we just count how many orders exist on the memclob.
+	equityTierCount := k.MemClob.CountSubaccountShortTermOrders(ctx, order.GetSubaccountId())
+
+	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
+	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
+		return errorsmod.Wrapf(
+			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
+			"Opening order would exceed equity tier limit of %d. Order count: %d, order id: %+v",
+			equityTierLimit.Limit,
+			equityTierCount,
+			order.GetOrderId(),
+		)
+	}
+	return nil
+}
+
+// ValidateSubaccountEquityTierLimitForStatefulOrder returns an error if adding the order would exceed the equity
+// tier limit on how many open orders a subaccount can have
 //
 // Note that the method is dependent on whether we are executing on `checkState` or on `deliverState` for
 // stateful orders. For `deliverState`, we sum:
@@ -65,90 +136,46 @@ func (k *Keeper) InitializeEquityTierLimit(
 //   - the number of untriggered conditional orders.
 //
 // And for `checkState`, we add to the above sum the number of uncommitted stateful orders in the mempool.
-func (k Keeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx sdk.Context, order types.Order) error {
-	// Always allow short-term FoK or IoC orders as they will either fill immediately or be cancelled and won't rest on
-	// the book.
-	if order.IsShortTermOrder() && order.RequiresImmediateExecution() {
-		return nil
-	}
+func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Context, order types.Order) error {
 
-	var equityTierLimits []types.EquityTierLimit
-	if order.IsShortTermOrder() {
-		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).ShortTermOrderEquityTiers
-	} else if order.IsStatefulOrder() {
-		equityTierLimits = k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
-	} else {
-		panic(fmt.Sprintf("Unsupported order type for equity tiers. Order: %+v", order))
-	}
+	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
 	if len(equityTierLimits) == 0 {
 		return nil
 	}
 
-	subaccountId := order.GetSubaccountId()
-	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
-		ctx,
-		satypes.Update{
-			SubaccountId: subaccountId,
-		},
-	)
+	equityTierLimit, err := k.getEquityTierLimit(ctx, order.GetSubaccountId(), equityTierLimits)
 	if err != nil {
 		return err
 	}
 
-	equityTierLimit := types.EquityTierLimit{}
-	for _, limit := range equityTierLimits {
-		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
-			break
-		}
-		equityTierLimit = limit
-	}
-	// Return immediately if the amount the subaccount can open is 0.
-	if equityTierLimit.Limit == 0 {
-		return errorsmod.Wrapf(
-			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order id: %+v",
-			equityTierLimit.Limit,
-			order.GetOrderId(),
-		)
-	}
-
 	equityTierCount := uint32(0)
-	if order.IsStatefulOrder() {
-		// For stateful orders we get the stateful order count.
-		// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
-		// is aware of (orders that are part of the mempool but have yet to proposed in a block).
-		equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
-		if !lib.IsDeliverTxMode(ctx) {
-			equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
-			if equityTierCountMaybeNegative < 0 {
-				panic(
-					fmt.Errorf(
-						"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
-							"equityTierCount %d, statefulOrderCount %d, uncommittedStatefulOrderCount %d.",
-						order,
-						equityTierCountMaybeNegative,
-						k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId),
-						k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
-					),
-				)
-			}
-			equityTierCount = uint32(equityTierCountMaybeNegative)
+	// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
+	// is aware of (orders that are part of the mempool but have yet to proposed in a block).
+	equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
+	if !lib.IsDeliverTxMode(ctx) {
+		equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
+		if equityTierCountMaybeNegative < 0 {
+			panic(
+				fmt.Errorf(
+					"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+						"equityTierCount %d, statefulOrderCount %d, uncommittedStatefulOrderCount %d.",
+					order,
+					equityTierCountMaybeNegative,
+					k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId),
+					k.GetUncommittedStatefulOrderCount(ctx, order.OrderId),
+				),
+			)
 		}
-	}
-
-	if order.IsShortTermOrder() {
-		// For short term orders we just count how many orders exist on the memclob.
-		equityTierCount = k.MemClob.CountSubaccountShortTermOrders(ctx, subaccountId)
+		equityTierCount = uint32(equityTierCountMaybeNegative)
 	}
 
 	// Verify that opening this order would not exceed the maximum amount of orders for the equity tier.
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
+			"Opening order would exceed equity tier limit of %d. Order count: %d, order id: %+v",
 			equityTierLimit.Limit,
 			equityTierCount,
-			netCollateral,
 			order.GetOrderId(),
 		)
 	}
