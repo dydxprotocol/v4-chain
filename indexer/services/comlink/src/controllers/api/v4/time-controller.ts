@@ -4,7 +4,6 @@ import { Controller, Get, Route } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { TimeResponse } from '../../../types';
 
@@ -26,7 +25,6 @@ class TimeController extends Controller {
 
 router.get(
   '/',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   (_req: express.Request, res: express.Response) => {
