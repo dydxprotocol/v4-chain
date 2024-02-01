@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -53,11 +54,14 @@ func (k *Keeper) InitializeEquityTierLimit(
 	return nil
 }
 
-// getEquityTierLimit returns the equity tier limit for a subaccount based on its net collateral.
-func (k Keeper) getEquityTierLimit(
+// getEquityTierLimitForSubaccount returns the equity tier limit for a subaccount based on its net collateral.
+// The equity tier limit is the maximum amount of open orders a subaccount can have based on its net collateral
+// and the equity tier limits configuration. If the subaccount has no net collateral, return an error.
+// Also returns the net collateral of the subaccount for debug purposes.
+func (k Keeper) getEquityTierLimitForSubaccount(
 	ctx sdk.Context, subaccountId satypes.SubaccountId,
 	equityTierLimits []types.EquityTierLimit,
-) (types.EquityTierLimit, error) {
+) (equityTier types.EquityTierLimit, bigNetCollateral *big.Int, err error) {
 	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
@@ -65,7 +69,7 @@ func (k Keeper) getEquityTierLimit(
 		},
 	)
 	if err != nil {
-		return types.EquityTierLimit{}, err
+		return types.EquityTierLimit{}, nil, err
 	}
 
 	var equityTierLimit types.EquityTierLimit
@@ -78,7 +82,7 @@ func (k Keeper) getEquityTierLimit(
 
 	// Return immediately if the amount the subaccount can open is 0
 	if equityTierLimit.Limit == 0 {
-		return types.EquityTierLimit{}, errorsmod.Wrapf(
+		return types.EquityTierLimit{}, nil, errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d, for subaccount %+v with net collateral %+v",
 			equityTierLimit.Limit,
@@ -87,7 +91,7 @@ func (k Keeper) getEquityTierLimit(
 		)
 	}
 
-	return equityTierLimit, nil
+	return equityTierLimit, nil, nil
 }
 
 // ValidateSubaccountEquityTierLimitForShortTermOrder returns an error if adding the order would exceed the equity
@@ -104,7 +108,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 		return nil
 	}
 
-	equityTierLimit, err := k.getEquityTierLimit(ctx, order.GetSubaccountId(), equityTierLimits)
+	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(ctx, order.GetSubaccountId(), equityTierLimits)
 	if err != nil {
 		return err
 	}
@@ -116,8 +120,9 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order count: %d, order id: %+v",
+			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
 			equityTierLimit.Limit,
+			netCollateral,
 			equityTierCount,
 			order.GetOrderId(),
 		)
@@ -139,7 +144,7 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 		return nil
 	}
 
-	equityTierLimit, err := k.getEquityTierLimit(ctx, order.GetSubaccountId(), equityTierLimits)
+	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(ctx, order.GetSubaccountId(), equityTierLimits)
 	if err != nil {
 		return err
 	}
@@ -168,9 +173,10 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 	if lib.MustConvertIntegerToUint32(equityTierCount) >= equityTierLimit.Limit {
 		return errorsmod.Wrapf(
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-			"Opening order would exceed equity tier limit of %d. Order count: %d, order id: %+v",
+			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
 			equityTierLimit.Limit,
 			equityTierCount,
+			netCollateral,
 			order.GetOrderId(),
 		)
 	}
