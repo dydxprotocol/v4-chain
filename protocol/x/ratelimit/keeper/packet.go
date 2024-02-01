@@ -1,8 +1,8 @@
 package keeper
 
-// TODO(CORE-854): Improve attribution message.
-// This file was written with reference to Stride's IBC Rate Limit implementation:
-// https://github.com/Stride-Labs/stride/blob/121f2ac5d2e5f8e406f89999410a49ea4277a552/x/ratelimit
+// This file includes keeper methods used by the IBC middleware for processing IBC packets.
+// Re-uses/adapts Stride x/ratelimit implementation: https://github.com/Stride-Labs/stride/tree/4913e1dd1a/x/ratelimit
+// See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
 
 import (
 	"fmt"

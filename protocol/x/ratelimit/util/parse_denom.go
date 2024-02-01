@@ -1,9 +1,8 @@
 package util
 
-// TODO(CORE-854): Improve attribution message.
-// Denom-parsing utility functions are copied over from Stride's implementation:
-// https://github.com/Stride-Labs/stride/blob/eb3564c/x/ratelimit/keeper/packet.go#L40
-
+// This file includes utility methods used by the IBC middleware for parsing IBC denoms.
+// Re-uses Stride x/ratelimit implementation: https://github.com/Stride-Labs/stride/tree/4913e1dd1a/x/ratelimit
+// See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
 import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
