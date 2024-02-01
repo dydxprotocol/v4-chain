@@ -58,7 +58,6 @@ func (k Keeper) getEquityTierLimit(
 	ctx sdk.Context, subaccountId satypes.SubaccountId,
 	equityTierLimits []types.EquityTierLimit,
 ) (types.EquityTierLimit, error) {
-
 	netCollateral, _, _, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{
@@ -137,7 +136,6 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 //
 // And for `checkState`, we add to the above sum the number of uncommitted stateful orders in the mempool.
 func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Context, order types.Order) error {
-
 	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
 	if len(equityTierLimits) == 0 {
 		return nil
