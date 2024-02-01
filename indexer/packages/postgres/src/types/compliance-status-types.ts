@@ -19,16 +19,16 @@ export enum ComplianceStatus {
 
 export interface ComplianceStatusCreateObject {
   address: string;
-  status: string;
-  reason?: string;
+  status: ComplianceStatus;
+  reason?: ComplianceReason;
   createdAt: IsoString;
   updatedAt: IsoString;
 }
 
 export interface ComplianceStatusUpdateObject {
   address: string;
-  status?: string;
-  reason?: string | null;
+  status?: ComplianceStatus;
+  reason?: ComplianceReason | null;
   createdAt?: IsoString;
   updatedAt?: IsoString;
 }
