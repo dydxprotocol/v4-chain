@@ -126,15 +126,13 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 }
 
 // ValidateSubaccountEquityTierLimitForStatefulOrder returns an error if adding the order would exceed the equity
-// tier limit on how many open orders a subaccount can have
+// tier limit on how many open orders a subaccount can have.
 //
 // Note that the method is dependent on whether we are executing on `checkState` or on `deliverState` for
 // stateful orders. For `deliverState`, we sum:
 //   - the number of long term orders.
-//   - the number of triggered conditional orders.
-//   - the number of untriggered conditional orders.
-//
-// And for `checkState`, we add to the above sum the number of uncommitted stateful orders in the mempool.
+//   - the number of conditional orders.
+//   - the number of uncommitted stateful orders in the mempool (checkState only)
 func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Context, order types.Order) error {
 	equityTierLimits := k.GetEquityTierLimitConfiguration(ctx).StatefulOrderEquityTiers
 	if len(equityTierLimits) == 0 {
@@ -146,16 +144,15 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 		return err
 	}
 
-	equityTierCount := uint32(0)
+	equityTierCount := k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
 	// If this is `CheckTx` then we must also add the number of uncommitted stateful orders that this validator
 	// is aware of (orders that are part of the mempool but have yet to proposed in a block).
-	equityTierCount = k.GetStatefulOrderCount(ctx, order.OrderId.SubaccountId)
 	if !lib.IsDeliverTxMode(ctx) {
 		equityTierCountMaybeNegative := k.GetUncommittedStatefulOrderCount(ctx, order.OrderId) + int32(equityTierCount)
 		if equityTierCountMaybeNegative < 0 {
 			panic(
 				fmt.Errorf(
-					"Expected ValidateSubaccountEquityTierLimitForNewOrder for new order %+v to be >= 0. "+
+					"Expected ValidateSubaccountEquityTierLimitForStatefulOrder for new order %+v to be >= 0. "+
 						"equityTierCount %d, statefulOrderCount %d, uncommittedStatefulOrderCount %d.",
 					order,
 					equityTierCountMaybeNegative,
