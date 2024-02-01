@@ -56,7 +56,8 @@ func (k *Keeper) InitializeEquityTierLimit(
 
 // getEquityTierLimitForSubaccount returns the equity tier limit for a subaccount based on its net collateral.
 // The equity tier limit is the maximum amount of open orders a subaccount can have based on its net collateral
-// and the equity tier limits configuration. An error is returned if calculating the net collateral returns an error or the user has zero allowed open orders based upon their net collateral.
+// and the equity tier limits configuration. An error is returned if calculating the net collateral returns an
+// error or the user has zero allowed open orders based upon their net collateral.
 // Also returns the net collateral of the subaccount for debug purposes.
 func (k Keeper) getEquityTierLimitForSubaccount(
 	ctx sdk.Context, subaccountId satypes.SubaccountId,
@@ -108,7 +109,11 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 		return nil
 	}
 
-	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(ctx, order.GetSubaccountId(), equityTierLimits)
+	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(
+		ctx,
+		order.GetSubaccountId(),
+		equityTierLimits,
+	)
 	if err != nil {
 		return err
 	}
@@ -144,7 +149,11 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx sdk.Contex
 		return nil
 	}
 
-	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(ctx, order.GetSubaccountId(), equityTierLimits)
+	equityTierLimit, netCollateral, err := k.getEquityTierLimitForSubaccount(
+		ctx,
+		order.GetSubaccountId(),
+		equityTierLimits,
+	)
 	if err != nil {
 		return err
 	}
