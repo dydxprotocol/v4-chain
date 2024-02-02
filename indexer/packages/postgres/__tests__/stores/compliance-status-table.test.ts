@@ -1,7 +1,7 @@
 import { ComplianceStatus, ComplianceStatusFromDatabase } from '../../src/types';
 import * as ComplianceStatusTable from '../../src/stores/compliance-status-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import {compliantStatusData, defaultAddress, noncompliantStatusData} from '../helpers/constants';
+import { compliantStatusData, defaultAddress, noncompliantStatusData } from '../helpers/constants';
 import { DateTime } from 'luxon';
 
 describe('Compliance status store', () => {
