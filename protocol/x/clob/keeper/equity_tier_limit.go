@@ -127,8 +127,8 @@ func (k Keeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx sdk.Conte
 			types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 			"Opening order would exceed equity tier limit of %d. Order count: %d, total net collateral: %+v, order id: %+v",
 			equityTierLimit.Limit,
-			netCollateral,
 			equityTierCount,
+			netCollateral,
 			order.GetOrderId(),
 		)
 	}
