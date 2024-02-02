@@ -21,8 +21,8 @@ export interface ComplianceStatusCreateObject {
   address: string;
   status: ComplianceStatus;
   reason?: ComplianceReason;
-  createdAt: IsoString;
-  updatedAt: IsoString;
+  createdAt?: IsoString;
+  updatedAt?: IsoString;
 }
 
 export interface ComplianceStatusUpdateObject {

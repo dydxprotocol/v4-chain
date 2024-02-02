@@ -1,7 +1,7 @@
 import { ComplianceStatus, ComplianceStatusFromDatabase } from '../../src/types';
 import * as ComplianceStatusTable from '../../src/stores/compliance-status-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { compliantStatusData, noncompliantStatusData } from '../helpers/constants';
+import {compliantStatusData, defaultAddress, noncompliantStatusData} from '../helpers/constants';
 import { DateTime } from 'luxon';
 
 describe('Compliance status store', () => {
@@ -22,6 +22,24 @@ describe('Compliance status store', () => {
       ComplianceStatusTable.create(compliantStatusData),
       ComplianceStatusTable.create(noncompliantStatusData),
     ]);
+  });
+
+  it('Successfully creates compliance status without createdAt/updatedAt', async () => {
+    await ComplianceStatusTable.create({
+      address: defaultAddress,
+      status: ComplianceStatus.COMPLIANT,
+    });
+    const complianceStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
+      {},
+      [],
+      { readReplica: true },
+    );
+
+    expect(complianceStatus.length).toEqual(1);
+    expect(complianceStatus[0]).toEqual(expect.objectContaining({
+      address: defaultAddress,
+      status: ComplianceStatus.COMPLIANT,
+    }));
   });
 
   it('Successfully finds all compliance status', async () => {
@@ -86,7 +104,7 @@ describe('Compliance status store', () => {
     await ComplianceStatusTable.create(noncompliantStatusData);
 
     const updatedTime: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt,
+      noncompliantStatusData.createdAt!,
     ).plus({ minutes: 10 }).toUTC().toISO();
 
     await ComplianceStatusTable.update({
@@ -127,7 +145,7 @@ describe('Compliance status store', () => {
     await ComplianceStatusTable.upsert(noncompliantStatusData);
 
     const updatedTime: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt,
+      noncompliantStatusData.createdAt!,
     ).plus({ minutes: 10 }).toUTC().toISO();
 
     await ComplianceStatusTable.upsert({
@@ -156,10 +174,10 @@ describe('Compliance status store', () => {
     await ComplianceStatusTable.create(noncompliantStatusData);
 
     const updatedTime1: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt,
+      noncompliantStatusData.createdAt!,
     ).plus({ minutes: 10 }).toUTC().toISO();
     const updatedTime2: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt,
+      noncompliantStatusData.createdAt!,
     ).plus({ minutes: 20 }).toUTC().toISO();
     const otherAddress: string = '0x123456789abcdef';
 

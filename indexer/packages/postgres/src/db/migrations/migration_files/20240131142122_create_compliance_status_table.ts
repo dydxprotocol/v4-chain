@@ -23,8 +23,8 @@ export async function up(knex: Knex): Promise<void> {
           'COMPLIANCE_PROVIDER', // the address was set to the status due to being flagged by a compliance provider
         ],
       ).nullable().defaultTo(null); // null for COMPLIANT addresses
-      table.timestamp('createdAt').notNullable();
-      table.timestamp('updatedAt').notNullable();
+      table.timestamp('createdAt').notNullable().defaultTo(knex.fn.now());
+      table.timestamp('updatedAt').notNullable().defaultTo(knex.fn.now());
 
       table.index(['status']); // needed to search for CLOSE_ONLY addresses
       table.index(['updatedAt']); // needed to search for CLOSE_ONLY addresses
