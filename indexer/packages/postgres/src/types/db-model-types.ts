@@ -223,6 +223,14 @@ export interface ComplianceDataFromDatabase {
   updatedAt: string;
 }
 
+export interface ComplianceStatusFromDatabase {
+  address: string;
+  status: string;
+  reason?: string;
+  createdAt: IsoString;
+  updatedAt: IsoString;
+}
+
 export interface TradingRewardFromDatabase {
   id: string;
   address: string;

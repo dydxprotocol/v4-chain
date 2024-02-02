@@ -25,6 +25,7 @@ const layer1Tables = [
   'compliance_data',
   'trading_rewards',
   'trading_reward_aggregations',
+  'compliance_status',
 ];
 
 /**
