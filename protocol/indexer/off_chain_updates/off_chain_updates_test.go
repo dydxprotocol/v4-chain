@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
@@ -20,7 +19,6 @@ import (
 )
 
 var (
-	noopLogger                     = log.NewNopLogger()
 	orderIdHash                    = constants.OrderIdHash_Alice_Number0_Id0
 	order                          = constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	indexerOrder                   = v1.OrderToIndexerOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15)
