@@ -68,14 +68,14 @@ func TestPlaceOrder(t *testing.T) {
 			orders: []clobtypes.MsgPlaceOrder{PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20},
 			expectedOffchainMessagesAfterPlaceOrder: []msgsender.Message{
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
 					0,
 				).AddHeader(msgsender.MessageHeader{
@@ -100,14 +100,14 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			expectedOffchainMessagesAfterPlaceOrder: []msgsender.Message{
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
 					0,
 				).AddHeader(msgsender.MessageHeader{
@@ -115,14 +115,14 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -130,7 +130,7 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -252,14 +252,14 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			expectedOffchainMessagesAfterPlaceOrder: []msgsender.Message{
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
 					0,
 				).AddHeader(msgsender.MessageHeader{
@@ -267,14 +267,14 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -282,7 +282,7 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -292,7 +292,7 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			expectedOffchainMessagesInNextBlock: []msgsender.Message{
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				),
@@ -411,14 +411,14 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			expectedOffchainMessagesAfterPlaceOrder: []msgsender.Message{
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					0,
 				).AddHeader(msgsender.MessageHeader{
@@ -426,14 +426,14 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell5_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderPlaceMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order,
 				).AddHeader(msgsender.MessageHeader{
 					Key:   msgsender.TransactionHashHeaderKey,
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -441,7 +441,7 @@ func TestPlaceOrder(t *testing.T) {
 					Value: tmhash.Sum(CheckTx_PlaceOrder_Alice_Num0_Id0_Buy6_Price10_GTB20.Tx),
 				}),
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				).AddHeader(msgsender.MessageHeader{
@@ -451,7 +451,7 @@ func TestPlaceOrder(t *testing.T) {
 			},
 			expectedOffchainMessagesInNextBlock: []msgsender.Message{
 				off_chain_updates.MustCreateOrderUpdateMessage(
-					nil,
+					ctx,
 					PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.Order.OrderId,
 					PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 				),
