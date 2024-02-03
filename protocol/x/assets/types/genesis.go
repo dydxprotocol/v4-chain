@@ -4,17 +4,20 @@ import "github.com/dydxprotocol/v4-chain/protocol/lib"
 
 const (
 	// UusdcDenom is the precomputed denom for IBC Micro USDC.
-	UusdcDenom = "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
+	UusdcDenom         = "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5"
+	UusdcDenomExponent = -6
 )
 
-var AssetUsdc Asset = Asset{
-	Id:               0,
-	Symbol:           "USDC",
-	DenomExponent:    -6,
-	Denom:            UusdcDenom,
-	HasMarket:        false,
-	AtomicResolution: lib.QuoteCurrencyAtomicResolution,
-}
+var (
+	AssetUsdc Asset = Asset{
+		Id:               0,
+		Symbol:           "USDC",
+		DenomExponent:    UusdcDenomExponent,
+		Denom:            UusdcDenom,
+		HasMarket:        false,
+		AtomicResolution: lib.QuoteCurrencyAtomicResolution,
+	}
+)
 
 // DefaultGenesis returns the default Capability genesis state
 func DefaultGenesis() *GenesisState {

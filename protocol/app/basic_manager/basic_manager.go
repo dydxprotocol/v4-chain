@@ -6,6 +6,7 @@ import (
 	"cosmossdk.io/x/upgrade"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -27,8 +28,10 @@ import (
 	clobmodule "github.com/dydxprotocol/v4-chain/protocol/x/clob"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
+	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -69,6 +72,7 @@ var (
 		evidence.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
@@ -85,5 +89,7 @@ var (
 		delaymsgmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
+		ratelimitmodule.AppModuleBasic{},
+		govplusmodule.AppModuleBasic{},
 	)
 )

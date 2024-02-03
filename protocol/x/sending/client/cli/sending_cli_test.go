@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -50,7 +50,7 @@ func (s *SendingIntegrationTestSuite) SetupTest() {
 	s.cfg = network.DefaultConfig(nil)
 
 	s.cfg.Mnemonics = append(s.cfg.Mnemonics, validatorMnemonic)
-	s.cfg.ChainID = app.AppName
+	s.cfg.ChainID = appconstants.AppName
 
 	// Set min gas prices to zero so that we can submit transactions with zero gas price.
 	s.cfg.MinGasPrices = fmt.Sprintf("0%s", sdk.DefaultBondDenom)

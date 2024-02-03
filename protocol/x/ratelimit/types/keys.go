@@ -1,5 +1,7 @@
 package types
 
+import fmt "fmt"
+
 // Module name and store keys
 const (
 	// ModuleName defines the module name
@@ -14,7 +16,14 @@ const (
 
 	// LimitParamsKeyPrefix is the prefix for the key-value store for LimitParams
 	LimitParamsKeyPrefix = "LimitParams:"
+
+	// PendingSendPacketPrefix is the prefix for the key-value store for PendingSendPacket.
+	PendingSendPacketPrefix = "PendingSendPacket:"
 )
 
 // State
 const ()
+
+func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {
+	return []byte(fmt.Sprintf("%s_%d", channelId, sequenceNumber))
+}

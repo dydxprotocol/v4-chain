@@ -4,6 +4,7 @@ import (
 	evidence "cosmossdk.io/x/evidence/types"
 	feegrant "cosmossdk.io/x/feegrant"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/authz"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	crisis "github.com/cosmos/cosmos-sdk/x/crisis/types"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution/types"
@@ -15,17 +16,28 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 )
 
 var (
 	// NormalMsgs are messages that can be submitted by external users.
-	NormalMsgs = map[string]sdk.Msg{
+	NormalMsgs = lib.MergeAllMapsMustHaveDistinctKeys(NormalMsgsDefault, NormalMsgsDydxCustom)
+
+	// Default modules
+	NormalMsgsDefault = map[string]sdk.Msg{
 		// auth
 		"/cosmos.auth.v1beta1.BaseAccount":      nil,
 		"/cosmos.auth.v1beta1.ModuleAccount":    nil,
 		"/cosmos.auth.v1beta1.ModuleCredential": nil,
+
+		// authz
+		"/cosmos.authz.v1beta1.GenericAuthorization": nil,
+		"/cosmos.authz.v1beta1.MsgGrant":             &authz.MsgGrant{},
+		"/cosmos.authz.v1beta1.MsgGrantResponse":     nil,
+		"/cosmos.authz.v1beta1.MsgRevoke":            &authz.MsgRevoke{},
+		"/cosmos.authz.v1beta1.MsgRevokeResponse":    nil,
 
 		// bank
 		"/cosmos.bank.v1beta1.MsgMultiSend":         &bank.MsgMultiSend{},
@@ -79,8 +91,6 @@ var (
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance":          nil,
 
 		// gov
-		"/cosmos.gov.v1.MsgCancelProposal":            &gov.MsgCancelProposal{},
-		"/cosmos.gov.v1.MsgCancelProposalResponse":    nil,
 		"/cosmos.gov.v1.MsgDeposit":                   &gov.MsgDeposit{},
 		"/cosmos.gov.v1.MsgDepositResponse":           nil,
 		"/cosmos.gov.v1.MsgVote":                      &gov.MsgVote{},
@@ -123,24 +133,6 @@ var (
 		// upgrade
 		"/cosmos.upgrade.v1beta1.CancelSoftwareUpgradeProposal": nil,
 		"/cosmos.upgrade.v1beta1.SoftwareUpgradeProposal":       nil,
-
-		// clob
-		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
-		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
-		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
-		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
-
-		// perpetuals
-
-		// prices
-
-		// sending
-		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
-		"/dydxprotocol.sending.MsgCreateTransferResponse":         nil,
-		"/dydxprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
-		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
-		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 
 		// ibc.applications
 		"/ibc.applications.transfer.v1.MsgTransfer":           &ibctransfer.MsgTransfer{},
@@ -218,5 +210,26 @@ var (
 
 		// ica
 		"/ibc.applications.interchain_accounts.v1.InterchainAccount": nil,
+	}
+
+	// Custom modules
+	NormalMsgsDydxCustom = map[string]sdk.Msg{
+		// clob
+		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
+		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
+		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
+		"/dydxprotocol.clob.MsgPlaceOrderResponse":  nil,
+
+		// perpetuals
+
+		// prices
+
+		// sending
+		"/dydxprotocol.sending.MsgCreateTransfer":                 &sending.MsgCreateTransfer{},
+		"/dydxprotocol.sending.MsgCreateTransferResponse":         nil,
+		"/dydxprotocol.sending.MsgDepositToSubaccount":            &sending.MsgDepositToSubaccount{},
+		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
+		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
 	}
 )

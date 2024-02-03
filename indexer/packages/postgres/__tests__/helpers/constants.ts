@@ -24,6 +24,9 @@ import {
   CandleResolution,
   ComplianceDataCreateObject,
   ComplianceProvider,
+  ComplianceReason,
+  ComplianceStatus,
+  ComplianceStatusCreateObject,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
@@ -587,6 +590,23 @@ export const nonBlockedComplianceData: ComplianceDataCreateObject = {
   chain: dydxChain,
   blocked: false,
   riskScore: '10.00',
+  updatedAt: createdDateTime.plus(1).toISO(),
+};
+
+// ========= Compliance Status ==========
+
+export const compliantStatusData: ComplianceStatusCreateObject = {
+  address: defaultAddress,
+  status: ComplianceStatus.COMPLIANT,
+  createdAt: createdDateTime.toISO(),
+  updatedAt: createdDateTime.toISO(),
+};
+
+export const noncompliantStatusData: ComplianceStatusCreateObject = {
+  address: blockedAddress,
+  status: ComplianceStatus.BLOCKED,
+  reason: ComplianceReason.SANCTIONED_GEO,
+  createdAt: createdDateTime.plus(1).toISO(),
   updatedAt: createdDateTime.plus(1).toISO(),
 };
 

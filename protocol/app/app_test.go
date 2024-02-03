@@ -12,6 +12,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
+	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -38,8 +39,10 @@ import (
 	delaymsgmodule "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg"
 	epochsmodule "github.com/dydxprotocol/v4-chain/protocol/x/epochs"
 	feetiersmodule "github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
+	govplusmodule "github.com/dydxprotocol/v4-chain/protocol/x/govplus"
 	perpetualsmodule "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals"
 	pricesmodule "github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	ratelimitmodule "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit"
 	rewardsmodule "github.com/dydxprotocol/v4-chain/protocol/x/rewards"
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
@@ -198,6 +201,7 @@ func TestModuleBasics(t *testing.T) {
 		upgrade.AppModuleBasic{},
 		transfer.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		authzmodule.AppModuleBasic{},
 
 		// Custom modules
 		pricesmodule.AppModuleBasic{},
@@ -212,8 +216,10 @@ func TestModuleBasics(t *testing.T) {
 		vestmodule.AppModuleBasic{},
 		rewardsmodule.AppModuleBasic{},
 		sendingmodule.AppModuleBasic{},
+		govplusmodule.AppModuleBasic{},
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
+		ratelimitmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)

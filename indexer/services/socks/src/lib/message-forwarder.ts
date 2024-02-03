@@ -4,7 +4,7 @@ import {
   InfoObject,
   safeJsonStringify,
 } from '@dydxprotocol-indexer/base';
-import { addOnMessageFunction } from '@dydxprotocol-indexer/kafka';
+import { updateOnMessageFunction } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 import _ from 'lodash';
 
@@ -63,7 +63,7 @@ export class MessageForwarder {
 
     // Kafkajs requires the function passed into `eachMessage` be an async function.
     // eslint-disable-next-line @typescript-eslint/require-await
-    addOnMessageFunction(async (topic, message): Promise<void> => {
+    updateOnMessageFunction(async (topic, message): Promise<void> => {
       return this.onMessage(topic, message);
     });
 

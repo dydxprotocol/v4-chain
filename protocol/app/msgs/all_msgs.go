@@ -14,6 +14,15 @@ var (
 		"/cosmos.auth.v1beta1.ModuleCredential": {},
 		"/cosmos.auth.v1beta1.MsgUpdateParams":  {},
 
+		// authz
+		"/cosmos.authz.v1beta1.GenericAuthorization": {},
+		"/cosmos.authz.v1beta1.MsgExec":              {},
+		"/cosmos.authz.v1beta1.MsgExecResponse":      {},
+		"/cosmos.authz.v1beta1.MsgGrant":             {},
+		"/cosmos.authz.v1beta1.MsgGrantResponse":     {},
+		"/cosmos.authz.v1beta1.MsgRevoke":            {},
+		"/cosmos.authz.v1beta1.MsgRevokeResponse":    {},
+
 		// bank
 		"/cosmos.bank.v1beta1.MsgMultiSend":              {},
 		"/cosmos.bank.v1beta1.MsgMultiSendResponse":      {},
@@ -181,6 +190,10 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         {},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": {},
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator":         {},
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse": {},
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotes":               {},
 		"/dydxprotocol.perpetuals.MsgAddPremiumVotesResponse":       {},
@@ -200,6 +213,10 @@ var (
 		"/dydxprotocol.prices.MsgUpdateMarketPricesResponse": {},
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          {},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  {},
+
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams":         {},
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": {},
 
 		// sending
 		"/dydxprotocol.sending.MsgCreateTransfer":                  {},

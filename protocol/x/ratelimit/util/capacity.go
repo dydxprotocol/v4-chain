@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -28,33 +27,22 @@ import (
 // On a high level, `capacity` trends towards `baseline` by `capacity_diff` but does not “cross” it.
 func CalculateNewCapacityList(
 	bigTvl *big.Int,
-	limitParams types.LimitParams,
-	prevCapacityList []dtypes.SerializableInt,
+	limiterCapacityList []types.LimiterCapacity,
 	timeSinceLastBlock time.Duration,
 ) (
 	newCapacityList []dtypes.SerializableInt,
-	err error,
 ) {
 	// Declare new capacity list to be populated.
-	newCapacityList = make([]dtypes.SerializableInt, len(prevCapacityList))
+	newCapacityList = make([]dtypes.SerializableInt, len(limiterCapacityList))
 
-	if len(limitParams.Limiters) != len(prevCapacityList) {
-		// This violates an invariant. Since this is in the `EndBlocker`, we return an error instead of panicking.
-		return nil, errorsmod.Wrapf(
-			types.ErrMismatchedCapacityLimitersLength,
-			"denom = %v, len(limiters) = %v, len(prevCapacityList) = %v",
-			limitParams.Denom,
-			len(limitParams.Limiters),
-			len(prevCapacityList),
-		)
-	}
+	for i, limiterCapacity := range limiterCapacityList {
+		limiter, bigPrevCapacity := limiterCapacity.Limiter, limiterCapacity.Capacity.BigInt()
 
-	for i, limiter := range limitParams.Limiters {
 		// For each limiter, calculate the current baseline.
 		baseline := GetBaseline(bigTvl, limiter)
 
 		capacityMinusBaseline := new(big.Int).Sub(
-			prevCapacityList[i].BigInt(), // array access is safe because of input invariant
+			bigPrevCapacity,
 			baseline,
 		)
 
@@ -84,7 +72,7 @@ func CalculateNewCapacityList(
 			// else if `capacity < baseline` then `capacity += capacity_diff`
 			newCapacityList[i] = dtypes.NewIntFromBigInt(
 				new(big.Int).Add(
-					prevCapacityList[i].BigInt(),
+					bigPrevCapacity,
 					capacityDiff,
 				),
 			)
@@ -92,12 +80,12 @@ func CalculateNewCapacityList(
 			// else `capacity -= capacity_diff`
 			newCapacityList[i] = dtypes.NewIntFromBigInt(
 				new(big.Int).Sub(
-					prevCapacityList[i].BigInt(),
+					bigPrevCapacity,
 					capacityDiff,
 				),
 			)
 		}
 	}
 
-	return newCapacityList, nil
+	return newCapacityList
 }

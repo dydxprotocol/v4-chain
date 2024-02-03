@@ -406,6 +406,7 @@ export async function create(
   return TransferModel.query(
     Transaction.get(options.txId),
   ).insert({
+    ...transferToCreate,
     id: uuid(
       transferToCreate.eventId,
       transferToCreate.assetId,
@@ -414,7 +415,6 @@ export async function create(
       transferToCreate.senderWalletAddress,
       transferToCreate.recipientWalletAddress,
     ),
-    ...transferToCreate,
   }).returning('*');
 }
 

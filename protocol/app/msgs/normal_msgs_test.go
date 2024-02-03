@@ -16,6 +16,13 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.auth.v1beta1.ModuleAccount",
 		"/cosmos.auth.v1beta1.ModuleCredential",
 
+		// authz
+		"/cosmos.authz.v1beta1.GenericAuthorization",
+		"/cosmos.authz.v1beta1.MsgGrant",
+		"/cosmos.authz.v1beta1.MsgGrantResponse",
+		"/cosmos.authz.v1beta1.MsgRevoke",
+		"/cosmos.authz.v1beta1.MsgRevokeResponse",
+
 		// bank
 		"/cosmos.bank.v1beta1.MsgMultiSend",
 		"/cosmos.bank.v1beta1.MsgMultiSendResponse",
@@ -68,8 +75,6 @@ func TestNormalMsgs_Key(t *testing.T) {
 		"/cosmos.feegrant.v1beta1.PeriodicAllowance",
 
 		// gov
-		"/cosmos.gov.v1.MsgCancelProposal",
-		"/cosmos.gov.v1.MsgCancelProposalResponse",
 		"/cosmos.gov.v1.MsgDeposit",
 		"/cosmos.gov.v1.MsgDepositResponse",
 		"/cosmos.gov.v1.MsgVote",

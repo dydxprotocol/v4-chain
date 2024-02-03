@@ -20,6 +20,10 @@ export const configSchema = {
   ...kafkaConfigSchema,
   ...redisConfigSchema,
 
+  BATCH_PROCESSING_ENABLED: parseBoolean({ default: true }),
+  KAFKA_BATCH_PROCESSING_COMMIT_FREQUENCY_MS: parseNumber({
+    default: 3_000,
+  }),
   FLUSH_KAFKA_MESSAGES_INTERVAL_MS: parseNumber({
     default: 10,
   }),

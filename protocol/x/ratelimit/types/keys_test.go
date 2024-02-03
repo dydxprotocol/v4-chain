@@ -13,5 +13,6 @@ func TestModuleKeys(t *testing.T) {
 }
 
 func TestStateKeys(t *testing.T) {
-	// TODO(CORE-824): test state keys
+	require.Equal(t, "DenomCapacity:", types.DenomCapacityKeyPrefix)
+	require.Equal(t, "LimitParams:", types.LimitParamsKeyPrefix)
 }

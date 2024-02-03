@@ -21,8 +21,10 @@ import (
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	delaymsg "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetiers "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	govplus "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	ratelimit "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
@@ -36,8 +38,14 @@ var (
 	// InternalMsgSamplesGovAuth are msgs that are used only used internally.
 	// GovAuth means that these messages must originate from the gov module and
 	// signed by gov module account.
-	InternalMsgSamplesGovAuth = map[string]sdk.Msg{
-		// ------- CosmosSDK default modules
+	// InternalMsgSamplesAll are msgs that are used only used internally.
+	InternalMsgSamplesGovAuth = lib.MergeAllMapsMustHaveDistinctKeys(
+		InternalMsgSamplesDefault,
+		InternalMsgSamplesDydxCustom,
+	)
+
+	// CosmosSDK default modules
+	InternalMsgSamplesDefault = map[string]sdk.Msg{
 		// auth
 		"/cosmos.auth.v1beta1.MsgUpdateParams": &auth.MsgUpdateParams{},
 
@@ -81,7 +89,19 @@ var (
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgrade":         &upgrade.MsgSoftwareUpgrade{},
 		"/cosmos.upgrade.v1beta1.MsgSoftwareUpgradeResponse": nil,
 
-		// ------- Custom modules
+		// ibc
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
+		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
+		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
+		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
+		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
+		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
+		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
+		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
+	}
+
+	// Custom modules
+	InternalMsgSamplesDydxCustom = map[string]sdk.Msg{
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
@@ -116,6 +136,10 @@ var (
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams":         &feetiers.MsgUpdatePerpetualFeeParams{},
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse": nil,
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator":         &govplus.MsgSlashValidator{},
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse": nil,
+
 		// perpetuals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual":               &perpetuals.MsgCreatePerpetual{},
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse":       nil,
@@ -131,6 +155,10 @@ var (
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse": nil,
 		"/dydxprotocol.prices.MsgUpdateMarketParam":          &prices.MsgUpdateMarketParam{},
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse":  nil,
+
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams":         &ratelimit.MsgSetLimitParams{},
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse": nil,
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams":         &rewards.MsgUpdateParams{},
@@ -149,15 +177,5 @@ var (
 		"/dydxprotocol.vest.MsgSetVestEntryResponse":    nil,
 		"/dydxprotocol.vest.MsgDeleteVestEntry":         &vest.MsgDeleteVestEntry{},
 		"/dydxprotocol.vest.MsgDeleteVestEntryResponse": nil,
-
-		// ibc
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParams":         &icahosttypes.MsgUpdateParams{},
-		"/ibc.applications.interchain_accounts.host.v1.MsgUpdateParamsResponse": nil,
-		"/ibc.applications.transfer.v1.MsgUpdateParams":                         &ibctransfer.MsgUpdateParams{},
-		"/ibc.applications.transfer.v1.MsgUpdateParamsResponse":                 nil,
-		"/ibc.core.client.v1.MsgUpdateParams":                                   &ibcclient.MsgUpdateParams{},
-		"/ibc.core.client.v1.MsgUpdateParamsResponse":                           nil,
-		"/ibc.core.connection.v1.MsgUpdateParams":                               &ibcconn.MsgUpdateParams{},
-		"/ibc.core.connection.v1.MsgUpdateParamsResponse":                       nil,
 	}
 )

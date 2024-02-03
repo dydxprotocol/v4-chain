@@ -3,12 +3,13 @@ package assets_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

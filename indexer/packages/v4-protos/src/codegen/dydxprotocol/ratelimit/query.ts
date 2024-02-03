@@ -1,5 +1,5 @@
 import { LimitParams, LimitParamsSDKType } from "./limit_params";
-import { Duration, DurationSDKType } from "../../google/protobuf/duration";
+import { LimiterCapacity, LimiterCapacitySDKType } from "./capacity";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
 /** ListLimitParamsRequest is a request type of the ListLimitParams RPC method. */
@@ -11,13 +11,11 @@ export interface ListLimitParamsRequestSDKType {}
 /** ListLimitParamsResponse is a response type of the ListLimitParams RPC method. */
 
 export interface ListLimitParamsResponse {
-  /** ListLimitParamsResponse is a response type of the ListLimitParams RPC method. */
   limitParamsList: LimitParams[];
 }
 /** ListLimitParamsResponse is a response type of the ListLimitParams RPC method. */
 
 export interface ListLimitParamsResponseSDKType {
-  /** ListLimitParamsResponse is a response type of the ListLimitParams RPC method. */
   limit_params_list: LimitParamsSDKType[];
 }
 /**
@@ -44,29 +42,13 @@ export interface QueryCapacityByDenomRequestSDKType {
    */
   denom: string;
 }
-/** CapacityResult is a specific rate limit for a denom. */
-
-export interface CapacityResult {
-  period?: Duration;
-  capacity: Uint8Array;
-}
-/** CapacityResult is a specific rate limit for a denom. */
-
-export interface CapacityResultSDKType {
-  period?: DurationSDKType;
-  capacity: Uint8Array;
-}
 /**
  * QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
  * method.
  */
 
 export interface QueryCapacityByDenomResponse {
-  /**
-   * QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
-   * method.
-   */
-  results: CapacityResult[];
+  limiterCapacityList: LimiterCapacity[];
 }
 /**
  * QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
@@ -74,11 +56,7 @@ export interface QueryCapacityByDenomResponse {
  */
 
 export interface QueryCapacityByDenomResponseSDKType {
-  /**
-   * QueryCapacityByDenomResponse is a response type of the CapacityByDenom RPC
-   * method.
-   */
-  results: CapacityResultSDKType[];
+  limiter_capacity_list: LimiterCapacitySDKType[];
 }
 
 function createBaseListLimitParamsRequest(): ListLimitParamsRequest {
@@ -205,71 +183,16 @@ export const QueryCapacityByDenomRequest = {
 
 };
 
-function createBaseCapacityResult(): CapacityResult {
-  return {
-    period: undefined,
-    capacity: new Uint8Array()
-  };
-}
-
-export const CapacityResult = {
-  encode(message: CapacityResult, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.period !== undefined) {
-      Duration.encode(message.period, writer.uint32(10).fork()).ldelim();
-    }
-
-    if (message.capacity.length !== 0) {
-      writer.uint32(18).bytes(message.capacity);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): CapacityResult {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseCapacityResult();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.period = Duration.decode(reader, reader.uint32());
-          break;
-
-        case 2:
-          message.capacity = reader.bytes();
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<CapacityResult>): CapacityResult {
-    const message = createBaseCapacityResult();
-    message.period = object.period !== undefined && object.period !== null ? Duration.fromPartial(object.period) : undefined;
-    message.capacity = object.capacity ?? new Uint8Array();
-    return message;
-  }
-
-};
-
 function createBaseQueryCapacityByDenomResponse(): QueryCapacityByDenomResponse {
   return {
-    results: []
+    limiterCapacityList: []
   };
 }
 
 export const QueryCapacityByDenomResponse = {
   encode(message: QueryCapacityByDenomResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.results) {
-      CapacityResult.encode(v!, writer.uint32(10).fork()).ldelim();
+    for (const v of message.limiterCapacityList) {
+      LimiterCapacity.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
@@ -285,7 +208,7 @@ export const QueryCapacityByDenomResponse = {
 
       switch (tag >>> 3) {
         case 1:
-          message.results.push(CapacityResult.decode(reader, reader.uint32()));
+          message.limiterCapacityList.push(LimiterCapacity.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -299,7 +222,7 @@ export const QueryCapacityByDenomResponse = {
 
   fromPartial(object: DeepPartial<QueryCapacityByDenomResponse>): QueryCapacityByDenomResponse {
     const message = createBaseQueryCapacityByDenomResponse();
-    message.results = object.results?.map(e => CapacityResult.fromPartial(e)) || [];
+    message.limiterCapacityList = object.limiterCapacityList?.map(e => LimiterCapacity.fromPartial(e)) || [];
     return message;
   }
 

@@ -825,13 +825,13 @@ const GenesisState = `{
           }
         ],
         "min_initial_deposit_ratio": "0.000000000000000000",
-        "proposal_cancel_ratio": "0.500000000000000000",
+        "proposal_cancel_ratio": "1.000000000000000000",
         "quorum": "0.334000000000000000",
         "threshold": "0.500000000000000000",
         "veto_threshold": "0.334000000000000000",
 		"min_deposit_ratio": "0.010000000000000000",
         "expedited_voting_period": "86400s",
-        "expedited_threshold": "0.667000000000000000",
+        "expedited_threshold": "0.750000000000000000",
         "expedited_min_deposit": [
           {
             "amount": "50000000",
@@ -844,6 +844,7 @@ const GenesisState = `{
       "starting_proposal_id": "1",
       "votes": []
     },
+    "govplus": {},
     "ibc": {
       "channel_genesis": {
         "ack_sequences": [],
@@ -1358,6 +1359,25 @@ const GenesisState = `{
         "market_id":1,
         "fee_multiplier_ppm":990000
       }
+    },
+    "ratelimit": {
+      "limit_params_list": [
+        {
+          "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+          "limiters": [
+            {
+              "baseline_minimum": "100000000000",
+              "baseline_tvl_ppm": 10000,
+              "period": "3600s"
+            },
+            {
+              "baseline_minimum": "1000000000000",
+              "baseline_tvl_ppm": 100000,
+              "period": "86400s"
+            }
+          ]
+        }
+      ]
     },
     "sending": {},
     "slashing": {

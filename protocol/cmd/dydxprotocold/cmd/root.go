@@ -39,6 +39,7 @@ import (
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	"github.com/spf13/cast"
@@ -109,7 +110,7 @@ func NewRootCmdWithInterceptors(
 		WithViper(EnvPrefix)
 
 	rootCmd := &cobra.Command{
-		Use:   dydxapp.AppDaemonName,
+		Use:   constants.AppDaemonName,
 		Short: "Start dydxprotocol app",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// set the default command outputs

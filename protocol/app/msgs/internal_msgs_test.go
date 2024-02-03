@@ -97,6 +97,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParams",
 		"/dydxprotocol.feetiers.MsgUpdatePerpetualFeeParamsResponse",
 
+		// govplus
+		"/dydxprotocol.govplus.MsgSlashValidator",
+		"/dydxprotocol.govplus.MsgSlashValidatorResponse",
+
 		// perpeutals
 		"/dydxprotocol.perpetuals.MsgCreatePerpetual",
 		"/dydxprotocol.perpetuals.MsgCreatePerpetualResponse",
@@ -112,6 +116,10 @@ func TestInternalMsgSamples_Gov_Key(t *testing.T) {
 		"/dydxprotocol.prices.MsgCreateOracleMarketResponse",
 		"/dydxprotocol.prices.MsgUpdateMarketParam",
 		"/dydxprotocol.prices.MsgUpdateMarketParamResponse",
+
+		// ratelimit
+		"/dydxprotocol.ratelimit.MsgSetLimitParams",
+		"/dydxprotocol.ratelimit.MsgSetLimitParamsResponse",
 
 		// rewards
 		"/dydxprotocol.rewards.MsgUpdateParams",

@@ -387,8 +387,22 @@ func (_m *MemClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clob
 	_m.Called(ctx, order, blockHeight)
 }
 
-// ValidateSubaccountEquityTierLimitForNewOrder provides a mock function with given fields: ctx, order
-func (_m *MemClobKeeper) ValidateSubaccountEquityTierLimitForNewOrder(ctx types.Context, order clobtypes.Order) error {
+// ValidateSubaccountEquityTierLimitForShortTermOrder provides a mock function with given fields: ctx, order
+func (_m *MemClobKeeper) ValidateSubaccountEquityTierLimitForShortTermOrder(ctx types.Context, order clobtypes.Order) error {
+	ret := _m.Called(ctx, order)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) error); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ValidateSubaccountEquityTierLimitForStatefulOrder provides a mock function with given fields: ctx, order
+func (_m *MemClobKeeper) ValidateSubaccountEquityTierLimitForStatefulOrder(ctx types.Context, order clobtypes.Order) error {
 	ret := _m.Called(ctx, order)
 
 	var r0 error

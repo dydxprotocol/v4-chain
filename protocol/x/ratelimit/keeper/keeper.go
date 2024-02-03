@@ -27,10 +27,9 @@ type (
 		storeKey        storetypes.StoreKey
 		bankKeeper      types.BankKeeper
 		blockTimeKeeper types.BlockTimeKeeper
+		ics4Wrapper     types.ICS4Wrapper
 
-		// TODO(CORE-824): Implement `x/ratelimit` keeper
-
-		// the addresses capable of executing a MsgUpdateParams message.
+		// the addresses capable of executing MsgSetLimitParams message.
 		authorities map[string]struct{}
 	}
 )
@@ -40,6 +39,7 @@ func NewKeeper(
 	storeKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	blockTimeKeeper types.BlockTimeKeeper,
+	ics4Wrapper types.ICS4Wrapper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
@@ -47,12 +47,15 @@ func NewKeeper(
 		storeKey:        storeKey,
 		bankKeeper:      bankKeeper,
 		blockTimeKeeper: blockTimeKeeper,
+		ics4Wrapper:     ics4Wrapper,
 		authorities:     lib.UniqueSliceToSet(authorities),
 	}
 }
 
 // ProcessWithdrawal processes an outbound IBC transfer,
 // by updating the capacity lists for the denom.
+// If any of the capacities are inefficient, returns an error which results in
+// transaction failing upstream.
 func (k Keeper) ProcessWithdrawal(
 	ctx sdk.Context,
 	denom string,
@@ -95,9 +98,27 @@ func (k Keeper) ProcessWithdrawal(
 	return nil
 }
 
-// ProcessDeposit processes a inbound IBC transfer,
+// UndoWithdrawal is a wrapper around `IncrementCapacitiesForDenom`.
+// It also emits telemetry for the amount of withdrawal undone.
+func (k Keeper) UndoWithdrawal(
+	ctx sdk.Context,
+	denom string,
+	amount *big.Int,
+) {
+	k.IncrementCapacitiesForDenom(ctx, denom, amount)
+
+	telemetry.IncrCounterWithLabels(
+		[]string{types.ModuleName, metrics.UndoWithdrawAmount},
+		metrics.GetMetricValueFromBigInt(amount),
+		[]gometrics.Label{
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, denom),
+		},
+	)
+}
+
+// IncrementCapacitiesForDenom processes a inbound IBC transfer,
 // by updating the capacity lists for the denom.
-func (k Keeper) ProcessDeposit(
+func (k Keeper) IncrementCapacitiesForDenom(
 	ctx sdk.Context,
 	denom string,
 	amount *big.Int,
@@ -131,7 +152,11 @@ func (k Keeper) ProcessDeposit(
 func (k Keeper) SetLimitParams(
 	ctx sdk.Context,
 	limitParams types.LimitParams,
-) {
+) (err error) {
+	if err := limitParams.Validate(); err != nil {
+		return err
+	}
+
 	limitParamsStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
 	denomCapacityStore := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.DenomCapacityKeyPrefix))
 
@@ -164,6 +189,8 @@ func (k Keeper) SetLimitParams(
 
 	b := k.cdc.MustMarshal(&limitParams)
 	limitParamsStore.Set(denomKey, b)
+
+	return nil
 }
 
 // GetLimitParams returns `LimitParams` for the given denom.
@@ -238,53 +265,79 @@ func (k Keeper) UpdateAllCapacitiesEndBlocker(
 	}
 
 	// Iterate through all the limit params in state.
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
-	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
-
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		var limitParams types.LimitParams
-		k.cdc.MustUnmarshal(iterator.Value(), &limitParams)
-		k.updateCapacityForLimitParams(ctx, limitParams, timeSinceLastBlock)
+	limitParams := k.GetAllLimitParams(ctx)
+	for _, limitParams := range limitParams {
+		k.updateCapacityForDenom(ctx, limitParams.Denom, timeSinceLastBlock)
 	}
 }
 
 // updateCapacityForLimitParams calculates current baseline for a denom and recovers some amount of capacity
 // towards baseline.
-// Assumes that the `LimitParams` exist in state.
-func (k Keeper) updateCapacityForLimitParams(
+func (k Keeper) updateCapacityForDenom(
 	ctx sdk.Context,
-	limitParams types.LimitParams,
+	denom string,
 	timeSinceLastBlock time.Duration,
 ) {
-	tvl := k.bankKeeper.GetSupply(ctx, limitParams.Denom)
+	tvl := k.bankKeeper.GetSupply(ctx, denom)
 
-	capacityList := k.GetDenomCapacity(ctx, limitParams.Denom).CapacityList
-
-	newCapacityList, err := ratelimitutil.CalculateNewCapacityList(
-		tvl.Amount.BigInt(),
-		limitParams,
-		capacityList,
-		timeSinceLastBlock,
-	)
-
+	limiterCapacityList, err := k.GetLimiterCapacityListForDenom(ctx, denom)
 	if err != nil {
 		log.ErrorLogWithError(
 			ctx,
 			fmt.Sprintf(
-				"error calculating new capacity list for denom %v. Skipping update.",
-				limitParams.Denom,
+				"GetLimiterCapacityListForDenom(%v) returns error (skipping update): %v",
+				denom,
+				err,
 			),
 			err,
 		)
 		return
 	}
 
+	newCapacityList := ratelimitutil.CalculateNewCapacityList(
+		tvl.Amount.BigInt(),
+		limiterCapacityList,
+		timeSinceLastBlock,
+	)
+
 	k.SetDenomCapacity(ctx, types.DenomCapacity{
-		Denom:        limitParams.Denom,
+		Denom:        denom,
 		CapacityList: newCapacityList,
 	})
+}
+
+// GetLimiterCapacityListForDenom returns a list of `LimiterCapacity`, which is a tuple of
+// (limiter, current_capacity), for the given denom.
+func (k Keeper) GetLimiterCapacityListForDenom(
+	ctx sdk.Context,
+	denom string,
+) (
+	limiterCapacityList []types.LimiterCapacity,
+	err error,
+) {
+	limitParams := k.GetLimitParams(ctx, denom)
+	capacityList := k.GetDenomCapacity(ctx, denom).CapacityList
+
+	if len(limitParams.Limiters) != len(capacityList) {
+		// This breaks the invariant (len(limiters) == len(capacity_list)).
+		return nil, errorsmod.Wrapf(
+			types.ErrMismatchedCapacityLimitersLength,
+			"denom = %v, len(limiters) = %v, len(capacity_list) = %v",
+			denom,
+			len(limitParams.Limiters),
+			len(capacityList),
+		)
+	}
+
+	limiterCapacityList = make([]types.LimiterCapacity, len(capacityList))
+	for i, limiter := range limitParams.Limiters {
+		limiterCapacityList[i] = types.LimiterCapacity{
+			Limiter:  limiter,
+			Capacity: capacityList[i],
+		}
+	}
+
+	return limiterCapacityList, nil
 }
 
 // GetDenomCapacity returns `DenomCapacity` for the given denom.
@@ -308,6 +361,22 @@ func (k Keeper) GetDenomCapacity(
 	return val
 }
 
+// GetAllLimitParams returns `LimitParams` stored in state
+func (k Keeper) GetAllLimitParams(ctx sdk.Context) (list []types.LimitParams) {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.LimitParamsKeyPrefix))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
+
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		var val types.LimitParams
+		k.cdc.MustUnmarshal(iterator.Value(), &val)
+		list = append(list, val)
+	}
+
+	return
+}
+
 func (k Keeper) HasAuthority(authority string) bool {
 	_, ok := k.authorities[authority]
 	return ok
@@ -317,5 +386,4 @@ func (k Keeper) Logger(ctx sdk.Context) cosmoslog.Logger {
 	return ctx.Logger().With(cosmoslog.ModuleKey, fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) InitializeForGenesis(ctx sdk.Context) {
-}
+func (k Keeper) InitializeForGenesis(ctx sdk.Context) {}

@@ -44,25 +44,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 	}
 
 	anteDecorators := NewAnteDecoratorChain(options)
-
-	// TODO(STAB-24): This change can be reverted to using ChainAnteDecorators again once
-	// https://github.com/cosmos/cosmos-sdk/pull/16076 is merged, released, and we pick-up the SDK version containing
-	// the change.
-	anteHandlers := make([]sdk.AnteHandler, len(anteDecorators)+1)
-	// Install the terminator ante handler.
-	anteHandlers[len(anteDecorators)] = func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-		return ctx, nil
-	}
-	for i := 0; i < len(anteDecorators); i++ {
-		// Make a copy of the value to ensure that we can hold a reference to it. This avoids the golang common mistake:
-		// https://github.com/golang/go/wiki/CommonMistakes#using-goroutines-on-loop-iterator-variables
-		ii := i
-		anteHandlers[ii] = func(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
-			return anteDecorators[ii].AnteHandle(ctx, tx, simulate, anteHandlers[ii+1])
-		}
-	}
-
-	return anteHandlers[0], nil
+	return sdk.ChainAnteDecorators(anteDecorators...), nil
 }
 
 // NewAnteDecoratorChain returns a list of AnteDecorators in the expected application chain ordering

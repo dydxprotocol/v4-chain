@@ -82,6 +82,7 @@ export enum QueryableField {
   BLOCK_HEIGHT_BEFORE_OR_AT = 'blockHeightBeforeOrAt',
   STARTED_AT_BEFORE_OR_AT = 'startedAtBeforeOrAt',
   STARTED_AT_HEIGHT_BEFORE_OR_AT = 'startedAtHeightBeforeOrAt',
+  REASON = 'reason',
 }
 
 export interface QueryConfig {
@@ -275,6 +276,14 @@ export interface ComplianceDataQueryConfig extends QueryConfig {
   [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
   [QueryableField.PROVIDER]?: string;
   [QueryableField.BLOCKED]?: boolean;
+}
+
+export interface ComplianceStatusQueryConfig extends QueryConfig {
+  [QueryableField.ADDRESS]?: string[];
+  [QueryableField.STATUS]?: string;
+  [QueryableField.CREATED_BEFORE_OR_AT]?: string;
+  [QueryableField.UPDATED_BEFORE_OR_AT]?: string;
+  [QueryableField.REASON]?: string;
 }
 
 export interface TradingRewardQueryConfig extends QueryConfig {

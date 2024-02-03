@@ -13,7 +13,7 @@ FROM golang@sha256:${GOLANG_1_21_ALPINE_DIGEST} as builder
 ARG VERSION
 ARG COMMIT
 
-RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash
+RUN set -eux; apk add --no-cache ca-certificates build-base; apk add git linux-headers bash binutils-gold
 
 # Download go dependencies
 WORKDIR /dydxprotocol

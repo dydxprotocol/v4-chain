@@ -34,6 +34,7 @@ const (
 	Type             = "type"
 	Valid            = "valid"
 	ValidateBasic    = "validate_basic"
+	Ante             = "ante"
 	CheckTx          = "check_tx"
 	ReCheckTx        = "recheck_tx"
 	DeliverTx        = "deliver_tx"
@@ -402,9 +403,14 @@ const (
 	ValidatorVolumeQuoteQuantums   = "validator_volume_quote_quantums"
 
 	// x/ratelimit
-	Capacity       = "capacity"
-	RateLimitDenom = "rate_limit_denom"
-	LimiterIndex   = "limiter_index"
+	Capacity           = "capacity"
+	RateLimitDenom     = "rate_limit_denom"
+	LimiterIndex       = "limiter_index"
+	UndoWithdrawAmount = "undo_withdraw_amount"
+
+	// x/authz
+	MsgExec  = "msg_exec"
+	InnerMsg = "inner_msg"
 )
 
 const (

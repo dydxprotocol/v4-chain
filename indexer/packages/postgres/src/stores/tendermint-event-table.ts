@@ -108,12 +108,12 @@ export async function create(
   return TendermintEventModel.query(
     Transaction.get(options.txId),
   ).insert({
+    ...tendermintEventToCreate,
     id: createEventId(
       tendermintEventToCreate.blockHeight,
       tendermintEventToCreate.transactionIndex,
       tendermintEventToCreate.eventIndex,
     ),
-    ...tendermintEventToCreate,
   }).returning('*');
 }
 
