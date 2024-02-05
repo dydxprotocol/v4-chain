@@ -6,8 +6,11 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -16,11 +19,18 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
+	"github.com/skip-mev/slinky/abci/strategies/aggregator"
+	aggregatormock "github.com/skip-mev/slinky/abci/strategies/aggregator/mocks"
+	"github.com/skip-mev/slinky/abci/strategies/codec"
+	strategymock "github.com/skip-mev/slinky/abci/strategies/currencypair/mocks"
+	slinkytestutils "github.com/skip-mev/slinky/abci/testutils"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/client"
+	vetypes "github.com/skip-mev/slinky/abci/ve/types"
+	cmtabci "github.com/cometbft/cometbft/abci/types"
+	"cosmossdk.io/log"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
+	"math/big"
 )
 
 var (
@@ -454,6 +464,183 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 	}
 }
 
+func TestSlinkyPrepareProposalHandler(t *testing.T) {
+	// test an empty UpdateMarketPrices tx is inserted if ves are not enabled
+	t.Run("ves not enabled", func(t *testing.T) {
+		// mocks
+		mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
+		mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
+			Return(constants.ValidMsgAddPremiumVotes)
+
+		mockClobKeeper := mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+			Return(constants.ValidEmptyMsgProposedOperations)
+
+		mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
+		mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
+			Return(constants.MsgAcknowledgeBridges_Ids0_1_Height0)
+
+		ctx := slinkytestutils.CreateBaseSDKContext(t)
+		ctx = slinkytestutils.UpdateContextWithVEHeight(ctx, 3)
+		ctx = ctx.WithBlockHeight(2) // disable vote-extensions
+
+		gen := prices.NewSlinkyPriceUpdateGenerator(nil, nil, nil, nil) // ignore all fields, should immediately return
+
+		handler := prepare.PrepareProposalHandlerWithPriceUpdateGenerator(
+			encoding.GetTestEncodingCfg().TxConfig,
+			&mockBridgeKeeper,
+			&mockClobKeeper,
+			&mockPerpKeeper,
+			gen,
+		)
+
+		txs := [][]byte{}
+
+		resp, err := handler(ctx, &abci.RequestPrepareProposal{Txs: txs, MaxTxBytes: 100_000})
+		require.NoError(t, err)
+
+		// expect all txs to have been inserted
+		marketPricesTx, err := encoding.GetTestEncodingCfg().TxConfig.TxDecoder()(resp.Txs[len(resp.Txs)-1]) // check that the last tx is a valid update-market-prices tx
+		require.NoError(t, err)
+		require.Len(t, marketPricesTx.GetMsgs(), 1)
+
+		// expect the message to be an UpdateMarketPrices message w/ no markets
+		updateMarketPricesMsg := marketPricesTx.GetMsgs()[0].(*pricestypes.MsgUpdateMarketPrices)
+		require.Len(t, updateMarketPricesMsg.MarketPriceUpdates, 0)
+	})
+
+	// test that a valid UpdateMarketPricesTx is inserted if ves are enabled, and a valid ExtendedCommitInfo is present
+	t.Run("ves enabled", func(t *testing.T) {
+		// mocks
+		mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
+		mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
+			Return(constants.ValidMsgAddPremiumVotes)
+
+		mockClobKeeper := mocks.PrepareClobKeeper{}
+		mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
+			Return(constants.ValidEmptyMsgProposedOperations)
+
+		mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
+		mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
+			Return(constants.MsgAcknowledgeBridges_Ids0_1_Height0)
+
+		ctx := slinkytestutils.CreateBaseSDKContext(t)
+		ctx = slinkytestutils.UpdateContextWithVEHeight(ctx, 3)
+		ctx = ctx.WithBlockHeight(4) // enable vote-extensions
+		ctx = ctx.WithLogger(log.NewTestLogger(t))
+
+		cpMock := strategymock.NewCurrencyPairStrategy(t)
+		aggMock := aggregatormock.NewVoteAggregator(t)
+		extCommitCodec := codec.NewDefaultExtendedCommitCodec()
+		veCodec := codec.NewDefaultVoteExtensionCodec()
+		gen := prices.NewSlinkyPriceUpdateGenerator(
+			aggMock,
+			extCommitCodec,
+			veCodec,
+			cpMock,
+		)
+
+		// mock dependencies
+		validator1 := []byte("validator1")
+		validator2 := []byte("validator2")
+
+		validator1ve := vetypes.OracleVoteExtension{
+			Prices: map[uint64][]byte{
+				0: []byte("99"),
+				1: []byte("100"),
+			},
+		}
+		validator2ve := vetypes.OracleVoteExtension{
+			Prices: map[uint64][]byte{
+				0: []byte("99"),
+				1: []byte("100"),
+			},
+		}
+		
+		validator1veBz, err := veCodec.Encode(validator1ve)
+		require.NoError(t, err)
+
+		validator2veBz, err := veCodec.Encode(validator2ve)
+		require.NoError(t, err)
+
+		// setup extendedCommit
+		extCommit := cmtabci.ExtendedCommitInfo{
+			Votes: []cmtabci.ExtendedVoteInfo{
+				{
+					Validator: cmtabci.Validator{
+						Address: validator1,
+					},
+					VoteExtension: validator1veBz,
+				},
+				{
+					Validator: cmtabci.Validator{
+						Address: validator2,
+					},
+					VoteExtension: validator2veBz,
+				},
+			},
+		}
+		extCommitBz, err := extCommitCodec.Encode(extCommit)
+		require.NoError(t, err)
+
+		mogBtc := oracletypes.NewCurrencyPair("MOG", "BTC")
+		tiaPepe := oracletypes.NewCurrencyPair("TIA", "PEPE")
+
+		aggMock.On("AggregateOracleVotes", ctx, []aggregator.Vote{
+			{
+				ConsAddress: validator1,
+				OracleVoteExtension: validator1ve,
+			},
+			{
+				ConsAddress: validator2,
+				OracleVoteExtension: validator2ve,
+			},
+		}).Return(map[oracletypes.CurrencyPair]*big.Int{
+			mogBtc: big.NewInt(100),
+			tiaPepe: big.NewInt(99),
+		}, nil)
+		
+		cpMock.On("ID", ctx, mogBtc).Return(uint64(0), nil)
+		cpMock.On("ID", ctx, tiaPepe).Return(uint64(1), nil)
+
+		handler := prepare.PrepareProposalHandlerWithPriceUpdateGenerator(
+			encoding.GetTestEncodingCfg().TxConfig,
+			&mockBridgeKeeper,
+			&mockClobKeeper,
+			&mockPerpKeeper,
+			gen,
+		)
+
+		txs := [][]byte{
+			extCommitBz, // extended commit should be first
+			constants.Msg_Send_TxBytes,
+		}
+
+		resp, err := handler(ctx, &abci.RequestPrepareProposal{Txs: txs, MaxTxBytes: 100_000})
+		require.NoError(t, err)
+
+		// expect all txs to have been inserted
+		marketPricesTx, err := encoding.GetTestEncodingCfg().TxConfig.TxDecoder()(resp.Txs[len(resp.Txs)-1]) // check that the last tx is a valid update-market-prices tx
+		require.NoError(t, err)
+		require.Len(t, marketPricesTx.GetMsgs(), 1)
+
+		// expect the message to be an UpdateMarketPrices message w/ no markets
+		updateMarketPricesMsg := marketPricesTx.GetMsgs()[0].(*pricestypes.MsgUpdateMarketPrices)
+		require.Len(t, updateMarketPricesMsg.MarketPriceUpdates, 2)
+
+		expectedPrices := map[uint64]uint64{
+			0: 100,
+			1: 99,
+		}
+
+		for _, update := range updateMarketPricesMsg.MarketPriceUpdates {
+			expectedPrice, ok := expectedPrices[uint64(update.MarketId)]
+			require.True(t, ok)
+			require.Equal(t, expectedPrice, update.Price)
+		}
+	})
+}
+
 func TestGetUpdateMarketPricesTx(t *testing.T) {
 	tests := map[string]struct {
 		keeperResp *pricestypes.MsgUpdateMarketPrices
@@ -477,7 +664,7 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 		},
 		"empty tx": {
 			keeperResp: &pricestypes.MsgUpdateMarketPrices{},
-			txEncoder:  emptyTxEncoder, // returns empty tx.
+				txEncoder:  emptyTxEncoder, // returns empty tx.
 
 			expectedErr: fmt.Errorf("Invalid tx: []"),
 		},

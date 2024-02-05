@@ -92,7 +92,7 @@ func PrepareProposalHandlerWithPriceUpdateGenerator(
 
 		var extCommitBzTx []byte
 		if len(req.Txs) > slinkyabci.NumInjectedTxs {
-			extCommitBzTx = req.Txs[slinkyabci.NumInjectedTxs]
+			extCommitBzTx = req.Txs[slinkyabci.OracleInfoIndex]
 		}
 
 		// get the update market prices tx
