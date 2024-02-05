@@ -11,7 +11,7 @@ import (
 
 // SlinkyPriceUpdateGenerator is an implementation of the PriceUpdateGenerator interface. This implementation
 // retrieves the MsgUpdateMarketPricesTx by aggregating over all VoteExtensions from set of PreCommits on
-// the last block (these commits are local to the proposal).
+// the last block (these commits are local to the proposer).
 type SlinkyPriceUpdateGenerator struct {
 	// VoteAggregator is responsible for reading all votes in the extended-commit and unmarshalling
 	// them into a set of prices for the MsgUpdateMarketPricesTx.
