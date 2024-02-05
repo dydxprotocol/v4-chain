@@ -17,7 +17,6 @@ import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { getIpAddr } from '../../../lib/utils';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -101,7 +100,6 @@ class ComplianceController extends Controller {
 
 router.get(
   '/',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...checkSchema({
     address: {

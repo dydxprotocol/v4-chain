@@ -17,7 +17,7 @@ export default class ComplianceStatusModel extends Model {
   static get jsonSchema() {
     return {
       type: 'object',
-      required: ['address', 'status', 'createdAt', 'updatedAt'],
+      required: ['address', 'status'],
       properties: {
         address: { type: 'string' },
         status: {

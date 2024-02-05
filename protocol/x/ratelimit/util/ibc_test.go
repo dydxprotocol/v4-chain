@@ -1,9 +1,5 @@
 package util_test
 
-// TODO(CORE-854): Improve attribution message.
-// This file re-uses similar utilities (with minor tweaking) Stride's IBC Rate Limit implementation:
-// https://github.com/Stride-Labs/stride/blob/121f2ac5d2e5f8e406f89999410a49ea4277a552/x/ratelimit
-
 import (
 	"bytes"
 	"crypto/sha256"
