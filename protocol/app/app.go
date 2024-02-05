@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"go.uber.org/zap"
 	"io"
 	"math/big"
 	"net/http"
@@ -199,6 +200,15 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	// Slinky
+	compression "github.com/skip-mev/slinky/abci/strategies/codec"
+	"github.com/skip-mev/slinky/abci/strategies/currencypair"
+	"github.com/skip-mev/slinky/abci/ve"
+	oracleconfig "github.com/skip-mev/slinky/oracle/config"
+	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	servicemetrics "github.com/skip-mev/slinky/service/metrics"
+	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
 )
 
 var (
@@ -313,6 +323,10 @@ type App struct {
 	BridgeClient       *bridgeclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	// Slinky
+	oracleClient           oracleclient.OracleClient
+	oraclePrometheusServer *promserver.PrometheusServer
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -1287,6 +1301,50 @@ func New(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
+	// Slinky setup
+	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	// Create the oracle service.
+	app.oracleClient, err = oracleclient.NewClientFromConfig(
+		cfg,
+		app.Logger().With("client", "oracle"),
+		oracleMetrics,
+	)
+	if err != nil {
+		panic(err)
+	}
+	// run prometheus metrics
+	if cfg.MetricsEnabled {
+		logger, err := zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+
+		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, logger)
+		if err != nil {
+			panic(err)
+		}
+
+		// start the prometheus server
+		go app.oraclePrometheusServer.Start()
+	}
+
+	// Connect to the oracle service (default timeout of 5 seconds).
+	go func() {
+		if err := app.oracleClient.Start(context.Background()); err != nil {
+			app.Logger().Error("failed to start oracle client", "err", err)
+			panic(err)
+		}
+
+		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
+	}()
+
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.setAnteHandler(encodingConfig.TxConfig)
@@ -1339,6 +1397,22 @@ func New(
 			),
 		)
 	}
+
+	// Vote Extension setup.
+	voteExtensionsHandler := ve.NewVoteExtensionHandler(
+		app.Logger(),
+		app.oracleClient,
+		time.Second,
+		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
+		compression.NewCompressionVoteExtensionCodec(
+			compression.NewDefaultVoteExtensionCodec(),
+			compression.NewZLibCompressor(),
+		),
+		app.PreBlocker,
+		oracleMetrics,
+	)
+	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
 
 	// Note that panics from out of gas errors won't get logged, since the `OutOfGasMiddleware` is added in front of this,
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
