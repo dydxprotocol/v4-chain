@@ -39,7 +39,6 @@ func (k Keeper) SetPendingSendPacket(ctx sdk.Context, channelId string, sequence
 func (k Keeper) HasPendingSendPacket(ctx sdk.Context, channelId string, sequence uint64) bool {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.PendingSendPacketPrefix))
 	key := types.GetPendingSendPacketKey(channelId, sequence)
-
 	return store.Has(key)
 }
 
@@ -103,6 +102,12 @@ func (k Keeper) UndoSendPacket(
 	// Undo'ing capacity change from the withdrawal.
 	k.UndoWithdrawal(ctx, denom, amount)
 	k.RemovePendingSendPacket(ctx, channelId, sequence)
+
+	k.Logger(ctx).Info(
+		"SendPacket timeout'ed or failed acknowledgement on the receiver chain. Reverted capacity change.",
+		"denom",
+		denom,
+	)
 }
 
 // SendPacket wraps IBC ChannelKeeper's SendPacket function
@@ -139,7 +144,11 @@ func (k Keeper) SendPacket(
 		Data:             data,
 	})
 	if err != nil {
-		k.Logger(ctx).Error(fmt.Sprintf("ICS20 packet send was denied: %s", err.Error()))
+		k.Logger(ctx).Info(
+			fmt.Sprintf("ICS20 packet send was denied: %s", err.Error()),
+			"exec_mode",
+			ctx.ExecMode(),
+		)
 		return 0, err
 	}
 	return sequence, err

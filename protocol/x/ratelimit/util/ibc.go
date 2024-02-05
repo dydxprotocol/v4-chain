@@ -94,7 +94,7 @@ func UnpackAcknowledgementResponseForTransfer(
 				"acknowledgement result cannot be empty",
 			)
 		}
-		logger.Info(fmt.Sprintf("IBC transfer acknowledgement success: %+v", response))
+		logger.Info(fmt.Sprintf("IBC transfer acknowledgement success: %+v\n", response))
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_SUCCESS}, nil
 
 	case *channeltypes.Acknowledgement_Error:
