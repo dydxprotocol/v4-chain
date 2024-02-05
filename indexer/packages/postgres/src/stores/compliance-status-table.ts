@@ -13,18 +13,17 @@ import {
 import Transaction from '../helpers/transaction';
 import ComplianceStatusModel from '../models/compliance-status-model';
 import {
+  ComplianceStatusColumns,
   ComplianceStatusFromDatabase,
   ComplianceStatusQueryConfig,
+  ComplianceStatusUpsertObject,
+  ComplianceStatusUpdateObject,
+  ComplianceStatusCreateObject,
   Options,
   Ordering,
   QueryableField,
   QueryConfig,
 } from '../types';
-import {
-  ComplianceStatusColumns,
-  ComplianceStatusCreateObject,
-  ComplianceStatusUpdateObject,
-} from '../types/compliance-status-types';
 
 export async function findAll(
   {
@@ -118,7 +117,7 @@ export async function update(
 }
 
 export async function upsert(
-  complianceStatusToUpsert: ComplianceStatusCreateObject,
+  complianceStatusToUpsert: ComplianceStatusUpsertObject,
   options: Options = { txId: undefined },
 ): Promise<ComplianceStatusFromDatabase> {
   const complianceStatus: ComplianceStatusFromDatabase | undefined = await
@@ -142,7 +141,7 @@ export async function upsert(
 }
 
 export async function bulkUpsert(
-  complianceStatusObjects: ComplianceStatusCreateObject[],
+  complianceStatusObjects: ComplianceStatusUpsertObject[],
   options: Options = { txId: undefined },
 ): Promise<void> {
   if (complianceStatusObjects.length === 0) {
@@ -150,21 +149,21 @@ export async function bulkUpsert(
   }
 
   complianceStatusObjects.forEach(
-    (complianceStatusObject: ComplianceStatusCreateObject) => verifyAllInjectableVariables(
+    (complianceStatusObject: ComplianceStatusUpsertObject) => verifyAllInjectableVariables(
       Object.values(complianceStatusObject),
     ),
   );
 
-  const columns: ComplianceStatusColumns[] = Object.values(ComplianceStatusColumns);
+  const columns: ComplianceStatusColumns[] = [
+    ComplianceStatusColumns.address,
+    ComplianceStatusColumns.status,
+    ComplianceStatusColumns.reason,
+  ];
   const rows: string[] = setBulkRowsForUpdate<ComplianceStatusColumns>({
     objectArray: complianceStatusObjects,
     columns,
     stringColumns: [
       ComplianceStatusColumns.address,
-    ],
-    timestampColumns: [
-      ComplianceStatusColumns.createdAt,
-      ComplianceStatusColumns.updatedAt,
     ],
     enumColumns: [
       ComplianceStatusColumns.status,
