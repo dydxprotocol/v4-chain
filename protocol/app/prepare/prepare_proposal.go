@@ -10,8 +10,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	slinkyabci "github.com/skip-mev/slinky/abci/types"
 )

@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"testing"
 
+	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
+	cmtabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -24,12 +26,10 @@ import (
 	"github.com/skip-mev/slinky/abci/strategies/codec"
 	strategymock "github.com/skip-mev/slinky/abci/strategies/currencypair/mocks"
 	slinkytestutils "github.com/skip-mev/slinky/abci/testutils"
+	vetypes "github.com/skip-mev/slinky/abci/ve/types"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	vetypes "github.com/skip-mev/slinky/abci/ve/types"
-	cmtabci "github.com/cometbft/cometbft/abci/types"
-	"cosmossdk.io/log"
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 	"math/big"
 )
 
@@ -556,7 +556,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 				1: []byte("100"),
 			},
 		}
-		
+
 		validator1veBz, err := veCodec.Encode(validator1ve)
 		require.NoError(t, err)
 
@@ -588,18 +588,18 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 
 		aggMock.On("AggregateOracleVotes", ctx, []aggregator.Vote{
 			{
-				ConsAddress: validator1,
+				ConsAddress:         validator1,
 				OracleVoteExtension: validator1ve,
 			},
 			{
-				ConsAddress: validator2,
+				ConsAddress:         validator2,
 				OracleVoteExtension: validator2ve,
 			},
 		}).Return(map[oracletypes.CurrencyPair]*big.Int{
-			mogBtc: big.NewInt(100),
+			mogBtc:  big.NewInt(100),
 			tiaPepe: big.NewInt(99),
 		}, nil)
-		
+
 		cpMock.On("ID", ctx, mogBtc).Return(uint64(0), nil)
 		cpMock.On("ID", ctx, tiaPepe).Return(uint64(1), nil)
 
@@ -664,7 +664,7 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 		},
 		"empty tx": {
 			keeperResp: &pricestypes.MsgUpdateMarketPrices{},
-				txEncoder:  emptyTxEncoder, // returns empty tx.
+			txEncoder:  emptyTxEncoder, // returns empty tx.
 
 			expectedErr: fmt.Errorf("Invalid tx: []"),
 		},
@@ -690,7 +690,7 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.keeperResp)
-			
+
 			resp, err := getMarketPriceUpdates(prices.NewDefaultPriceUpdateGenerator(&mockPricesKeeper), mockTxConfig)
 
 			if tc.expectedErr != nil {
