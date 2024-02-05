@@ -6,11 +6,11 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
+	"github.com/Workiva/go-datastructures/threadsafe/err"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -94,11 +94,19 @@ func UnpackAcknowledgementResponseForTransfer(
 				"acknowledgement result cannot be empty",
 			)
 		}
-		logger.Info(fmt.Sprintf("IBC transfer acknowledgement success: %+v\n", response))
+		logger.Info(
+			"IBC transfer acknowledgement success",
+			"response",
+			response,
+		)
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_SUCCESS}, nil
 
 	case *channeltypes.Acknowledgement_Error:
-		logger.Error(fmt.Sprintf("acknowledgement error: %s", response.Error))
+		logger.Error(
+			"received acknowledgement error",
+			"error",
+			err.Error(),
+		)
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_FAILURE, Error: response.Error}, nil
 
 	default:

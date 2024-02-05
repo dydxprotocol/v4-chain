@@ -404,7 +404,6 @@ const (
 
 	// x/ratelimit
 	Capacity           = "capacity"
-	PendingSendPackets = "pending_send_packets"
 	RateLimitDenom     = "rate_limit_denom"
 	LimiterIndex       = "limiter_index"
 	UndoWithdrawAmount = "undo_withdraw_amount"

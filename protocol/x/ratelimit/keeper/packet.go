@@ -5,7 +5,6 @@ package keeper
 // See v4-chain/protocol/x/ratelimit/LICENSE and v4-chain/protocol/x/ratelimit/README.md for licensing information.
 
 import (
-	"fmt"
 	"math/big"
 
 	"cosmossdk.io/store/prefix"
@@ -105,8 +104,14 @@ func (k Keeper) UndoSendPacket(
 
 	k.Logger(ctx).Info(
 		"SendPacket timeout'ed or failed acknowledgement on the receiver chain. Reverted capacity change.",
+		"channel_id",
+		channelId,
+		"sequence",
+		sequence,
 		"denom",
 		denom,
+		"amount",
+		amount.String(),
 	)
 }
 
@@ -145,9 +150,11 @@ func (k Keeper) SendPacket(
 	})
 	if err != nil {
 		k.Logger(ctx).Info(
-			fmt.Sprintf("ICS20 packet send was denied: %s", err.Error()),
+			"ICS20 packet send was denied",
 			"exec_mode",
 			ctx.ExecMode(),
+			"error",
+			err.Error(),
 		)
 		return 0, err
 	}
