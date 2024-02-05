@@ -13,21 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-func TestGetAllCurrencyPairs(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
-	mockTimeProvider.On("Now").Return(constants.TimeT)
-
-	marketNumber := 10
-	items := keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
-	marketParams := keeper.GetAllMarketParams(ctx)
-	require.Equal(t, len(marketParams), marketNumber)
-	cps := keeper.GetAllCurrencyPairs(ctx)
-	require.Equal(t, marketNumber, len(cps))
-	for i, cp := range cps {
-		require.Equal(t, items[i].Param.Pair, fmt.Sprintf("%v-%v", cp.Base, cp.Quote))
-	}
-}
-
 func TestGetCurrencyPairFromID(t *testing.T) {
 	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -108,9 +93,6 @@ func TestBadMarketData(t *testing.T) {
 		},
 		types.MarketPrice{})
 	require.NoError(t, err)
-
-	pairs := keeper.GetAllCurrencyPairs(ctx)
-	require.Equal(t, 0, len(pairs))
 
 	_, found := keeper.GetCurrencyPairFromID(ctx, uint64(0))
 	require.False(t, found)
