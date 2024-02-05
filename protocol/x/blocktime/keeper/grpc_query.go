@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +22,7 @@ func (k Keeper) DowntimeParams(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	params := k.GetDowntimeParams(ctx)
 	return &types.QueryDowntimeParamsResponse{
 		Params: params,
@@ -40,7 +40,7 @@ func (k Keeper) PreviousBlockInfo(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	info := k.GetPreviousBlockInfo(ctx)
 	return &types.QueryPreviousBlockInfoResponse{
 		Info: &info,
@@ -58,7 +58,7 @@ func (k Keeper) AllDowntimeInfo(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	info := k.GetAllDowntimeInfo(ctx)
 	return &types.QueryAllDowntimeInfoResponse{
 		Info: info,

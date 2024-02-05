@@ -147,8 +147,8 @@ func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // BeginBlock executes all ABCI BeginBlock logic respective to the epochs module.
 func (am AppModule) BeginBlock(ctx context.Context) error {
-	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyBeginBlocker)
+	sdkCtx := lib.UnwrapSDKContext(ctx, types.ModuleName)
 	BeginBlocker(sdkCtx, am.keeper)
 	return nil
 }

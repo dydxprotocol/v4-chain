@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -158,9 +158,9 @@ func (am AppModule) EndBlock(ctx context.Context) error {
 	if err := am.keeper.ProcessRewardsForBlock(sdkCtx); err != nil {
 		// Panicking here will only happen due to misconfiguration of the rewards module,
 		// and will lead to consensus failure.
-		am.keeper.Logger(sdkCtx).Error(
+		log.ErrorLogWithError(
+			sdkCtx,
 			"failed to process rewards for block",
-			constants.ErrorLogKey,
 			err,
 		)
 	}

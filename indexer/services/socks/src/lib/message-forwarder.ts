@@ -148,7 +148,7 @@ export class MessageForwarder {
 
     if (!this.subscriptions.subscriptions[message.channel] &&
       !this.subscriptions.batchedSubscriptions[message.channel]) {
-      logger.info({
+      logger.debug({
         at: 'message-forwarder#forwardMessage',
         message: 'No clients to forward to',
         messageId: message.id,
@@ -172,7 +172,7 @@ export class MessageForwarder {
             message.channel === Channel.V4_ORDERBOOK && config.ENABLE_ORDERBOOK_LOGS
           )
       ) {
-        logger.info({
+        logger.debug({
           at: 'message-forwarder#forwardMessage',
           message: 'Forwarding message to clients..',
           messageContents: message,

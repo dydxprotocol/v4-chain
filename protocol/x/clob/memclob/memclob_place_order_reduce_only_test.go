@@ -1372,6 +1372,7 @@ func TestPlaceOrder_ReduceOnly(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				order,
 				tc.placedMatchableOrders,
@@ -1655,6 +1656,7 @@ func TestPlaceOrder_LongTermReduceOnlyRemovals(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				order,
 				tc.placedMatchableOrders,
