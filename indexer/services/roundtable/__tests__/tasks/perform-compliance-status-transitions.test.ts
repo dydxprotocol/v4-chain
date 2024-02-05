@@ -52,6 +52,7 @@ describe('update-close-only-status', () => {
     config.CLOSE_ONLY_TO_BLOCKED_DAYS = 7;
     // Seed database with CLOSE_ONLY compliance status older than 7 days
     const oldUpdatedAt = DateTime.utc().minus({ days: 8 }).toISO();
+    const newTs = DateTime.utc().toISO();
     await Promise.all([
       ComplianceStatusTable.create({
         address: testConstants.blockedAddress,
@@ -62,8 +63,8 @@ describe('update-close-only-status', () => {
       ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.CLOSE_ONLY,
-        createdAt: DateTime.utc().toISO(),
-        updatedAt: DateTime.utc().toISO(),
+        createdAt: newTs,
+        updatedAt: newTs,
       }),
     ]);
 
@@ -76,6 +77,18 @@ describe('update-close-only-status', () => {
       {},
     );
     expect(updatedStatus[0].status).toEqual(ComplianceStatus.BLOCKED);
+    expect(updatedStatus[0].updatedAt).not.toEqual(oldUpdatedAt);
+    const nonUpdatedStatus = await ComplianceStatusTable.findAll(
+      { address: [testConstants.defaultAddress] },
+      [],
+      {},
+    );
+    expect(nonUpdatedStatus[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      createdAt: newTs,
+      updatedAt: newTs,
+    }));
 
     // Assert the stats were correctly recorded
     expect(stats.gauge).toHaveBeenCalledWith(

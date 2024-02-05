@@ -1,4 +1,5 @@
 import {
+  ONE_DAY_IN_MILLISECONDS,
   stats,
 } from '@dydxprotocol-indexer/base';
 import {
@@ -10,7 +11,7 @@ import {
 import config from '../config';
 
 // eslint-disable-next-line max-len
-const CLOSE_ONLY_TO_BLOCKED_DAYS_IN_MS: number = config.CLOSE_ONLY_TO_BLOCKED_DAYS * 24 * 60 * 60 * 1000;
+const CLOSE_ONLY_TO_BLOCKED_DAYS_IN_MS: number = config.CLOSE_ONLY_TO_BLOCKED_DAYS * ONE_DAY_IN_MILLISECONDS;
 
 export default async function runTask(): Promise<void> {
   const queryStart: number = Date.now();
