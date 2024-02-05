@@ -64,7 +64,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5
 	github.com/rs/zerolog v1.31.0
 	github.com/shopspring/decimal v1.3.1
-	github.com/skip-mev/slinky v0.2.1-0.20240202193854-9fa036a2314c
+	github.com/skip-mev/slinky v0.2.1-0.20240205201114-084e56f076aa
 	github.com/spf13/viper v1.18.2
 	google.golang.org/genproto/googleapis/api v0.0.0-20231212172506-995d672761c0
 	google.golang.org/protobuf v1.32.0
