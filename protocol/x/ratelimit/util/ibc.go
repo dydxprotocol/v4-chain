@@ -10,7 +10,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/log"
-	"github.com/Workiva/go-datastructures/threadsafe/err"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
@@ -105,7 +104,7 @@ func UnpackAcknowledgementResponseForTransfer(
 		logger.Error(
 			"received acknowledgement error",
 			"error",
-			err.Error(),
+			response.Error,
 		)
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_FAILURE, Error: response.Error}, nil
 
