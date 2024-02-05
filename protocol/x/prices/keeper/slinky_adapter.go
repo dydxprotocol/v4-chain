@@ -18,12 +18,14 @@ import (
 
 func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []oracletypes.CurrencyPair {
 	mps := k.GetAllMarketParams(ctx)
-	cps := make([]oracletypes.CurrencyPair, len(mps))
-	for i, mp := range mps {
-		cp, err := oracletypes.CurrencyPairFromString(mp.Pair)
+	var cps []oracletypes.CurrencyPair
+	for _, mp := range mps {
+		cp, err := MarketPairToCurrencyPair(mp.Pair)
 		if err != nil {
-			cps[i] = cp
+			k.Logger(ctx).Error("failed to convert market param to currency pair", "param", mp)
+			continue
 		}
+		cps = append(cps, cp)
 	}
 	return cps
 }
@@ -33,8 +35,9 @@ func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp oracletype
 	if !found {
 		return cp, false
 	}
-	cp, err := oracletypes.CurrencyPairFromString(mp.Pair)
+	cp, err := MarketPairToCurrencyPair(mp.Pair)
 	if err != nil {
+		k.Logger(ctx).Error("CurrencyPairFromString", "error", err)
 		return cp, false
 	}
 	return cp, true
@@ -43,7 +46,12 @@ func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp oracletype
 func (k Keeper) GetIDForCurrencyPair(ctx sdk.Context, cp oracletypes.CurrencyPair) (uint64, bool) {
 	mps := k.GetAllMarketParams(ctx)
 	for _, mp := range mps {
-		if strings.EqualFold(mp.Pair, cp.String()) {
+		mpCp, err := MarketPairToCurrencyPair(mp.Pair)
+		if err != nil {
+			k.Logger(ctx).Error("market param pair invalid format", "pair", mp.Pair)
+			continue
+		}
+		if strings.EqualFold(mpCp.String(), cp.String()) {
 			return uint64(mp.Id), true
 		}
 	}
@@ -62,4 +70,17 @@ func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp oracletypes.Currency
 	return oracletypes.QuotePrice{
 		Price: math.NewIntFromUint64(mp.Price),
 	}, nil
+}
+
+func MarketPairToCurrencyPair(marketPair string) (oracletypes.CurrencyPair, error) {
+	split := strings.Split(marketPair, "-")
+	if len(split) != 2 {
+		return oracletypes.CurrencyPair{}, fmt.Errorf("incorrectly formatted CurrencyPair: %s", marketPair)
+	}
+	cp := oracletypes.CurrencyPair{
+		Base:  strings.ToUpper(split[0]),
+		Quote: strings.ToUpper(split[1]),
+	}
+
+	return cp, cp.ValidateBasic()
 }
