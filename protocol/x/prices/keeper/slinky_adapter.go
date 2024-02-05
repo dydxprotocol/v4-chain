@@ -16,20 +16,6 @@ import (
  * store for converting to and from Slinky's on chain price data.
  */
 
-func (k Keeper) GetAllCurrencyPairs(ctx sdk.Context) []oracletypes.CurrencyPair {
-	mps := k.GetAllMarketParams(ctx)
-	var cps []oracletypes.CurrencyPair
-	for _, mp := range mps {
-		cp, err := MarketPairToCurrencyPair(mp.Pair)
-		if err != nil {
-			k.Logger(ctx).Error("failed to convert market param to currency pair", "param", mp)
-			continue
-		}
-		cps = append(cps, cp)
-	}
-	return cps
-}
-
 func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp oracletypes.CurrencyPair, found bool) {
 	mp, found := k.GetMarketParam(ctx, uint32(id))
 	if !found {
