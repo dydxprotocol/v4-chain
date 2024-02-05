@@ -125,7 +125,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
 
 function getOffChainUpdate(messageValue: Buffer, offset: string): OffChainUpdateV1 {
   const messageValueBinary: Uint8Array = new Uint8Array(messageValue);
-  logger.info({
+  logger.debug({
     at: 'onMessage#getOffChainupdate',
     message: 'Received message',
     offset,
