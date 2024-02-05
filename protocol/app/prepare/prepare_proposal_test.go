@@ -16,8 +16,11 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var (
@@ -500,8 +503,9 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.keeperResp)
+			
+			resp, err := getMarketPriceUpdates(prices.NewDefaultPriceUpdateGenerator(&mockPricesKeeper), mockTxConfig)
 
-			resp, err := prepare.GetUpdateMarketPricesTx(ctx, mockTxConfig, &mockPricesKeeper)
 			if tc.expectedErr != nil {
 				require.Equal(t, err, tc.expectedErr)
 			} else {
@@ -511,6 +515,15 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 			require.Equal(t, tc.expectedNumMarkets, resp.NumMarkets)
 		})
 	}
+}
+
+func getMarketPriceUpdates(gen prices.PriceUpdateGenerator, txConfig client.TxConfig) (prepare.PricesTxResponse, error) {
+	msg, err := gen.GetValidMarketPriceUpdates(sdk.Context{}, nil)
+	if err != nil {
+		return prepare.PricesTxResponse{}, err
+	}
+
+	return prepare.EncodeMarketPriceUpdates(txConfig, msg)
 }
 
 func TestGetAcknowledgeBridgesTx(t *testing.T) {

@@ -7,7 +7,6 @@ import (
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 // PrepareClobKeeper defines the expected CLOB keeper used for `PrepareProposal`.
@@ -18,11 +17,6 @@ type PrepareClobKeeper interface {
 // PreparePerpetualsKeeper defines the expected Perpetuals keeper used for `PrepareProposal`.
 type PreparePerpetualsKeeper interface {
 	GetAddPremiumVotes(ctx sdk.Context) *perpstypes.MsgAddPremiumVotes
-}
-
-// PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
-type PreparePricesKeeper interface {
-	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MsgUpdateMarketPrices
 }
 
 // PrepareBridgeKeeper defines the expected Bridge keeper used for `PrepareProposal`.
