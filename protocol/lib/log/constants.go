@@ -31,6 +31,9 @@ const (
 	Proposer            = "proposer"
 	PrunableBlockHeight = "prunable_block_height"
 	StatusCode          = "status_code"
+	Reason              = "reason"
+	RemovalStatus       = "removal_status"
+	TotalFilled         = "total_filled"
 
 	OrderSizeOptimisticallyFilledFromMatchingQuantums = "order_size_optimistically_filled_from_matching_quantums"
 	NewLocalValidatorOperationsQueue                  = "new_local_validator_operations_queue"

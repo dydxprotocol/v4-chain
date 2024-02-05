@@ -546,7 +546,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					// Order update message, note order place messages are skipped for stateful orders
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
 							0,
 						),
@@ -656,14 +656,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					// Short term order placement results in Create and Update with 0 fill amount
 					expectedOffchainMessagesCheckTx: []msgsender.Message{
 						off_chain_updates.MustCreateOrderPlaceMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
 						).AddHeader(msgsender.MessageHeader{
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
 						).AddHeader(msgsender.MessageHeader{
@@ -676,13 +676,13 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
 						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
 						),
@@ -847,14 +847,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					},
 					expectedOffchainMessagesCheckTx: []msgsender.Message{
 						off_chain_updates.MustCreateOrderPlaceMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
 						).AddHeader(msgsender.MessageHeader{
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
 						).AddHeader(msgsender.MessageHeader{
@@ -865,7 +865,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// post-only shouldn't match and will have 0 fill size in update message
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy10_Price49999_GTBT15_PO.Order.OrderId,
 							0,
 						),
@@ -979,14 +979,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					// Short term order placement results in Create and Update with 0 fill amount
 					expectedOffchainMessagesCheckTx: []msgsender.Message{
 						off_chain_updates.MustCreateOrderPlaceMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order,
 						).AddHeader(msgsender.MessageHeader{
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id0_Sell1_Price50000_GTB20.Tx),
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							0,
 						).AddHeader(msgsender.MessageHeader{
@@ -997,13 +997,13 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker fully filled
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
 						// taker, partially filled
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
@@ -1041,7 +1041,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 						// attempt to replay the stateful order in PrepareCheckState after advancing the block, fill amount
 						// will stay constant
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
@@ -1171,14 +1171,14 @@ func TestPlaceLongTermOrder(t *testing.T) {
 					// taker and maker
 					expectedOffchainMessagesCheckTx: []msgsender.Message{
 						off_chain_updates.MustCreateOrderPlaceMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order,
 						).AddHeader(msgsender.MessageHeader{
 							Key:   msgsender.TransactionHashHeaderKey,
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.OrderId,
 							LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy2_Price50000_GTBT5.Order.GetBaseQuantums(),
 						).AddHeader(msgsender.MessageHeader{
@@ -1186,7 +1186,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							Value: tmhash.Sum(CheckTx_PlaceOrder_Bob_Num0_Id1_Sell1_Price50000_GTB20.Tx),
 						}),
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							PlaceOrder_Bob_Num0_Id1_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						).AddHeader(msgsender.MessageHeader{
@@ -1547,13 +1547,13 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 					expectedOffchainMessagesAfterBlock: []msgsender.Message{
 						// maker
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.OrderId,
 							LongTermPlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price50000_GTB20.Order.GetBaseQuantums(),
 						),
 						// taker
 						off_chain_updates.MustCreateOrderUpdateMessage(
-							nil,
+							ctx,
 							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.OrderId,
 							Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order.GetBaseQuantums(),
 						),

@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,7 +20,7 @@ func (k Keeper) SubaccountAll(
 	}
 
 	var subaccounts []types.Subaccount
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	store := ctx.KVStore(k.storeKey)
 	subaccountStore := prefix.NewStore(store, []byte(types.SubaccountKeyPrefix))
@@ -49,7 +49,7 @@ func (k Keeper) Subaccount(
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	val := k.GetSubaccount(
 		ctx,
