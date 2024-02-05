@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ func (k Keeper) EventParams(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	params := k.GetEventParams(ctx)
 	return &types.QueryEventParamsResponse{
 		Params: params,
@@ -42,7 +42,7 @@ func (k Keeper) ProposeParams(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	params := k.GetProposeParams(ctx)
 	return &types.QueryProposeParamsResponse{
 		Params: params,
@@ -61,7 +61,7 @@ func (k Keeper) SafetyParams(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	params := k.GetSafetyParams(ctx)
 	return &types.QuerySafetyParamsResponse{
 		Params: params,
@@ -80,7 +80,7 @@ func (k Keeper) AcknowledgedEventInfo(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	acknowledgedEventInfo := k.GetAcknowledgedEventInfo(ctx)
 	return &types.QueryAcknowledgedEventInfoResponse{
 		Info: acknowledgedEventInfo,
@@ -104,7 +104,7 @@ func (k Keeper) RecognizedEventInfo(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	acknowledgedEventInfo := k.GetAcknowledgedEventInfo(ctx)
 	recognizedEventInfo := k.bridgeEventManager.GetRecognizedEventInfo()
 
@@ -130,7 +130,7 @@ func (k Keeper) DelayedCompleteBridgeMessages(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	return &types.QueryDelayedCompleteBridgeMessagesResponse{
 		Messages: k.GetDelayedCompleteBridgeMessages(ctx, req.Address),
 	}, nil

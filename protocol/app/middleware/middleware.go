@@ -2,10 +2,11 @@ package middleware
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"os"
 	"runtime/debug"
 	"strings"
+
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -28,8 +29,11 @@ func NewRunTxPanicLoggingMiddleware(moduleBasics module.BasicManager) baseapp.Re
 				keyvals = append(keyvals, fullModuleName, "true")
 			}
 		}
+		if err, isError := recoveryObj.(error); isError {
+			keyvals = append(keyvals, "error", err)
+		}
 
-		keyvals = append(keyvals, "stack trace", stack)
+		keyvals = append(keyvals, "stack_trace", stack)
 
 		Logger.Error(
 			fmt.Sprintf(

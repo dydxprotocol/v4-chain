@@ -25,7 +25,7 @@ func RequireCancelOrderOffchainUpdate(
 
 func RequireCancelOrderMessage(t *testing.T, ctx sdk.Context, message *msgsender.Message, orderId types.OrderId) {
 	expectedMessage, _ := off_chain_updates.CreateOrderRemoveMessageWithReason(
-		ctx.Logger(),
+		ctx,
 		orderId,
 		indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 		off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,

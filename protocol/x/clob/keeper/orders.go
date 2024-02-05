@@ -480,7 +480,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 				// In this case, Indexer could be learning of this order for the first
 				// time with this removal.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-					k.Logger(ctx),
+					ctx,
 					order.OrderId,
 					orderStatus,
 					err,

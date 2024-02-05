@@ -4,8 +4,8 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -21,7 +21,7 @@ func (k msgServer) UpdatePerpetualParams(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	_, err := k.Keeper.ModifyPerpetual(
 		ctx,
