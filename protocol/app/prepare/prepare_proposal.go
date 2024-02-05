@@ -91,7 +91,7 @@ func PrepareProposalHandlerWithPriceUpdateGenerator(
 		}
 
 		var extCommitBzTx []byte
-		if len(req.Txs) > slinkyabci.NumInjectedTxs {
+		if len(req.Txs) >= slinkyabci.NumInjectedTxs {
 			extCommitBzTx = req.Txs[slinkyabci.OracleInfoIndex]
 		}
 
