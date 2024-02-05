@@ -9,6 +9,9 @@ import {
 
 import config from '../config';
 
+// eslint-disable-next-line max-len
+const CLOSE_ONLY_TO_BLOCKED_DAYS_IN_MS: number = config.CLOSE_ONLY_TO_BLOCKED_DAYS * 24 * 60 * 60 * 1000;
+
 export default async function runTask(): Promise<void> {
   const queryStart: number = Date.now();
 
@@ -18,7 +21,7 @@ export default async function runTask(): Promise<void> {
     {
       status: ComplianceStatus.CLOSE_ONLY,
       updatedBeforeOrAt: new Date(
-        Date.now() - config.CLOSE_ONLY_TO_BLOCKED_DAYS * 24 * 60 * 60 * 1000,
+        queryStart - CLOSE_ONLY_TO_BLOCKED_DAYS_IN_MS,
       ).toISOString(),
     },
     [],

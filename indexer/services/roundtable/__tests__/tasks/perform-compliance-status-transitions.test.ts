@@ -54,13 +54,13 @@ describe('update-close-only-status', () => {
     const oldUpdatedAt = DateTime.utc().minus({ days: 8 }).toISO();
     await Promise.all([
       ComplianceStatusTable.create({
-        address: testConstants.defaultAddress,
+        address: testConstants.blockedAddress,
         status: ComplianceStatus.CLOSE_ONLY,
         createdAt: oldUpdatedAt,
         updatedAt: oldUpdatedAt,
       }),
       ComplianceStatusTable.create({
-        address: testConstants.blockedAddress,
+        address: testConstants.defaultAddress,
         status: ComplianceStatus.CLOSE_ONLY,
         createdAt: DateTime.utc().toISO(),
         updatedAt: DateTime.utc().toISO(),
@@ -71,7 +71,7 @@ describe('update-close-only-status', () => {
 
     // Assert the status was updated to BLOCKED
     const updatedStatus = await ComplianceStatusTable.findAll(
-      { address: [testConstants.defaultAddress] },
+      { address: [testConstants.blockedAddress] },
       [],
       {},
     );
