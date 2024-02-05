@@ -2,11 +2,12 @@ package keeper_test
 
 import (
 	"context"
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -99,7 +100,7 @@ func TestCreateTransfer(t *testing.T) {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
 
-					ctx := sdk.UnwrapSDKContext(goCtx)
+					ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 					require.Len(t, ctx.EventManager().Events(), 1)
 					event := ctx.EventManager().Events()[0]
 					require.Equal(t, event.Type, types.EventTypeCreateTransfer)
@@ -163,7 +164,7 @@ func TestDepositToSubaccount(t *testing.T) {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
 
-					ctx := sdk.UnwrapSDKContext(goCtx)
+					ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 					require.Len(t, ctx.EventManager().Events(), 1)
 					event := ctx.EventManager().Events()[0]
 					require.Equal(t, event.Type, types.EventTypeDepositToSubaccount)
@@ -223,7 +224,7 @@ func TestWithdrawFromSubaccount(t *testing.T) {
 					require.NoError(t, err)
 					require.NotNil(t, resp)
 
-					ctx := sdk.UnwrapSDKContext(goCtx)
+					ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 					require.Len(t, ctx.EventManager().Events(), 1)
 					event := ctx.EventManager().Events()[0]
 					require.Equal(t, event.Type, types.EventTypeWithdrawFromSubaccount)

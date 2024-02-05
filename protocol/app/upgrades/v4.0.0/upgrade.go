@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	ratelimitkeeper "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
@@ -18,7 +18,7 @@ func CreateUpgradeHandler(
 	rateLimitKeepr ratelimitkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
 		if err := rateLimitKeepr.SetLimitParams(

@@ -6,20 +6,19 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"cosmossdk.io/log"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	noopLogger                     = log.NewNopLogger()
 	orderIdHash                    = constants.OrderIdHash_Alice_Number0_Id0
 	order                          = constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15
 	indexerOrder                   = v1.OrderToIndexerOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15)
@@ -66,8 +65,9 @@ var (
 )
 
 func TestCreateOrderPlaceMessage(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
 	actualMessage, success := CreateOrderPlaceMessage(
-		noopLogger,
+		ctx,
 		order,
 	)
 	require.True(t, success)
@@ -82,7 +82,9 @@ func TestCreateOrderPlaceMessage(t *testing.T) {
 }
 
 func TestCreateOrderUpdateMessage(t *testing.T) {
-	actualMessage, success := CreateOrderUpdateMessage(noopLogger, order.OrderId, totalFilledAmount)
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+
+	actualMessage, success := CreateOrderUpdateMessage(ctx, order.OrderId, totalFilledAmount)
 	require.True(t, success)
 
 	updateBytes, err := proto.Marshal(&offchainUpdateOrderUpdate)
@@ -95,8 +97,10 @@ func TestCreateOrderUpdateMessage(t *testing.T) {
 }
 
 func TestCreateOrderRemoveWithReason(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+
 	actualMessage, success := CreateOrderRemoveMessage(
-		noopLogger,
+		ctx,
 		order.OrderId,
 		orderStatus,
 		orderError,
@@ -114,6 +118,8 @@ func TestCreateOrderRemoveWithReason(t *testing.T) {
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+
 	require.NotEqual(
 		t,
 		offchainUpdateOrderRemove.GetOrderRemove().Reason,
@@ -121,7 +127,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
 		"defaultRemovalReason must be different than expectedMessage's removal reason for test to "+
 			"be valid & useful.")
 	actualMessage, success := CreateOrderRemoveMessageWithDefaultReason(
-		noopLogger,
+		ctx,
 		order.OrderId,
 		orderStatus,
 		orderError,
@@ -140,8 +146,9 @@ func TestCreateOrderRemoveMessageWithDefaultReason_HappyPath(t *testing.T) {
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_DefaultReasonReturned(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
 	actualMessage, success := CreateOrderRemoveMessageWithDefaultReason(
-		noopLogger,
+		ctx,
 		order.OrderId,
 		clobtypes.Success,
 		orderError,
@@ -160,12 +167,14 @@ func TestCreateOrderRemoveMessageWithDefaultReason_DefaultReasonReturned(t *test
 }
 
 func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+
 	require.PanicsWithError(
 		t,
 		"Invalid parameter: defaultRemovalReason cannot be OrderRemove_ORDER_REMOVAL_REASON_UNSPECIFIED",
 		func() {
 			CreateOrderRemoveMessageWithDefaultReason(
-				noopLogger,
+				ctx,
 				order.OrderId,
 				clobtypes.Success,
 				orderError,
@@ -177,8 +186,10 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 }
 
 func TestCreateOrderRemoveWithReasonMessage(t *testing.T) {
+	ctx, _, _ := sdk.NewSdkContextWithMultistore()
+
 	actualMessage, success := CreateOrderRemoveMessageWithReason(
-		noopLogger,
+		ctx,
 		order.OrderId,
 		reason,
 		status,

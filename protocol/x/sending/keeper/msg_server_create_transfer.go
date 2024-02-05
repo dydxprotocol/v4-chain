@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -18,7 +19,7 @@ func (k msgServer) CreateTransfer(
 	goCtx context.Context,
 	msg *types.MsgCreateTransfer,
 ) (*types.MsgCreateTransferResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Process the transfer by applying subaccount updates.
 	err := k.Keeper.ProcessTransfer(ctx, msg.Transfer)
@@ -48,7 +49,7 @@ func (k msgServer) DepositToSubaccount(
 	goCtx context.Context,
 	msg *types.MsgDepositToSubaccount,
 ) (*types.MsgDepositToSubaccountResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Process deposit from account to subaccount.
 	err := k.Keeper.ProcessDepositToSubaccount(ctx, msg)
@@ -77,7 +78,7 @@ func (k msgServer) WithdrawFromSubaccount(
 	goCtx context.Context,
 	msg *types.MsgWithdrawFromSubaccount,
 ) (*types.MsgWithdrawFromSubaccountResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	// Process withdrawal from subaccount to account.
 	err := k.Keeper.ProcessWithdrawFromSubaccount(ctx, msg)
@@ -113,7 +114,7 @@ func (k msgServer) SendFromModuleToAccount(
 		)
 	}
 
-	ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 	if err := k.Keeper.SendFromModuleToAccount(ctx, msg); err != nil {
 		telemetry.IncrCounterWithLabels(
