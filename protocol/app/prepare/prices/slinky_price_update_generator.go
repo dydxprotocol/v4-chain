@@ -1,13 +1,12 @@
 package prices
 
 import (
-	"github.com/skip-mev/slinky/abci/strategies/aggregator"
-	"github.com/skip-mev/slinky/abci/strategies/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/abci/ve"
+	"github.com/skip-mev/slinky/abci/strategies/aggregator"
+	"github.com/skip-mev/slinky/abci/strategies/codec"
 	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-
+	"github.com/skip-mev/slinky/abci/ve"
 )
 
 // SlinkyPriceUpdateGenerator is an implementation of the PriceUpdateGenerator interface. This implementation
@@ -36,9 +35,9 @@ func NewSlinkyPriceUpdateGenerator(
 	currencyPairStrategy currencypair.CurrencyPairStrategy,
 ) *SlinkyPriceUpdateGenerator {
 	return &SlinkyPriceUpdateGenerator{
-		agg:                 agg,
-		extCommitCodec:      extCommitCodec,
-		veCodec:             veCodec,
+		agg:                  agg,
+		extCommitCodec:       extCommitCodec,
+		veCodec:              veCodec,
 		currencyPairStrategy: currencyPairStrategy,
 	}
 }
@@ -79,7 +78,7 @@ func (pug *SlinkyPriceUpdateGenerator) GetValidMarketPriceUpdates(ctx sdk.Contex
 		if !price.IsUint64() {
 			return nil, &InvalidPriceError{
 				MarketID: marketID,
-				Reason:  "price is not a uint64",
+				Reason:   "price is not a uint64",
 			}
 		}
 

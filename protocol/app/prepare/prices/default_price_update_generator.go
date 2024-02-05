@@ -15,7 +15,7 @@ type PricesKeeper interface {
 // This implementation retrieves the `MsgUpdateMarketPrices` from the `PricesKeeper`, i.e the default
 // behavior for dydx v4's PrepareProposalHandler.
 type DefaultPriceUpdateGenerator struct {
-	// pk is an adapter for the 
+	// pk is an adapter for the
 	pk PricesKeeper
 }
 

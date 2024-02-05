@@ -1,10 +1,9 @@
 package prices_test
 
 import (
-	"testing"
 	"fmt"
-	"math/big"
 	cmtabci "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/skip-mev/slinky/abci/strategies/aggregator"
 	aggregatormock "github.com/skip-mev/slinky/abci/strategies/aggregator/mocks"
@@ -12,9 +11,10 @@ import (
 	strategymock "github.com/skip-mev/slinky/abci/strategies/currencypair/mocks"
 	"github.com/skip-mev/slinky/abci/testutils"
 	vetypes "github.com/skip-mev/slinky/abci/ve/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/stretchr/testify/suite"
 	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
+	"github.com/stretchr/testify/suite"
+	"math/big"
+	"testing"
 )
 
 type SlinkyPriceUpdateGeneratorSuite struct {
@@ -25,7 +25,7 @@ type SlinkyPriceUpdateGeneratorSuite struct {
 	cps *strategymock.CurrencyPairStrategy
 
 	veCodec *codecmock.VoteExtensionCodec
-	
+
 	extCommitCodec *codecmock.ExtendedCommitCodec
 
 	va *aggregatormock.VoteAggregator
@@ -70,11 +70,10 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestVoteExtensionAggregationFails(
 	ctx := testutils.UpdateContextWithVEHeight(testutils.CreateBaseSDKContext(suite.T()), 5)
 	ctx = ctx.WithBlockHeight(6) // ves enabled
 
-
 	// create vote-extensions
 	validator := []byte("validator")
 	voteExtensionBz := []byte("vote-extension") // we j mock what the actual wire-transmitted bz are for this vote-extension
-	extCommitBz := []byte("ext-commit") // '' for ext-commit
+	extCommitBz := []byte("ext-commit")         // '' for ext-commit
 	extCommit := cmtabci.ExtendedCommitInfo{
 		Votes: []cmtabci.ExtendedVoteInfo{
 			{
@@ -85,7 +84,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestVoteExtensionAggregationFails(
 			},
 		},
 	}
-	
+
 	// mock codecs
 	suite.extCommitCodec.On("Decode", extCommitBz).Return(extCommit, nil)
 
@@ -99,7 +98,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestVoteExtensionAggregationFails(
 	// expect an error from the vote-extension aggregator
 	suite.va.On("AggregateOracleVotes", ctx, []aggregator.Vote{
 		{
-			ConsAddress: sdk.ConsAddress(validator),
+			ConsAddress:         sdk.ConsAddress(validator),
 			OracleVoteExtension: ve,
 		},
 	}).Return(nil, fmt.Errorf("error in aggregation"))
@@ -116,11 +115,10 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestCurrencyPairConversionFails() 
 	ctx := testutils.UpdateContextWithVEHeight(testutils.CreateBaseSDKContext(suite.T()), 5)
 	ctx = ctx.WithBlockHeight(6) // ves enabled
 
-
 	// create vote-extensions
 	validator := []byte("validator")
 	voteExtensionBz := []byte("vote-extension") // we j mock what the actual wire-transmitted bz are for this vote-extension
-	extCommitBz := []byte("ext-commit") // '' for ext-commit
+	extCommitBz := []byte("ext-commit")         // '' for ext-commit
 	extCommit := cmtabci.ExtendedCommitInfo{
 		Votes: []cmtabci.ExtendedVoteInfo{
 			{
@@ -131,7 +129,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestCurrencyPairConversionFails() 
 			},
 		},
 	}
-	
+
 	// mock codecs
 	suite.extCommitCodec.On("Decode", extCommitBz).Return(extCommit, nil)
 
@@ -146,7 +144,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestCurrencyPairConversionFails() 
 	// expect an error from the vote-extension aggregator
 	suite.va.On("AggregateOracleVotes", ctx, []aggregator.Vote{
 		{
-			ConsAddress: sdk.ConsAddress(validator),
+			ConsAddress:         sdk.ConsAddress(validator),
 			OracleVoteExtension: ve,
 		},
 	}).Return(map[oracletypes.CurrencyPair]*big.Int{
@@ -155,7 +153,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestCurrencyPairConversionFails() 
 
 	// expect an error from the currency-pair strategy
 	suite.cps.On("ID", ctx, mogBtc).Return(uint64(0), fmt.Errorf("error in currency-pair conversion"))
-		
+
 	// execute
 	msg, err := suite.spug.GetValidMarketPriceUpdates(ctx, extCommitBz)
 	suite.Nil(msg)
@@ -168,11 +166,10 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestValidMarketPriceUpdate() {
 	ctx := testutils.UpdateContextWithVEHeight(testutils.CreateBaseSDKContext(suite.T()), 5)
 	ctx = ctx.WithBlockHeight(6) // ves enabled
 
-
 	// create vote-extensions
 	validator := []byte("validator")
 	voteExtensionBz := []byte("vote-extension") // we j mock what the actual wire-transmitted bz are for this vote-extension
-	extCommitBz := []byte("ext-commit") // '' for ext-commit
+	extCommitBz := []byte("ext-commit")         // '' for ext-commit
 	extCommit := cmtabci.ExtendedCommitInfo{
 		Votes: []cmtabci.ExtendedVoteInfo{
 			{
@@ -183,7 +180,7 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestValidMarketPriceUpdate() {
 			},
 		},
 	}
-	
+
 	// mock codecs
 	suite.extCommitCodec.On("Decode", extCommitBz).Return(extCommit, nil)
 
@@ -199,18 +196,18 @@ func (suite *SlinkyPriceUpdateGeneratorSuite) TestValidMarketPriceUpdate() {
 	// expect an error from the vote-extension aggregator
 	suite.va.On("AggregateOracleVotes", ctx, []aggregator.Vote{
 		{
-			ConsAddress: sdk.ConsAddress(validator),
+			ConsAddress:         sdk.ConsAddress(validator),
 			OracleVoteExtension: ve,
 		},
 	}).Return(map[oracletypes.CurrencyPair]*big.Int{
-		mogBtc: big.NewInt(1),
+		mogBtc:  big.NewInt(1),
 		pepeEth: big.NewInt(2),
 	}, nil)
 
 	// expect no error from currency-pair strategies
 	suite.cps.On("ID", ctx, mogBtc).Return(uint64(0), nil)
 	suite.cps.On("ID", ctx, pepeEth).Return(uint64(1), nil)
-		
+
 	// execute
 	msg, err := suite.spug.GetValidMarketPriceUpdates(ctx, extCommitBz)
 	suite.NoError(err)
