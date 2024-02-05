@@ -1321,12 +1321,12 @@ func New(
 	}
 	// run prometheus metrics
 	if cfg.MetricsEnabled {
-		logger, err := zap.NewProduction()
+		promLogger, err := zap.NewProduction()
 		if err != nil {
 			panic(err)
 		}
 
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, logger)
+		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
 		if err != nil {
 			panic(err)
 		}
@@ -1400,7 +1400,7 @@ func New(
 
 	// Vote Extension setup.
 	voteExtensionsHandler := ve.NewVoteExtensionHandler(
-		app.Logger(),
+		logger,
 		app.oracleClient,
 		time.Second,
 		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
