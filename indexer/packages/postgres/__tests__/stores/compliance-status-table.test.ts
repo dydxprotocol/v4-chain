@@ -1,9 +1,9 @@
 import {
   ComplianceStatus,
-  ComplianceStatusCreateObject,
   ComplianceStatusFromDatabase,
   ComplianceDataColumns,
   Ordering,
+  ComplianceStatusUpsertObject,
 } from '../../src/types';
 import * as ComplianceStatusTable from '../../src/stores/compliance-status-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -156,7 +156,7 @@ describe('Compliance status store', () => {
     await ComplianceStatusTable.upsert(noncompliantStatusUpsertData);
 
     await ComplianceStatusTable.upsert({
-      ...noncompliantStatusData,
+      ...noncompliantStatusUpsertData,
       status: ComplianceStatus.CLOSE_ONLY,
     });
 
@@ -171,16 +171,17 @@ describe('Compliance status store', () => {
     expect(updatedComplianceStatus.length).toEqual(1);
     expect(updatedComplianceStatus[0]).toEqual(
       expect.objectContaining({
-        ...noncompliantStatusData,
+        ...noncompliantStatusUpsertData,
         status: ComplianceStatus.CLOSE_ONLY,
       }),
     );
   });
 
   it('Successfully bulk upserts compliance status', async () => {
-    const compliantUpsertStatusData: ComplianceStatusCreateObject = {
+    const compliantUpsertStatusData: ComplianceStatusUpsertObject = {
       address: defaultAddress,
       status: ComplianceStatus.COMPLIANT,
+      updatedAt: DateTime.utc().toISO(),
     };
     await ComplianceStatusTable.create(noncompliantStatusUpsertData);
     const otherAddress: string = '0x123456789abcdef';

@@ -329,6 +329,8 @@ describe('update-compliance-data', () => {
       status: ComplianceStatus.CLOSE_ONLY,
       reason: ComplianceReason.COMPLIANCE_PROVIDER,
     }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
 
     expectGaugeStats({
       activeAddresses: 0,
@@ -401,11 +403,15 @@ describe('update-compliance-data', () => {
       status: ComplianceStatus.CLOSE_ONLY,
       reason: ComplianceReason.COMPLIANCE_PROVIDER,
     }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     expect(complianceStatusData[1]).toEqual(expect.objectContaining({
       address: testConstants.blockedAddress,
       status: ComplianceStatus.CLOSE_ONLY,
       reason: ComplianceReason.COMPLIANCE_PROVIDER,
     }));
+    expect(DateTime.fromISO(complianceStatusData[1].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     // Both addresses screened
     expectGaugeStats({
       activeAddresses: 0,
@@ -487,11 +493,15 @@ describe('update-compliance-data', () => {
       status: ComplianceStatus.CLOSE_ONLY,
       reason: ComplianceReason.COMPLIANCE_PROVIDER,
     }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     expect(complianceStatusData[1]).toEqual(expect.objectContaining({
       address: testConstants.blockedAddress,
       status: ComplianceStatus.CLOSE_ONLY,
       reason: ComplianceReason.COMPLIANCE_PROVIDER,
     }));
+    expect(DateTime.fromISO(complianceStatusData[1].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     // Both addresses screened
     expectGaugeStats({
       activeAddresses: 0,

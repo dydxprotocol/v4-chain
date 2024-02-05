@@ -29,6 +29,7 @@ export interface ComplianceStatusUpsertObject {
   address: string;
   status: ComplianceStatus;
   reason?: ComplianceReason;
+  updatedAt: IsoString;
 }
 
 export interface ComplianceStatusUpdateObject {

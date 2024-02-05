@@ -11,7 +11,8 @@ import {
   IsoString,
   SubaccountColumns,
   SubaccountFromDatabase,
-  SubaccountTable, ComplianceStatusUpsertObject,
+  SubaccountTable,
+  ComplianceStatusUpsertObject,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -185,12 +186,13 @@ export default async function runTask(
       .reduce(
         (acc: ComplianceStatusUpsertObject[], complianceDataObject: ComplianceDataCreateObject) => {
           if (complianceDataObject.blocked) {
-            const statusCreateObject: ComplianceStatusUpsertObject = {
+            const upsertStatus: ComplianceStatusUpsertObject = {
               address: complianceDataObject.address,
               status: ComplianceStatus.CLOSE_ONLY,
               reason: ComplianceReason.COMPLIANCE_PROVIDER,
+              updatedAt: calculatedAt,
             };
-            acc.push(statusCreateObject);
+            acc.push(upsertStatus);
           }
           return acc;
         }, []);

@@ -14,11 +14,11 @@ import Transaction from '../helpers/transaction';
 import ComplianceStatusModel from '../models/compliance-status-model';
 import {
   ComplianceStatusColumns,
+  ComplianceStatusCreateObject,
   ComplianceStatusFromDatabase,
   ComplianceStatusQueryConfig,
-  ComplianceStatusUpsertObject,
   ComplianceStatusUpdateObject,
-  ComplianceStatusCreateObject,
+  ComplianceStatusUpsertObject,
   Options,
   Ordering,
   QueryableField,
@@ -158,12 +158,16 @@ export async function bulkUpsert(
     ComplianceStatusColumns.address,
     ComplianceStatusColumns.status,
     ComplianceStatusColumns.reason,
+    ComplianceStatusColumns.updatedAt,
   ];
   const rows: string[] = setBulkRowsForUpdate<ComplianceStatusColumns>({
     objectArray: complianceStatusObjects,
     columns,
     stringColumns: [
       ComplianceStatusColumns.address,
+    ],
+    timestampColumns: [
+      ComplianceStatusColumns.updatedAt,
     ],
     enumColumns: [
       ComplianceStatusColumns.status,

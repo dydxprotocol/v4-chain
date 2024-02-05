@@ -26,7 +26,8 @@ import {
   ComplianceProvider,
   ComplianceReason,
   ComplianceStatus,
-  ComplianceStatusCreateObject, ComplianceStatusUpsertObject,
+  ComplianceStatusCreateObject,
+  ComplianceStatusUpsertObject,
   FillCreateObject,
   FillType,
   FundingIndexUpdatesCreateObject,
@@ -614,6 +615,7 @@ export const noncompliantStatusUpsertData: ComplianceStatusUpsertObject = {
   address: blockedAddress,
   status: ComplianceStatus.BLOCKED,
   reason: ComplianceReason.SANCTIONED_GEO,
+  updatedAt: createdDateTime.toISO(),
 };
 
 // ========= Trading Reward Data ==========
