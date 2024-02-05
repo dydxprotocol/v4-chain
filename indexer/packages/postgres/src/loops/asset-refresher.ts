@@ -1,10 +1,13 @@
 import {
-  stats, delay, logger, NodeEnv,
+  stats,
+  logger,
+  NodeEnv,
 } from '@dydxprotocol-indexer/base';
 
 import config from '../config';
 import * as AssetTable from '../stores/asset-table';
 import { AssetFromDatabase, AssetsMap, Options } from '../types';
+import { startUpdateLoop } from './loopHelper';
 
 let idToAsset: AssetsMap = {};
 
@@ -12,10 +15,11 @@ let idToAsset: AssetsMap = {};
  * Refresh loop to cache the list of all assets from the database in-memory.
  */
 export async function start(): Promise<void> {
-  for (;;) {
-    await updateAssets();
-    await delay(config.ASSET_REFRESHER_INTERVAL_MS);
-  }
+  await startUpdateLoop(
+    updateAssets,
+    config.ASSET_REFRESHER_INTERVAL_MS,
+    'updateAssets',
+  );
 }
 
 /**
