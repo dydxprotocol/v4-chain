@@ -368,8 +368,8 @@ func TestPrepareProposalHandler(t *testing.T) {
 				mockTxConfig,
 				&mockBridgeKeeper,
 				&mockClobKeeper,
-				&mockPricesKeeper,
 				&mockPerpKeeper,
+				prices.NewDefaultPriceUpdateGenerator(&mockPricesKeeper),
 			)
 
 			req := abci.RequestPrepareProposal{
@@ -448,8 +448,8 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 				encodingCfg.TxConfig,
 				&mockBridgeKeeper,
 				&mockClobKeeper,
-				&mockPricesKeeper,
 				&mockPerpKeeper,
+				prices.NewDefaultPriceUpdateGenerator(&mockPricesKeeper),
 			)
 
 			req := abci.RequestPrepareProposal{
@@ -486,7 +486,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 
 		gen := prices.NewSlinkyPriceUpdateGenerator(nil, nil, nil, nil) // ignore all fields, should immediately return
 
-		handler := prepare.PrepareProposalHandlerWithPriceUpdateGenerator(
+		handler := prepare.PrepareProposalHandler(
 			encoding.GetTestEncodingCfg().TxConfig,
 			&mockBridgeKeeper,
 			&mockClobKeeper,
@@ -603,7 +603,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 		cpMock.On("ID", ctx, mogBtc).Return(uint64(0), nil)
 		cpMock.On("ID", ctx, tiaPepe).Return(uint64(1), nil)
 
-		handler := prepare.PrepareProposalHandlerWithPriceUpdateGenerator(
+		handler := prepare.PrepareProposalHandler(
 			encoding.GetTestEncodingCfg().TxConfig,
 			&mockBridgeKeeper,
 			&mockClobKeeper,
