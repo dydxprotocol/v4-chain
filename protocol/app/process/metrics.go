@@ -10,12 +10,13 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 )
 
 // recordErrorMetricsWithLabel records an error metric in `ProcessProposalHandler` with a label.
 func recordErrorMetricsWithLabel(label string) {
 	telemetry.IncrCounterWithLabels(
-		[]string{ModuleName, metrics.Handler, metrics.Error, metrics.Count},
+		[]string{errors.ModuleName, metrics.Handler, metrics.Error, metrics.Count},
 		1,
 		[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Detail, label)},
 	)
@@ -26,7 +27,7 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 	// Record success.
 	telemetry.IncrCounter(
 		1,
-		ModuleName,
+		errors.ModuleName,
 		metrics.Handler,
 		metrics.Success,
 		metrics.Count,
@@ -37,7 +38,7 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 	if ok {
 		telemetry.SetGauge(
 			float32(len(updateMarketPricesMsg.MarketPriceUpdates)),
-			ModuleName,
+			errors.ModuleName,
 			metrics.NumMarketPricesToUpdate,
 		)
 	} else {
@@ -50,7 +51,7 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 	if ok {
 		telemetry.SetGauge(
 			float32(len(addPremiumVotesMsg.Votes)),
-			ModuleName,
+			errors.ModuleName,
 			metrics.NumPremiumVotes,
 		)
 	} else {
@@ -62,7 +63,7 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 	if ok {
 		telemetry.IncrCounter(
 			float32(len(msgAcknowledgeBridges.Events)),
-			ModuleName,
+			errors.ModuleName,
 			metrics.NumBridges,
 		)
 	} else {
@@ -80,14 +81,14 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 	// Other txs.
 	telemetry.SetGauge(
 		float32(len(txs.OtherTxs)),
-		ModuleName,
+		errors.ModuleName,
 		metrics.NumOtherTxs,
 	)
 
 	// Total # of txs in the new proposal.
 	telemetry.SetGauge(
 		float32(totalNumTxs),
-		ModuleName,
+		errors.ModuleName,
 		metrics.TotalNumTxs,
 	)
 }

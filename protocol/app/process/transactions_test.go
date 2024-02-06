@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -42,35 +43,35 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		"Less than min num txs": {
 			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, validUpdatePriceTx}, // need at least 4.
 			expectedErr: errorsmod.Wrapf(
-				process.ErrUnexpectedNumMsgs,
+				errors.ErrUnexpectedNumMsgs,
 				"Expected the proposal to contain at least 4 txs, but got 3",
 			),
 		},
 		"Order tx decoding fails": {
 			txsBytes: [][]byte{invalidTxBytes, validAcknowledgeBridgesTx, validAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
+				errors.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Acknowledge bridges tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, invalidTxBytes, validAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
+				errors.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidTxBytes, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
+				errors.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Update prices tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidTxBytes},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
+				errors.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
@@ -84,7 +85,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrDecodingTxBytes,
+				errors.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
@@ -98,7 +99,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
-				process.ErrUnexpectedMsgType,
+				errors.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
 			),
 		},
@@ -280,14 +281,14 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		"AddFunding tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrap(
-				process.ErrMsgValidateBasic,
+				errors.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
 					"cannot contain duplicates: MsgAddPremiumVotes is invalid"),
 		},
 		"UpdatePrices tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidUpdatePriceTx},
 			expectedErr: errorsmod.Wrap(
-				process.ErrMsgValidateBasic,
+				errors.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),
 		},
@@ -300,7 +301,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
+			expectedErr: errorsmod.Wrap(errors.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
@@ -311,7 +312,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
+			expectedErr: errorsmod.Wrap(errors.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 	}
 
