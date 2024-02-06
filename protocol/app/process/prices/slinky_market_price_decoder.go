@@ -20,14 +20,24 @@ type SlinkyMarketPriceDecoder struct {
 	agg prices.PriceUpdateGenerator
 }
 
+// NewSlinkyMarketPriceDecoder returns a new SlinkyMarketPriceDecoder
+func NewSlinkyMarketPriceDecoder(decoder UpdateMarketPriceTxDecoder, agg prices.PriceUpdateGenerator) *SlinkyMarketPriceDecoder {
+	return &SlinkyMarketPriceDecoder{
+		decoder: decoder,
+		agg:     agg,
+	}
+}
+
 // DecodeUpdateMarketPricesTx returns a new `UpdateMarketPricesTx` after validating the following:
 //   - the underlying decoder decodes successfully
 //   - the UpdateMarketPricesTx follows correctly from the vote-extensions
+//      - vote-extensions are enabled: each price per market-id is derived from the injected extended commit
+//      - vote-extensions are disabled: no price updates are proposed
 //   - vote-extensions are inserted into the block if necessary
 //
 // If error occurs during any of the checks, returns error.
 func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context, txs [][]byte) (*UpdateMarketPricesTx, error) {
-	var extendedCommitBz []byte
+	expectedMsg := &pricestypes.MsgUpdateMarketPrices{}
 
 	// check if vote-extensions are enabled
 	if ve.VoteExtensionsEnabled(ctx) {
@@ -36,8 +46,12 @@ func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context,
 			return nil, errors.GetDecodingError(msgUpdateMarketPricesType, fmt.Errorf("expected %v txs, got %v", slinkyabci.NumInjectedTxs, len(txs)))
 		}
 
-		// get the expected extended commit bytes
-		extendedCommitBz = txs[slinkyabci.NumInjectedTxs]
+		// get the expected message from the injected vote-extensions
+		var err error
+		expectedMsg, err = mpd.agg.GetValidMarketPriceUpdates(ctx, txs[slinkyabci.OracleInfoIndex])
+		if err != nil {
+			return nil, errors.GetDecodingError(msgUpdateMarketPricesType, err)
+		}
 	}
 
 	// use the underlying decoder to get the UpdateMarketPricesTx
@@ -46,14 +60,17 @@ func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context,
 		return nil, err
 	}
 
-	// get the expected message from the injected vote-extensions
-	expectedMsg, err := mpd.agg.GetValidMarketPriceUpdates(ctx, extendedCommitBz)
-	if err != nil {
-		return nil, err
+	updateMarketPricesMsg, ok := updateMarketPrices.GetMsg().(*pricestypes.MsgUpdateMarketPrices)
+	if !ok {
+		return nil, errors.GetDecodingError(msgUpdateMarketPricesType, fmt.Errorf("expected %T, got %T", expectedMsg, updateMarketPricesMsg))
 	}
 
 	// check that the UpdateMarketPricesTx matches the expected message
-	return updateMarketPrices, checkEqualityOfMarketPriceUpdate(expectedMsg, updateMarketPrices.GetMsg())
+	if err := checkEqualityOfMarketPriceUpdate(expectedMsg, updateMarketPricesMsg); err != nil {
+		return nil, err
+	}
+
+	return updateMarketPrices, nil
 }
 
 // GetTxOffset returns the offset that other injected txs should be placed with respect to their normally
@@ -66,31 +83,30 @@ func (mpd *SlinkyMarketPriceDecoder) GetTxOffset(ctx sdk.Context) int {
 	return 0
 }
 
-// checkEqualityOfMarketPriceUpdate checks that the given market-price updates are equivalent
-func checkEqualityOfMarketPriceUpdate(expectedMsgI, actualMsgI sdk.Msg) error {
-	expectedMsg, ok := expectedMsgI.(*pricestypes.MsgUpdateMarketPrices)
-	if !ok {
-		return fmt.Errorf("expected message to be of type %T, got %T", expectedMsg, expectedMsgI)
-	}
-
-	actualMsg, ok := actualMsgI.(*pricestypes.MsgUpdateMarketPrices)
-	if !ok {
-		return fmt.Errorf("actual message to be of type %T, got %T", actualMsg, actualMsgI)
-	}
-
+// checkEqualityOfMarketPriceUpdate checks that the given market-price updates are equivalent. Notice,
+// this method only checks that the prices per market-id are correct, not that the market-ids are in the
+// same order,
+func checkEqualityOfMarketPriceUpdate(expectedMsg, actualMsg *pricestypes.MsgUpdateMarketPrices) error {
 	// assert len is correct
 	if len(expectedMsg.MarketPriceUpdates) != len(actualMsg.MarketPriceUpdates) {
-		return fmt.Errorf("expected %v market-price updates, got %v", len(expectedMsg.MarketPriceUpdates), len(actualMsg.MarketPriceUpdates))
+		return IncorrectNumberUpdatesError(len(expectedMsg.MarketPriceUpdates), len(actualMsg.MarketPriceUpdates))
 	}
 
-	// assert each market-price update is correct
-	for i, expectedMarketPriceUpdate := range expectedMsg.MarketPriceUpdates {
-		actualMarketPriceUpdate := actualMsg.MarketPriceUpdates[i]
-		if expectedMarketPriceUpdate.MarketId != actualMarketPriceUpdate.MarketId {
-			return fmt.Errorf("expected market id %v, got %v", expectedMarketPriceUpdate.MarketId, actualMarketPriceUpdate.MarketId)
+	// map market-id to price-map
+	expectedPricesPerMarketID := make(map[uint32]uint64)
+	for _, marketPriceUpdate := range expectedMsg.MarketPriceUpdates {
+		expectedPricesPerMarketID[marketPriceUpdate.MarketId] = marketPriceUpdate.Price
+	}
+
+	// check that the actual prices match the expected prices
+	for _, marketPriceUpdate := range actualMsg.MarketPriceUpdates {
+		expectedPrice, ok := expectedPricesPerMarketID[marketPriceUpdate.MarketId]
+		if !ok {
+			return MissingPriceUpdateForMarket(marketPriceUpdate.MarketId)
 		}
-		if expectedMarketPriceUpdate.Price != actualMarketPriceUpdate.Price {
-			return fmt.Errorf("expected price %v, got %v", expectedMarketPriceUpdate.Price, actualMarketPriceUpdate.Price)
+
+		if expectedPrice != marketPriceUpdate.Price {
+			return IncorrectPriceUpdateForMarket(marketPriceUpdate.MarketId, expectedPrice, marketPriceUpdate.Price)
 		}
 	}
 

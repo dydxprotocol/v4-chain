@@ -1,7 +1,6 @@
 package prices
 
 import (
-	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
@@ -41,18 +40,18 @@ func (mpd *DefaultUpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx sdk
 
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, fmt.Errorf("unexpected number of msgs: %v", len(msgs))
+		return nil, errors.GetUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
 	}
 
 	updateMarketPrices, ok := msgs[0].(*pricestypes.MsgUpdateMarketPrices)
 	if !ok {
-		return nil, fmt.Errorf("unexpected msg type: %v", msgs[0])
+		return nil, errors.GetUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
 	}
 
 	return &UpdateMarketPricesTx{
 		ctx:          ctx,
 		pricesKeeper: mpd.pk,
-		msg:          updateMarketPrices,
+		Msg:          updateMarketPrices,
 	}, nil
 }
 
