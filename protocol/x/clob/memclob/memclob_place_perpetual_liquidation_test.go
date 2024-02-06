@@ -553,6 +553,7 @@ func TestPlacePerpetualLiquidation_CollatCheckFailure(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlacePerpetualLiquidationOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				tc.order,
 				tc.placedMatchableOrders,

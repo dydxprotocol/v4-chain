@@ -5,26 +5,22 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/log"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-const (
-	hashErrMsg   = "Cannot hash order id."
-	createErrMsg = "Cannot create message."
-)
-
 // MustCreateOrderPlaceMessage invokes CreateOrderPlaceMessage and panics if creation was unsuccessful.
 func MustCreateOrderPlaceMessage(
-	logger log.Logger,
+	ctx sdk.Context,
 	order clobtypes.Order,
 ) msgsender.Message {
-	msg, ok := CreateOrderPlaceMessage(logger, order)
+	msg, ok := CreateOrderPlaceMessage(ctx, order)
 	if !ok {
 		panic(fmt.Errorf("Unable to create place order message for order %+v", order))
 	}
@@ -33,21 +29,30 @@ func MustCreateOrderPlaceMessage(
 
 // CreateOrderPlaceMessage creates an off-chain update message for an order.
 func CreateOrderPlaceMessage(
-	logger log.Logger,
+	ctx sdk.Context,
 	order clobtypes.Order,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for placing order."
-	errDetails := fmt.Sprintf("Order: %+v", order)
 
 	orderIdHash, err := GetOrderIdHash(order.OrderId)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, hashErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
 		return msgsender.Message{}, false
 	}
 
 	update, err := newOrderPlaceMessage(order)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.Order, order,
+		)
 		return msgsender.Message{}, false
 	}
 
@@ -56,11 +61,11 @@ func CreateOrderPlaceMessage(
 
 // MustCreateOrderUpdateMessage invokes CreateOrderUpdateMessage and panics if creation was unsuccessful.
 func MustCreateOrderUpdateMessage(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	totalFilled satypes.BaseQuantums,
 ) msgsender.Message {
-	msg, ok := CreateOrderUpdateMessage(logger, orderId, totalFilled)
+	msg, ok := CreateOrderUpdateMessage(ctx, orderId, totalFilled)
 	if !ok {
 		panic(fmt.Errorf("Unable to create place order message for order id %+v", orderId))
 	}
@@ -68,24 +73,34 @@ func MustCreateOrderUpdateMessage(
 }
 
 // CreateOrderUpdateMessage creates an off-chain update message for an order being updated.
-// TODO(CLOB-1051) take in ctx, not logger
 func CreateOrderUpdateMessage(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	totalFilled satypes.BaseQuantums,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for updating order."
-	errDetails := fmt.Sprintf("OrderId: %+v, TotalFilled %+v", orderId, totalFilled)
 
 	orderIdHash, err := GetOrderIdHash(orderId)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, hashErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.OrderId, orderId,
+			log.TotalFilled, totalFilled,
+		)
 		return msgsender.Message{}, false
 	}
 
 	update, err := newOrderUpdateMessage(orderId, totalFilled)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.OrderId, orderId,
+			log.TotalFilled, totalFilled,
+		)
 		return msgsender.Message{}, false
 	}
 
@@ -95,12 +110,12 @@ func CreateOrderUpdateMessage(
 // MustCreateOrderRemoveMessageWithReason invokes CreateOrderRemoveMessageWithReason and panics if creation was
 // unsuccessful.
 func MustCreateOrderRemoveMessageWithReason(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	reason shared.OrderRemovalReason,
 	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
-	msg, ok := CreateOrderRemoveMessageWithReason(logger, orderId, reason, removalStatus)
+	msg, ok := CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 	if !ok {
 		panic(fmt.Errorf("Unable to create remove order message with reason for order id %+v", orderId))
 	}
@@ -110,28 +125,36 @@ func MustCreateOrderRemoveMessageWithReason(
 // CreateOrderRemoveMessageWithReason creates an off-chain update message for an order being removed
 // with a specific reason for the removal and the resulting removal status of the removed order.
 func CreateOrderRemoveMessageWithReason(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	reason shared.OrderRemovalReason,
 	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for removing order."
-	errDetails := fmt.Sprintf(
-		"OrderId: %+v, Reason %d, Removal status %d",
-		orderId,
-		reason,
-		removalStatus,
-	)
 
 	orderIdHash, err := GetOrderIdHash(orderId)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, hashErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.OrderId, orderId,
+			log.Reason, reason,
+			log.RemovalStatus, removalStatus,
+		)
 		return msgsender.Message{}, false
 	}
 
 	update, err := newOrderRemoveMessage(orderId, reason, removalStatus)
 	if err != nil {
-		logger.Error(fmt.Sprintf("%s %s Err: %+v %s\n", errMessage, createErrMsg, err, errDetails))
+		log.ErrorLogWithError(
+			ctx,
+			errMessage,
+			err,
+			log.OrderId, orderId,
+			log.Reason, reason,
+			log.RemovalStatus, removalStatus,
+		)
 		return msgsender.Message{}, false
 	}
 
@@ -139,13 +162,14 @@ func CreateOrderRemoveMessageWithReason(
 }
 
 // MustCreateOrderRemoveMessage invokes CreateOrderRemoveMessage and panics if creation was unsuccessful.
-func MustCreateOrderRemoveMessage(logger log.Logger,
+func MustCreateOrderRemoveMessage(
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
 	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
-	msg, ok := CreateOrderRemoveMessage(logger, orderId, orderStatus, orderError, removalStatus)
+	msg, ok := CreateOrderRemoveMessage(ctx, orderId, orderStatus, orderError, removalStatus)
 	if !ok {
 		panic(fmt.Errorf("Unable to create remove order message for order id %+v", orderId))
 	}
@@ -155,32 +179,25 @@ func MustCreateOrderRemoveMessage(logger log.Logger,
 // CreateOrderRemoveMessage creates an off-chain update message for an order being removed, with the
 // order's status and the resulting removal status of the removed order.
 func CreateOrderRemoveMessage(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
 	removalStatus OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
-	errDetails := fmt.Sprintf(
-		"OrderId: %+v, Removal status %d",
-		orderId,
-		removalStatus,
-	)
-
 	reason, err := shared.GetOrderRemovalReason(orderStatus, orderError)
 	if err != nil {
-		logger.Error(
-			fmt.Sprintf(
-				"Error creating off-chain update message for removing order. Invalid order removal "+
-					"reason. Error: %+v %s\n",
-				err,
-				errDetails,
-			),
+		log.ErrorLogWithError(
+			ctx,
+			"Error creating off-chain update message for removing order. Invalid order removal reason.",
+			err,
+			log.OrderId, orderId,
+			log.RemovalStatus, removalStatus,
 		)
 		return msgsender.Message{}, false
 	}
 
-	return CreateOrderRemoveMessageWithReason(logger, orderId, reason, removalStatus)
+	return CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 }
 
 // CreateOrderRemoveMessageWithDefaultReason creates an off-chain update message for an order being
@@ -189,7 +206,7 @@ func CreateOrderRemoveMessage(
 // and falls back to the defaultRemovalReason. If defaultRemovalReason is ...UNSPECIFIED, it panics.
 // TODO(CLOB-1051) take in ctx, not logger
 func CreateOrderRemoveMessageWithDefaultReason(
-	logger log.Logger,
+	ctx sdk.Context,
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
@@ -204,26 +221,20 @@ func CreateOrderRemoveMessageWithDefaultReason(
 			),
 		)
 	}
-	errDetails := fmt.Sprintf(
-		"OrderId: %+v, Removal status %d",
-		orderId,
-		removalStatus,
-	)
 
 	reason, err := shared.GetOrderRemovalReason(orderStatus, orderError)
 	if err != nil {
-		logger.Error(
-			fmt.Sprintf(
-				"Error creating off-chain update message for removing order. Invalid order removal "+
-					"reason. Error: %+v %s\n",
-				err,
-				errDetails,
-			),
+		log.ErrorLogWithError(
+			ctx,
+			"Error creating off-chain update message for removing order. Invalid order removal reason.",
+			err,
+			log.OrderId, orderId,
+			log.RemovalStatus, removalStatus,
 		)
 		reason = defaultRemovalReason
 	}
 
-	return CreateOrderRemoveMessageWithReason(logger, orderId, reason, removalStatus)
+	return CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 }
 
 // newOrderPlaceMessage returns an `OffChainUpdate` struct populated with an `OrderPlace` struct

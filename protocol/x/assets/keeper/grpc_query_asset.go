@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +22,7 @@ func (k Keeper) AllAssets(
 	}
 
 	var assets []types.Asset
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	store := ctx.KVStore(k.storeKey)
 	assetStore := prefix.NewStore(store, []byte(types.AssetKeyPrefix))
@@ -48,7 +48,7 @@ func (k Keeper) Asset(c context.Context, req *types.QueryAssetRequest) (*types.Q
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 
 	val, exists := k.GetAsset(
 		ctx,

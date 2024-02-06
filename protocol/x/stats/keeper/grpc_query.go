@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -23,7 +23,7 @@ func (k Keeper) Params(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	params := k.GetParams(ctx)
 	return &types.QueryParamsResponse{
 		Params: params,
@@ -41,7 +41,7 @@ func (k Keeper) StatsMetadata(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	statsMetadata := k.GetStatsMetadata(ctx)
 	return &types.QueryStatsMetadataResponse{
 		Metadata: statsMetadata,
@@ -59,7 +59,7 @@ func (k Keeper) GlobalStats(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	globalStats := k.GetGlobalStats(ctx)
 	return &types.QueryGlobalStatsResponse{
 		Stats: globalStats,
@@ -77,7 +77,7 @@ func (k Keeper) UserStats(
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
 
-	ctx := sdk.UnwrapSDKContext(c)
+	ctx := lib.UnwrapSDKContext(c, types.ModuleName)
 	userStats := k.GetUserStats(ctx, req.User)
 	return &types.QueryUserStatsResponse{
 		Stats: userStats,

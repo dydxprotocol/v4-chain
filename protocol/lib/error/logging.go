@@ -4,9 +4,6 @@ import (
 	"errors"
 	"fmt"
 
-	"cosmossdk.io/log"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -18,10 +15,11 @@ const (
 // the LogContextualizer interface. This method is appropriate for logging errors that may or may not be wrapped
 // in an ErrorWithLogContext.
 func LogErrorWithOptionalContext(
-	logger log.Logger,
+	ctx sdk.Context,
 	msg string,
 	err error,
 ) {
+	logger := ctx.Logger()
 	var logContextualizer LogContextualizer
 	if ok := errors.As(err, &logContextualizer); ok {
 		logger = logContextualizer.AddLoggingContext(logger)
@@ -39,19 +37,4 @@ func LogErrorWithOptionalContext(
 func WrapErrorWithSourceModuleContext(err error, module string) error {
 	return NewErrorWithLogContext(err).
 		WithLogKeyValue(SourceModuleKey, fmt.Sprintf("x/%v", module))
-}
-
-// LogDeliverTxError logs an error, appending the block height and ABCI callback to the error message.
-func LogDeliverTxError(logger log.Logger, err error, blockHeight int64, handler string, msg sdk.Msg) {
-	if err != nil {
-		logger.Error(
-			err.Error(),
-			metrics.BlockHeight, blockHeight,
-			metrics.Handler, handler,
-			metrics.Callback, metrics.DeliverTx,
-			metrics.Msg, msg,
-		)
-	} else {
-		logger.Error("LogErrorWithBlockHeight called with nil error")
-	}
 }

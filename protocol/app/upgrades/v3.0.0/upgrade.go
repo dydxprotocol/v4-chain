@@ -18,6 +18,7 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
@@ -156,7 +157,7 @@ func CreateUpgradeHandler(
 	ak authkeeper.AccountKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
-		sdkCtx := sdk.UnwrapSDKContext(ctx)
+		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info("Running %s Upgrade...", UpgradeName)
 		InitializeModuleAccs(sdkCtx, ak)
 

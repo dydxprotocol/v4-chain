@@ -395,6 +395,7 @@ func TestPlaceOrder_AddOrderToOrderbook(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				tc.order,
 				tc.existingOrders,
@@ -2291,6 +2292,7 @@ func TestPlaceOrder_MatchOrders_PreexistingMatches(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				tc.order,
 				tc.placedMatchableOrders,
@@ -3286,6 +3288,7 @@ func TestPlaceOrder_PostOnly(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				order,
 				tc.placedMatchableOrders,
@@ -3428,6 +3431,7 @@ func TestPlaceOrder_ImmediateOrCancel(t *testing.T) {
 			// Verify the correct offchain update messages were returned.
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				order,
 				tc.placedMatchableOrders,
@@ -4101,6 +4105,7 @@ func TestPlaceOrder_FillOrKill(t *testing.T) {
 
 			assertPlaceOrderOffchainMessages(
 				t,
+				ctx,
 				offchainUpdates,
 				order,
 				tc.placedMatchableOrders,

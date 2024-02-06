@@ -125,7 +125,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 	offchainUpdates = types.NewOffchainUpdates()
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-			m.clobKeeper.Logger(ctx),
+			ctx,
 			orderIdToCancel,
 			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -461,7 +461,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		orderId := order.OrderId
 		if _, found := m.openOrders.getOrder(ctx, orderId); found {
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				orderId,
 				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -470,7 +470,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			}
 		}
 		if message, success := off_chain_updates.CreateOrderPlaceMessage(
-			m.clobKeeper.Logger(ctx),
+			ctx,
 			order,
 		); success {
 			offchainUpdates.AddPlaceMessage(order.OrderId, message)
@@ -511,7 +511,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				err,
@@ -533,7 +533,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
@@ -563,7 +563,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		// during uncrossing.
 		if m.generateOffchainUpdates {
 			if message, success := off_chain_updates.CreateOrderUpdateMessage(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				order.OrderId,
 				order.GetBaseQuantums(),
 			); success {
@@ -580,7 +580,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				order.OrderId,
 				orderStatus,
 				nil,
@@ -615,7 +615,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			// Send an off-chain update message indicating the order should be removed from the orderbook
 			// on the Indexer.
 			if message, success := off_chain_updates.CreateOrderRemoveMessage(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				order.OrderId,
 				addOrderOrderStatus,
 				nil,
@@ -652,7 +652,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	// the total filled size of the order (size of order - remaining size).
 	if m.generateOffchainUpdates {
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			m.clobKeeper.Logger(ctx),
+			ctx,
 			order.OrderId,
 			order.GetBaseQuantums()-remainingSize,
 		); success {
@@ -788,7 +788,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 				makerOrderWithRemovalReason.RemovalReason,
 			)
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-				branchedContext.Logger(),
+				branchedContext,
 				makerOrderId,
 				reason,
 				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
@@ -1112,7 +1112,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 		// message for the order.
 		if m.generateOffchainUpdates && off_chain_updates.ShouldSendOrderRemovalOnReplay(err) {
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithDefaultReason(
-				m.clobKeeper.Logger(ctx),
+				ctx,
 				orderId,
 				orderStatus,
 				err,
@@ -1264,7 +1264,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					m.clobKeeper.Logger(ctx),
+					ctx,
 					statefulOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1283,7 +1283,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				// orderbook on the Indexer. As the order is expired, the status of the order is canceled
 				// and not best-effort-canceled.
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-					m.clobKeeper.Logger(ctx),
+					ctx,
 					shortTermOrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
@@ -1971,7 +1971,7 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		// Send an off-chain update message to the indexer to update the total filled size of the maker
 		// order.
 		if message, success := off_chain_updates.CreateOrderUpdateMessage(
-			m.clobKeeper.Logger(ctx),
+			ctx,
 			makerOrder.OrderId,
 			newTotalFilledAmount,
 		); success {
@@ -2097,7 +2097,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 				}
 				if m.generateOffchainUpdates {
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
-						m.clobKeeper.Logger(ctx),
+						ctx,
 						orderId,
 						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
