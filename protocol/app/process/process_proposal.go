@@ -3,8 +3,8 @@ package process
 import (
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
@@ -13,7 +13,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-
 )
 
 const ConsensusRound = sdk.ContextKey("consensus_round")

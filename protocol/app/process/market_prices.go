@@ -4,8 +4,8 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 var (
