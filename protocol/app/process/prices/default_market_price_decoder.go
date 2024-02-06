@@ -61,4 +61,3 @@ func (mpd *DefaultUpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx sdk
 func (mpd DefaultUpdateMarketPriceTxDecoder) GetTxOffset(sdk.Context) int {
 	return 0
 }
-

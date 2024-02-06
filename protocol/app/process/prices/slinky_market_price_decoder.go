@@ -1,13 +1,13 @@
 package prices
 
 import (
+	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
-	"github.com/skip-mev/slinky/abci/ve"
-	slinkyabci "github.com/skip-mev/slinky/abci/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"fmt"
+	slinkyabci "github.com/skip-mev/slinky/abci/types"
+	"github.com/skip-mev/slinky/abci/ve"
 )
 
 // SlinkyMarketPriceDecoder wraps an existing MarketPriceDecoder with logic to verify that the MarketPriceUpdateTx was indeed
@@ -57,7 +57,7 @@ func (mpd *SlinkyMarketPriceDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context,
 }
 
 // GetTxOffset returns the offset that other injected txs should be placed with respect to their normally
-// expected indices. If vote-extensions are enabled, slinkyabci.NumInjectedTxs is the expected offset, 
+// expected indices. If vote-extensions are enabled, slinkyabci.NumInjectedTxs is the expected offset,
 // otherwise 0 is the expected offset.
 func (mpd *SlinkyMarketPriceDecoder) GetTxOffset(ctx sdk.Context) int {
 	if ve.VoteExtensionsEnabled(ctx) {
@@ -77,7 +77,6 @@ func checkEqualityOfMarketPriceUpdate(expectedMsgI, actualMsgI sdk.Msg) error {
 	if !ok {
 		return fmt.Errorf("actual message to be of type %T, got %T", actualMsg, actualMsgI)
 	}
-
 
 	// assert len is correct
 	if len(expectedMsg.MarketPriceUpdates) != len(actualMsg.MarketPriceUpdates) {
