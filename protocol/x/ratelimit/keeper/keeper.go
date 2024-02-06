@@ -62,11 +62,7 @@ func (k Keeper) ProcessWithdrawal(
 	amount *big.Int,
 ) error {
 	denomCapacity := k.GetDenomCapacity(ctx, denom)
-
-	newCapacityList := make([]dtypes.SerializableInt,
-		0,
-		len(denomCapacity.CapacityList),
-	)
+	newCapacityList := make([]dtypes.SerializableInt, len(denomCapacity.CapacityList))
 
 	for i, capacity := range denomCapacity.CapacityList {
 		// Check that the withdrawal amount does not exceed each capacity.
@@ -125,10 +121,7 @@ func (k Keeper) IncrementCapacitiesForDenom(
 ) {
 	denomCapacity := k.GetDenomCapacity(ctx, denom)
 
-	newCapacityList := make([]dtypes.SerializableInt,
-		0,
-		len(denomCapacity.CapacityList),
-	)
+	newCapacityList := make([]dtypes.SerializableInt, len(denomCapacity.CapacityList))
 
 	// Credit each capacity in the list by the amount of deposit.
 	for i, capacity := range denomCapacity.CapacityList {
