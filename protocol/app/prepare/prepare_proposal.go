@@ -55,22 +55,6 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
-	pricesKeeper prices.PricesKeeper,
-	perpetualKeeper PreparePerpetualsKeeper,
-) sdk.PrepareProposalHandler {
-	return PrepareProposalHandlerWithPriceUpdateGenerator(
-		txConfig,
-		bridgeKeeper,
-		clobKeeper,
-		perpetualKeeper,
-		prices.NewDefaultPriceUpdateGenerator(pricesKeeper),
-	)
-}
-
-func PrepareProposalHandlerWithPriceUpdateGenerator(
-	txConfig client.TxConfig,
-	bridgeKeeper PrepareBridgeKeeper,
-	clobKeeper PrepareClobKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
 	priceUpdateGenerator prices.PriceUpdateGenerator,
 ) sdk.PrepareProposalHandler {

@@ -106,6 +106,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
+	priceUpdateGenerator "github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -1305,8 +1306,8 @@ func New(
 				txConfig,
 				app.BridgeKeeper,
 				app.ClobKeeper,
-				app.PricesKeeper,
 				app.PerpetualsKeeper,
+				priceUpdateGenerator.NewDefaultPriceUpdateGenerator(app.PricesKeeper),
 			),
 		)
 	}
