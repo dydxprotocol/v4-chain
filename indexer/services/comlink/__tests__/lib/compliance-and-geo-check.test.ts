@@ -89,6 +89,16 @@ describe('compliance-check', () => {
     await dbHelpers.clearData();
   });
 
+  it('does not return 403 if no address in request', async () => {
+    isRestrictedCountrySpy.mockReturnValueOnce(false);
+    await sendRequestToApp({
+      type: RequestMethod.GET,
+      path: '/v4/check-compliance-query',
+      expressApp: complianceCheckApp,
+      expectedStatus: 200,
+    });
+  });
+
   it.each([
     ['query', '/v4/check-compliance-query?address=random'],
     ['param', '/v4/check-compliance-param/random'],

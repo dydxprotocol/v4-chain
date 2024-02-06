@@ -40,21 +40,23 @@ export async function complianceAndGeoCheck(
   }
 
   const { address }: AddressRequest = matchedData(req) as AddressRequest;
-  const updatedStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
-    { address: [address] },
-    [],
-    { readReplica: true },
-  );
-  if (updatedStatus.length > 0) {
-    if (updatedStatus[0].status === ComplianceStatus.CLOSE_ONLY) {
-      return next();
-    } else if (updatedStatus[0].status === ComplianceStatus.BLOCKED) {
-      return create4xxResponse(
-        res,
-        INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
-        403,
-        { code: BlockedCode.COMPLIANCE_BLOCKED },
-      );
+  if (address !== undefined) {
+    const updatedStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
+      { address: [address] },
+      [],
+      { readReplica: true },
+    );
+    if (updatedStatus.length > 0) {
+      if (updatedStatus[0].status === ComplianceStatus.CLOSE_ONLY) {
+        return next();
+      } else if (updatedStatus[0].status === ComplianceStatus.BLOCKED) {
+        return create4xxResponse(
+          res,
+          INDEXER_COMPLIANCE_BLOCKED_PAYLOAD,
+          403,
+          { code: BlockedCode.COMPLIANCE_BLOCKED },
+        );
+      }
     }
   }
 
