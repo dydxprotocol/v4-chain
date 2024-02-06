@@ -1,7 +1,7 @@
 package prices
 
 import (
-	"fmt"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
@@ -25,18 +25,18 @@ type UpdateMarketPriceTxDecoder interface {
 type UpdateMarketPricesTx struct {
 	ctx          sdk.Context
 	pricesKeeper PricesKeeper
-	msg          *pricestypes.MsgUpdateMarketPrices
+	Msg          *pricestypes.MsgUpdateMarketPrices
 }
 
 // Validate returns an error if:
 // - the underlying msg fails `ValidateBasic`
 // - the underlying msg values are not "valid" according to the index price.
 func (umpt *UpdateMarketPricesTx) Validate() error {
-	if err := umpt.msg.ValidateBasic(); err != nil {
-		return fmt.Errorf("error validating msg: %v: %v", umpt.msg, err)
+	if err := umpt.Msg.ValidateBasic(); err != nil {
+		return errors.GetValidateBasicError(umpt.Msg, err)
 	}
 
-	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.msg, true); err != nil {
+	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.Msg, true); err != nil {
 		return err
 	}
 
@@ -45,5 +45,5 @@ func (umpt *UpdateMarketPricesTx) Validate() error {
 
 // GetMsg retrieves the MarketPriceUpdate msg from this tx
 func (umpt *UpdateMarketPricesTx) GetMsg() sdk.Msg {
-	return umpt.msg
+	return umpt.Msg
 }
