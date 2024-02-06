@@ -19,6 +19,7 @@ const (
 
 // NewCreateSettledFundingEvent constructs a new funding sdk.Event. Note that `fundingPaid` is positive
 // if the subaccount paid funding, negative if the subaccount received funding.
+// TODO(CT-245): Add tests that this event is emitted.
 func NewCreateSettledFundingEvent(
 	subaccount SubaccountId,
 	perpetualId uint32,
