@@ -5,6 +5,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"slices"
 )
 
@@ -61,7 +62,7 @@ type ProcessProposalTxs struct {
 	ProposedOperationsTx *ProposedOperationsTx
 	AcknowledgeBridgesTx *AcknowledgeBridgesTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
-	UpdateMarketPricesTx *UpdateMarketPricesTx
+	UpdateMarketPricesTx SingleMsgTx // abstract over MarketPriceUpdates from ves or default.
 
 	// Multi msgs txs.
 	OtherTxs []*OtherMsgsTx
@@ -79,11 +80,22 @@ func DecodeProcessProposalTxs(
 	numTxs := len(req.Txs)
 	if numTxs < minTxsCount {
 		return nil, errorsmod.Wrapf(
-			ErrUnexpectedNumMsgs,
+			errors.ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
 			minTxsCount,
 			numTxs,
 		)
+	}
+
+	// Price updates.
+	updatePricesTx, err := DecodeUpdateMarketPricesTx(
+		ctx,
+		pricesKeeper,
+		decoder,
+		req.Txs[numTxs+updateMarketPricesTxLenOffset],
+	)
+	if err != nil {
+		return nil, err
 	}
 
 	// Operations.
@@ -105,17 +117,6 @@ func DecodeProcessProposalTxs(
 
 	// Funding samples.
 	addPremiumVotesTx, err := DecodeAddPremiumVotesTx(decoder, req.Txs[numTxs+addPremiumVotesTxLenOffset])
-	if err != nil {
-		return nil, err
-	}
-
-	// Price updates.
-	updatePricesTx, err := DecodeUpdateMarketPricesTx(
-		ctx,
-		pricesKeeper,
-		decoder,
-		req.Txs[numTxs+updateMarketPricesTxLenOffset],
-	)
 	if err != nil {
 		return nil, err
 	}

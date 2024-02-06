@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 )
 
 var (
@@ -33,19 +34,19 @@ func DecodeUpdateMarketPricesTx(
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, getDecodingError(msgUpdateMarketPricesType, err)
+		return nil, errors.GetDecodingError(msgUpdateMarketPricesType, err)
 	}
 
 	// Check msg length.
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, getUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
+		return nil, errors.GetUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
 	}
 
 	// Check msg type.
 	updateMarketPrices, ok := msgs[0].(*types.MsgUpdateMarketPrices)
 	if !ok {
-		return nil, getUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
+		return nil, errors.GetUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
 	}
 
 	return &UpdateMarketPricesTx{
@@ -60,7 +61,7 @@ func DecodeUpdateMarketPricesTx(
 // - the underlying msg values are not "valid" according to the index price.
 func (umpt *UpdateMarketPricesTx) Validate() error {
 	if err := umpt.msg.ValidateBasic(); err != nil {
-		return getValidateBasicError(umpt.msg, err)
+		return errors.GetValidateBasicError(umpt.msg, err)
 	}
 
 	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.msg, true); err != nil {

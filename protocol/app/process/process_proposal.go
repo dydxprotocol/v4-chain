@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+
 )
 
 const ConsensusRound = sdk.ContextKey("consensus_round")
@@ -44,9 +46,9 @@ func ProcessProposalHandler(
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
-			ModuleName,
+			errors.ModuleName,
 			time.Now(),
-			ModuleName, // purposely repeated to add the module name to the metric key.
+			errors.ModuleName, // purposely repeated to add the module name to the metric key.
 			metrics.Handler,
 			metrics.Latency,
 		)
@@ -61,7 +63,7 @@ func ProcessProposalHandler(
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 		ctx = log.AddPersistentTagsToLogger(
 			ctx,
-			log.Module, ModuleName,
+			log.Module, errors.ModuleName,
 		)
 
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later

@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	processerrors "github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -110,7 +111,7 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 			txBytes:     invalidStatelessMsgTxBytes,
 			indexPrices: constants.AtTimeTSingleExchangePriceUpdate,
 			expectedErr: errorsmod.Wrap(
-				process.ErrMsgValidateBasic,
+				processerrors.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),
 		},
