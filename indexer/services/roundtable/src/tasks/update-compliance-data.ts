@@ -1,18 +1,18 @@
-import {
-  delay,
-  logger,
-  stats,
-} from '@dydxprotocol-indexer/base';
+import { delay, logger, stats } from '@dydxprotocol-indexer/base';
 import { ComplianceClientResponse } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceDataColumns,
   ComplianceDataCreateObject,
   ComplianceDataFromDatabase,
+  ComplianceReason,
+  ComplianceStatus,
   ComplianceTable,
+  ComplianceStatusTable,
   IsoString,
   SubaccountColumns,
   SubaccountFromDatabase,
   SubaccountTable,
+  ComplianceStatusUpsertObject,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -182,6 +182,21 @@ export default async function runTask(
       },
     );
 
+    const complianceStatusUpsertObjects: ComplianceStatusUpsertObject[] = complianceCreateObjects
+      .reduce(
+        (acc: ComplianceStatusUpsertObject[], complianceDataObject: ComplianceDataCreateObject) => {
+          if (complianceDataObject.blocked) {
+            const upsertStatus: ComplianceStatusUpsertObject = {
+              address: complianceDataObject.address,
+              status: ComplianceStatus.CLOSE_ONLY,
+              reason: ComplianceReason.COMPLIANCE_PROVIDER,
+              updatedAt: calculatedAt,
+            };
+            acc.push(upsertStatus);
+          }
+          return acc;
+        }, []);
+
     stats.timing(
       `${config.SERVICE_NAME}.${taskName}.query_compliance_data`,
       Date.now() - startQueryProvider,
@@ -212,6 +227,21 @@ export default async function runTask(
       complianceCreateObjects.length,
       undefined,
       { provider: complianceProvider.provider },
+    );
+
+    // Upsert compliance status into database
+    const complianceStatusStartUpsert: number = Date.now();
+    await ComplianceStatusTable.bulkUpsert(
+      complianceStatusUpsertObjects,
+    );
+
+    stats.timing(
+      `${config.SERVICE_NAME}.${taskName}.upsert_compliance_status`,
+      Date.now() - complianceStatusStartUpsert,
+    );
+    stats.gauge(
+      `${config.SERVICE_NAME}.${taskName}.num_compliance_status_upserted`,
+      complianceStatusUpsertObjects.length,
     );
   } catch (error) {
     logger.error({

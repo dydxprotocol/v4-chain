@@ -10,6 +10,10 @@ import {
   ComplianceDataColumns,
   Ordering,
   ComplianceDataCreateObject,
+  ComplianceStatusTable,
+  ComplianceStatusFromDatabase,
+  ComplianceStatus,
+  ComplianceReason,
 } from '@dydxprotocol-indexer/postgres';
 import updateComplianceDataTask from '../../src/tasks/update-compliance-data';
 import { logger, stats } from '@dydxprotocol-indexer/base';
@@ -68,6 +72,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 0,
       addressesScreened: 0,
       upserted: 0,
+      statusUpserted: 0,
     },
     mockProvider.provider,
     );
@@ -89,6 +94,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 0,
       addressesScreened: 0,
       upserted: 0,
+      statusUpserted: 0,
     },
     mockProvider.provider,
     );
@@ -115,6 +121,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 0,
       addressesScreened: 0,
       upserted: 0,
+      statusUpserted: 0,
     },
     mockProvider.provider,
     );
@@ -144,6 +151,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 0,
       addressesScreened: 0,
       upserted: 0,
+      statusUpserted: 0,
     },
     mockProvider.provider,
     );
@@ -159,6 +167,9 @@ describe('update-compliance-data', () => {
 
     let complianceData: ComplianceDataFromDatabase[] = await ComplianceTable.findAll({}, [], {});
     expect(complianceData).toHaveLength(0);
+    let complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(0);
 
     await updateComplianceDataTask(mockProvider);
 
@@ -171,12 +182,21 @@ describe('update-compliance-data', () => {
       riskScore,
     }));
 
+    complianceStatusData = await ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(1);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+
     expectGaugeStats({
       activeAddresses: 0,
       newAddresses: 1,
       oldAddresses: 0,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -207,12 +227,22 @@ describe('update-compliance-data', () => {
       mockProvider.provider,
     );
 
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(1);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+
     expectGaugeStats({
       activeAddresses: 1,
       newAddresses: 0,
       oldAddresses: 0,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -242,12 +272,22 @@ describe('update-compliance-data', () => {
       mockProvider.provider,
     );
 
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(1);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+
     expectGaugeStats({
       activeAddresses: 1,
       newAddresses: 0,
       oldAddresses: 0,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -281,12 +321,24 @@ describe('update-compliance-data', () => {
       mockProvider.provider,
     );
 
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {});
+    expect(complianceStatusData).toHaveLength(1);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
+
     expectGaugeStats({
       activeAddresses: 0,
       newAddresses: 0,
       oldAddresses: 1,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -340,6 +392,26 @@ describe('update-compliance-data', () => {
       },
       mockProvider.provider,
     );
+
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {
+      orderBy: [[ComplianceDataColumns.address, Ordering.DESC]],
+    });
+    expect(complianceStatusData).toHaveLength(2);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
+    expect(complianceStatusData[1]).toEqual(expect.objectContaining({
+      address: testConstants.blockedAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+    expect(DateTime.fromISO(complianceStatusData[1].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     // Both addresses screened
     expectGaugeStats({
       activeAddresses: 0,
@@ -347,6 +419,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 1,
       addressesScreened: 2,
       upserted: 2,
+      statusUpserted: 2,
     },
     mockProvider.provider,
     );
@@ -409,6 +482,26 @@ describe('update-compliance-data', () => {
       },
       mockProvider.provider,
     );
+
+    const complianceStatusData: ComplianceStatusFromDatabase[] = await
+    ComplianceStatusTable.findAll({}, [], {
+      orderBy: [[ComplianceDataColumns.address, Ordering.DESC]],
+    });
+    expect(complianceStatusData).toHaveLength(2);
+    expect(complianceStatusData[0]).toEqual(expect.objectContaining({
+      address: testConstants.defaultAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+    expect(DateTime.fromISO(complianceStatusData[0].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
+    expect(complianceStatusData[1]).toEqual(expect.objectContaining({
+      address: testConstants.blockedAddress,
+      status: ComplianceStatus.CLOSE_ONLY,
+      reason: ComplianceReason.COMPLIANCE_PROVIDER,
+    }));
+    expect(DateTime.fromISO(complianceStatusData[1].updatedAt).toUnixInteger()).toBeGreaterThan(
+      DateTime.utc().minus({ days: 1 }).toUnixInteger());
     // Both addresses screened
     expectGaugeStats({
       activeAddresses: 0,
@@ -416,6 +509,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 1,
       addressesScreened: 3,
       upserted: 2,
+      statusUpserted: 2,
     },
     mockProvider.provider,
     );
@@ -484,6 +578,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 0,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -512,6 +607,7 @@ describe('update-compliance-data', () => {
       oldAddresses: 1,
       addressesScreened: 1,
       upserted: 1,
+      statusUpserted: 1,
     },
     mockProvider.provider,
     );
@@ -607,12 +703,14 @@ function expectGaugeStats(
     oldAddresses,
     addressesScreened,
     upserted,
+    statusUpserted,
   }: {
     activeAddresses: number,
     newAddresses: number,
     oldAddresses: number,
     addressesScreened: number,
     upserted: number,
+    statusUpserted: number,
   },
   provider: string,
 ): void {
@@ -645,6 +743,10 @@ function expectGaugeStats(
     upserted,
     undefined,
     { provider },
+  );
+  expect(stats.gauge).toHaveBeenCalledWith(
+    'roundtable.update_compliance_data.num_compliance_status_upserted',
+    statusUpserted,
   );
 }
 

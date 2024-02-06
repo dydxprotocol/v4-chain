@@ -25,6 +25,13 @@ export interface ComplianceStatusCreateObject {
   updatedAt?: IsoString;
 }
 
+export interface ComplianceStatusUpsertObject {
+  address: string;
+  status: ComplianceStatus;
+  reason?: ComplianceReason;
+  updatedAt: IsoString;
+}
+
 export interface ComplianceStatusUpdateObject {
   address: string;
   status?: ComplianceStatus;
