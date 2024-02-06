@@ -14,6 +14,7 @@ import {
 } from '../../src/types';
 import { InvalidMessageHandler } from '../../src/lib/invalid-message';
 import { PingHandler } from '../../src/lib/ping';
+import { COUNTRY_HEADER_KEY } from '@dydxprotocol-indexer/compliance';
 
 jest.mock('uuid');
 jest.mock('../../src/helpers/wss');
@@ -98,6 +99,7 @@ describe('Index', () => {
       // Connect to the index before starting each test.
       (v4 as unknown as jest.Mock).mockReturnValueOnce(connectionId);
       const incomingMessage: IncomingMessage = new IncomingMessage(new Socket());
+      incomingMessage.headers[COUNTRY_HEADER_KEY] = countryCode;
       mockConnect(websocket, incomingMessage);
     });
 
