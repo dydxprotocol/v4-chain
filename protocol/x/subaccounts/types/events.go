@@ -27,7 +27,7 @@ func NewCreateSettledFundingEvent(
 	return sdk.NewEvent(
 		EventTypeSettledFunding,
 		sdk.NewAttribute(AttributeKeySubaccount, subaccount.Owner),
-		sdk.NewAttribute(AttributeKeySubaccount, fmt.Sprint(subaccount.Number)),
+		sdk.NewAttribute(AttributeKeySubaccountNumber, fmt.Sprint(subaccount.Number)),
 		sdk.NewAttribute(AttributeKeyPerpetualId, fmt.Sprint(perpetualId)),
 		sdk.NewAttribute(AttributeKeyFundingPaid, fundingPaid.String()),
 	)
