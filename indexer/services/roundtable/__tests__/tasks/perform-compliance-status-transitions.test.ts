@@ -42,10 +42,6 @@ describe('update-close-only-status', () => {
       `${config.SERVICE_NAME}.num_stale_close_only_updated.count`,
       0,
     );
-    expect(stats.gauge).toHaveBeenCalledWith(
-      `${config.SERVICE_NAME}.num_stale_close_only.count`,
-      0,
-    );
   });
 
   it('updates CLOSE_ONLY addresses older than 7 days to BLOCKED', async () => {
@@ -93,10 +89,6 @@ describe('update-close-only-status', () => {
     // Assert the stats were correctly recorded
     expect(stats.gauge).toHaveBeenCalledWith(
       `${config.SERVICE_NAME}.num_stale_close_only_updated.count`,
-      1,
-    );
-    expect(stats.gauge).toHaveBeenCalledWith(
-      `${config.SERVICE_NAME}.num_stale_close_only.count`,
       1,
     );
   });

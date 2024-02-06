@@ -6,7 +6,6 @@ package util
 
 import (
 	"encoding/json"
-	"fmt"
 	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
@@ -94,11 +93,19 @@ func UnpackAcknowledgementResponseForTransfer(
 				"acknowledgement result cannot be empty",
 			)
 		}
-		logger.Info(fmt.Sprintf("IBC transfer acknowledgement success: %+v", response))
+		logger.Info(
+			"IBC transfer acknowledgement success",
+			"response",
+			response,
+		)
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_SUCCESS}, nil
 
 	case *channeltypes.Acknowledgement_Error:
-		logger.Error(fmt.Sprintf("acknowledgement error: %s", response.Error))
+		logger.Error(
+			"received acknowledgement error",
+			"error",
+			response.Error,
+		)
 		return &types.AcknowledgementResponse{Status: types.AckResponseStatus_FAILURE, Error: response.Error}, nil
 
 	default:

@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 
 	cometbfttypes "github.com/cometbft/cometbft/types"
@@ -931,4 +932,242 @@ func TestGetAllLimitParams(t *testing.T) {
 		expectedLimitParamsList,
 		allLimitParams,
 	)
+}
+
+func TestProcessWithdrawal(t *testing.T) {
+	tests := map[string]struct {
+		balances              []banktypes.Balance // Use baseline minimum
+		limitParamsList       []types.LimitParams
+		withdrawDenom         string
+		withdrawAmount        *big.Int
+		expectedDenomCapacity types.DenomCapacity
+		expectedErr           error
+	}{
+		"has limit params, withdrawal amount < capacity, succeeds": {
+			balances: []banktypes.Balance{},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+					},
+				},
+			},
+			withdrawDenom:  testDenom,
+			withdrawAmount: big.NewInt(98_760_000), // < baseline capacity
+			expectedDenomCapacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(1_240_000), // 100_000_000 - 98_760_000
+				},
+			},
+			expectedErr: nil,
+		},
+		"no limit params, succeeds": {
+			balances: []banktypes.Balance{},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+					},
+				},
+			},
+			withdrawDenom:  testDenom2,
+			withdrawAmount: big.NewInt(98_760_000),
+			expectedDenomCapacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(100_000_000), // unchanged
+				},
+			},
+			expectedErr: nil,
+		},
+		"has limit params, withdrawal amount > capacity, rate limited": {
+			balances: []banktypes.Balance{},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+					},
+				},
+			},
+			withdrawDenom:  testDenom,
+			withdrawAmount: big.NewInt(105_000_000), // < baseline capacity
+			expectedDenomCapacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(100_000_000), // unchanged
+				},
+			},
+			expectedErr: errorsmod.Wrapf(
+				types.ErrWithdrawalExceedsCapacity,
+				"denom = %v, capacity(index: %v) = %v, amount = %v",
+				testDenom,
+				0,
+				big.NewInt(100_000_000),
+				big.NewInt(105_000_000),
+			),
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Set up treasury account balance in genesis state
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *banktypes.GenesisState) {
+						genesisState.Balances = append(genesisState.Balances, tc.balances...)
+					},
+				)
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+
+			k := tApp.App.RatelimitKeeper
+
+			// Initialize limit params
+			for _, limitParams := range tc.limitParamsList {
+				err := k.SetLimitParams(ctx, limitParams)
+				require.NoError(t, err)
+			}
+
+			// Run the function being tested
+			err := k.ProcessWithdrawal(
+				ctx,
+				tc.withdrawDenom,
+				tc.withdrawAmount,
+			)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			gotDenomCapacity := k.GetDenomCapacity(ctx, tc.expectedDenomCapacity.Denom)
+			require.Equal(
+				t,
+				tc.expectedDenomCapacity,
+				gotDenomCapacity,
+			)
+		})
+	}
+}
+
+func TestIncrementCapacitiesForDenom(t *testing.T) {
+	tests := map[string]struct {
+		balances              []banktypes.Balance // Use baseline minimum
+		limitParamsList       []types.LimitParams
+		incrementDenom        string
+		incrementAmount       *big.Int
+		expectedDenomCapacity types.DenomCapacity
+		expectedErr           error
+	}{
+		"has limit params": {
+			balances: []banktypes.Balance{},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+					},
+				},
+			},
+			incrementDenom:  testDenom,
+			incrementAmount: big.NewInt(98_760_000), // < baseline capacity
+			expectedDenomCapacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(198_760_000), // 100_000_000 + 98_760_000
+				},
+			},
+			expectedErr: nil,
+		},
+		"no limit params": {
+			balances: []banktypes.Balance{},
+			limitParamsList: []types.LimitParams{
+				{
+					Denom: testDenom,
+					Limiters: []types.Limiter{
+						{
+							Period:          3_600 * time.Second,
+							BaselineMinimum: dtypes.NewInt(100_000_000),
+							BaselineTvlPpm:  10_000,
+						},
+					},
+				},
+			},
+			incrementDenom:  testDenom2,
+			incrementAmount: big.NewInt(98_760_000),
+			expectedDenomCapacity: types.DenomCapacity{
+				Denom: testDenom,
+				CapacityList: []dtypes.SerializableInt{
+					dtypes.NewInt(100_000_000), // unchanged
+				},
+			},
+			expectedErr: nil,
+		},
+	}
+
+	// Run tests.
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Set up treasury account balance in genesis state
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *banktypes.GenesisState) {
+						genesisState.Balances = append(genesisState.Balances, tc.balances...)
+					},
+				)
+				return genesis
+			}).Build()
+
+			ctx := tApp.InitChain()
+
+			k := tApp.App.RatelimitKeeper
+
+			// Initialize limit params
+			for _, limitParams := range tc.limitParamsList {
+				err := k.SetLimitParams(ctx, limitParams)
+				require.NoError(t, err)
+			}
+
+			// Run the function being tested
+			k.IncrementCapacitiesForDenom(
+				ctx,
+				tc.incrementDenom,
+				tc.incrementAmount,
+			)
+
+			gotDenomCapacity := k.GetDenomCapacity(ctx, tc.expectedDenomCapacity.Denom)
+			require.Equal(
+				t,
+				tc.expectedDenomCapacity,
+				gotDenomCapacity,
+			)
+		})
+	}
 }
