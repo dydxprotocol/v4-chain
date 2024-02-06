@@ -7,6 +7,7 @@
     "start": "node --heapsnapshot-signal=SIGUSR2 -r dd-trace/init -r dotenv-flow/config build/src/index.js",
     "dev": "node -r dotenv-flow/config build/src/index.js",
     "build": "rm -rf build/ && tsc && pnpm run swagger && pnpm run gen-markdown",
+    "build:dev": "rm -rf build/ && tsc",
     "build:prod": "pnpm run build",
     "build:watch": "pnpm run build -- --watch",
     "coverage": "pnpm test -- --coverage",

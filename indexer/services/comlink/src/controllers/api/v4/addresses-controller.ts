@@ -37,7 +37,7 @@ import {
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
-import { complianceCheck } from '../../../lib/compliance-check';
+import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   adjustUSDCAssetPosition,
@@ -51,7 +51,6 @@ import {
   initializePerpetualPositionsWithFunding,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckAddressSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -246,11 +245,10 @@ class AddressesController extends Controller {
 
 router.get(
   '/:address',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckAddressSchema,
   handleValidationErrors,
-  complianceCheck,
+  complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const {
@@ -280,11 +278,10 @@ router.get(
 
 router.get(
   '/:address/subaccountNumber/:subaccountNumber',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   handleValidationErrors,
-  complianceCheck,
+  complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();

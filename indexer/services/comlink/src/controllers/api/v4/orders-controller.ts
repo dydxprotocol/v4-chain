@@ -28,13 +28,12 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { redisClient } from '../../../helpers/redis/redis-controller';
-import { complianceCheck } from '../../../lib/compliance-check';
+import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
 import {
   handleControllerError,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import {
   CheckLimitSchema,
   CheckSubaccountSchema,
@@ -167,7 +166,6 @@ class OrdersController extends Controller {
 
 router.get(
   '/',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckSubaccountSchema,
   ...CheckLimitSchema,
@@ -224,7 +222,7 @@ router.get(
   query('goodTilBlock').if(query('goodTilBlockTime').exists()).isEmpty()
     .withMessage('Cannot provide both goodTilBlock and goodTilBlockTime'),
   handleValidationErrors,
-  complianceCheck,
+  complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
     const start: number = Date.now();
@@ -276,7 +274,6 @@ router.get(
 
 router.get(
   '/:orderId',
-  rejectRestrictedCountries,
   ...checkSchema({
     orderId: {
       in: ['params'],
