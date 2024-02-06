@@ -2,6 +2,7 @@ package app
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
@@ -50,6 +51,7 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 // NewAnteDecoratorChain returns a list of AnteDecorators in the expected application chain ordering
 func NewAnteDecoratorChain(options HandlerOptions) []sdk.AnteDecorator {
 	return []sdk.AnteDecorator{
+		baseapp.NewLockAndCacheContextAnteDecorator(),
 		// Note: app-injected messages, and clob transactions don't require Gas fees.
 		libante.NewAppInjectedMsgAnteWrapper(
 			clobante.NewSingleMsgClobTxAnteWrapper(
