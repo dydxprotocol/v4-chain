@@ -3,6 +3,10 @@ package app
 import (
 	"context"
 	"encoding/json"
+	compression "github.com/skip-mev/slinky/abci/strategies/codec"
+	"github.com/skip-mev/slinky/abci/strategies/currencypair"
+	"github.com/skip-mev/slinky/abci/ve"
+	"go.uber.org/zap"
 	"io"
 	"math/big"
 	"net/http"
@@ -102,11 +106,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 
+	priceUpdateGenerator "github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-	priceUpdateGenerator "github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -199,6 +203,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	oracleconfig "github.com/skip-mev/slinky/oracle/config"
+	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	servicemetrics "github.com/skip-mev/slinky/service/metrics"
+	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
 )
 
 var (
@@ -313,6 +322,10 @@ type App struct {
 	BridgeClient       *bridgeclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	// Slinky
+	oracleClient           oracleclient.OracleClient
+	oraclePrometheusServer *promserver.PrometheusServer
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -1287,6 +1300,11 @@ func New(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
+	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
+	if !appFlags.NonValidatingFullNode {
+		app.initOracle(appOpts)
+	}
+
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.setAnteHandler(encodingConfig.TxConfig)
@@ -1386,6 +1404,67 @@ func New(
 	)
 
 	return app
+}
+
+func (app *App) initOracle(appOpts servertypes.AppOptions) {
+	// Slinky setup
+	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	// Create the oracle service.
+	app.oracleClient, err = oracleclient.NewClientFromConfig(
+		cfg,
+		app.Logger().With("client", "oracle"),
+		oracleMetrics,
+	)
+	if err != nil {
+		panic(err)
+	}
+	// run prometheus metrics
+	if cfg.MetricsEnabled {
+		promLogger, err := zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+
+		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
+		if err != nil {
+			panic(err)
+		}
+
+		// start the prometheus server
+		go app.oraclePrometheusServer.Start()
+	}
+
+	// Connect to the oracle service (default timeout of 5 seconds).
+	go func() {
+		if err := app.oracleClient.Start(context.Background()); err != nil {
+			app.Logger().Error("failed to start oracle client", "err", err)
+			panic(err)
+		}
+
+		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
+	}()
+	// Vote Extension setup.
+	voteExtensionsHandler := ve.NewVoteExtensionHandler(
+		app.Logger(),
+		app.oracleClient,
+		time.Second,
+		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
+		compression.NewCompressionVoteExtensionCodec(
+			compression.NewDefaultVoteExtensionCodec(),
+			compression.NewZLibCompressor(),
+		),
+		app.PreBlocker,
+		oracleMetrics,
+	)
+	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
@@ -1660,6 +1739,12 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 // Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
 	app.BaseApp.Close()
+	if app.oracleClient != nil {
+		app.oracleClient.Stop()
+	}
+	if app.oraclePrometheusServer != nil {
+		app.oraclePrometheusServer.Close()
+	}
 	return app.closeOnce()
 }
 
