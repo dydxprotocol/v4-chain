@@ -2,16 +2,10 @@ package process
 
 // DONTCOVER
 
-import (
-	errorsmod "cosmossdk.io/errors"
-)
+import errorsmod "cosmossdk.io/errors"
 
 const (
 	ModuleName = "process_proposal"
-)
-
-var (
-	ErrProposedPriceValidation = errorsmod.Register(ModuleName, 5, "Validation of proposed MsgUpdateMarketPrices failed")
 )
 
 var (
@@ -20,6 +14,7 @@ var (
 	ErrMsgValidateBasic  = errorsmod.Register(ModuleName, 2, "ValidateBasic failed on msg")
 	ErrUnexpectedNumMsgs = errorsmod.Register(ModuleName, 3, "Unexpected num of msgs")
 	ErrUnexpectedMsgType = errorsmod.Register(ModuleName, 4, "Unexpected msg type")
+	ErrProposedPriceValidation = errorsmod.Register(ModuleName, 5, "Validation of proposed MsgUpdateMarketPrices failed")
 )
 
 func IncorrectNumberUpdatesError(expected, actual int) error {

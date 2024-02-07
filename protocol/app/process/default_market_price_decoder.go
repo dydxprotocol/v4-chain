@@ -2,16 +2,6 @@ package process
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"reflect"
-)
-
-var (
-	msgUpdateMarketPricesType = reflect.TypeOf(pricestypes.MsgUpdateMarketPrices{})
-)
-
-const (
-	UpdateMarketPricesTxLenOffset = -1
 )
 
 // DefaultUpdateMarketPriceTxDecoder is the default implementation of the MarketPriceDecoder interface.
@@ -40,26 +30,7 @@ func NewDefaultUpdateMarketPriceTxDecoder(pk ProcessPricesKeeper, txDecoder sdk.
 //
 // If error occurs during any of the checks, returns error.
 func (mpd *DefaultUpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context, txs [][]byte) (*UpdateMarketPricesTx, error) {
-	tx, err := mpd.txDecoder(txs[len(txs)+UpdateMarketPricesTxLenOffset])
-	if err != nil {
-		return nil, getDecodingError(msgUpdateMarketPricesType, err)
-	}
-
-	msgs := tx.GetMsgs()
-	if len(msgs) != 1 {
-		return nil, getUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
-	}
-
-	updateMarketPrices, ok := msgs[0].(*pricestypes.MsgUpdateMarketPrices)
-	if !ok {
-		return nil, getUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
-	}
-
-	return &UpdateMarketPricesTx{
-		ctx:          ctx,
-		pricesKeeper: mpd.pk,
-		Msg:          updateMarketPrices,
-	}, nil
+	return DecodeUpdateMarketPricesTx(ctx, mpd.pk, mpd.txDecoder, txs[len(txs)+updateMarketPricesTxLenOffset])
 }
 
 // GetTxOffset returns the offset that other injected txs should be placed with respect to their normally

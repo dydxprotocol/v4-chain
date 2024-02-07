@@ -18,31 +18,10 @@ type UpdateMarketPriceTxDecoder interface {
 	GetTxOffset(ctx sdk.Context) int
 }
 
-// MarketPriceUpdateTx is the default implementation of the MarketPriceUpdateTx interface.
-// It's Validate() method is responsible for validating the underlying msg in accordance with the dydx process-proposal
-// logic pre vote-extensions
-type UpdateMarketPricesTx struct {
-	ctx          sdk.Context
-	pricesKeeper ProcessPricesKeeper
-	Msg          *pricestypes.MsgUpdateMarketPrices
-}
-
-// Validate returns an error if:
-// - the underlying msg fails `ValidateBasic`
-// - the underlying msg values are not "valid" according to the index price.
-func (umpt *UpdateMarketPricesTx) Validate() error {
-	if err := umpt.Msg.ValidateBasic(); err != nil {
-		return getValidateBasicError(umpt.Msg, err)
+func NewUpdateMarketPricesTx(ctx sdk.Context, pk ProcessPricesKeeper, msg *pricestypes.MsgUpdateMarketPrices) *UpdateMarketPricesTx {
+	return &UpdateMarketPricesTx{
+		ctx:          ctx,
+		pricesKeeper: pk,
+		msg:          msg,
 	}
-
-	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.Msg, true); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// GetMsg retrieves the MarketPriceUpdate msg from this tx
-func (umpt *UpdateMarketPricesTx) GetMsg() sdk.Msg {
-	return umpt.Msg
 }
