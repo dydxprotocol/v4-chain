@@ -3,6 +3,9 @@ package app
 import (
 	"context"
 	"encoding/json"
+	compression "github.com/skip-mev/slinky/abci/strategies/codec"
+	"github.com/skip-mev/slinky/abci/strategies/currencypair"
+	"github.com/skip-mev/slinky/abci/ve"
 	"go.uber.org/zap"
 	"io"
 	"math/big"
@@ -103,11 +106,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 
+	priceUpdateGenerator "github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	timelib "github.com/dydxprotocol/v4-chain/protocol/lib/time"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-	priceUpdateGenerator "github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 
 	// Mempool
 	"github.com/dydxprotocol/v4-chain/protocol/mempool"
@@ -201,10 +204,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 
-	// Slinky
-	compression "github.com/skip-mev/slinky/abci/strategies/codec"
-	"github.com/skip-mev/slinky/abci/strategies/currencypair"
-	"github.com/skip-mev/slinky/abci/ve"
 	oracleconfig "github.com/skip-mev/slinky/oracle/config"
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
 	servicemetrics "github.com/skip-mev/slinky/service/metrics"
@@ -1301,49 +1300,10 @@ func New(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
-	// Slinky setup
-	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
-	if err != nil {
-		panic(err)
+	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
+	if !appFlags.NonValidatingFullNode {
+		app.initOracle(appOpts)
 	}
-	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
-	if err != nil {
-		panic(err)
-	}
-	// Create the oracle service.
-	app.oracleClient, err = oracleclient.NewClientFromConfig(
-		cfg,
-		app.Logger().With("client", "oracle"),
-		oracleMetrics,
-	)
-	if err != nil {
-		panic(err)
-	}
-	// run prometheus metrics
-	if cfg.MetricsEnabled {
-		promLogger, err := zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-		if err != nil {
-			panic(err)
-		}
-
-		// start the prometheus server
-		go app.oraclePrometheusServer.Start()
-	}
-
-	// Connect to the oracle service (default timeout of 5 seconds).
-	go func() {
-		if err := app.oracleClient.Start(context.Background()); err != nil {
-			app.Logger().Error("failed to start oracle client", "err", err)
-			panic(err)
-		}
-
-		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
-	}()
 
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
@@ -1398,22 +1358,6 @@ func New(
 		)
 	}
 
-	// Vote Extension setup.
-	voteExtensionsHandler := ve.NewVoteExtensionHandler(
-		logger,
-		app.oracleClient,
-		time.Second,
-		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
-		compression.NewCompressionVoteExtensionCodec(
-			compression.NewDefaultVoteExtensionCodec(),
-			compression.NewZLibCompressor(),
-		),
-		app.PreBlocker,
-		oracleMetrics,
-	)
-	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
-	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
-
 	// Note that panics from out of gas errors won't get logged, since the `OutOfGasMiddleware` is added in front of this,
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
 	// Also note that `AddRunTxRecoveryHandler` adds the handler in reverse order, meaning that handlers that appear
@@ -1460,6 +1404,67 @@ func New(
 	)
 
 	return app
+}
+
+func (app *App) initOracle(appOpts servertypes.AppOptions) {
+	// Slinky setup
+	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	// Create the oracle service.
+	app.oracleClient, err = oracleclient.NewClientFromConfig(
+		cfg,
+		app.Logger().With("client", "oracle"),
+		oracleMetrics,
+	)
+	if err != nil {
+		panic(err)
+	}
+	// run prometheus metrics
+	if cfg.MetricsEnabled {
+		promLogger, err := zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+
+		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
+		if err != nil {
+			panic(err)
+		}
+
+		// start the prometheus server
+		go app.oraclePrometheusServer.Start()
+	}
+
+	// Connect to the oracle service (default timeout of 5 seconds).
+	go func() {
+		if err := app.oracleClient.Start(context.Background()); err != nil {
+			app.Logger().Error("failed to start oracle client", "err", err)
+			panic(err)
+		}
+
+		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
+	}()
+	// Vote Extension setup.
+	voteExtensionsHandler := ve.NewVoteExtensionHandler(
+		app.Logger(),
+		app.oracleClient,
+		time.Second,
+		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
+		compression.NewCompressionVoteExtensionCodec(
+			compression.NewDefaultVoteExtensionCodec(),
+			compression.NewZLibCompressor(),
+		),
+		app.PreBlocker,
+		oracleMetrics,
+	)
+	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
@@ -1734,6 +1739,12 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 // Close invokes an ordered shutdown of routines.
 func (app *App) Close() error {
 	app.BaseApp.Close()
+	if app.oracleClient != nil {
+		app.oracleClient.Stop()
+	}
+	if app.oraclePrometheusServer != nil {
+		app.oraclePrometheusServer.Close()
+	}
 	return app.closeOnce()
 }
 
