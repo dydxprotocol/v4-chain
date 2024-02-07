@@ -10,10 +10,10 @@ const (
 
 var (
 	// 1 - 99: Default.
-	ErrDecodingTxBytes   = errorsmod.Register(ModuleName, 1, "Decoding tx bytes failed")
-	ErrMsgValidateBasic  = errorsmod.Register(ModuleName, 2, "ValidateBasic failed on msg")
-	ErrUnexpectedNumMsgs = errorsmod.Register(ModuleName, 3, "Unexpected num of msgs")
-	ErrUnexpectedMsgType = errorsmod.Register(ModuleName, 4, "Unexpected msg type")
+	ErrDecodingTxBytes         = errorsmod.Register(ModuleName, 1, "Decoding tx bytes failed")
+	ErrMsgValidateBasic        = errorsmod.Register(ModuleName, 2, "ValidateBasic failed on msg")
+	ErrUnexpectedNumMsgs       = errorsmod.Register(ModuleName, 3, "Unexpected num of msgs")
+	ErrUnexpectedMsgType       = errorsmod.Register(ModuleName, 4, "Unexpected msg type")
 	ErrProposedPriceValidation = errorsmod.Register(ModuleName, 5, "Validation of proposed MsgUpdateMarketPrices failed")
 )
 

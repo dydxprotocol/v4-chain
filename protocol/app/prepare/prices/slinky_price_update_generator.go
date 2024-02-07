@@ -96,5 +96,9 @@ func (pug *SlinkyPriceUpdateGenerator) GetValidMarketPriceUpdates(ctx sdk.Contex
 		return msg.MarketPriceUpdates[i].MarketId < msg.MarketPriceUpdates[j].MarketId
 	})
 
-	return msg, msg.ValidateBasic()
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
+	}
+
+	return msg, nil
 }
