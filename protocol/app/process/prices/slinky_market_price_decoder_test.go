@@ -87,8 +87,8 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsNotEnabled() {
 }
 
 // test that if vote-extensions are enabled
-//  - missing extended commit -> failure
-//  - price-update generator fails -> failure
+//   - missing extended commit -> failure
+//   - price-update generator fails -> failure
 func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsEnabled() {
 	suite.Run("test that missing extended commit -> failure", func() {
 		// enable ves
@@ -168,7 +168,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					{
 						MarketId: 2, // propose non-empty prices
-						Price: 100,
+						Price:    100,
 					},
 				},
 			},
@@ -203,7 +203,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					{
 						MarketId: 1, // propose non-empty prices
-						Price: 101,
+						Price:    101,
 					},
 				},
 			},
@@ -240,7 +240,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestHappyPath_VoteExtensionsEnabled(
 			MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 				{
 					MarketId: 1, // propose non-empty prices
-					Price: 100,
+					Price:    100,
 				},
 			},
 		},
@@ -252,4 +252,28 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestHappyPath_VoteExtensionsEnabled(
 	suite.NotNil(tx)
 	suite.Len(tx.Msg.MarketPriceUpdates, 1)
 	suite.Equal(expectedMsg.MarketPriceUpdates[0], tx.Msg.MarketPriceUpdates[0])
+}
+
+func (suite *SlinkyMarketPriceDecoderSuite) TestGetTxOffset() {
+	suite.Run("TxOffset is 0 if ve is not enabled", func() {
+		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+
+		suite.ctx = testutils.CreateBaseSDKContext(suite.T())
+		suite.ctx = suite.ctx.WithBlockHeight(5)
+		suite.ctx = suite.ctx.WithBlockHeight(2)
+
+		offset := decoder.GetTxOffset(suite.ctx)
+		suite.Equal(0, offset)
+	})
+
+	suite.Run("TxOffset is slinkyabci.NumInjectedTx if ve is enabled", func() {
+		decoder := prices.NewSlinkyMarketPriceDecoder(prices.NewDefaultUpdateMarketPriceTxDecoder(nil, nil), nil) // ignore deps
+
+		suite.ctx = testutils.CreateBaseSDKContext(suite.T())
+		suite.ctx = testutils.UpdateContextWithVEHeight(suite.ctx, 4)
+		suite.ctx = suite.ctx.WithBlockHeight(5)
+
+		offset := decoder.GetTxOffset(suite.ctx)
+		suite.Equal(slinkyabci.NumInjectedTxs, offset)
+	})
 }
