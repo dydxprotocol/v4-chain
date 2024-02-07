@@ -1,13 +1,14 @@
 package process_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"errors"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	processerrors "github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -66,7 +67,8 @@ func TestDecodeUpdateMarketPricesTx(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
-			umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, encodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+			pricesTxDecoder := prices.NewDefaultUpdateMarketPriceTxDecoder(k, encodingCfg.TxConfig.TxDecoder())
+			umpt, err := pricesTxDecoder.DecodeUpdateMarketPricesTx(ctx, [][]byte{tc.txBytes})
 			if tc.expectedErr != nil {
 				require.ErrorContains(t, err, tc.expectedErr.Error())
 				require.Nil(t, umpt)
@@ -128,7 +130,10 @@ func TestUpdateMarketPricesTx_Validate(t *testing.T) {
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, k)
 			indexPriceCache.UpdatePrices(tc.indexPrices)
-			umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+
+			// Decode.
+			pricesTxDecoder := prices.NewDefaultUpdateMarketPriceTxDecoder(k, constants.TestEncodingCfg.TxConfig.TxDecoder())
+			umpt, err := pricesTxDecoder.DecodeUpdateMarketPricesTx(ctx, [][]byte{tc.txBytes})
 			require.NoError(t, err)
 
 			// Run and Validate.
@@ -146,12 +151,12 @@ func TestUpdateMarketPricesTx_GetMsg(t *testing.T) {
 	validMsgTxBytes := constants.ValidMsgUpdateMarketPricesTxBytes
 
 	tests := map[string]struct {
-		txWrapper   process.UpdateMarketPricesTx
+		txWrapper   prices.UpdateMarketPricesTx
 		txBytes     []byte
 		expectedMsg *types.MsgUpdateMarketPrices
 	}{
 		"Returns nil msg": {
-			txWrapper: process.UpdateMarketPricesTx{},
+			txWrapper: prices.UpdateMarketPricesTx{},
 		},
 		"Returns valid msg": {
 			txBytes:     validMsgTxBytes,
@@ -164,7 +169,11 @@ func TestUpdateMarketPricesTx_GetMsg(t *testing.T) {
 			var msg sdk.Msg
 			if tc.txBytes != nil {
 				ctx, k, _, _, _, _ := keepertest.PricesKeepers(t)
-				umpt, err := process.DecodeUpdateMarketPricesTx(ctx, k, constants.TestEncodingCfg.TxConfig.TxDecoder(), tc.txBytes)
+
+				// Decode.
+				pricesTxDecoder := prices.NewDefaultUpdateMarketPriceTxDecoder(k, constants.TestEncodingCfg.TxConfig.TxDecoder())
+
+				umpt, err := pricesTxDecoder.DecodeUpdateMarketPricesTx(ctx, [][]byte{tc.txBytes})
 				require.NoError(t, err)
 				msg = umpt.GetMsg()
 			} else {

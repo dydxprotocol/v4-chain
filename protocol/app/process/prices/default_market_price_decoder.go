@@ -26,6 +26,14 @@ type DefaultUpdateMarketPriceTxDecoder struct {
 	txDecoder sdk.TxDecoder
 }
 
+// NewDefaultUpdateMarketPriceTxDecoder returns a new DefaultUpdateMarketPriceTxDecoder
+func NewDefaultUpdateMarketPriceTxDecoder(pk PricesKeeper, txDecoder sdk.TxDecoder) *DefaultUpdateMarketPriceTxDecoder {
+	return &DefaultUpdateMarketPriceTxDecoder{
+		pk:        pk,
+		txDecoder: txDecoder,
+	}
+}
+
 // DecodeUpdateMarketPricesTx returns a new `UpdateMarketPricesTx` after validating the following:
 //   - decodes the given tx bytes
 //   - checks the num of msgs in the tx matches expectations
@@ -45,7 +53,7 @@ func (mpd *DefaultUpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx sdk
 
 	updateMarketPrices, ok := msgs[0].(*pricestypes.MsgUpdateMarketPrices)
 	if !ok {
-		return nil, errors.GetUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
+		return nil, errors.GetUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
 	}
 
 	return &UpdateMarketPricesTx{

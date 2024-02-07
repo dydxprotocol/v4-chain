@@ -4,6 +4,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 )
 
 // FullNodeProcessProposalHandler is the `ProcessProposal` implementation for full-nodes.
@@ -15,7 +16,7 @@ func FullNodeProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesTxDecoder prices.UpdateMarketPriceTxDecoder,
 ) sdk.ProcessProposalHandler {
 	// Keep track of the current block height and consensus round.
 	currentBlockHeight := int64(0)
@@ -34,7 +35,7 @@ func FullNodeProcessProposalHandler(
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesTxDecoder)
 		if err != nil {
 			return response, nil
 		}
