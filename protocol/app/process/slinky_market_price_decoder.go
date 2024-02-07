@@ -82,30 +82,31 @@ func (mpd *SlinkyMarketPriceDecoder) GetTxOffset(ctx sdk.Context) int {
 	return 0
 }
 
-// checkEqualityOfMarketPriceUpdate checks that the given market-price updates are equivalent. Notice,
-// this method only checks that the prices per market-id are correct, not that the market-ids are in the
-// same order,
+// checkEqualityOfMarketPriceUpdate checks that the given market-price updates are equivalent and both pass validate basic checks.
 func checkEqualityOfMarketPriceUpdate(expectedMsg, actualMsg *pricestypes.MsgUpdateMarketPrices) error {
+	// assert that the market-price updates are valid
+	if err := expectedMsg.ValidateBasic(); err != nil {
+		return InvalidMarketPriceUpdateError(err)
+	}
+
+	if err := actualMsg.ValidateBasic(); err != nil {
+		return InvalidMarketPriceUpdateError(err)
+	}
 	// assert len is correct
 	if len(expectedMsg.MarketPriceUpdates) != len(actualMsg.MarketPriceUpdates) {
 		return IncorrectNumberUpdatesError(len(expectedMsg.MarketPriceUpdates), len(actualMsg.MarketPriceUpdates))
 	}
 
-	// map market-id to price-map
-	expectedPricesPerMarketID := make(map[uint32]uint64)
-	for _, marketPriceUpdate := range expectedMsg.MarketPriceUpdates {
-		expectedPricesPerMarketID[marketPriceUpdate.MarketId] = marketPriceUpdate.Price
-	}
+	// check that the actual prices match the expected prices (both are sorted so markets are in the same order)
+	for i, actualUpdate := range actualMsg.MarketPriceUpdates {
+		expectedUpdate := expectedMsg.MarketPriceUpdates[i]
 
-	// check that the actual prices match the expected prices
-	for _, marketPriceUpdate := range actualMsg.MarketPriceUpdates {
-		expectedPrice, ok := expectedPricesPerMarketID[marketPriceUpdate.MarketId]
-		if !ok {
-			return MissingPriceUpdateForMarket(marketPriceUpdate.MarketId)
+		if expectedUpdate.MarketId != actualUpdate.MarketId {
+			return MissingPriceUpdateForMarket(expectedUpdate.MarketId)
 		}
 
-		if expectedPrice != marketPriceUpdate.Price {
-			return IncorrectPriceUpdateForMarket(marketPriceUpdate.MarketId, expectedPrice, marketPriceUpdate.Price)
+		if expectedUpdate.Price != actualUpdate.Price {
+			return IncorrectPriceUpdateForMarket(expectedUpdate.MarketId, expectedUpdate.Price, actualUpdate.Price)
 		}
 	}
 
