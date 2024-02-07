@@ -31,8 +31,8 @@ func NewSlinkyMarketPriceDecoder(decoder UpdateMarketPriceTxDecoder, agg prices.
 // DecodeUpdateMarketPricesTx returns a new `UpdateMarketPricesTx` after validating the following:
 //   - the underlying decoder decodes successfully
 //   - the UpdateMarketPricesTx follows correctly from the vote-extensions
-//      - vote-extensions are enabled: each price per market-id is derived from the injected extended commit
-//      - vote-extensions are disabled: no price updates are proposed
+//   - vote-extensions are enabled: each price per market-id is derived from the injected extended commit
+//   - vote-extensions are disabled: no price updates are proposed
 //   - vote-extensions are inserted into the block if necessary
 //
 // If error occurs during any of the checks, returns error.

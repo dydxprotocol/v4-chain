@@ -101,7 +101,7 @@ func DecodeProcessProposalTxs(
 	}
 
 	// Operations.
-	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex + offset]) // if vote-extensions were injected, offset will be incremented.
+	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex+offset]) // if vote-extensions were injected, offset will be incremented.
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func DecodeProcessProposalTxs(
 
 	// Other txs.
 	allOtherTxs := make([]*OtherMsgsTx, numTxs-injectedTxCount) // if vote-extensions were injected, offset will be incremented.
-	for i, txBytes := range req.Txs[firstOtherTxIndex + offset : numTxs+lastOtherTxLenOffset] {
+	for i, txBytes := range req.Txs[firstOtherTxIndex+offset : numTxs+lastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err

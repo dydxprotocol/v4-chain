@@ -1,8 +1,8 @@
 package prices
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 

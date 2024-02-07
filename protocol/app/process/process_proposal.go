@@ -5,9 +5,9 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+	pricesdecoder "github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
-	pricesdecoder "github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
