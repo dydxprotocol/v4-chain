@@ -18,7 +18,6 @@ import (
 	"time"
 
 	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
@@ -1321,7 +1320,7 @@ func New(
 				app.ClobKeeper,
 				app.StakingKeeper,
 				app.PerpetualsKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
 			),
 		)
 	} else {
@@ -1333,7 +1332,7 @@ func New(
 				app.StakingKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
 			),
 		)
 	}

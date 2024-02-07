@@ -4,7 +4,7 @@ package mocks
 
 import (
 	types "github.com/cosmos/cosmos-sdk/types"
-	prices "github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
+	process "github.com/dydxprotocol/v4-chain/protocol/app/process"
 	mock "github.com/stretchr/testify/mock"
 )
 
@@ -14,23 +14,23 @@ type UpdateMarketPriceTxDecoder struct {
 }
 
 // DecodeUpdateMarketPricesTx provides a mock function with given fields: ctx, txs
-func (_m *UpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx types.Context, txs [][]byte) (*prices.UpdateMarketPricesTx, error) {
+func (_m *UpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx types.Context, txs [][]byte) (*process.UpdateMarketPricesTx, error) {
 	ret := _m.Called(ctx, txs)
 
 	if len(ret) == 0 {
 		panic("no return value specified for DecodeUpdateMarketPricesTx")
 	}
 
-	var r0 *prices.UpdateMarketPricesTx
+	var r0 *process.UpdateMarketPricesTx
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, [][]byte) (*prices.UpdateMarketPricesTx, error)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, [][]byte) (*process.UpdateMarketPricesTx, error)); ok {
 		return rf(ctx, txs)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, [][]byte) *prices.UpdateMarketPricesTx); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, [][]byte) *process.UpdateMarketPricesTx); ok {
 		r0 = rf(ctx, txs)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*prices.UpdateMarketPricesTx)
+			r0 = ret.Get(0).(*process.UpdateMarketPricesTx)
 		}
 	}
 

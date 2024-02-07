@@ -8,8 +8,6 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -44,35 +42,35 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		"Less than min num txs": {
 			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, validUpdatePriceTx}, // need at least 4.
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrUnexpectedNumMsgs,
+				process.ErrUnexpectedNumMsgs,
 				"Expected the proposal to contain at least 4 txs, but got 3",
 			),
 		},
 		"Order tx decoding fails": {
 			txsBytes: [][]byte{invalidTxBytes, validAcknowledgeBridgesTx, validAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrDecodingTxBytes,
+				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Acknowledge bridges tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, invalidTxBytes, validAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrDecodingTxBytes,
+				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Add funding tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidTxBytes, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrDecodingTxBytes,
+				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
 		"Update prices tx decoding fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidTxBytes},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrDecodingTxBytes,
+				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
@@ -86,7 +84,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrDecodingTxBytes,
+				process.ErrDecodingTxBytes,
 				"invalid field number: tx parse error",
 			),
 		},
@@ -100,7 +98,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				validUpdatePriceTx,
 			},
 			expectedErr: errorsmod.Wrapf(
-				errors.ErrUnexpectedMsgType,
+				process.ErrUnexpectedMsgType,
 				"Invalid msg type or content in OtherTxs *types.MsgUpdateMarketPrices",
 			),
 		},
@@ -118,7 +116,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -199,7 +197,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -282,14 +280,14 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 		"AddFunding tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, invalidAddFundingTx, validUpdatePriceTx},
 			expectedErr: errorsmod.Wrap(
-				errors.ErrMsgValidateBasic,
+				process.ErrMsgValidateBasic,
 				"premium votes must be sorted by perpetual id in ascending order and "+
 					"cannot contain duplicates: MsgAddPremiumVotes is invalid"),
 		},
 		"UpdatePrices tx validation fails": {
 			txsBytes: [][]byte{validOperationsTx, validAcknowledgeBridgesTx, validAddFundingTx, invalidUpdatePriceTx},
 			expectedErr: errorsmod.Wrap(
-				errors.ErrMsgValidateBasic,
+				process.ErrMsgValidateBasic,
 				"price cannot be 0 for market id (0): Market price update is invalid: stateless.",
 			),
 		},
@@ -302,7 +300,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(errors.ErrMsgValidateBasic, "Sender is the same as recipient"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 		"Other txs validation fails: multi txs": {
 			txsBytes: [][]byte{
@@ -313,7 +311,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
-			expectedErr: errorsmod.Wrap(errors.ErrMsgValidateBasic, "Sender is the same as recipient"),
+			expectedErr: errorsmod.Wrap(process.ErrMsgValidateBasic, "Sender is the same as recipient"),
 		},
 	}
 
@@ -347,7 +345,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				encodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 
@@ -454,7 +452,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 
