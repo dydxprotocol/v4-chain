@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/skip-mev/slinky/abci/testutils"
 	slinkyabci "github.com/skip-mev/slinky/abci/types"
 	"github.com/stretchr/testify/suite"
