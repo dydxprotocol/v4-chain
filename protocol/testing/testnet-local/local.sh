@@ -95,6 +95,7 @@ create_validators() {
 		cat <<<"$new_file" >"$VAL_CONFIG_DIR"/node_key.json
 
 		edit_config "$VAL_CONFIG_DIR"
+    dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml '.oracle.oracle_address' -v 'slinky0:8080'
 
 		# Using "*" as a subscript results in a single arg: "dydx1... dydx1... dydx1..."
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
@@ -167,6 +168,12 @@ edit_config() {
 	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '5s'
 }
 
+
+edit_oracle_config() {
+  dasel put -t bool -f "/etc/oracle.toml" '.production' -v 'true'
+}
+
 install_prerequisites
 create_validators
 setup_cosmovisor
+edit_oracle_config
