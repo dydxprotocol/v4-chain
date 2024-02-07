@@ -13,13 +13,13 @@ import (
 
 // BigBaselineMinimum1Hr defines the minimum baseline USDC for the 1-hour rate-limit.
 var BigBaselineMinimum1Hr = new(big.Int).Mul(
-	big.NewInt(100_000), // 100k full coins
+	big.NewInt(1_000_000), // 1m full coins
 	lib.BigPow10(-assettypes.UusdcDenomExponent),
 )
 
 // BigBaselineMinimum1Day defines the minimum baseline USDC for the 1-day rate-limit.
 var BigBaselineMinimum1Day = new(big.Int).Mul(
-	big.NewInt(1_000_000), // 1m full coins
+	big.NewInt(10_000_000), // 10m full coins
 	lib.BigPow10(-assettypes.UusdcDenomExponent),
 )
 

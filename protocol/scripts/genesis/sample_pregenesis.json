@@ -1694,12 +1694,12 @@
           "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
           "limiters": [
             {
-              "baseline_minimum": "100000000000",
+              "baseline_minimum": "1000000000000",
               "baseline_tvl_ppm": 10000,
               "period": "3600s"
             },
             {
-              "baseline_minimum": "1000000000000",
+              "baseline_minimum": "10000000000000",
               "baseline_tvl_ppm": 100000,
               "period": "86400s"
             }
@@ -1782,7 +1782,7 @@
       ]
     }
   },
-  "app_version": "3.0.0-dev0-60-ge0fd2767",
+  "app_version": "4.0.0-dev0-22-gd31fa077",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
