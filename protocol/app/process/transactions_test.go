@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
@@ -117,7 +118,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				pricesKeeper,
+				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -198,7 +199,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				pricesKeeper,
+				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -346,7 +347,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				encodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				pricesKeeper,
+				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 
@@ -453,7 +454,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				pricesKeeper,
+				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 

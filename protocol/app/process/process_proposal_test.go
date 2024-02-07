@@ -8,6 +8,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -285,6 +286,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				prices.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
