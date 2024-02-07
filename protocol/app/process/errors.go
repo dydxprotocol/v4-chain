@@ -43,3 +43,7 @@ func IncorrectPriceUpdateForMarket(marketID uint32, expected, actual uint64) err
 		actual,
 	)
 }
+
+func InvalidMarketPriceUpdateError(err error) error {
+	return errorsmod.Wrap(ErrProposedPriceValidation, err.Error())
+}
