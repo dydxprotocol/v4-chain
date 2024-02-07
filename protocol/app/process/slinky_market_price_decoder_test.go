@@ -206,6 +206,36 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 		suite.Nil(tx)
 		suite.Error(err, process.IncorrectPriceUpdateForMarket(1, 100, 101))
 	})
+
+	suite.Run("if DecodeUpdateMarketPricesTx returns msgs that don't pass ValidateBasic - fail", func() {
+		// enable ves
+		suite.ctx = testutils.UpdateContextWithVEHeight(suite.ctx, 4)
+		suite.ctx = suite.ctx.WithBlockHeight(5)
+
+		proposal := [][]byte{[]byte("test")}
+
+		expectedMsg := &pricestypes.MsgUpdateMarketPrices{
+			MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
+				{
+					MarketId: 2, // incorrect order
+					Price:    100,
+				},
+				{
+					MarketId: 1,
+					Price:    100,
+				},
+			},
+		}
+
+		suite.gen.On("GetValidMarketPriceUpdates", suite.ctx, proposal[slinkyabci.OracleInfoIndex]).Return(expectedMsg, nil)
+
+		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(process.NewUpdateMarketPricesTx(suite.ctx, nil, expectedMsg), nil)
+
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
+		suite.Nil(tx)
+		suite.Error(err)
+	})
 }
 
 // test happy path
