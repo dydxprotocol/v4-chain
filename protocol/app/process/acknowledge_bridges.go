@@ -5,7 +5,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -36,19 +35,19 @@ func DecodeAcknowledgeBridgesTx(
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, errors.GetDecodingError(msgAcknowledgeBridgesType, err)
+		return nil, getDecodingError(msgAcknowledgeBridgesType, err)
 	}
 
 	// Check msg length.
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, errors.GetUnexpectedNumMsgsError(msgAcknowledgeBridgesType, 1, len(msgs))
+		return nil, getUnexpectedNumMsgsError(msgAcknowledgeBridgesType, 1, len(msgs))
 	}
 
 	// Check msg type.
 	acknowledgeBridges, ok := msgs[0].(*types.MsgAcknowledgeBridges)
 	if !ok {
-		return nil, errors.GetUnexpectedMsgTypeError(msgAcknowledgeBridgesType, msgs[0])
+		return nil, getUnexpectedMsgTypeError(msgAcknowledgeBridgesType, msgs[0])
 	}
 
 	return &AcknowledgeBridgesTx{
@@ -69,7 +68,7 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 	if err := abt.msg.ValidateBasic(); err != nil {
 		telemetry.IncrCounterWithLabels(
 			[]string{
-				errors.ModuleName,
+				ModuleName,
 				metrics.AcknowledgeBridgesTx,
 				metrics.Validate,
 				metrics.Error,
@@ -77,7 +76,7 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 			1,
 			[]gometrics.Label{metrics.GetLabelForStringValue(metrics.Error, metrics.ValidateBasic)},
 		)
-		return errors.GetValidateBasicError(abt.msg, err)
+		return getValidateBasicError(abt.msg, err)
 	}
 
 	if len(abt.msg.Events) == 0 {
@@ -93,7 +92,7 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 	if acknowledgedEventInfo.NextId != abt.msg.Events[0].Id {
 		telemetry.IncrCounterWithLabels(
 			[]string{
-				errors.ModuleName,
+				ModuleName,
 				metrics.AcknowledgeBridgesTx,
 				metrics.Validate,
 				metrics.Error,
@@ -109,7 +108,7 @@ func (abt *AcknowledgeBridgesTx) Validate() error {
 	if recognizedEventInfo.NextId <= abt.msg.Events[len(abt.msg.Events)-1].Id {
 		telemetry.IncrCounterWithLabels(
 			[]string{
-				errors.ModuleName,
+				ModuleName,
 				metrics.AcknowledgeBridgesTx,
 				metrics.Validate,
 				metrics.Error,

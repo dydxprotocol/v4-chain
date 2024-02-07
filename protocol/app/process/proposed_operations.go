@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -27,19 +26,19 @@ func DecodeProposedOperationsTx(decoder sdk.TxDecoder, txBytes []byte) (*Propose
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, errors.GetDecodingError(msgProposedOperationsType, err)
+		return nil, getDecodingError(msgProposedOperationsType, err)
 	}
 
 	// Check msg length.
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, errors.GetUnexpectedNumMsgsError(msgProposedOperationsType, 1, len(msgs))
+		return nil, getUnexpectedNumMsgsError(msgProposedOperationsType, 1, len(msgs))
 	}
 
 	// Check msg type.
 	proposedOperations, ok := msgs[0].(*types.MsgProposedOperations)
 	if !ok {
-		return nil, errors.GetUnexpectedMsgTypeError(msgProposedOperationsType, msgs[0])
+		return nil, getUnexpectedMsgTypeError(msgProposedOperationsType, msgs[0])
 	}
 
 	return &ProposedOperationsTx{msg: proposedOperations}, nil
@@ -48,7 +47,7 @@ func DecodeProposedOperationsTx(decoder sdk.TxDecoder, txBytes []byte) (*Propose
 // Validate returns an error if the underlying msg fails `ValidateBasic`.
 func (pmot *ProposedOperationsTx) Validate() error {
 	if err := pmot.msg.ValidateBasic(); err != nil {
-		return errors.GetValidateBasicError(pmot.msg, err)
+		return getValidateBasicError(pmot.msg, err)
 	}
 	return nil
 }

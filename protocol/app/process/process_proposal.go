@@ -4,8 +4,6 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
-	pricesdecoder "github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 
@@ -39,7 +37,7 @@ func ProcessProposalHandler(
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
-	pricesTxDecoder pricesdecoder.UpdateMarketPriceTxDecoder,
+	pricesTxDecoder UpdateMarketPriceTxDecoder,
 ) sdk.ProcessProposalHandler {
 	// Keep track of the current block height and consensus round.
 	currentBlockHeight := int64(0)
@@ -47,9 +45,9 @@ func ProcessProposalHandler(
 
 	return func(ctx sdk.Context, req *abci.RequestProcessProposal) (*abci.ResponseProcessProposal, error) {
 		defer telemetry.ModuleMeasureSince(
-			errors.ModuleName,
+			ModuleName,
 			time.Now(),
-			errors.ModuleName, // purposely repeated to add the module name to the metric key.
+			ModuleName, // purposely repeated to add the module name to the metric key.
 			metrics.Handler,
 			metrics.Latency,
 		)
@@ -62,7 +60,7 @@ func ProcessProposalHandler(
 			currentConsensusRound += 1
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
-		logger := ctx.Logger().With(log.ModuleKey, errors.ModuleName)
+		logger := ctx.Logger().With(log.ModuleKey, ModuleName)
 
 		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
 		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on

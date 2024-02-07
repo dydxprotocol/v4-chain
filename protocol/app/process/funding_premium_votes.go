@@ -4,7 +4,6 @@ import (
 	"reflect"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -27,19 +26,19 @@ func DecodeAddPremiumVotesTx(decoder sdk.TxDecoder, txBytes []byte) (*AddPremium
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, errors.GetDecodingError(msgAddPremiumVotesType, err)
+		return nil, getDecodingError(msgAddPremiumVotesType, err)
 	}
 
 	// Check msg length.
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, errors.GetUnexpectedNumMsgsError(msgAddPremiumVotesType, 1, len(msgs))
+		return nil, getUnexpectedNumMsgsError(msgAddPremiumVotesType, 1, len(msgs))
 	}
 
 	// Check msg type.
 	addPremiumVotes, ok := msgs[0].(*types.MsgAddPremiumVotes)
 	if !ok {
-		return nil, errors.GetUnexpectedMsgTypeError(msgAddPremiumVotesType, msgs[0])
+		return nil, getUnexpectedMsgTypeError(msgAddPremiumVotesType, msgs[0])
 	}
 
 	return &AddPremiumVotesTx{msg: addPremiumVotes}, nil
@@ -48,7 +47,7 @@ func DecodeAddPremiumVotesTx(decoder sdk.TxDecoder, txBytes []byte) (*AddPremium
 // Validate returns an error if the underlying msg fails `ValidateBasic`.
 func (afst *AddPremiumVotesTx) Validate() error {
 	if err := afst.msg.ValidateBasic(); err != nil {
-		return errors.GetValidateBasicError(afst.msg, err)
+		return getValidateBasicError(afst.msg, err)
 	}
 	return nil
 }

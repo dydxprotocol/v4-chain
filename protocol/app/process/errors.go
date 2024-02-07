@@ -1,12 +1,25 @@
-package prices
+package process
+
+// DONTCOVER
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
+)
+
+const (
+	ModuleName = "process_proposal"
 )
 
 var (
-	ErrProposedPriceValidation = errorsmod.Register(errors.ModuleName, 5, "Validation of proposed MsgUpdateMarketPrices failed")
+	ErrProposedPriceValidation = errorsmod.Register(ModuleName, 5, "Validation of proposed MsgUpdateMarketPrices failed")
+)
+
+var (
+	// 1 - 99: Default.
+	ErrDecodingTxBytes   = errorsmod.Register(ModuleName, 1, "Decoding tx bytes failed")
+	ErrMsgValidateBasic  = errorsmod.Register(ModuleName, 2, "ValidateBasic failed on msg")
+	ErrUnexpectedNumMsgs = errorsmod.Register(ModuleName, 3, "Unexpected num of msgs")
+	ErrUnexpectedMsgType = errorsmod.Register(ModuleName, 4, "Unexpected msg type")
 )
 
 func IncorrectNumberUpdatesError(expected, actual int) error {

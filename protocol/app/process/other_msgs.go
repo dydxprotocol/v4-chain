@@ -3,7 +3,6 @@ package process
 import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 )
 
@@ -24,13 +23,13 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		return nil, errorsmod.Wrapf(errors.ErrDecodingTxBytes, "OtherMsgsTx Error: %+v", err)
+		return nil, errorsmod.Wrapf(ErrDecodingTxBytes, "OtherMsgsTx Error: %+v", err)
 	}
 
 	// Check msg length.
 	allMsgs := tx.GetMsgs()
 	if len(allMsgs) == 0 {
-		return nil, errorsmod.Wrapf(errors.ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero")
+		return nil, errorsmod.Wrapf(ErrUnexpectedNumMsgs, "OtherMsgs len cannot be zero")
 	}
 
 	// Check msg type.
@@ -38,7 +37,7 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 		if ante.IsDisallowExternalSubmitMsg(msg) {
 			return nil,
 				errorsmod.Wrapf(
-					errors.ErrUnexpectedMsgType,
+					ErrUnexpectedMsgType,
 					"Invalid msg type or content in OtherTxs %T",
 					msg,
 				)
@@ -47,7 +46,7 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 		if IsDisallowClobOrderMsgInOtherTxs(msg) {
 			return nil,
 				errorsmod.Wrapf(
-					errors.ErrUnexpectedMsgType,
+					ErrUnexpectedMsgType,
 					"Msg type %T is not allowed in OtherTxs",
 					msg,
 				)
@@ -65,7 +64,7 @@ func (omt *OtherMsgsTx) Validate() error {
 	for _, msg := range omt.msgs {
 		if m, ok := msg.(sdk.HasValidateBasic); ok {
 			if err := m.ValidateBasic(); err != nil {
-				return errors.GetValidateBasicError(msg, err)
+				return getValidateBasicError(msg, err)
 			}
 		}
 	}

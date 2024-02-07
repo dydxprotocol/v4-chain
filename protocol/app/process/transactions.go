@@ -6,8 +6,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -64,7 +62,7 @@ type ProcessProposalTxs struct {
 	ProposedOperationsTx *ProposedOperationsTx
 	AcknowledgeBridgesTx *AcknowledgeBridgesTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
-	UpdateMarketPricesTx *prices.UpdateMarketPricesTx // abstract over MarketPriceUpdates from ves or default.
+	UpdateMarketPricesTx *UpdateMarketPricesTx // abstract over MarketPriceUpdates from ves or default.
 
 	// Multi msgs txs.
 	OtherTxs []*OtherMsgsTx
@@ -76,7 +74,7 @@ func DecodeProcessProposalTxs(
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
 	bridgeKeeper ProcessBridgeKeeper,
-	pricesTxDecoder prices.UpdateMarketPriceTxDecoder,
+	pricesTxDecoder UpdateMarketPriceTxDecoder,
 ) (*ProcessProposalTxs, error) {
 	// Check len (accounting for offset from injected vote-extensions if applicable)
 	offset := pricesTxDecoder.GetTxOffset(ctx)
@@ -84,7 +82,7 @@ func DecodeProcessProposalTxs(
 	numTxs := len(req.Txs)
 	if numTxs < injectedTxCount {
 		return nil, errorsmod.Wrapf(
-			errors.ErrUnexpectedNumMsgs,
+			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
 			minTxsCount,
 			numTxs,

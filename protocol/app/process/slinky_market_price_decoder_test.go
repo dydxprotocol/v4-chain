@@ -1,13 +1,13 @@
-package prices_test
+package process_test
 
 import (
 	"fmt"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/skip-mev/slinky/abci/testutils"
 	slinkyabci "github.com/skip-mev/slinky/abci/types"
 	"github.com/stretchr/testify/suite"
@@ -47,7 +47,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsNotEnabled() {
 		proposal := [][]byte{[]byte("test")}
 
 		// mock decoder response that returns non-empty prices
-		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&prices.UpdateMarketPricesTx{
+		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&process.UpdateMarketPricesTx{
 			Msg: &pricestypes.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					{
@@ -59,9 +59,9 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsNotEnabled() {
 		}, nil).Once()
 
 		// expect an error
-		expectError := prices.IncorrectNumberUpdatesError(0, 1)
+		expectError := process.IncorrectNumberUpdatesError(0, 1)
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
 		suite.EqualError(expectError, err.Error())
@@ -75,11 +75,11 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsNotEnabled() {
 		proposal := [][]byte{[]byte("test")}
 
 		// mock decoder response that returns non-empty prices
-		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&prices.UpdateMarketPricesTx{
+		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&process.UpdateMarketPricesTx{
 			Msg: &pricestypes.MsgUpdateMarketPrices{},
 		}, nil).Once()
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(err)
 		suite.Len(tx.Msg.MarketPriceUpdates, 0)
@@ -97,7 +97,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsEnabled() {
 
 		proposal := [][]byte{}
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
 		suite.Error(err)
@@ -113,7 +113,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestVoteExtensionsEnabled() {
 
 		suite.gen.On("GetValidMarketPriceUpdates", suite.ctx, proposal[slinkyabci.OracleInfoIndex]).Return(nil, err)
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
 		suite.Error(err)
@@ -139,7 +139,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 
 		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(nil, fmt.Errorf("error"))
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
 		suite.Error(err)
@@ -163,7 +163,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 
 		suite.gen.On("GetValidMarketPriceUpdates", suite.ctx, proposal[slinkyabci.OracleInfoIndex]).Return(expectedMsg, nil)
 
-		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&prices.UpdateMarketPricesTx{
+		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&process.UpdateMarketPricesTx{
 			Msg: &pricestypes.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					{
@@ -174,10 +174,10 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 			},
 		}, nil)
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
-		suite.Error(err, prices.MissingPriceUpdateForMarket(expectedMsg.MarketPriceUpdates[0].MarketId).Error())
+		suite.Error(err, process.MissingPriceUpdateForMarket(expectedMsg.MarketPriceUpdates[0].MarketId).Error())
 	})
 
 	suite.Run("if DecodeUpdateMarketPricesTx returns conflicting updates (incorrect price for market-id) - fail", func() {
@@ -198,7 +198,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 
 		suite.gen.On("GetValidMarketPriceUpdates", suite.ctx, proposal[slinkyabci.OracleInfoIndex]).Return(expectedMsg, nil)
 
-		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&prices.UpdateMarketPricesTx{
+		suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&process.UpdateMarketPricesTx{
 			Msg: &pricestypes.MsgUpdateMarketPrices{
 				MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 					{
@@ -209,10 +209,10 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestMarketPriceUpdateValidation_With
 			},
 		}, nil)
 
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 		tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 		suite.Nil(tx)
-		suite.Error(err, prices.IncorrectPriceUpdateForMarket(1, 100, 101))
+		suite.Error(err, process.IncorrectPriceUpdateForMarket(1, 100, 101))
 	})
 }
 
@@ -235,7 +235,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestHappyPath_VoteExtensionsEnabled(
 
 	suite.gen.On("GetValidMarketPriceUpdates", suite.ctx, proposal[slinkyabci.OracleInfoIndex]).Return(expectedMsg, nil)
 
-	suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&prices.UpdateMarketPricesTx{
+	suite.decoder.On("DecodeUpdateMarketPricesTx", suite.ctx, proposal).Return(&process.UpdateMarketPricesTx{
 		Msg: &pricestypes.MsgUpdateMarketPrices{
 			MarketPriceUpdates: []*pricestypes.MsgUpdateMarketPrices_MarketPrice{
 				{
@@ -246,7 +246,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestHappyPath_VoteExtensionsEnabled(
 		},
 	}, nil)
 
-	decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+	decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 	tx, err := decoder.DecodeUpdateMarketPricesTx(suite.ctx, proposal)
 	suite.NoError(err)
 	suite.NotNil(tx)
@@ -256,7 +256,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestHappyPath_VoteExtensionsEnabled(
 
 func (suite *SlinkyMarketPriceDecoderSuite) TestGetTxOffset() {
 	suite.Run("TxOffset is 0 if ve is not enabled", func() {
-		decoder := prices.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
+		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 
 		suite.ctx = testutils.CreateBaseSDKContext(suite.T())
 		suite.ctx = suite.ctx.WithBlockHeight(5)
@@ -267,7 +267,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestGetTxOffset() {
 	})
 
 	suite.Run("TxOffset is slinkyabci.NumInjectedTx if ve is enabled", func() {
-		decoder := prices.NewSlinkyMarketPriceDecoder(prices.NewDefaultUpdateMarketPriceTxDecoder(nil, nil), nil) // ignore deps
+		decoder := process.NewSlinkyMarketPriceDecoder(process.NewDefaultUpdateMarketPriceTxDecoder(nil, nil), nil) // ignore deps
 
 		suite.ctx = testutils.CreateBaseSDKContext(suite.T())
 		suite.ctx = testutils.UpdateContextWithVEHeight(suite.ctx, 4)

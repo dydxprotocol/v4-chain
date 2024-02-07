@@ -1,8 +1,7 @@
-package prices
+package process
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -24,7 +23,7 @@ type UpdateMarketPriceTxDecoder interface {
 // logic pre vote-extensions
 type UpdateMarketPricesTx struct {
 	ctx          sdk.Context
-	pricesKeeper PricesKeeper
+	pricesKeeper  ProcessPricesKeeper
 	Msg          *pricestypes.MsgUpdateMarketPrices
 }
 
@@ -33,7 +32,7 @@ type UpdateMarketPricesTx struct {
 // - the underlying msg values are not "valid" according to the index price.
 func (umpt *UpdateMarketPricesTx) Validate() error {
 	if err := umpt.Msg.ValidateBasic(); err != nil {
-		return errors.GetValidateBasicError(umpt.Msg, err)
+		return getValidateBasicError(umpt.Msg, err)
 	}
 
 	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.Msg, true); err != nil {

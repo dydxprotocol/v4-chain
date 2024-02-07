@@ -1,8 +1,7 @@
-package prices
+package process
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process/errors"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"reflect"
 )
@@ -20,14 +19,14 @@ const (
 // logic pre vote-extensions
 type DefaultUpdateMarketPriceTxDecoder struct {
 	// pk is the expecte dependency on x/prices keeper, used for stateful validation of the returned MarketPriceUpdateTx
-	pk PricesKeeper
+	pk ProcessPricesKeeper
 
 	// tx decoder used for unmarshalling the market-price-update tx
 	txDecoder sdk.TxDecoder
 }
 
 // NewDefaultUpdateMarketPriceTxDecoder returns a new DefaultUpdateMarketPriceTxDecoder
-func NewDefaultUpdateMarketPriceTxDecoder(pk PricesKeeper, txDecoder sdk.TxDecoder) *DefaultUpdateMarketPriceTxDecoder {
+func NewDefaultUpdateMarketPriceTxDecoder(pk ProcessPricesKeeper, txDecoder sdk.TxDecoder) *DefaultUpdateMarketPriceTxDecoder {
 	return &DefaultUpdateMarketPriceTxDecoder{
 		pk:        pk,
 		txDecoder: txDecoder,
@@ -43,17 +42,17 @@ func NewDefaultUpdateMarketPriceTxDecoder(pk PricesKeeper, txDecoder sdk.TxDecod
 func (mpd *DefaultUpdateMarketPriceTxDecoder) DecodeUpdateMarketPricesTx(ctx sdk.Context, txs [][]byte) (*UpdateMarketPricesTx, error) {
 	tx, err := mpd.txDecoder(txs[len(txs)+UpdateMarketPricesTxLenOffset])
 	if err != nil {
-		return nil, errors.GetDecodingError(msgUpdateMarketPricesType, err)
+		return nil, getDecodingError(msgUpdateMarketPricesType, err)
 	}
 
 	msgs := tx.GetMsgs()
 	if len(msgs) != 1 {
-		return nil, errors.GetUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
+		return nil, getUnexpectedNumMsgsError(msgUpdateMarketPricesType, 1, len(msgs))
 	}
 
 	updateMarketPrices, ok := msgs[0].(*pricestypes.MsgUpdateMarketPrices)
 	if !ok {
-		return nil, errors.GetUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
+		return nil, getUnexpectedMsgTypeError(msgUpdateMarketPricesType, msgs[0])
 	}
 
 	return &UpdateMarketPricesTx{
