@@ -84,7 +84,7 @@ func DecodeProcessProposalTxs(
 		return nil, errorsmod.Wrapf(
 			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
-			minTxsCount,
+			injectedTxCount,
 			numTxs,
 		)
 	}

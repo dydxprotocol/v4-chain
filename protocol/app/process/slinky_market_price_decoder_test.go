@@ -251,7 +251,7 @@ func (suite *SlinkyMarketPriceDecoderSuite) TestGetTxOffset() {
 		decoder := process.NewSlinkyMarketPriceDecoder(suite.decoder, suite.gen)
 
 		suite.ctx = testutils.CreateBaseSDKContext(suite.T())
-		suite.ctx = suite.ctx.WithBlockHeight(5)
+		suite.ctx = testutils.UpdateContextWithVEHeight(suite.ctx, 4)
 		suite.ctx = suite.ctx.WithBlockHeight(2)
 
 		offset := decoder.GetTxOffset(suite.ctx)
