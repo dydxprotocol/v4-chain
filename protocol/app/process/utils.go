@@ -6,12 +6,12 @@ import (
 	"reflect"
 )
 
-// GetValidateBasicError returns a sdk error for `Msg.ValidateBasic` failure.
+// getValidateBasicError returns a sdk error for `Msg.ValidateBasic` failure.
 func getValidateBasicError(msg sdk.Msg, err error) error {
 	return errorsmod.Wrapf(ErrMsgValidateBasic, "Msg Type: %T, Error: %+v", msg, err)
 }
 
-// GetDecodingError returns a sdk error for tx decoding failure.
+// getDecodingError returns a sdk error for tx decoding failure.
 func getDecodingError(msgType reflect.Type, err error) error {
 	return errorsmod.Wrapf(ErrDecodingTxBytes, "Msg Type: %s, Error: %+v", msgType, err)
 }

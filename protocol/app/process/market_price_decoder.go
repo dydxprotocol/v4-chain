@@ -23,7 +23,7 @@ type UpdateMarketPriceTxDecoder interface {
 // logic pre vote-extensions
 type UpdateMarketPricesTx struct {
 	ctx          sdk.Context
-	pricesKeeper  ProcessPricesKeeper
+	pricesKeeper ProcessPricesKeeper
 	Msg          *pricestypes.MsgUpdateMarketPrices
 }
 
