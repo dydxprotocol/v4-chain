@@ -16,12 +16,12 @@ func TestDefaultUsdcRateLimitParams(t *testing.T) {
 			Limiters: []types.Limiter{
 				{
 					Period:          3600 * time.Second,
-					BaselineMinimum: dtypes.NewInt(100_000_000_000),
+					BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
 					BaselineTvlPpm:  10_000,
 				},
 				{
 					Period:          24 * time.Hour,
-					BaselineMinimum: dtypes.NewInt(1_000_000_000_000),
+					BaselineMinimum: dtypes.NewInt(10_000_000_000_000),
 					BaselineTvlPpm:  100_000,
 				},
 			},
