@@ -112,6 +112,18 @@ services:
       - DAEMON_HOME=/dydxprotocol/chain/.dave
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
+  slinky0:
+    image: local:dydxprotocol
+    entrypoint:
+      - slinky
+      - -oracle-config-path
+      - /etc/oracle.toml
+      - -host
+      - "0.0.0.0"
+      - -port
+      - "8080"
+    ports:
+      - "8080:8080"
 
   datadog-agent:
     image: public.ecr.aws/datadog/agent:7
