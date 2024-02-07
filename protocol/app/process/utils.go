@@ -2,8 +2,9 @@ package process
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"reflect"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // getValidateBasicError returns a sdk error for `Msg.ValidateBasic` failure.
