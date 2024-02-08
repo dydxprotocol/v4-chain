@@ -51,7 +51,7 @@ func (cd ClobDecorator) AnteHandle(
 
 	// Ensure that if this is a clob message then that there is only one.
 	// If it isn't a clob message then pass to the next AnteHandler.
-	isSingleClobMsgTx, err := IsSingleClobMsgTx(ctx, tx)
+	isSingleClobMsgTx, err := IsSingleClobMsgTx(tx)
 	if err != nil {
 		return ctx, err
 	}
@@ -141,7 +141,7 @@ func (cd ClobDecorator) AnteHandle(
 // IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
 // (`MsgPlaceOrder` or `MsgCancelOrder`). If `msgs` consist of multiple clob messages,
 // or a mix of on-chain and clob messages, an error is returned.
-func IsSingleClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
+func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 	msgs := tx.GetMsgs()
 	var hasMessage = false
 
