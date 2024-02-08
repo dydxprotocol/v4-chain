@@ -34,6 +34,7 @@ const (
 	Reason              = "reason"
 	RemovalStatus       = "removal_status"
 	TotalFilled         = "total_filled"
+	RequestId           = "request_id"
 
 	OrderSizeOptimisticallyFilledFromMatchingQuantums = "order_size_optimistically_filled_from_matching_quantums"
 	NewLocalValidatorOperationsQueue                  = "new_local_validator_operations_queue"
