@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"github.com/dydxprotocol/v4-chain/protocol/app/vote_extensions"
 	compression "github.com/skip-mev/slinky/abci/strategies/codec"
 	"github.com/skip-mev/slinky/abci/strategies/currencypair"
 	"github.com/skip-mev/slinky/abci/ve"
@@ -93,7 +94,6 @@ import (
 	"github.com/cosmos/ibc-go/modules/capability"
 	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/configs"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -121,7 +121,6 @@ import (
 	liquidationclient "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
 	metricsclient "github.com/dydxprotocol/v4-chain/protocol/daemons/metrics/client"
 	pricefeedclient "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	daemonservertypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
@@ -324,7 +323,7 @@ type App struct {
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
 
 	// Slinky
-	oracleClient           oracleclient.OracleClient
+	oracleClient           *vote_extensions.OracleClient
 	oraclePrometheusServer *promserver.PrometheusServer
 }
 
@@ -763,27 +762,6 @@ func New(
 					panic(err)
 				}
 			}()
-		}
-
-		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
-			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-			// periodically sent via gRPC to a shared socket with the server.
-			app.PriceFeedClient = pricefeedclient.StartNewClient(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				appFlags,
-				logger,
-				&daemontypes.GrpcClientImpl{},
-				exchangeQueryConfig,
-				constants.StaticExchangeDetails,
-				&pricefeedclient.SubTaskRunnerImpl{},
-			)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 		}
 
 		// Start Bridge Daemon.
@@ -1417,13 +1395,17 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		panic(err)
 	}
 	// Create the oracle service.
-	app.oracleClient, err = oracleclient.NewClientFromConfig(
+	slinkyClient, err := oracleclient.NewClientFromConfig(
 		cfg,
 		app.Logger().With("client", "oracle"),
 		oracleMetrics,
 	)
 	if err != nil {
 		panic(err)
+	}
+	app.oracleClient = &vote_extensions.OracleClient{
+		Slinky:       slinkyClient,
+		PricesKeeper: app.PricesKeeper,
 	}
 	// run prometheus metrics
 	if cfg.MetricsEnabled {
@@ -1455,7 +1437,7 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		app.Logger(),
 		app.oracleClient,
 		time.Second,
-		currencypair.NewDeltaCurrencyPairStrategy(app.PricesKeeper),
+		currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper),
 		compression.NewCompressionVoteExtensionCodec(
 			compression.NewDefaultVoteExtensionCodec(),
 			compression.NewZLibCompressor(),
@@ -1463,7 +1445,12 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		app.PreBlocker,
 		oracleMetrics,
 	)
-	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
+
+	// Wrapping the slinky handler is necessary to pass the sdk.Context to the PricesKeeper
+	app.SetExtendVoteHandler(func(c sdk.Context, vote *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
+		app.oracleClient.Context = &c
+		return voteExtensionsHandler.ExtendVoteHandler()(c, vote)
+	})
 	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
 }
 
