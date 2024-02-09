@@ -165,6 +165,9 @@ func NewRootCmdWithInterceptors(
 	if err != nil {
 		panic(err)
 	}
+	// [ Home Dir Temp Fix ] (also see protocol/cmd/dydxprotocold/main.go)
+	// Unset the temp home dir. This must be done after `ReadFromClientConfig`, otherwise it will
+	// create a temp dir in cwd.
 	initClientCtx.HomeDir = ""
 	if err := autoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
