@@ -14,7 +14,7 @@ func main() {
 	config.SetupConfig()
 
 	option := cmd.GetOptionWithCustomStartCmd()
-	rootCmd := cmd.NewRootCmd(option, app.DefaultNodeHome)
+	rootCmd := cmd.NewRootCmd(option, tempDir())
 
 	cmd.AddTendermintSubcommands(rootCmd)
 	cmd.AddInitCmdPostRunE(rootCmd)
@@ -22,4 +22,14 @@ func main() {
 	if err := svrcmd.Execute(rootCmd, constants.AppDaemonName, app.DefaultNodeHome); err != nil {
 		os.Exit(1)
 	}
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "dydxprotocol")
+	if err != nil {
+		dir = app.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }

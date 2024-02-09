@@ -165,6 +165,7 @@ func NewRootCmdWithInterceptors(
 	if err != nil {
 		panic(err)
 	}
+	initClientCtx.HomeDir = ""
 	if err := autoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
