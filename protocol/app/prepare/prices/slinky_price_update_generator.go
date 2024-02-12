@@ -1,6 +1,8 @@
 package prices
 
 import (
+	"sort"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/skip-mev/slinky/abci/strategies/aggregator"
@@ -87,6 +89,15 @@ func (pug *SlinkyPriceUpdateGenerator) GetValidMarketPriceUpdates(ctx sdk.Contex
 			MarketId: uint32(marketID),
 			Price:    price.Uint64(),
 		})
+	}
+
+	// sort the market-price updates
+	sort.Slice(msg.MarketPriceUpdates, func(i, j int) bool {
+		return msg.MarketPriceUpdates[i].MarketId < msg.MarketPriceUpdates[j].MarketId
+	})
+
+	if err := msg.ValidateBasic(); err != nil {
+		return nil, err
 	}
 
 	return msg, nil

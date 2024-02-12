@@ -1342,7 +1342,7 @@ func New(
 				app.ClobKeeper,
 				app.StakingKeeper,
 				app.PerpetualsKeeper,
-				app.PricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
 			),
 		)
 	} else {
@@ -1354,6 +1354,7 @@ func New(
 				app.StakingKeeper,
 				app.PerpetualsKeeper,
 				app.PricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
 			),
 		)
 	}
