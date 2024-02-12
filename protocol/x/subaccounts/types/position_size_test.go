@@ -135,5 +135,3 @@ func TestPerpetualUpdate_GetIsLong(t *testing.T) {
 		shortUpdate.GetIsLong(),
 	)
 }
-
-// TODO(DEC-649): Add unit test for position_size.go in subaccounts
