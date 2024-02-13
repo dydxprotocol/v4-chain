@@ -28,7 +28,6 @@ import (
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -46,6 +45,7 @@ import (
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	// Unnamed import of statik for swagger UI support.
 	// Used in cosmos-sdk when registering the route for swagger docs.
@@ -86,12 +86,14 @@ func NewRootCmdWithInterceptors(
 	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) *cobra.Command {
+	initAppOptions := viper.New()
+	initAppOptions.Set(flags.FlagHome, tempDir())
 	tempApp := dydxapp.New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		nil,
 		true,
-		simtestutil.NewAppOptionsWithFlagHome(tempDir()),
+		initAppOptions,
 	)
 	defer func() {
 		if err := tempApp.Close(); err != nil {
