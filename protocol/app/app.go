@@ -1404,14 +1404,11 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		panic(err)
 	}
 
-	app.oracleClient, err = vote_extensions.NewOracleClient(
+	app.oracleClient = vote_extensions.NewOracleClient(
 		slinkyClient,
 		app.PricesKeeper,
 		&daemontypes.GrpcClientImpl{},
 		daemonflags.GetDaemonFlagValuesFromOptions(appOpts).Shared.SocketAddress)
-	if err != nil {
-		panic(err)
-	}
 
 	// run prometheus metrics
 	if cfg.MetricsEnabled {
