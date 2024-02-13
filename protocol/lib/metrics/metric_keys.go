@@ -23,6 +23,7 @@ const (
 	SubaccountsNegativeTncSubaccountSeen               = "negative_tnc_subaccount_seen"
 	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 	ChainOutageSeen                                    = "chain_outage_seen"
+	SubaccountCreatedCount                             = "subaccount_created_count"
 
 	// Gauges
 	InsuranceFundBalance             = "insurance_fund_balance"
