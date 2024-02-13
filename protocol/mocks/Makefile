@@ -56,3 +56,4 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=BridgeServiceClient --dir=./daemons/bridge/api --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=BridgeQueryClient --dir=./daemons/bridge/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=EthClient --dir=./daemons/bridge/client/types --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=SubTaskRunner --dir=./daemons/liquidation/client --structname=LiquidationDaemonTaskRunner --recursive --output=./mocks
