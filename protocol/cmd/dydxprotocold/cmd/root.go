@@ -28,6 +28,7 @@ import (
 	runtimeservices "github.com/cosmos/cosmos-sdk/runtime/services"
 	"github.com/cosmos/cosmos-sdk/server"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
@@ -38,13 +39,13 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 
 	// Unnamed import of statik for swagger UI support.
 	// Used in cosmos-sdk when registering the route for swagger docs.
@@ -90,7 +91,7 @@ func NewRootCmdWithInterceptors(
 		dbm.NewMemDB(),
 		nil,
 		true,
-		viper.New(),
+		simtestutil.NewAppOptionsWithFlagHome(tempDir()),
 	)
 	defer func() {
 		if err := tempApp.Close(); err != nil {
@@ -161,14 +162,10 @@ func NewRootCmdWithInterceptors(
 	}
 
 	initRootCmd(tempApp, rootCmd, option, appInterceptor)
-	initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
+	initClientCtx, err := config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx)
 	if err != nil {
 		panic(err)
 	}
-	// [ Home Dir Temp Fix ] (also see protocol/cmd/dydxprotocold/main.go)
-	// Unset the temp home dir. This must be done after `ReadFromClientConfig`, otherwise it will
-	// create a temp dir in cwd.
-	initClientCtx.HomeDir = ""
 	if err := autoCliOpts(tempApp, initClientCtx).EnhanceRootCommand(rootCmd); err != nil {
 		panic(err)
 	}
@@ -427,4 +424,14 @@ func appExport(
 	}
 
 	return dydxApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "dydxprotocol")
+	if err != nil {
+		dir = app.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }
