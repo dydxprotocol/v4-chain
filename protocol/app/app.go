@@ -1403,10 +1403,16 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 	if err != nil {
 		panic(err)
 	}
-	app.oracleClient = &vote_extensions.OracleClient{
-		Slinky:       slinkyClient,
-		PricesKeeper: app.PricesKeeper,
+
+	app.oracleClient, err = vote_extensions.NewOracleClient(
+		slinkyClient,
+		app.PricesKeeper,
+		&daemontypes.GrpcClientImpl{},
+		daemonflags.GetDaemonFlagValuesFromOptions(appOpts).Shared.SocketAddress)
+	if err != nil {
+		panic(err)
 	}
+
 	// run prometheus metrics
 	if cfg.MetricsEnabled {
 		promLogger, err := zap.NewProduction()
@@ -1446,11 +1452,7 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		oracleMetrics,
 	)
 
-	// Wrapping the slinky handler is necessary to pass the sdk.Context to the PricesKeeper
-	app.SetExtendVoteHandler(func(c sdk.Context, vote *abci.RequestExtendVote) (*abci.ResponseExtendVote, error) {
-		app.oracleClient.Context = &c
-		return voteExtensionsHandler.ExtendVoteHandler()(c, vote)
-	})
+	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
 }
 
