@@ -6,6 +6,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"strconv"
+	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
@@ -21,36 +22,42 @@ type OracleClient struct {
 	PricesKeeper           priceskeeper.Keeper
 	PriceFeedServiceClient api.PriceFeedServiceClient
 	grpcClient             daemontypes.GrpcClient
+	pricesSocket           string
 	pricesConn             *grpc.ClientConn
 }
 
-func NewOracleClient(slinky oracleclient.OracleClient, pricesKeeper priceskeeper.Keeper, grpcClient daemontypes.GrpcClient, pricesSocket string) (*OracleClient, error) {
-	pricesConn, err := grpcClient.NewGrpcConnection(context.Background(), pricesSocket)
-	if err != nil {
-		return nil, err
-	}
+func NewOracleClient(slinky oracleclient.OracleClient, pricesKeeper priceskeeper.Keeper, grpcClient daemontypes.GrpcClient, pricesSocket string) *OracleClient {
 	return &OracleClient{
-		Slinky:                 slinky,
-		PricesKeeper:           pricesKeeper,
-		PriceFeedServiceClient: api.NewPriceFeedServiceClient(pricesConn),
-		grpcClient:             grpcClient,
-		pricesConn:             pricesConn,
-	}, nil
+		Slinky:       slinky,
+		PricesKeeper: pricesKeeper,
+		grpcClient:   grpcClient,
+		pricesSocket: pricesSocket,
+	}
 }
 
-func (o OracleClient) Start(ctx context.Context) error {
+func (o *OracleClient) Start(ctx context.Context) error {
+	cancelCtx, cf := context.WithTimeout(ctx, time.Second*5)
+	defer cf()
+	pricesConn, err := o.grpcClient.NewGrpcConnection(cancelCtx, o.pricesSocket)
+	if err != nil {
+		return err
+	}
+	o.pricesConn = pricesConn
+	o.PriceFeedServiceClient = api.NewPriceFeedServiceClient(o.pricesConn)
 	return o.Slinky.Start(ctx)
 }
 
-func (o OracleClient) Stop() error {
-	_ = o.grpcClient.CloseConnection(o.pricesConn)
+func (o *OracleClient) Stop() error {
+	if o.pricesConn != nil {
+		_ = o.grpcClient.CloseConnection(o.pricesConn)
+	}
 	return o.Slinky.Stop()
 }
 
-func (o OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracletypes.QueryPricesResponse, error) {
+func (o *OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracletypes.QueryPricesResponse, error) {
 	sdkCtx, ok := ctx.(sdk.Context)
 	if !ok {
-		panic("oracle client was passed on non-sdk context object")
+		return nil, fmt.Errorf("oracle client was passed on non-sdk context object")
 	}
 	slinkyResponse, err := o.Slinky.Prices(ctx, in, opts...)
 	if err != nil {
@@ -84,6 +91,9 @@ func (o OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesReq
 				},
 			},
 		})
+	}
+	if o.PriceFeedServiceClient == nil {
+		sdkCtx.Logger().Error("nil price feed service client")
 	}
 	_, err = o.PriceFeedServiceClient.UpdateMarketPrices(ctx, &api.UpdateMarketPricesRequest{MarketPriceUpdates: updates})
 	if err != nil {
