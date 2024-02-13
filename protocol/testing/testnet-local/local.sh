@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -exo pipefail
 
 # This file initializes muliple validators for local and CI testing purposes.
 # This file should be run as part of `docker-compose.yml`.
@@ -171,6 +171,7 @@ edit_config() {
 
 edit_oracle_config() {
   dasel put -t bool -f "/etc/oracle.toml" '.production' -v 'true'
+  dasel put -t string -f "/etc/oracle.toml" '.update_interval' -v '2s'
 }
 
 install_prerequisites
