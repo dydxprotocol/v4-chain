@@ -37,6 +37,16 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 			store.Delete(key)
 		}
 	} else {
+		if !store.Has(key) {
+			metrics.IncrCounterWithLabels(
+				metrics.SubaccountCreatedCount,
+				1,
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					metrics.GetCallbackMetricFromCtx(ctx),
+				),
+			)
+		}
 		b := k.cdc.MustMarshal(&subaccount)
 		store.Set(key, b)
 	}
