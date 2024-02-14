@@ -10,13 +10,16 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
-	oracletypes "github.com/skip-mev/slinky/service/servers/oracle/types"
-	types2 "github.com/skip-mev/slinky/x/oracle/types"
+	oracleservicetypes "github.com/skip-mev/slinky/service/servers/oracle/types"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 	"google.golang.org/grpc"
 
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
 )
 
+// OracleClient is a wrapper around the default Slinky OracleClient interface. This object is responsible for requesting
+// prices from the sidecar, sending them to the x/prices module (via the price-feed service), and relaying what 
+// prices (according to the x/prices module) a node should inject into their vote-extension.
 type OracleClient struct {
 	Slinky                 oracleclient.OracleClient
 	PricesKeeper           priceskeeper.Keeper
@@ -26,6 +29,7 @@ type OracleClient struct {
 	pricesConn             *grpc.ClientConn
 }
 
+// NewOracleClient returns a new OracleClient object.
 func NewOracleClient(slinky oracleclient.OracleClient, pricesKeeper priceskeeper.Keeper, grpcClient daemontypes.GrpcClient, pricesSocket string) *OracleClient {
 	return &OracleClient{
 		Slinky:       slinky,
@@ -35,6 +39,9 @@ func NewOracleClient(slinky oracleclient.OracleClient, pricesKeeper priceskeeper
 	}
 }
 
+// Start starts the OracleClient. This method is responsible for establishing a connection to the price-feed service 
+// and the sidecar, and then starting the Slinky OracleClient. This method will timeout after 5 seconds if no
+// connection is established.
 func (o *OracleClient) Start(ctx context.Context) error {
 	cancelCtx, cf := context.WithTimeout(ctx, time.Second*5)
 	defer cf()
@@ -47,6 +54,8 @@ func (o *OracleClient) Start(ctx context.Context) error {
 	return o.Slinky.Start(ctx)
 }
 
+// Stop stops the OracleClient. This method is responsible for closing the connection to the sidecar and to 
+// the price-feed service.
 func (o *OracleClient) Stop() error {
 	if o.pricesConn != nil {
 		_ = o.grpcClient.CloseConnection(o.pricesConn)
@@ -54,33 +63,52 @@ func (o *OracleClient) Stop() error {
 	return o.Slinky.Stop()
 }
 
-func (o *OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracletypes.QueryPricesResponse, error) {
+// Prices is a wrapper around the Slinky OracleClient's Prices method. This method is responsible for doing the following:
+//  1. Request the latest prices from the oracle-sidecar
+//  2. Relay the latest prices to the price-feed service, which will then update the x/prices module's indexPriceCache
+//  3. Get the latest prices from the x/prices module's indexPriceCache via GetValidMarketPriceUpdates
+//  4. Translate the response from x/prices into a QueryPricesResponse, and return this
+// This method fails if:
+//  - The sidecar returns an error
+//  - The sidecar returns a price that cannot be parsed as a uint64
+//  - The price-feed service client returns an error
+func (o *OracleClient) Prices(ctx context.Context, in *oracleservicetypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracleservicetypes.QueryPricesResponse, error) {
 	sdkCtx, ok := ctx.(sdk.Context)
 	if !ok {
 		return nil, fmt.Errorf("oracle client was passed on non-sdk context object")
 	}
+
+	// get prices from slinky sidecar via GRPC
 	slinkyResponse, err := o.Slinky.Prices(ctx, in, opts...)
 	if err != nil {
 		return nil, err
 	}
-	// Update the prices keeper w/ the most recent prices for the relevant markets
+
+	// update the prices keeper w/ the most recent prices for the relevant markets
 	var updates []*api.MarketPriceUpdate
 	for currencyPairString, priceString := range slinkyResponse.Prices {
-		currencyPair, err := types2.CurrencyPairFromString(currencyPairString)
+		// convert currency-pair string (index) into currency-pair object
+		currencyPair, err := oracletypes.CurrencyPairFromString(currencyPairString)
 		if err != nil {
 			return nil, err
 		}
 		sdkCtx.Logger().Info("turned price pair to currency pair", "string", currencyPairString, "currency pair", currencyPair.String())
+		
+		// get the market id for the currency pair
 		id, found := o.PricesKeeper.GetIDForCurrencyPair(sdkCtx, currencyPair)
 		if !found {
 			sdkCtx.Logger().Info("slinky client returned currency pair not found in prices keeper", "currency pair", currencyPairString)
 			continue
 		}
+		
+		// parse the price string into a uint64
 		price, err := strconv.ParseUint(priceString, 10, 64)
 		if err != nil {
 			return nil, fmt.Errorf("slinky client returned price %s not parsable as uint64", priceString)
 		}
 		sdkCtx.Logger().Info("parsed update for", "market id", uint32(id), "price", price)
+
+		// append the update to the list of MarketPriceUpdates to be sent to the app's price-feed service
 		updates = append(updates, &api.MarketPriceUpdate{
 			MarketId: uint32(id),
 			ExchangePrices: []*api.ExchangePrice{
@@ -92,6 +120,9 @@ func (o *OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesRe
 			},
 		})
 	}
+
+	// send the updates to the app's price-feed service -> these will then be piped to the x/prices indexPriceCache via the price
+	// feed service
 	if o.PriceFeedServiceClient == nil {
 		sdkCtx.Logger().Error("nil price feed service client")
 	}
@@ -100,15 +131,17 @@ func (o *OracleClient) Prices(ctx context.Context, in *oracletypes.QueryPricesRe
 		sdkCtx.Logger().Error(err.Error())
 		return nil, err
 	}
-	// Get valid price updates
+
+	// get the final prices to include in the vote-extension from the x/prices module
 	validUpdates := o.PricesKeeper.GetValidMarketPriceUpdates(sdkCtx)
 	if validUpdates == nil {
 		sdkCtx.Logger().Info("prices keeper returned no valid market price updates")
 		return nil, nil
 	}
 	sdkCtx.Logger().Info("prices keeper returned valid updates", "length", len(validUpdates.MarketPriceUpdates))
-	// Translate price updates into oracle response
-	var outputResponse = &oracletypes.QueryPricesResponse{
+
+	// translate price updates into oracle response
+	var outputResponse = &oracleservicetypes.QueryPricesResponse{
 		Prices:    make(map[string]string),
 		Timestamp: slinkyResponse.Timestamp,
 	}
