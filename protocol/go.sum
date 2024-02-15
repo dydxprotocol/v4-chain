@@ -525,15 +525,10 @@ github.com/dvsekhvalnov/jose2go v1.5.0 h1:3j8ya4Z4kMCwT5nXIKFSV84YS+HdqSSO0VsTQx
 github.com/dvsekhvalnov/jose2go v1.5.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.3-0.20231204185009-5e6c4b6d67b8 h1:zmH6go7DRhFcQHoiN/rQ1INaAelp01VUPUTSqSDJsAU=
 github.com/dydxprotocol/cometbft v0.38.3-0.20231204185009-5e6c4b6d67b8/go.mod h1:KQ8mOea6U2satQbGe2WjxBopa8mGgHatMKS9sQsJ6uY=
-<<<<<<< HEAD
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240206213020-ef2fbbac2693 h1:FdOhkelNwqyXMP6JFJzi+d9A0cxGJEiieDIkDYtcCa4=
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240206213020-ef2fbbac2693/go.mod h1:y+5fRLbztsvx6GHBVXPlgM51ZpuNd8M7y4YEAQNnTPU=
-=======
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225126-ba76b79cd4cf h1:buHamAV21CWNE8IVKe/v6RPzQaLM9t3ZkTijGFaS4c4=
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225126-ba76b79cd4cf/go.mod h1:y+5fRLbztsvx6GHBVXPlgM51ZpuNd8M7y4YEAQNnTPU=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf h1:1S0YnPWIM1uacL73Jx9mZYK0T3uj1qoL2TqwlRtyDpw=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
->>>>>>> 71ce2c6f (Fix unnecessary home directory creation issues (#1073))
+github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225014-c0bde14212a7 h1:g3dt0DIEZONvrfKZojvEwUB2j7THUG/5JxY2oqXxQcA=
+github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225014-c0bde14212a7/go.mod h1:y+5fRLbztsvx6GHBVXPlgM51ZpuNd8M7y4YEAQNnTPU=
+github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7 h1:lTVwvpc4mHShiFDnPG/m06hKtHJYbKM4HFUR3T3vNHg=
+github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
