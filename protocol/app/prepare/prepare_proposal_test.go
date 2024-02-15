@@ -7,10 +7,8 @@ import (
 
 	"cosmossdk.io/log"
 	abci "github.com/cometbft/cometbft/abci/types"
-	cmtabci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
 	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -34,21 +32,21 @@ import (
 )
 
 var (
-	ctx = sdktypes.Context{}
+	ctx = sdk.Context{}
 
-	failingTxEncoder = func(tx sdktypes.Tx) ([]byte, error) {
+	failingTxEncoder = func(tx sdk.Tx) ([]byte, error) {
 		return nil, errors.New("encoder failed")
 	}
-	emptyTxEncoder = func(tx sdktypes.Tx) ([]byte, error) {
+	emptyTxEncoder = func(tx sdk.Tx) ([]byte, error) {
 		return []byte{}, nil
 	}
-	passingTxEncoderOne = func(tx sdktypes.Tx) ([]byte, error) {
+	passingTxEncoderOne = func(tx sdk.Tx) ([]byte, error) {
 		return []byte{1}, nil
 	}
-	passingTxEncoderTwo = func(tx sdktypes.Tx) ([]byte, error) {
+	passingTxEncoderTwo = func(tx sdk.Tx) ([]byte, error) {
 		return []byte{1, 2}, nil
 	}
-	passingTxEncoderFour = func(tx sdktypes.Tx) ([]byte, error) {
+	passingTxEncoderFour = func(tx sdk.Tx) ([]byte, error) {
 		return []byte{1, 2, 3, 4}, nil
 	}
 )
@@ -62,16 +60,16 @@ func TestPrepareProposalHandler(t *testing.T) {
 		maxBytes int64
 
 		pricesResp    *pricestypes.MsgUpdateMarketPrices
-		pricesEncoder sdktypes.TxEncoder
+		pricesEncoder sdk.TxEncoder
 
 		fundingResp    *perpetualtypes.MsgAddPremiumVotes
-		fundingEncoder sdktypes.TxEncoder
+		fundingEncoder sdk.TxEncoder
 
 		clobResp    *clobtypes.MsgProposedOperations
-		clobEncoder sdktypes.TxEncoder
+		clobEncoder sdk.TxEncoder
 
 		bridgeResp    *bridgetypes.MsgAcknowledgeBridges
-		bridgeEncoder sdktypes.TxEncoder
+		bridgeEncoder sdk.TxEncoder
 
 		expectedTxs [][]byte
 	}{
@@ -338,7 +336,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockTxConfig := createMockTxConfig(
 				nil,
-				[]sdktypes.TxEncoder{
+				[]sdk.TxEncoder{
 					tc.pricesEncoder,
 					tc.fundingEncoder,
 					tc.bridgeEncoder,
@@ -564,16 +562,16 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 		require.NoError(t, err)
 
 		// setup extendedCommit
-		extCommit := cmtabci.ExtendedCommitInfo{
-			Votes: []cmtabci.ExtendedVoteInfo{
+		extCommit := abci.ExtendedCommitInfo{
+			Votes: []abci.ExtendedVoteInfo{
 				{
-					Validator: cmtabci.Validator{
+					Validator: abci.Validator{
 						Address: validator1,
 					},
 					VoteExtension: validator1veBz,
 				},
 				{
-					Validator: cmtabci.Validator{
+					Validator: abci.Validator{
 						Address: validator2,
 					},
 					VoteExtension: validator2veBz,
@@ -644,7 +642,7 @@ func TestSlinkyPrepareProposalHandler(t *testing.T) {
 func TestGetUpdateMarketPricesTx(t *testing.T) {
 	tests := map[string]struct {
 		keeperResp *pricestypes.MsgUpdateMarketPrices
-		txEncoder  sdktypes.TxEncoder
+		txEncoder  sdk.TxEncoder
 
 		expectedTx         []byte
 		expectedNumMarkets int
@@ -686,7 +684,7 @@ func TestGetUpdateMarketPricesTx(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
+			mockTxConfig := createMockTxConfig(nil, []sdk.TxEncoder{tc.txEncoder})
 			mockPricesKeeper := mocks.PreparePricesKeeper{}
 			mockPricesKeeper.On("GetValidMarketPriceUpdates", mock.Anything).
 				Return(tc.keeperResp)
@@ -716,7 +714,7 @@ func getMarketPriceUpdates(gen prices.PriceUpdateGenerator, txConfig client.TxCo
 func TestGetAcknowledgeBridgesTx(t *testing.T) {
 	tests := map[string]struct {
 		keeperResp *bridgetypes.MsgAcknowledgeBridges
-		txEncoder  sdktypes.TxEncoder
+		txEncoder  sdk.TxEncoder
 
 		expectedTx         []byte
 		expectedNumBridges int
@@ -758,7 +756,7 @@ func TestGetAcknowledgeBridgesTx(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
+			mockTxConfig := createMockTxConfig(nil, []sdk.TxEncoder{tc.txEncoder})
 			mockBridgeKeeper := mocks.PrepareBridgeKeeper{}
 			mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
 				Return(tc.keeperResp)
@@ -778,7 +776,7 @@ func TestGetAcknowledgeBridgesTx(t *testing.T) {
 func TestGetAddPremiumVotesTx(t *testing.T) {
 	tests := map[string]struct {
 		keeperResp *perpetualtypes.MsgAddPremiumVotes
-		txEncoder  sdktypes.TxEncoder
+		txEncoder  sdk.TxEncoder
 
 		expectedTx       []byte
 		expectedNumVotes int
@@ -820,7 +818,7 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
+			mockTxConfig := createMockTxConfig(nil, []sdk.TxEncoder{tc.txEncoder})
 			mockPerpKeeper := mocks.PreparePerpetualsKeeper{}
 			mockPerpKeeper.On("GetAddPremiumVotes", mock.Anything).
 				Return(tc.keeperResp)
@@ -840,7 +838,7 @@ func TestGetAddPremiumVotesTx(t *testing.T) {
 func TestGetProposedOperationsTx(t *testing.T) {
 	tests := map[string]struct {
 		keeperResp *clobtypes.MsgProposedOperations
-		txEncoder  sdktypes.TxEncoder
+		txEncoder  sdk.TxEncoder
 
 		expectedTx               []byte
 		expectedNumPlaceOrders   int
@@ -885,7 +883,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(nil, []sdktypes.TxEncoder{tc.txEncoder})
+			mockTxConfig := createMockTxConfig(nil, []sdk.TxEncoder{tc.txEncoder})
 			mockClobKeeper := mocks.PrepareClobKeeper{}
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).Return(tc.keeperResp)
 
@@ -903,7 +901,7 @@ func TestGetProposedOperationsTx(t *testing.T) {
 func TestEncodeMsgsIntoTxBytes(t *testing.T) {
 	tests := map[string]struct {
 		setMsgErr error
-		txEncoder sdktypes.TxEncoder
+		txEncoder sdk.TxEncoder
 
 		expectedTx  []byte
 		expectedErr error
@@ -925,7 +923,7 @@ func TestEncodeMsgsIntoTxBytes(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			mockTxConfig := createMockTxConfig(tc.setMsgErr, []sdktypes.TxEncoder{tc.txEncoder})
+			mockTxConfig := createMockTxConfig(tc.setMsgErr, []sdk.TxEncoder{tc.txEncoder})
 
 			tx, err := prepare.EncodeMsgsIntoTxBytes(mockTxConfig, &clobtypes.MsgProposedOperations{})
 
@@ -939,7 +937,7 @@ func TestEncodeMsgsIntoTxBytes(t *testing.T) {
 	}
 }
 
-func createMockTxConfig(setMsgsError error, allTxEncoders []sdktypes.TxEncoder) *mocks.TxConfig {
+func createMockTxConfig(setMsgsError error, allTxEncoders []sdk.TxEncoder) *mocks.TxConfig {
 	mockTxConfig := mocks.TxConfig{}
 	mockTxBuilder := mocks.TxBuilder{}
 

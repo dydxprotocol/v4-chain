@@ -11,7 +11,7 @@ import (
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// ExtendVoteHandler is a wrapper around the Slinky ExtendVoteHandler. This wrapper is responsible for applying the newest 
+// ExtendVoteHandler is a wrapper around the Slinky ExtendVoteHandler. This wrapper is responsible for applying the newest
 // MarketPriceUpdates in a block + calculating the latest historical smoothed prices, so that the prices to be submitted in a vote
 // extension are determined on the latest available information.
 type ExtendVoteHandler struct {

@@ -18,7 +18,7 @@ import (
 )
 
 // OracleClient is a wrapper around the default Slinky OracleClient interface. This object is responsible for requesting
-// prices from the sidecar, sending them to the x/prices module (via the price-feed service), and relaying what 
+// prices from the sidecar, sending them to the x/prices module (via the price-feed service), and relaying what
 // prices (according to the x/prices module) a node should inject into their vote-extension.
 type OracleClient struct {
 	Slinky                 oracleclient.OracleClient
@@ -39,7 +39,7 @@ func NewOracleClient(slinky oracleclient.OracleClient, pricesKeeper priceskeeper
 	}
 }
 
-// Start starts the OracleClient. This method is responsible for establishing a connection to the price-feed service 
+// Start starts the OracleClient. This method is responsible for establishing a connection to the price-feed service
 // and the sidecar, and then starting the Slinky OracleClient. This method will timeout after 5 seconds if no
 // connection is established.
 func (o *OracleClient) Start(ctx context.Context) error {
@@ -54,7 +54,7 @@ func (o *OracleClient) Start(ctx context.Context) error {
 	return o.Slinky.Start(ctx)
 }
 
-// Stop stops the OracleClient. This method is responsible for closing the connection to the sidecar and to 
+// Stop stops the OracleClient. This method is responsible for closing the connection to the sidecar and to
 // the price-feed service.
 func (o *OracleClient) Stop() error {
 	if o.pricesConn != nil {
@@ -68,10 +68,11 @@ func (o *OracleClient) Stop() error {
 //  2. Relay the latest prices to the price-feed service, which will then update the x/prices module's indexPriceCache
 //  3. Get the latest prices from the x/prices module's indexPriceCache via GetValidMarketPriceUpdates
 //  4. Translate the response from x/prices into a QueryPricesResponse, and return this
+//
 // This method fails if:
-//  - The sidecar returns an error
-//  - The sidecar returns a price that cannot be parsed as a uint64
-//  - The price-feed service client returns an error
+//   - The sidecar returns an error
+//   - The sidecar returns a price that cannot be parsed as a uint64
+//   - The price-feed service client returns an error
 func (o *OracleClient) Prices(ctx context.Context, in *oracleservicetypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracleservicetypes.QueryPricesResponse, error) {
 	sdkCtx, ok := ctx.(sdk.Context)
 	if !ok {
@@ -93,14 +94,14 @@ func (o *OracleClient) Prices(ctx context.Context, in *oracleservicetypes.QueryP
 			return nil, err
 		}
 		sdkCtx.Logger().Info("turned price pair to currency pair", "string", currencyPairString, "currency pair", currencyPair.String())
-		
+
 		// get the market id for the currency pair
 		id, found := o.PricesKeeper.GetIDForCurrencyPair(sdkCtx, currencyPair)
 		if !found {
 			sdkCtx.Logger().Info("slinky client returned currency pair not found in prices keeper", "currency pair", currencyPairString)
 			continue
 		}
-		
+
 		// parse the price string into a uint64
 		price, err := strconv.ParseUint(priceString, 10, 64)
 		if err != nil {
