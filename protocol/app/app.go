@@ -1785,7 +1785,9 @@ func (app *App) setAnteHandler(txConfig client.TxConfig) {
 func (app *App) Close() error {
 	app.BaseApp.Close()
 	if app.oracleClient != nil {
-		app.oracleClient.Stop()
+		if err := app.oracleClient.Stop(); err != nil {
+			return err
+		}
 	}
 	if app.oraclePrometheusServer != nil {
 		app.oraclePrometheusServer.Close()

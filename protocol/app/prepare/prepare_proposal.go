@@ -196,7 +196,7 @@ func PrepareProposalHandler(
 	}
 }
 
-// GetUpdateMarketPricesTx returns a tx containing `MsgUpdateMarketPrices`.
+// EncodeMarketPriceUpdates returns a tx containing `MsgUpdateMarketPrices`.
 func EncodeMarketPriceUpdates(
 	txConfig client.TxConfig,
 	msg *pricetypes.MsgUpdateMarketPrices,
