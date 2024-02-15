@@ -193,8 +193,6 @@ cloud.google.com/go/workflows v1.6.0/go.mod h1:6t9F5h/unJz41YqfBmqSASJSXccBLtD1V
 cloud.google.com/go/workflows v1.7.0/go.mod h1:JhSrZuVZWuiDfKEFxU0/F1PQjmpnpcoISEXH2bcHC3M=
 cosmossdk.io/api v0.7.2 h1:BO3i5fvKMKvfaUiMkCznxViuBEfyWA/k6w2eAF6q1C4=
 cosmossdk.io/api v0.7.2/go.mod h1:IcxpYS5fMemZGqyYtErK7OqvdM0C8kdW3dq8Q/XIG38=
-cosmossdk.io/client/v2 v2.0.0-beta.1 h1:XkHh1lhrLYIT9zKl7cIOXUXg2hdhtjTPBUfqERNA1/Q=
-cosmossdk.io/client/v2 v2.0.0-beta.1/go.mod h1:JEUSu9moNZQ4kU3ir1DKD5eU4bllmAexrGWjmb9k8qU=
 cosmossdk.io/collections v0.4.0 h1:PFmwj2W8szgpD5nOd8GWH6AbYNi1f2J6akWXJ7P5t9s=
 cosmossdk.io/collections v0.4.0/go.mod h1:oa5lUING2dP+gdDquow+QjlF45eL1t4TJDypgGd+tv0=
 cosmossdk.io/core v0.11.0 h1:vtIafqUi+1ZNAE/oxLOQQ7Oek2n4S48SWLG8h/+wdbo=
@@ -537,8 +535,10 @@ github.com/dvsekhvalnov/jose2go v1.5.0 h1:3j8ya4Z4kMCwT5nXIKFSV84YS+HdqSSO0VsTQx
 github.com/dvsekhvalnov/jose2go v1.5.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.3-0.20231204185009-5e6c4b6d67b8 h1:zmH6go7DRhFcQHoiN/rQ1INaAelp01VUPUTSqSDJsAU=
 github.com/dydxprotocol/cometbft v0.38.3-0.20231204185009-5e6c4b6d67b8/go.mod h1:KQ8mOea6U2satQbGe2WjxBopa8mGgHatMKS9sQsJ6uY=
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240206224621-ffeae5184c58 h1:3nW+id7dbHUv+RJB2pecjKtA0WWQr3oit4KrxBJ0+kw=
-github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240206224621-ffeae5184c58/go.mod h1:y+5fRLbztsvx6GHBVXPlgM51ZpuNd8M7y4YEAQNnTPU=
+github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225126-ba76b79cd4cf h1:buHamAV21CWNE8IVKe/v6RPzQaLM9t3ZkTijGFaS4c4=
+github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225126-ba76b79cd4cf/go.mod h1:y+5fRLbztsvx6GHBVXPlgM51ZpuNd8M7y4YEAQNnTPU=
+github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf h1:1S0YnPWIM1uacL73Jx9mZYK0T3uj1qoL2TqwlRtyDpw=
+github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
