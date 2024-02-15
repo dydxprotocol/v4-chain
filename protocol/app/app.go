@@ -1282,16 +1282,6 @@ func New(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
-	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
-	var oracleMetrics servicemetrics.Metrics
-	if !appFlags.NonValidatingFullNode {
-		oracleMetrics = app.initOracle(appOpts)
-	}
-
-	if oracleMetrics == nil {
-		oracleMetrics = servicemetrics.NewNopMetrics()
-	}
-
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.setAnteHandler(encodingConfig.TxConfig)
@@ -1345,6 +1335,16 @@ func New(
 		process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.txConfig.TxDecoder()),
 		priceUpdateGenerator,
 	)
+
+	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
+	var oracleMetrics servicemetrics.Metrics
+	if !appFlags.NonValidatingFullNode {
+		oracleMetrics = app.initOracle(appOpts, priceUpdateDecoder)
+	}
+
+	if oracleMetrics == nil {
+		oracleMetrics = servicemetrics.NewNopMetrics()
+	}
 
 	// ProcessProposal setup.
 	var dydxProcessProposalHandler sdk.ProcessProposalHandler
@@ -1435,7 +1435,7 @@ func New(
 	return app
 }
 
-func (app *App) initOracle(appOpts servertypes.AppOptions) servicemetrics.Metrics {
+func (app *App) initOracle(appOpts servertypes.AppOptions, pricesTxDecoder process.UpdateMarketPriceTxDecoder) servicemetrics.Metrics {
 	// Slinky setup
 	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
 	if err != nil {
@@ -1487,7 +1487,7 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) servicemetrics.Metric
 		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
 	}()
 	// Vote Extension setup.
-	voteExtensionsHandler := ve.NewVoteExtensionHandler(
+	slinkyVoteExtensionsHandler := ve.NewVoteExtensionHandler(
 		app.Logger(),
 		app.oracleClient,
 		time.Second,
@@ -1500,8 +1500,14 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) servicemetrics.Metric
 		oracleMetrics,
 	)
 
-	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
-	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
+	dydxExtendVoteHandler := vote_extensions.ExtendVoteHandler{
+		SlinkyExtendVoteHandler: slinkyVoteExtensionsHandler.ExtendVoteHandler(),
+		PricesTxDecoder:         pricesTxDecoder,
+		PricesKeeper:            app.PricesKeeper,
+	}
+
+	app.SetExtendVoteHandler(dydxExtendVoteHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(slinkyVoteExtensionsHandler.VerifyVoteExtensionHandler())
 
 	return oracleMetrics
 }
