@@ -148,6 +148,12 @@ func (k Keeper) LiquidateSubaccountsAgainstOrderbook(
 		metrics.Latency,
 	)
 
+	// Stat the number of subaccounts that require deleveraging.
+	metrics.SetGaugeWithLabels(
+		metrics.ClobSubaccountsRequiringDeleveragingCount,
+		float32(len(subaccountsToDeleverage)),
+	)
+
 	return subaccountsToDeleverage, nil
 }
 
