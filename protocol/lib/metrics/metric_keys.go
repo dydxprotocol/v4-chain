@@ -23,12 +23,14 @@ const (
 	SubaccountsNegativeTncSubaccountSeen               = "negative_tnc_subaccount_seen"
 	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 	ChainOutageSeen                                    = "chain_outage_seen"
+	SubaccountCreatedCount                             = "subaccount_created_count"
 
 	// Gauges
-	InsuranceFundBalance             = "insurance_fund_balance"
-	ClobMev                          = "clob_mev"
-	ClobConditionalOrderTriggerPrice = "clob_conditional_order_trigger_price"
-	ClobConditionalOrderTriggered    = "clob_conditional_order_triggered"
+	InsuranceFundBalance                      = "insurance_fund_balance"
+	ClobMev                                   = "clob_mev"
+	ClobConditionalOrderTriggerPrice          = "clob_conditional_order_trigger_price"
+	ClobConditionalOrderTriggered             = "clob_conditional_order_triggered"
+	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"

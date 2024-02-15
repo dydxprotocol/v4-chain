@@ -7,7 +7,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 
 	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
@@ -120,7 +120,7 @@ func TestMsgDeleteVestEntry(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			k, ms, goCtx := setupMsgServer(t)
-			ctx := sdk.UnwrapSDKContext(goCtx)
+			ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
 			// Set up valid entry
 			err := k.SetVestEntry(ctx, TestValidEntry)

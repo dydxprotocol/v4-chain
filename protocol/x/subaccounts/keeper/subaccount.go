@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/cosmos/gogoproto/proto"
+
 	storetypes "cosmossdk.io/store/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -35,6 +37,16 @@ func (k Keeper) SetSubaccount(ctx sdk.Context, subaccount types.Subaccount) {
 			store.Delete(key)
 		}
 	} else {
+		if !store.Has(key) {
+			metrics.IncrCounterWithLabels(
+				metrics.SubaccountCreatedCount,
+				1,
+				metrics.GetLabelForStringValue(
+					metrics.Callback,
+					metrics.GetCallbackMetricFromCtx(ctx),
+				),
+			)
+		}
 		b := k.cdc.MustMarshal(&subaccount)
 		store.Set(key, b)
 	}
@@ -411,11 +423,13 @@ func GetSettledSubaccountWithPerpetuals(
 		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
 
 		// Update cached funding index of the perpetual position.
-		newPerpetualPositions = append(newPerpetualPositions, &types.PerpetualPosition{
-			PerpetualId:  p.PerpetualId,
-			Quantums:     p.Quantums,
-			FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
-		})
+		newPerpetualPositions = append(
+			newPerpetualPositions, &types.PerpetualPosition{
+				PerpetualId:  p.PerpetualId,
+				Quantums:     p.Quantums,
+				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+			},
+		)
 	}
 
 	newSubaccount := types.Subaccount{
@@ -542,6 +556,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 	}
 
+	bigCurNetCollateral := make(map[string]*big.Int)
+	bigCurInitialMargin := make(map[string]*big.Int)
+	bigCurMaintenanceMargin := make(map[string]*big.Int)
+
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
 		// Check all updated perps are updatable.
@@ -579,22 +597,31 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				SettledSubaccount: u.SettledSubaccount,
 			}
 
-			bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
-				err := k.internalGetNetCollateralAndMarginRequirements(
-				ctx,
-				emptyUpdate,
-			)
+			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
 				return false, nil, err
+			}
+			saKey := string(bytes)
+
+			// Cache the current collateralization and margin requirements for the subaccount.
+			if _, ok := bigCurNetCollateral[saKey]; !ok {
+				bigCurNetCollateral[saKey],
+					bigCurInitialMargin[saKey],
+					bigCurMaintenanceMargin[saKey],
+					err = k.internalGetNetCollateralAndMarginRequirements(
+					ctx,
+					emptyUpdate,
+				)
+				if err != nil {
+					return false, nil, err
+				}
 			}
 
 			// Determine whether the state transition is valid.
 			result = IsValidStateTransitionForUndercollateralizedSubaccount(
-				bigCurNetCollateral,
-				bigCurInitialMargin,
-				bigCurMaintenanceMargin,
+				bigCurNetCollateral[saKey],
+				bigCurInitialMargin[saKey],
+				bigCurMaintenanceMargin[saKey],
 				bigNewNetCollateral,
 				bigNewMaintenanceMargin,
 			)

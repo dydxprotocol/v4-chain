@@ -27,7 +27,7 @@ func (dec FreeInfiniteGasDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (newCtx sdk.Context, err error) {
-	isSingleClobMsgTx, err := clobante.IsSingleClobMsgTx(ctx, tx)
+	isSingleClobMsgTx, err := clobante.IsSingleClobMsgTx(tx)
 	if err != nil {
 		return ctx, err
 	}

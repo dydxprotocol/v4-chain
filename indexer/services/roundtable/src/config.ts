@@ -90,6 +90,9 @@ export const configSchema = {
   LOOPS_INTERVAL_MS_AGGREGATE_TRADING_REWARDS: parseInteger({
     default: THIRTY_SECONDS_IN_MILLISECONDS,
   }),
+  LOOPS_INTERVAL_MS_PERFORM_COMPLIANCE_STATUS_TRANSITIONS: parseInteger({
+    default: ONE_HOUR_IN_MILLISECONDS,
+  }),
 
   // Start delay
   START_DELAY_ENABLED: parseBoolean({ default: true }),
@@ -141,6 +144,7 @@ export const configSchema = {
   MAX_COMPLIANCE_DATA_QUERY_PER_LOOP: parseInteger({ default: 100 }),
   COMPLIANCE_PROVIDER_QUERY_BATCH_SIZE: parseInteger({ default: 100 }),
   COMPLIANCE_PROVIDER_QUERY_DELAY_MS: parseInteger({ default: ONE_SECOND_IN_MILLISECONDS }),
+  CLOSE_ONLY_TO_BLOCKED_DAYS: parseInteger({ default: 7 }),
 
   // Remove old cached order updates
   OLD_CACHED_ORDER_UPDATES_WINDOW_MS: parseInteger({ default: 30 * ONE_SECOND_IN_MILLISECONDS }),

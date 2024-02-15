@@ -207,6 +207,10 @@ import (
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
 	servicemetrics "github.com/skip-mev/slinky/service/metrics"
 	promserver "github.com/skip-mev/slinky/service/servers/prometheus"
+
+	slinkyproposals "github.com/skip-mev/slinky/abci/proposals"
+	"github.com/skip-mev/slinky/abci/strategies/aggregator"
+	voteweighted "github.com/skip-mev/slinky/pkg/math/voteweighted"
 )
 
 var (
@@ -1278,11 +1282,6 @@ func New(
 	app.MountTransientStores(tkeys)
 	app.MountMemoryStores(memKeys)
 
-	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
-	if !appFlags.NonValidatingFullNode {
-		app.initOracle(appOpts)
-	}
-
 	// initialize BaseApp
 	app.SetInitChainer(app.InitChainer)
 	app.setAnteHandler(encodingConfig.TxConfig)
@@ -1293,49 +1292,100 @@ func New(
 	app.SetPrecommiter(app.Precommitter)
 	app.SetPrepareCheckStater(app.PrepareCheckStater)
 
+	strategy := currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper)
+	veCodec := compression.NewCompressionVoteExtensionCodec(
+		compression.NewDefaultVoteExtensionCodec(),
+		compression.NewZLibCompressor(),
+	)
+	extCommitCodec := compression.NewCompressionExtendedCommitCodec(
+		compression.NewDefaultExtendedCommitCodec(),
+		compression.NewZLibCompressor(),
+	)
+	priceUpdateGenerator := priceUpdateGenerator.NewSlinkyPriceUpdateGenerator(
+		aggregator.NewDefaultVoteAggregator(
+			logger,
+			voteweighted.MedianFromContext(
+				logger,
+				app.StakingKeeper,
+				baseapp.VoteExtensionThreshold,
+			),
+			strategy,
+		),
+		extCommitCodec,
+		veCodec,
+		strategy,
+	)
+
+	var dydxPrepareProposalHandler sdk.PrepareProposalHandler
 	// PrepareProposal setup.
 	if appFlags.NonValidatingFullNode {
-		app.SetPrepareProposal(prepare.FullNodePrepareProposalHandler())
+		dydxPrepareProposalHandler = prepare.FullNodePrepareProposalHandler()
 	} else {
-		app.SetPrepareProposal(
-			prepare.PrepareProposalHandler(
-				txConfig,
-				app.BridgeKeeper,
-				app.ClobKeeper,
-				app.PerpetualsKeeper,
-				priceUpdateGenerator.NewDefaultPriceUpdateGenerator(app.PricesKeeper),
-			),
+		// setup slinky prepare-proposal handler
+		dydxPrepareProposalHandler = prepare.PrepareProposalHandler(
+			txConfig,
+			app.BridgeKeeper,
+			app.ClobKeeper,
+			app.PerpetualsKeeper,
+			priceUpdateGenerator,
 		)
 	}
 
+	priceUpdateDecoder := process.NewSlinkyMarketPriceDecoder(
+		process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.txConfig.TxDecoder()),
+		priceUpdateGenerator,
+	)
+
+	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
+	var oracleMetrics servicemetrics.Metrics
+	if !appFlags.NonValidatingFullNode {
+		oracleMetrics = app.initOracle(appOpts, priceUpdateDecoder)
+	}
+
+	if oracleMetrics == nil {
+		oracleMetrics = servicemetrics.NewNopMetrics()
+	}
+
 	// ProcessProposal setup.
+	var dydxProcessProposalHandler sdk.ProcessProposalHandler
 	if appFlags.NonValidatingFullNode {
 		// Note: If the command-line flag `--non-validating-full-node` is enabled, this node will use
 		// an implementation of `ProcessProposal` which always returns `abci.ResponseProcessProposal_ACCEPT`.
 		// Full-nodes do not participate in consensus, and therefore should not participate in voting / `ProcessProposal`.
-		app.SetProcessProposal(
-			process.FullNodeProcessProposalHandler(
-				txConfig,
-				app.BridgeKeeper,
-				app.ClobKeeper,
-				app.StakingKeeper,
-				app.PerpetualsKeeper,
-				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
-			),
+		dydxProcessProposalHandler = process.FullNodeProcessProposalHandler(
+			txConfig,
+			app.BridgeKeeper,
+			app.ClobKeeper,
+			app.StakingKeeper,
+			app.PerpetualsKeeper,
+			priceUpdateDecoder,
 		)
 	} else {
-		app.SetProcessProposal(
-			process.ProcessProposalHandler(
-				txConfig,
-				app.BridgeKeeper,
-				app.ClobKeeper,
-				app.StakingKeeper,
-				app.PerpetualsKeeper,
-				app.PricesKeeper,
-				process.NewDefaultUpdateMarketPriceTxDecoder(app.PricesKeeper, app.TxConfig().TxDecoder()),
-			),
+		dydxProcessProposalHandler = process.ProcessProposalHandler(
+			txConfig,
+			app.BridgeKeeper,
+			app.ClobKeeper,
+			app.StakingKeeper,
+			app.PerpetualsKeeper,
+			app.PricesKeeper,
+			priceUpdateDecoder,
 		)
 	}
+
+	proposalHandler := slinkyproposals.NewProposalHandler(
+		logger,
+		dydxPrepareProposalHandler,
+		dydxProcessProposalHandler,
+		ve.NewDefaultValidateVoteExtensionsFn(app.ChainID(), app.StakingKeeper),
+		veCodec,
+		extCommitCodec,
+		strategy,
+		oracleMetrics,
+		slinkyproposals.RetainOracleDataInWrappedProposalHandler(),
+	)
+
+	app.SetPrepareProposal(proposalHandler.PrepareProposalHandler())
+	app.SetProcessProposal(proposalHandler.ProcessProposalHandler())
 
 	// Note that panics from out of gas errors won't get logged, since the `OutOfGasMiddleware` is added in front of this,
 	// so error will get handled by that middleware and subsequent middlewares won't get executed.
@@ -1385,7 +1435,7 @@ func New(
 	return app
 }
 
-func (app *App) initOracle(appOpts servertypes.AppOptions) {
+func (app *App) initOracle(appOpts servertypes.AppOptions, pricesTxDecoder process.UpdateMarketPriceTxDecoder) servicemetrics.Metrics {
 	// Slinky setup
 	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
 	if err != nil {
@@ -1437,7 +1487,7 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		app.Logger().Info("started oracle client", "address", cfg.OracleAddress)
 	}()
 	// Vote Extension setup.
-	voteExtensionsHandler := ve.NewVoteExtensionHandler(
+	slinkyVoteExtensionsHandler := ve.NewVoteExtensionHandler(
 		app.Logger(),
 		app.oracleClient,
 		time.Second,
@@ -1450,8 +1500,16 @@ func (app *App) initOracle(appOpts servertypes.AppOptions) {
 		oracleMetrics,
 	)
 
-	app.SetExtendVoteHandler(voteExtensionsHandler.ExtendVoteHandler())
-	app.SetVerifyVoteExtensionHandler(voteExtensionsHandler.VerifyVoteExtensionHandler())
+	dydxExtendVoteHandler := vote_extensions.ExtendVoteHandler{
+		SlinkyExtendVoteHandler: slinkyVoteExtensionsHandler.ExtendVoteHandler(),
+		PricesTxDecoder:         pricesTxDecoder,
+		PricesKeeper:            app.PricesKeeper,
+	}
+
+	app.SetExtendVoteHandler(dydxExtendVoteHandler.ExtendVoteHandler())
+	app.SetVerifyVoteExtensionHandler(slinkyVoteExtensionsHandler.VerifyVoteExtensionHandler())
+
+	return oracleMetrics
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
