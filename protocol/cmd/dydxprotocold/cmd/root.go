@@ -38,7 +38,6 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
@@ -431,7 +430,7 @@ func appExport(
 var tempDir = func() string {
 	dir, err := os.MkdirTemp("", "dydxprotocol")
 	if err != nil {
-		dir = app.DefaultNodeHome
+		dir = dydxapp.DefaultNodeHome
 	}
 	defer os.RemoveAll(dir)
 
