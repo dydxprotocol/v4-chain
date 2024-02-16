@@ -1,12 +1,13 @@
 package indexer_manager
 
 import (
+	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
+	"encoding/binary"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 )
@@ -15,37 +16,44 @@ const (
 	// TransientStoreKey is the transient store key for indexer events.
 	TransientStoreKey = "transient_indexer_events"
 
-	// IndexerEventsKey is the key to retrieve the indexer events
-	// within the last block.
-	IndexerEventsKey = "IndexerEvents"
+	// IndexerEventsCountKey is the key to retrieve the count of the indexer events
+	// within the last block. Each individual event is stored at a big endian encoded
+	// uint32 starting from 0 upto and not including count.
+	IndexerEventsCountKey = "c"
+	IndexerEventsPrefix   = "e"
 
 	ModuleName = "indexer_events"
 )
 
-func getIndexerEvents(ctx sdk.Context, storeKey storetypes.StoreKey) []*IndexerTendermintEventWrapper {
-	// This is necessary to prevent GasConsumed from being incremented when indexer events are recorded.
-	// Without this, consensus failure would occur due to lastResultsHash mismatch from different gas costs.
-	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
+func getIndexerEventsCount(noGasCtx sdk.Context, store storetypes.KVStore) uint32 {
+	countsBytes := store.Get([]byte(IndexerEventsCountKey))
+	if countsBytes == nil {
+		return 0
+	}
+	return binary.BigEndian.Uint32(countsBytes)
+}
+
+func getIndexerEvents(noGasCtx sdk.Context, storeKey storetypes.StoreKey) []*IndexerTendermintEventWrapper {
 	store := noGasCtx.TransientStore(storeKey)
-	indexerEventsSliceBytes := store.Get([]byte(IndexerEventsKey))
-	if indexerEventsSliceBytes == nil {
-		return []*IndexerTendermintEventWrapper{}
+	count := getIndexerEventsCount(noGasCtx, store)
+	events := make([]*IndexerTendermintEventWrapper, count)
+	store = prefix.NewStore(store, []byte(IndexerEventsPrefix))
+	for i := uint32(0); i < count; i++ {
+		var event IndexerTendermintEventWrapper
+		bytes := store.Get(lib.Uint32ToKey(i))
+		if err := proto.Unmarshal(bytes, &event); err != nil {
+			panic(err)
+		}
+		events[i] = &event
 	}
-	var events IndexerEventsStoreValue
-	unmarshaler := &common.UnmarshalerImpl{}
-	err := unmarshaler.Unmarshal(indexerEventsSliceBytes, &events)
-	if err != nil {
-		panic(err)
-	}
-	return events.Events
+	return events
 }
 
 // GetBytes returns the marshaled bytes of the event message.
 func GetBytes(
 	eventMessage proto.Message,
 ) []byte {
-	marshaler := &common.MarshalerImpl{}
-	eventMessageBytes, err := marshaler.Marshal(eventMessage)
+	eventMessageBytes, err := proto.Marshal(eventMessage)
 	if err != nil {
 		panic(err)
 	}
@@ -101,18 +109,15 @@ func addEvent(
 	storeKey storetypes.StoreKey,
 ) {
 	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
-	indexerEvents := getIndexerEvents(noGasCtx, storeKey)
-	indexerEvents = append(indexerEvents, &event)
-	newEventsValue := IndexerEventsStoreValue{
-		Events: indexerEvents,
-	}
-	marshaler := &common.MarshalerImpl{}
-	newEventsValueBytes, err := marshaler.Marshal(&newEventsValue)
+	store := noGasCtx.TransientStore(storeKey)
+	count := getIndexerEventsCount(noGasCtx, store)
+	b, err := proto.Marshal(&event)
 	if err != nil {
 		panic(err)
 	}
-	store := noGasCtx.TransientStore(storeKey)
-	store.Set([]byte(IndexerEventsKey), newEventsValueBytes)
+	store.Set([]byte(IndexerEventsCountKey), lib.Uint32ToKey(count+1))
+	store = prefix.NewStore(store, []byte(IndexerEventsPrefix))
+	store.Set(lib.Uint32ToKey(count), b)
 }
 
 // clearEvents clears events in the context's transient store of indexer events.
@@ -122,7 +127,7 @@ func clearEvents(
 ) {
 	noGasCtx := ctx.WithGasMeter(ante_types.NewFreeInfiniteGasMeter())
 	store := noGasCtx.TransientStore(storeKey)
-	store.Delete([]byte(IndexerEventsKey))
+	store.Delete([]byte(IndexerEventsCountKey))
 }
 
 // produceBlock returns the block. It should only be called in EndBlocker when the

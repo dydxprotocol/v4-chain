@@ -3,6 +3,7 @@ package keeper
 import (
 	"fmt"
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -10,7 +11,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -195,9 +195,8 @@ func GetLiquidityTierUpsertEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeLiquidityTier {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var liquidityTierEvent indexerevents.LiquidityTierUpsertEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &liquidityTierEvent)
+		err := proto.Unmarshal(event.DataBytes, &liquidityTierEvent)
 		if err != nil {
 			panic(err)
 		}
