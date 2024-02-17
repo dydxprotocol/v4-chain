@@ -22,7 +22,8 @@ const RAW_TABLE_COLUMNS: string = `
   \`goodTilBlock\` bigint,
   \`goodTilBlockTime\` string,
   \`createdAtHeight\` bigint,
-  \`clientMetadata\` bigint
+  \`clientMetadata\` bigint,
+  \`triggerPrice\` string
 `;
 const TABLE_COLUMNS: string = `
   "id",
@@ -41,7 +42,8 @@ const TABLE_COLUMNS: string = `
   "goodTilBlock",
   goodTilBlockTime,
   "createdAtHeight",
-  "clientMetadata"
+  "clientMetadata",
+  ${castToDouble('triggerPrice')},
 `;
 
 export function generateRawTable(tablePrefix: string, rdsExportIdentifier: string): string {
