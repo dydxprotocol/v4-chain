@@ -26,6 +26,7 @@ export async function sendRequestToApp({
   errorMsg,
   expressApp,
   expectedStatus = 200,
+  headers = {},
 }: {
   type: RequestMethod,
   path: string,
@@ -33,6 +34,7 @@ export async function sendRequestToApp({
   errorMsg?: string,
   expressApp: e.Express,
   expectedStatus?: number,
+  headers?: Record<string, string>,
 }) {
   let req: request.Test;
 
@@ -51,6 +53,10 @@ export async function sendRequestToApp({
       break;
     default:
       throw new Error(`Invalid type of request: ${type}`);
+  }
+
+  if (Object.keys(headers).length) {
+    await req.set(headers);
   }
 
   const response: request.Response = await req.send(body);
