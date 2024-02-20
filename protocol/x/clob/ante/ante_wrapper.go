@@ -27,7 +27,7 @@ func (anteWrapper SingleMsgClobTxAnteWrapper) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	isSingleClobMsgTx, err := IsSingleClobMsgTx(ctx, tx)
+	isSingleClobMsgTx, err := IsSingleClobMsgTx(tx)
 	if err != nil {
 		return ctx, err
 	}

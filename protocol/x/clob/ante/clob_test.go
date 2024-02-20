@@ -283,10 +283,9 @@ func TestIsClobTransaction(t *testing.T) {
 			err := builder.SetMsgs(tc.msgs...)
 			require.NoError(t, err)
 			tx := builder.GetTx()
-			ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 
 			// Invoke the function under test.
-			result, err := ante.IsSingleClobMsgTx(ctx, tx)
+			result, err := ante.IsSingleClobMsgTx(tx)
 
 			// Assert the results.
 			require.Equal(t, tc.expectedResult, result)

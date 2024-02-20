@@ -6,6 +6,7 @@ import {
   ComplianceStatusFromDatabase,
   ComplianceStatusTable,
   ComplianceStatus,
+  ComplianceStatusUpsertObject,
 } from '@dydxprotocol-indexer/postgres';
 
 import config from '../config';
@@ -38,19 +39,21 @@ export default async function runTask(): Promise<void> {
   );
 
   // Update addresses status to BLOCKED
-  const updatedAddresses: ComplianceStatusFromDatabase[] = await Promise.all(
-    addressesToUpdate.map((address) => ComplianceStatusTable.update({
-      address,
-      status: ComplianceStatus.BLOCKED,
-      updatedAt: new Date().toISOString(),
-    }),
-    ),
-  ) as ComplianceStatusFromDatabase[];
+  const complianceStatusUpsertObjects: ComplianceStatusUpsertObject[] = addressesToUpdate
+    .reduce(
+      (acc: ComplianceStatusUpsertObject[], address: string) => {
+        acc.push({
+          address,
+          status: ComplianceStatus.BLOCKED,
+          updatedAt: new Date().toISOString(),
+        });
+        return acc;
+      }, []);
+  await ComplianceStatusTable.bulkUpsert(complianceStatusUpsertObjects);
 
   stats.timing(
     `${config.SERVICE_NAME}.update_stale_close_only.timing`,
     Date.now() - updateStart,
   );
-  stats.gauge(`${config.SERVICE_NAME}.num_stale_close_only.count`, addressesToUpdate.length);
-  stats.gauge(`${config.SERVICE_NAME}.num_stale_close_only_updated.count`, updatedAddresses.length);
+  stats.gauge(`${config.SERVICE_NAME}.num_stale_close_only_updated.count`, addressesToUpdate.length);
 }

@@ -1,7 +1,18 @@
-import { ComplianceStatus, ComplianceStatusFromDatabase } from '../../src/types';
+import {
+  ComplianceStatus,
+  ComplianceStatusFromDatabase,
+  ComplianceDataColumns,
+  Ordering,
+  ComplianceStatusUpsertObject,
+} from '../../src/types';
 import * as ComplianceStatusTable from '../../src/stores/compliance-status-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
-import { compliantStatusData, defaultAddress, noncompliantStatusData } from '../helpers/constants';
+import {
+  compliantStatusData,
+  defaultAddress,
+  noncompliantStatusData,
+  noncompliantStatusUpsertData,
+} from '../helpers/constants';
 import { DateTime } from 'luxon';
 
 describe('Compliance status store', () => {
@@ -130,7 +141,7 @@ describe('Compliance status store', () => {
   });
 
   it('Successfully upserts a new compliance status', async () => {
-    await ComplianceStatusTable.upsert(noncompliantStatusData);
+    await ComplianceStatusTable.upsert(noncompliantStatusUpsertData);
 
     const complianceStatus: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll(
       {},
@@ -138,20 +149,15 @@ describe('Compliance status store', () => {
       { readReplica: true },
     );
     expect(complianceStatus.length).toEqual(1);
-    expect(complianceStatus[0]).toEqual(noncompliantStatusData);
+    expect(complianceStatus[0]).toEqual(expect.objectContaining(noncompliantStatusUpsertData));
   });
 
   it('Successfully upserts an existing compliance status', async () => {
-    await ComplianceStatusTable.upsert(noncompliantStatusData);
-
-    const updatedTime: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt!,
-    ).plus({ minutes: 10 }).toUTC().toISO();
+    await ComplianceStatusTable.upsert(noncompliantStatusUpsertData);
 
     await ComplianceStatusTable.upsert({
-      ...noncompliantStatusData,
+      ...noncompliantStatusUpsertData,
       status: ComplianceStatus.CLOSE_ONLY,
-      updatedAt: updatedTime,
     });
 
     const updatedComplianceStatus: ComplianceStatusFromDatabase[] = await
@@ -163,37 +169,34 @@ describe('Compliance status store', () => {
       { readReplica: true },
     );
     expect(updatedComplianceStatus.length).toEqual(1);
-    expect(updatedComplianceStatus[0]).toEqual({
-      ...noncompliantStatusData,
-      status: ComplianceStatus.CLOSE_ONLY,
-      updatedAt: updatedTime,
-    });
+    expect(updatedComplianceStatus[0]).toEqual(
+      expect.objectContaining({
+        ...noncompliantStatusUpsertData,
+        status: ComplianceStatus.CLOSE_ONLY,
+      }),
+    );
   });
 
   it('Successfully bulk upserts compliance status', async () => {
-    await ComplianceStatusTable.create(noncompliantStatusData);
-
-    const updatedTime1: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt!,
-    ).plus({ minutes: 10 }).toUTC().toISO();
-    const updatedTime2: string = DateTime.fromISO(
-      noncompliantStatusData.createdAt!,
-    ).plus({ minutes: 20 }).toUTC().toISO();
+    const compliantUpsertStatusData: ComplianceStatusUpsertObject = {
+      address: defaultAddress,
+      status: ComplianceStatus.COMPLIANT,
+      updatedAt: DateTime.utc().toISO(),
+    };
+    await ComplianceStatusTable.create(noncompliantStatusUpsertData);
     const otherAddress: string = '0x123456789abcdef';
 
     await ComplianceStatusTable.bulkUpsert(
       [
-        compliantStatusData,
+        compliantUpsertStatusData,
         {
-          ...noncompliantStatusData,
+          ...noncompliantStatusUpsertData,
           status: ComplianceStatus.FIRST_STRIKE,
-          updatedAt: updatedTime1,
         },
         {
-          ...noncompliantStatusData,
+          ...noncompliantStatusUpsertData,
           address: otherAddress,
           status: ComplianceStatus.COMPLIANT,
-          updatedAt: updatedTime2,
         },
       ],
     );
@@ -201,26 +204,26 @@ describe('Compliance status store', () => {
     const complianceStatus = await ComplianceStatusTable.findAll(
       {},
       [],
-      { readReplica: true },
+      {
+        orderBy: [[ComplianceDataColumns.address, Ordering.DESC]],
+      },
     );
 
     expect(complianceStatus.length).toEqual(3);
     expect(complianceStatus).toEqual(expect.arrayContaining([
-      {
-        ...compliantStatusData,
+      expect.objectContaining({
+        ...compliantUpsertStatusData,
         reason: null,
-      },
-      {
-        ...noncompliantStatusData,
+      }),
+      expect.objectContaining({
+        ...noncompliantStatusUpsertData,
         status: ComplianceStatus.FIRST_STRIKE,
-        updatedAt: updatedTime1,
-      },
-      {
-        ...noncompliantStatusData,
+      }),
+      expect.objectContaining({
+        ...noncompliantStatusUpsertData,
         address: otherAddress,
         status: ComplianceStatus.COMPLIANT,
-        updatedAt: updatedTime2,
-      },
+      }),
     ]));
   });
 });

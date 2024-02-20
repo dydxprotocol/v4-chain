@@ -85,12 +85,14 @@ func NewRootCmdWithInterceptors(
 	appConfigInterceptor func(string, *DydxAppConfig) (string, *DydxAppConfig),
 	appInterceptor func(app *dydxapp.App) *dydxapp.App,
 ) *cobra.Command {
+	initAppOptions := viper.New()
+	initAppOptions.Set(flags.FlagHome, tempDir())
 	tempApp := dydxapp.New(
 		log.NewNopLogger(),
 		dbm.NewMemDB(),
 		nil,
 		true,
-		viper.New(),
+		initAppOptions,
 	)
 	defer func() {
 		if err := tempApp.Close(); err != nil {
@@ -117,6 +119,7 @@ func NewRootCmdWithInterceptors(
 			cmd.SetOut(cmd.OutOrStdout())
 			cmd.SetErr(cmd.ErrOrStderr())
 
+			initClientCtx = initClientCtx.WithCmdContext(cmd.Context()).WithViper("")
 			initClientCtx, err := client.ReadPersistentCommandFlags(initClientCtx, cmd.Flags())
 			if err != nil {
 				return err
@@ -160,7 +163,7 @@ func NewRootCmdWithInterceptors(
 	}
 
 	initRootCmd(tempApp, rootCmd, option, appInterceptor)
-	initClientCtx, err := config.ReadFromClientConfig(initClientCtx)
+	initClientCtx, err := config.ReadDefaultValuesFromDefaultClientConfig(initClientCtx)
 	if err != nil {
 		panic(err)
 	}
@@ -422,4 +425,14 @@ func appExport(
 	}
 
 	return dydxApp.ExportAppStateAndValidators(forZeroHeight, jailAllowedAddrs, modulesToExport)
+}
+
+var tempDir = func() string {
+	dir, err := os.MkdirTemp("", "dydxprotocol")
+	if err != nil {
+		dir = dydxapp.DefaultNodeHome
+	}
+	defer os.RemoveAll(dir)
+
+	return dir
 }

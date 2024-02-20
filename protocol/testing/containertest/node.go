@@ -3,8 +3,9 @@ package containertest
 import (
 	"context"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app"
 
 	comethttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
