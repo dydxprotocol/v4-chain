@@ -3,6 +3,7 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
+import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -77,6 +78,7 @@ export class Subscriptions {
     messageId: number,
     id?: string,
     batched?: boolean,
+    country?: string,
   ): Promise<void> {
     if (this.forwardMessage === undefined) {
       throw new Error('Unexpected error, subscription object is uninitialized.');
@@ -129,7 +131,7 @@ export class Subscriptions {
     let initialResponse: string;
     const startGetInitialResponse: number = Date.now();
     try {
-      initialResponse = await this.getInitialResponsesForChannels(channel, id);
+      initialResponse = await this.getInitialResponsesForChannels(channel, id, country);
     } catch (error) {
       logger.info({
         at: 'Subscription#subscribe',
@@ -483,10 +485,12 @@ export class Subscriptions {
 
   private async getInitialResponseForSubaccountSubscription(
     id?: string,
+    country?: string,
   ): Promise<string> {
     if (id === undefined) {
       throw new Error('Invalid undefined id');
     }
+
     try {
       const {
         address,
@@ -507,6 +511,9 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/addresses/${address}/subaccountNumber/${subaccountNumber}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
           transformResponse: (res) => res,
         }),
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
@@ -514,6 +521,9 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
           transformResponse: (res) => res,
         }),
       ]);
@@ -571,9 +581,10 @@ export class Subscriptions {
   private async getInitialResponsesForChannels(
     channel: Channel,
     id?: string,
+    country?: string,
   ): Promise<string> {
     if (channel === Channel.V4_ACCOUNTS) {
-      return this.getInitialResponseForSubaccountSubscription(id);
+      return this.getInitialResponseForSubaccountSubscription(id, country);
     }
     const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
     // If no endpoint exists, return an empty initial response.
@@ -585,6 +596,9 @@ export class Subscriptions {
       method: RequestMethod.GET,
       url: endpoint,
       timeout: config.INITIAL_GET_TIMEOUT_MS,
+      headers: {
+        'cf-ipcountry': country,
+      },
       transformResponse: (res) => res, // Disables JSON parsing
     });
   }

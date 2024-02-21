@@ -102,6 +102,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
+        nonRestrictedCountry,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -121,6 +122,9 @@ describe('Subscriptions', () => {
         for (const urlPattern of urlPatterns) {
           expect(axiosRequestMock).toHaveBeenCalledWith(expect.objectContaining({
             url: expect.stringMatching(RegExp(urlPattern)),
+            headers: {
+              'cf-ipcountry': nonRestrictedCountry,
+            },
           }));
         }
       } else {
@@ -245,31 +249,6 @@ describe('Subscriptions', () => {
         mockSubaccountId,
         false,
         nonRestrictedCountry,
-      );
-
-      expect(sendMessageMock).toHaveBeenCalledTimes(1);
-      expect(sendMessageMock).toHaveBeenCalledWith(
-        mockWs,
-        connectionId,
-        expect.objectContaining({
-          connection_id: connectionId,
-          type: 'error',
-          message: expectedError.message,
-        }));
-      expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
-      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
-    });
-
-    it('sends blocked error if subscribing to subaccount from restricted country', async () => {
-      const expectedError: BlockedError = new BlockedError();
-      await subscriptions.subscribe(
-        mockWs,
-        Channel.V4_ACCOUNTS,
-        connectionId,
-        initialMsgId,
-        mockSubaccountId,
-        false,
-        restrictedCountry,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
