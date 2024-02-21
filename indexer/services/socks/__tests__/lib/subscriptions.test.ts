@@ -57,8 +57,7 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
   };
   const initialMessage: Object = { a: 'b' };
-  const restrictedCountry: string = 'US';
-  const nonRestrictedCountry: string = 'AR';
+  const country: string = 'AR';
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -102,7 +101,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        nonRestrictedCountry,
+        country,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -123,7 +122,7 @@ describe('Subscriptions', () => {
           expect(axiosRequestMock).toHaveBeenCalledWith(expect.objectContaining({
             url: expect.stringMatching(RegExp(urlPattern)),
             headers: {
-              'cf-ipcountry': nonRestrictedCountry,
+              'cf-ipcountry': country,
             },
           }));
         }
@@ -248,7 +247,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
+        country,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -275,7 +274,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
+        country,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -312,7 +311,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        nonRestrictedCountry,
+        country,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -332,7 +331,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
+        country,
       );
       subscriptions.unsubscribe(
         connectionId,

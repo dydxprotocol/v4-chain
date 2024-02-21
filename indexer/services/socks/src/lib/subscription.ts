@@ -3,7 +3,6 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
