@@ -9,7 +9,7 @@ import express from 'express';
 import { matchedData } from 'express-validator';
 import { DateTime } from 'luxon';
 import {
-  Controller, Get, Query, Route,
+  Controller, Get, Path, Route,
 } from 'tsoa';
 
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
@@ -19,6 +19,7 @@ import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { getIpAddr } from '../../../lib/utils';
+import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { ComplianceRequest, ComplianceV2Response } from '../../../types';
@@ -38,7 +39,7 @@ class ComplianceV2Controller extends Controller {
 
   @Get('/screen/:address')
   async screen(
-    @Query() address: string,
+    @Path() address: string,
   ): Promise<ComplianceV2Response> {
     const controller: ComplianceControllerHelper = new ComplianceControllerHelper(this.ipAddress);
     const {
@@ -96,6 +97,7 @@ class ComplianceV2Controller extends Controller {
 router.get(
   '/screen/:address',
   rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckAddressSchema,
   handleValidationErrors,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
