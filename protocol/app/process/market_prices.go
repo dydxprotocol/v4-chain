@@ -63,7 +63,7 @@ func (umpt *UpdateMarketPricesTx) Validate() error {
 		return getValidateBasicError(umpt.msg, err)
 	}
 
-	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.msg, true); err != nil {
+	if err := umpt.pricesKeeper.PerformStatefulPriceUpdateValidation(umpt.ctx, umpt.msg, false); err != nil {
 		return err
 	}
 
