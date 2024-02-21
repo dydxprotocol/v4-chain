@@ -3,7 +3,6 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -78,7 +77,6 @@ export class Subscriptions {
     messageId: number,
     id?: string,
     batched?: boolean,
-    country?: string,
   ): Promise<void> {
     if (this.forwardMessage === undefined) {
       throw new Error('Unexpected error, subscription object is uninitialized.');
@@ -131,7 +129,7 @@ export class Subscriptions {
     let initialResponse: string;
     const startGetInitialResponse: number = Date.now();
     try {
-      initialResponse = await this.getInitialResponsesForChannels(channel, id, country);
+      initialResponse = await this.getInitialResponsesForChannels(channel, id);
     } catch (error) {
       logger.info({
         at: 'Subscription#subscribe',
@@ -485,19 +483,10 @@ export class Subscriptions {
 
   private async getInitialResponseForSubaccountSubscription(
     id?: string,
-    country?: string,
   ): Promise<string> {
     if (id === undefined) {
       throw new Error('Invalid undefined id');
     }
-
-    // TODO(IND-508): Change this to match technical spec for persistent geo-blocking. This may
-    // either have to replicate any blocking logic added on comlink, or re-direct to comlink to
-    // determine if subscribing to a specific subaccount is blocked.
-    if (country !== undefined && isRestrictedCountry(country)) {
-      throw new BlockedError();
-    }
-
     try {
       const {
         address,
@@ -582,10 +571,9 @@ export class Subscriptions {
   private async getInitialResponsesForChannels(
     channel: Channel,
     id?: string,
-    country?: string,
   ): Promise<string> {
     if (channel === Channel.V4_ACCOUNTS) {
-      return this.getInitialResponseForSubaccountSubscription(id, country);
+      return this.getInitialResponseForSubaccountSubscription(id);
     }
     const endpoint: string | undefined = this.getInitialEndpointForSubscription(channel, id);
     // If no endpoint exists, return an empty initial response.

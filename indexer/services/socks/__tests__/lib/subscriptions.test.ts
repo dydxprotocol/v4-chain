@@ -10,7 +10,6 @@ import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
 import { AxiosSafeServerError, makeAxiosSafeServerError } from '@dydxprotocol-indexer/base';
 import { BlockedError } from '../../src/lib/errors';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 
 jest.mock('ws');
 jest.mock('../../src/helpers/wss');
@@ -83,9 +82,6 @@ describe('Subscriptions', () => {
     axiosRequestMock = (axiosRequest as jest.Mock);
     axiosRequestMock.mockClear();
     axiosRequestMock.mockImplementation(() => (JSON.stringify(initialMessage)));
-    (isRestrictedCountry as jest.Mock).mockImplementation((country: string): boolean => {
-      return country === restrictedCountry;
-    });
   });
 
   describe('subscribe', () => {
@@ -106,7 +102,6 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        nonRestrictedCountry,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -150,7 +145,6 @@ describe('Subscriptions', () => {
           initialMsgId,
           id,
           false,
-          nonRestrictedCountry,
         );
 
         expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -179,7 +173,6 @@ describe('Subscriptions', () => {
             initialMsgId,
             defaultId,
             false,
-            nonRestrictedCountry,
           );
         },
       ).rejects.toEqual(new Error(`Invalid channel: ${invalidChannel}`));
@@ -194,7 +187,6 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -217,7 +209,6 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -386,7 +377,6 @@ describe('Subscriptions', () => {
           initialMsgId,
           validIds[channel],
           false,
-          nonRestrictedCountry,
         );
       }));
 
