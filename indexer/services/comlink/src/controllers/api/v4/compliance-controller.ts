@@ -28,7 +28,7 @@ const UNCACHED_QUERY_POINTS: number = 1;
 const GLOBAL_RATE_LIMIT_KEY: string = 'screenQueryProviderGlobal';
 
 @Route('screen')
-class ComplianceController extends Controller {
+export class ComplianceControllerHelper extends Controller {
   private ipAddress: string;
 
   constructor(ipAddress: string) {
@@ -122,7 +122,7 @@ router.get(
       // Rate limiter middleware ensures the ip address can be found from the request
       const ipAddress: string = getIpAddr(req)!;
 
-      const controller: ComplianceController = new ComplianceController(ipAddress);
+      const controller: ComplianceControllerHelper = new ComplianceControllerHelper(ipAddress);
       const response: ComplianceResponse = await controller.screen(address);
 
       return res.send(response);

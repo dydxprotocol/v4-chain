@@ -444,7 +444,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/screen', params={
+r = requests.get('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}', params={
   'address': 'string'
 }, headers = headers)
 
@@ -458,7 +458,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
+fetch('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}?address=string',
 {
   method: 'GET',
 
@@ -472,7 +472,7 @@ fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
 
 ```
 
-`GET /screen`
+`GET /compliance/screen/{address}`
 
 ### Parameters
 
@@ -486,8 +486,8 @@ fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
 
 ```json
 {
-  "restricted": true,
-  "reason": "string"
+  "status": "COMPLIANT",
+  "reason": "MANUAL"
 }
 ```
 
@@ -495,7 +495,7 @@ fetch('https://dydx-testnet.imperator.co/v4/screen?address=string',
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ComplianceResponse](#schemacomplianceresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ComplianceV2Response](#schemacompliancev2response)|
 
 <aside class="success">
 This operation does not require authentication
@@ -2408,6 +2408,83 @@ This operation does not require authentication
 |---|---|---|---|---|
 |restricted|boolean|true|none|none|
 |reason|string|false|none|none|
+
+## ComplianceStatus
+
+<a id="schemacompliancestatus"></a>
+<a id="schema_ComplianceStatus"></a>
+<a id="tocScompliancestatus"></a>
+<a id="tocscompliancestatus"></a>
+
+```json
+"COMPLIANT"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|COMPLIANT|
+|*anonymous*|FIRST_STRIKE|
+|*anonymous*|CLOSE_ONLY|
+|*anonymous*|BLOCKED|
+
+## ComplianceReason
+
+<a id="schemacompliancereason"></a>
+<a id="schema_ComplianceReason"></a>
+<a id="tocScompliancereason"></a>
+<a id="tocscompliancereason"></a>
+
+```json
+"MANUAL"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|MANUAL|
+|*anonymous*|US_GEO|
+|*anonymous*|CA_GEO|
+|*anonymous*|SANCTIONED_GEO|
+|*anonymous*|COMPLIANCE_PROVIDER|
+
+## ComplianceV2Response
+
+<a id="schemacompliancev2response"></a>
+<a id="schema_ComplianceV2Response"></a>
+<a id="tocScompliancev2response"></a>
+<a id="tocscompliancev2response"></a>
+
+```json
+{
+  "status": "COMPLIANT",
+  "reason": "MANUAL"
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|status|[ComplianceStatus](#schemacompliancestatus)|true|none|none|
+|reason|[ComplianceReason](#schemacompliancereason)|false|none|none|
 
 ## OrderSide
 

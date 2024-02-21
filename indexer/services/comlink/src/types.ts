@@ -4,7 +4,7 @@ import {
   AssetFromDatabase,
   CandleColumns,
   CandleFromDatabase,
-  CandleResolution,
+  CandleResolution, ComplianceReason, ComplianceStatus,
   FillType,
   IsoString,
   Liquidity,
@@ -401,6 +401,11 @@ export interface ComplianceRequest extends AddressRequest {}
 export enum BlockedCode {
   GEOBLOCKED = 'GEOBLOCKED',
   COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
+}
+
+export interface ComplianceV2Response {
+  status: ComplianceStatus;
+  reason?: ComplianceReason;
 }
 
 /* ------- HISTORICAL TRADING REWARD TYPES ------- */

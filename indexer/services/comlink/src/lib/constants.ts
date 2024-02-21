@@ -26,3 +26,5 @@ Record<SparklineTimePeriod, CandleResolution> = {
   [SparklineTimePeriod.ONE_DAY]: CandleResolution.ONE_HOUR,
   [SparklineTimePeriod.SEVEN_DAYS]: CandleResolution.FOUR_HOURS,
 };
+
+export const DYDX_ADDRESS_PREFIX: string = 'dydx';
