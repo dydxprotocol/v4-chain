@@ -400,6 +400,11 @@ export interface ComplianceResponse {
 
 export interface ComplianceRequest extends AddressRequest {}
 
+export interface SetComplianceStatusRequest extends AddressRequest {
+  status: ComplianceStatus;
+  reason?: ComplianceReason;
+}
+
 export enum BlockedCode {
   GEOBLOCKED = 'GEOBLOCKED',
   COMPLIANCE_BLOCKED = 'COMPLIANCE_BLOCKED',
