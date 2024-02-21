@@ -172,12 +172,7 @@ require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
-<<<<<<< HEAD
-	github.com/getsentry/sentry-go v0.25.0 // indirect
-=======
 	github.com/getsentry/sentry-go v0.27.0 // indirect
-	github.com/ghostiam/protogetter v0.2.3 // indirect
->>>>>>> b33b88c3 (Upgrade forks: cosmos v0.50.4 and cometbft v0.38.5 (#1084))
 	github.com/go-critic/go-critic v0.9.0 // indirect
 	github.com/go-kit/kit v0.13.0 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
@@ -308,17 +303,10 @@ require (
 	github.com/petermattis/goid v0.0.0-20230904192822-1876fd5063bc // indirect
 	github.com/pierrec/lz4/v4 v4.1.17 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-<<<<<<< HEAD
-	github.com/polyfloyd/go-errorlint v1.4.4 // indirect
-	github.com/prometheus/client_golang v1.17.0 // indirect
-	github.com/prometheus/client_model v0.5.0 // indirect
-	github.com/prometheus/common v0.45.0 // indirect
-=======
 	github.com/polyfloyd/go-errorlint v1.4.5 // indirect
 	github.com/prometheus/client_golang v1.18.0 // indirect
 	github.com/prometheus/client_model v0.6.0 // indirect
 	github.com/prometheus/common v0.47.0 // indirect
->>>>>>> b33b88c3 (Upgrade forks: cosmos v0.50.4 and cometbft v0.38.5 (#1084))
 	github.com/prometheus/procfs v0.12.0 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.0 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
@@ -330,13 +318,8 @@ require (
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/rs/cors v1.10.1 // indirect
 	github.com/ryancurrah/gomodguard v1.3.0 // indirect
-<<<<<<< HEAD
 	github.com/ryanrolds/sqlclosecheck v0.4.0 // indirect
-	github.com/sagikazarmark/locafero v0.3.0 // indirect
-=======
-	github.com/ryanrolds/sqlclosecheck v0.5.1 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
->>>>>>> b33b88c3 (Upgrade forks: cosmos v0.50.4 and cometbft v0.38.5 (#1084))
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
 	github.com/sasha-s/go-deadlock v0.3.1 // indirect
@@ -429,11 +412,7 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540
 	// Use dYdX fork of Cosmos SDK
-<<<<<<< HEAD
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.4-0.20240214225014-c0bde14212a7
-=======
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-24873b51ad9f
->>>>>>> b33b88c3 (Upgrade forks: cosmos v0.50.4 and cometbft v0.38.5 (#1084))
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
 )
 
 replace (
