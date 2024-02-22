@@ -432,6 +432,7 @@ type TestApp struct {
 	passingCheckTxs    [][]byte
 	passingCheckTxsMtx sync.Mutex
 	halted             bool
+	mtx                sync.RWMutex
 }
 
 func (tApp *TestApp) Builder() TestAppBuilder {
@@ -440,6 +441,9 @@ func (tApp *TestApp) Builder() TestAppBuilder {
 
 // InitChain initializes the chain. Will panic if initialized more than once.
 func (tApp *TestApp) InitChain() sdk.Context {
+	tApp.mtx.Lock()
+	defer tApp.mtx.Unlock()
+
 	if tApp.App != nil {
 		panic(errors.New("Cannot initialize chain that has been initialized already."))
 	}
@@ -668,6 +672,9 @@ func (tApp *TestApp) AdvanceToBlock(
 	block uint32,
 	options AdvanceToBlockOptions,
 ) sdk.Context {
+	tApp.mtx.Lock()
+	defer tApp.mtx.Unlock()
+
 	tApp.panicIfChainIsHalted()
 	tApp.initChainIfNeeded()
 
@@ -680,7 +687,7 @@ func (tApp *TestApp) AdvanceToBlock(
 	if options.BlockTime.UnixNano() < tApp.header.Time.UnixNano() {
 		panic(fmt.Errorf("Expected time (%v) >= current block time (%v).", options.BlockTime, tApp.header.Time))
 	}
-	if int64(block) == tApp.GetBlockHeight() {
+	if int64(block) == tApp.header.Height {
 		return tApp.App.NewContextLegacy(true, tApp.header)
 	}
 
@@ -1038,16 +1045,22 @@ func finalizeBlockAndCommit(
 
 // GetHeader fetches the current header of the test app.
 func (tApp *TestApp) GetHeader() tmproto.Header {
+	tApp.mtx.RLock()
+	defer tApp.mtx.RUnlock()
 	return tApp.header
 }
 
 // GetBlockHeight fetches the current block height of the test app.
 func (tApp *TestApp) GetBlockHeight() int64 {
+	tApp.mtx.RLock()
+	defer tApp.mtx.RUnlock()
 	return tApp.header.Height
 }
 
 // GetHalted fetches the halted flag.
 func (tApp *TestApp) GetHalted() bool {
+	tApp.mtx.RLock()
+	defer tApp.mtx.RUnlock()
 	return tApp.halted
 }
 
@@ -1068,6 +1081,9 @@ func newTestingLogger() cmtlog.Logger {
 //
 // This method is thread-safe.
 func (tApp *TestApp) CheckTx(req abcitypes.RequestCheckTx) abcitypes.ResponseCheckTx {
+	tApp.mtx.RLock()
+	defer tApp.mtx.RUnlock()
+
 	tApp.panicIfChainIsHalted()
 	res, err := tApp.App.CheckTx(&req)
 	// Note that the dYdX fork of CometBFT explicitly excludes place and cancel order messages. See
@@ -1122,6 +1138,9 @@ func (tApp *TestApp) panicIfChainIsHalted() {
 // PrepareProposal creates an abci `RequestPrepareProposal` using the current state of the chain
 // and calls the PrepareProposal handler to return an abci `ResponsePrepareProposal`.
 func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, error) {
+	tApp.mtx.Lock()
+	defer tApp.mtx.Unlock()
+
 	return tApp.App.PrepareProposal(&abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,
@@ -1136,6 +1155,9 @@ func (tApp *TestApp) PrepareProposal() (*abcitypes.ResponsePrepareProposal, erro
 // application for the current block height. This is helpful for testcases where we want to use DeliverTxsOverride
 // to insert new transactions, but preserve the operations that would have been proposed.
 func (tApp *TestApp) GetProposedOperationsTx() []byte {
+	tApp.mtx.Lock()
+	defer tApp.mtx.Unlock()
+
 	request := abcitypes.RequestPrepareProposal{
 		Txs:                tApp.passingCheckTxs,
 		MaxTxBytes:         math.MaxInt64,

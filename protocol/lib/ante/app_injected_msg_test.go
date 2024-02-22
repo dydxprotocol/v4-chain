@@ -1,6 +1,7 @@
 package ante_test
 
 import (
+	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,6 +12,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+)
+
+var (
+	testMsg = &testdata.TestMsg{Signers: []string{"meh"}}
 )
 
 func TestIsSingleAppInjectedMsg(t *testing.T) {
