@@ -532,8 +532,8 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540 h1:pkYQbAdOAAoZBSId9kLupCgZHj8YvA9LzM31fVYpjlw=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540/go.mod h1:REQN+ObgfYxi39TcYR/Hv95C9bPxY3sYJCvghryj7vY=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222172237-75a6d5f7782a h1:XCOQ7T/2RWoSxBM9n73K8/yy/57m3OyWgqUF2Dz3n7Q=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222172237-75a6d5f7782a/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
+github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222221247-6eacec603896 h1:tD6NwPhiMGzM3tKmowrjLnQPDU03ezPWPCEk7D/Dnx0=
+github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222221247-6eacec603896/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
 github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf h1:1S0YnPWIM1uacL73Jx9mZYK0T3uj1qoL2TqwlRtyDpw=
 github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
