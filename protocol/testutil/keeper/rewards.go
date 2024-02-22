@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/gogoproto/proto"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -9,7 +10,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -132,9 +132,8 @@ func GetTradingRewardEventsFromIndexerTendermintBlock(
 		if event.Subtype != indexerevents.SubtypeTradingReward {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var rewardEvent indexerevents.TradingRewardsEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &rewardEvent)
+		err := proto.Unmarshal(event.DataBytes, &rewardEvent)
 		if err != nil {
 			panic(err)
 		}

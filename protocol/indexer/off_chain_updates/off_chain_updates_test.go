@@ -1,7 +1,6 @@
 package off_chain_updates
 
 import (
-	"fmt"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
@@ -10,7 +9,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -271,21 +269,6 @@ func TestNewOrderRemoveMessage(t *testing.T) {
 		*actualUpdate,
 		"Decoded OffchainUpdateV1 value should be equal to the expected OffchainUpdate proto message",
 	)
-}
-
-func TestMarshalOffchainUpdate_MarshalError(t *testing.T) {
-	expectedError := fmt.Errorf("Marshal error")
-	mockMarshaller := mocks.Marshaler{}
-	mockMarshaller.On("Marshal", &offchainUpdateOrderPlace).Return(
-		[]byte{},
-		expectedError,
-	)
-
-	updateBytes, err := marshalOffchainUpdate(offchainUpdateOrderPlace, &mockMarshaller)
-
-	require.Equal(t, []byte{}, updateBytes)
-	require.ErrorContains(t, err, expectedError.Error())
-	require.True(t, mockMarshaller.AssertExpectations(t))
 }
 
 func TestGetOrderIdHash(t *testing.T) {

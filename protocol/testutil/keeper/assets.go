@@ -2,9 +2,9 @@ package keeper
 
 import (
 	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/gogoproto/proto"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -109,9 +109,8 @@ func GetAssetCreateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeAsset {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var assetEvent indexerevents.AssetCreateEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &assetEvent)
+		err := proto.Unmarshal(event.DataBytes, &assetEvent)
 		if err != nil {
 			panic(err)
 		}

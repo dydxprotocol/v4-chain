@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+	"github.com/cosmos/gogoproto/proto"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -11,7 +12,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -182,9 +182,8 @@ func getMarketEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeMarket {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var marketEvent indexerevents.MarketEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &marketEvent)
+		err := proto.Unmarshal(event.DataBytes, &marketEvent)
 		if err != nil {
 			panic(err)
 		}
