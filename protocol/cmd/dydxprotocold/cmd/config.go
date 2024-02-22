@@ -81,6 +81,11 @@ func initTendermintConfig() *tmcfg.Config {
 	// Expose the Tendermint RPC.
 	cfg.RPC.ListenAddress = "tcp://0.0.0.0:26657"
 	cfg.RPC.CORSAllowedOrigins = []string{"*"}
+	// goroutine profiling showed that we were using exactly 900 threads (the default) which was throttling
+	// the maximum amount of load that the process could take. As of the last load test, at max QPS we were
+	// seeing ~1700 threads being used.
+	cfg.RPC.MaxOpenConnections = 4000
+	cfg.RPC.GRPCMaxOpenConnections = 4000
 
 	// Mempool config.
 	// We specifically are using a number greater than max QPS (currently set at 5000) * ShortBlockWindow to prevent
