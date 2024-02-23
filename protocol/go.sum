@@ -440,6 +440,8 @@ github.com/cosmos/cosmos-db v1.0.0 h1:EVcQZ+qYag7W6uorBKFPvX6gRjw6Uq2hIh4hCWjuQ0
 github.com/cosmos/cosmos-db v1.0.0/go.mod h1:iBvi1TtqaedwLdcrZVYRSSCb6eSy61NLj4UNmdIgs0U=
 github.com/cosmos/cosmos-proto v1.0.0-beta.4 h1:aEL7tU/rLOmxZQ9z4i7mzxcLbSCY48OdY7lIWTLG7oU=
 github.com/cosmos/cosmos-proto v1.0.0-beta.4/go.mod h1:oeB+FyVzG3XrQJbJng0EnV8Vljfk9XvTIpGILNU/9Co=
+github.com/cosmos/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240219091002-18ea4c520045 h1:UQEFOXQGeEmtQxj7P69x0pagoGtAtRCXB1Jh2A1c4oM=
+github.com/cosmos/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240219091002-18ea4c520045/go.mod h1:T0ZAvOrgyB36TANZcTcLyzmY+ov2mWgvJEGSGBHd+iE=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
 github.com/cosmos/go-bip39 v1.0.0/go.mod h1:RNJv0H/pOIVgxw6KS7QeX2a0Uo0aKUlfhZ4xuwvCdJw=
 github.com/cosmos/gogogateway v1.2.0 h1:Ae/OivNhp8DqBi/sh2A8a1D0y638GpL3tkmLQAiKxTE=
@@ -524,8 +526,6 @@ github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540 h1:pkYQbA
 github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540/go.mod h1:REQN+ObgfYxi39TcYR/Hv95C9bPxY3sYJCvghryj7vY=
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c h1:vTcPGxL/uU0MF/Wfzi3G0uzLweEj/417qs1enjf0q60=
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7 h1:lTVwvpc4mHShiFDnPG/m06hKtHJYbKM4HFUR3T3vNHg=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
