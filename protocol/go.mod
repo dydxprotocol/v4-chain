@@ -415,6 +415,7 @@ replace (
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
+	github.com/cosmos/iavl => github.com/cosmos/iavl v1.0.0
 )
 
 replace (
