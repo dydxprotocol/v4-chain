@@ -405,13 +405,9 @@ require (
 )
 
 replace (
-<<<<<<< HEAD
-	cosmossdk.io/client/v2 => github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7
-=======
 	// TODO(DEC-2209): Ideally we rely on a released version (we don't make any changes in our cosmos-sdk fork).
 	// In this case the latest signing mode fixes aren't tagged as a release yet.
 	cosmossdk.io/client/v2 => github.com/cosmos/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240219091002-18ea4c520045
->>>>>>> 4814ea84 (Upgrade client/v2 to fix autocli signing issues (#1090))
 	// TODO(https://github.com/cosmos/rosetta/issues/76): Rosetta requires cosmossdk.io/core v0.12.0 erroneously but
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0

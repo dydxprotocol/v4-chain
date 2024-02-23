@@ -524,15 +524,8 @@ github.com/dvsekhvalnov/jose2go v1.6.0 h1:Y9gnSnP4qEI0+/uQkHvFXeD2PLPJeXEL+ySMEA
 github.com/dvsekhvalnov/jose2go v1.6.0/go.mod h1:QsHjhyTlD/lAVqn/NSbVZmSCGeDehTB/mPZadG+mhXU=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540 h1:pkYQbAdOAAoZBSId9kLupCgZHj8YvA9LzM31fVYpjlw=
 github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540/go.mod h1:REQN+ObgfYxi39TcYR/Hv95C9bPxY3sYJCvghryj7vY=
-<<<<<<< HEAD
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c h1:vTcPGxL/uU0MF/Wfzi3G0uzLweEj/417qs1enjf0q60=
 github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7 h1:lTVwvpc4mHShiFDnPG/m06hKtHJYbKM4HFUR3T3vNHg=
-github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225014-c0bde14212a7/go.mod h1:Fi+Bqmvo+7wImB5+31CsBheyjBkvQxx8QRQY1acPVDU=
-=======
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222221247-6eacec603896 h1:tD6NwPhiMGzM3tKmowrjLnQPDU03ezPWPCEk7D/Dnx0=
-github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222221247-6eacec603896/go.mod h1:AgkOyykpqwdRuf8cLqoA6PxNZC6ODwNmPrEGYuRzBFY=
->>>>>>> 4814ea84 (Upgrade client/v2 to fix autocli signing issues (#1090))
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
