@@ -721,7 +721,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -748,7 +748,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -791,7 +791,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -834,7 +834,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -872,7 +872,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -893,7 +893,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_BUY,
@@ -919,7 +919,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
 						PlaceOrder_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20,
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_SELL,
@@ -940,7 +940,7 @@ func TestShortTermOrderReplacements(t *testing.T) {
 				},
 				{
 					ordersToPlace: []clobtypes.MsgPlaceOrder{
-						*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+						*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 							clobtypes.Order{
 								OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 0},
 								Side:         clobtypes.Order_SIDE_BUY,
@@ -1053,7 +1053,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 		"Cancel partially filled short term order in same block": {
 			firstBlockOrders: []clobtypes.MsgPlaceOrder{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5,
-				*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+				*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 					clobtypes.Order{
 						OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         clobtypes.Order_SIDE_SELL,
@@ -1081,7 +1081,7 @@ func TestCancelShortTermOrder(t *testing.T) {
 		"Cancel partially filled short term order in next block": {
 			firstBlockOrders: []clobtypes.MsgPlaceOrder{
 				PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB5,
-				*clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+				*clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 					clobtypes.Order{
 						OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 						Side:         clobtypes.Order_SIDE_SELL,
@@ -1243,7 +1243,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1252,7 +1252,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Sell5_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1278,7 +1278,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Sell5_Price15_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1287,7 +1287,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Buy5_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1313,7 +1313,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1322,7 +1322,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1348,7 +1348,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Sell5_Price15_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1357,7 +1357,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Buy10_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1383,7 +1383,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1392,7 +1392,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1406,7 +1406,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob1_Sell10_Price15_GTB20_IOC,
 									testapp.DefaultGenesis(),
 								),
@@ -1433,7 +1433,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
 									testapp.DefaultGenesis(),
 								),
@@ -1442,7 +1442,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1468,7 +1468,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id4_Clob1_Buy20_Price35_GTB22,
 									testapp.DefaultGenesis(),
 								),
@@ -1477,7 +1477,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Sell10_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1503,7 +1503,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id8_Clob1_Sell5_Price10_GTB22,
 									testapp.DefaultGenesis(),
 								),
@@ -1512,7 +1512,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1539,7 +1539,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id11_Clob1_Buy5_Price40_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1548,7 +1548,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Sell10_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1575,7 +1575,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id8_Clob1_Sell20_Price10_GTB22,
 									testapp.DefaultGenesis(),
 								),
@@ -1584,7 +1584,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Buy10_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1598,7 +1598,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id0_Clob1_Buy20_Price15_GTB20_FOK,
 									testapp.DefaultGenesis(),
 								),
@@ -1625,7 +1625,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price15_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1634,7 +1634,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO,
 									testapp.DefaultGenesis(),
 								),
@@ -1660,7 +1660,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id12_Clob0_Buy5_Price5_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1669,7 +1669,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob0_Sell15_Price10_GTB18_PO,
 									testapp.DefaultGenesis(),
 								),
@@ -1695,7 +1695,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id12_Clob0_Sell20_Price5_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1704,7 +1704,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob0_Buy15_Price10_GTB18_PO,
 									testapp.DefaultGenesis(),
 								),
@@ -1731,7 +1731,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 					Msgs: []testmsgs.TestSdkMsg{
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Bob_Num0_Id12_Clob0_Buy5_Price40_GTB20,
 									testapp.DefaultGenesis(),
 								),
@@ -1740,7 +1740,7 @@ func TestShortTermAdvancedOrders(t *testing.T) {
 						},
 						{
 							Msg: clobtypes.NewMsgPlaceOrder(
-								MustScaleOrder(
+								testapp.MustScaleOrder(
 									constants.Order_Alice_Num0_Id1_Clob0_Sell15_Price10_GTB18_PO,
 									testapp.DefaultGenesis(),
 								),

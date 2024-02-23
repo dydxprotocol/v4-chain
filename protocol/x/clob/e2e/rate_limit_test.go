@@ -173,7 +173,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 	tApp := testapp.NewTestAppBuilder(t).Build()
 
-	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: constants.Alice_Num0,
@@ -192,7 +192,7 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 		20,
 	)
 
-	PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price10_GTB20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Bob_Num0_Id0_Clob0_Sell1_Price10_GTB20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
@@ -202,7 +202,7 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 		},
 		testapp.DefaultGenesis(),
 	))
-	PlaceOrder_Bob_Num0_Id0_Clob0_Sell7_Price10_GTB20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	PlaceOrder_Bob_Num0_Id0_Clob0_Sell7_Price10_GTB20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
 			Side:         clobtypes.Order_SIDE_SELL,
@@ -264,7 +264,7 @@ func TestCancellationAndMatchInTheSameBlock_Regression(t *testing.T) {
 }
 
 func TestStatefulCancellation_Deduplication(t *testing.T) {
-	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: constants.Alice_Num0,
@@ -351,7 +351,7 @@ func TestStatefulCancellation_Deduplication(t *testing.T) {
 }
 
 func TestStatefulOrderPlacement_Deduplication(t *testing.T) {
-	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(MustScaleOrder(
+	LPlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT20 := *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: constants.Alice_Num0,
