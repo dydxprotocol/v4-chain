@@ -1,3 +1,4 @@
+import { logger } from '@dydxprotocol-indexer/base';
 import { perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import {
   FundingEventV1,
@@ -6,6 +7,7 @@ import {
   FundingUpdateV1,
 } from '@dydxprotocol-indexer/v4-protos';
 
+import config from '../config';
 import { FundingHandler } from '../handlers/funding-handler';
 import { Handler } from '../handlers/handler';
 import { FundingEventMessage } from '../lib/types';
@@ -28,10 +30,18 @@ export class FundingValidator extends Validator<FundingEventV1> {
         perpetualMarketRefresher.getPerpetualMarketFromId(
           perpetualId.toString(),
         ) === undefined) {
-        return this.logAndThrowParseMessageError(
-          'Invalid FundingEvent, perpetualId does not exist',
-          { event: this.event },
-        );
+        if (config.IGNORE_NONEXISTENT_PERPETUAL_MARKET) {
+          logger.error({
+            at: `${this.constructor.name}#validate`,
+            message: 'Ignoring invalid FundingEvent, perpetualId does not exist',
+            event: this.event,
+          });
+        } else {
+          return this.logAndThrowParseMessageError(
+            'Invalid FundingEvent, perpetualId does not exist',
+            { event: this.event },
+          );
+        }
       }
     });
   }
