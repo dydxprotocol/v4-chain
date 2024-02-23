@@ -21,6 +21,7 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
 import { bigIntToBytes } from '@dydxprotocol-indexer/v4-proto-parser';
+import config from '../../src/config';
 
 describe('funding-validator', () => {
   beforeEach(async () => {
@@ -32,6 +33,7 @@ describe('funding-validator', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+    config.IGNORE_NONEXISTENT_PERPETUAL_MARKET = false;
   });
 
   describe('validate', () => {
@@ -47,6 +49,35 @@ describe('funding-validator', () => {
 
       validator.validate();
       expectDidntLogError();
+    });
+
+    it('does not throw error if IGNORE_NONEXISTENT_PERPETUAL_MARKET is true', () => {
+      config.IGNORE_NONEXISTENT_PERPETUAL_MARKET = true;
+      const event: FundingEventV1 = {
+        type: FundingEventV1_Type.TYPE_FUNDING_RATE_AND_INDEX,
+        updates: [
+          {
+            perpetualId: 10,
+            fundingValuePpm: 10,
+            fundingIndex: bigIntToBytes(BigInt(0)),
+          },
+        ],
+      } as FundingEventV1;
+      const validator: FundingValidator = new FundingValidator(
+        event,
+        createBlock(event),
+        0,
+      );
+
+      const errMsg: string = 'Invalid FundingEvent, perpetualId does not exist';
+      expect(() => validator.validate()).not.toThrow(new ParseMessageError(errMsg));
+      expect(logger.error).toHaveBeenCalledWith({
+        at: `${FundingValidator.name}#validate`,
+        message: errMsg,
+        blockHeight: defaultHeight,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        event,
+      });
     });
 
     it.each([

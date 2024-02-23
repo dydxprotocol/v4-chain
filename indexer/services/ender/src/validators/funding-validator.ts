@@ -33,7 +33,8 @@ export class FundingValidator extends Validator<FundingEventV1> {
         if (config.IGNORE_NONEXISTENT_PERPETUAL_MARKET) {
           logger.error({
             at: `${this.constructor.name}#validate`,
-            message: 'Ignoring invalid FundingEvent, perpetualId does not exist',
+            message: 'Invalid FundingEvent, perpetualId does not exist',
+            blockHeight: this.block.height,
             event: this.event,
           });
         } else {
