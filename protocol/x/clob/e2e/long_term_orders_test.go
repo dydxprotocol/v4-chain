@@ -368,7 +368,7 @@ func TestLongTermOrderExpires(t *testing.T) {
 		ctx,
 		tApp.App,
 		*clobtypes.NewMsgPlaceOrder(
-			MustScaleOrder(order, testapp.DefaultGenesis()),
+			testapp.MustScaleOrder(order, testapp.DefaultGenesis()),
 		),
 	) {
 		resp := tApp.CheckTx(checkTx)
