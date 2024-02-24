@@ -199,7 +199,7 @@ describe('fundingHandler', () => {
       undefined,
     );
     const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
-      FundingIndexUpdatesTable.findAll({}, [], {});
+    FundingIndexUpdatesTable.findAll({}, [], {});
 
     expect(fundingIndices.length).toEqual(1);
     expect(fundingIndices[0]).toEqual(expect.objectContaining({
