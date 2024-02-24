@@ -476,7 +476,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[0].pair' -v 'BTC-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].id' -v '0'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].exponent' -v '-5'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[0].min_price_change_ppm' -v '1000' # 0.1%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[0].id' -v '0'
@@ -491,7 +491,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[1].pair' -v 'ETH-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].id' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].exponent' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[1].min_price_change_ppm' -v '1000' # 0.1%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[1].id' -v '1'
@@ -506,7 +506,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[2].pair' -v 'LINK-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].id' -v '2'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[2].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[2].id' -v '2'
@@ -521,7 +521,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[3].pair' -v 'MATIC-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].id' -v '3'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[3].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[3].id' -v '3'
@@ -536,7 +536,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[4].pair' -v 'CRV-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[4].id' -v '4'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[4].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[4].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[4].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[4].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[4].id' -v '4'
@@ -551,7 +551,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[5].pair' -v 'SOL-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[5].id' -v '5'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[5].exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[5].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[5].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[5].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[5].id' -v '5'
@@ -566,7 +566,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[6].pair' -v 'ADA-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[6].id' -v '6'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[6].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[6].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[6].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[6].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[6].id' -v '6'
@@ -581,7 +581,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[7].pair' -v 'AVAX-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[7].id' -v '7'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[7].exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[7].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[7].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[7].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[7].id' -v '7'
@@ -596,7 +596,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[8].pair' -v 'FIL-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[8].id' -v '8'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[8].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[8].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[8].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[8].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[8].id' -v '8'
@@ -611,7 +611,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[9].pair' -v 'LTC-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[9].id' -v '9'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[9].exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[9].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[9].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[9].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[9].id' -v '9'
@@ -626,7 +626,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[10].pair' -v 'DOGE-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[10].id' -v '10'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[10].exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[10].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[10].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[10].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[10].id' -v '10'
@@ -641,7 +641,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[11].pair' -v 'ATOM-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[11].id' -v '11'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[11].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[11].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[11].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[11].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[11].id' -v '11'
@@ -656,7 +656,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[12].pair' -v 'DOT-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[12].id' -v '12'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[12].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[12].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[12].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[12].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[12].id' -v '12'
@@ -671,7 +671,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[13].pair' -v 'UNI-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[13].id' -v '13'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[13].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[13].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[13].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[13].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[13].id' -v '13'
@@ -686,7 +686,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[14].pair' -v 'BCH-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[14].id' -v '14'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[14].exponent' -v '-7'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[14].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[14].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[14].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[14].id' -v '14'
@@ -701,7 +701,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[15].pair' -v 'TRX-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[15].id' -v '15'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[15].exponent' -v '-11'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[15].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[15].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[15].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[15].id' -v '15'
@@ -716,7 +716,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[16].pair' -v 'NEAR-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[16].id' -v '16'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[16].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[16].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[16].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[16].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[16].id' -v '16'
@@ -731,7 +731,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[17].pair' -v 'MKR-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[17].id' -v '17'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[17].exponent' -v '-6'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[17].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[17].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[17].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[17].id' -v '17'
@@ -746,7 +746,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[18].pair' -v 'XLM-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[18].id' -v '18'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[18].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[18].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[18].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[18].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[18].id' -v '18'
@@ -761,7 +761,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[19].pair' -v 'ETC-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[19].id' -v '19'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[19].exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[19].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[19].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[19].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[19].id' -v '19'
@@ -776,7 +776,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[20].pair' -v 'COMP-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[20].id' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[20].exponent' -v '-8'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[20].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[20].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[20].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[20].id' -v '20'
@@ -791,7 +791,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[21].pair' -v 'WLD-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[21].id' -v '21'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[21].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[21].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[21].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[21].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[21].id' -v '21'
@@ -806,7 +806,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[22].pair' -v 'APE-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[22].id' -v '22'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[22].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[22].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[22].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[22].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[22].id' -v '22'
@@ -821,7 +821,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[23].pair' -v 'APT-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[23].id' -v '23'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[23].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[23].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[23].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[23].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[23].id' -v '23'
@@ -836,7 +836,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[24].pair' -v 'ARB-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[24].id' -v '24'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[24].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[24].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[24].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[24].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[24].id' -v '24'
@@ -851,7 +851,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[25].pair' -v 'BLUR-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[25].id' -v '25'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[25].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[25].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[25].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[25].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[25].id' -v '25'
@@ -866,7 +866,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[26].pair' -v 'LDO-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[26].id' -v '26'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[26].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[26].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[26].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[26].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[26].id' -v '26'
@@ -881,7 +881,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[27].pair' -v 'OP-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[27].id' -v '27'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[27].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[27].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[27].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[27].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[27].id' -v '27'
@@ -896,7 +896,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[28].pair' -v 'PEPE-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].id' -v '28'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].exponent' -v '-16'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[28].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[28].id' -v '28'
@@ -911,7 +911,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[29].pair' -v 'SEI-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[29].id' -v '29'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[29].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[29].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[29].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[29].min_price_change_ppm' -v '4000' # 0.4%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[29].id' -v '29'
@@ -926,7 +926,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[30].pair' -v 'SHIB-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[30].id' -v '30'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[30].exponent' -v '-15'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[30].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[30].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[30].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[30].id' -v '30'
@@ -941,7 +941,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[31].pair' -v 'SUI-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[31].id' -v '31'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[31].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[31].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[31].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[31].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[31].id' -v '31'
@@ -956,7 +956,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[32].pair' -v 'XRP-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[32].id' -v '32'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[32].exponent' -v '-10'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[32].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[32].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[32].min_price_change_ppm' -v '2500' # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[32].id' -v '32'
@@ -971,7 +971,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[33].pair' -v 'USDT-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].id' -v '1000000'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[33].min_price_change_ppm' -v '1000'  # 0.100%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[33].id' -v '1000000'
@@ -986,7 +986,7 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.prices.market_params.[34].pair' -v 'DYDX-USD'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].id' -v '1000001'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].exponent' -v '-9'
-	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '3'
+	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_exchanges' -v '1'
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_params.[34].min_price_change_ppm' -v '2500'  # 0.25%
 	dasel put -t json -f "$GENESIS" '.app_state.prices.market_prices.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.prices.market_prices.[34].id' -v '1000001'

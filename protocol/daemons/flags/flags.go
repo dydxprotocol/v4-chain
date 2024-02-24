@@ -23,6 +23,8 @@ const (
 	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
 	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
+
+	FlagSlinkyDaemonEnabled = "slinky-daemon-enabled"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -63,12 +65,18 @@ type PriceFlags struct {
 	LoopDelayMs uint32
 }
 
+type SlinkyFlags struct {
+	// Enabled toggles the slinky daemon on or off.
+	Enabled bool
+}
+
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
 	Bridge      BridgeFlags
 	Liquidation LiquidationFlags
 	Price       PriceFlags
+	Slinky      SlinkyFlags
 }
 
 var defaultDaemonFlags *DaemonFlags
@@ -95,6 +103,9 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Price: PriceFlags{
 				Enabled:     true,
 				LoopDelayMs: 3_000,
+			},
+			Slinky: SlinkyFlags{
+				Enabled: false,
 			},
 		}
 	}
@@ -173,6 +184,13 @@ func AddDaemonFlagsToCmd(
 		df.Price.LoopDelayMs,
 		"Delay in milliseconds between sending price updates to the application.",
 	)
+
+	// Slinky Daemon.
+	cmd.Flags().Bool(
+		FlagSlinkyDaemonEnabled,
+		df.Slinky.Enabled,
+		"Enable Slinky Daemon. Set to false for non-validator nodes.",
+	)
 }
 
 // GetDaemonFlagValuesFromOptions gets all daemon flag values from the `AppOptions` struct.
@@ -242,6 +260,13 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagPriceDaemonLoopDelayMs); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Price.LoopDelayMs = v
+		}
+	}
+
+	// Slinky Daemon.
+	if option := appOpts.Get(FlagSlinkyDaemonEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Slinky.Enabled = v
 		}
 	}
 
