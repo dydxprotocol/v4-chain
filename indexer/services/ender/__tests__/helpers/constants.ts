@@ -81,7 +81,7 @@ export const defaultFundingUpdateSampleEventWithAdditionalMarket: FundingEventMe
       fundingIndex: bigIntToBytes(BigInt(0)),
     },
     {
-      perpetualId: 50,
+      perpetualId: 99999,
       fundingValuePpm: 10,
       fundingIndex: bigIntToBytes(BigInt(0)),
     },
