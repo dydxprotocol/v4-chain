@@ -23,6 +23,9 @@ export const configSchema = {
   SEND_WEBSOCKET_MESSAGES: parseBoolean({
     default: true,
   }),
+  IGNORE_NONEXISTENT_PERPETUAL_MARKET: parseBoolean({
+    default: false,
+  }),
 };
 
 export default parseSchema(configSchema);
