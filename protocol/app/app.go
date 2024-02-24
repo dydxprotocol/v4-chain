@@ -794,7 +794,6 @@ func New(
 					logger,
 				)
 			}
-
 		}
 
 		// Start Bridge Daemon.

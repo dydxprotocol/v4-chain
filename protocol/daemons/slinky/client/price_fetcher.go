@@ -86,12 +86,16 @@ func (p *PriceFetcher) FetchPrices(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		p.logger.Info("turned price pair to currency pair", "string", currencyPairString, "currency pair", currencyPair.String())
+		p.logger.Info("turned price pair to currency pair",
+			"string", currencyPairString,
+			"currency pair", currencyPair.String())
 
 		// get the market id for the currency pair
 		id, err := p.marketPairFetcher.GetIDForPair(currencyPair)
 		if err != nil {
-			p.logger.Info("slinky client returned currency pair not found in MarketPairFetcher", "currency pair", currencyPairString, "error", err)
+			p.logger.Info("slinky client returned currency pair not found in MarketPairFetcher",
+				"currency pair", currencyPairString,
+				"error", err)
 			continue
 		}
 
@@ -115,8 +119,8 @@ func (p *PriceFetcher) FetchPrices(ctx context.Context) error {
 		})
 	}
 
-	// send the updates to the app's price-feed service -> these will then be piped to the x/prices indexPriceCache via the price
-	// feed service
+	// send the updates to the app's price-feed service -> these will then be piped to the
+	// x/prices indexPriceCache via the pricefeed service
 	if p.priceFeedServiceClient == nil {
 		p.logger.Error("nil price feed service client")
 	}

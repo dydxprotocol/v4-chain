@@ -35,7 +35,10 @@ func NewMarketPairFetcher(logger log.Logger) *MarketPairFetcher {
 }
 
 // Start opens the grpc connections for the fetcher.
-func (m *MarketPairFetcher) Start(ctx context.Context, appFlags appflags.Flags, grpcClient daemontypes.GrpcClient) error {
+func (m *MarketPairFetcher) Start(
+	ctx context.Context,
+	appFlags appflags.Flags,
+	grpcClient daemontypes.GrpcClient) error {
 	// Create the query client connection
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
@@ -55,7 +58,6 @@ func (m *MarketPairFetcher) Stop() {
 	if m.queryConn != nil {
 		_ = m.queryConn.Close()
 	}
-	return
 }
 
 // GetIDForPair returns the ID corresponding to the currency pair in the x/prices module.
