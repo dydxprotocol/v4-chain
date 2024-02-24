@@ -38,7 +38,8 @@ BEGIN
         perpetual_market_id = (funding_update->'perpetualId')::bigint;
         SELECT * INTO perpetual_market_record FROM perpetual_markets WHERE "id" = perpetual_market_id;
         IF NOT FOUND THEN
-            errors_response = array_append(errors_response, to_jsonb('Received FundingUpdate with unknown perpetualId.'));
+            errors_response = array_append(errors_response, to_jsonb('Received FundingUpdate with unknown perpetualId.'::text));
+            CONTINUE;
         END IF;
 
         perpetual_markets_response = jsonb_set(perpetual_markets_response, ARRAY[(perpetual_market_record."id")::text], dydx_to_jsonb(perpetual_market_record));
@@ -81,7 +82,7 @@ BEGIN
                 funding_update_response = jsonb_set(funding_update_response, ARRAY[(funding_index_updates_record."perpetualId")::text], dydx_to_jsonb(funding_index_updates_record));
 
             ELSE
-                errors_response = array_append(errors_response, to_jsonb('Received unknown FundingEvent type.'));
+                errors_response = array_append(errors_response, to_jsonb('Received unknown FundingEvent type.'::text));
                 CONTINUE;
         END CASE;
 
