@@ -17,7 +17,15 @@ import (
 // Its purpose is to periodically query the prices module for MarketParams and create
 // an easily indexed mapping between Slinky's CurrencyPair type and the corresponding ID
 // in the x/prices module.
-type MarketPairFetcher struct {
+type MarketPairFetcher interface {
+	Start(context.Context, appflags.Flags, daemontypes.GrpcClient) error
+	Stop()
+	GetIDForPair(oracletypes.CurrencyPair) (uint32, error)
+	FetchIdMappings(context.Context) error
+}
+
+// MarketPairFetcherImpl implements the MarketPairFetcher interface.
+type MarketPairFetcherImpl struct {
 	logger            log.Logger
 	queryConn         *grpc.ClientConn
 	pricesQueryClient pricetypes.QueryClient
@@ -27,15 +35,15 @@ type MarketPairFetcher struct {
 	compatMu       sync.RWMutex
 }
 
-func NewMarketPairFetcher(logger log.Logger) *MarketPairFetcher {
-	return &MarketPairFetcher{
+func NewMarketPairFetcher(logger log.Logger) MarketPairFetcher {
+	return &MarketPairFetcherImpl{
 		logger:         logger,
 		compatMappings: make(map[oracletypes.CurrencyPair]uint32),
 	}
 }
 
 // Start opens the grpc connections for the fetcher.
-func (m *MarketPairFetcher) Start(
+func (m *MarketPairFetcherImpl) Start(
 	ctx context.Context,
 	appFlags appflags.Flags,
 	grpcClient daemontypes.GrpcClient) error {
@@ -54,7 +62,7 @@ func (m *MarketPairFetcher) Start(
 }
 
 // Stop closes all existing connections.
-func (m *MarketPairFetcher) Stop() {
+func (m *MarketPairFetcherImpl) Stop() {
 	if m.queryConn != nil {
 		_ = m.queryConn.Close()
 	}
@@ -62,7 +70,7 @@ func (m *MarketPairFetcher) Stop() {
 
 // GetIDForPair returns the ID corresponding to the currency pair in the x/prices module.
 // If the currency pair is not found it will return an error.
-func (m *MarketPairFetcher) GetIDForPair(cp oracletypes.CurrencyPair) (uint32, error) {
+func (m *MarketPairFetcherImpl) GetIDForPair(cp oracletypes.CurrencyPair) (uint32, error) {
 	var id uint32
 	m.compatMu.RLock()
 	defer m.compatMu.RUnlock()
@@ -75,7 +83,7 @@ func (m *MarketPairFetcher) GetIDForPair(cp oracletypes.CurrencyPair) (uint32, e
 
 // FetchIdMappings is run periodically to refresh the cache of known mappings between
 // CurrencyPair and MarketParam ID.
-func (m *MarketPairFetcher) FetchIdMappings(ctx context.Context) error {
+func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	// fetch all market params
 	resp, err := m.pricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
 	if err != nil {

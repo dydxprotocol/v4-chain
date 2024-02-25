@@ -17,8 +17,15 @@ import (
 )
 
 // PriceFetcher is responsible for pulling prices from the slinky sidecar and sending them to the pricefeed server.
-type PriceFetcher struct {
-	marketPairFetcher      *MarketPairFetcher
+type PriceFetcher interface {
+	Start(ctx context.Context) error
+	Stop()
+	FetchPrices(ctx context.Context) error
+}
+
+// PriceFetcherImpl implements the PriceFetcher interface.
+type PriceFetcherImpl struct {
+	marketPairFetcher      MarketPairFetcher
 	priceFeedServiceClient api.PriceFeedServiceClient
 	grpcClient             daemontypes.GrpcClient
 	pricesSocket           string
@@ -29,12 +36,12 @@ type PriceFetcher struct {
 
 // NewPriceFetcher creates a PriceFetcher.
 func NewPriceFetcher(
-	marketPairFetcher *MarketPairFetcher,
+	marketPairFetcher MarketPairFetcher,
 	grpcClient daemontypes.GrpcClient,
 	pricesSocket string,
 	slinky oracleclient.OracleClient,
-	logger log.Logger) *PriceFetcher {
-	return &PriceFetcher{
+	logger log.Logger) PriceFetcher {
+	return &PriceFetcherImpl{
 		marketPairFetcher: marketPairFetcher,
 		grpcClient:        grpcClient,
 		pricesSocket:      pricesSocket,
@@ -44,7 +51,7 @@ func NewPriceFetcher(
 }
 
 // Start initializes the underlying connections of the PriceFetcher.
-func (p *PriceFetcher) Start(ctx context.Context) error {
+func (p *PriceFetcherImpl) Start(ctx context.Context) error {
 	cancelCtx, cf := context.WithTimeout(ctx, SlinkyPriceServerConnectionTimeout)
 	defer cf()
 	pricesConn, err := p.grpcClient.NewGrpcConnection(cancelCtx, p.pricesSocket)
@@ -57,7 +64,7 @@ func (p *PriceFetcher) Start(ctx context.Context) error {
 }
 
 // Stop closes all open connections.
-func (p *PriceFetcher) Stop() {
+func (p *PriceFetcherImpl) Stop() {
 	if p.pricesConn != nil {
 		_ = p.grpcClient.CloseConnection(p.pricesConn)
 	}
@@ -71,7 +78,7 @@ func (p *PriceFetcher) Stop() {
 //
 // The markets in the index price cache will only have a single index price (from slinky).
 // This is because the sidecar pre-aggregates market data.
-func (p *PriceFetcher) FetchPrices(ctx context.Context) error {
+func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 	// get prices from slinky sidecar via GRPC
 	slinkyResponse, err := p.slinky.Prices(ctx, &types.QueryPricesRequest{})
 	if err != nil {

@@ -24,8 +24,8 @@ type Client struct {
 	daemontypes.HealthCheckable
 	ctx               context.Context
 	cf                context.CancelFunc
-	marketPairFetcher *MarketPairFetcher
-	priceFetcher      *PriceFetcher
+	marketPairFetcher MarketPairFetcher
+	priceFetcher      PriceFetcher
 	wg                sync.WaitGroup
 	logger            log.Logger
 }
