@@ -92,9 +92,10 @@ func (k Keeper) CreateAsset(
 	// Store the new asset
 	k.setAsset(ctx, asset)
 
-	k.GetIndexerEventManager().AddTxnEvent(
+	k.GetIndexerEventManager().AddBlockEvent(
 		ctx,
 		indexerevents.SubtypeAsset,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.AssetEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewAssetCreateEvent(

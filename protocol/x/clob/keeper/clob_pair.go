@@ -88,9 +88,10 @@ func (k Keeper) CreatePerpetualClobPair(
 	}
 
 	k.createClobPair(ctx, clobPair)
-	k.GetIndexerEventManager().AddTxnEvent(
+	k.GetIndexerEventManager().AddBlockEvent(
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(

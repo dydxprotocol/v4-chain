@@ -2236,9 +2236,10 @@ func setupProcessProposerOperationsTestCase(
 		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 		// the indexer event manager to expect these events.
 		if tc.expectedError == nil && tc.expectedPanics == "" && len(tc.expectedMatches) > 0 {
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				mock.Anything,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(

@@ -1123,9 +1123,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			}
 			// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 			// the indexer event manager to expect these events.
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -1152,9 +1153,10 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				constants.ClobPair_Btc.Status,
 			)
 			require.NoError(t, err)
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -2026,9 +2028,10 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth_No_Fee,
 			} {
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ctx,
 					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -2100,8 +2103,8 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			if tc.expectedFilledSize == 0 {
 				// Bankruptcy price in DeleveragingEvent is not exposed by API. It is also
 				// being tested in other e2e tests. So we don't test it here.
-				mockIndexerEventManager.On("AddTxnEvent",
-					mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
+				mockIndexerEventManager.On("AddBlockEvent",
+					mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything,
 				).Return()
 				_, err = ks.ClobKeeper.MaybeDeleverageSubaccount(
 					ctx,
@@ -2143,9 +2146,10 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
-	indexerEventManager.On("AddTxnEvent",
+	indexerEventManager.On("AddBlockEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -3664,9 +3668,10 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 			}
 
 			// Create clob pair.
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -4402,9 +4407,10 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 				perpetualId := clobtest.MustPerpetualId(clobPair)
 				// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 				// the indexer event manager to expect these events.
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -4958,9 +4964,10 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create all CLOBs.
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -5111,9 +5118,10 @@ func TestSortLiquidationOrders(t *testing.T) {
 			require.NoError(t, err)
 
 			// Create all CLOBs.
-			mockIndexerEventManager.On("AddTxnEvent",
+			mockIndexerEventManager.On("AddBlockEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(

@@ -46,9 +46,10 @@ func TestCreateClobPair(t *testing.T) {
 					[]perptypes.Perpetual{testPerp1},
 					[]pricestypes.MarketParamPrice{testMarket1},
 				)
-				mockIndexerEventManager.On("AddTxnEvent",
+				mockIndexerEventManager.On("AddBlockEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(

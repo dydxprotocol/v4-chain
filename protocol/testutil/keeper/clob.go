@@ -270,10 +270,11 @@ func CreateNClobPair(
 
 		// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 		// the indexer event manager to expect these events.
-		mockIndexerEventManager.On("AddTxnEvent",
+		mockIndexerEventManager.On("AddBlockEvent",
 			ctx,
 			indexerevents.SubtypePerpetualMarket,
 			indexerevents.PerpetualMarketEventVersion,
+			indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 			indexer_manager.GetBytes(
 				indexerevents.NewPerpetualMarketCreateEvent(
 					clobtest.MustPerpetualId(items[i]),

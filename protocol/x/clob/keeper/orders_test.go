@@ -1010,9 +1010,10 @@ func TestPlaceOrder_SendOffchainMessages(t *testing.T) {
 	memClob.On("CreateOrderbook", ctx, constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
-	indexerEventManager.On("AddTxnEvent",
+	indexerEventManager.On("AddBlockEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1064,9 +1065,10 @@ func TestPerformStatefulOrderValidation_PreExistingStatefulOrder(t *testing.T) {
 	memClob.On("CreateOrderbook", ks.Ctx, constants.ClobPair_Btc).Return()
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
-	indexerEventManager.On("AddTxnEvent",
+	indexerEventManager.On("AddBlockEvent",
 		ks.Ctx,
 		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
@@ -1818,9 +1820,10 @@ func TestGetStatePosition_Success(t *testing.T) {
 			clobPairs := []types.ClobPair{constants.ClobPair_Btc, constants.ClobPair_Eth}
 			for i, cp := range clobPairs {
 				perpetualId := clobtest.MustPerpetualId(cp)
-				indexerEventManager.On("AddTxnEvent",
+				indexerEventManager.On("AddBlockEvent",
 					ks.Ctx,
 					indexerevents.SubtypePerpetualMarket,
+					indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 					indexerevents.PerpetualMarketEventVersion,
 					indexer_manager.GetBytes(
 						indexerevents.NewPerpetualMarketCreateEvent(
@@ -2031,9 +2034,10 @@ func TestInitStatefulOrders(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
-			indexerEventManager.On("AddTxnEvent",
+			indexerEventManager.On("AddBlockEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(
@@ -2162,9 +2166,10 @@ func TestHydrateUntriggeredConditionalOrdersInMemClob(t *testing.T) {
 
 			// Create CLOB pair.
 			memClob.On("CreateOrderbook", mock.Anything, constants.ClobPair_Btc).Return()
-			indexerEventManager.On("AddTxnEvent",
+			indexerEventManager.On("AddBlockEvent",
 				ks.Ctx,
 				indexerevents.SubtypePerpetualMarket,
+				indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 				indexerevents.PerpetualMarketEventVersion,
 				indexer_manager.GetBytes(
 					indexerevents.NewPerpetualMarketCreateEvent(

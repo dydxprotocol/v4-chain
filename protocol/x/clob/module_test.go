@@ -289,9 +289,10 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 
 	// PerpetualMarketCreateEvents are emitted when initializing the genesis state, so we need to mock
 	// the indexer event manager to expect these events.
-	mockIndexerEventManager.On("AddTxnEvent",
+	mockIndexerEventManager.On("AddBlockEvent",
 		ctx,
 		indexerevents.SubtypePerpetualMarket,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.PerpetualMarketEventVersion,
 		indexer_manager.GetBytes(
 			indexerevents.NewPerpetualMarketCreateEvent(
