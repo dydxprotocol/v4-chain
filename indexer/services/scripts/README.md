@@ -17,7 +17,7 @@ pnpm run validate-pnl -- \
 --p d6f67aac-749d-5f62-8a55-ef825915b575 d6f67aac-749d-5f62-8a55-ef825915b575
 
 
-KAFKA_BROKER_URLS=b-1.devindexerapne1ms.e0k85v.c3.kafka.ap-northeast-1.amazonaws.com:9092 \
+KAFKA_BROKER_URLS=...kafka.ap-northeast-1.amazonaws.com:9092 \
 SERVICE_NAME=scripts pnpm run print-block -- --h 9265388
 ```
 
