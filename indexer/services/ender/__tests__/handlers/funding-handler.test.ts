@@ -26,6 +26,7 @@ import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
   defaultFundingRateEvent,
   defaultFundingUpdateSampleEvent,
+  defaultFundingUpdateSampleEventWithAdditionalMarket,
   defaultHeight,
   defaultPreviousHeight,
   defaultTime,
@@ -165,6 +166,47 @@ describe('fundingHandler', () => {
         fundingUpdateSampleEvent2.updates[1].fundingValuePpm,
       )),
     );
+  });
+
+  it('successfully processes and clears cache for a new funding rate with non-existent market', async () => {
+    const kafkaMessage: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingUpdateSampleEventWithAdditionalMarket],
+      height: defaultHeight,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage);
+
+    await expectNextFundingRate(
+      'BTC-USD',
+      new Big(protocolTranslations.funding8HourValuePpmTo1HourRate(
+        defaultFundingUpdateSampleEvent.updates[0].fundingValuePpm,
+      )),
+    );
+
+    const kafkaMessage2: KafkaMessage = createKafkaMessageFromFundingEvents({
+      fundingEvents: [defaultFundingRateEvent],
+      height: 4,
+      time: defaultTime,
+    });
+
+    await onMessage(kafkaMessage2);
+    await expectNextFundingRate(
+      'BTC-USD',
+      undefined,
+    );
+    const fundingIndices: FundingIndexUpdatesFromDatabase[] = await
+      FundingIndexUpdatesTable.findAll({}, [], {});
+
+    expect(fundingIndices.length).toEqual(1);
+    expect(fundingIndices[0]).toEqual(expect.objectContaining({
+      perpetualId: '0',
+      rate: '0.00000125',
+      oraclePrice: '10000',
+      fundingIndex: '0.1',
+    }));
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update_event', 0.1, { ticker: 'BTC-USD' });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.funding_index_update', 0.1, { ticker: 'BTC-USD' });
   });
 
   it('successfully processes and clears cache for a new funding rate', async () => {
