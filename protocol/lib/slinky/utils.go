@@ -2,8 +2,9 @@ package slinky
 
 import (
 	"fmt"
-	"github.com/skip-mev/slinky/x/oracle/types"
 	"strings"
+
+	"github.com/skip-mev/slinky/x/oracle/types"
 )
 
 /*

@@ -33,7 +33,6 @@ type ClientTestSuite struct {
 	daemonFlags           daemonflags.DaemonFlags
 	appFlags              appflags.Flags
 	daemonServer          *daemonserver.Server
-	exchangePriceCache    *pricefeed_types.MarketToExchangePrices
 	grpcServer            *grpc.Server
 	pricesMockQueryServer *mocks.QueryServer
 	wg                    sync.WaitGroup

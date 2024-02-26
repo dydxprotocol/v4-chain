@@ -88,5 +88,4 @@ func TestMarketPairFetcher(t *testing.T) {
 		err := fetcher.FetchIdMappings(context.Background())
 		require.Error(t, err, "test error")
 	})
-
 }

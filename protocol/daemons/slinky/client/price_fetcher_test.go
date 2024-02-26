@@ -31,12 +31,11 @@ func TestPriceFetcherTestSuite(t *testing.T) {
 
 type PriceFetcherTestSuite struct {
 	suite.Suite
-	daemonFlags        daemonflags.DaemonFlags
-	appFlags           appflags.Flags
-	daemonServer       *daemonserver.Server
-	exchangePriceCache *pricefeed_types.MarketToExchangePrices
-	pricesGrpcServer   *grpc.Server
-	wg                 sync.WaitGroup
+	daemonFlags      daemonflags.DaemonFlags
+	appFlags         appflags.Flags
+	daemonServer     *daemonserver.Server
+	pricesGrpcServer *grpc.Server
+	wg               sync.WaitGroup
 }
 
 func (p *PriceFetcherTestSuite) SetupTest() {
@@ -189,7 +188,9 @@ func (p *PriceFetcherTestSuite) TestPriceFetcher() {
 			logger,
 		)
 		p.Require().NoError(fetcher.Start(context.Background()))
-		p.Require().Errorf(fetcher.FetchPrices(context.Background()), "slinky client returned price %s not parsable as uint64", "abc123")
+		p.Require().Errorf(
+			fetcher.FetchPrices(context.Background()),
+			"slinky client returned price %s not parsable as uint64", "abc123")
 		fetcher.Stop()
 	})
 
