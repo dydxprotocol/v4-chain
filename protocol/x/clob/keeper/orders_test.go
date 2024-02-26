@@ -116,12 +116,12 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
 				// Indexer event
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Dave_Num0.ToStateKey()),
 				// Indexer event
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update rewards
 				rewardtypes.RewardShareKeyPrefix + constants.Carl_Num0.Owner,
 				rewardtypes.RewardShareKeyPrefix + constants.Dave_Num0.Owner,
@@ -436,11 +436,11 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				// Update taker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num1.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update prunable block height for taker fill amount
@@ -810,11 +810,11 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				// Update taker subaccount.
 				satypes.SubaccountKeyPrefix +
 					string(constants.Carl_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update maker subaccount.
 				satypes.SubaccountKeyPrefix +
 					string(constants.Dave_Num0.ToStateKey()),
-				indexer_manager.IndexerEventsKey,
+				indexer_manager.IndexerEventsCountKey,
 				// Update block stats
 				statstypes.BlockStatsKey,
 				// Update taker order fill amount to state and memStore.

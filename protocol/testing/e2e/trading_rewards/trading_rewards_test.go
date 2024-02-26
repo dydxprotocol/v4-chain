@@ -2,6 +2,7 @@ package trading_rewards_test
 
 import (
 	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/gogoproto/proto"
 	"math/big"
 	"testing"
 	"time"
@@ -12,7 +13,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
@@ -831,9 +831,8 @@ func TestTradingRewards(t *testing.T) {
 					)
 				}
 
-				unmarshaler := common.UnmarshalerImpl{}
 				var block indexer_manager.IndexerTendermintBlock
-				_ = unmarshaler.Unmarshal(msgSender.GetOnchainMessages()[0].Value, &block)
+				_ = proto.Unmarshal(msgSender.GetOnchainMessages()[0].Value, &block)
 				rewards := keepertest.GetTradingRewardEventsFromIndexerTendermintBlock(block)
 				require.ElementsMatch(t, expectedStateAtBlock.ExpectedTradingRewardEvents, rewards)
 			}

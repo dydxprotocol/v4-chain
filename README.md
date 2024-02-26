@@ -28,6 +28,10 @@ This repository contains the source code for the Cosmos SDK application responsi
 
 [dYdX Blog](https://dydx.exchange/blog#)
 
+# Clients
+
+[v4-clients](https://github.com/dydxprotocol/v4-clients)
+
 # Third-party Clients
 
 [C++ Client](https://github.com/asnefedovv/dydx-v4-client-cpp)

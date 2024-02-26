@@ -1347,7 +1347,7 @@
         "security": [],
         "parameters": [
           {
-            "in": "query",
+            "in": "path",
             "name": "address",
             "required": true,
             "schema": {

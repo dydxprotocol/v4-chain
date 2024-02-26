@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"github.com/cosmos/gogoproto/proto"
 	"math/big"
 	"testing"
 
@@ -8,7 +9,6 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -151,9 +151,8 @@ func GetSubaccountUpdateEventsFromIndexerBlock(
 		if event.Subtype != indexerevents.SubtypeSubaccountUpdate {
 			continue
 		}
-		unmarshaler := common.UnmarshalerImpl{}
 		var subaccountUpdate indexerevents.SubaccountUpdateEventV1
-		err := unmarshaler.Unmarshal(event.DataBytes, &subaccountUpdate)
+		err := proto.Unmarshal(event.DataBytes, &subaccountUpdate)
 		if err != nil {
 			panic(err)
 		}

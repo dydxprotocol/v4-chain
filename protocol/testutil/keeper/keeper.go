@@ -29,7 +29,7 @@ type callback func(
 func initKeepers(t testing.TB, cb callback) sdk.Context {
 	ctx, stateStore, db := sdktest.NewSdkContextWithMultistore()
 	// Mount transient store for indexer events, shared by all keepers that emit indexer events.
-	transientStoreKey := storetypes.NewTransientStoreKey(indexer_manager.IndexerEventsKey)
+	transientStoreKey := storetypes.NewTransientStoreKey(indexer_manager.TransientStoreKey)
 	stateStore.MountStoreWithDB(transientStoreKey, storetypes.StoreTypeTransient, db)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
 

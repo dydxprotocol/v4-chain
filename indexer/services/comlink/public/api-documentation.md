@@ -444,9 +444,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}', params={
-  'address': 'string'
-}, headers = headers)
+r = requests.get('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}', headers = headers)
 
 print(r.json())
 
@@ -458,7 +456,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}?address=string',
+fetch('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}',
 {
   method: 'GET',
 
@@ -478,7 +476,7 @@ fetch('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}?address=
 
 |Name|In|Type|Required|Description|
 |---|---|---|---|---|
-|address|query|string|true|none|
+|address|path|string|true|none|
 
 > Example responses
 

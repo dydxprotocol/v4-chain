@@ -411,14 +411,16 @@ require (
 )
 
 replace (
-	cosmossdk.io/client/v2 => github.com/dydxprotocol/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240214225126-ba76b79cd4cf
+	// TODO(DEC-2209): Ideally we rely on a released version (we don't make any changes in our cosmos-sdk fork).
+	// In this case the latest signing mode fixes aren't tagged as a release yet.
+	cosmossdk.io/client/v2 => github.com/cosmos/cosmos-sdk/client/v2 v2.0.0-beta.1.0.20240219091002-18ea4c520045
 	// TODO(https://github.com/cosmos/rosetta/issues/76): Rosetta requires cosmossdk.io/core v0.12.0 erroneously but
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-24873b51ad9f
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240222221247-6eacec603896
 )
 
 replace (

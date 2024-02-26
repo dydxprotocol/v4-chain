@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/big"
@@ -11,7 +12,6 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 
@@ -123,9 +123,8 @@ func getUpdatePerpetualEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_TransactionIndex); ok {
-			unmarshaler := common.UnmarshalerImpl{}
 			var updatePerpetualEvent indexerevents.UpdatePerpetualEventV1
-			err := unmarshaler.Unmarshal(event.DataBytes, &updatePerpetualEvent)
+			err := proto.Unmarshal(event.DataBytes, &updatePerpetualEvent)
 			if err != nil {
 				panic(err)
 			}
@@ -1965,9 +1964,8 @@ func getFundingBlockEventsFromIndexerBlock(
 			continue
 		}
 		if _, ok := event.OrderingWithinBlock.(*indexer_manager.IndexerTendermintEvent_BlockEvent_); ok {
-			unmarshaler := common.UnmarshalerImpl{}
 			var fundingEvent indexerevents.FundingEventV1
-			err := unmarshaler.Unmarshal(event.DataBytes, &fundingEvent)
+			err := proto.Unmarshal(event.DataBytes, &fundingEvent)
 			if err != nil {
 				panic(err)
 			}
