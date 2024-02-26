@@ -304,6 +304,40 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ComplianceStatus": {
+        "enum": [
+          "COMPLIANT",
+          "FIRST_STRIKE",
+          "CLOSE_ONLY",
+          "BLOCKED"
+        ],
+        "type": "string"
+      },
+      "ComplianceReason": {
+        "enum": [
+          "MANUAL",
+          "US_GEO",
+          "CA_GEO",
+          "SANCTIONED_GEO",
+          "COMPLIANCE_PROVIDER"
+        ],
+        "type": "string"
+      },
+      "ComplianceV2Response": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/ComplianceStatus"
+          },
+          "reason": {
+            "$ref": "#/components/schemas/ComplianceReason"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "OrderSide": {
         "enum": [
           "BUY",
@@ -1286,6 +1320,34 @@
         "parameters": [
           {
             "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/compliance/screen/{address}": {
+      "get": {
+        "operationId": "Screen",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceV2Response"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
             "name": "address",
             "required": true,
             "schema": {

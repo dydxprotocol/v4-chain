@@ -4,6 +4,7 @@ import AddressesController from './v4/addresses-controller';
 import AssetPositionsController from './v4/asset-positions-controller';
 import CandlesController from './v4/candles-controller';
 import ComplianceController from './v4/compliance-controller';
+import ComplianceV2Controller from './v4/compliance-v2-controller';
 import FillsController from './v4/fills-controller';
 import HeightController from './v4/height-controller';
 import HistoricalBlockTradingRewardController from './v4/historical-block-trading-rewards-controller';
@@ -40,5 +41,6 @@ router.use('/time', TimeController);
 router.use('/trades', TradesController);
 router.use('/transfers', TransfersController);
 router.use('/screen', ComplianceController);
+router.use('/compliance', ComplianceV2Controller);
 
 export default router;

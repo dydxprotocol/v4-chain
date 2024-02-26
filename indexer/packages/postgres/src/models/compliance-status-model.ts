@@ -39,9 +39,9 @@ export default class ComplianceStatusModel extends Model {
 
   address!: string;
 
-  status!: string;
+  status!: ComplianceStatus;
 
-  reason?: string;
+  reason?: ComplianceReason;
 
   createdAt!: string;
 

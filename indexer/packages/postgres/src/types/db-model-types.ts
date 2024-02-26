@@ -2,6 +2,7 @@
 import Big from 'big.js';
 
 import { CandleResolution } from './candle-types';
+import { ComplianceReason, ComplianceStatus } from './compliance-status-types';
 import { FillType, Liquidity } from './fill-types';
 import {
   OrderSide, OrderStatus, OrderType, TimeInForce,
@@ -225,8 +226,8 @@ export interface ComplianceDataFromDatabase {
 
 export interface ComplianceStatusFromDatabase {
   address: string;
-  status: string;
-  reason?: string;
+  status: ComplianceStatus;
+  reason?: ComplianceReason;
   createdAt: IsoString;
   updatedAt: IsoString;
 }
