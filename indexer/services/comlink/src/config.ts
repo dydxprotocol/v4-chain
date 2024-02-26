@@ -53,6 +53,8 @@ export const configSchema = {
   RATE_LIMIT_SCREEN_QUERY_PROVIDER_GLOBAL_DURATION_SECONDS: parseInteger({ default: 60 }),
   // Threshold for refreshing compliance data for an address when screened
   MAX_AGE_SCREENED_ADDRESS_COMPLIANCE_DATA_SECONDS: parseInteger({ default: 86_400 }), //  1 day
+  // Expose setting compliance status, only set to true in dev/staging.
+  EXPOSE_SET_COMPLIANCE_ENDPOINT: parseBoolean({ default: false }),
 };
 
 ////////////////////////////////////////////////////////////////////////////////

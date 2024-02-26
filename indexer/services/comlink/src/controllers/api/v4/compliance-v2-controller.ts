@@ -22,7 +22,7 @@ import { getIpAddr } from '../../../lib/utils';
 import { CheckAddressSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { ComplianceRequest, ComplianceV2Response } from '../../../types';
+import { ComplianceRequest, ComplianceV2Response, SetComplianceStatusRequest } from '../../../types';
 import { ComplianceControllerHelper } from './compliance-controller';
 
 const router: express.Router = express.Router();
@@ -144,5 +144,60 @@ router.get(
     }
   },
 );
+
+if (config.EXPOSE_SET_COMPLIANCE_ENDPOINT) {
+  router.post(
+    '/setStatus',
+    handleValidationErrors,
+    ExportResponseCodeStats({ controllerName }),
+    async (req: express.Request, res: express.Response) => {
+      const start: number = Date.now();
+
+      const {
+        address,
+        status,
+        reason,
+      }: {
+        address: string,
+        status: ComplianceStatus,
+        reason?: ComplianceReason,
+      } = req.body as SetComplianceStatusRequest;
+
+      try {
+        if (!address.startsWith(DYDX_ADDRESS_PREFIX)) {
+          return create4xxResponse(
+            res,
+            `Address ${address} is not a dydx address`,
+          );
+        }
+        const complianceStatus: ComplianceStatusFromDatabase = await ComplianceStatusTable.upsert({
+          address,
+          status,
+          reason,
+          updatedAt: DateTime.utc().toISO(),
+        });
+        const response: ComplianceV2Response = {
+          status: complianceStatus.status,
+          reason: complianceStatus.reason,
+        };
+
+        return res.send(response);
+      } catch (error) {
+        return handleControllerError(
+          'ComplianceV2Controller POST /setStatus',
+          'Compliance error',
+          error,
+          req,
+          res,
+        );
+      } finally {
+        stats.timing(
+          `${config.SERVICE_NAME}.${controllerName}.set_compliance.timing`,
+          Date.now() - start,
+        );
+      }
+    },
+  );
+}
 
 export default router;

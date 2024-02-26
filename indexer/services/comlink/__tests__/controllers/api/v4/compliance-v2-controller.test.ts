@@ -14,6 +14,7 @@ import { stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
+import config from '../../../../src/config';
 
 jest.mock('../../../../src/lib/utils', () => ({
   ...jest.requireActual('../../../../src/lib/utils'),
@@ -144,6 +145,76 @@ describe('ComplianceV2Controller', () => {
         path: `/v4/compliance/screen/${testConstants.defaultAddress}`,
       });
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+  });
+
+  describe('POST /setStatus', () => {
+    beforeEach(async () => {
+      ipAddrMock.mockReturnValue(ipAddr);
+      await testMocks.seedData();
+    });
+
+    afterEach(async () => {
+      await redis.deleteAllAsync(ratelimitRedis.client);
+      await dbHelpers.clearData();
+      jest.clearAllMocks();
+    });
+
+    it('should return 400 for non-dydx address', async () => {
+      config.EXPOSE_SET_COMPLIANCE_ENDPOINT = true;
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/setStatus',
+        body: {
+          address: '0x123',
+          status: ComplianceStatus.COMPLIANT,
+        },
+        expectedStatus: 400,
+      });
+    });
+
+    it('should upsert db row for dydx address', async () => {
+      let data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(0);
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/setStatus',
+        body: {
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.COMPLIANT,
+        },
+      });
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+      data = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      }));
+    });
+
+    it('should update exisitng db row for dydx address', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+      });
+      let data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/setStatus',
+        body: {
+          address: testConstants.defaultAddress,
+          status: ComplianceStatus.COMPLIANT,
+        },
+      });
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+      data = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      }));
     });
   });
 });
