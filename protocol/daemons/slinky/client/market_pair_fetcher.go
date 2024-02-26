@@ -2,15 +2,18 @@ package client
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"fmt"
+	"sync"
+
+	"cosmossdk.io/log"
+	"google.golang.org/grpc"
+
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
+
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
-	"google.golang.org/grpc"
-	"sync"
 )
 
 // MarketPairFetcher is a lightweight process run in a goroutine by the slinky client.
@@ -26,9 +29,9 @@ type MarketPairFetcher interface {
 
 // MarketPairFetcherImpl implements the MarketPairFetcher interface.
 type MarketPairFetcherImpl struct {
-	logger            log.Logger
-	queryConn         *grpc.ClientConn
-	pricesQueryClient pricetypes.QueryClient
+	Logger            log.Logger
+	QueryConn         *grpc.ClientConn
+	PricesQueryClient pricetypes.QueryClient
 
 	// compatMappings stores a mapping between CurrencyPair and the corresponding market(param|price) ID
 	compatMappings map[oracletypes.CurrencyPair]uint32
@@ -37,7 +40,7 @@ type MarketPairFetcherImpl struct {
 
 func NewMarketPairFetcher(logger log.Logger) MarketPairFetcher {
 	return &MarketPairFetcherImpl{
-		logger:         logger,
+		Logger:         logger,
 		compatMappings: make(map[oracletypes.CurrencyPair]uint32),
 	}
 }
@@ -50,21 +53,21 @@ func (m *MarketPairFetcherImpl) Start(
 	// Create the query client connection
 	queryConn, err := grpcClient.NewTcpConnection(ctx, appFlags.GrpcAddress)
 	if err != nil {
-		m.logger.Error(
+		m.Logger.Error(
 			"Failed to establish gRPC connection",
 			"gRPC address", appFlags.GrpcAddress,
 			"error", err,
 		)
 		return err
 	}
-	m.pricesQueryClient = pricetypes.NewQueryClient(queryConn)
+	m.PricesQueryClient = pricetypes.NewQueryClient(queryConn)
 	return nil
 }
 
 // Stop closes all existing connections.
 func (m *MarketPairFetcherImpl) Stop() {
-	if m.queryConn != nil {
-		_ = m.queryConn.Close()
+	if m.QueryConn != nil {
+		_ = m.QueryConn.Close()
 	}
 }
 
@@ -85,14 +88,9 @@ func (m *MarketPairFetcherImpl) GetIDForPair(cp oracletypes.CurrencyPair) (uint3
 // CurrencyPair and MarketParam ID.
 func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	// fetch all market params
-	resp, err := m.pricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
+	resp, err := m.PricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
 	if err != nil {
 		return err
-	}
-	// Exit early if there are no changes
-	// This assumes there will not be an addition and a removal of markets in the same block
-	if len(resp.MarketParams) == len(m.compatMappings) {
-		return nil
 	}
 	var compatMappings = make(map[oracletypes.CurrencyPair]uint32, len(resp.MarketParams))
 	for _, mp := range resp.MarketParams {
@@ -100,7 +98,7 @@ func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		m.logger.Info("Mapped market to pair", "market id", mp.Id, "currency pair", cp.String())
+		m.Logger.Debug("Mapped market to pair", "market id", mp.Id, "currency pair", cp.String())
 		compatMappings[cp] = mp.Id
 	}
 	m.compatMu.Lock()

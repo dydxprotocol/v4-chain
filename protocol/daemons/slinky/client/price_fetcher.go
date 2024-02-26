@@ -3,13 +3,13 @@ package client
 import (
 	"context"
 	"fmt"
-	"github.com/skip-mev/slinky/service/servers/oracle/types"
 	"strconv"
 
 	"cosmossdk.io/log"
 	"google.golang.org/grpc"
 
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	"github.com/skip-mev/slinky/service/servers/oracle/types"
 	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
@@ -129,7 +129,7 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 	// send the updates to the app's price-feed service -> these will then be piped to the
 	// x/prices indexPriceCache via the pricefeed service
 	if p.priceFeedServiceClient == nil {
-		p.logger.Error("nil price feed service client")
+		return fmt.Errorf("price feed service client was not initialized in slinky client")
 	}
 	if len(updates) == 0 {
 		p.logger.Info("Slinky returned 0 valid market price updates")
@@ -137,7 +137,6 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 	}
 	_, err = p.priceFeedServiceClient.UpdateMarketPrices(ctx, &api.UpdateMarketPricesRequest{MarketPriceUpdates: updates})
 	if err != nil {
-		p.logger.Error(err.Error())
 		return err
 	}
 	return nil

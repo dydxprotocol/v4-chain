@@ -122,7 +122,7 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 	for {
 		select {
 		case <-ticker.C:
-			err := c.marketPairFetcher.FetchIdMappings(ctx)
+			err = c.marketPairFetcher.FetchIdMappings(ctx)
 			if err != nil {
 				c.logger.Error("Failed to run fetch id mappings for slinky daemon", "error", err)
 				c.ReportFailure(errors.Wrap(err, "failed to run FetchIdMappings for slinky daemon"))
