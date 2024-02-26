@@ -7,7 +7,11 @@ import {
   dbHelpers,
   IsoString,
   LiquidityTiersTable,
+  liquidityTierRefresher,
   MarketTable,
+  Ordering,
+  PerpetualMarketColumns,
+  PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   PerpetualMarketTable,
   TendermintEventFromDatabase,
@@ -22,6 +26,7 @@ import {
   IndexerTendermintBlock,
   IndexerTendermintEvent,
   MarketEventV1,
+  PerpetualMarketCreateEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
   Timestamp,
@@ -41,12 +46,14 @@ import {
   defaultFundingUpdateSampleEvent,
   defaultHeight,
   defaultMarketModify,
+  defaultPerpetualMarketCreateEvent,
   defaultPreviousHeight,
   defaultSubaccountMessage,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import Long from 'long';
 import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
+import { expectPerpetualMarketMatchesEvent } from '../helpers/postgres-helpers';
 
 describe('on-message', () => {
   let producerSendMock: jest.SpyInstance;
@@ -125,6 +132,12 @@ describe('on-message', () => {
   const defaultMarketEventBinary: Uint8Array = Uint8Array.from(MarketEventV1.encode(
     defaultMarketModify,
   ).finish());
+
+  const defaultPerpetualMarketEventBinary: Uint8Array = Uint8Array.from(
+    PerpetualMarketCreateEventV1.encode(
+      defaultPerpetualMarketCreateEvent,
+    ).finish(),
+  );
 
   it('successfully processes block with transaction event', async () => {
     const transactionIndex: number = 0;
@@ -230,6 +243,73 @@ describe('on-message', () => {
       expectTransactionWithHash([defaultTxHash]),
       expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
     ]);
+
+    expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
+    expect(stats.timing).toHaveBeenCalledWith(
+      'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });
+    expect(stats.gauge).toHaveBeenCalledWith('ender.processing_block_height', expect.any(Number));
+    expect(stats.timing).toHaveBeenCalledWith('ender.processed_block.timing',
+      expect.any(Number), 1, { success: 'true' });
+  });
+
+  it('successfully processes block with market create and funding events', async () => {
+    await Promise.all([
+      MarketTable.create(testConstants.defaultMarket),
+      MarketTable.create(testConstants.defaultMarket2),
+    ]);
+    await Promise.all([
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier),
+      LiquidityTiersTable.create(testConstants.defaultLiquidityTier2),
+    ]);
+    await Promise.all([
+      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+    ]);
+    await Promise.all([
+      perpetualMarketRefresher.updatePerpetualMarkets(),
+      liquidityTierRefresher.updateLiquidityTiers(),
+    ]);
+
+    const transactionIndex: number = -1;
+    const eventIndex: number = 0;
+    const events: IndexerTendermintEvent[] = [
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.PERPETUAL_MARKET,
+        defaultPerpetualMarketEventBinary,
+        0,
+        eventIndex,
+      ),
+      createIndexerTendermintEvent(
+        DydxIndexerSubtypes.FUNDING,
+        defaultFundingEventBinary,
+        transactionIndex,
+        eventIndex + 1,
+      ),
+    ];
+
+    const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+      defaultHeight,
+      defaultTime,
+      events,
+      [defaultTxHash],
+    );
+    const binaryBlock: Uint8Array = Uint8Array.from(IndexerTendermintBlock.encode(block).finish());
+    const kafkaMessage: KafkaMessage = createKafkaMessage(Buffer.from(binaryBlock));
+
+    await onMessage(kafkaMessage);
+    await Promise.all([
+      expectTendermintEvent(defaultHeight.toString(), 0, eventIndex),
+      expectTendermintEvent(defaultHeight.toString(), transactionIndex, eventIndex + 1),
+      expectTransactionWithHash([defaultTxHash]),
+      expectBlock(defaultHeight.toString(), defaultDateTime.toISO()),
+    ]);
+
+    const newPerpetualMarkets: PerpetualMarketFromDatabase[] = await PerpetualMarketTable.findAll(
+      {},
+      [], {
+        orderBy: [[PerpetualMarketColumns.id, Ordering.ASC]],
+      });
+    expect(newPerpetualMarkets.length).toEqual(2);
+    expectPerpetualMarketMatchesEvent(defaultPerpetualMarketCreateEvent, newPerpetualMarkets[0]);
 
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
