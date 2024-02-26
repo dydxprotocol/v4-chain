@@ -114,8 +114,11 @@ func (c *ClientTestSuite) TestClient() {
 			c.appFlags,
 			logger,
 		)
-		// Need to wait until a single cycle is done
-		time.Sleep(time.Millisecond * 20)
+		waitTime := time.Second * 5
+		c.Require().Eventually(func() bool {
+			return cli.HealthCheck() == nil
+		}, waitTime, time.Millisecond*500, "Slinky daemon failed to become healthy within %s", waitTime)
+		// Need to wait until a single c
 		cli.Stop()
 		c.Require().NoError(cli.HealthCheck())
 	})
