@@ -215,6 +215,8 @@ var (
 	// Custom modules
 	NormalMsgsDydxCustom = map[string]sdk.Msg{
 		// clob
+		"/dydxprotocol.clob.MsgBatchCancel":         &clob.MsgBatchCancel{},
+		"/dydxprotocol.clob.MsgBatchCancelResponse": nil,
 		"/dydxprotocol.clob.MsgCancelOrder":         &clob.MsgCancelOrder{},
 		"/dydxprotocol.clob.MsgCancelOrderResponse": nil,
 		"/dydxprotocol.clob.MsgPlaceOrder":          &clob.MsgPlaceOrder{},
