@@ -4,13 +4,13 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 var _ sdk.Msg = &MsgBatchCancel{}
 
 // NewMsgBatchCancel constructs a MsgBatchCancel.
-func NewMsgBatchCancel(subaccountId types.SubaccountId, cancelBatch []OrderBatch, goodTilBlock uint32) *MsgBatchCancel {
+func NewMsgBatchCancel(subaccountId satypes.SubaccountId, cancelBatch []OrderBatch, goodTilBlock uint32) *MsgBatchCancel {
 	return &MsgBatchCancel{
 		SubaccountId:     subaccountId,
 		ShortTermCancels: cancelBatch,
