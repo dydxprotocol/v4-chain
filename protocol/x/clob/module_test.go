@@ -3,12 +3,13 @@ package clob_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	sdkmath "cosmossdk.io/math"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -148,7 +149,7 @@ func TestAppModuleBasic_RegisterInterfaces(t *testing.T) {
 	// due to it using an unexported method on the interface thus we use reflection to access the field
 	// directly that contains the registrations.
 	fv := reflect.ValueOf(registry).Elem().FieldByName("implInterfaces")
-	require.Len(t, fv.MapKeys(), 16)
+	require.Len(t, fv.MapKeys(), 18)
 }
 
 func TestAppModuleBasic_DefaultGenesis(t *testing.T) {

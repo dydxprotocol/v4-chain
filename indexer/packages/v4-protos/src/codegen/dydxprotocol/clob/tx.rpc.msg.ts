@@ -1,6 +1,6 @@
 import { Rpc } from "../../helpers";
 import * as _m0 from "protobufjs/minimal";
-import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse } from "./tx";
+import { MsgProposedOperations, MsgProposedOperationsResponse, MsgPlaceOrder, MsgPlaceOrderResponse, MsgCancelOrder, MsgCancelOrderResponse, MsgBatchCancel, MsgBatchCancelResponse, MsgCreateClobPair, MsgCreateClobPairResponse, MsgUpdateClobPair, MsgUpdateClobPairResponse, MsgUpdateEquityTierLimitConfiguration, MsgUpdateEquityTierLimitConfigurationResponse, MsgUpdateBlockRateLimitConfiguration, MsgUpdateBlockRateLimitConfigurationResponse, MsgUpdateLiquidationsConfig, MsgUpdateLiquidationsConfigResponse } from "./tx";
 /** Msg defines the Msg service. */
 
 export interface Msg {
@@ -15,6 +15,9 @@ export interface Msg {
   /** CancelOrder allows accounts to cancel existing orders on the orderbook. */
 
   cancelOrder(request: MsgCancelOrder): Promise<MsgCancelOrderResponse>;
+  /** BatchCancel allows accounts to cancel a batch of orders on the orderbook. */
+
+  batchCancel(request: MsgBatchCancel): Promise<MsgBatchCancelResponse>;
   /** CreateClobPair creates a new clob pair. */
 
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse>;
@@ -50,6 +53,7 @@ export class MsgClientImpl implements Msg {
     this.proposedOperations = this.proposedOperations.bind(this);
     this.placeOrder = this.placeOrder.bind(this);
     this.cancelOrder = this.cancelOrder.bind(this);
+    this.batchCancel = this.batchCancel.bind(this);
     this.createClobPair = this.createClobPair.bind(this);
     this.updateClobPair = this.updateClobPair.bind(this);
     this.updateEquityTierLimitConfiguration = this.updateEquityTierLimitConfiguration.bind(this);
@@ -73,6 +77,12 @@ export class MsgClientImpl implements Msg {
     const data = MsgCancelOrder.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.clob.Msg", "CancelOrder", data);
     return promise.then(data => MsgCancelOrderResponse.decode(new _m0.Reader(data)));
+  }
+
+  batchCancel(request: MsgBatchCancel): Promise<MsgBatchCancelResponse> {
+    const data = MsgBatchCancel.encode(request).finish();
+    const promise = this.rpc.request("dydxprotocol.clob.Msg", "BatchCancel", data);
+    return promise.then(data => MsgBatchCancelResponse.decode(new _m0.Reader(data)));
   }
 
   createClobPair(request: MsgCreateClobPair): Promise<MsgCreateClobPairResponse> {

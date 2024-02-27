@@ -11,6 +11,7 @@ import "dydxprotocol/clob/matches.proto";
 import "dydxprotocol/clob/order.proto";
 import "dydxprotocol/clob/order_removals.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
 
 // this line is used by starport scaffolding # proto/tx/import
 
@@ -26,6 +27,8 @@ service Msg {
   rpc PlaceOrder(MsgPlaceOrder) returns (MsgPlaceOrderResponse);
   // CancelOrder allows accounts to cancel existing orders on the orderbook.
   rpc CancelOrder(MsgCancelOrder) returns (MsgCancelOrderResponse);
+  // BatchCancel allows accounts to cancel a batch of orders on the orderbook.
+  rpc BatchCancel(MsgBatchCancel) returns (MsgBatchCancelResponse);
   // CreateClobPair creates a new clob pair.
   rpc CreateClobPair(MsgCreateClobPair) returns (MsgCreateClobPairResponse);
   // UpdateClobPair sets the status of a clob pair. Should return an error
@@ -97,6 +100,34 @@ message MsgCancelOrder {
 
 // MsgCancelOrderResponse is a response type used for canceling orders.
 message MsgCancelOrderResponse {}
+
+// MsgBatchCancel is a request type used for batch canceling orders.
+// This msg is not atomic. Cancels will be performed optimistically even
+// if some cancels are invalid or fail.
+message MsgBatchCancel {
+  // The subaccount this batch cancel will be applied for.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 1
+      [ (gogoproto.nullable) = false ];
+
+  // The batch of short term orders that will be cancelled.
+  repeated OrderBatch short_term_cancels = 2 [ (gogoproto.nullable) = false ];
+
+  // The last block the short term order cancellations can be executed at.
+  uint32 good_til_block = 3;
+}
+
+// OrderBatch represents a batch of orders all belonging to a single clob pair
+// id. Along with a subaccount id and an order flag, is used to represent a
+// batch of orders that share the same subaccount, order flag, and clob pair id.
+message OrderBatch {
+  // The Clob Pair ID all orders in this order batch belong to.
+  uint32 clob_pair_id = 1;
+  // List of client ids in this order batch.
+  repeated fixed32 client_ids = 2;
+}
+
+// MsgBatchCancelResponse is a response type used for batch canceling orders.
+message MsgBatchCancelResponse {}
 
 // MsgUpdateClobPair is a request type used for updating a ClobPair in state.
 message MsgUpdateClobPair {
