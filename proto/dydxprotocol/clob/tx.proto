@@ -116,9 +116,9 @@ message MsgBatchCancel {
   uint32 good_til_block = 3;
 }
 
-// OrderBatch represents a batch of orders all belonging to a single clob pair id.
-// Along with a subaccount id and an order flag, is used to represent a batch of orders
-// that share the same subaccount, order flag, and clob pair id.
+// OrderBatch represents a batch of orders all belonging to a single clob pair
+// id. Along with a subaccount id and an order flag, is used to represent a
+// batch of orders that share the same subaccount, order flag, and clob pair id.
 message OrderBatch {
   // The Clob Pair ID all orders in this order batch belong to.
   uint32 clob_pair_id = 1;

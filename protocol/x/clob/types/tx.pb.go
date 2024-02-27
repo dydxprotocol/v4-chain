@@ -490,9 +490,9 @@ func (m *MsgBatchCancel) GetGoodTilBlock() uint32 {
 	return 0
 }
 
-// OrderBatch represents a batch of orders all belonging to a single clob pair id.
-// Along with a subaccount id and an order flag, is used to represent a batch of orders
-// that share the same subaccount, order flag, and clob pair id.
+// OrderBatch represents a batch of orders all belonging to a single clob pair
+// id. Along with a subaccount id and an order flag, is used to represent a
+// batch of orders that share the same subaccount, order flag, and clob pair id.
 type OrderBatch struct {
 	// The Clob Pair ID all orders in this order batch belong to.
 	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`

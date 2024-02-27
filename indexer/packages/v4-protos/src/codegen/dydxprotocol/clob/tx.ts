@@ -1,4 +1,5 @@
 import { Order, OrderSDKType, OrderId, OrderIdSDKType } from "./order";
+import { SubaccountId, SubaccountIdSDKType } from "../subaccounts/subaccount";
 import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
@@ -125,6 +126,70 @@ export interface MsgCancelOrderResponse {}
 /** MsgCancelOrderResponse is a response type used for canceling orders. */
 
 export interface MsgCancelOrderResponseSDKType {}
+/**
+ * MsgBatchCancel is a request type used for batch canceling orders.
+ * This msg is not atomic. Cancels will be performed optimistically even
+ * if some cancels are invalid or fail.
+ */
+
+export interface MsgBatchCancel {
+  /** The subaccount this batch cancel will be applied for. */
+  subaccountId?: SubaccountId;
+  /** The batch of short term orders that will be cancelled. */
+
+  shortTermCancels: OrderBatch[];
+  /** The last block the short term order cancellations can be executed at. */
+
+  goodTilBlock: number;
+}
+/**
+ * MsgBatchCancel is a request type used for batch canceling orders.
+ * This msg is not atomic. Cancels will be performed optimistically even
+ * if some cancels are invalid or fail.
+ */
+
+export interface MsgBatchCancelSDKType {
+  /** The subaccount this batch cancel will be applied for. */
+  subaccount_id?: SubaccountIdSDKType;
+  /** The batch of short term orders that will be cancelled. */
+
+  short_term_cancels: OrderBatchSDKType[];
+  /** The last block the short term order cancellations can be executed at. */
+
+  good_til_block: number;
+}
+/**
+ * OrderBatch represents a batch of orders all belonging to a single clob pair
+ * id. Along with a subaccount id and an order flag, is used to represent a
+ * batch of orders that share the same subaccount, order flag, and clob pair id.
+ */
+
+export interface OrderBatch {
+  /** The Clob Pair ID all orders in this order batch belong to. */
+  clobPairId: number;
+  /** List of client ids in this order batch. */
+
+  clientIds: number[];
+}
+/**
+ * OrderBatch represents a batch of orders all belonging to a single clob pair
+ * id. Along with a subaccount id and an order flag, is used to represent a
+ * batch of orders that share the same subaccount, order flag, and clob pair id.
+ */
+
+export interface OrderBatchSDKType {
+  /** The Clob Pair ID all orders in this order batch belong to. */
+  clob_pair_id: number;
+  /** List of client ids in this order batch. */
+
+  client_ids: number[];
+}
+/** MsgBatchCancelResponse is a response type used for batch canceling orders. */
+
+export interface MsgBatchCancelResponse {}
+/** MsgBatchCancelResponse is a response type used for batch canceling orders. */
+
+export interface MsgBatchCancelResponseSDKType {}
 /** MsgUpdateClobPair is a request type used for updating a ClobPair in state. */
 
 export interface MsgUpdateClobPair {
@@ -633,6 +698,172 @@ export const MsgCancelOrderResponse = {
 
   fromPartial(_: DeepPartial<MsgCancelOrderResponse>): MsgCancelOrderResponse {
     const message = createBaseMsgCancelOrderResponse();
+    return message;
+  }
+
+};
+
+function createBaseMsgBatchCancel(): MsgBatchCancel {
+  return {
+    subaccountId: undefined,
+    shortTermCancels: [],
+    goodTilBlock: 0
+  };
+}
+
+export const MsgBatchCancel = {
+  encode(message: MsgBatchCancel, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.subaccountId !== undefined) {
+      SubaccountId.encode(message.subaccountId, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.shortTermCancels) {
+      OrderBatch.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.goodTilBlock !== 0) {
+      writer.uint32(24).uint32(message.goodTilBlock);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgBatchCancel {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgBatchCancel();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.subaccountId = SubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.shortTermCancels.push(OrderBatch.decode(reader, reader.uint32()));
+          break;
+
+        case 3:
+          message.goodTilBlock = reader.uint32();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<MsgBatchCancel>): MsgBatchCancel {
+    const message = createBaseMsgBatchCancel();
+    message.subaccountId = object.subaccountId !== undefined && object.subaccountId !== null ? SubaccountId.fromPartial(object.subaccountId) : undefined;
+    message.shortTermCancels = object.shortTermCancels?.map(e => OrderBatch.fromPartial(e)) || [];
+    message.goodTilBlock = object.goodTilBlock ?? 0;
+    return message;
+  }
+
+};
+
+function createBaseOrderBatch(): OrderBatch {
+  return {
+    clobPairId: 0,
+    clientIds: []
+  };
+}
+
+export const OrderBatch = {
+  encode(message: OrderBatch, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobPairId !== 0) {
+      writer.uint32(8).uint32(message.clobPairId);
+    }
+
+    writer.uint32(18).fork();
+
+    for (const v of message.clientIds) {
+      writer.fixed32(v);
+    }
+
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): OrderBatch {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseOrderBatch();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.clobPairId = reader.uint32();
+          break;
+
+        case 2:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.clientIds.push(reader.fixed32());
+            }
+          } else {
+            message.clientIds.push(reader.fixed32());
+          }
+
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<OrderBatch>): OrderBatch {
+    const message = createBaseOrderBatch();
+    message.clobPairId = object.clobPairId ?? 0;
+    message.clientIds = object.clientIds?.map(e => e) || [];
+    return message;
+  }
+
+};
+
+function createBaseMsgBatchCancelResponse(): MsgBatchCancelResponse {
+  return {};
+}
+
+export const MsgBatchCancelResponse = {
+  encode(_: MsgBatchCancelResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): MsgBatchCancelResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseMsgBatchCancelResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(_: DeepPartial<MsgBatchCancelResponse>): MsgBatchCancelResponse {
+    const message = createBaseMsgBatchCancelResponse();
     return message;
   }
 
