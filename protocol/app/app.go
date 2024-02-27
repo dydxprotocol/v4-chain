@@ -450,7 +450,7 @@ func New(
 	)
 	app.oracleMetricsOnce = sync.OnceFunc(
 		func() {
-			app.oracleMetricsOnce()
+			app.initOracleMetrics(appOpts)
 		})
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
@@ -1384,7 +1384,7 @@ func New(
 
 	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
 	if !appFlags.NonValidatingFullNode {
-		app.initOracle(appOpts, priceUpdateDecoder)
+		app.initOracle(priceUpdateDecoder)
 	}
 
 	if app.oracleMetrics == nil {
@@ -1523,7 +1523,7 @@ func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oraclecl
 	return slinkyClient
 }
 
-func (app *App) initOracle(appOpts servertypes.AppOptions, pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
+func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 	// Slinky setup
 	app.oracleMetricsOnce()
 
