@@ -86,13 +86,9 @@ class OrdersController extends Controller {
       goodTilBlockTimeBeforeOrAt,
     };
     if (!_.isEmpty(status)) {
-      // BEST_EFFORT_OPENED status not included in the filter, orders in postgres cannot be
-      // BEST_EFFORT_OPENED. An order is only BEST_EFFORT_OPENED if it exists in redis and not
-      // in postgres.
-      orderQueryConfig.statuses = _.filter(
-        status,
-        (s: APIOrderStatus) => s !== APIOrderStatusEnum.BEST_EFFORT_OPENED,
-      ) as OrderStatus[];
+      // BEST_EFFORT_OPENED status is not filtered out, because it's a minor optimization,
+      // is more confusing, and is not going to affect the result of the query.
+      orderQueryConfig.statuses = status as OrderStatus[];
     }
     const ordering: Ordering = returnLatestOrders !== undefined
       ? returnLatestOrdersToOrdering(returnLatestOrders)
