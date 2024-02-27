@@ -1,9 +1,10 @@
 package types_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInsuranceFundModuleAddress(t *testing.T) {

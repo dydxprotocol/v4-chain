@@ -10,7 +10,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/config"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -40,7 +40,7 @@ var (
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
 		// clob insurance fund account manages insurance fund for liquidations.
-		clobmoduletypes.InsuranceFundName: nil,
+		perpetualsmoduletypes.InsuranceFundName: nil,
 		// rewards treasury account distribute funds trading accounts.
 		rewardsmoduletypes.TreasuryAccountName: nil,
 		// rewards vester account vest rewards tokens into the rewards treasury.

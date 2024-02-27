@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"time"
 
+	types2 "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -141,7 +143,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		types.InsuranceFundModuleAddress,
+		types2.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 
