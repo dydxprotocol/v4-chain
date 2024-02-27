@@ -135,7 +135,7 @@ export async function findAll(
   }
 
   if (status !== undefined) {
-    baseQuery = baseQuery.where(OrderColumns.status, status);
+    baseQuery = baseQuery.whereIn(OrderColumns.status, status);
   }
 
   if (reduceOnly !== undefined) {

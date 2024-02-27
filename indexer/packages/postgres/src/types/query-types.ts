@@ -121,7 +121,7 @@ export interface OrderQueryConfig extends QueryConfig {
   [QueryableField.TOTAL_FILLED]?: string;
   [QueryableField.PRICE]?: string;
   [QueryableField.TYPE]?: OrderType;
-  [QueryableField.STATUS]?: OrderStatus;
+  [QueryableField.STATUS]?: OrderStatus[];
   [QueryableField.POST_ONLY]?: boolean;
   [QueryableField.REDUCE_ONLY]?: boolean;
   [QueryableField.GOOD_TIL_BLOCK_BEFORE_OR_AT]?: string;

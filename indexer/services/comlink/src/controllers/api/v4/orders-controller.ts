@@ -7,7 +7,9 @@ import {
   OrderColumns,
   OrderFromDatabase,
   Ordering,
+  OrderQueryConfig,
   OrderSide,
+  OrderStatus,
   OrderTable,
   OrderType,
   perpetualMarketRefresher,
@@ -74,6 +76,21 @@ class OrdersController extends Controller {
       clobPairId = perpetualMarketRefresher.getClobPairIdFromTicker(ticker);
     }
 
+    const orderQueryConfig: OrderQueryConfig = {
+      subaccountId: [SubaccountTable.uuid(address, subaccountNumber)],
+      limit,
+      clobPairId,
+      side,
+      type,
+      goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
+      goodTilBlockTimeBeforeOrAt,
+    };
+    if (status !== undefined && !_.isEmpty(status)) {
+      orderQueryConfig.status = _.filter(
+        status,
+        (s: APIOrderStatus) => s !== APIOrderStatusEnum.BEST_EFFORT_OPENED,
+      ) as OrderStatus[];
+    }
     const ordering: Ordering = returnLatestOrders !== undefined
       ? returnLatestOrdersToOrdering(returnLatestOrders)
       : Ordering.DESC;
@@ -93,15 +110,7 @@ class OrdersController extends Controller {
         goodTilBlockTimeBeforeOrAt,
       ),
       OrderTable.findAll(
-        {
-          subaccountId: [SubaccountTable.uuid(address, subaccountNumber)],
-          limit,
-          clobPairId,
-          side,
-          type,
-          goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
-          goodTilBlockTimeBeforeOrAt,
-        }, [], {
+        orderQueryConfig, [], {
           ...DEFAULT_POSTGRES_OPTIONS,
           orderBy: [
             // Order by `goodTilBlock` and then order by `goodTilBlockTime`
@@ -114,7 +123,28 @@ class OrdersController extends Controller {
       ),
     ]);
 
-    const postgresOrderMap: PostgresOrderMap = _.keyBy(postgresOrders, OrderColumns.id);
+    const redisOrderIds: string[] = _.map(
+      Object.values(redisOrderMap),
+      (redisOrder: RedisOrder) => {
+        return OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
+      },
+    );
+
+    // Fetch additional orders from Postgres that are not in the initial query, because they
+    // might not conform to the status filter above. For example, if the user is querying for
+    // `status: [BEST_EFFORT_OPENED]`, we need to fetch all orders from Postgres, because if the
+    // order in postgres is 'OPENED', then we do not want to return this order to the user as
+    // 'BEST_EFFORT_OPENED'.
+    const additionalPostgresOrders: OrderFromDatabase[] = await OrderTable.findAll({
+      id: redisOrderIds,
+    }, [], {
+      ...DEFAULT_POSTGRES_OPTIONS,
+    });
+
+    const postgresOrderMap: PostgresOrderMap = _.keyBy(
+      _.concat(postgresOrders, additionalPostgresOrders),
+      OrderColumns.id,
+    );
 
     let mergedResponses: OrderResponseObject[] = mergePostgresAndRedisOrdersToResponseObjects(
       postgresOrderMap,
