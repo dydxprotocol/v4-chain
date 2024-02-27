@@ -1,6 +1,11 @@
 package e2e_test
 
 import (
+	"math/rand"
+	"sync"
+	"sync/atomic"
+	"testing"
+
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -18,10 +23,6 @@ import (
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 	"github.com/syndtr/goleveldb/leveldb/testutil"
-	"math/rand"
-	"sync"
-	"sync/atomic"
-	"testing"
 )
 
 var (

@@ -110,8 +110,6 @@ func initDatadogProfiler(logger log.Logger, ddAgentHost string, ddAgentPort uint
 			profiler.CPUProfile,
 			profiler.HeapProfile,
 			profiler.MutexProfile,
-			profiler.BlockProfile,
-			profiler.GoroutineProfile,
 		),
 	)
 	if err != nil {
