@@ -252,7 +252,7 @@ describe('on-message', () => {
       expect.any(Number), 1, { success: 'true' });
   });
 
-  it('successfully processes block with market create and funding events', async () => {
+  it('successfully processes block with market create and its funding events', async () => {
     await Promise.all([
       MarketTable.create(testConstants.defaultMarket),
       MarketTable.create(testConstants.defaultMarket2),
