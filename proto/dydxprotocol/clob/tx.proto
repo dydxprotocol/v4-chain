@@ -110,7 +110,7 @@ message MsgBatchCancel {
       [ (gogoproto.nullable) = false ];
 
   // The batch of short term orders that will be cancelled.
-  repeated OrderBatch short_term_orders = 2 [ (gogoproto.nullable) = false ];
+  repeated OrderBatch short_term_cancels = 2 [ (gogoproto.nullable) = false ];
 
   // The last block the short term order cancellations can be executed at.
   uint32 good_til_block = 3;
