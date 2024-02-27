@@ -26,7 +26,7 @@ func NewOracleClient(pricesKeeper PricesKeeper) *OracleClient {
 }
 
 // Start starts the OracleClient.
-func (o *OracleClient) Start(ctx context.Context) error {
+func (o *OracleClient) Start(_ context.Context) error {
 	return nil
 }
 
@@ -41,7 +41,7 @@ func (o *OracleClient) Stop() error {
 //
 // This method fails if:
 //   - The passed in context is not an sdk.Context
-func (o *OracleClient) Prices(ctx context.Context, in *oracleservicetypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracleservicetypes.QueryPricesResponse, error) {
+func (o *OracleClient) Prices(ctx context.Context, _ *oracleservicetypes.QueryPricesRequest, opts ...grpc.CallOption) (*oracleservicetypes.QueryPricesResponse, error) {
 	sdkCtx, ok := ctx.(sdk.Context)
 	if !ok {
 		return nil, fmt.Errorf("oracle client was passed on non-sdk context object")
