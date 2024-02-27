@@ -165,6 +165,8 @@ var (
 		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  {},
 
 		// clob
+		"/dydxprotocol.clob.MsgBatchCancel":                                {},
+		"/dydxprotocol.clob.MsgBatchCancelResponse":                        {},
 		"/dydxprotocol.clob.MsgCancelOrder":                                {},
 		"/dydxprotocol.clob.MsgCancelOrderResponse":                        {},
 		"/dydxprotocol.clob.MsgCreateClobPair":                             {},
