@@ -116,7 +116,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -197,7 +197,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				bridgeKeeper,
-				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 
 			// Validate.
@@ -345,7 +345,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 				encodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 
@@ -452,7 +452,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 				constants.TestEncodingCfg.TxConfig.TxDecoder(),
 				&abci.RequestProcessProposal{Txs: tc.txsBytes},
 				mockBridgeKeeper,
-				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			require.NoError(t, err)
 

@@ -10,7 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	slinkyabci "github.com/skip-mev/slinky/abci/types"
 )
 
 var (
@@ -52,8 +55,8 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
-	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
+	priceUpdateGenerator prices.PriceUpdateGenerator,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		defer telemetry.ModuleMeasureSince(
@@ -71,8 +74,21 @@ func PrepareProposalHandler(
 			return &EmptyResponse, nil
 		}
 
+		var extCommitBzTx []byte
+		if len(req.Txs) >= slinkyabci.NumInjectedTxs {
+			extCommitBzTx = req.Txs[slinkyabci.OracleInfoIndex]
+		}
+
+		// get the update market prices tx
+		msg, err := priceUpdateGenerator.GetValidMarketPriceUpdates(ctx, extCommitBzTx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("GetValidMarketPriceUpdates error: %v", err))
+			recordErrorMetricsWithLabel(metrics.PricesTx)
+			return &EmptyResponse, nil
+		}
+
 		// Gather "FixedSize" group messages.
-		pricesTxResp, err := GetUpdateMarketPricesTx(ctx, txConfig, pricesKeeper)
+		pricesTxResp, err := EncodeMarketPriceUpdates(txConfig, msg)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetUpdateMarketPricesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PricesTx)
@@ -180,19 +196,12 @@ func PrepareProposalHandler(
 	}
 }
 
-// GetUpdateMarketPricesTx returns a tx containing `MsgUpdateMarketPrices`.
-func GetUpdateMarketPricesTx(
-	ctx sdk.Context,
+// EncodeMarketPriceUpdates returns a tx containing `MsgUpdateMarketPrices`.
+func EncodeMarketPriceUpdates(
 	txConfig client.TxConfig,
-	pricesKeeper PreparePricesKeeper,
+	msg *pricetypes.MsgUpdateMarketPrices,
 ) (PricesTxResponse, error) {
-	// Get prices to update.
-	msgUpdateMarketPrices := pricesKeeper.GetValidMarketPriceUpdates(ctx)
-	if msgUpdateMarketPrices == nil {
-		return PricesTxResponse{}, fmt.Errorf("MsgUpdateMarketPrices cannot be nil")
-	}
-
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgUpdateMarketPrices)
+	tx, err := EncodeMsgsIntoTxBytes(txConfig, msg)
 	if err != nil {
 		return PricesTxResponse{}, err
 	}
@@ -202,7 +211,7 @@ func GetUpdateMarketPricesTx(
 
 	return PricesTxResponse{
 		Tx:         tx,
-		NumMarkets: len(msgUpdateMarketPrices.MarketPriceUpdates),
+		NumMarkets: len(msg.MarketPriceUpdates),
 	}, nil
 }
 

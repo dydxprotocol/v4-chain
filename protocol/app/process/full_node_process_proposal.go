@@ -15,7 +15,7 @@ func FullNodeProcessProposalHandler(
 	clobKeeper ProcessClobKeeper,
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesTxDecoder UpdateMarketPriceTxDecoder,
 ) sdk.ProcessProposalHandler {
 	// Keep track of the current block height and consensus round.
 	currentBlockHeight := int64(0)
@@ -34,7 +34,7 @@ func FullNodeProcessProposalHandler(
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesTxDecoder)
 		if err != nil {
 			return response, nil
 		}
