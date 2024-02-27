@@ -332,7 +332,6 @@ type App struct {
 
 	// Slinky
 	oraclePrometheusServer *promserver.PrometheusServer
-	oracleMetricsOnce      func()
 	oracleMetrics          servicemetrics.Metrics
 }
 
@@ -448,10 +447,6 @@ func New(
 			return nil
 		},
 	)
-	app.oracleMetricsOnce = sync.OnceFunc(
-		func() {
-			app.initOracleMetrics(appOpts)
-		})
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
@@ -1384,6 +1379,9 @@ func New(
 
 	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
 	if !appFlags.NonValidatingFullNode {
+		if app.oracleMetrics == nil {
+			app.oracleMetrics = app.initOracleMetrics(appOpts)
+		}
 		app.initOracle(priceUpdateDecoder)
 	}
 
@@ -1507,7 +1505,9 @@ func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) servicemetrics
 
 func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oracleclient.OracleClient {
 	// Create the oracle service.
-	app.oracleMetricsOnce()
+	if app.oracleMetrics == nil {
+		app.oracleMetrics = app.initOracleMetrics(appOpts)
+	}
 	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
 	if err != nil {
 		panic(err)
@@ -1524,9 +1524,6 @@ func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oraclecl
 }
 
 func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
-	// Slinky setup
-	app.oracleMetricsOnce()
-
 	// Vote Extension setup.
 	slinkyVoteExtensionsHandler := ve.NewVoteExtensionHandler(
 		app.Logger(),
