@@ -9,7 +9,7 @@ import (
 
 var _ sdk.Msg = &MsgBatchCancel{}
 
-// NewMsgCancelOrderShortTerm constructs a MsgBatchCancel from an `OrderId` and a `GoodTilBlock`.
+// NewMsgBatchCancel constructs a MsgBatchCancel.
 func NewMsgBatchCancel(subaccountId types.SubaccountId, cancelBatch []OrderBatch, goodTilBlock uint32) *MsgBatchCancel {
 	return &MsgBatchCancel{
 		SubaccountId:     subaccountId,
@@ -18,7 +18,7 @@ func NewMsgBatchCancel(subaccountId types.SubaccountId, cancelBatch []OrderBatch
 	}
 }
 
-// ValidateBasic performs stateless validation for
+// ValidateBasic performs stateless validation for the `MsgBatchCancel` msg.
 func (msg *MsgBatchCancel) ValidateBasic() (err error) {
 	subaccountId := msg.GetSubaccountId()
 	if err := subaccountId.Validate(); err != nil {
