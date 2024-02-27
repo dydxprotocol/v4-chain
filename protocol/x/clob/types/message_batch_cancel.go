@@ -10,7 +10,11 @@ import (
 var _ sdk.Msg = &MsgBatchCancel{}
 
 // NewMsgBatchCancel constructs a MsgBatchCancel.
-func NewMsgBatchCancel(subaccountId satypes.SubaccountId, cancelBatch []OrderBatch, goodTilBlock uint32) *MsgBatchCancel {
+func NewMsgBatchCancel(
+	subaccountId satypes.SubaccountId,
+	cancelBatch []OrderBatch,
+	goodTilBlock uint32,
+) *MsgBatchCancel {
 	return &MsgBatchCancel{
 		SubaccountId:     subaccountId,
 		ShortTermCancels: cancelBatch,
