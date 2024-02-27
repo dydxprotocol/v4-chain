@@ -24,7 +24,7 @@ export default async function runTask(): Promise<void> {
 
   const staleOpenOrders: OrderFromDatabase[] = await OrderTable.findAll(
     {
-      status: [OrderStatus.OPEN],
+      statuses: [OrderStatus.OPEN],
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
       // goodTilBlock needs to be < latest block height to be guaranteed to be CANCELED
       goodTilBlockBeforeOrAt: (latestBlockHeight - 1).toString(),

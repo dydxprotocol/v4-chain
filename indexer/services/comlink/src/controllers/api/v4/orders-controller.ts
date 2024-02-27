@@ -85,8 +85,11 @@ class OrdersController extends Controller {
       goodTilBlockBeforeOrAt: goodTilBlockBeforeOrAt?.toString(),
       goodTilBlockTimeBeforeOrAt,
     };
-    if (status !== undefined && !_.isEmpty(status)) {
-      orderQueryConfig.status = _.filter(
+    if (!_.isEmpty(status)) {
+      // BEST_EFFORT_OPENED status not included in the filter, orders in postgres cannot be
+      // BEST_EFFORT_OPENED. An order is only BEST_EFFORT_OPENED if it exists in redis and not
+      // in postgres.
+      orderQueryConfig.statuses = _.filter(
         status,
         (s: APIOrderStatus) => s !== APIOrderStatusEnum.BEST_EFFORT_OPENED,
       ) as OrderStatus[];
@@ -129,17 +132,24 @@ class OrdersController extends Controller {
         return OrderTable.orderIdToUuid(redisOrder.order!.orderId!);
       },
     );
+    const postgresOrderIdsToFetch: string[] = _.difference(
+      redisOrderIds,
+      _.map(postgresOrders, OrderColumns.id),
+    );
 
-    // Fetch additional orders from Postgres that are not in the initial query, because they
-    // might not conform to the status filter above. For example, if the user is querying for
-    // `status: [BEST_EFFORT_OPENED]`, we need to fetch all orders from Postgres, because if the
-    // order in postgres is 'OPENED', then we do not want to return this order to the user as
-    // 'BEST_EFFORT_OPENED'.
-    const additionalPostgresOrders: OrderFromDatabase[] = await OrderTable.findAll({
-      id: redisOrderIds,
-    }, [], {
-      ...DEFAULT_POSTGRES_OPTIONS,
-    });
+    // Postgres is regarded as the source of truth, so for any redis orders not returned from the
+    // initial postgres query, we need to fetch them from Postgres to ensure we have the most
+    // accurate status. For example, if the user is querying for `status: [BEST_EFFORT_OPENED]`,
+    // we need to fetch all orders from Postgres, because if the order in postgres is 'OPENED',
+    // then we do not want to return this order to the user as 'BEST_EFFORT_OPENED'.
+    let additionalPostgresOrders: OrderFromDatabase[] = [];
+    if (!_.isEmpty(postgresOrderIdsToFetch)) {
+      additionalPostgresOrders = await OrderTable.findAll({
+        id: redisOrderIds,
+      }, [], {
+        ...DEFAULT_POSTGRES_OPTIONS,
+      });
+    }
 
     const postgresOrderMap: PostgresOrderMap = _.keyBy(
       _.concat(postgresOrders, additionalPostgresOrders),
