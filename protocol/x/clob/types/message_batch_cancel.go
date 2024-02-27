@@ -26,9 +26,22 @@ func (msg *MsgBatchCancel) ValidateBasic() (err error) {
 	}
 
 	cancelBatches := msg.GetShortTermCancels()
+	if len(cancelBatches) == 0 {
+		return errorsmod.Wrapf(
+			ErrInvalidBatchCancel,
+			"Batch cancel cannot have zero orders specified.",
+		)
+	}
 	totalNumberCancels := 0
 	for _, cancelBatch := range cancelBatches {
-		totalNumberCancels += len(cancelBatch.GetClientIds())
+		numClientIds := len(cancelBatch.GetClientIds())
+		if numClientIds == 0 {
+			return errorsmod.Wrapf(
+				ErrInvalidBatchCancel,
+				"Order Batch cannot have zero client ids.",
+			)
+		}
+		totalNumberCancels += numClientIds
 		seenClientIds := map[uint32]struct{}{}
 		for _, clientId := range cancelBatch.GetClientIds() {
 			if _, seen := seenClientIds[clientId]; seen {

@@ -209,7 +209,7 @@ var (
 	ErrInvalidBatchCancel = errorsmod.Register(
 		ModuleName,
 		45,
-		"Invalid Batch Cancel",
+		"Invalid batch cancel message",
 	)
 
 	// Liquidations errors.

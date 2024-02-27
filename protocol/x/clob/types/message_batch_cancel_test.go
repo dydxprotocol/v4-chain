@@ -53,11 +53,11 @@ func TestMsgBatchCancel_ValidateBasic(t *testing.T) {
 				[]types.OrderBatch{
 					{
 						ClobPairId: 0,
-						ClientIds:  oneOverMax[:52],
+						ClientIds:  oneOverMax[:types.MaxMsgBatchCancelBatchSize/2+2],
 					},
 					{
 						ClobPairId: 1,
-						ClientIds:  oneOverMax[:52],
+						ClientIds:  oneOverMax[:types.MaxMsgBatchCancelBatchSize/2+2],
 					},
 				},
 				10,
@@ -70,11 +70,11 @@ func TestMsgBatchCancel_ValidateBasic(t *testing.T) {
 				[]types.OrderBatch{
 					{
 						ClobPairId: 0,
-						ClientIds:  oneOverMax[:50],
+						ClientIds:  oneOverMax[:types.MaxMsgBatchCancelBatchSize/2],
 					},
 					{
 						ClobPairId: 1,
-						ClientIds:  oneOverMax[:50],
+						ClientIds:  oneOverMax[:types.MaxMsgBatchCancelBatchSize/2],
 					},
 				},
 				10,
@@ -103,6 +103,27 @@ func TestMsgBatchCancel_ValidateBasic(t *testing.T) {
 						ClientIds: []uint32{
 							0, 1, 2, 3, 1,
 						},
+					},
+				},
+				10,
+			),
+			err: types.ErrInvalidBatchCancel,
+		},
+		"zero batches in cancel batch": {
+			msg: *types.NewMsgBatchCancel(
+				constants.Alice_Num0,
+				[]types.OrderBatch{},
+				10,
+			),
+			err: types.ErrInvalidBatchCancel,
+		},
+		"zero client ids in cancel batch": {
+			msg: *types.NewMsgBatchCancel(
+				constants.Alice_Num0,
+				[]types.OrderBatch{
+					{
+						ClobPairId: 0,
+						ClientIds:  []uint32{},
 					},
 				},
 				10,
