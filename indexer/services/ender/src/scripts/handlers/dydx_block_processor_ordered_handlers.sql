@@ -53,6 +53,8 @@ BEGIN
                 rval[i] = dydx_update_perpetual_handler(event_data);
             WHEN '"update_clob_pair"'::jsonb THEN
                 rval[i] = dydx_update_clob_pair_handler(event_data);
+            WHEN '"funding_values"'::jsonb THEN
+                rval[i] = dydx_funding_handler(block_height, block_time, event_data, event_index, transaction_index);
             ELSE
                 NULL;
             END CASE;
