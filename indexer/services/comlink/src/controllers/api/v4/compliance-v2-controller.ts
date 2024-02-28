@@ -1,5 +1,6 @@
-import { Secp256k1, sha256, ExtendedSecp256k1Signature } from '@cosmjs/crypto';
+import { ExtendedSecp256k1Signature, Secp256k1, sha256 } from '@cosmjs/crypto';
 import { logger, stats, TooManyRequestsError } from '@dydxprotocol-indexer/base';
+import { CountryHeaders, isRestrictedCountryHeaders } from '@dydxprotocol-indexer/compliance';
 import {
   ComplianceReason,
   ComplianceStatus,
@@ -16,6 +17,7 @@ import {
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
+import { getGeoComplianceReason } from '../../../helpers/compliance/compliance-utils';
 import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
@@ -209,9 +211,63 @@ router.post(
         );
       }
 
-      // TODO(OTE-141): Implement logic.
+      const complianceStatus: ComplianceStatusFromDatabase[] = await
+      ComplianceStatusTable.findAll(
+        { address: [address] },
+        [],
+      );
+      let complianceStatusFromDatabase: ComplianceStatusFromDatabase | undefined;
+      if (complianceStatus.length === 0) {
+        if (isRestrictedCountryHeaders(req.headers as CountryHeaders)) {
+          if (action === ComplianceAction.ONBOARD) {
+            complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
+              address,
+              status: ComplianceStatus.BLOCKED,
+              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+              updatedAt: DateTime.utc().toISO(),
+            });
+          } else if (action === ComplianceAction.CONNECT) {
+            complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
+              address,
+              status: ComplianceStatus.FIRST_STRIKE,
+              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+              updatedAt: DateTime.utc().toISO(),
+            });
+          }
+        } else {
+          complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
+            address,
+            status: ComplianceStatus.COMPLIANT,
+            updatedAt: DateTime.utc().toISO(),
+          });
+        }
+      } else {
+        complianceStatusFromDatabase = complianceStatus[0];
+        if (
+          complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
+          complianceStatus[0].status === ComplianceStatus.COMPLIANT
+        ) {
+          if (
+            isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
+            action === ComplianceAction.CONNECT
+          ) {
+            const complianceProgression: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
+              [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE,
+              [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
+            };
+
+            complianceStatusFromDatabase = await ComplianceStatusTable.update({
+              address,
+              status: complianceProgression[complianceStatus[0].status],
+              reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
+              updatedAt: DateTime.utc().toISO(),
+            });
+          }
+        }
+      }
       const response = {
-        status: ComplianceStatus.COMPLIANT,
+        status: complianceStatusFromDatabase!.status,
+        reason: complianceStatusFromDatabase!.reason,
       };
 
       return res.send(response);
