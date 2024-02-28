@@ -667,7 +667,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-				types.PerpetualMarketType_CROSS, // MarketType
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -868,7 +868,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-				types.PerpetualMarketType_CROSS, // MarketType
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -1030,7 +1030,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-				types.PerpetualMarketType_CROSS, // MarketType
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -1193,7 +1193,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
-				types.PerpetualMarketType_CROSS, // MarketType
+				types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 

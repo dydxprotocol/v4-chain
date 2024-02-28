@@ -50,6 +50,15 @@ func (k Keeper) CreatePerpetual(
 		)
 	}
 
+	// Check if market type is valid
+	if marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS &&
+		marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("market type %v", marketType),
+		)
+	}
+
 	// Create the perpetual.
 	perpetual := types.Perpetual{
 		Params: types.PerpetualParams{

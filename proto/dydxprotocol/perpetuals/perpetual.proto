@@ -20,12 +20,12 @@ message Perpetual {
 }
 
 enum PerpetualMarketType {
-  // CROSS is a market type where the margin is shared across all positions
-  // in the market.
-  CROSS = 0;
-  // ISOLATED is a market type where the margin is isolated to the individual
-  // market
-  ISOLATED = 1;
+  // Unspecified market type.
+  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0;
+  // Market type for cross margin perpetual markets.
+  PERPETUAL_MARKET_TYPE_CROSS = 1;
+  // Market type for isolated margin perpetual markets.
+  PERPETUAL_MARKET_TYPE_ISOLATED = 2;
 }
 
 

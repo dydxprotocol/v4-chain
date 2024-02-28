@@ -239,7 +239,7 @@ func CreateNPerpetuals(
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
-			types.PerpetualMarketType_CROSS,                // MarketType
+			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 		)
 		if err != nil {
 			return items, err
@@ -289,7 +289,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
-			types.PerpetualMarketType_CROSS,
+			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		)
 		require.NoError(t, err)
 	}
