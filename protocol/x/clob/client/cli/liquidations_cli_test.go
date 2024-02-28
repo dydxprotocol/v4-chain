@@ -292,7 +292,7 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	insuranceFundBalance, err := testutil_bank.GetModuleAccUsdcBalance(
 		val,
 		s.network.Config.Codec,
-		types.InsuranceFundName,
+		perptypes.InsuranceFundName,
 	)
 
 	s.Require().NoError(err)
