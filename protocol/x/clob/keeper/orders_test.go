@@ -539,7 +539,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		// 1. The first should have a buy price well below the oracle price of 50,000. (success)
 		// 2. The second should have a buy price above the oracle price of 50,000. (undercollateralized)
 		// 3. The third should have the order in common with #1 and the subaccount in common with #2 and should succeed.
-		`Subaccount can now place buy order that would failed the 
+		`Subaccount can now place buy order that would have failed the 
 				deprecated pessimistic collateralization check with the oracle price`: {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
