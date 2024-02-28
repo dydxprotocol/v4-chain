@@ -3,15 +3,16 @@ package main
 
 import (
 	"bytes"
-	"cosmossdk.io/log"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
-	dbm "github.com/cosmos/cosmos-db"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 
 	"github.com/cosmos/iavl"
 	"github.com/spf13/cobra"
@@ -280,6 +281,7 @@ func PrintTree(tree *iavl.MutableTree, prefix string) error {
 		fmt.Printf("  %s\n    %X\n", printKey, digest)
 		if treeUnmarshallerRegistry, ok := unmarshallerRegistry[prefix]; ok {
 			for keyPrefix, unmarshaller := range treeUnmarshallerRegistry {
+				// Convert the first byte of the key to a hexadecimal string for matching.
 				if strings.HasPrefix(string(key), keyPrefix) {
 					str := unmarshaller(value)
 					fmt.Printf("    %s\n", str)

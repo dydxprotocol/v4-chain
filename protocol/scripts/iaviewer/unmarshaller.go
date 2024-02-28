@@ -1,9 +1,11 @@
 package main
 
 import (
-	"github.com/cosmos/gogoproto/proto"
 	"reflect"
 
+	"github.com/cosmos/gogoproto/proto"
+
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	app "github.com/dydxprotocol/v4-chain/protocol/app"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -28,5 +30,8 @@ var unmarshallerRegistry = map[string]map[string]func([]byte) string{
 		"EqTierCfg":  protoUnmarshaller[*clob.EquityTierLimitConfiguration],
 		"LiqCfg":     protoUnmarshaller[*clob.LiquidationsConfig],
 		"RateLimCfg": protoUnmarshaller[*clob.BlockRateLimitConfiguration],
+	},
+	"s/k:bank/": {
+		"\x01": protoUnmarshaller[*banktypes.Metadata],
 	},
 }
