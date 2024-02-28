@@ -285,9 +285,9 @@ func PrintTree(tree *iavl.MutableTree, prefix string) error {
 				fmt.Printf("!! key = %v, keyPrefixBytes = %v\n", key, keyPrefixBytes)
 
 				if bytes.HasPrefix(key, keyPrefixBytes) {
-					// panic("hit!!!!")
 					str := unmarshaller(value)
 					fmt.Printf("    %s\n", str)
+					panic("hit!!!!")
 					break
 				}
 			}
