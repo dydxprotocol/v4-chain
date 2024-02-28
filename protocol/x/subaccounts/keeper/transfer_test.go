@@ -134,123 +134,114 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 	}
 
 	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
-					t,
-					true,
-				)
-				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
-				// Set up Subaccounts module account.
-				auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
+			// Set up Subaccounts module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
 
-				// Set up test account address.
-				addressStr := sample_testutil.AccAddress()
-				testAccAddress, err := sdk.AccAddressFromBech32(addressStr)
-				require.NoError(t, err)
+			// Set up test account address.
+			addressStr := sample_testutil.AccAddress()
+			testAccAddress, err := sdk.AccAddressFromBech32(addressStr)
+			require.NoError(t, err)
 
-				testAcc := authtypes.NewBaseAccount(testAccAddress, nil, accountKeeper.NextAccountNumber(ctx), 0)
-				accountKeeper.SetAccount(ctx, testAcc)
+			testAcc := authtypes.NewBaseAccount(testAccAddress, nil, accountKeeper.NextAccountNumber(ctx), 0)
+			accountKeeper.SetAccount(ctx, testAcc)
 
-				if tc.accAddressBalance.Sign() > 0 {
-					// Mint asset in the receipt/sender account address for transfer.
-					err := bank_testutil.FundAccount(
-						ctx,
-						testAccAddress,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
-
-				if tc.subaccountModuleAccBalance.Sign() > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						types.ModuleName,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
-
-				_, err = assetsKeeper.CreateAsset(
+			if tc.accAddressBalance.Sign() > 0 {
+				// Mint asset in the receipt/sender account address for transfer.
+				err := bank_testutil.FundAccount(
 					ctx,
+					testAccAddress,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
+			if tc.subaccountModuleAccBalance.Sign() > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					types.ModuleName,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
+			_, err = assetsKeeper.CreateAsset(
+				ctx,
+				tc.asset.Id,
+				tc.asset.Symbol,
+				tc.asset.Denom,
+				tc.asset.DenomExponent,
+				tc.asset.HasMarket,
+				tc.asset.MarketId,
+				tc.asset.AtomicResolution,
+			)
+			require.NoError(t, err)
+
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+			subaccount.AssetPositions = tc.assetPositions
+
+			keeper.SetSubaccount(ctx, subaccount)
+
+			// Test either WithdrawFundsFromSubaccountToAccount or DepositFundsFromAccountToSubaccount.
+			if tc.testTransferFundToAccount {
+				err = keeper.WithdrawFundsFromSubaccountToAccount(
+					ctx,
+					*subaccount.Id,
+					testAccAddress,
 					tc.asset.Id,
-					tc.asset.Symbol,
-					tc.asset.Denom,
-					tc.asset.DenomExponent,
-					tc.asset.HasMarket,
-					tc.asset.MarketId,
-					tc.asset.AtomicResolution,
+					tc.quantums,
 				)
-				require.NoError(t, err)
-
-				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
-				subaccount.AssetPositions = tc.assetPositions
-
-				keeper.SetSubaccount(ctx, subaccount)
-
-				// Test either WithdrawFundsFromSubaccountToAccount or DepositFundsFromAccountToSubaccount.
-				if tc.testTransferFundToAccount {
-					err = keeper.WithdrawFundsFromSubaccountToAccount(
-						ctx,
-						*subaccount.Id,
-						testAccAddress,
-						tc.asset.Id,
-						tc.quantums,
-					)
-				} else {
-					err = keeper.DepositFundsFromAccountToSubaccount(
-						ctx,
-						testAccAddress,
-						*subaccount.Id,
-						tc.asset.Id,
-						tc.quantums,
-					)
-				}
-
-				require.NoError(t, err)
-
-				// Check the subaccount has been updated as expected.
-				updatedSubaccount := keeper.GetSubaccount(ctx, *subaccount.Id)
-				if tc.expectedAssetPositions != nil {
-					require.Equal(
-						t,
-						tc.expectedAssetPositions,
-						updatedSubaccount.AssetPositions,
-					)
-				}
-				require.Equal(
-					t,
-					tc.expectedQuoteBalance,
-					updatedSubaccount.GetUsdcPosition(),
+			} else {
+				err = keeper.DepositFundsFromAccountToSubaccount(
+					ctx,
+					testAccAddress,
+					*subaccount.Id,
+					tc.asset.Id,
+					tc.quantums,
 				)
+			}
 
-				// Check the subaccount module balance.
-				subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
-					subaccountsModuleAccBalance,
-				)
+			require.NoError(t, err)
 
-				// Check the test account balance has been updated as expected.
-				testAccountBalance := bankKeeper.GetBalance(
-					ctx, testAccAddress,
-					tc.asset.Denom,
+			// Check the subaccount has been updated as expected.
+			updatedSubaccount := keeper.GetSubaccount(ctx, *subaccount.Id)
+			if tc.expectedAssetPositions != nil {
+				require.Equal(t,
+					tc.expectedAssetPositions,
+					updatedSubaccount.AssetPositions,
 				)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedAccAddressBalance)),
-					testAccountBalance,
-				)
-			},
-		)
+			}
+			require.Equal(t,
+				tc.expectedQuoteBalance,
+				updatedSubaccount.GetUsdcPosition(),
+			)
+
+			// Check the subaccount module balance.
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				subaccountsModuleAccBalance,
+			)
+
+			// Check the test account balance has been updated as expected.
+			testAccountBalance := bankKeeper.GetBalance(
+				ctx, testAccAddress,
+				tc.asset.Denom,
+			)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedAccAddressBalance)),
+				testAccountBalance,
+			)
+		})
 	}
 }
 
@@ -370,129 +361,120 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 	}
 
 	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
-					t,
-					true,
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+			// Set up Subaccounts module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
+
+			// Set up test account address.
+			addressStr := sample_testutil.AccAddress()
+			testAccAddress, err := sdk.AccAddressFromBech32(addressStr)
+			require.NoError(t, err)
+
+			testAcc := authtypes.NewBaseAccount(testAccAddress, nil, accountKeeper.NextAccountNumber(ctx), 0)
+			accountKeeper.SetAccount(ctx, testAcc)
+
+			if tc.accAddressBalance.Sign() > 0 {
+				// Mint asset in the receipt/sender account address for transfer.
+				err := bank_testutil.FundAccount(
+					ctx,
+					testAccAddress,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+					},
+					*bankKeeper,
 				)
-				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
-
-				// Set up Subaccounts module account.
-				auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
-
-				// Set up test account address.
-				addressStr := sample_testutil.AccAddress()
-				testAccAddress, err := sdk.AccAddressFromBech32(addressStr)
 				require.NoError(t, err)
+			}
 
-				testAcc := authtypes.NewBaseAccount(testAccAddress, nil, accountKeeper.NextAccountNumber(ctx), 0)
-				accountKeeper.SetAccount(ctx, testAcc)
-
-				if tc.accAddressBalance.Sign() > 0 {
-					// Mint asset in the receipt/sender account address for transfer.
-					err := bank_testutil.FundAccount(
-						ctx,
-						testAccAddress,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
-
-				if tc.subaccountModuleAccBalance.Sign() > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						types.ModuleName,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
-
-				if !tc.skipSetUpUsdc {
-					// Always create USDC as the first asset unless specificed to skip.
-					err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
-					require.NoError(t, err)
-				}
-
-				if tc.asset.Denom != constants.Usdc.Denom {
-					_, err := assetsKeeper.CreateAsset(
-						ctx,
-						tc.asset.Id,
-						tc.asset.Symbol,
-						tc.asset.Denom,
-						tc.asset.DenomExponent,
-						tc.asset.HasMarket,
-						tc.asset.MarketId,
-						tc.asset.AtomicResolution,
-					)
-					require.NoError(t, err)
-				}
-
-				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
-				subaccount.AssetPositions = tc.assetPositions
-
-				keeper.SetSubaccount(ctx, subaccount)
-
-				// Test either WithdrawFundsFromSubaccountToAccount or DepositFundsFromAccountToSubaccount.
-				if tc.testTransferFundToAccount {
-					err = keeper.WithdrawFundsFromSubaccountToAccount(
-						ctx,
-						*subaccount.Id,
-						testAccAddress,
-						tc.asset.Id,
-						tc.quantums,
-					)
-				} else {
-					err = keeper.DepositFundsFromAccountToSubaccount(
-						ctx,
-						testAccAddress,
-						*subaccount.Id,
-						tc.asset.Id,
-						tc.quantums,
-					)
-				}
-
-				require.ErrorIs(
-					t,
-					err,
-					tc.expectedErr,
+			if tc.subaccountModuleAccBalance.Sign() > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					types.ModuleName,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+					},
+					*bankKeeper,
 				)
+				require.NoError(t, err)
+			}
 
-				// Check the subaccount balance stays the same.
-				updatedSubaccount := keeper.GetSubaccount(ctx, *subaccount.Id)
+			if !tc.skipSetUpUsdc {
+				// Always create USDC as the first asset unless specificed to skip.
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+				require.NoError(t, err)
+			}
 
-				require.Equal(
-					t,
-					tc.assetPositions[0].GetBigQuantums(),
-					updatedSubaccount.GetUsdcPosition(),
-				)
-
-				// Check the subaccount module balance stays the same.
-				subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
-					subaccountsModuleAccBalance,
-				)
-
-				// Check the test account balance stays the same.
-				testAccountBalance := bankKeeper.GetBalance(
-					ctx, testAccAddress,
+			if tc.asset.Denom != constants.Usdc.Denom {
+				_, err := assetsKeeper.CreateAsset(
+					ctx,
+					tc.asset.Id,
+					tc.asset.Symbol,
 					tc.asset.Denom,
+					tc.asset.DenomExponent,
+					tc.asset.HasMarket,
+					tc.asset.MarketId,
+					tc.asset.AtomicResolution,
 				)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
-					testAccountBalance,
+				require.NoError(t, err)
+			}
+
+			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+			subaccount.AssetPositions = tc.assetPositions
+
+			keeper.SetSubaccount(ctx, subaccount)
+
+			// Test either WithdrawFundsFromSubaccountToAccount or DepositFundsFromAccountToSubaccount.
+			if tc.testTransferFundToAccount {
+				err = keeper.WithdrawFundsFromSubaccountToAccount(
+					ctx,
+					*subaccount.Id,
+					testAccAddress,
+					tc.asset.Id,
+					tc.quantums,
 				)
-			},
-		)
+			} else {
+				err = keeper.DepositFundsFromAccountToSubaccount(
+					ctx,
+					testAccAddress,
+					*subaccount.Id,
+					tc.asset.Id,
+					tc.quantums,
+				)
+			}
+
+			require.ErrorIs(t,
+				err,
+				tc.expectedErr,
+			)
+
+			// Check the subaccount balance stays the same.
+			updatedSubaccount := keeper.GetSubaccount(ctx, *subaccount.Id)
+
+			require.Equal(t,
+				tc.assetPositions[0].GetBigQuantums(),
+				updatedSubaccount.GetUsdcPosition(),
+			)
+
+			// Check the subaccount module balance stays the same.
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+				subaccountsModuleAccBalance,
+			)
+
+			// Check the test account balance stays the same.
+			testAccountBalance := bankKeeper.GetBalance(
+				ctx, testAccAddress,
+				tc.asset.Denom,
+			)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+				testAccountBalance,
+			)
+		})
 	}
 }
 
@@ -570,121 +552,106 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
-					t,
-					true,
-				)
-				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
-				// Set up Subaccounts module account.
-				auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
-				// Set up receiver module account.
-				auth_testutil.CreateTestModuleAccount(
-					ctx,
-					accountKeeper,
-					authtypes.FeeCollectorName,
-					[]string{authtypes.Minter},
-				)
+			// Set up Subaccounts module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
+			// Set up receiver module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, authtypes.FeeCollectorName, []string{authtypes.Minter})
 
-				// This currently assumes the 1 base denom = 1 base quantum.
-				// TODO(DEC-714): Implement conversion of assets between `assets` and
-				// `bank` modules
-				bankKeeper.SetDenomMetaData(
-					ctx, banktypes.Metadata{
-						Base:    tc.asset.Denom,
-						Display: tc.asset.Denom,
-						DenomUnits: []*banktypes.DenomUnit{
-							{
-								Denom:    tc.asset.Denom,
-								Exponent: 0,
-							},
-						},
+			// This currently assumes the 1 base denom = 1 base quantum.
+			// TODO(DEC-714): Implement conversion of assets between `assets` and
+			// `bank` modules
+			bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+				Base:    tc.asset.Denom,
+				Display: tc.asset.Denom,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    tc.asset.Denom,
+						Exponent: 0,
 					},
+				},
+			})
+
+			// Mint asset in the receipt/sender module account for transfer.
+			if tc.feeModuleAccBalance.Sign() > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					authtypes.FeeCollectorName,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.feeModuleAccBalance)),
+					},
+					*bankKeeper,
 				)
+				require.NoError(t, err)
+			}
 
-				// Mint asset in the receipt/sender module account for transfer.
-				if tc.feeModuleAccBalance.Sign() > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						authtypes.FeeCollectorName,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.feeModuleAccBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
+			if tc.subaccountModuleAccBalance.Sign() > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					types.ModuleName,
+					sdk.Coins{
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
 
-				if tc.subaccountModuleAccBalance.Sign() > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						types.ModuleName,
-						sdk.Coins{
-							sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
+			// Always create USDC as the first asset.
+			if !tc.skipSetUpUsdc {
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+				require.NoError(t, err)
+			}
 
-				// Always create USDC as the first asset.
-				if !tc.skipSetUpUsdc {
-					err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
-					require.NoError(t, err)
-				}
-
-				if tc.asset.Denom != constants.Usdc.Denom {
-					_, err := assetsKeeper.CreateAsset(
-						ctx,
-						tc.asset.Id,
-						tc.asset.Symbol,
-						tc.asset.Denom,
-						tc.asset.DenomExponent,
-						tc.asset.HasMarket,
-						tc.asset.MarketId,
-						tc.asset.AtomicResolution,
-					)
-					require.NoError(t, err)
-				}
-
-				err := keeper.TransferFeesToFeeCollectorModule(
+			if tc.asset.Denom != constants.Usdc.Denom {
+				_, err := assetsKeeper.CreateAsset(
 					ctx,
 					tc.asset.Id,
-					tc.quantums,
-				)
-
-				if tc.expectedErr != nil {
-					require.ErrorIs(
-						t,
-						err,
-						tc.expectedErr,
-					)
-				} else {
-					require.NoError(t, err)
-				}
-
-				// Check the subaccount module balance.
-				subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
-					subaccountsModuleAccBalance,
-				)
-
-				// Check the fee module account balance has been updated as expected.
-				toModuleBalance := bankKeeper.GetBalance(
-					ctx, authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+					tc.asset.Symbol,
 					tc.asset.Denom,
+					tc.asset.DenomExponent,
+					tc.asset.HasMarket,
+					tc.asset.MarketId,
+					tc.asset.AtomicResolution,
 				)
-				require.Equal(
-					t,
-					sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
-					toModuleBalance,
+				require.NoError(t, err)
+			}
+
+			err := keeper.TransferFeesToFeeCollectorModule(
+				ctx,
+				tc.asset.Id,
+				tc.quantums,
+			)
+
+			if tc.expectedErr != nil {
+				require.ErrorIs(t,
+					err,
+					tc.expectedErr,
 				)
-			},
-		)
+			} else {
+				require.NoError(t, err)
+			}
+
+			// Check the subaccount module balance.
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, tc.asset.Denom)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				subaccountsModuleAccBalance,
+			)
+
+			// Check the fee module account balance has been updated as expected.
+			toModuleBalance := bankKeeper.GetBalance(
+				ctx, authtypes.NewModuleAddress(authtypes.FeeCollectorName),
+				tc.asset.Denom,
+			)
+			require.Equal(t,
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
+				toModuleBalance,
+			)
+		})
 	}
 }
 
@@ -743,14 +710,11 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"panics - asset doesn't exist": {
-			insuranceFundBalance:       1500,
-			skipSetUpUsdc:              true,
-			subaccountModuleAccBalance: 500,
-			quantums:                   big.NewInt(500),
-			expectedErr: errorsmod.Wrap(
-				asstypes.ErrAssetDoesNotExist,
-				lib.UintToString(uint32(0)),
-			),
+			insuranceFundBalance:                1500,
+			skipSetUpUsdc:                       true,
+			subaccountModuleAccBalance:          500,
+			quantums:                            big.NewInt(500),
+			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.UintToString(uint32(0))),
 			expectedSubaccountsModuleAccBalance: 500,
 			expectedInsuranceFundBalance:        1500,
 			panics:                              true,
@@ -758,102 +722,94 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 	}
 
 	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(
-					t,
-					true,
-				)
-				keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+		t.Run(name, func(t *testing.T) {
+			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 
-				// Set up Subaccounts module account.
-				auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
-				// Set up insurance fund module account.
-				auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, perptypes.InsuranceFundName, []string{})
+			// Set up Subaccounts module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
+			// Set up insurance fund module account.
+			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, perptypes.InsuranceFundName, []string{})
 
-				bankKeeper.SetDenomMetaData(
-					ctx, banktypes.Metadata{
-						Base:    constants.Usdc.Denom,
-						Display: constants.Usdc.Denom,
-						DenomUnits: []*banktypes.DenomUnit{
-							{
-								Denom:    constants.Usdc.Denom,
-								Exponent: 0,
-							},
-						},
+			bankKeeper.SetDenomMetaData(ctx, banktypes.Metadata{
+				Base:    constants.Usdc.Denom,
+				Display: constants.Usdc.Denom,
+				DenomUnits: []*banktypes.DenomUnit{
+					{
+						Denom:    constants.Usdc.Denom,
+						Exponent: 0,
 					},
+				},
+			})
+
+			// Mint asset in the receipt/sender module account for transfer.
+			if tc.insuranceFundBalance > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					perptypes.InsuranceFundName,
+					sdk.Coins{
+						sdk.NewInt64Coin(constants.Usdc.Denom, tc.insuranceFundBalance),
+					},
+					*bankKeeper,
 				)
+				require.NoError(t, err)
+			}
 
-				// Mint asset in the receipt/sender module account for transfer.
-				if tc.insuranceFundBalance > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						perptypes.InsuranceFundName,
-						sdk.Coins{
-							sdk.NewInt64Coin(constants.Usdc.Denom, tc.insuranceFundBalance),
+			if tc.subaccountModuleAccBalance > 0 {
+				err := bank_testutil.FundModuleAccount(
+					ctx,
+					types.ModuleName,
+					sdk.Coins{
+						sdk.NewInt64Coin(constants.Usdc.Denom, tc.subaccountModuleAccBalance),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
+			if !tc.skipSetUpUsdc {
+				err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
+				require.NoError(t, err)
+			}
+
+			if tc.expectedErr != nil {
+				if tc.panics {
+					require.PanicsWithError(
+						t,
+						tc.expectedErr.Error(),
+						func() {
+							//nolint:errcheck
+							keeper.TransferInsuranceFundPayments(ctx, tc.quantums)
 						},
-						*bankKeeper,
 					)
-					require.NoError(t, err)
-				}
-
-				if tc.subaccountModuleAccBalance > 0 {
-					err := bank_testutil.FundModuleAccount(
-						ctx,
-						types.ModuleName,
-						sdk.Coins{
-							sdk.NewInt64Coin(constants.Usdc.Denom, tc.subaccountModuleAccBalance),
-						},
-						*bankKeeper,
-					)
-					require.NoError(t, err)
-				}
-
-				if !tc.skipSetUpUsdc {
-					err := keepertest.CreateUsdcAsset(ctx, assetsKeeper)
-					require.NoError(t, err)
-				}
-
-				if tc.expectedErr != nil {
-					if tc.panics {
-						require.PanicsWithError(
-							t,
-							tc.expectedErr.Error(),
-							func() {
-								//nolint:errcheck
-								keeper.TransferInsuranceFundPayments(ctx, tc.quantums)
-							},
-						)
-					} else {
-						require.ErrorIs(
-							t,
-							keeper.TransferInsuranceFundPayments(ctx, tc.quantums),
-							tc.expectedErr,
-						)
-					}
 				} else {
-					require.NoError(t, keeper.TransferInsuranceFundPayments(ctx, tc.quantums))
+					require.ErrorIs(
+						t,
+						keeper.TransferInsuranceFundPayments(ctx, tc.quantums),
+						tc.expectedErr,
+					)
 				}
+			} else {
+				require.NoError(t, keeper.TransferInsuranceFundPayments(ctx, tc.quantums))
+			}
 
-				// Check the subaccount module balance.
-				subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, constants.Usdc.Denom)
-				require.Equal(
-					t,
-					sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedSubaccountsModuleAccBalance),
-					subaccountsModuleAccBalance,
-				)
+			// Check the subaccount module balance.
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, types.ModuleAddress, constants.Usdc.Denom)
+			require.Equal(
+				t,
+				sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedSubaccountsModuleAccBalance),
+				subaccountsModuleAccBalance,
+			)
 
-				// Check the fee module account balance has been updated as expected.
-				toModuleBalance := bankKeeper.GetBalance(
-					ctx, authtypes.NewModuleAddress(perptypes.InsuranceFundName),
-					constants.Usdc.Denom,
-				)
-				require.Equal(
-					t,
-					sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedInsuranceFundBalance),
-					toModuleBalance,
-				)
-			},
-		)
+			// Check the fee module account balance has been updated as expected.
+			toModuleBalance := bankKeeper.GetBalance(
+				ctx, authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+				constants.Usdc.Denom,
+			)
+			require.Equal(t,
+				sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedInsuranceFundBalance),
+				toModuleBalance,
+			)
+		})
 	}
 }
