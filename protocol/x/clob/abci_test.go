@@ -1326,183 +1326,182 @@ func TestPrepareCheckState(t *testing.T) {
 		},
 	}
 	for name, tc := range tests {
-		t.Run(
-			name, func(t *testing.T) {
-				// Setup keeper state.
-				memClob := memclob.NewMemClobPriceTimePriority(false)
-				mockBankKeeper := &mocks.BankKeeper{}
-				mockBankKeeper.On(
-					"GetBalance",
-					mock.Anything,
-					perptypes.InsuranceFundModuleAddress,
-					constants.Usdc.Denom,
-				).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
-				mockBankKeeper.On(
-					"SendCoinsFromModuleToModule",
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-					mock.Anything,
-				).Return(nil)
-				ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
-				ctx := ks.Ctx.WithIsCheckTx(true).WithBlockHeight(int64(tc.processProposerMatchesEvents.BlockHeight))
-				// Create the default markets.
-				keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+		t.Run(name, func(t *testing.T) {
+			// Setup keeper state.
+			memClob := memclob.NewMemClobPriceTimePriority(false)
+			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"GetBalance",
+				mock.Anything,
+				perptypes.InsuranceFundModuleAddress,
+				constants.Usdc.Denom,
+			).Return(sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))))
+			mockBankKeeper.On(
+				"SendCoinsFromModuleToModule",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ctx := ks.Ctx.WithIsCheckTx(true).WithBlockHeight(int64(tc.processProposerMatchesEvents.BlockHeight))
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
 
-				// Create liquidity tiers.
-				keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
 
-				require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
+			require.NoError(t, ks.FeeTiersKeeper.SetPerpetualFeeParams(ctx, constants.PerpetualFeeParams))
 
-				err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
-				require.NoError(t, err)
+			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
+			require.NoError(t, err)
 
-				// Create all perpetuals.
-				for _, p := range tc.perpetuals {
-					_, err := ks.PerpetualsKeeper.CreatePerpetual(
-						ctx,
-						p.Params.Id,
-						p.Params.Ticker,
-						p.Params.MarketId,
-						p.Params.AtomicResolution,
-						p.Params.DefaultFundingPpm,
-						p.Params.LiquidityTier,
-					)
-					require.NoError(t, err)
-				}
-
-				// Create all subaccounts.
-				for _, subaccount := range tc.subaccounts {
-					ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
-				}
-
-				// Create all CLOBs.
-				for _, clobPair := range tc.clobs {
-					_, err = ks.ClobKeeper.CreatePerpetualClobPair(
-						ctx,
-						clobPair.Id,
-						clobtest.MustPerpetualId(clobPair),
-						satypes.BaseQuantums(clobPair.StepBaseQuantums),
-						clobPair.QuantumConversionExponent,
-						clobPair.SubticksPerTick,
-						clobPair.Status,
-					)
-					require.NoError(t, err)
-				}
-
-				// Initialize the liquidations config.
-				err = ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default)
-				require.NoError(t, err)
-
-				// Create all pre-existing stateful orders in state.
-				for _, order := range tc.preExistingStatefulOrders {
-					ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 100)
-				}
-
-				// Set the ProcessProposerMatchesEvents in state.
-				ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
-					ctx.WithIsCheckTx(false),
-					tc.processProposerMatchesEvents,
+			// Create all perpetuals.
+			for _, p := range tc.perpetuals {
+				_, err := ks.PerpetualsKeeper.CreatePerpetual(
+					ctx,
+					p.Params.Id,
+					p.Params.Ticker,
+					p.Params.MarketId,
+					p.Params.AtomicResolution,
+					p.Params.DefaultFundingPpm,
+					p.Params.LiquidityTier,
 				)
+				require.NoError(t, err)
+			}
 
-				// Set the blocktime of the last committed block.
-				ctx = ctx.WithBlockTime(unixTimeFive)
-				ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
-					Timestamp: unixTimeFive,
-				})
+			// Create all subaccounts.
+			for _, subaccount := range tc.subaccounts {
+				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
+			}
 
-				// Initialize the memclob with each placed operation using a forked version of state,
-				// and ensure the forked state is not committed to the base state.
-				setupCtx, _ := ctx.CacheContext()
-				for _, operation := range tc.placedOperations {
-					switch operation.Operation.(type) {
-					case *types.Operation_ShortTermOrderPlacement:
-						order := operation.GetShortTermOrderPlacement()
-						tempCtx, writeCache := setupCtx.CacheContext()
-						tempCtx = tempCtx.WithTxBytes(order.Order.GetOrderHash().ToBytes())
-						_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
-							tempCtx,
-							order,
-						)
-						if err == nil {
-							writeCache()
-						} else {
-							isExpectedErr := errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) ||
-								errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder)
-							if !isExpectedErr {
-								panic(
-									fmt.Errorf(
-										"Expected error ErrFokOrderCouldNotBeFullyFilled or ErrPostOnlyWouldCrossMakerOrder, got %w",
-										err,
-									),
-								)
-							}
-						}
-					case *types.Operation_ShortTermOrderCancellation:
-						orderCancellation := operation.GetShortTermOrderCancellation()
-						err := ks.ClobKeeper.CancelShortTermOrder(ctx, orderCancellation)
-						if err != nil {
-							panic(err)
-						}
-					case *types.Operation_PreexistingStatefulOrder:
-						orderId := operation.GetPreexistingStatefulOrder()
-						orderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
-						if !found {
+			// Create all CLOBs.
+			for _, clobPair := range tc.clobs {
+				_, err = ks.ClobKeeper.CreatePerpetualClobPair(
+					ctx,
+					clobPair.Id,
+					clobtest.MustPerpetualId(clobPair),
+					satypes.BaseQuantums(clobPair.StepBaseQuantums),
+					clobPair.QuantumConversionExponent,
+					clobPair.SubticksPerTick,
+					clobPair.Status,
+				)
+				require.NoError(t, err)
+			}
+
+			// Initialize the liquidations config.
+			err = ks.ClobKeeper.InitializeLiquidationsConfig(ctx, types.LiquidationsConfig_Default)
+			require.NoError(t, err)
+
+			// Create all pre-existing stateful orders in state.
+			for _, order := range tc.preExistingStatefulOrders {
+				ks.ClobKeeper.SetLongTermOrderPlacement(ctx, order, 100)
+			}
+
+			// Set the ProcessProposerMatchesEvents in state.
+			ks.ClobKeeper.MustSetProcessProposerMatchesEvents(
+				ctx.WithIsCheckTx(false),
+				tc.processProposerMatchesEvents,
+			)
+
+			// Set the blocktime of the last committed block.
+			ctx = ctx.WithBlockTime(unixTimeFive)
+			ks.BlockTimeKeeper.SetPreviousBlockInfo(ctx, &blocktimetypes.BlockInfo{
+				Timestamp: unixTimeFive,
+			})
+
+			// Initialize the memclob with each placed operation using a forked version of state,
+			// and ensure the forked state is not committed to the base state.
+			setupCtx, _ := ctx.CacheContext()
+			for _, operation := range tc.placedOperations {
+				switch operation.Operation.(type) {
+				case *types.Operation_ShortTermOrderPlacement:
+					order := operation.GetShortTermOrderPlacement()
+					tempCtx, writeCache := setupCtx.CacheContext()
+					tempCtx = tempCtx.WithTxBytes(order.Order.GetOrderHash().ToBytes())
+					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
+						tempCtx,
+						order,
+					)
+					if err == nil {
+						writeCache()
+					} else {
+						isExpectedErr := errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) ||
+							errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder)
+						if !isExpectedErr {
 							panic(
-								fmt.Sprintf(
-									"Order ID %+v not found in state.",
-									orderId,
+								fmt.Errorf(
+									"Expected error ErrFokOrderCouldNotBeFullyFilled or ErrPostOnlyWouldCrossMakerOrder, got %w",
+									err,
 								),
 							)
 						}
-						tempCtx, writeCache := setupCtx.CacheContext()
-						_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
-							tempCtx,
-							types.NewMsgPlaceOrder(orderPlacement.Order),
+					}
+				case *types.Operation_ShortTermOrderCancellation:
+					orderCancellation := operation.GetShortTermOrderCancellation()
+					err := ks.ClobKeeper.CancelShortTermOrder(ctx, orderCancellation)
+					if err != nil {
+						panic(err)
+					}
+				case *types.Operation_PreexistingStatefulOrder:
+					orderId := operation.GetPreexistingStatefulOrder()
+					orderPlacement, found := ks.ClobKeeper.GetLongTermOrderPlacement(ctx, *orderId)
+					if !found {
+						panic(
+							fmt.Sprintf(
+								"Order ID %+v not found in state.",
+								orderId,
+							),
 						)
-						if err == nil {
-							writeCache()
-						} else {
-							isExpectedErr := errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) ||
-								errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder)
-							if !isExpectedErr {
-								panic(isExpectedErr)
-							}
+					}
+					tempCtx, writeCache := setupCtx.CacheContext()
+					_, _, err := ks.ClobKeeper.PlaceShortTermOrder(
+						tempCtx,
+						types.NewMsgPlaceOrder(orderPlacement.Order),
+					)
+					if err == nil {
+						writeCache()
+					} else {
+						isExpectedErr := errors.Is(err, types.ErrFokOrderCouldNotBeFullyFilled) ||
+							errors.Is(err, types.ErrPostOnlyWouldCrossMakerOrder)
+						if !isExpectedErr {
+							panic(isExpectedErr)
 						}
 					}
 				}
+			}
 
-				// Set the liquidatable subaccount IDs.
-				ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
+			// Set the liquidatable subaccount IDs.
+			ks.ClobKeeper.DaemonLiquidationInfo.UpdateLiquidatableSubaccountIds(tc.liquidatableSubaccounts)
 
-				// Run the test.
-				clob.PrepareCheckState(
-					ctx,
-					ks.ClobKeeper,
-				)
+			// Run the test.
+			clob.PrepareCheckState(
+				ctx,
+				ks.ClobKeeper,
+			)
 
-				// Verify test expectations.
-				require.NoError(t, err)
-				operationsQueue, _ := memClob.GetOperationsToReplay(ctx)
+			// Verify test expectations.
+			require.NoError(t, err)
+			operationsQueue, _ := memClob.GetOperationsToReplay(ctx)
 
-				require.Equal(t, tc.expectedOperationsQueue, operationsQueue)
+			require.Equal(t, tc.expectedOperationsQueue, operationsQueue)
 
-				memclob.AssertMemclobHasOrders(
-					t,
-					ctx,
-					memClob,
-					tc.expectedBids,
-					tc.expectedAsks,
-				)
+			memclob.AssertMemclobHasOrders(
+				t,
+				ctx,
+				memClob,
+				tc.expectedBids,
+				tc.expectedAsks,
+			)
 
-				memclob.AssertMemclobHasShortTermTxBytes(
-					t,
-					ctx,
-					memClob,
-					tc.expectedOperationsQueue,
-					tc.expectedBids,
-					tc.expectedAsks,
-				)
-			})
+			memclob.AssertMemclobHasShortTermTxBytes(
+				t,
+				ctx,
+				memClob,
+				tc.expectedOperationsQueue,
+				tc.expectedBids,
+				tc.expectedAsks,
+			)
+		})
 	}
 }
