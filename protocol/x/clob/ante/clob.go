@@ -130,6 +130,25 @@ func (cd ClobDecorator) AnteHandle(
 				log.Error, err,
 			)
 		}
+	case *types.MsgBatchCancel:
+		// MsgBatchCancel currently only processes short-term cancels right now.
+		// No need to process short term orders on `ReCheckTx`.
+		if ctx.IsReCheckTx() {
+			return next(ctx, tx, simulate)
+		}
+		ctx = log.AddPersistentTagsToLogger(ctx,
+			log.Handler, log.MsgBatchCancel,
+		)
+
+		err := cd.clobKeeper.BatchCancelShortTermOrder(
+			ctx,
+			msg,
+		)
+
+		log.DebugLog(ctx, "Received new batch cancellation",
+			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			log.Error, err,
+		)
 	}
 	if err != nil {
 		return ctx, err
