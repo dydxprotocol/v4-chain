@@ -274,7 +274,8 @@ func ReadTree(db dbm.DB, version uint64, prefix []byte) (*iavl.MutableTree, erro
 }
 
 func PrintTree(tree *iavl.MutableTree, prefix string) error {
-	fmt.Printf("Tree %s data:\n", prefix)
+	fmt.Printf("!!! Tree %s data:\n", prefix)
+	panic("unreachable")
 	tree.Iterate(func(key []byte, value []byte) bool { //nolint:errcheck
 		printKey := parseWeaveKey(key)
 		digest := sha256.Sum256(value)
