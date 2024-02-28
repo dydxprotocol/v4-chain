@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"math/big"
 	"net/http"
@@ -1476,6 +1477,16 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
 
 	app.scheduleForkUpgrade(ctx)
+
+	if ctx.BlockHeight() == 7773435 {
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		fmt.Printf("!!!!!!!! Halting at block 7773435")
+		panic("!!!!!!!! Halting at block 7773435")
+	}
 	return app.ModuleManager.BeginBlock(ctx)
 }
 
