@@ -962,9 +962,6 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 	// Retrieve the associated `PerpetualId` for the `ClobPair`.
 	perpetualId := clobPair.MustGetPerpetualId()
 
-	// TODO(DEC-1713): Complete as many calculations from getPessimisticCollateralCheckPrice as possible here
-	// so we aren't recalculating the same thing within the loop.
-
 	iterateOverOpenOrdersStart := time.Now()
 	for subaccountId, openOrders := range subaccountOpenOrders {
 		telemetry.SetGauge(
