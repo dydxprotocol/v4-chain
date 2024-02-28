@@ -187,7 +187,14 @@ describe('orders-controller#V4', () => {
       orderFlags: ORDER_FLAG_CONDITIONAL.toString(),
       status: APIOrderStatusEnum.UNTRIGGERED,
       triggerPrice: '1000',
+      goodTilBlock: '99',
     };
+    const untriggeredOrderId: string = OrderTable.uuid(
+      untriggeredOrder.subaccountId,
+      untriggeredOrder.clientId,
+      untriggeredOrder.clobPairId,
+      untriggeredOrder.orderFlags,
+    );
 
     it('Successfully gets multiple redis orders', async () => {
       await Promise.all([
@@ -427,6 +434,45 @@ describe('orders-controller#V4', () => {
       ]);
     });
 
+    it('Successfully returns filtered order when > limit orders exist', async () => {
+      await Promise.all([
+        OrderTable.create(testConstants.defaultOrder),
+        OrderTable.create(untriggeredOrder),
+      ]);
+
+      const response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders?${getQueryString(defaultQueryParams)}`,
+      });
+
+      expect(response.body).toEqual([
+        postgresOrderToResponseObject({
+          ...testConstants.defaultOrder,
+          id: testConstants.defaultOrderId,
+        }),
+        postgresOrderToResponseObject({
+          ...untriggeredOrder,
+          id: untriggeredOrderId,
+        }),
+      ]);
+
+      const response2 = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders?${getQueryString({
+          ...defaultQueryParams,
+          status: APIOrderStatusEnum.UNTRIGGERED,
+          limit: 1,
+        })}`,
+      });
+
+      expect(response2.body).toEqual([
+        postgresOrderToResponseObject({
+          ...untriggeredOrder,
+          id: untriggeredOrderId,
+        }),
+      ]);
+    });
+
     it('Successfully filters orders by status', async () => {
       await Promise.all([
         OrderTable.create(testConstants.defaultOrder),
@@ -507,12 +553,7 @@ describe('orders-controller#V4', () => {
       expect(response.body).toEqual([
         postgresOrderToResponseObject({
           ...untriggeredOrder,
-          id: OrderTable.uuid(
-            untriggeredOrder.subaccountId,
-            untriggeredOrder.clientId,
-            untriggeredOrder.clobPairId,
-            untriggeredOrder.orderFlags,
-          ),
+          id: untriggeredOrderId,
         }),
       ]);
 
@@ -535,12 +576,7 @@ describe('orders-controller#V4', () => {
         ),
         postgresOrderToResponseObject({
           ...untriggeredOrder,
-          id: OrderTable.uuid(
-            untriggeredOrder.subaccountId,
-            untriggeredOrder.clientId,
-            untriggeredOrder.clobPairId,
-            untriggeredOrder.orderFlags,
-          ),
+          id: untriggeredOrderId,
         }),
       ]);
     });
