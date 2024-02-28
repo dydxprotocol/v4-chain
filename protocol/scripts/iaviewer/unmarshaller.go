@@ -36,6 +36,6 @@ var unmarshallerRegistry = map[string]map[string]func([]byte) string{
 		"\x01": protoUnmarshaller[*banktypes.Metadata],
 	},
 	"s/k:acc/": {
-		"\x01": protoUnmarshaller[*authtypes.ModuleAccount],
+		"\x01": protoUnmarshaller[*authtypes.BaseAccount],
 	},
 }
