@@ -66,7 +66,8 @@ func (k Keeper) BatchCancelShortTermOrder(
 	nextBlockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight() + 1)
 
 	// Statefully validate the GTB and the clob pair ids.
-	if err := k.validateGoodTilBlock(msg.GetGoodTilBlock(), nextBlockHeight); err != nil {
+	goodTilBlock := msg.GetGoodTilBlock()
+	if err := k.validateGoodTilBlock(goodTilBlock, nextBlockHeight); err != nil {
 		return err
 	}
 	for _, batchOrder := range msg.GetShortTermCancels() {
@@ -79,7 +80,7 @@ func (k Keeper) BatchCancelShortTermOrder(
 			)
 		}
 	}
-
+	fmt.Println("good good")
 	subaccountId := msg.GetSubaccountId()
 	oneCancelSucceeded := false
 	for _, batchOrder := range msg.GetShortTermCancels() {
@@ -92,8 +93,11 @@ func (k Keeper) BatchCancelShortTermOrder(
 					ClobPairId:   clobPairId,
 					ClientId:     clientId,
 				},
+				GoodTilOneof: &types.MsgCancelOrder_GoodTilBlock{
+					GoodTilBlock: goodTilBlock,
+				},
 			}
-
+			fmt.Println("running st order cancel", msgCancelOrder)
 			// Run the short term order. If it errors, just log silently.
 			err := k.CancelShortTermOrder(
 				ctx,

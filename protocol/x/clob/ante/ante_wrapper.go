@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
@@ -62,6 +64,7 @@ func (anteWrapper ShortTermSingleMsgClobTxAnteWrapper) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
+	fmt.Println("ante handler short term single clob message tx", tx.GetMsgs()[0])
 	isShortTermClobMsgTx, err := IsShortTermClobMsgTx(ctx, tx)
 	if err != nil {
 		return ctx, err

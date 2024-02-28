@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cometbftlog "github.com/cometbft/cometbft/libs/log"
@@ -44,6 +46,7 @@ func (cd ClobDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
+	fmt.Printf("ante handler called, %+v\n\n%+v\n\n", tx.GetMsgs(), tx)
 	// No need to process during `DeliverTx` or simulation, call next `AnteHandler`.
 	if lib.IsDeliverTxMode(ctx) || simulate {
 		return next(ctx, tx, simulate)
@@ -136,6 +139,8 @@ func (cd ClobDecorator) AnteHandle(
 		if ctx.IsReCheckTx() {
 			return next(ctx, tx, simulate)
 		}
+
+		fmt.Println("msg batch cancellll", msg)
 		ctx = log.AddPersistentTagsToLogger(ctx,
 			log.Handler, log.MsgBatchCancel,
 		)
@@ -158,15 +163,15 @@ func (cd ClobDecorator) AnteHandle(
 }
 
 // IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder`). If `msgs` consist of multiple clob messages,
-// or a mix of on-chain and clob messages, an error is returned.
+// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`). If `msgs` consist of multiple
+// clob messages, or a mix of on-chain and clob messages, an error is returned.
 func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 	msgs := tx.GetMsgs()
 	var hasMessage = false
 
 	for _, msg := range msgs {
 		switch msg.(type) {
-		case *types.MsgCancelOrder, *types.MsgPlaceOrder:
+		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel:
 			hasMessage = true
 		}
 
@@ -183,7 +188,7 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 	if numMsgs > 1 {
 		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+			"a transaction containing MsgCancelOrder or MsgPlaceOrder or MsgBatchCancel may not contain more than one message",
 		)
 	}
 
@@ -191,8 +196,8 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 }
 
 // IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder`) which references a Short-Term Order. If `msgs` consist of multiple
-// clob messages, or a mix of on-chain and clob messages, an error is returned.
+// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`) which references a Short-Term Order.
+// If `msgs` consist of multiple clob messages, or a mix of on-chain and clob messages, an error is returned.
 func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	msgs := tx.GetMsgs()
 
@@ -211,6 +216,11 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 				if msg.Order.OrderId.IsShortTermOrder() {
 					isShortTermOrder = true
 				}
+			}
+		case *types.MsgBatchCancel:
+			{
+				// MsgBatchCancel processes only short term orders for now.
+				isShortTermOrder = true
 			}
 		}
 
