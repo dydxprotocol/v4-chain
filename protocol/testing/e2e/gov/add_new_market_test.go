@@ -27,8 +27,8 @@ const (
 	NumBlocksAfterTradingEnabled = 50
 	TestMarketId                 = 1001
 	// Expected response log when a order is submitted but oracle price is zero.
-	ExpectedPlaceOrderCheckTxResponseLog = "recovered: clob pair ID = (1001), perpetual ID = (1001), " +
-		"market ID = (1001): Oracle price must be > 0"
+	// https://github.com/dydxprotocol/v4-chain/blob/5ee11ed/protocol/x/perpetuals/keeper/perpetual.go#L1514-L1517
+	ExpectedPlaceOrderCheckTxResponseLog = "recovered: type: perpetual, id: 1001: product position is not updatable"
 )
 
 var (

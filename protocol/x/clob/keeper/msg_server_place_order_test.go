@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -48,8 +49,13 @@ func TestPlaceOrder_Error(t *testing.T) {
 			ExpectedError:          types.ErrTimeExceedsGoodTilBlockTime,
 		},
 		"Returns an error when collateralization check fails": {
-			StatefulOrderPlacement: constants.LongTermOrder_Bob_Num0_Id2_Clob0_Buy15_Price5_GTBT10,
+			StatefulOrderPlacement: constants.LongTermOrder_Alice_Num0_Id1_Clob0_Buy1BTC_Price50000_GTBT15,
 			ExpectedError:          types.ErrStatefulOrderCollateralizationCheckFailed,
+		},
+		"Returns an error when equity tier check fails": {
+			// Bob has TNC of $0.
+			StatefulOrderPlacement: constants.LongTermOrder_Bob_Num0_Id2_Clob0_Buy15_Price5_GTBT10,
+			ExpectedError:          types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
 		},
 		"Returns an error when order replacement is attempted": {
 			StatefulOrders: []types.Order{
@@ -125,6 +131,27 @@ func TestPlaceOrder_Error(t *testing.T) {
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.DefaultFundingPpm,
 				perpetual.Params.LiquidityTier,
+			)
+			require.NoError(t, err)
+
+			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, constants.Alice_Num0_10_000USD)
+
+			err = ks.ClobKeeper.InitializeEquityTierLimit(
+				ks.Ctx,
+				types.EquityTierLimitConfiguration{
+					ShortTermOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(20_000_000),
+							Limit:          5,
+						},
+					},
+					StatefulOrderEquityTiers: []types.EquityTierLimit{
+						{
+							UsdTncRequired: dtypes.NewInt(20_000_000),
+							Limit:          5,
+						},
+					},
+				},
 			)
 			require.NoError(t, err)
 
