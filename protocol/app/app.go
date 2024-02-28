@@ -1478,14 +1478,13 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 	app.scheduleForkUpgrade(ctx)
 
-	if ctx.BlockHeight() == 7773435 {
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		fmt.Printf("!!!!!!!! Halting at block 7773435")
-		panic("!!!!!!!! Halting at block 7773435")
+	if ctx.BlockHeight() == 7773436 {
+		fmt.Printf("!!!!!!!! Halting at BeginBlock 7773436")
+		fmt.Printf("!!!!!!!! Halting at BeginBlock 7773436")
+		fmt.Printf("!!!!!!!! Halting at BeginBlock 7773436")
+		fmt.Printf("!!!!!!!! Halting at BeginBlock 7773436")
+		fmt.Printf("!!!!!!!! Halting at BeginBlock 7773436")
+		panic("!!!!!!!! Halting at BeginBlock 7773436")
 	}
 	return app.ModuleManager.BeginBlock(ctx)
 }
