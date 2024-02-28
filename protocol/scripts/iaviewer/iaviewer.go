@@ -282,12 +282,11 @@ func PrintTree(tree *iavl.MutableTree, prefix string) error {
 			for keyPrefix, unmarshaller := range treeUnmarshallerRegistry {
 				// Convert the first byte of the key to a hexadecimal string for matching.
 				keyPrefixBytes := []byte(keyPrefix)
-				fmt.Printf("!! key = %v, keyPrefixBytes = %v\n", key, keyPrefixBytes)
 
 				if bytes.HasPrefix(key, keyPrefixBytes) {
+					panic("hit!!")
 					str := unmarshaller(value)
 					fmt.Printf("    %s\n", str)
-					panic("hit!!!!")
 					break
 				}
 			}

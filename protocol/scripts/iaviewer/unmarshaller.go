@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	app "github.com/dydxprotocol/v4-chain/protocol/app"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -33,5 +34,8 @@ var unmarshallerRegistry = map[string]map[string]func([]byte) string{
 	},
 	"s/k:bank/": {
 		"\x01": protoUnmarshaller[*banktypes.Metadata],
+	},
+	"s/k:acc/": {
+		"\x01": protoUnmarshaller[sdk.AccountI],
 	},
 }
