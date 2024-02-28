@@ -131,6 +131,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.DefaultFundingPpm,
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
 			)
 			require.NoError(t, err)
 
@@ -297,6 +298,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 				perpetual.Params.AtomicResolution,
 				perpetual.Params.DefaultFundingPpm,
 				perpetual.Params.LiquidityTier,
+				perpetual.Params.MarketType,
 			)
 			require.NoError(t, err)
 

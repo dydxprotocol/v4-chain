@@ -40,6 +40,7 @@ func (k Keeper) CreatePerpetual(
 	atomicResolution int32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
+	marketType types.PerpetualMarketType,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
@@ -58,6 +59,7 @@ func (k Keeper) CreatePerpetual(
 			AtomicResolution:  atomicResolution,
 			DefaultFundingPpm: defaultFundingPpm,
 			LiquidityTier:     liquidityTier,
+			MarketType:        marketType,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}

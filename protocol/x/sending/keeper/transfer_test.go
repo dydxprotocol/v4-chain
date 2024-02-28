@@ -1,13 +1,14 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"math/big"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -131,6 +132,7 @@ func runProcessTransferTest(t *testing.T, tc TransferTestCase) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -257,6 +259,7 @@ func TestProcessTransfer_CreateRecipientAccount(t *testing.T) {
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

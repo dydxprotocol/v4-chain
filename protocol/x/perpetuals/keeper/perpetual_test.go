@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
 	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -142,6 +143,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 		atomicResolution  int32
 		defaultFundingPpm int32
 		liquidityTier     uint32
+		marketType        types.PerpetualMarketType
 		expectedError     error
 	}{
 		"Price doesn't exist": {
@@ -213,6 +215,7 @@ func TestCreatePerpetual_Failure(t *testing.T) {
 				tc.atomicResolution,
 				tc.defaultFundingPpm,
 				tc.liquidityTier,
+				tc.marketType,
 			)
 
 			require.Error(t, err)
@@ -344,6 +347,7 @@ func TestHasPerpetual(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -421,6 +425,7 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 			perps[perp].Params.AtomicResolution,
 			perps[perp].Params.DefaultFundingPpm,
 			perps[perp].Params.LiquidityTier,
+			perps[perp].Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
@@ -662,6 +667,7 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -862,6 +868,7 @@ func TestGetNetNotional_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -1023,6 +1030,7 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -1185,6 +1193,7 @@ func TestGetNetCollateral_Success(t *testing.T) {
 				tc.baseCurrencyAtomicResolution, // AtomicResolution
 				int32(0),                        // DefaultFundingPpm
 				0,                               // LiquidityTier
+				types.PerpetualMarketType_CROSS, // MarketType
 			)
 			require.NoError(t, err)
 
@@ -1871,6 +1880,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 					p.Params.AtomicResolution,
 					p.Params.DefaultFundingPpm,
 					p.Params.LiquidityTier,
+					p.Params.MarketType,
 				)
 				require.NoError(t, err)
 				oldPerps[i] = perp

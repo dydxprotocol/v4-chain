@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"testing"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,7 +54,8 @@ func PerpetualsKeepersWithClobHelpers(
 	t testing.TB,
 	clobKeeper types.PerpetualsClobKeeper,
 ) (pc PerpKeepersTestContext) {
-	pc.Ctx = initKeepers(t, func(
+	pc.Ctx = initKeepers(
+		t, func(
 		db *dbm.MemDB,
 		registry codectypes.InterfaceRegistry,
 		cdc *codec.ProtoCodec,
@@ -79,7 +81,8 @@ func PerpetualsKeepersWithClobHelpers(
 		)
 
 		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
-	})
+		},
+	)
 
 	// Mock time provider response for market creation.
 	pc.MockTimeProvider.On("Now").Return(constants.TimeT)
@@ -236,6 +239,7 @@ func CreateNPerpetuals(
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			types.PerpetualMarketType_CROSS,                // MarketType
 		)
 		if err != nil {
 			return items, err
@@ -285,6 +289,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
+			types.PerpetualMarketType_CROSS,
 		)
 		require.NoError(t, err)
 	}

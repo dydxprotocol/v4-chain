@@ -43,6 +43,7 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			elem.Params.AtomicResolution,
 			elem.Params.DefaultFundingPpm,
 			elem.Params.LiquidityTier,
+			elem.Params.MarketType,
 		)
 
 		if err != nil {
