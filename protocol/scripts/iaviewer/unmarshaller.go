@@ -1,10 +1,9 @@
 package main
 
 import (
-	"reflect"
-
 	"github.com/cosmos/gogoproto/proto"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	app "github.com/dydxprotocol/v4-chain/protocol/app"
@@ -13,12 +12,18 @@ import (
 
 func protoUnmarshaller[M proto.Message](b []byte) string {
 	cdc := app.GetEncodingConfig().Codec
-	var m M
-	// TODO: avoid reflection?
-	msgType := reflect.TypeOf(m).Elem()
-	m = reflect.New(msgType).Interface().(M)
-	cdc.MustUnmarshal(b, m)
-	return m.String()
+	// var m M
+	// // TODO: avoid reflection?
+	// msgType := reflect.TypeOf(m).Elem()
+	// m = reflect.New(msgType).Interface().(M)
+	// cdc.MustUnmarshal(b, m)
+	// return m.String()
+
+	var acc sdk.AccountI
+	if err := cdc.UnmarshalInterface(b, &acc); err != nil {
+		panic(err)
+	}
+	return string(acc.String())
 }
 
 // Maps prefix names for modules to an inner registry map of type map[string]func([]byte) string.
