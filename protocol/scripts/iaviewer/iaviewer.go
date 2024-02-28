@@ -274,8 +274,6 @@ func ReadTree(db dbm.DB, version uint64, prefix []byte) (*iavl.MutableTree, erro
 }
 
 func PrintTree(tree *iavl.MutableTree, prefix string) error {
-	fmt.Printf("!!! Tree %s data:\n", prefix)
-	panic("unreachable")
 	tree.Iterate(func(key []byte, value []byte) bool { //nolint:errcheck
 		printKey := parseWeaveKey(key)
 		digest := sha256.Sum256(value)
@@ -283,7 +281,8 @@ func PrintTree(tree *iavl.MutableTree, prefix string) error {
 		if treeUnmarshallerRegistry, ok := unmarshallerRegistry[prefix]; ok {
 			for keyPrefix, unmarshaller := range treeUnmarshallerRegistry {
 				// Convert the first byte of the key to a hexadecimal string for matching.
-				if strings.HasPrefix(string(key), keyPrefix) {
+				fmt.Printf("!! %s, %s\n", string(key[:1]), keyPrefix)
+				if strings.HasPrefix(string(key[:1]), keyPrefix) {
 					str := unmarshaller(value)
 					fmt.Printf("    %s\n", str)
 					break
