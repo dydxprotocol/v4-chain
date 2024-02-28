@@ -60,7 +60,7 @@ export async function findAll(
     totalFilled,
     price,
     type,
-    status,
+    statuses,
     reduceOnly,
     orderFlags,
     goodTilBlockBeforeOrAt,
@@ -83,7 +83,7 @@ export async function findAll(
       totalFilled,
       price,
       type,
-      status,
+      statuses,
       reduceOnly,
       orderFlags,
       goodTilBlockBeforeOrAt,
@@ -134,8 +134,8 @@ export async function findAll(
     baseQuery = baseQuery.where(OrderColumns.type, type);
   }
 
-  if (status !== undefined) {
-    baseQuery = baseQuery.where(OrderColumns.status, status);
+  if (statuses !== undefined) {
+    baseQuery = baseQuery.whereIn(OrderColumns.status, statuses);
   }
 
   if (reduceOnly !== undefined) {
