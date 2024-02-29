@@ -66,6 +66,7 @@ func networkWithLiquidityTierAndPerpetualObjects(
 				Id:            uint32(i),
 				Ticker:        fmt.Sprintf("test_query_ticker_%d", i),
 				LiquidityTier: uint32(i % m),
+				MarketType:    types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 			},
 			FundingIndex: dtypes.ZeroInt(),
 		}

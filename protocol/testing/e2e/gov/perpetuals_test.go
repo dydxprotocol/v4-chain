@@ -25,6 +25,7 @@ var (
 		AtomicResolution:  -8,
 		DefaultFundingPpm: 545,
 		LiquidityTier:     1,
+		MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 	}
 	TEST_LIQUIDITY_TIER = perptypes.LiquidityTier{
 		Id:                     1,
@@ -329,7 +330,12 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 
 			if tc.expectedProposalStatus == govtypesv1.ProposalStatus_PROPOSAL_STATUS_PASSED {
 				// If proposal is supposed to pass, verify that the perpetual's params have been updated.
-				require.Equal(t, tc.msg.PerpetualParams, updatedPerpetual.Params)
+				// All params except for MarketType should be updated.
+				require.Equal(t, tc.msg.PerpetualParams.Ticker, updatedPerpetual.Params.Ticker)
+				require.Equal(t, tc.msg.PerpetualParams.MarketId, updatedPerpetual.Params.MarketId)
+				require.Equal(t, tc.msg.PerpetualParams.DefaultFundingPpm, updatedPerpetual.Params.DefaultFundingPpm)
+				require.Equal(t, tc.msg.PerpetualParams.LiquidityTier, updatedPerpetual.Params.LiquidityTier)
+				require.Equal(t, tc.msg.PerpetualParams.AtomicResolution, updatedPerpetual.Params.AtomicResolution)
 			} else {
 				// If proposal is not supposed to succeed, verify that the perpetual's
 				// params match the ones before proposal submission.

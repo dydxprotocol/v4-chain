@@ -223,8 +223,10 @@ func CreateNPerpetuals(
 		CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 		if i%3 == 0 {
 			defaultFundingPpm = 1
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
 		} else if i%3 == 1 {
 			defaultFundingPpm = -1
 		} else {
@@ -238,8 +240,8 @@ func CreateNPerpetuals(
 			uint32(i),            // MarketId
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
-			allLiquidityTiers[i%len(allLiquidityTiers)].Id,        // LiquidityTier
-			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
+			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			marketType, // MarketType
 		)
 		if err != nil {
 			return items, err
