@@ -167,7 +167,11 @@ export interface MsgBatchCancelSDKType {
 export interface OrderBatch {
   /** The Clob Pair ID all orders in this order batch belong to. */
   clobPairId: number;
-  /** List of client ids in this order batch. */
+  /**
+   * List of client ids in this order batch.
+   * Note that this is serialized as a uint32 instead of a fixed32 in the
+   * regular OrderId object to save space.
+   */
 
   clientIds: number[];
 }
@@ -180,7 +184,11 @@ export interface OrderBatch {
 export interface OrderBatchSDKType {
   /** The Clob Pair ID all orders in this order batch belong to. */
   clob_pair_id: number;
-  /** List of client ids in this order batch. */
+  /**
+   * List of client ids in this order batch.
+   * Note that this is serialized as a uint32 instead of a fixed32 in the
+   * regular OrderId object to save space.
+   */
 
   client_ids: number[];
 }
