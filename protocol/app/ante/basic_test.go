@@ -11,7 +11,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -36,13 +35,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 
 			expectedErr: sdkerrors.ErrNoSignatures,
 		},
-		"skip ValidateBasic: single msg, AppInjected msg": {
-			msgOne:         &pricestypes.MsgUpdateMarketPrices{},
-			txHasSignature: false, // this should cause ValidateBasic to fail, but this is skipped.
-
-			expectedErr: nil,
-		},
-		"valid ValidateBasic: single msg, NO AppInjected msg": {
+		"valid ValidateBasic: single msg": {
 			msgOne:         &testdata.TestMsg{Signers: []string{constants.AliceAccAddress.String()}},
 			txHasSignature: true, // this should allow ValidateBasic to pass.
 
@@ -78,8 +71,7 @@ func TestValidateBasic_AppInjectedMsgWrapper(t *testing.T) {
 			suite.TxBuilder = suite.ClientCtx.TxConfig.NewTxBuilder()
 
 			vbd := ante.NewValidateBasicDecorator()
-			wrappedVbd := libante.NewAppInjectedMsgAnteWrapper(vbd)
-			antehandler := sdk.ChainAnteDecorators(wrappedVbd)
+			antehandler := sdk.ChainAnteDecorators(vbd)
 
 			msgs := make([]sdk.Msg, 0)
 			if tc.msgOne != nil {

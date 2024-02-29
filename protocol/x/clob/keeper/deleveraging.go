@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"time"
 
+	types2 "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -141,7 +143,7 @@ func (k Keeper) GetInsuranceFundBalance(
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		types.InsuranceFundModuleAddress,
+		types2.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 
@@ -398,6 +400,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 						*offsettingSubaccount.Id,
 						perpetualId,
 						satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+						// TODO(CT-641): Use the actual unit price rather than the total quote quantums.
 						satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
 						deltaBaseQuantums.Sign() > 0,
 						isFinalSettlement,

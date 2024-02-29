@@ -1,6 +1,7 @@
 import { logger } from '@dydxprotocol-indexer/base';
 import {
   AssetCreateEventV1,
+  DeleveragingEventV1,
   FundingEventV1,
   IndexerTendermintEvent,
   LiquidityTierUpsertEventV1,
@@ -97,6 +98,13 @@ export function annotateIndexerTendermintEvent(
         ...event,
         dataBytes: new Uint8Array(),
         data: JSON.stringify(UpdateClobPairEventV1.decode(eventDataBinary)),
+      };
+    }
+    case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
+      return {
+        ...event,
+        dataBytes: new Uint8Array(),
+        data: JSON.stringify(DeleveragingEventV1.decode(eventDataBinary)),
       };
     }
     case (DydxIndexerSubtypes.TRADING_REWARD.toString()): {

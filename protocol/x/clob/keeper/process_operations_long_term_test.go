@@ -581,15 +581,17 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
-					Timestamp: time.Unix(5, 0),
-				})
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(
+					ks.Ctx, &blocktimetypes.BlockInfo{
+						Timestamp: time.Unix(5, 0),
+					},
+				)
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualLiquidation(
@@ -667,15 +669,17 @@ func TestProcessProposerMatches_LongTerm_Success(t *testing.T) {
 					"SendCoinsFromModuleToModule",
 					mock.Anything,
 					satypes.ModuleName,
-					types.InsuranceFundName,
+					perptypes.InsuranceFundName,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
 			},
 			setupState: func(ctx sdk.Context, ks keepertest.ClobKeepersTestContext) {
-				ks.BlockTimeKeeper.SetPreviousBlockInfo(ks.Ctx, &blocktimetypes.BlockInfo{
-					Timestamp: time.Unix(5, 0),
-				})
+				ks.BlockTimeKeeper.SetPreviousBlockInfo(
+					ks.Ctx, &blocktimetypes.BlockInfo{
+						Timestamp: time.Unix(5, 0),
+					},
+				)
 			},
 			rawOperations: []types.OperationRaw{
 				clobtest.NewMatchOperationRawFromPerpetualLiquidation(

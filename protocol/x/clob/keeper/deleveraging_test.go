@@ -97,7 +97,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 				bankMock.On(
 					"GetBalance",
 					mock.Anything,
-					types.InsuranceFundModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					constants.Usdc.Denom,
 				).Return(
 					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -195,7 +195,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -315,7 +315,7 @@ func TestCanDeleverageSubaccount(t *testing.T) {
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
