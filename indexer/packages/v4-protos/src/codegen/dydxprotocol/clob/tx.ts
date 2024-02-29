@@ -784,7 +784,7 @@ export const OrderBatch = {
     writer.uint32(18).fork();
 
     for (const v of message.clientIds) {
-      writer.fixed32(v);
+      writer.uint32(v);
     }
 
     writer.ldelim();
@@ -809,10 +809,10 @@ export const OrderBatch = {
             const end2 = reader.uint32() + reader.pos;
 
             while (reader.pos < end2) {
-              message.clientIds.push(reader.fixed32());
+              message.clientIds.push(reader.uint32());
             }
           } else {
-            message.clientIds.push(reader.fixed32());
+            message.clientIds.push(reader.uint32());
           }
 
           break;
