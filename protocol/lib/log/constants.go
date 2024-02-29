@@ -49,7 +49,7 @@ const (
 	CheckTx        = "check_tx"
 	RecheckTx      = "recheck_tx"
 	DeliverTx      = "deliver_tx"
-	MsgBatchCancel = "msg_batch_canel"
+	MsgBatchCancel = "msg_batch_cancel"
 )
 
 // Special tag values that should be PascalCased (i.e function names)
