@@ -3,7 +3,7 @@ package e2e_test
 import (
 	"context"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	blocktime "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/stretchr/testify/require"
 	"sync"
@@ -15,7 +15,7 @@ import (
 // but the meaningful validation will come from Go's ability to perform data race detection during testing
 // when using the `-race` flag.
 func TestParallelQuery(t *testing.T) {
-	tApp := testApp.NewTestAppBuilder(t).Build()
+	tApp := testapp.NewTestAppBuilder(t).Build()
 	tApp.InitChain()
 
 	// In parallel:
@@ -38,7 +38,7 @@ func TestParallelQuery(t *testing.T) {
 			blockLimitReached.Store(true)
 		}()
 		for i := uint32(2); i < 50; i++ {
-			tApp.AdvanceToBlock(i, testApp.AdvanceToBlockOptions{})
+			tApp.AdvanceToBlock(i, testapp.AdvanceToBlockOptions{})
 		}
 	}()
 

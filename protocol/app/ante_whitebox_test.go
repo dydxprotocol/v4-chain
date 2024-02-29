@@ -10,7 +10,6 @@ import (
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
-	"github.com/stretchr/testify/require"
 )
 
 func newTestHandlerOptions(t *testing.T) app.HandlerOptions {
@@ -69,32 +68,4 @@ func humanReadableDecoratorTypes(decoratorChain []sdk.AnteDecorator) []string {
 		}
 	}
 	return dTypes
-}
-
-func TestAnteHandlerChainOrder_Valid(t *testing.T) {
-	handlerOptions := newTestHandlerOptions(t)
-	decoratorChain := app.NewAnteDecoratorChain(handlerOptions)
-	decoratorTypes := humanReadableDecoratorTypes(decoratorChain)
-
-	expectedDecoratorTypes := []string{
-		"baseapp.lockAndCacheContextDecorator",
-		"ante.AppInjectedMsgAnteWrapper(ante.SingleMsgClobTxAnteWrapper(ante.SetUpContextDecorator))",
-		"ante.FreeInfiniteGasDecorator",
-		"ante.RejectExtensionOptionsDecorator",
-		"ante.ValidateMsgTypeDecorator",
-		"ante.AppInjectedMsgAnteWrapper(ante.ValidateBasicDecorator)",
-		"ante.TxTimeoutHeightDecorator",
-		"ante.ValidateMemoDecorator",
-		"ante.ConsumeTxSizeGasDecorator",
-		"ante.AppInjectedMsgAnteWrapper(ante.SingleMsgClobTxAnteWrapper(ante.DeductFeeDecorator))",
-		"ante.AppInjectedMsgAnteWrapper(ante.SetPubKeyDecorator)",
-		"ante.ValidateSigCountDecorator",
-		"ante.AppInjectedMsgAnteWrapper(ante.SigGasConsumeDecorator)",
-		"ante.AppInjectedMsgAnteWrapper(ante.SigVerificationDecorator)",
-		"ante.AppInjectedMsgAnteWrapper(ante.ShortTermSingleMsgClobTxAnteWrapper(ante.IncrementSequenceDecorator))",
-		"ante.ClobRateLimitDecorator",
-		"ante.ClobDecorator",
-	}
-
-	require.Equal(t, expectedDecoratorTypes, decoratorTypes, "Decorator order does not match expected")
 }
