@@ -432,7 +432,11 @@ type TestApp struct {
 	passingCheckTxs    [][]byte
 	passingCheckTxsMtx sync.Mutex
 	halted             bool
-	mtx                sync.RWMutex
+	// mtx is used to enable writing concurrent tests that invoke AdvanceToBlock and CheckTx concurrently.
+	// Note that AdvanceToBlock requires an exclusive lock similar to what is performed via CometBFT/Cosmos SDK
+	// while CheckTx only requires a read lock since it invokes CheckTx across multiple instances of the application.
+	// This allows for determinism invariant testing across these multiple instances of the application to occur.
+	mtx sync.RWMutex
 }
 
 func (tApp *TestApp) Builder() TestAppBuilder {
