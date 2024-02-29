@@ -189,6 +189,11 @@ func RandomizedGenState(simState *module.SimulationState) {
 	for i := 0; i < numPerpetuals; i++ {
 		marketId := marketsForPerp[i]
 
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+		if i%2 == 0 {
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+		}
+
 		perpetuals[i] = types.Perpetual{
 			Params: types.PerpetualParams{
 				Id:                uint32(i),
@@ -197,7 +202,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				AtomicResolution:  genAtomicResolution(r, isReasonableGenesis),
 				DefaultFundingPpm: genDefaultFundingPpm(r),
 				LiquidityTier:     uint32(simtypes.RandIntBetween(r, 0, numLiquidityTiers)),
-				MarketType:        types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+				MarketType:        marketType,
 			},
 			FundingIndex: dtypes.ZeroInt(),
 		}

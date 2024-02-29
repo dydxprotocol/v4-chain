@@ -336,6 +336,7 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 				require.Equal(t, tc.msg.PerpetualParams.DefaultFundingPpm, updatedPerpetual.Params.DefaultFundingPpm)
 				require.Equal(t, tc.msg.PerpetualParams.LiquidityTier, updatedPerpetual.Params.LiquidityTier)
 				require.Equal(t, tc.msg.PerpetualParams.AtomicResolution, updatedPerpetual.Params.AtomicResolution)
+				require.Equal(t, initialPerpetual.Params.MarketType, updatedPerpetual.Params.MarketType)
 			} else {
 				// If proposal is not supposed to succeed, verify that the perpetual's
 				// params match the ones before proposal submission.

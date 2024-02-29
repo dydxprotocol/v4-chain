@@ -902,7 +902,7 @@ const GenesisState = `{
             "liquidity_tier": 0,
             "market_id": 0,
             "ticker": "BTC-USD",
-		"market_type": 1
+            "market_type": 1
           }
         },
         {
