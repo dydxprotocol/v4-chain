@@ -398,6 +398,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 						*offsettingSubaccount.Id,
 						perpetualId,
 						satypes.BaseQuantums(new(big.Int).Abs(deltaBaseQuantums).Uint64()),
+						// TODO(CT-641): Use the actual unit price rather than the total quote quantums.
 						satypes.BaseQuantums(deltaQuoteQuantums.Uint64()),
 						deltaBaseQuantums.Sign() > 0,
 						isFinalSettlement,
