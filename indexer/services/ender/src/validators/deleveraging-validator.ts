@@ -27,9 +27,9 @@ export class DeleveragingValidator extends Validator<DeleveragingEventV1> {
       );
     }
 
-    if (this.event.price.eq(0)) {
+    if (this.event.totalQuoteQuantums.eq(0)) {
       return this.logAndThrowParseMessageError(
-        'DeleveragingEvent price cannot equal 0',
+        'DeleveragingEvent totalQuoteQuantums cannot equal 0',
         { event: this.event },
       );
     }

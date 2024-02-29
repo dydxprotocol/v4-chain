@@ -303,7 +303,7 @@ export const defaultDeleveragingEvent: DeleveragingEventV1 = {
   offsetting: defaultRecipientSubaccountId,
   perpetualId: 1,
   fillAmount: Long.fromValue(10_000, true),
-  price: Long.fromValue(1_000_000_000, true),
+  totalQuoteQuantums: Long.fromValue(1_000_000_000, true),
   isBuy: true,
   isFinalSettlement: false,
 };

@@ -56,12 +56,12 @@ describe('deleveraging-validator', () => {
         'DeleveragingEvent fillAmount cannot equal 0',
       ],
       [
-        'has price of 0',
+        'has totalQuoteQuantums of 0',
         {
           ...defaultDeleveragingEvent,
           price: new Long(0),
         },
-        'DeleveragingEvent price cannot equal 0',
+        'DeleveragingEvent totalQuoteQuantums cannot equal 0',
       ],
     ])('throws error if event %s', (_message: string, event: DeleveragingEventV1, message: string) => {
       const validator: DeleveragingValidator = new DeleveragingValidator(
