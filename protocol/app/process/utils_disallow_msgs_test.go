@@ -25,7 +25,7 @@ func TestIsDisallowClobOrderMsgInOtherTxs(t *testing.T) {
 	for _, msg := range allMsgSamples {
 		result := process.IsDisallowClobOrderMsgInOtherTxs(msg)
 		switch msg.(type) {
-		case *clobtypes.MsgCancelOrder, *clobtypes.MsgPlaceOrder:
+		case *clobtypes.MsgCancelOrder, *clobtypes.MsgPlaceOrder, *clobtypes.MsgBatchCancel:
 			// The sample msgs are short-term orders, so we expect these to be disallowed.
 			require.True(t, result) // true -> disallow
 		default:

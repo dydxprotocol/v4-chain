@@ -80,7 +80,6 @@ func (k Keeper) BatchCancelShortTermOrder(
 			)
 		}
 	}
-	fmt.Println("good good")
 	subaccountId := msg.GetSubaccountId()
 	oneCancelSucceeded := false
 	for _, batchOrder := range msg.GetShortTermCancels() {
@@ -97,7 +96,6 @@ func (k Keeper) BatchCancelShortTermOrder(
 					GoodTilBlock: goodTilBlock,
 				},
 			}
-			fmt.Println("running st order cancel", msgCancelOrder)
 			// Run the short term order. If it errors, just log silently.
 			err := k.CancelShortTermOrder(
 				ctx,

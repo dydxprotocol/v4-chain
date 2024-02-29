@@ -1,8 +1,9 @@
 package process_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
@@ -85,6 +86,13 @@ func TestDecodeOtherMsgsTx(t *testing.T) {
 			expectedErr: errorsmod.Wrap(
 				process.ErrUnexpectedMsgType,
 				"Msg type *types.MsgCancelOrder is not allowed in OtherTxs",
+			),
+		},
+		"Error: batch cancel order is not allowed": {
+			txBytes: constants.Msg_BatchCancel_TxBtyes,
+			expectedErr: errorsmod.Wrap(
+				process.ErrUnexpectedMsgType,
+				"Msg type *types.MsgBatchCancel is not allowed in OtherTxs",
 			),
 		},
 		"Valid: single msg": {

@@ -140,7 +140,6 @@ func (cd ClobDecorator) AnteHandle(
 			return next(ctx, tx, simulate)
 		}
 
-		fmt.Println("msg batch cancellll", msg)
 		ctx = log.AddPersistentTagsToLogger(ctx,
 			log.Handler, log.MsgBatchCancel,
 		)
