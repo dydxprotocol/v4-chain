@@ -1,5 +1,63 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
+export enum PerpetualMarketType {
+  /** PERPETUAL_MARKET_TYPE_UNSPECIFIED - Unspecified market type. */
+  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0,
+
+  /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_CROSS = 1,
+
+  /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_ISOLATED = 2,
+  UNRECOGNIZED = -1,
+}
+export enum PerpetualMarketTypeSDKType {
+  /** PERPETUAL_MARKET_TYPE_UNSPECIFIED - Unspecified market type. */
+  PERPETUAL_MARKET_TYPE_UNSPECIFIED = 0,
+
+  /** PERPETUAL_MARKET_TYPE_CROSS - Market type for cross margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_CROSS = 1,
+
+  /** PERPETUAL_MARKET_TYPE_ISOLATED - Market type for isolated margin perpetual markets. */
+  PERPETUAL_MARKET_TYPE_ISOLATED = 2,
+  UNRECOGNIZED = -1,
+}
+export function perpetualMarketTypeFromJSON(object: any): PerpetualMarketType {
+  switch (object) {
+    case 0:
+    case "PERPETUAL_MARKET_TYPE_UNSPECIFIED":
+      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_UNSPECIFIED;
+
+    case 1:
+    case "PERPETUAL_MARKET_TYPE_CROSS":
+      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS;
+
+    case 2:
+    case "PERPETUAL_MARKET_TYPE_ISOLATED":
+      return PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED;
+
+    case -1:
+    case "UNRECOGNIZED":
+    default:
+      return PerpetualMarketType.UNRECOGNIZED;
+  }
+}
+export function perpetualMarketTypeToJSON(object: PerpetualMarketType): string {
+  switch (object) {
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_UNSPECIFIED:
+      return "PERPETUAL_MARKET_TYPE_UNSPECIFIED";
+
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS:
+      return "PERPETUAL_MARKET_TYPE_CROSS";
+
+    case PerpetualMarketType.PERPETUAL_MARKET_TYPE_ISOLATED:
+      return "PERPETUAL_MARKET_TYPE_ISOLATED";
+
+    case PerpetualMarketType.UNRECOGNIZED:
+    default:
+      return "UNRECOGNIZED";
+  }
+}
 /** Perpetual represents a perpetual on the dYdX exchange. */
 
 export interface Perpetual {
@@ -59,6 +117,9 @@ export interface PerpetualParams {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidityTier: number;
+  /** The market type specifying if this perpetual is cross or isolated */
+
+  marketType: PerpetualMarketType;
 }
 /**
  * PerpetualParams represents the parameters of a perpetual on the dYdX
@@ -95,6 +156,9 @@ export interface PerpetualParamsSDKType {
   /** The liquidity_tier that this perpetual is associated with. */
 
   liquidity_tier: number;
+  /** The market type specifying if this perpetual is cross or isolated */
+
+  market_type: PerpetualMarketTypeSDKType;
 }
 /** MarketPremiums stores a list of premiums for a single perpetual market. */
 
@@ -323,7 +387,8 @@ function createBasePerpetualParams(): PerpetualParams {
     marketId: 0,
     atomicResolution: 0,
     defaultFundingPpm: 0,
-    liquidityTier: 0
+    liquidityTier: 0,
+    marketType: 0
   };
 }
 
@@ -351,6 +416,10 @@ export const PerpetualParams = {
 
     if (message.liquidityTier !== 0) {
       writer.uint32(48).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(56).int32(message.marketType);
     }
 
     return writer;
@@ -389,6 +458,10 @@ export const PerpetualParams = {
           message.liquidityTier = reader.uint32();
           break;
 
+        case 7:
+          message.marketType = (reader.int32() as any);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -406,6 +479,7 @@ export const PerpetualParams = {
     message.atomicResolution = object.atomicResolution ?? 0;
     message.defaultFundingPpm = object.defaultFundingPpm ?? 0;
     message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
     return message;
   }
 
