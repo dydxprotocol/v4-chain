@@ -35,6 +35,7 @@ DECLARE
     liquidated_side text;
     offsetting_side text;
     size numeric;
+    quote_amount numeric;
     price numeric;
     event_id bytea;
 BEGIN
@@ -55,8 +56,9 @@ BEGIN
     */
     size = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'fillAmount') *
                                  power(10, perpetual_market_record."atomicResolution")::numeric);
-    price = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'price') *
+    quote_amount = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'price') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
+    price = dydx_trim_scale(quote_amount / size);
 
     liquidated_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'liquidated');
     offsetting_subaccount_uuid = dydx_uuid_from_subaccount_id(event_data->'offsetting');
@@ -78,7 +80,7 @@ BEGIN
             clob_pair_id,
             size,
             price,
-            dydx_trim_scale(size * price),
+            quote_amount,
             event_id,
             transaction_hash,
             block_time,

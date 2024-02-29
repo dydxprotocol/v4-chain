@@ -7,6 +7,7 @@ import {
 } from '../helpers/constants';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError, expectLoggedParseMessageError } from '../helpers/validator-helpers';
+import Long from 'long';
 
 describe('deleveraging-validator', () => {
   beforeEach(() => {
@@ -45,6 +46,22 @@ describe('deleveraging-validator', () => {
           offsetting: undefined,
         },
         'DeleveragingEvent must have an offsetting subaccount id',
+      ],
+      [
+        'has fillAmount of 0',
+        {
+          ...defaultDeleveragingEvent,
+          fillAmount: new Long(0),
+        },
+        'DeleveragingEvent fillAmount cannot equal 0',
+      ],
+      [
+        'has price of 0',
+        {
+          ...defaultDeleveragingEvent,
+          price: new Long(0),
+        },
+        'DeleveragingEvent price cannot equal 0',
       ],
     ])('throws error if event %s', (_message: string, event: DeleveragingEventV1, message: string) => {
       const validator: DeleveragingValidator = new DeleveragingValidator(

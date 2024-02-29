@@ -20,6 +20,19 @@ export class DeleveragingValidator extends Validator<DeleveragingEventV1> {
       );
     }
 
+    if (this.event.fillAmount.eq(0)) {
+      return this.logAndThrowParseMessageError(
+        'DeleveragingEvent fillAmount cannot equal 0',
+        { event: this.event },
+      );
+    }
+
+    if (this.event.price.eq(0)) {
+      return this.logAndThrowParseMessageError(
+        'DeleveragingEvent price cannot equal 0',
+        { event: this.event },
+      );
+    }
   }
 
   public createHandlers(
