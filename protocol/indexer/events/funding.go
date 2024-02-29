@@ -13,7 +13,7 @@ func NewPremiumSamplesEvent(
 
 // NewFundingRatesAndIndicesEvent creates a FundingEvent representing a list of new
 // funding rates generated at the end of each `funding-tick` epoch and funding indices
-// accordingly updated with `funding rate * totalQuoteQuantums`.
+// accordingly updated with `funding rate * price`.
 func NewFundingRatesAndIndicesEvent(
 	newFundingRatesAndIndicesForEvent []FundingUpdateV1,
 ) *FundingEventV1 {
