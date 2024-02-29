@@ -134,7 +134,7 @@ func (m *FundingUpdateV1) GetFundingValuePpm() int32 {
 //     `funding-sample` epoch.
 //  3. Funding rate and index: final funding rate combining all premium samples
 //     during a `funding-tick` epoch and funding index accordingly updated with
-//     `funding rate * totalQuoteQuantums`.
+//     `funding rate * price`.
 type FundingEventV1 struct {
 	// updates is a list of per-market funding updates for all existing perpetual
 	// markets. The list is sorted by `perpetualId`s which are unique.
@@ -195,7 +195,7 @@ func (m *FundingEventV1) GetType() FundingEventV1_Type {
 type MarketEventV1 struct {
 	// market id.
 	MarketId uint32 `protobuf:"varint,1,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
-	// either an event for totalQuoteQuantums update, market creation, or market modification.
+	// either an event for price update, market creation, or market modification.
 	//
 	// Types that are valid to be assigned to Event:
 	//	*MarketEventV1_PriceUpdate
@@ -301,11 +301,11 @@ func (*MarketEventV1) XXX_OneofWrappers() []interface{} {
 	}
 }
 
-// MarketPriceUpdateEvent message contains all the information about a totalQuoteQuantums
+// MarketPriceUpdateEvent message contains all the information about a price
 // update on the dYdX chain.
 type MarketPriceUpdateEventV1 struct {
 	// price_with_exponent. Multiply by 10 ^ Exponent to get the human readable
-	// totalQuoteQuantums in dollars. For example if `Exponent == -5` then a `exponent_price`
+	// price in dollars. For example if `Exponent == -5` then a `exponent_price`
 	// of `1,000,000,000` represents “$10,000`.
 	PriceWithExponent uint64 `protobuf:"varint,1,opt,name=price_with_exponent,json=priceWithExponent,proto3" json:"price_with_exponent,omitempty"`
 }
@@ -410,10 +410,10 @@ func (m *MarketBaseEventV1) GetMinPriceChangePpm() uint32 {
 // the dYdX chain.
 type MarketCreateEventV1 struct {
 	Base *MarketBaseEventV1 `protobuf:"bytes,1,opt,name=base,proto3" json:"base,omitempty"`
-	// Static value. The exponent of the totalQuoteQuantums.
+	// Static value. The exponent of the price.
 	// For example if Exponent == -5 then a `exponent_price` of 1,000,000,000
 	// represents $10,000. Therefore 10 ^ Exponent represents the smallest
-	// totalQuoteQuantums step (in dollars) that can be recorded.
+	// price step (in dollars) that can be recorded.
 	Exponent int32 `protobuf:"zigzag32,2,opt,name=exponent,proto3" json:"exponent,omitempty"`
 }
 
@@ -861,8 +861,8 @@ type DeleveragingEventV1 struct {
 	// `true` if liquidating a short position, `false` otherwise.
 	IsBuy bool `protobuf:"varint,6,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
 	// `true` if the deleveraging event is for final settlement, indicating
-	// the match occurred at the oracle totalQuoteQuantums rather than bankruptcy totalQuoteQuantums.
-	// When this flag is `false`, the fill totalQuoteQuantums is the bankruptcy totalQuoteQuantums
+	// the match occurred at the oracle price rather than bankruptcy price.
+	// When this flag is `false`, the fill price is the bankruptcy price
 	// of the liquidated subaccount.
 	IsFinalSettlement bool `protobuf:"varint,7,opt,name=is_final_settlement,json=isFinalSettlement,proto3" json:"is_final_settlement,omitempty"`
 }
@@ -963,9 +963,9 @@ type LiquidationOrderV1 struct {
 	TotalSize uint64 `protobuf:"varint,4,opt,name=total_size,json=totalSize,proto3" json:"total_size,omitempty"`
 	// `true` if liquidating a short position, `false` otherwise.
 	IsBuy bool `protobuf:"varint,5,opt,name=is_buy,json=isBuy,proto3" json:"is_buy,omitempty"`
-	// The fillable totalQuoteQuantums in subticks.
-	// This represents the lower-totalQuoteQuantums-bound for liquidating longs
-	// and the upper-totalQuoteQuantums-bound for liquidating shorts.
+	// The fillable price in subticks.
+	// This represents the lower-price-bound for liquidating longs
+	// and the upper-price-bound for liquidating shorts.
 	// Must be a multiple of ClobPair.SubticksPerTick
 	// (where `ClobPair.Id = orderId.ClobPairId`).
 	Subticks uint64 `protobuf:"varint,6,opt,name=subticks,proto3" json:"subticks,omitempty"`
@@ -1513,7 +1513,7 @@ type AssetCreateEventV1 struct {
 	// `true` if this `Asset` has a valid `MarketId` value.
 	HasMarket bool `protobuf:"varint,3,opt,name=has_market,json=hasMarket,proto3" json:"has_market,omitempty"`
 	// The `Id` of the `Market` associated with this `Asset`. It acts as the
-	// oracle totalQuoteQuantums for the purposes of calculating collateral
+	// oracle price for the purposes of calculating collateral
 	// and margin requirements.
 	MarketId uint32 `protobuf:"varint,4,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	// The exponent for converting an atomic amount (1 'quantum')
