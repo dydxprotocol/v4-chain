@@ -375,7 +375,7 @@ func (h *lockingAnteHandler) otherMsgAnteHandle(ctx sdk.Context, tx sdk.Tx, simu
 
 	// During non-simulated `checkTx` we must write the store since we own branching and writing.
 	// During `deliverTx` and simulation the Cosmos SDK is responsible for branching and writing.
-	if err == nil && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
+	if err == nil && !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
 		cacheMs.Write()
 	}
 
