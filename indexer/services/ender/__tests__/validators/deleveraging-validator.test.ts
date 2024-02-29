@@ -59,7 +59,7 @@ describe('deleveraging-validator', () => {
         'has totalQuoteQuantums of 0',
         {
           ...defaultDeleveragingEvent,
-          price: new Long(0),
+          totalQuoteQuantums: new Long(0),
         },
         'DeleveragingEvent totalQuoteQuantums cannot equal 0',
       ],
