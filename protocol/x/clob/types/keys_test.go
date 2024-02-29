@@ -44,7 +44,3 @@ func TestTransientStoreKeys(t *testing.T) {
 	require.Equal(t, "UncmtSOCxl:", types.UncommittedStatefulOrderCancellationKeyPrefix)
 	require.Equal(t, "NumUncmtSO:", types.UncommittedStatefulOrderCountPrefix)
 }
-
-func TestModuleAccountKeys(t *testing.T) {
-	require.Equal(t, "insurance_fund", types.InsuranceFundName)
-}

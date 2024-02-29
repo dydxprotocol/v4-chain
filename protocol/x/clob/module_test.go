@@ -9,11 +9,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
-
 	sdkmath "cosmossdk.io/math"
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
@@ -84,7 +84,7 @@ func createAppModuleWithKeeper(t *testing.T) (
 	mockBankKeeper.On(
 		"GetBalance",
 		mock.Anything,
-		clob_types.InsuranceFundModuleAddress,
+		perptypes.InsuranceFundModuleAddress,
 		constants.Usdc.Denom,
 	).Return(
 		sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),

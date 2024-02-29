@@ -839,13 +839,18 @@ func TestRecordMevMetrics(t *testing.T) {
 			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
-				types.InsuranceFundModuleAddress,
+				perptypes.InsuranceFundModuleAddress,
 				constants.Usdc.Denom,
 			).Return(
 				sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(new(big.Int))),
 			)
 
-			ks := keepertest.NewClobKeepersTestContext(t, memClob, mockBankKeeper, indexer_manager.NewIndexerEventManagerNoop())
+			ks := keepertest.NewClobKeepersTestContext(
+				t,
+				memClob,
+				mockBankKeeper,
+				indexer_manager.NewIndexerEventManagerNoop(),
+			)
 			ctx := ks.Ctx.WithIsCheckTx(true)
 
 			// Create the default markets.

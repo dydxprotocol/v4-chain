@@ -3,13 +3,14 @@ package keeper
 import (
 	"math/big"
 
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -277,7 +278,7 @@ func (k Keeper) TransferInsuranceFundPayments(
 	// Determine the sender and receiver.
 	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
 	fromModule := types.ModuleName
-	toModule := clobtypes.InsuranceFundName
+	toModule := perptypes.InsuranceFundName
 
 	if insuranceFundDelta.Sign() < 0 {
 		// Insurance fund needs to cover losses from liquidations.

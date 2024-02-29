@@ -1,8 +1,8 @@
 package types
 
 import (
+	"bytes"
 	fmt "fmt"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 )
@@ -51,10 +51,11 @@ func (o *InternalOperation) GetInternalOperationTextString() string {
 
 // GetOperationsQueueString returns a string representation of the provided operations.
 func GetInternalOperationsQueueTextString(operations []InternalOperation) string {
-	var result string
-	for _, operation := range operations {
-		result += operation.GetInternalOperationTextString() + "\n"
+	var buf bytes.Buffer
+	for _, op := range operations {
+		// Note that MarshalText only throws errors if the writer throws errors which it never does
+		proto.MarshalText(&buf, &op) //nolint:errcheck
+		buf.Write([]byte("\n"))
 	}
-
-	return result
+	return buf.String()
 }

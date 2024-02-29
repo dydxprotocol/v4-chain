@@ -19,3 +19,7 @@ func TestStateKeys(t *testing.T) {
 	require.Equal(t, "LiqTier:", types.LiquidityTierKeyPrefix)
 	require.Equal(t, "Params", types.ParamsKey)
 }
+
+func TestModuleAccountKeys(t *testing.T) {
+	require.Equal(t, "insurance_fund", types.InsuranceFundName)
+}
