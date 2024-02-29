@@ -1,8 +1,6 @@
 package process
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
@@ -25,7 +23,6 @@ func DecodeOtherMsgsTx(decoder sdk.TxDecoder, txBytes []byte) (*OtherMsgsTx, err
 	// Decode.
 	tx, err := decoder(txBytes)
 	if err != nil {
-		fmt.Println("GUHH")
 		return nil, errorsmod.Wrapf(ErrDecodingTxBytes, "OtherMsgsTx Error: %+v", err)
 	}
 

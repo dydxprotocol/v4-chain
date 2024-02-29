@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -59,9 +58,7 @@ func TestBatchCancel(t *testing.T) {
 					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 				}
 			}
-			fmt.Println("submitting the batch cancel")
 			for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, *tc.firstBlockBatchCancel) {
-				fmt.Println("request checkTx", checkTx)
 				tApp.CheckTx(checkTx)
 			}
 
