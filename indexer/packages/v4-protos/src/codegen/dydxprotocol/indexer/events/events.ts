@@ -465,9 +465,9 @@ export interface DeleveragingEventV1 {
    */
 
   fillAmount: Long;
-  /** Fill price of deleveraging event, in USDC quote quantums. */
+  /** Total quote quantums filled. */
 
-  price: Long;
+  totalQuoteQuantums: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   isBuy: boolean;
@@ -501,9 +501,9 @@ export interface DeleveragingEventV1SDKType {
    */
 
   fill_amount: Long;
-  /** Fill price of deleveraging event, in USDC quote quantums. */
+  /** Total quote quantums filled. */
 
-  price: Long;
+  total_quote_quantums: Long;
   /** `true` if liquidating a short position, `false` otherwise. */
 
   is_buy: boolean;
@@ -1853,7 +1853,7 @@ function createBaseDeleveragingEventV1(): DeleveragingEventV1 {
     offsetting: undefined,
     perpetualId: 0,
     fillAmount: Long.UZERO,
-    price: Long.UZERO,
+    totalQuoteQuantums: Long.UZERO,
     isBuy: false,
     isFinalSettlement: false
   };
@@ -1877,8 +1877,8 @@ export const DeleveragingEventV1 = {
       writer.uint32(32).uint64(message.fillAmount);
     }
 
-    if (!message.price.isZero()) {
-      writer.uint32(40).uint64(message.price);
+    if (!message.totalQuoteQuantums.isZero()) {
+      writer.uint32(40).uint64(message.totalQuoteQuantums);
     }
 
     if (message.isBuy === true) {
@@ -1918,7 +1918,7 @@ export const DeleveragingEventV1 = {
           break;
 
         case 5:
-          message.price = (reader.uint64() as Long);
+          message.totalQuoteQuantums = (reader.uint64() as Long);
           break;
 
         case 6:
@@ -1944,7 +1944,7 @@ export const DeleveragingEventV1 = {
     message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
     message.perpetualId = object.perpetualId ?? 0;
     message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
-    message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
+    message.totalQuoteQuantums = object.totalQuoteQuantums !== undefined && object.totalQuoteQuantums !== null ? Long.fromValue(object.totalQuoteQuantums) : Long.UZERO;
     message.isBuy = object.isBuy ?? false;
     message.isFinalSettlement = object.isFinalSettlement ?? false;
     return message;

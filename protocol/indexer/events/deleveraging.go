@@ -11,24 +11,25 @@ import (
 // liquidatedSubaccountId is not actually an account that is liquidatable. More
 // specifically, it may be a well-collateralized subaccount with an open position
 // in a market with the final settlement status.
+// TODO(CT-641): Use the actual unit price rather than the total quote quantums.
 func NewDeleveragingEvent(
 	liquidatedSubaccountId satypes.SubaccountId,
 	offsettingSubaccountId satypes.SubaccountId,
 	perpetualId uint32,
 	fillAmount satypes.BaseQuantums,
-	price satypes.BaseQuantums,
+	totalQuoteQuantums satypes.BaseQuantums,
 	isBuy bool,
 	isFinalSettlement bool,
 ) *DeleveragingEventV1 {
 	indexerLiquidatedSubaccountId := v1.SubaccountIdToIndexerSubaccountId(liquidatedSubaccountId)
 	indexerOffsettingSubaccountId := v1.SubaccountIdToIndexerSubaccountId(offsettingSubaccountId)
 	return &DeleveragingEventV1{
-		Liquidated:        indexerLiquidatedSubaccountId,
-		Offsetting:        indexerOffsettingSubaccountId,
-		PerpetualId:       perpetualId,
-		FillAmount:        fillAmount.ToUint64(),
-		Price:             price.ToUint64(),
-		IsBuy:             isBuy,
-		IsFinalSettlement: isFinalSettlement,
+		Liquidated:         indexerLiquidatedSubaccountId,
+		Offsetting:         indexerOffsettingSubaccountId,
+		PerpetualId:        perpetualId,
+		FillAmount:         fillAmount.ToUint64(),
+		TotalQuoteQuantums: totalQuoteQuantums.ToUint64(),
+		IsBuy:              isBuy,
+		IsFinalSettlement:  isFinalSettlement,
 	}
 }
