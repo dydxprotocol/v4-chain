@@ -58,6 +58,7 @@ func GeneratePerpetual(optionalModifications ...PerpetualModifierOption) *perpty
 			AtomicResolution:  -8,
 			DefaultFundingPpm: 0,
 			LiquidityTier:     0,
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}

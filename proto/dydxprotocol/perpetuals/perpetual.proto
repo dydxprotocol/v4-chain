@@ -28,7 +28,6 @@ enum PerpetualMarketType {
   PERPETUAL_MARKET_TYPE_ISOLATED = 2;
 }
 
-
 // PerpetualParams represents the parameters of a perpetual on the dYdX
 // exchange.
 message PerpetualParams {

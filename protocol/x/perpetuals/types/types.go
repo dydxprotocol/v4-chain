@@ -18,25 +18,6 @@ type GetPricePremiumParams struct {
 	MaxAbsPremiumVotePpm        *big.Int
 }
 
-//// PerpetualMarketType enum
-//type PerpetualMarketType int
-//
-//const (
-//	MARKET_TYPE_CROSS PerpetualMarketType = iota
-//	MARKET_TYPE_ISOLATED
-//)
-//
-//func (p PerpetualMarketType) String() string {
-//	switch p {
-//	case MARKET_TYPE_CROSS:
-//		return "MARKET_TYPE_CROSS"
-//	case MARKET_TYPE_ISOLATED:
-//		return "MARKET_TYPE_ISOLATED"
-//	default:
-//		return "Invalid"
-//	}
-//}
-
 // Interface used by ABCI calls to access the perpetuals keeper.
 type PerpetualsKeeper interface {
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)

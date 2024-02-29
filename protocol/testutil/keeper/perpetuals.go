@@ -56,31 +56,31 @@ func PerpetualsKeepersWithClobHelpers(
 ) (pc PerpKeepersTestContext) {
 	pc.Ctx = initKeepers(
 		t, func(
-		db *dbm.MemDB,
-		registry codectypes.InterfaceRegistry,
-		cdc *codec.ProtoCodec,
-		stateStore storetypes.CommitMultiStore,
-		transientStoreKey storetypes.StoreKey,
-	) []GenesisInitializer {
-		// Define necessary keepers here for unit tests
-		pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
-			stateStore,
-			db,
-			cdc,
-			transientStoreKey,
-		)
-		pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
-		pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
-			stateStore,
-			db,
-			cdc,
-			pc.PricesKeeper,
-			pc.EpochsKeeper,
-			clobKeeper,
-			transientStoreKey,
-		)
+			db *dbm.MemDB,
+			registry codectypes.InterfaceRegistry,
+			cdc *codec.ProtoCodec,
+			stateStore storetypes.CommitMultiStore,
+			transientStoreKey storetypes.StoreKey,
+		) []GenesisInitializer {
+			// Define necessary keepers here for unit tests
+			pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
+				stateStore,
+				db,
+				cdc,
+				transientStoreKey,
+			)
+			pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
+			pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
+				stateStore,
+				db,
+				cdc,
+				pc.PricesKeeper,
+				pc.EpochsKeeper,
+				clobKeeper,
+				transientStoreKey,
+			)
 
-		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
+			return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
 		},
 	)
 
@@ -238,7 +238,7 @@ func CreateNPerpetuals(
 			uint32(i),            // MarketId
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
-			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			allLiquidityTiers[i%len(allLiquidityTiers)].Id,        // LiquidityTier
 			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, // MarketType
 		)
 		if err != nil {
@@ -289,7 +289,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
-			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+			perp.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}
