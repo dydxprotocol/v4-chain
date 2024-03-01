@@ -517,6 +517,78 @@ export interface DeleveragingEventV1SDKType {
   is_final_settlement: boolean;
 }
 /**
+ * DeleveragingEventV2 message contains all the information for a deleveraging
+ * on the dYdX chain. It has the unit price rather than the total quote quantums
+ * that is present in DeleveragingEventV1.
+ */
+
+export interface DeleveragingEventV2 {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountId;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountId;
+  /** The ID of the perpetual that was liquidated. */
+
+  perpetualId: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fillAmount: Long;
+  /** Fill price of deleveraging event, in USDC quote quantums. */
+
+  price: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  isBuy: boolean;
+  /**
+   * `true` if the deleveraging event is for final settlement, indicating
+   * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
+   */
+
+  isFinalSettlement: boolean;
+}
+/**
+ * DeleveragingEventV2 message contains all the information for a deleveraging
+ * on the dYdX chain. It has the unit price rather than the total quote quantums
+ * that is present in DeleveragingEventV1.
+ */
+
+export interface DeleveragingEventV2SDKType {
+  /** ID of the subaccount that was liquidated. */
+  liquidated?: IndexerSubaccountIdSDKType;
+  /** ID of the subaccount that was used to offset the position. */
+
+  offsetting?: IndexerSubaccountIdSDKType;
+  /** The ID of the perpetual that was liquidated. */
+
+  perpetual_id: number;
+  /**
+   * The amount filled between the liquidated and offsetting position, in
+   * base quantums.
+   */
+
+  fill_amount: Long;
+  /** Fill price of deleveraging event, in USDC quote quantums. */
+
+  price: Long;
+  /** `true` if liquidating a short position, `false` otherwise. */
+
+  is_buy: boolean;
+  /**
+   * `true` if the deleveraging event is for final settlement, indicating
+   * the match occurred at the oracle price rather than bankruptcy price.
+   * When this flag is `false`, the fill price is the bankruptcy price
+   * of the liquidated subaccount.
+   */
+
+  is_final_settlement: boolean;
+}
+/**
  * LiquidationOrder represents the liquidation taker order to be included in a
  * liquidation order fill event.
  */
@@ -1945,6 +2017,111 @@ export const DeleveragingEventV1 = {
     message.perpetualId = object.perpetualId ?? 0;
     message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
     message.totalQuoteQuantums = object.totalQuoteQuantums !== undefined && object.totalQuoteQuantums !== null ? Long.fromValue(object.totalQuoteQuantums) : Long.UZERO;
+    message.isBuy = object.isBuy ?? false;
+    message.isFinalSettlement = object.isFinalSettlement ?? false;
+    return message;
+  }
+
+};
+
+function createBaseDeleveragingEventV2(): DeleveragingEventV2 {
+  return {
+    liquidated: undefined,
+    offsetting: undefined,
+    perpetualId: 0,
+    fillAmount: Long.UZERO,
+    price: Long.UZERO,
+    isBuy: false,
+    isFinalSettlement: false
+  };
+}
+
+export const DeleveragingEventV2 = {
+  encode(message: DeleveragingEventV2, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.liquidated !== undefined) {
+      IndexerSubaccountId.encode(message.liquidated, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.offsetting !== undefined) {
+      IndexerSubaccountId.encode(message.offsetting, writer.uint32(18).fork()).ldelim();
+    }
+
+    if (message.perpetualId !== 0) {
+      writer.uint32(24).uint32(message.perpetualId);
+    }
+
+    if (!message.fillAmount.isZero()) {
+      writer.uint32(32).uint64(message.fillAmount);
+    }
+
+    if (!message.price.isZero()) {
+      writer.uint32(40).uint64(message.price);
+    }
+
+    if (message.isBuy === true) {
+      writer.uint32(48).bool(message.isBuy);
+    }
+
+    if (message.isFinalSettlement === true) {
+      writer.uint32(56).bool(message.isFinalSettlement);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): DeleveragingEventV2 {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseDeleveragingEventV2();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.liquidated = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 2:
+          message.offsetting = IndexerSubaccountId.decode(reader, reader.uint32());
+          break;
+
+        case 3:
+          message.perpetualId = reader.uint32();
+          break;
+
+        case 4:
+          message.fillAmount = (reader.uint64() as Long);
+          break;
+
+        case 5:
+          message.price = (reader.uint64() as Long);
+          break;
+
+        case 6:
+          message.isBuy = reader.bool();
+          break;
+
+        case 7:
+          message.isFinalSettlement = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<DeleveragingEventV2>): DeleveragingEventV2 {
+    const message = createBaseDeleveragingEventV2();
+    message.liquidated = object.liquidated !== undefined && object.liquidated !== null ? IndexerSubaccountId.fromPartial(object.liquidated) : undefined;
+    message.offsetting = object.offsetting !== undefined && object.offsetting !== null ? IndexerSubaccountId.fromPartial(object.offsetting) : undefined;
+    message.perpetualId = object.perpetualId ?? 0;
+    message.fillAmount = object.fillAmount !== undefined && object.fillAmount !== null ? Long.fromValue(object.fillAmount) : Long.UZERO;
+    message.price = object.price !== undefined && object.price !== null ? Long.fromValue(object.price) : Long.UZERO;
     message.isBuy = object.isBuy ?? false;
     message.isFinalSettlement = object.isFinalSettlement ?? false;
     return message;
