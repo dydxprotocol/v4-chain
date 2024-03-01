@@ -9,7 +9,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
 	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	shared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	io "io"
 	math "math"
@@ -564,7 +564,7 @@ type isSourceOfFunds_Source interface {
 }
 
 type SourceOfFunds_SubaccountId struct {
-	SubaccountId *v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3,oneof" json:"subaccount_id,omitempty"`
+	SubaccountId *types.IndexerSubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3,oneof" json:"subaccount_id,omitempty"`
 }
 type SourceOfFunds_Address struct {
 	Address string `protobuf:"bytes,2,opt,name=address,proto3,oneof" json:"address,omitempty"`
@@ -580,7 +580,7 @@ func (m *SourceOfFunds) GetSource() isSourceOfFunds_Source {
 	return nil
 }
 
-func (m *SourceOfFunds) GetSubaccountId() *v1.IndexerSubaccountId {
+func (m *SourceOfFunds) GetSubaccountId() *types.IndexerSubaccountId {
 	if x, ok := m.GetSource().(*SourceOfFunds_SubaccountId); ok {
 		return x.SubaccountId
 	}
@@ -607,8 +607,8 @@ func (*SourceOfFunds) XXX_OneofWrappers() []interface{} {
 // When a subaccount is involved, a SubaccountUpdateEvent message will
 // be produced with the updated asset positions.
 type TransferEventV1 struct {
-	SenderSubaccountId    *v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=sender_subaccount_id,json=senderSubaccountId,proto3" json:"sender_subaccount_id,omitempty"`
-	RecipientSubaccountId *v1.IndexerSubaccountId `protobuf:"bytes,2,opt,name=recipient_subaccount_id,json=recipientSubaccountId,proto3" json:"recipient_subaccount_id,omitempty"`
+	SenderSubaccountId    *types.IndexerSubaccountId `protobuf:"bytes,1,opt,name=sender_subaccount_id,json=senderSubaccountId,proto3" json:"sender_subaccount_id,omitempty"`
+	RecipientSubaccountId *types.IndexerSubaccountId `protobuf:"bytes,2,opt,name=recipient_subaccount_id,json=recipientSubaccountId,proto3" json:"recipient_subaccount_id,omitempty"`
 	// Id of the asset transfered.
 	AssetId uint32 `protobuf:"varint,3,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
 	// The amount of asset in quantums to transfer.
@@ -656,14 +656,14 @@ func (m *TransferEventV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_TransferEventV1 proto.InternalMessageInfo
 
-func (m *TransferEventV1) GetSenderSubaccountId() *v1.IndexerSubaccountId {
+func (m *TransferEventV1) GetSenderSubaccountId() *types.IndexerSubaccountId {
 	if m != nil {
 		return m.SenderSubaccountId
 	}
 	return nil
 }
 
-func (m *TransferEventV1) GetRecipientSubaccountId() *v1.IndexerSubaccountId {
+func (m *TransferEventV1) GetRecipientSubaccountId() *types.IndexerSubaccountId {
 	if m != nil {
 		return m.RecipientSubaccountId
 	}
@@ -702,7 +702,7 @@ func (m *TransferEventV1) GetRecipient() *SourceOfFunds {
 // the dYdX chain. This includes the maker/taker orders that matched and the
 // amount filled.
 type OrderFillEventV1 struct {
-	MakerOrder v1.IndexerOrder `protobuf:"bytes,1,opt,name=maker_order,json=makerOrder,proto3" json:"maker_order"`
+	MakerOrder types.IndexerOrder `protobuf:"bytes,1,opt,name=maker_order,json=makerOrder,proto3" json:"maker_order"`
 	// The type of order fill this event represents.
 	//
 	// Types that are valid to be assigned to TakerOrder:
@@ -763,7 +763,7 @@ type isOrderFillEventV1_TakerOrder interface {
 }
 
 type OrderFillEventV1_Order struct {
-	Order *v1.IndexerOrder `protobuf:"bytes,2,opt,name=order,proto3,oneof" json:"order,omitempty"`
+	Order *types.IndexerOrder `protobuf:"bytes,2,opt,name=order,proto3,oneof" json:"order,omitempty"`
 }
 type OrderFillEventV1_LiquidationOrder struct {
 	LiquidationOrder *LiquidationOrderV1 `protobuf:"bytes,4,opt,name=liquidation_order,json=liquidationOrder,proto3,oneof" json:"liquidation_order,omitempty"`
@@ -779,14 +779,14 @@ func (m *OrderFillEventV1) GetTakerOrder() isOrderFillEventV1_TakerOrder {
 	return nil
 }
 
-func (m *OrderFillEventV1) GetMakerOrder() v1.IndexerOrder {
+func (m *OrderFillEventV1) GetMakerOrder() types.IndexerOrder {
 	if m != nil {
 		return m.MakerOrder
 	}
-	return v1.IndexerOrder{}
+	return types.IndexerOrder{}
 }
 
-func (m *OrderFillEventV1) GetOrder() *v1.IndexerOrder {
+func (m *OrderFillEventV1) GetOrder() *types.IndexerOrder {
 	if x, ok := m.GetTakerOrder().(*OrderFillEventV1_Order); ok {
 		return x.Order
 	}
@@ -848,9 +848,9 @@ func (*OrderFillEventV1) XXX_OneofWrappers() []interface{} {
 // the amount filled.
 type DeleveragingEventV1 struct {
 	// ID of the subaccount that was liquidated.
-	Liquidated v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=liquidated,proto3" json:"liquidated"`
+	Liquidated types.IndexerSubaccountId `protobuf:"bytes,1,opt,name=liquidated,proto3" json:"liquidated"`
 	// ID of the subaccount that was used to offset the position.
-	Offsetting v1.IndexerSubaccountId `protobuf:"bytes,2,opt,name=offsetting,proto3" json:"offsetting"`
+	Offsetting types.IndexerSubaccountId `protobuf:"bytes,2,opt,name=offsetting,proto3" json:"offsetting"`
 	// The ID of the perpetual that was liquidated.
 	PerpetualId uint32 `protobuf:"varint,3,opt,name=perpetual_id,json=perpetualId,proto3" json:"perpetual_id,omitempty"`
 	// The amount filled between the liquidated and offsetting position, in
@@ -900,18 +900,18 @@ func (m *DeleveragingEventV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DeleveragingEventV1 proto.InternalMessageInfo
 
-func (m *DeleveragingEventV1) GetLiquidated() v1.IndexerSubaccountId {
+func (m *DeleveragingEventV1) GetLiquidated() types.IndexerSubaccountId {
 	if m != nil {
 		return m.Liquidated
 	}
-	return v1.IndexerSubaccountId{}
+	return types.IndexerSubaccountId{}
 }
 
-func (m *DeleveragingEventV1) GetOffsetting() v1.IndexerSubaccountId {
+func (m *DeleveragingEventV1) GetOffsetting() types.IndexerSubaccountId {
 	if m != nil {
 		return m.Offsetting
 	}
-	return v1.IndexerSubaccountId{}
+	return types.IndexerSubaccountId{}
 }
 
 func (m *DeleveragingEventV1) GetPerpetualId() uint32 {
@@ -953,7 +953,7 @@ func (m *DeleveragingEventV1) GetIsFinalSettlement() bool {
 // liquidation order fill event.
 type LiquidationOrderV1 struct {
 	// ID of the subaccount that was liquidated.
-	Liquidated v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=liquidated,proto3" json:"liquidated"`
+	Liquidated types.IndexerSubaccountId `protobuf:"bytes,1,opt,name=liquidated,proto3" json:"liquidated"`
 	// The ID of the clob pair involved in the liquidation.
 	ClobPairId uint32 `protobuf:"varint,2,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
 	// The ID of the perpetual involved in the liquidation.
@@ -1004,11 +1004,11 @@ func (m *LiquidationOrderV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_LiquidationOrderV1 proto.InternalMessageInfo
 
-func (m *LiquidationOrderV1) GetLiquidated() v1.IndexerSubaccountId {
+func (m *LiquidationOrderV1) GetLiquidated() types.IndexerSubaccountId {
 	if m != nil {
 		return m.Liquidated
 	}
-	return v1.IndexerSubaccountId{}
+	return types.IndexerSubaccountId{}
 }
 
 func (m *LiquidationOrderV1) GetClobPairId() uint32 {
@@ -1053,11 +1053,11 @@ func (m *LiquidationOrderV1) GetSubticks() uint64 {
 // at the end of a block which is why multiple asset/perpetual position
 // updates may exist.
 type SubaccountUpdateEventV1 struct {
-	SubaccountId *v1.IndexerSubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
+	SubaccountId *types.IndexerSubaccountId `protobuf:"bytes,1,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id,omitempty"`
 	// updated_perpetual_positions will each be for unique perpetuals.
-	UpdatedPerpetualPositions []*v1.IndexerPerpetualPosition `protobuf:"bytes,3,rep,name=updated_perpetual_positions,json=updatedPerpetualPositions,proto3" json:"updated_perpetual_positions,omitempty"`
+	UpdatedPerpetualPositions []*types.IndexerPerpetualPosition `protobuf:"bytes,3,rep,name=updated_perpetual_positions,json=updatedPerpetualPositions,proto3" json:"updated_perpetual_positions,omitempty"`
 	// updated_asset_positions will each be for unique assets.
-	UpdatedAssetPositions []*v1.IndexerAssetPosition `protobuf:"bytes,4,rep,name=updated_asset_positions,json=updatedAssetPositions,proto3" json:"updated_asset_positions,omitempty"`
+	UpdatedAssetPositions []*types.IndexerAssetPosition `protobuf:"bytes,4,rep,name=updated_asset_positions,json=updatedAssetPositions,proto3" json:"updated_asset_positions,omitempty"`
 }
 
 func (m *SubaccountUpdateEventV1) Reset()         { *m = SubaccountUpdateEventV1{} }
@@ -1093,21 +1093,21 @@ func (m *SubaccountUpdateEventV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_SubaccountUpdateEventV1 proto.InternalMessageInfo
 
-func (m *SubaccountUpdateEventV1) GetSubaccountId() *v1.IndexerSubaccountId {
+func (m *SubaccountUpdateEventV1) GetSubaccountId() *types.IndexerSubaccountId {
 	if m != nil {
 		return m.SubaccountId
 	}
 	return nil
 }
 
-func (m *SubaccountUpdateEventV1) GetUpdatedPerpetualPositions() []*v1.IndexerPerpetualPosition {
+func (m *SubaccountUpdateEventV1) GetUpdatedPerpetualPositions() []*types.IndexerPerpetualPosition {
 	if m != nil {
 		return m.UpdatedPerpetualPositions
 	}
 	return nil
 }
 
-func (m *SubaccountUpdateEventV1) GetUpdatedAssetPositions() []*v1.IndexerAssetPosition {
+func (m *SubaccountUpdateEventV1) GetUpdatedAssetPositions() []*types.IndexerAssetPosition {
 	if m != nil {
 		return m.UpdatedAssetPositions
 	}
@@ -1247,7 +1247,7 @@ func (*StatefulOrderEventV1) XXX_OneofWrappers() []interface{} {
 
 // A stateful order placement contains an order.
 type StatefulOrderEventV1_StatefulOrderPlacementV1 struct {
-	Order *v1.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
+	Order *types.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
 }
 
 func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) Reset() {
@@ -1287,7 +1287,7 @@ func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StatefulOrderEventV1_StatefulOrderPlacementV1 proto.InternalMessageInfo
 
-func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) GetOrder() *v1.IndexerOrder {
+func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) GetOrder() *types.IndexerOrder {
 	if m != nil {
 		return m.Order
 	}
@@ -1297,7 +1297,7 @@ func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) GetOrder() *v1.IndexerOr
 // A stateful order removal contains the id of an order that was already
 // placed and is now removed and the reason for the removal.
 type StatefulOrderEventV1_StatefulOrderRemovalV1 struct {
-	RemovedOrderId *v1.IndexerOrderId        `protobuf:"bytes,1,opt,name=removed_order_id,json=removedOrderId,proto3" json:"removed_order_id,omitempty"`
+	RemovedOrderId *types.IndexerOrderId     `protobuf:"bytes,1,opt,name=removed_order_id,json=removedOrderId,proto3" json:"removed_order_id,omitempty"`
 	Reason         shared.OrderRemovalReason `protobuf:"varint,2,opt,name=reason,proto3,enum=dydxprotocol.indexer.shared.OrderRemovalReason" json:"reason,omitempty"`
 }
 
@@ -1338,7 +1338,7 @@ func (m *StatefulOrderEventV1_StatefulOrderRemovalV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StatefulOrderEventV1_StatefulOrderRemovalV1 proto.InternalMessageInfo
 
-func (m *StatefulOrderEventV1_StatefulOrderRemovalV1) GetRemovedOrderId() *v1.IndexerOrderId {
+func (m *StatefulOrderEventV1_StatefulOrderRemovalV1) GetRemovedOrderId() *types.IndexerOrderId {
 	if m != nil {
 		return m.RemovedOrderId
 	}
@@ -1355,7 +1355,7 @@ func (m *StatefulOrderEventV1_StatefulOrderRemovalV1) GetReason() shared.OrderRe
 // A conditional order placement contains an order. The order is newly-placed
 // and untriggered when this event is emitted.
 type StatefulOrderEventV1_ConditionalOrderPlacementV1 struct {
-	Order *v1.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
+	Order *types.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
 }
 
 func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) Reset() {
@@ -1395,7 +1395,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) XXX_DiscardUnknown() 
 
 var xxx_messageInfo_StatefulOrderEventV1_ConditionalOrderPlacementV1 proto.InternalMessageInfo
 
-func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) GetOrder() *v1.IndexerOrder {
+func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) GetOrder() *types.IndexerOrder {
 	if m != nil {
 		return m.Order
 	}
@@ -1405,7 +1405,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) GetOrder() *v1.Indexe
 // A conditional order trigger event contains an order id and is emitted when
 // an order is triggered.
 type StatefulOrderEventV1_ConditionalOrderTriggeredV1 struct {
-	TriggeredOrderId *v1.IndexerOrderId `protobuf:"bytes,1,opt,name=triggered_order_id,json=triggeredOrderId,proto3" json:"triggered_order_id,omitempty"`
+	TriggeredOrderId *types.IndexerOrderId `protobuf:"bytes,1,opt,name=triggered_order_id,json=triggeredOrderId,proto3" json:"triggered_order_id,omitempty"`
 }
 
 func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) Reset() {
@@ -1445,7 +1445,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) XXX_DiscardUnknown() 
 
 var xxx_messageInfo_StatefulOrderEventV1_ConditionalOrderTriggeredV1 proto.InternalMessageInfo
 
-func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) GetTriggeredOrderId() *v1.IndexerOrderId {
+func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) GetTriggeredOrderId() *types.IndexerOrderId {
 	if m != nil {
 		return m.TriggeredOrderId
 	}
@@ -1454,7 +1454,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) GetTriggeredOrderId()
 
 // A long term order placement contains an order.
 type StatefulOrderEventV1_LongTermOrderPlacementV1 struct {
-	Order *v1.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
+	Order *types.IndexerOrder `protobuf:"bytes,1,opt,name=order,proto3" json:"order,omitempty"`
 }
 
 func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) Reset() {
@@ -1494,7 +1494,7 @@ func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_StatefulOrderEventV1_LongTermOrderPlacementV1 proto.InternalMessageInfo
 
-func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) GetOrder() *v1.IndexerOrder {
+func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) GetOrder() *types.IndexerOrder {
 	if m != nil {
 		return m.Order
 	}
@@ -1607,7 +1607,7 @@ type PerpetualMarketCreateEventV1 struct {
 	// Defined in perpetuals.perpetual
 	MarketId uint32 `protobuf:"varint,4,opt,name=market_id,json=marketId,proto3" json:"market_id,omitempty"`
 	// Status of the CLOB
-	Status v1.ClobPairStatus `protobuf:"varint,5,opt,name=status,proto3,enum=dydxprotocol.indexer.protocol.v1.ClobPairStatus" json:"status,omitempty"`
+	Status types.ClobPairStatus `protobuf:"varint,5,opt,name=status,proto3,enum=dydxprotocol.indexer.protocol.v1.ClobPairStatus" json:"status,omitempty"`
 	// `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
 	// per Subtick.
 	// Defined in clob.clob_pair
@@ -1693,11 +1693,11 @@ func (m *PerpetualMarketCreateEventV1) GetMarketId() uint32 {
 	return 0
 }
 
-func (m *PerpetualMarketCreateEventV1) GetStatus() v1.ClobPairStatus {
+func (m *PerpetualMarketCreateEventV1) GetStatus() types.ClobPairStatus {
 	if m != nil {
 		return m.Status
 	}
-	return v1.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
+	return types.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
 }
 
 func (m *PerpetualMarketCreateEventV1) GetQuantumConversionExponent() int32 {
@@ -1832,7 +1832,7 @@ type UpdateClobPairEventV1 struct {
 	// Defined in clob.clob_pair
 	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
 	// Status of the CLOB
-	Status v1.ClobPairStatus `protobuf:"varint,2,opt,name=status,proto3,enum=dydxprotocol.indexer.protocol.v1.ClobPairStatus" json:"status,omitempty"`
+	Status types.ClobPairStatus `protobuf:"varint,2,opt,name=status,proto3,enum=dydxprotocol.indexer.protocol.v1.ClobPairStatus" json:"status,omitempty"`
 	// `10^Exponent` gives the number of QuoteQuantums traded per BaseQuantum
 	// per Subtick.
 	// Defined in clob.clob_pair
@@ -1888,11 +1888,11 @@ func (m *UpdateClobPairEventV1) GetClobPairId() uint32 {
 	return 0
 }
 
-func (m *UpdateClobPairEventV1) GetStatus() v1.ClobPairStatus {
+func (m *UpdateClobPairEventV1) GetStatus() types.ClobPairStatus {
 	if m != nil {
 		return m.Status
 	}
-	return v1.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
+	return types.ClobPairStatus_CLOB_PAIR_STATUS_UNSPECIFIED
 }
 
 func (m *UpdateClobPairEventV1) GetQuantumConversionExponent() int32 {
@@ -5214,7 +5214,7 @@ func (m *SourceOfFunds) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &v1.IndexerSubaccountId{}
+			v := &types.IndexerSubaccountId{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -5332,7 +5332,7 @@ func (m *TransferEventV1) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.SenderSubaccountId == nil {
-				m.SenderSubaccountId = &v1.IndexerSubaccountId{}
+				m.SenderSubaccountId = &types.IndexerSubaccountId{}
 			}
 			if err := m.SenderSubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5368,7 +5368,7 @@ func (m *TransferEventV1) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.RecipientSubaccountId == nil {
-				m.RecipientSubaccountId = &v1.IndexerSubaccountId{}
+				m.RecipientSubaccountId = &types.IndexerSubaccountId{}
 			}
 			if err := m.RecipientSubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -5596,7 +5596,7 @@ func (m *OrderFillEventV1) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			v := &v1.IndexerOrder{}
+			v := &types.IndexerOrder{}
 			if err := v.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6208,7 +6208,7 @@ func (m *SubaccountUpdateEventV1) Unmarshal(dAtA []byte) error {
 				return io.ErrUnexpectedEOF
 			}
 			if m.SubaccountId == nil {
-				m.SubaccountId = &v1.IndexerSubaccountId{}
+				m.SubaccountId = &types.IndexerSubaccountId{}
 			}
 			if err := m.SubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6243,7 +6243,7 @@ func (m *SubaccountUpdateEventV1) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UpdatedPerpetualPositions = append(m.UpdatedPerpetualPositions, &v1.IndexerPerpetualPosition{})
+			m.UpdatedPerpetualPositions = append(m.UpdatedPerpetualPositions, &types.IndexerPerpetualPosition{})
 			if err := m.UpdatedPerpetualPositions[len(m.UpdatedPerpetualPositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6277,7 +6277,7 @@ func (m *SubaccountUpdateEventV1) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.UpdatedAssetPositions = append(m.UpdatedAssetPositions, &v1.IndexerAssetPosition{})
+			m.UpdatedAssetPositions = append(m.UpdatedAssetPositions, &types.IndexerAssetPosition{})
 			if err := m.UpdatedAssetPositions[len(m.UpdatedAssetPositions)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -6587,7 +6587,7 @@ func (m *StatefulOrderEventV1_StatefulOrderPlacementV1) Unmarshal(dAtA []byte) e
 				return io.ErrUnexpectedEOF
 			}
 			if m.Order == nil {
-				m.Order = &v1.IndexerOrder{}
+				m.Order = &types.IndexerOrder{}
 			}
 			if err := m.Order.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6673,7 +6673,7 @@ func (m *StatefulOrderEventV1_StatefulOrderRemovalV1) Unmarshal(dAtA []byte) err
 				return io.ErrUnexpectedEOF
 			}
 			if m.RemovedOrderId == nil {
-				m.RemovedOrderId = &v1.IndexerOrderId{}
+				m.RemovedOrderId = &types.IndexerOrderId{}
 			}
 			if err := m.RemovedOrderId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6778,7 +6778,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderPlacementV1) Unmarshal(dAtA []byte
 				return io.ErrUnexpectedEOF
 			}
 			if m.Order == nil {
-				m.Order = &v1.IndexerOrder{}
+				m.Order = &types.IndexerOrder{}
 			}
 			if err := m.Order.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6864,7 +6864,7 @@ func (m *StatefulOrderEventV1_ConditionalOrderTriggeredV1) Unmarshal(dAtA []byte
 				return io.ErrUnexpectedEOF
 			}
 			if m.TriggeredOrderId == nil {
-				m.TriggeredOrderId = &v1.IndexerOrderId{}
+				m.TriggeredOrderId = &types.IndexerOrderId{}
 			}
 			if err := m.TriggeredOrderId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -6950,7 +6950,7 @@ func (m *StatefulOrderEventV1_LongTermOrderPlacementV1) Unmarshal(dAtA []byte) e
 				return io.ErrUnexpectedEOF
 			}
 			if m.Order == nil {
-				m.Order = &v1.IndexerOrder{}
+				m.Order = &types.IndexerOrder{}
 			}
 			if err := m.Order.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
@@ -7270,7 +7270,7 @@ func (m *PerpetualMarketCreateEventV1) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= v1.ClobPairStatus(b&0x7F) << shift
+				m.Status |= types.ClobPairStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
@@ -7615,7 +7615,7 @@ func (m *UpdateClobPairEventV1) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= v1.ClobPairStatus(b&0x7F) << shift
+				m.Status |= types.ClobPairStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

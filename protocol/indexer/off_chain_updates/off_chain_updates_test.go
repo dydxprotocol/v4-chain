@@ -7,6 +7,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -24,36 +25,36 @@ var (
 	orderStatus                    = clobtypes.Undercollateralized
 	orderError               error = nil
 	reason                         = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
-	status                         = OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
+	status                         = ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
 	defaultRemovalReason           = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR
-	offchainUpdateOrderPlace       = OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderPlace{
-			&OrderPlaceV1{
+	offchainUpdateOrderPlace       = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderPlace{
+			OrderPlace: &ocutypes.OrderPlaceV1{
 				Order:           &indexerOrder,
-				PlacementStatus: OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}
-	offchainUpdateOrderUpdate = OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderUpdate{
-			&OrderUpdateV1{
+	offchainUpdateOrderUpdate = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderUpdate{
+			OrderUpdate: &ocutypes.OrderUpdateV1{
 				OrderId:             &indexerOrder.OrderId,
 				TotalFilledQuantums: totalFilledAmount.ToUint64(),
 			},
 		},
 	}
-	offchainUpdateOrderRemove = OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderRemove{
-			&OrderRemoveV1{
+	offchainUpdateOrderRemove = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderRemove{
+			OrderRemove: &ocutypes.OrderRemoveV1{
 				RemovedOrderId: &indexerOrder.OrderId,
 				Reason:         reason,
 				RemovalStatus:  status,
 			},
 		},
 	}
-	offchainUpdateOrderRemoveWithDefaultRemovalReason = OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderRemove{
-			&OrderRemoveV1{
+	offchainUpdateOrderRemoveWithDefaultRemovalReason = ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderRemove{
+			OrderRemove: &ocutypes.OrderRemoveV1{
 				RemovedOrderId: &indexerOrder.OrderId,
 				Reason:         defaultRemovalReason,
 				RemovalStatus:  status,
@@ -212,7 +213,7 @@ func TestNewOrderPlaceMessage(t *testing.T) {
 		err,
 		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdateV1{}
+	actualUpdate := &ocutypes.OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,
@@ -234,7 +235,7 @@ func TestNewOrderUpdateMessage(t *testing.T) {
 		err,
 		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdateV1{}
+	actualUpdate := &ocutypes.OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,
@@ -256,7 +257,7 @@ func TestNewOrderRemoveMessage(t *testing.T) {
 		err,
 		"Encoding OffchainUpdateV1 proto into bytes should not result in an error.",
 	)
-	actualUpdate := &OffChainUpdateV1{}
+	actualUpdate := &ocutypes.OffChainUpdateV1{}
 	err = proto.Unmarshal(actualUpdateBytes, actualUpdate)
 	require.NoError(
 		t,

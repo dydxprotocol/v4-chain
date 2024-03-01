@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
@@ -483,7 +484,7 @@ func (k Keeper) PlaceStatefulOrdersFromLastBlock(
 					order.OrderId,
 					orderStatus,
 					err,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(order.OrderId, message)
