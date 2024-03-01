@@ -406,6 +406,7 @@ importers:
       '@bugsnag/js': ^7.18.0
       '@bugsnag/node': ^7.18.0
       '@bugsnag/plugin-express': ^7.18.0
+      '@cosmjs/crypto': 0.32.1
       '@dydxprotocol-indexer/base': workspace:^0.0.1
       '@dydxprotocol-indexer/compliance': workspace:^0.0.1
       '@dydxprotocol-indexer/dev': workspace:^0.0.1
@@ -455,6 +456,7 @@ importers:
       '@bugsnag/js': 7.18.0
       '@bugsnag/node': 7.18.0
       '@bugsnag/plugin-express': 7.18.0_@bugsnag+core@7.18.0
+      '@cosmjs/crypto': 0.32.1
       '@dydxprotocol-indexer/base': link:../../packages/base
       '@dydxprotocol-indexer/compliance': link:../../packages/compliance
       '@dydxprotocol-indexer/postgres': link:../../packages/postgres
