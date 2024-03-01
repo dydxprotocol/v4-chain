@@ -186,7 +186,7 @@ router.post(
         );
       }
 
-      // Verify the timestamp is within 30 seconds of the current time
+      // Verify the timestamp is within GEOBLOCK_REQUEST_TTL_SECONDS seconds of the current time
       const now = DateTime.now().toSeconds();
       if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
         return create4xxResponse(
