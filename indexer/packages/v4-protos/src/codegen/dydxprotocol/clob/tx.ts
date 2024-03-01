@@ -169,8 +169,8 @@ export interface OrderBatch {
   clobPairId: number;
   /**
    * List of client ids in this order batch.
-   * Note that this is serialized as a uint32 instead of a fixed32 in the
-   * regular OrderId object to save space.
+   * Note that this is serialized as a uint32 instead of a fixed32 to
+   * avoid issues when decoding repeated packed fixed32.
    */
 
   clientIds: number[];
@@ -186,8 +186,8 @@ export interface OrderBatchSDKType {
   clob_pair_id: number;
   /**
    * List of client ids in this order batch.
-   * Note that this is serialized as a uint32 instead of a fixed32 in the
-   * regular OrderId object to save space.
+   * Note that this is serialized as a uint32 instead of a fixed32 to
+   * avoid issues when decoding repeated packed fixed32.
    */
 
   client_ids: number[];

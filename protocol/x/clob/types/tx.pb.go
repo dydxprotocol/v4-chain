@@ -497,8 +497,8 @@ type OrderBatch struct {
 	// The Clob Pair ID all orders in this order batch belong to.
 	ClobPairId uint32 `protobuf:"varint,1,opt,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
 	// List of client ids in this order batch.
-	// Note that this is serialized as a uint32 instead of a fixed32 in the
-	// regular OrderId object to save space.
+	// Note that this is serialized as a uint32 instead of a fixed32 to
+	// avoid issues when decoding repeated packed fixed32.
 	ClientIds []uint32 `protobuf:"varint,2,rep,packed,name=client_ids,json=clientIds,proto3" json:"client_ids,omitempty"`
 }
 
