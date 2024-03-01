@@ -10,6 +10,7 @@
     "build:watch": "pnpm run build -- --watch",
     "validate-pnl": "ts-node src/validate-pnl.ts",
     "print-block": "ts-node src/print-block.ts",
+    "print-candle-time-boundaries": "ts-node src/print-candle-time-boundaries.ts",
     "coverage": "pnpm test -- --coverage",
     "lint": "eslint --ext .ts,.js .",
     "lint:fix": "eslint --ext .ts,.js . --fix",

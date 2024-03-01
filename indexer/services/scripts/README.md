@@ -19,6 +19,9 @@ pnpm run validate-pnl -- \
 
 KAFKA_BROKER_URLS=...kafka.ap-northeast-1.amazonaws.com:9092 \
 SERVICE_NAME=scripts pnpm run print-block -- --h 9265388
+
+SERVICE_NAME=script pnpm run print-candle-time-boundaries -- \
+--t 2024-02-28T10:01:36.17+00:00
 ```
 
 ### EnvVars
