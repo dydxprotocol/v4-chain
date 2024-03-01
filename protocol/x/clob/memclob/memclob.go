@@ -16,6 +16,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -128,7 +129,7 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 			ctx,
 			orderIdToCancel,
-			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
 			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		); success {
 			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
@@ -464,7 +465,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 				ctx,
 				orderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(orderId, message)
@@ -1118,7 +1119,7 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 				orderStatus,
 				err,
 				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 			); success {
 				existingOffchainUpdates.AddRemoveMessage(orderId, message)
 			}
@@ -1267,7 +1268,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx,
 					statefulOrderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
@@ -1286,7 +1287,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx,
 					shortTermOrderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
 					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(shortTermOrderId, message)
@@ -2100,7 +2101,7 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 						ctx,
 						orderId,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					); success {
 						offchainUpdates.AddRemoveMessage(orderId, message)

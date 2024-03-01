@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
 	types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	shared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	types1 "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -175,7 +175,7 @@ func (m *OrderPlaceV1) GetPlacementStatus() OrderPlaceV1_OrderPlacementStatus {
 // removal and the resulting status from the removal.
 type OrderRemoveV1 struct {
 	RemovedOrderId *types.IndexerOrderId            `protobuf:"bytes,1,opt,name=removed_order_id,json=removedOrderId,proto3" json:"removed_order_id,omitempty"`
-	Reason         shared.OrderRemovalReason        `protobuf:"varint,2,opt,name=reason,proto3,enum=dydxprotocol.indexer.shared.OrderRemovalReason" json:"reason,omitempty"`
+	Reason         types1.OrderRemovalReason        `protobuf:"varint,2,opt,name=reason,proto3,enum=dydxprotocol.indexer.shared.OrderRemovalReason" json:"reason,omitempty"`
 	RemovalStatus  OrderRemoveV1_OrderRemovalStatus `protobuf:"varint,3,opt,name=removal_status,json=removalStatus,proto3,enum=dydxprotocol.indexer.off_chain_updates.OrderRemoveV1_OrderRemovalStatus" json:"removal_status,omitempty"`
 }
 
@@ -219,11 +219,11 @@ func (m *OrderRemoveV1) GetRemovedOrderId() *types.IndexerOrderId {
 	return nil
 }
 
-func (m *OrderRemoveV1) GetReason() shared.OrderRemovalReason {
+func (m *OrderRemoveV1) GetReason() types1.OrderRemovalReason {
 	if m != nil {
 		return m.Reason
 	}
-	return shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED
+	return types1.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED
 }
 
 func (m *OrderRemoveV1) GetRemovalStatus() OrderRemoveV1_OrderRemovalStatus {
@@ -967,7 +967,7 @@ func (m *OrderRemoveV1) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Reason |= shared.OrderRemovalReason(b&0x7F) << shift
+				m.Reason |= types1.OrderRemovalReason(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}

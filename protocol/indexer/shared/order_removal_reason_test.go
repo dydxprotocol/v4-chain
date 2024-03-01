@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
@@ -16,37 +17,37 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 		orderError  error
 
 		// Expectations
-		expectedReason shared.OrderRemovalReason
+		expectedReason sharedtypes.OrderRemovalReason
 		expectedErr    error
 	}{
 		"Gets order removal reason for order status Undercollateralized": {
 			orderStatus:    clobtypes.Undercollateralized,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order status InternalError": {
 			orderStatus:    clobtypes.InternalError,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order status ImmediateOrCancelWouldRestOnBook": {
 			orderStatus:    clobtypes.ImmediateOrCancelWouldRestOnBook,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_IMMEDIATE_OR_CANCEL_WOULD_REST_ON_BOOK,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrFokOrderCouldNotBeFullyFilled": {
 			orderError:     clobtypes.ErrFokOrderCouldNotBeFullyFilled,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_FOK_ORDER_COULD_NOT_BE_FULLY_FULLED,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrPostOnlyWouldCrossMakerOrder": {
 			orderError:     clobtypes.ErrPostOnlyWouldCrossMakerOrder,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_POST_ONLY_WOULD_CROSS_MAKER_ORDER,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrReduceOnlyWouldIncreasePositionSize": {
 			orderError:     clobtypes.ErrReduceOnlyWouldIncreasePositionSize,
-			expectedReason: shared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
 			expectedErr:    nil,
 		},
 		"Returns error for order status Success": {

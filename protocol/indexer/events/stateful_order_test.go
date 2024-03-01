@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
@@ -15,7 +15,7 @@ var (
 	indexerOrder   = v1.OrderToIndexerOrder(order)
 	orderId        = constants.OrderId_Alice_Num0_ClientId0_Clob0
 	indexerOrderId = v1.OrderIdToIndexerOrderId(orderId)
-	reason         = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED
+	reason         = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED
 )
 
 func TestLongTermOrderPlacementEvent_Success(t *testing.T) {

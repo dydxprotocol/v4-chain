@@ -12,6 +12,7 @@ import (
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -114,7 +115,7 @@ func CreateOrderUpdateMessage(
 func MustCreateOrderRemoveMessageWithReason(
 	ctx sdk.Context,
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
+	reason sharedtypes.OrderRemovalReason,
 	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
 	msg, ok := CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
@@ -129,7 +130,7 @@ func MustCreateOrderRemoveMessageWithReason(
 func CreateOrderRemoveMessageWithReason(
 	ctx sdk.Context,
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
+	reason sharedtypes.OrderRemovalReason,
 	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for removing order."
@@ -213,9 +214,9 @@ func CreateOrderRemoveMessageWithDefaultReason(
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
 	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
-	defaultRemovalReason shared.OrderRemovalReason,
+	defaultRemovalReason sharedtypes.OrderRemovalReason,
 ) (message msgsender.Message, success bool) {
-	if defaultRemovalReason == shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED {
+	if defaultRemovalReason == sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED {
 		panic(
 			fmt.Errorf(
 				"Invalid parameter: " +
@@ -262,7 +263,7 @@ func newOrderPlaceMessage(
 // The `OrderRemove` struct is instantiated with the given orderId, reason and status parameters.
 func newOrderRemoveMessage(
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
+	reason sharedtypes.OrderRemovalReason,
 	status ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) ([]byte, error) {
 	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)

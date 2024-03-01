@@ -9,7 +9,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -24,9 +24,9 @@ var (
 	totalFilledAmount              = satypes.BaseQuantums(5)
 	orderStatus                    = clobtypes.Undercollateralized
 	orderError               error = nil
-	reason                         = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
+	reason                         = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED
 	status                         = ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED
-	defaultRemovalReason           = shared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR
+	defaultRemovalReason           = sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR
 	offchainUpdateOrderPlace       = ocutypes.OffChainUpdateV1{
 		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderPlace{
 			OrderPlace: &ocutypes.OrderPlaceV1{
@@ -178,7 +178,7 @@ func TestCreateOrderRemoveMessageWithDefaultReason_InvalidDefault(t *testing.T) 
 				clobtypes.Success,
 				orderError,
 				status,
-				shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
+				sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
 			)
 		},
 	)
