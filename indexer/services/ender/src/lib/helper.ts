@@ -23,7 +23,7 @@ import {
   UpdateClobPairEventV1,
   SubaccountMessage,
   DeleveragingEventV1,
-  TradingRewardsEventV1,
+  TradingRewardsEventV1, DeleveragingEventV2,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
@@ -200,13 +200,30 @@ export function indexerTendermintEventToEventProtoWithType(
       };
     }
     case (DydxIndexerSubtypes.DELEVERAGING.toString()): {
-      return {
-        type: DydxIndexerSubtypes.DELEVERAGING,
-        eventProto: DeleveragingEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
+      if (version === 1) {
+        return {
+          type: DydxIndexerSubtypes.DELEVERAGING,
+          eventProto: DeleveragingEventV1.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else if (version === 2) {
+        return {
+          type: DydxIndexerSubtypes.DELEVERAGING,
+          eventProto: DeleveragingEventV2.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      } else {
+        const message: string = `Unexpected version for DeleveragingEvent: ${version}`;
+        logger.error({
+          at: 'helpers#indexerTendermintEventToEventWithType',
+          message,
+        });
+        return undefined;
+      }
     }
     case (DydxIndexerSubtypes.TRADING_REWARD.toString()): {
       return {

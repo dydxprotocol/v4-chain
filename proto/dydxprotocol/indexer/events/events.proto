@@ -191,6 +191,32 @@ message DeleveragingEventV1 {
   bool is_final_settlement = 7;
 }
 
+// DeleveragingEventV2 message contains all the information for a deleveraging
+// on the dYdX chain. It has the unit price rather than the total quote quantums
+// that is present in DeleveragingEventV1.
+message DeleveragingEventV2 {
+  // ID of the subaccount that was liquidated.
+  dydxprotocol.indexer.protocol.v1.IndexerSubaccountId liquidated = 1
+      [ (gogoproto.nullable) = false ];
+  // ID of the subaccount that was used to offset the position.
+  dydxprotocol.indexer.protocol.v1.IndexerSubaccountId offsetting = 2
+      [ (gogoproto.nullable) = false ];
+  // The ID of the perpetual that was liquidated.
+  uint32 perpetual_id = 3;
+  // The amount filled between the liquidated and offsetting position, in
+  // base quantums.
+  uint64 fill_amount = 4;
+  // Fill price of deleveraging event, in USDC quote quantums.
+  uint64 price = 5;
+  // `true` if liquidating a short position, `false` otherwise.
+  bool is_buy = 6;
+  // `true` if the deleveraging event is for final settlement, indicating
+  // the match occurred at the oracle price rather than bankruptcy price.
+  // When this flag is `false`, the fill price is the bankruptcy price
+  // of the liquidated subaccount.
+  bool is_final_settlement = 7;
+}
+
 // LiquidationOrder represents the liquidation taker order to be included in a
 // liquidation order fill event.
 message LiquidationOrderV1 {

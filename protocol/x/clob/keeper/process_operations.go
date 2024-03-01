@@ -738,6 +738,15 @@ func (k Keeper) PersistMatchDeleveragingToState(
 
 		// Send on-chain update for the deleveraging. The events are stored in a TransientStore which should be rolled-back
 		// if the branched state is discarded, so batching is not necessary.
+		perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+		if err != nil {
+			return errorsmod.Wrapf(
+				types.ErrPerpetualDoesNotExist,
+				"Failed to fetch perpetual %d.",
+				perpetualId,
+			)
+		}
+		//perpetual.Params.AtomicResolution
 		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeDeleveraging,
