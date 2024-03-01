@@ -654,8 +654,8 @@ func (m *QueryLiquidationsConfigurationResponse) GetLiquidationsConfig() Liquida
 	return LiquidationsConfig{}
 }
 
-// StreamOrderbookUpdatesRequest is a request message for the StreamOrderbookUpdates
-// method.
+// StreamOrderbookUpdatesRequest is a request message for the
+// StreamOrderbookUpdates method.
 type StreamOrderbookUpdatesRequest struct {
 	// Clob pair ids to stream orderbook updates for.
 	ClobPairId []uint32 `protobuf:"varint,1,rep,packed,name=clob_pair_id,json=clobPairId,proto3" json:"clob_pair_id,omitempty"`
@@ -701,8 +701,8 @@ func (m *StreamOrderbookUpdatesRequest) GetClobPairId() []uint32 {
 	return nil
 }
 
-// StreamOrderbookUpdatesResponse is a response message for the StreamOrderbookUpdates
-// method.
+// StreamOrderbookUpdatesResponse is a response message for the
+// StreamOrderbookUpdates method.
 type StreamOrderbookUpdatesResponse struct {
 	// Orderbook updates for the clob pair.
 	Updates []types.OffChainUpdateV1 `protobuf:"bytes,1,rep,name=updates,proto3" json:"updates"`
