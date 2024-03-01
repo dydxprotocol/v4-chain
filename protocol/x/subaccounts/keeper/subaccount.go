@@ -522,9 +522,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a negative TNC subaccount was seen (%d)",
+						"block a negative TNC subaccount was seen (%d) for simulation on %s TX",
 					currentBlock,
 					lastBlockNegativeTncSubaccountSeen,
+					updateType.String(),
 				),
 			)
 		}
@@ -543,9 +544,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 					ctx,
 					fmt.Sprintf(
 						"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-							"block a chain outage was seen (%d) for TX simulation",
+							"block a chain outage was seen (%d) for simulation on %s TX",
 						currentBlock,
 						downtimeInfo.BlockInfo.Height,
+						updateType.String(),
 					),
 				)
 				success = false
