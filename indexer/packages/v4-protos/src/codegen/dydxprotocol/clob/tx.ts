@@ -184,12 +184,30 @@ export interface OrderBatchSDKType {
 
   client_ids: number[];
 }
-/** MsgBatchCancelResponse is a response type used for batch canceling orders. */
+/**
+ * MsgBatchCancelResponse is a response type used for batch canceling orders.
+ * It indicates which cancel orders have succeeded or failed.
+ */
 
-export interface MsgBatchCancelResponse {}
-/** MsgBatchCancelResponse is a response type used for batch canceling orders. */
+export interface MsgBatchCancelResponse {
+  /** A batch of short term cancel orders that have succeeded. */
+  shortTermSucceeded: OrderBatch[];
+  /** A batch of short term cancel orders that have failed. */
 
-export interface MsgBatchCancelResponseSDKType {}
+  shortTermFailed: OrderBatch[];
+}
+/**
+ * MsgBatchCancelResponse is a response type used for batch canceling orders.
+ * It indicates which cancel orders have succeeded or failed.
+ */
+
+export interface MsgBatchCancelResponseSDKType {
+  /** A batch of short term cancel orders that have succeeded. */
+  short_term_succeeded: OrderBatchSDKType[];
+  /** A batch of short term cancel orders that have failed. */
+
+  short_term_failed: OrderBatchSDKType[];
+}
 /** MsgUpdateClobPair is a request type used for updating a ClobPair in state. */
 
 export interface MsgUpdateClobPair {
@@ -836,11 +854,22 @@ export const OrderBatch = {
 };
 
 function createBaseMsgBatchCancelResponse(): MsgBatchCancelResponse {
-  return {};
+  return {
+    shortTermSucceeded: [],
+    shortTermFailed: []
+  };
 }
 
 export const MsgBatchCancelResponse = {
-  encode(_: MsgBatchCancelResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: MsgBatchCancelResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.shortTermSucceeded) {
+      OrderBatch.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    for (const v of message.shortTermFailed) {
+      OrderBatch.encode(v!, writer.uint32(18).fork()).ldelim();
+    }
+
     return writer;
   },
 
@@ -853,6 +882,14 @@ export const MsgBatchCancelResponse = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.shortTermSucceeded.push(OrderBatch.decode(reader, reader.uint32()));
+          break;
+
+        case 2:
+          message.shortTermFailed.push(OrderBatch.decode(reader, reader.uint32()));
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -862,8 +899,10 @@ export const MsgBatchCancelResponse = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<MsgBatchCancelResponse>): MsgBatchCancelResponse {
+  fromPartial(object: DeepPartial<MsgBatchCancelResponse>): MsgBatchCancelResponse {
     const message = createBaseMsgBatchCancelResponse();
+    message.shortTermSucceeded = object.shortTermSucceeded?.map(e => OrderBatch.fromPartial(e)) || [];
+    message.shortTermFailed = object.shortTermFailed?.map(e => OrderBatch.fromPartial(e)) || [];
     return message;
   }
 
