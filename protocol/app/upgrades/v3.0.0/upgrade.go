@@ -20,7 +20,7 @@ import (
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	clobmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	rewardsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -53,7 +53,7 @@ var (
 	ModuleAccsToInitialize = []string{
 		bridgemoduletypes.ModuleName,
 		satypes.ModuleName,
-		clobmoduletypes.InsuranceFundName,
+		perpetualsmoduletypes.InsuranceFundName,
 		rewardsmoduletypes.TreasuryAccountName,
 		rewardsmoduletypes.VesterAccountName,
 		vestmoduletypes.CommunityTreasuryAccountName,

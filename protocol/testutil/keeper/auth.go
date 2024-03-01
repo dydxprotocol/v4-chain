@@ -14,7 +14,7 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -36,11 +36,11 @@ func createAccountKeeper(
 
 	// Create default module account permissions for test.
 	maccPerms := map[string][]string{
-		minttypes.ModuleName:        {types.Minter},
-		bridgetypes.ModuleName:      {types.Minter},
-		types.FeeCollectorName:      nil,
-		satypes.ModuleName:          nil,
-		clobtypes.InsuranceFundName: nil,
+		minttypes.ModuleName:              {types.Minter},
+		bridgetypes.ModuleName:            {types.Minter},
+		types.FeeCollectorName:            nil,
+		satypes.ModuleName:                nil,
+		perpetualstypes.InsuranceFundName: nil,
 	}
 
 	k := keeper.NewAccountKeeper(

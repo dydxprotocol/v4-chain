@@ -76,6 +76,7 @@ type PerpetualsKeeper interface {
 		atomicResolution int32,
 		defaultFundingPpm int32,
 		liquidityTier uint32,
+		marketType PerpetualMarketType,
 	) (Perpetual, error)
 	ModifyPerpetual(
 		ctx sdk.Context,

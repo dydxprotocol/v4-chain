@@ -1,9 +1,10 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"testing"
 	"time"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
@@ -2221,6 +2222,7 @@ func setupProcessProposerOperationsTestCase(
 			p.Params.AtomicResolution,
 			p.Params.DefaultFundingPpm,
 			p.Params.LiquidityTier,
+			p.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

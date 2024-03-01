@@ -107,6 +107,11 @@ var (
 		22,
 		"MinNumVotesPerSample is zero",
 	)
+	ErrInvalidMarketType = errorsmod.Register(
+		ModuleName,
+		23,
+		"Market type is invalid",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

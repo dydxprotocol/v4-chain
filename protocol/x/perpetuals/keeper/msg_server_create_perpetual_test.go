@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -24,7 +25,13 @@ func TestCreatePerpetual(t *testing.T) {
 		perptest.WithId(2),
 		perptest.WithMarketId(1),
 	)
+	testPerpIsolated := *perptest.GeneratePerpetual(
+		perptest.WithId(3),
+		perptest.WithMarketId(2),
+		perptest.WithMarketType(types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED),
+	)
 	testMarket1 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(1))
+	testMarket2 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(2))
 	testCases := map[string]struct {
 		setup              func(*testing.T, sdk.Context, *perpkeeper.Keeper, *priceskeeper.Keeper)
 		msg                *types.MsgCreatePerpetual
@@ -63,6 +70,27 @@ func TestCreatePerpetual(t *testing.T) {
 				Params:    testPerp2.Params,
 			},
 			expectedPerpetuals: []types.Perpetual{testPerp1, testPerp2},
+		},
+		"Succeeds: create new isolated market perpetual": {
+			setup: func(
+				t *testing.T,
+				ctx sdk.Context,
+				perpKeeper *perpkeeper.Keeper,
+				pricesKeeper *priceskeeper.Keeper,
+			) {
+				keepertest.CreateTestLiquidityTiers(t, ctx, perpKeeper)
+				keepertest.CreateTestPriceMarkets(
+					t,
+					ctx,
+					pricesKeeper,
+					[]pricestypes.MarketParamPrice{testMarket2},
+				)
+			},
+			msg: &types.MsgCreatePerpetual{
+				Authority: lib.GovModuleAddress.String(),
+				Params:    testPerpIsolated.Params,
+			},
+			expectedPerpetuals: []types.Perpetual{testPerpIsolated},
 		},
 		"Failure: new perpetual id already exists in state": {
 			setup: func(t *testing.T, ctx sdk.Context, perpKeeper *perpkeeper.Keeper, pricesKeeper *priceskeeper.Keeper) {

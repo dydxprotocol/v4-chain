@@ -3,11 +3,12 @@ package perpetuals_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
@@ -271,7 +272,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "params": {
 				 "ticker":"EXAM-USD",
 				 "market_id":0,
-				 "liquidity_tier":0
+				 "liquidity_tier":0,
+                 "market_type":"PERPETUAL_MARKET_TYPE_CROSS"
 			  }
 		   }
 		],
@@ -309,7 +311,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "market_id":0,
 				 "atomic_resolution":0,
 				 "default_funding_ppm":0,
-				 "liquidity_tier":0
+				 "liquidity_tier":0,
+				 "market_type":"PERPETUAL_MARKET_TYPE_CROSS"
 			  },
 			  "funding_index":"0"
 		   }

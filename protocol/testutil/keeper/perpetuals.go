@@ -2,9 +2,10 @@ package keeper
 
 import (
 	"fmt"
+	"testing"
+
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/gogoproto/proto"
-	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -53,33 +54,35 @@ func PerpetualsKeepersWithClobHelpers(
 	t testing.TB,
 	clobKeeper types.PerpetualsClobKeeper,
 ) (pc PerpKeepersTestContext) {
-	pc.Ctx = initKeepers(t, func(
-		db *dbm.MemDB,
-		registry codectypes.InterfaceRegistry,
-		cdc *codec.ProtoCodec,
-		stateStore storetypes.CommitMultiStore,
-		transientStoreKey storetypes.StoreKey,
-	) []GenesisInitializer {
-		// Define necessary keepers here for unit tests
-		pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
-			stateStore,
-			db,
-			cdc,
-			transientStoreKey,
-		)
-		pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
-		pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
-			stateStore,
-			db,
-			cdc,
-			pc.PricesKeeper,
-			pc.EpochsKeeper,
-			clobKeeper,
-			transientStoreKey,
-		)
+	pc.Ctx = initKeepers(
+		t, func(
+			db *dbm.MemDB,
+			registry codectypes.InterfaceRegistry,
+			cdc *codec.ProtoCodec,
+			stateStore storetypes.CommitMultiStore,
+			transientStoreKey storetypes.StoreKey,
+		) []GenesisInitializer {
+			// Define necessary keepers here for unit tests
+			pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
+				stateStore,
+				db,
+				cdc,
+				transientStoreKey,
+			)
+			pc.EpochsKeeper, _ = createEpochsKeeper(stateStore, db, cdc)
+			pc.PerpetualsKeeper, pc.StoreKey = createPerpetualsKeeperWithClobHelpers(
+				stateStore,
+				db,
+				cdc,
+				pc.PricesKeeper,
+				pc.EpochsKeeper,
+				clobKeeper,
+				transientStoreKey,
+			)
 
-		return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
-	})
+			return []GenesisInitializer{pc.PricesKeeper, pc.PerpetualsKeeper}
+		},
+	)
 
 	// Mock time provider response for market creation.
 	pc.MockTimeProvider.On("Now").Return(constants.TimeT)
@@ -220,8 +223,10 @@ func CreateNPerpetuals(
 		CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 		if i%3 == 0 {
 			defaultFundingPpm = 1
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
 		} else if i%3 == 1 {
 			defaultFundingPpm = -1
 		} else {
@@ -236,6 +241,7 @@ func CreateNPerpetuals(
 			int32(i),             // AtomicResolution
 			defaultFundingPpm,    // DefaultFundingPpm
 			allLiquidityTiers[i%len(allLiquidityTiers)].Id, // LiquidityTier
+			marketType, // MarketType
 		)
 		if err != nil {
 			return items, err
@@ -285,6 +291,7 @@ func CreateTestPricesAndPerpetualMarkets(
 			perp.Params.AtomicResolution,
 			perp.Params.DefaultFundingPpm,
 			perp.Params.LiquidityTier,
+			perp.Params.MarketType,
 		)
 		require.NoError(t, err)
 	}

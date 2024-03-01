@@ -60,12 +60,19 @@ func networkWithLiquidityTierAndPerpetualObjects(
 	}
 
 	// Generate `n` Perpetuals.
+
 	for i := 0; i < n; i++ {
+		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
+		if i%2 == 1 {
+			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
+		}
+
 		perpetual := types.Perpetual{
 			Params: types.PerpetualParams{
 				Id:            uint32(i),
 				Ticker:        fmt.Sprintf("test_query_ticker_%d", i),
 				LiquidityTier: uint32(i % m),
+				MarketType:    marketType,
 			},
 			FundingIndex: dtypes.ZeroInt(),
 		}

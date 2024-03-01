@@ -28,3 +28,5 @@ Record<SparklineTimePeriod, CandleResolution> = {
 };
 
 export const DYDX_ADDRESS_PREFIX: string = 'dydx';
+
+export const GEOBLOCK_REQUEST_TTL_SECONDS: number = 30;

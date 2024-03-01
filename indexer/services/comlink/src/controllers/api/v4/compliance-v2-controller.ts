@@ -18,7 +18,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceProvider } from '../../../helpers/compliance/compliance-clients';
 import { getGeoComplianceReason } from '../../../helpers/compliance/compliance-utils';
-import { DYDX_ADDRESS_PREFIX } from '../../../lib/constants';
+import { DYDX_ADDRESS_PREFIX, GEOBLOCK_REQUEST_TTL_SECONDS } from '../../../lib/constants';
 import { create4xxResponse, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { getIpAddr } from '../../../lib/utils';
@@ -188,10 +188,10 @@ router.post(
 
       // Verify the timestamp is within 30 seconds of the current time
       const now = DateTime.now().toSeconds();
-      if (Math.abs(now - timestamp) > 30) {
+      if (Math.abs(now - timestamp) > GEOBLOCK_REQUEST_TTL_SECONDS) {
         return create4xxResponse(
           res,
-          'Timestamp is not within the valid range of 30 seconds',
+          `Timestamp is not within the valid range of ${GEOBLOCK_REQUEST_TTL_SECONDS} seconds`,
         );
       }
 
