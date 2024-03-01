@@ -211,6 +211,24 @@ router.post(
         );
       }
 
+      /**
+       * If the address doesn't exist in the compliance table:
+       * - if the request is from a restricted country:
+       *  - if the action is ONBOARD, set the status to BLOCKED
+       *  - if the action is CONNECT, set the status to FIRST_STRIKE
+       * - else if the request is not from a non-restricted country:
+       *  - set the status to COMPLIANT
+       *
+       * if the address is COMPLIANT:
+       * - the ONLY action should be CONNECT
+       * - if the request is from a restricted country:
+       *  - set the status to FIRST_STRIKE
+       *
+       * if the address is FIRST_STRIKE:
+       * - the ONLY action should be CONNECT
+       * - if the request is from a restricted country:
+       *  - set the status to CLOSE_ONLY
+       */
       const complianceStatus: ComplianceStatusFromDatabase[] = await
       ComplianceStatusTable.findAll(
         { address: [address] },
@@ -247,7 +265,15 @@ router.post(
           complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE ||
           complianceStatus[0].status === ComplianceStatus.COMPLIANT
         ) {
-          if (
+          if (action === ComplianceAction.ONBOARD) {
+            logger.error({
+              at: 'ComplianceV2Controller POST /geoblock',
+              message: 'Invalid action for current compliance status',
+              address,
+              action,
+              complianceStatus: complianceStatus[0],
+            });
+          } else if (
             isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
             action === ComplianceAction.CONNECT
           ) {
