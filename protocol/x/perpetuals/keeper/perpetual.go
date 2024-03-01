@@ -40,12 +40,22 @@ func (k Keeper) CreatePerpetual(
 	atomicResolution int32,
 	defaultFundingPpm int32,
 	liquidityTier uint32,
+	marketType types.PerpetualMarketType,
 ) (types.Perpetual, error) {
 	// Check if perpetual exists.
 	if k.HasPerpetual(ctx, id) {
 		return types.Perpetual{}, errorsmod.Wrap(
 			types.ErrPerpetualAlreadyExists,
 			lib.UintToString(id),
+		)
+	}
+
+	// Check if market type is valid
+	if marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS &&
+		marketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("market type %v", marketType),
 		)
 	}
 
@@ -58,6 +68,7 @@ func (k Keeper) CreatePerpetual(
 			AtomicResolution:  atomicResolution,
 			DefaultFundingPpm: defaultFundingPpm,
 			LiquidityTier:     liquidityTier,
+			MarketType:        marketType,
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}

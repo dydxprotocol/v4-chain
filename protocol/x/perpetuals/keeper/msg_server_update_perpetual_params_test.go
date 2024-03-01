@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -192,7 +193,20 @@ func TestUpdatePerpetualParams(t *testing.T) {
 				// Verify updated perpetual params in state.
 				updatedPerpetualInState, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, tc.msg.PerpetualParams.Id)
 				require.NoError(t, err)
-				require.Equal(t, tc.msg.PerpetualParams, updatedPerpetualInState.Params)
+				require.Equal(t, tc.msg.PerpetualParams.Ticker, updatedPerpetualInState.Params.Ticker)
+				require.Equal(t, tc.msg.PerpetualParams.MarketId, updatedPerpetualInState.Params.MarketId)
+				require.Equal(
+					t,
+					tc.msg.PerpetualParams.DefaultFundingPpm,
+					updatedPerpetualInState.Params.DefaultFundingPpm,
+				)
+				require.Equal(t, tc.msg.PerpetualParams.LiquidityTier, updatedPerpetualInState.Params.LiquidityTier)
+				require.Equal(
+					t,
+					tc.msg.PerpetualParams.AtomicResolution,
+					updatedPerpetualInState.Params.AtomicResolution,
+				)
+				require.Equal(t, testPerp.Params.MarketType, updatedPerpetualInState.Params.MarketType)
 			}
 		})
 	}

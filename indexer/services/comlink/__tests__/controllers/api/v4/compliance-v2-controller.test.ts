@@ -15,10 +15,22 @@ import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
 import config from '../../../../src/config';
+import { DateTime } from 'luxon';
+import { ComplianceAction } from '../../../../src/controllers/api/v4/compliance-v2-controller';
+import { ExtendedSecp256k1Signature, Secp256k1, sha256 } from '@cosmjs/crypto';
 
 jest.mock('../../../../src/lib/utils', () => ({
   ...jest.requireActual('../../../../src/lib/utils'),
   getIpAddr: jest.fn(),
+}));
+jest.mock('@cosmjs/crypto', () => ({
+  ...jest.requireActual('@cosmjs/crypto'),
+  Secp256k1: {
+    verifySignature: jest.fn(),
+  },
+  ExtendedSecp256k1Signature: {
+    fromFixedLength: jest.fn(),
+  },
 }));
 
 describe('ComplianceV2Controller', () => {
@@ -215,6 +227,100 @@ describe('ComplianceV2Controller', () => {
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
       }));
+    });
+  });
+
+  describe('POST /geoblock', () => {
+    beforeEach(async () => {
+      ipAddrMock.mockReturnValue(ipAddr);
+      await testMocks.seedData();
+      jest.mock('@cosmjs/crypto', () => ({
+        Secp256k1: {
+          verifySignature: jest.fn().mockResolvedValue(true),
+        },
+        ExtendedSecp256k1Signature: {
+          fromFixedLength: jest.fn().mockResolvedValue({} as ExtendedSecp256k1Signature),
+        },
+      }));
+      jest.spyOn(DateTime, 'now').mockReturnValue(DateTime.fromSeconds(1620000000)); // Mock current time
+    });
+
+    afterEach(async () => {
+      await redis.deleteAllAsync(ratelimitRedis.client);
+      await dbHelpers.clearData();
+      jest.clearAllMocks();
+      jest.restoreAllMocks();
+    });
+
+    it('should return 400 for non-dYdX address', async () => {
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          address: '0x123', // Non-dYdX address
+          message: 'Test message',
+          action: ComplianceAction.ONBOARD,
+          signedMessage: sha256(Buffer.from('msg')),
+          pubkey: new Uint8Array([/* public key bytes */]),
+          timestamp: 1620000000,
+        },
+        expectedStatus: 400,
+      });
+    });
+
+    it('should return 400 for invalid timestamp', async () => {
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          address: testConstants.defaultAddress,
+          message: 'Test message',
+          action: ComplianceAction.ONBOARD,
+          signedMessage: sha256(Buffer.from('msg')),
+          pubkey: new Uint8Array([/* public key bytes */]),
+          timestamp: 1619996600, // More than 30 seconds difference
+        },
+        expectedStatus: 400,
+      });
+    });
+
+    it('should return 400 for invalid signature', async () => {
+      // Mock verifySignature to return false for this test
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(false);
+
+      await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          address: testConstants.defaultAddress,
+          message: 'Test message',
+          action: ComplianceAction.ONBOARD,
+          signedMessage: sha256(Buffer.from('msg')),
+          pubkey: new Uint8Array([/* public key bytes */]),
+          timestamp: 1620000000,
+        },
+        expectedStatus: 400,
+      });
+    });
+
+    it('should process valid request', async () => {
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          address: testConstants.defaultAddress,
+          message: 'Test message',
+          action: ComplianceAction.ONBOARD,
+          signedMessage: sha256(Buffer.from('msg')),
+          pubkey: new Uint8Array([/* public key bytes */]),
+          timestamp: 1620000000, // Valid timestamp
+        },
+      });
+
+      expect(response.status).toEqual(200);
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
   });
 });

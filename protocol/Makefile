@@ -417,9 +417,9 @@ update-swagger-docs: statik
 
 # Run at `./protocol` directory.
 update-sample-pregenesis:
-	make build
-	./scripts/genesis/prod_pregenesis.sh build/dydxprotocold
-	cp /tmp/prod-chain/.dydxprotocol/config/sorted_genesis.json ./scripts/genesis/sample_pregenesis.json
+	$(MAKE) localnet-build
+	@docker build . -t check-sample-pregenesis -f scripts/genesis/Dockerfile --no-cache
+	@docker run --entrypoint ./scripts/genesis/copy_sample_pregenesis.sh  -v $(CURDIR):/workspace check-sample-pregenesis
 	@echo "Updated ./scripts/genesis/sample_pregenesis.json"
 
 check-sample-pregenesis-up-to-date:

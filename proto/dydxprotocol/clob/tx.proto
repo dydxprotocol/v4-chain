@@ -129,7 +129,13 @@ message OrderBatch {
 }
 
 // MsgBatchCancelResponse is a response type used for batch canceling orders.
-message MsgBatchCancelResponse {}
+// It indicates which cancel orders have succeeded or failed.
+message MsgBatchCancelResponse {
+  // A batch of short term cancel orders that have succeeded.
+  repeated OrderBatch short_term_succeeded = 1;
+  // A batch of short term cancel orders that have failed.
+  repeated OrderBatch short_term_failed = 2;
+}
 
 // MsgUpdateClobPair is a request type used for updating a ClobPair in state.
 message MsgUpdateClobPair {
