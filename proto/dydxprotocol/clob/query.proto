@@ -145,7 +145,8 @@ message StreamOrderbookUpdatesRequest {
 // method.
 message StreamOrderbookUpdatesResponse {
   // Orderbook updates for the clob pair.
-  repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1;
+  repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1 
+      [ (gogoproto.nullable) = false ];
   
   // Snapshot indicates if the response is from a snapshot of the orderbook.
   // This is true for the initial response and false for all subsequent updates.
