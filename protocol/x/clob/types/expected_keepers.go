@@ -71,6 +71,7 @@ type SubaccountsKeeper interface {
 	TransferInsuranceFundPayments(
 		ctx sdk.Context,
 		amount *big.Int,
+		perpetualId uint32,
 	) error
 }
 
@@ -139,6 +140,7 @@ type PerpetualsKeeper interface {
 		err error,
 	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)
+	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
 }
 
 type PricesKeeper interface {

@@ -109,14 +109,14 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					t,
 					tc.expectedError.Error(),
 					func() {
-						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx)
+						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, 0)
 					},
 				)
 			} else {
 				require.Equal(
 					t,
 					tc.expectedInsuranceFundBalance,
-					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx),
+					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, 0),
 				)
 			}
 		})
@@ -203,10 +203,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			require.Equal(
 				t,
 				tc.expectedIsValidInsuranceFundDelta,
-				ks.ClobKeeper.IsValidInsuranceFundDelta(
-					ks.Ctx,
-					tc.insuranceFundDelta,
-				),
+				ks.ClobKeeper.IsValidInsuranceFundDelta(ks.Ctx, tc.insuranceFundDelta, 0),
 			)
 		})
 	}
