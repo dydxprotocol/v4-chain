@@ -2129,6 +2129,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
 		assets            []*asstypes.Asset
 		marketParamPrices []pricestypes.MarketParamPrice
+		isSimulation      bool
 
 		// subaccount state
 		perpetualPositions []*types.PerpetualPosition
@@ -2757,6 +2758,40 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			updateType: types.Withdrawal,
 		},
+		`transfers are blocked if negative TNC subaccount was seen in future block and this
+			is a simulation TX`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals:                 []perptypes.Perpetual{},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions:     []*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock:                     99,
+			negativeTncSubaccountSeenAtBlock: 100,
+			isSimulation:                     true,
+
+			updateType: types.Withdrawal,
+		},
 	}
 
 	for name, tc := range tests {
@@ -2831,6 +2866,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			// Set the current block number on the context.
 			ctx = ctx.WithBlockHeight(int64(tc.currentBlock))
+
+			// If this is a simulation TX, set the simulation exec mode on the context.
+			if tc.isSimulation {
+				ctx = ctx.WithExecMode(sdk.ExecModeSimulate)
+			}
 
 			for i, u := range tc.updates {
 				if u.SubaccountId == (types.SubaccountId{}) {
