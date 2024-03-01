@@ -31,6 +31,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_block_processor_ordered_handlers.sql',
   'dydx_block_processor_unordered_handlers.sql',
   'dydx_deleveraging_handler.sql',
+  'dydx_deleveraging_handler_v2.sql',
   'dydx_funding_handler.sql',
   'dydx_liquidity_tier_handler.sql',
   'dydx_market_create_handler.sql',
