@@ -660,6 +660,39 @@ func (_m *QueryClient) PreviousBlockInfo(ctx context.Context, in *types.QueryPre
 	return r0, r1
 }
 
+// StreamOrderbookUpdates provides a mock function with given fields: ctx, in, opts
+func (_m *QueryClient) StreamOrderbookUpdates(ctx context.Context, in *clobtypes.StreamOrderbookUpdatesRequest, opts ...grpc.CallOption) (clobtypes.Query_StreamOrderbookUpdatesClient, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	var r0 clobtypes.Query_StreamOrderbookUpdatesClient
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) (clobtypes.Query_StreamOrderbookUpdatesClient, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) clobtypes.Query_StreamOrderbookUpdatesClient); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(clobtypes.Query_StreamOrderbookUpdatesClient)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Subaccount provides a mock function with given fields: ctx, in, opts
 func (_m *QueryClient) Subaccount(ctx context.Context, in *subaccountstypes.QueryGetSubaccountRequest, opts ...grpc.CallOption) (*subaccountstypes.QuerySubaccountResponse, error) {
 	_va := make([]interface{}, len(opts))

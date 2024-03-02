@@ -11,7 +11,8 @@ import (
 	mapset "github.com/deckarep/golang-set/v2"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testutil_memclob "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -1327,7 +1328,7 @@ func assertPlaceOrderOffchainMessages(
 				noopLogger,
 				order.OrderId,
 				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			)
 			expectedOffchainMessages = append(
 				expectedOffchainMessages,
@@ -1356,7 +1357,7 @@ func assertPlaceOrderOffchainMessages(
 			noopLogger,
 			orderId,
 			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		// If the reduce-only order was seen before updates, add it to the set so we don't try to check
 		// for it later.
@@ -1385,7 +1386,7 @@ func assertPlaceOrderOffchainMessages(
 					noopLogger,
 					matchOrder.OrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 
 				expectedOffchainMessages = append(
@@ -1443,7 +1444,7 @@ func assertPlaceOrderOffchainMessages(
 			noopLogger,
 			orderId,
 			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		expectedOffchainMessages = append(
 			expectedOffchainMessages,
@@ -1476,7 +1477,7 @@ func assertPlaceOrderOffchainMessages(
 			order.OrderId,
 			expectedOrderStatus,
 			expectedErr,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		)
 		expectedOffchainMessages = append(
 			expectedOffchainMessages,
@@ -1540,7 +1541,7 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 				noopLogger,
 				order.OrderId,
 				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_SELF_TRADE_ERROR,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			)
 
 			expectedOffchainMessages = append(
@@ -1555,7 +1556,7 @@ func getExpectedPlacePerpetualLiquidationOffchainMessages(
 					noopLogger,
 					order.OrderId,
 					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNDERCOLLATERALIZED,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 				)
 
 				expectedOffchainMessages = append(

@@ -6,6 +6,7 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
+	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -14,7 +15,7 @@ import (
 
 func TestSubaccountIdToIndexerSubaccountId(t *testing.T) {
 	subaccountId := constants.Alice_Num1
-	expectedSubaccountId := v1.IndexerSubaccountId{
+	expectedSubaccountId := v1types.IndexerSubaccountId{
 		Owner:  subaccountId.Owner,
 		Number: subaccountId.Number,
 	}
@@ -31,7 +32,7 @@ func TestPerpetualPositionToIndexerPerpetualPosition(t *testing.T) {
 	fundingPayments := map[uint32]dtypes.SerializableInt{
 		position.PerpetualId: dtypes.NewInt(100),
 	}
-	expectedPerpetualPosition := &v1.IndexerPerpetualPosition{
+	expectedPerpetualPosition := &v1types.IndexerPerpetualPosition{
 		PerpetualId:    position.PerpetualId,
 		Quantums:       position.Quantums,
 		FundingIndex:   position.FundingIndex,
@@ -58,14 +59,14 @@ func TestPerpetualPositionsToIndexerPerpetualPositions(t *testing.T) {
 		fundingPayments map[uint32]dtypes.SerializableInt
 
 		// Expectations
-		expectedPerpetualPositions []*v1.IndexerPerpetualPosition
+		expectedPerpetualPositions []*v1types.IndexerPerpetualPosition
 	}{
 		"Maps slice of PerpetualPosition to slice of IndexerPerpetualPosition with no funding payments": {
 			positions: []*satypes.PerpetualPosition{
 				position,
 				position2,
 			},
-			expectedPerpetualPositions: []*v1.IndexerPerpetualPosition{
+			expectedPerpetualPositions: []*v1types.IndexerPerpetualPosition{
 				{
 					PerpetualId:    position.PerpetualId,
 					Quantums:       position.Quantums,
@@ -89,7 +90,7 @@ func TestPerpetualPositionsToIndexerPerpetualPositions(t *testing.T) {
 				position.PerpetualId:  dtypes.NewInt(100),
 				position2.PerpetualId: dtypes.NewInt(-100),
 			},
-			expectedPerpetualPositions: []*v1.IndexerPerpetualPosition{
+			expectedPerpetualPositions: []*v1types.IndexerPerpetualPosition{
 				{
 					PerpetualId:    position.PerpetualId,
 					Quantums:       position.Quantums,
@@ -106,7 +107,7 @@ func TestPerpetualPositionsToIndexerPerpetualPositions(t *testing.T) {
 		},
 		"Maps empty slice to empty slice": {
 			positions:                  []*satypes.PerpetualPosition{},
-			expectedPerpetualPositions: []*v1.IndexerPerpetualPosition{},
+			expectedPerpetualPositions: []*v1types.IndexerPerpetualPosition{},
 		},
 		"Maps nil to nil slice": {
 			positions:                  nil,
@@ -129,7 +130,7 @@ func TestPerpetualPositionsToIndexerPerpetualPositions(t *testing.T) {
 
 func TestAssetPositionToIndexerAssetPosition(t *testing.T) {
 	position := &constants.Long_Asset_1BTC
-	expectedAssetPosition := &v1.IndexerAssetPosition{
+	expectedAssetPosition := &v1types.IndexerAssetPosition{
 		AssetId:  position.AssetId,
 		Quantums: position.Quantums,
 		Index:    position.Index,
@@ -151,14 +152,14 @@ func TestAssetPositionsToIndexerAssetPositions(t *testing.T) {
 		positions []*satypes.AssetPosition
 
 		// Expectations
-		expectedAssetPositions []*v1.IndexerAssetPosition
+		expectedAssetPositions []*v1types.IndexerAssetPosition
 	}{
 		"Maps slice of AssetPosition to slice of IndexerAssetPosition": {
 			positions: []*satypes.AssetPosition{
 				position,
 				position2,
 			},
-			expectedAssetPositions: []*v1.IndexerAssetPosition{
+			expectedAssetPositions: []*v1types.IndexerAssetPosition{
 				{
 					AssetId:  position.AssetId,
 					Quantums: position.Quantums,
@@ -173,7 +174,7 @@ func TestAssetPositionsToIndexerAssetPositions(t *testing.T) {
 		},
 		"Maps empty slice to empty slice": {
 			positions:              []*satypes.AssetPosition{},
-			expectedAssetPositions: []*v1.IndexerAssetPosition{},
+			expectedAssetPositions: []*v1types.IndexerAssetPosition{},
 		},
 		"Maps nil to nil slice": {
 			positions:              nil,
@@ -193,8 +194,8 @@ func TestAssetPositionsToIndexerAssetPositions(t *testing.T) {
 
 func TestOrderIdToIndexerOrderId(t *testing.T) {
 	orderId := constants.LongTermOrderId_Alice_Num1_ClientId3_Clob1
-	expectedOrderId := v1.IndexerOrderId{
-		SubaccountId: v1.IndexerSubaccountId{
+	expectedOrderId := v1types.IndexerOrderId{
+		SubaccountId: v1types.IndexerSubaccountId{
 			Owner:  orderId.SubaccountId.Owner,
 			Number: orderId.SubaccountId.Number,
 		},
@@ -216,17 +217,17 @@ func TestOrderSideToIndexerOrderSide(t *testing.T) {
 		side clobtypes.Order_Side
 
 		// Expectations
-		expectedSide v1.IndexerOrder_Side
+		expectedSide v1types.IndexerOrder_Side
 	}{}
 	// Iterate through all the values for Order_Side to create test cases.
 	for name, value := range clobtypes.Order_Side_value {
 		testName := fmt.Sprintf("Converts Order_Side %s to IndexerOrderV1_Side", name)
 		tests[testName] = struct {
 			side         clobtypes.Order_Side
-			expectedSide v1.IndexerOrder_Side
+			expectedSide v1types.IndexerOrder_Side
 		}{
 			side:         clobtypes.Order_Side(value),
-			expectedSide: v1.IndexerOrder_Side(v1.IndexerOrder_Side_value[name]),
+			expectedSide: v1types.IndexerOrder_Side(v1types.IndexerOrder_Side_value[name]),
 		}
 	}
 	for name, tc := range tests {
@@ -246,17 +247,17 @@ func TestOrderTimeInForceToIndexerOrderTimeInForce(t *testing.T) {
 		timeInForce clobtypes.Order_TimeInForce
 
 		// Expectations
-		expectedTimeInForce v1.IndexerOrder_TimeInForce
+		expectedTimeInForce v1types.IndexerOrder_TimeInForce
 	}{}
 	// Iterate through all the values for Order_TimeInForce to create test cases.
 	for name, value := range clobtypes.Order_TimeInForce_value {
 		testName := fmt.Sprintf("Converts Order_TimeInForce %s to IndexerOrderV1_TimeInForce", name)
 		tests[testName] = struct {
 			timeInForce         clobtypes.Order_TimeInForce
-			expectedTimeInForce v1.IndexerOrder_TimeInForce
+			expectedTimeInForce v1types.IndexerOrder_TimeInForce
 		}{
 			timeInForce:         clobtypes.Order_TimeInForce(value),
-			expectedTimeInForce: v1.IndexerOrder_TimeInForce(v1.IndexerOrder_TimeInForce_value[name]),
+			expectedTimeInForce: v1types.IndexerOrder_TimeInForce(v1types.IndexerOrder_TimeInForce_value[name]),
 		}
 	}
 	for name, tc := range tests {
@@ -276,17 +277,17 @@ func TestOrderConditionTypeToIndexerOrderConditionType(t *testing.T) {
 		conditionType clobtypes.Order_ConditionType
 
 		// Expectations
-		expectedConditionType v1.IndexerOrder_ConditionType
+		expectedConditionType v1types.IndexerOrder_ConditionType
 	}{}
 	// Iterate through all the values for Order_ConditionType to create test cases.
 	for name, value := range clobtypes.Order_ConditionType_value {
 		testName := fmt.Sprintf("Converts Order_ConditionType %s to IndexerOrderV1_ConditionType", name)
 		tests[testName] = struct {
 			conditionType         clobtypes.Order_ConditionType
-			expectedConditionType v1.IndexerOrder_ConditionType
+			expectedConditionType v1types.IndexerOrder_ConditionType
 		}{
 			conditionType:         clobtypes.Order_ConditionType(value),
-			expectedConditionType: v1.IndexerOrder_ConditionType(v1.IndexerOrder_ConditionType_value[name]),
+			expectedConditionType: v1types.IndexerOrder_ConditionType(v1types.IndexerOrder_ConditionType_value[name]),
 		}
 	}
 	for name, tc := range tests {
@@ -309,13 +310,13 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 		order clobtypes.Order
 
 		// Expectations
-		expectedOrder v1.IndexerOrder
+		expectedOrder v1types.IndexerOrder
 	}{
 		"Maps short term order to IndexerOrderV1": {
 			order: shortTermOrder,
-			expectedOrder: v1.IndexerOrder{
-				OrderId: v1.IndexerOrderId{
-					SubaccountId: v1.IndexerSubaccountId{
+			expectedOrder: v1types.IndexerOrder{
+				OrderId: v1types.IndexerOrderId{
+					SubaccountId: v1types.IndexerSubaccountId{
 						Owner:  shortTermOrder.OrderId.SubaccountId.Owner,
 						Number: shortTermOrder.OrderId.SubaccountId.Number,
 					},
@@ -326,7 +327,7 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 				Side:     v1.OrderSideToIndexerOrderSide(shortTermOrder.Side),
 				Quantums: shortTermOrder.Quantums,
 				Subticks: shortTermOrder.Subticks,
-				GoodTilOneof: &v1.IndexerOrder_GoodTilBlock{
+				GoodTilOneof: &v1types.IndexerOrder_GoodTilBlock{
 					GoodTilBlock: shortTermOrder.GoodTilOneof.(*clobtypes.Order_GoodTilBlock).GoodTilBlock,
 				},
 				TimeInForce:                     v1.OrderTimeInForceToIndexerOrderTimeInForce(shortTermOrder.TimeInForce),
@@ -338,9 +339,9 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 		},
 		"Maps stateful order to IndexerOrderV1": {
 			order: statefulOrder,
-			expectedOrder: v1.IndexerOrder{
-				OrderId: v1.IndexerOrderId{
-					SubaccountId: v1.IndexerSubaccountId{
+			expectedOrder: v1types.IndexerOrder{
+				OrderId: v1types.IndexerOrderId{
+					SubaccountId: v1types.IndexerSubaccountId{
 						Owner:  statefulOrder.OrderId.SubaccountId.Owner,
 						Number: statefulOrder.OrderId.SubaccountId.Number,
 					},
@@ -351,7 +352,7 @@ func TestOrderToIndexerOrderV1(t *testing.T) {
 				Side:     v1.OrderSideToIndexerOrderSide(statefulOrder.Side),
 				Quantums: statefulOrder.Quantums,
 				Subticks: statefulOrder.Subticks,
-				GoodTilOneof: &v1.IndexerOrder_GoodTilBlockTime{
+				GoodTilOneof: &v1types.IndexerOrder_GoodTilBlockTime{
 					GoodTilBlockTime: statefulOrder.GoodTilOneof.(*clobtypes.Order_GoodTilBlockTime).GoodTilBlockTime,
 				},
 				TimeInForce:                     v1.OrderTimeInForceToIndexerOrderTimeInForce(statefulOrder.TimeInForce),
@@ -385,7 +386,7 @@ func TestOrderToIndexerOrder_Panic(t *testing.T) {
 func TestConvertToClobPairStatus(t *testing.T) {
 	type convertToClobPairStatusTestCase struct {
 		status         clobtypes.ClobPair_Status
-		expectedStatus v1.ClobPairStatus
+		expectedStatus v1types.ClobPairStatus
 		expectedPanic  string
 	}
 
@@ -395,7 +396,7 @@ func TestConvertToClobPairStatus(t *testing.T) {
 		testName := fmt.Sprintf("Converts ClobPair_Status %s to v1.ClobPairStatus", name)
 		testCase := convertToClobPairStatusTestCase{
 			status:         clobtypes.ClobPair_Status(value),
-			expectedStatus: v1.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
+			expectedStatus: v1types.ClobPairStatus(clobtypes.ClobPair_Status_value[name]),
 		}
 		if value == int32(clobtypes.ClobPair_STATUS_UNSPECIFIED) {
 			testCase.expectedPanic = fmt.Sprintf(

@@ -14,7 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
