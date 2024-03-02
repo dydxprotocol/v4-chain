@@ -12,7 +12,7 @@ type GrpcStreamingManager interface {
 		req clobtypes.StreamOrderbookUpdatesRequest,
 		srv clobtypes.Query_StreamOrderbookUpdatesServer,
 	) (
-		finished chan<- bool,
+		finished chan bool,
 		err error,
 	)
 	SendOrderbookUpdates(*clobtypes.OffchainUpdates)

@@ -21,7 +21,7 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 	req clobtypes.StreamOrderbookUpdatesRequest,
 	srv clobtypes.Query_StreamOrderbookUpdatesServer,
 ) (
-	finished chan<- bool,
+	finished chan bool,
 	err error,
 ) {
 	return nil, nil
