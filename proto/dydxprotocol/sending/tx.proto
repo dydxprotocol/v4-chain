@@ -24,7 +24,11 @@ service Msg {
 }
 
 // MsgCreateTransfer is a request type used for initiating new transfers.
-message MsgCreateTransfer { Transfer transfer = 1; }
+message MsgCreateTransfer {
+  option (cosmos.msg.v1.signer) = "transfer";
+
+  Transfer transfer = 1;
+}
 
 // MsgCreateTransferResponse is a response type used for new transfers.
 message MsgCreateTransferResponse {}
