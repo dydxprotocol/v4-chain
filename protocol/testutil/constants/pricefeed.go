@@ -13,6 +13,7 @@ var (
 	MarketId0 = uint32(0)
 	MarketId1 = uint32(1)
 	MarketId2 = uint32(2)
+	MarketId3 = uint32(3)
 
 	MarketId7  = uint32(7)
 	MarketId8  = uint32(8)

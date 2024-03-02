@@ -2,9 +2,10 @@ package client_test
 
 import (
 	"context"
-	"cosmossdk.io/log"
 	"errors"
 	"testing"
+
+	"cosmossdk.io/log"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
@@ -409,6 +410,7 @@ func TestGetAllMarketPrices(t *testing.T) {
 				response2 := &pricestypes.QueryAllMarketPricesResponse{
 					MarketPrices: []pricestypes.MarketPrice{
 						constants.TestMarketPrices[2],
+						constants.TestMarketPrices[3],
 					},
 				}
 				mck.On("AllMarketPrices", mock.Anything, req2).Return(response2, nil)

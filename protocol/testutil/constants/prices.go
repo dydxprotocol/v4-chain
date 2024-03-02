@@ -289,6 +289,7 @@ var (
 		types.NewMarketPriceUpdate(MarketId0, Price5),
 		types.NewMarketPriceUpdate(MarketId1, Price6),
 		types.NewMarketPriceUpdate(MarketId2, Price7),
+		types.NewMarketPriceUpdate(MarketId3, Price4),
 	}
 
 	// `MsgUpdateMarketPrices`.

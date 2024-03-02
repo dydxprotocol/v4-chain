@@ -19,7 +19,7 @@ import (
 
 var (
 	TEST_PERPETUAL_PARAMS = perptypes.PerpetualParams{
-		Id:                765,
+		Id:                0,
 		Ticker:            "BTC-ADV4TNT",
 		MarketId:          123,
 		AtomicResolution:  -8,

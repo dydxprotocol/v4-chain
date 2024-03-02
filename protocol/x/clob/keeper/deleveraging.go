@@ -6,6 +6,8 @@ import (
 	"math/big"
 	"time"
 
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
@@ -142,6 +144,21 @@ func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (ba
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
 		insuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
+func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		perptypes.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 

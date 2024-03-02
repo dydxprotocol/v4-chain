@@ -31,6 +31,9 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
+// GetInsuranceFundName returns the name of the insurance fund account for a given perpetual.
+// For isolated markets, the name is "insurance-fund:<perpetualId>".
+// For cross markets, the name is "insurance-fund".
 func (k Keeper) GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error) {
 	perpetual, err := k.GetPerpetual(ctx, perpetualId)
 	if err != nil {
@@ -46,6 +49,7 @@ func (k Keeper) GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (strin
 	panic(fmt.Sprintf("invalid market type %v for perpetual %d", perpetual.Params.MarketType, perpetualId))
 }
 
+// GetInsuranceFundModuleAddress returns the address of the insurance fund account for a given perpetual.
 func (k Keeper) GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error) {
 	insuranceFundName, err := k.GetInsuranceFundName(ctx, perpetualId)
 	if err != nil {

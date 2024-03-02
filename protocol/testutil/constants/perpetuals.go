@@ -313,6 +313,57 @@ var (
 	}
 )
 
+var TestMarketPerpetuals = []perptypes.Perpetual{
+	{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-10),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(0),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+	},
+	{
+		Params: perptypes.PerpetualParams{
+			Id:                1,
+			Ticker:            "ETH-USD",
+			MarketId:          uint32(1),
+			AtomicResolution:  int32(-9),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(0),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+	},
+	{
+		Params: perptypes.PerpetualParams{
+			Id:                2,
+			Ticker:            "SOL-USD",
+			MarketId:          uint32(2),
+			AtomicResolution:  int32(-9),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+	},
+	{
+		Params: perptypes.PerpetualParams{
+			Id:                3,
+			Ticker:            "ISO-USD",
+			MarketId:          uint32(3),
+			AtomicResolution:  int32(-9),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+	},
+}
+
 // AddPremiumVotes messages.
 var (
 	TestAddPremiumVotesMsg = &perptypes.MsgAddPremiumVotes{
