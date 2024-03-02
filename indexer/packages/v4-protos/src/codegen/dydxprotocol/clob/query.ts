@@ -4,6 +4,7 @@ import { ClobPair, ClobPairSDKType } from "./clob_pair";
 import { EquityTierLimitConfiguration, EquityTierLimitConfigurationSDKType } from "./equity_tier_limit_config";
 import { BlockRateLimitConfiguration, BlockRateLimitConfigurationSDKType } from "./block_rate_limit_config";
 import { LiquidationsConfig, LiquidationsConfigSDKType } from "./liquidations_config";
+import { OffChainUpdateV1, OffChainUpdateV1SDKType } from "../indexer/off_chain_updates/off_chain_updates";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../helpers";
 /** QueryGetClobPairRequest is request type for the ClobPair method. */
@@ -197,6 +198,58 @@ export interface QueryLiquidationsConfigurationResponse {
 
 export interface QueryLiquidationsConfigurationResponseSDKType {
   liquidations_config?: LiquidationsConfigSDKType;
+}
+/**
+ * StreamOrderbookUpdatesRequest is a request message for the
+ * StreamOrderbookUpdates method.
+ */
+
+export interface StreamOrderbookUpdatesRequest {
+  /** Clob pair ids to stream orderbook updates for. */
+  clobPairId: number[];
+}
+/**
+ * StreamOrderbookUpdatesRequest is a request message for the
+ * StreamOrderbookUpdates method.
+ */
+
+export interface StreamOrderbookUpdatesRequestSDKType {
+  /** Clob pair ids to stream orderbook updates for. */
+  clob_pair_id: number[];
+}
+/**
+ * StreamOrderbookUpdatesResponse is a response message for the
+ * StreamOrderbookUpdates method.
+ */
+
+export interface StreamOrderbookUpdatesResponse {
+  /** Orderbook updates for the clob pair. */
+  updates: OffChainUpdateV1[];
+  /**
+   * Snapshot indicates if the response is from a snapshot of the orderbook.
+   * This is true for the initial response and false for all subsequent updates.
+   * Note that if the snapshot is true, then all previous entries should be
+   * discarded and the orderbook should be resynced.
+   */
+
+  snapshot: boolean;
+}
+/**
+ * StreamOrderbookUpdatesResponse is a response message for the
+ * StreamOrderbookUpdates method.
+ */
+
+export interface StreamOrderbookUpdatesResponseSDKType {
+  /** Orderbook updates for the clob pair. */
+  updates: OffChainUpdateV1SDKType[];
+  /**
+   * Snapshot indicates if the response is from a snapshot of the orderbook.
+   * This is true for the initial response and false for all subsequent updates.
+   * Note that if the snapshot is true, then all previous entries should be
+   * discarded and the orderbook should be resynced.
+   */
+
+  snapshot: boolean;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -786,6 +839,118 @@ export const QueryLiquidationsConfigurationResponse = {
   fromPartial(object: DeepPartial<QueryLiquidationsConfigurationResponse>): QueryLiquidationsConfigurationResponse {
     const message = createBaseQueryLiquidationsConfigurationResponse();
     message.liquidationsConfig = object.liquidationsConfig !== undefined && object.liquidationsConfig !== null ? LiquidationsConfig.fromPartial(object.liquidationsConfig) : undefined;
+    return message;
+  }
+
+};
+
+function createBaseStreamOrderbookUpdatesRequest(): StreamOrderbookUpdatesRequest {
+  return {
+    clobPairId: []
+  };
+}
+
+export const StreamOrderbookUpdatesRequest = {
+  encode(message: StreamOrderbookUpdatesRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    writer.uint32(10).fork();
+
+    for (const v of message.clobPairId) {
+      writer.uint32(v);
+    }
+
+    writer.ldelim();
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamOrderbookUpdatesRequest {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamOrderbookUpdatesRequest();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          if ((tag & 7) === 2) {
+            const end2 = reader.uint32() + reader.pos;
+
+            while (reader.pos < end2) {
+              message.clobPairId.push(reader.uint32());
+            }
+          } else {
+            message.clobPairId.push(reader.uint32());
+          }
+
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamOrderbookUpdatesRequest>): StreamOrderbookUpdatesRequest {
+    const message = createBaseStreamOrderbookUpdatesRequest();
+    message.clobPairId = object.clobPairId?.map(e => e) || [];
+    return message;
+  }
+
+};
+
+function createBaseStreamOrderbookUpdatesResponse(): StreamOrderbookUpdatesResponse {
+  return {
+    updates: [],
+    snapshot: false
+  };
+}
+
+export const StreamOrderbookUpdatesResponse = {
+  encode(message: StreamOrderbookUpdatesResponse, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    for (const v of message.updates) {
+      OffChainUpdateV1.encode(v!, writer.uint32(10).fork()).ldelim();
+    }
+
+    if (message.snapshot === true) {
+      writer.uint32(16).bool(message.snapshot);
+    }
+
+    return writer;
+  },
+
+  decode(input: _m0.Reader | Uint8Array, length?: number): StreamOrderbookUpdatesResponse {
+    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
+    let end = length === undefined ? reader.len : reader.pos + length;
+    const message = createBaseStreamOrderbookUpdatesResponse();
+
+    while (reader.pos < end) {
+      const tag = reader.uint32();
+
+      switch (tag >>> 3) {
+        case 1:
+          message.updates.push(OffChainUpdateV1.decode(reader, reader.uint32()));
+          break;
+
+        case 2:
+          message.snapshot = reader.bool();
+          break;
+
+        default:
+          reader.skipType(tag & 7);
+          break;
+      }
+    }
+
+    return message;
+  },
+
+  fromPartial(object: DeepPartial<StreamOrderbookUpdatesResponse>): StreamOrderbookUpdatesResponse {
+    const message = createBaseStreamOrderbookUpdatesResponse();
+    message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
+    message.snapshot = object.snapshot ?? false;
     return message;
   }
 

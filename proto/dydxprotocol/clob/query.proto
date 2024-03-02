@@ -9,6 +9,7 @@ import "dydxprotocol/clob/clob_pair.proto";
 import "dydxprotocol/clob/equity_tier_limit_config.proto";
 import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
+import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
@@ -50,6 +51,12 @@ service Query {
       returns (QueryLiquidationsConfigurationResponse) {
     option (google.api.http).get = "/dydxprotocol/clob/liquidations_config";
   }
+
+  // GRPC Streams
+
+  // Streams orderbook updates.
+  rpc StreamOrderbookUpdates(StreamOrderbookUpdatesRequest)
+      returns (stream StreamOrderbookUpdatesResponse);
 }
 
 // QueryGetClobPairRequest is request type for the ClobPair method.
@@ -125,4 +132,25 @@ message QueryLiquidationsConfigurationRequest {}
 // the LiquidationsConfiguration.
 message QueryLiquidationsConfigurationResponse {
   LiquidationsConfig liquidations_config = 1 [ (gogoproto.nullable) = false ];
+}
+
+// StreamOrderbookUpdatesRequest is a request message for the
+// StreamOrderbookUpdates method.
+message StreamOrderbookUpdatesRequest {
+  // Clob pair ids to stream orderbook updates for.
+  repeated uint32 clob_pair_id = 1;
+}
+
+// StreamOrderbookUpdatesResponse is a response message for the
+// StreamOrderbookUpdates method.
+message StreamOrderbookUpdatesResponse {
+  // Orderbook updates for the clob pair.
+  repeated dydxprotocol.indexer.off_chain_updates.OffChainUpdateV1 updates = 1
+      [ (gogoproto.nullable) = false ];
+
+  // Snapshot indicates if the response is from a snapshot of the orderbook.
+  // This is true for the initial response and false for all subsequent updates.
+  // Note that if the snapshot is true, then all previous entries should be
+  // discarded and the orderbook should be resynced.
+  bool snapshot = 2;
 }
