@@ -7,7 +7,6 @@ import (
 
 var _ types.GrpcStreamingManager = (*NoopGrpcStreamingManager)(nil)
 
-// GrpcStreamingManager is an implementation for managing gRPC streaming subscriptions.
 type NoopGrpcStreamingManager struct{}
 
 func NewNoopGrpcStreamingManager() *NoopGrpcStreamingManager {
@@ -28,9 +27,7 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 	return nil, nil
 }
 
-// SendMessages groups messages by their clob pair ids and
-// sends messages to the subscribers.
-func (sm *NoopGrpcStreamingManager) SendMessages(
-	msg *clobtypes.OffchainUpdateMessage,
+func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
+	updates *clobtypes.OffchainUpdates,
 ) {
 }

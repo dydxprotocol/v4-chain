@@ -7,7 +7,7 @@ import (
 
 var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)
 
-// GrpcStreamingManager is an implementation for managing gRPC streaming subscriptions.
+// GrpcStreamingManagerImpl is an implementation for managing gRPC streaming subscriptions.
 type GrpcStreamingManagerImpl struct {
 }
 
@@ -30,9 +30,9 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	return nil, nil
 }
 
-// SendMessages groups messages by their clob pair ids and
+// SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
-func (sm *GrpcStreamingManagerImpl) SendMessages(
-	msg *clobtypes.OffchainUpdateMessage,
+func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
+	updates *clobtypes.OffchainUpdates,
 ) {
 }

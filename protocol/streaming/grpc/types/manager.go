@@ -15,5 +15,5 @@ type GrpcStreamingManager interface {
 		finished chan<- bool,
 		err error,
 	)
-	SendMessages(*clobtypes.OffchainUpdateMessage)
+	SendOrderbookUpdates(*clobtypes.OffchainUpdates)
 }
