@@ -46,9 +46,16 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	finished chan bool,
 	err error,
 ) {
+	clobPairIds := req.GetClobPairId()
+
+	// Perform some basic validation on the request.
+	if len(clobPairIds) == 0 {
+		return nil, clobtypes.ErrInvalidGrpcStreamingRequest
+	}
+
 	finished = make(chan bool)
 	subscription := &OrderbookSubscription{
-		clobPairIds: req.GetClobPairId(),
+		clobPairIds: clobPairIds,
 		srv:         srv,
 		finished:    finished,
 	}
@@ -80,7 +87,11 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	// Unmarshal messages to v1 updates.
 	v1updates := make(map[uint32][]ocutypes.OffChainUpdateV1)
 	for clobPairId, update := range updates {
-		v1updates[clobPairId] = GetOffchainUpdatesV1(update)
+		v1update, err := GetOffchainUpdatesV1(update)
+		if err != nil {
+			panic(err)
+		}
+		v1updates[clobPairId] = v1update
 	}
 
 	sm.Lock()
@@ -112,12 +123,15 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 }
 
 // GetOffchainUpdatesV1 unmarshals messages in offchain updates to OffchainUpdateV1.
-func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) []ocutypes.OffChainUpdateV1 {
+func GetOffchainUpdatesV1(offchainUpdates *clobtypes.OffchainUpdates) ([]ocutypes.OffChainUpdateV1, error) {
 	v1updates := make([]ocutypes.OffChainUpdateV1, 0)
 	for _, message := range offchainUpdates.Messages {
 		var update ocutypes.OffChainUpdateV1
-		proto.Unmarshal(message.Message.Value, &update)
+		err := proto.Unmarshal(message.Message.Value, &update)
+		if err != nil {
+			return nil, err
+		}
 		v1updates = append(v1updates, update)
 	}
-	return v1updates
+	return v1updates, nil
 }

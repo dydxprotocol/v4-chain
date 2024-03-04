@@ -524,4 +524,9 @@ var (
 		11000,
 		"GrpcStreamingManager is not enabled",
 	)
+	ErrInvalidGrpcStreamingRequest = errorsmod.Register(
+		ModuleName,
+		11001,
+		"Invalid gRPC streaming request",
+	)
 )

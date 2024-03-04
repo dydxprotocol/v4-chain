@@ -8,12 +8,7 @@ func (k Keeper) StreamOrderbookUpdates(
 	req *types.StreamOrderbookUpdatesRequest,
 	stream types.Query_StreamOrderbookUpdatesServer,
 ) error {
-	grpcStreamingManager := k.GetGrpcStreamingManager()
-	if !grpcStreamingManager.Enabled() {
-		return types.ErrGrpcStreamingManagerNotEnabled
-	}
-
-	finished, err := grpcStreamingManager.Subscribe(*req, stream)
+	finished, err := k.GetGrpcStreamingManager().Subscribe(*req, stream)
 	if err != nil {
 		return err
 	}
