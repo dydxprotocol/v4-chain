@@ -1,6 +1,8 @@
 package ante
 
 import (
+	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cometbftlog "github.com/cometbft/cometbft/libs/log"
@@ -44,6 +46,7 @@ func (cd ClobDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
+	fmt.Println("clob ante handler")
 	// No need to process during `DeliverTx` or simulation, call next `AnteHandler`.
 	if lib.IsDeliverTxMode(ctx) || simulate {
 		return next(ctx, tx, simulate)
