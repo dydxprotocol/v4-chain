@@ -518,4 +518,10 @@ var (
 		10001,
 		"Subaccount cannot open more orders due to equity tier limit.",
 	)
+
+	ErrGrpcStreamingManagerNotEnabled = errorsmod.Register(
+		ModuleName,
+		11000,
+		"GrpcStreamingManager is not enabled",
+	)
 )

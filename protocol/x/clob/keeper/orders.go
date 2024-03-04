@@ -1241,6 +1241,8 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
+
+	k.GetGrpcStreamingManager().SendOrderbookUpdates(offchainUpdates)
 }
 
 // getFillQuoteQuantums returns the total fillAmount price in quote quantums based on the maker subticks.
