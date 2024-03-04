@@ -24,7 +24,6 @@ type GrpcStreamingManagerImpl struct {
 type OrderbookSubscription struct {
 	clobPairIds []uint32
 	srv         clobtypes.Query_StreamOrderbookUpdatesServer
-	finished    chan bool
 }
 
 func NewGrpcStreamingManager() *GrpcStreamingManagerImpl {
@@ -43,21 +42,18 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	req clobtypes.StreamOrderbookUpdatesRequest,
 	srv clobtypes.Query_StreamOrderbookUpdatesServer,
 ) (
-	finished chan bool,
 	err error,
 ) {
 	clobPairIds := req.GetClobPairId()
 
 	// Perform some basic validation on the request.
 	if len(clobPairIds) == 0 {
-		return nil, clobtypes.ErrInvalidGrpcStreamingRequest
+		return clobtypes.ErrInvalidGrpcStreamingRequest
 	}
 
-	finished = make(chan bool)
 	subscription := &OrderbookSubscription{
 		clobPairIds: clobPairIds,
 		srv:         srv,
-		finished:    finished,
 	}
 
 	sm.Lock()
@@ -66,7 +62,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	sm.orderbookSubscriptions[sm.nextId] = subscription
 	sm.nextId++
 
-	return finished, nil
+	return nil
 }
 
 // SendOrderbookUpdates groups updates by their clob pair ids and
@@ -117,7 +113,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 
 	// Clean up subscriptions that have been closed.
 	for _, id := range idsToRemove {
-		sm.orderbookSubscriptions[id].finished <- true
 		delete(sm.orderbookSubscriptions, id)
 	}
 }
