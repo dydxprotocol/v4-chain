@@ -130,7 +130,8 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	return quantumsDeleveraged, err
 }
 
-// GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
+// GetInsuranceFundBalance returns the current balance of the specific insurance fund based on the
+// perpetual (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
 func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)

@@ -731,6 +731,15 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedInsuranceFundBalance:        300,
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
+		"failure - isolated market insurance fund does not have sufficient funds": {
+			perpetual:                           constants.IsoUsd_IsolatedMarket,
+			insuranceFundBalance:                300,
+			subaccountModuleAccBalance:          2500,
+			quantums:                            big.NewInt(-500),
+			expectedSubaccountsModuleAccBalance: 2500,
+			expectedInsuranceFundBalance:        300,
+			expectedErr:                         sdkerrors.ErrInsufficientFunds,
+		},
 		"panics - asset doesn't exist": {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                1500,
