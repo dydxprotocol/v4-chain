@@ -7,6 +7,8 @@ import (
 	"math/rand"
 	"time"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	storetypes "cosmossdk.io/store/types"
@@ -508,12 +510,32 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
 		if negativeTncSubaccountExists && currentBlock < lastBlockNegativeTncSubaccountSeen {
+			// TODO(CORE-650): TX simulations can run on historical blocks due to cosmos SDK bug.
+			// For now avoid panicking, error log, and fail the transfer / withdrawal TX.
+			if ctx.ExecMode() == sdk.ExecModeSimulate {
+				log.ErrorLog(
+					ctx,
+					fmt.Sprintf(
+						"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
+							"block a negative TNC subaccount was seen (%d) for TX simulation",
+						currentBlock,
+						lastBlockNegativeTncSubaccountSeen,
+					),
+				)
+				success = false
+				for i := range settledUpdates {
+					successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
+				}
+				return success, successPerUpdate, nil
+			}
+
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
-						"block a negative TNC subaccount was seen (%d)",
+						"block a negative TNC subaccount was seen (%d) for simulation on %s TX",
 					currentBlock,
 					lastBlockNegativeTncSubaccountSeen,
+					updateType.String(),
 				),
 			)
 		}
@@ -525,6 +547,26 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		)
 		chainOutageExists := downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
 		if chainOutageExists && currentBlock < downtimeInfo.BlockInfo.Height {
+			// TODO(CORE-650): TX simulations can run on historical blocks due to cosmos SDK bug.
+			// For now avoid panicking, error log, and fail the transfer / withdrawal TX.
+			if ctx.ExecMode() == sdk.ExecModeSimulate {
+				log.ErrorLog(
+					ctx,
+					fmt.Sprintf(
+						"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
+							"block a chain outage was seen (%d) for simulation on %s TX",
+						currentBlock,
+						downtimeInfo.BlockInfo.Height,
+						updateType.String(),
+					),
+				)
+				success = false
+				for i := range settledUpdates {
+					successPerUpdate[i] = types.WithdrawalsAndTransfersBlocked
+				}
+				return success, successPerUpdate, nil
+			}
+
 			panic(
 				fmt.Sprintf(
 					"internalCanUpdateSubaccounts: current block (%d) is less than the last "+
