@@ -8,6 +8,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 
 	"github.com/cometbft/cometbft/libs/log"
@@ -43,6 +44,7 @@ type (
 		statsKeeper         types.StatsKeeper
 		rewardsKeeper       types.RewardsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
+		streamingManager    streamingtypes.GrpcStreamingManager
 
 		memStoreInitialized *atomic.Bool
 
@@ -83,6 +85,7 @@ func NewKeeper(
 	statsKeeper types.StatsKeeper,
 	rewardsKeeper types.RewardsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
+	grpcStreamingManager streamingtypes.GrpcStreamingManager,
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
 	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
@@ -107,6 +110,7 @@ func NewKeeper(
 		statsKeeper:                  statsKeeper,
 		rewardsKeeper:                rewardsKeeper,
 		indexerEventManager:          indexerEventManager,
+		streamingManager:             grpcStreamingManager,
 		memStoreInitialized:          &atomic.Bool{},
 		txDecoder:                    txDecoder,
 		mevTelemetryConfig: MevTelemetryConfig{
@@ -134,6 +138,10 @@ func (k Keeper) HasAuthority(authority string) bool {
 
 func (k Keeper) GetIndexerEventManager() indexer_manager.IndexerEventManager {
 	return k.indexerEventManager
+}
+
+func (k Keeper) GetGrpcStreamingManager() streamingtypes.GrpcStreamingManager {
+	return k.streamingManager
 }
 
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {

@@ -3,20 +3,6 @@ package keeper
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
-	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	"github.com/stretchr/testify/require"
-
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-
 	db "github.com/cometbft/cometbft-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -24,10 +10,20 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
+	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
+	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
 	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	delaymsgmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
 	feetierskeeper "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
@@ -35,6 +31,7 @@ import (
 	statskeeper "github.com/dydxprotocol/v4-chain/protocol/x/stats/keeper"
 	subkeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/stretchr/testify/require"
 )
 
 type ClobKeepersTestContext struct {
@@ -214,6 +211,7 @@ func createClobKeeper(
 		statsKeeper,
 		rewardsKeeper,
 		indexerEventManager,
+		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
