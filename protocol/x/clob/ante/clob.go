@@ -140,7 +140,8 @@ func (cd ClobDecorator) AnteHandle(
 			return next(ctx, tx, simulate)
 		}
 
-		ctx = log.AddPersistentTagsToLogger(ctx,
+		ctx = log.AddPersistentTagsToLogger(
+			ctx,
 			log.Handler, log.MsgBatchCancel,
 		)
 
@@ -149,7 +150,9 @@ func (cd ClobDecorator) AnteHandle(
 			msg,
 		)
 
-		log.DebugLog(ctx, "Received new batch cancellation",
+		log.DebugLog(
+			ctx,
+			"Received new batch cancellation",
 			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
 			log.Error, err,
 		)
