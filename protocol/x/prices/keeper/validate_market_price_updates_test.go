@@ -1,8 +1,9 @@
 package keeper_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -372,7 +373,9 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId1, constants.MarketId2},
+			expectedMarketIds: []uint32{
+				constants.MarketId0, constants.MarketId1, constants.MarketId2, constants.MarketId3,
+			},
 		},
 		"Non-empty proposed updates, Empty local updates": {
 			msgUpdateMarketPrices: constants.ValidMarketPriceUpdates,
@@ -388,6 +391,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			msgUpdateMarketPrices: []*types.MsgUpdateMarketPrices_MarketPrice{
 				types.NewMarketPriceUpdate(constants.MarketId0, constants.Price5),
 				types.NewMarketPriceUpdate(constants.MarketId1, constants.Price6),
+				types.NewMarketPriceUpdate(constants.MarketId3, constants.Price7),
 			},
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
@@ -400,7 +404,7 @@ func TestGetMarketsMissingFromPriceUpdates(t *testing.T) {
 			indexPrices:         constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedIndexPrices: constants.AtTimeTSingleExchangeSmoothedPrices,
 			// The returned market ids must be sorted.
-			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2},
+			expectedMarketIds: []uint32{constants.MarketId0, constants.MarketId2, constants.MarketId3},
 		},
 	}
 	for name, tc := range tests {

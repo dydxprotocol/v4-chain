@@ -874,6 +874,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -949,6 +956,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -1074,6 +1088,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			} else {
 				bankKeeper.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bankKeeper.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -4598,7 +4619,7 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
