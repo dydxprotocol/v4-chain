@@ -29,7 +29,7 @@ const router = express.Router();
 const controllerName: string = 'sparklines-controller';
 
 @Route('sparklines')
-class FillsController extends Controller {
+class SparklinesController extends Controller {
   @Get('/')
   async get(
     @Query() timePeriod: SparklineTimePeriod,
@@ -77,7 +77,7 @@ router.get(
 
     const start: number = Date.now();
     try {
-      const controller: FillsController = new FillsController();
+      const controller: SparklinesController = new SparklinesController();
       const sparklineResponse: SparklineResponseObject = await controller.get(
         timePeriod,
       );
