@@ -1,8 +1,9 @@
 package module
 
 import (
-	"cosmossdk.io/x/tx/signing"
 	"fmt"
+
+	"cosmossdk.io/x/tx/signing"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -76,6 +77,9 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 			// https://github.com/cosmos/cosmos-sdk/issues/18722 is fixed, replace this with the cosmos.msg.v1.signing
 			// annotation on the protos.
 			CustomGetSigners: map[protoreflect.FullName]signing.GetSignersFunc{
+				"dydxprotocol.clob.MsgBatchCancel": getLegacyMsgSignerFn(
+					[]string{"subaccount_id", "owner"},
+				),
 				"dydxprotocol.clob.MsgCancelOrder": getLegacyMsgSignerFn(
 					[]string{"order_id", "subaccount_id", "owner"},
 				),

@@ -22,6 +22,10 @@ type ClobKeeper interface {
 		success bool,
 		successPerUpdate map[satypes.SubaccountId]satypes.UpdateResult,
 	)
+	BatchCancelShortTermOrder(
+		ctx sdk.Context,
+		msg *MsgBatchCancel,
+	) (success []uint32, failure []uint32, err error)
 	CancelShortTermOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(

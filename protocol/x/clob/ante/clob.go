@@ -130,6 +130,38 @@ func (cd ClobDecorator) AnteHandle(
 				log.Error, err,
 			)
 		}
+	case *types.MsgBatchCancel:
+		// MsgBatchCancel currently only processes short-term cancels right now.
+		// No need to process short term orders on `ReCheckTx`.
+		if ctx.IsReCheckTx() {
+			return next(ctx, tx, simulate)
+		}
+
+		ctx = log.AddPersistentTagsToLogger(
+			ctx,
+			log.Handler, log.MsgBatchCancel,
+		)
+
+		success, failures, err := cd.clobKeeper.BatchCancelShortTermOrder(
+			ctx,
+			msg,
+		)
+		// If there are no successful cancellations and no validation errors,
+		// return an error indicating no cancels have succeeded.
+		if len(success) == 0 && err == nil {
+			err = errorsmod.Wrapf(
+				types.ErrBatchCancelFailed,
+				"No successful cancellations. Failures: %+v",
+				failures,
+			)
+		}
+
+		log.DebugLog(
+			ctx,
+			"Received new batch cancellation",
+			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			log.Error, err,
+		)
 	}
 	if err != nil {
 		return ctx, err
@@ -139,15 +171,15 @@ func (cd ClobDecorator) AnteHandle(
 }
 
 // IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder`). If `msgs` consist of multiple clob messages,
-// or a mix of on-chain and clob messages, an error is returned.
+// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`). If `msgs` consist of multiple
+// clob messages, or a mix of on-chain and clob messages, an error is returned.
 func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 	msgs := tx.GetMsgs()
 	var hasMessage = false
 
 	for _, msg := range msgs {
 		switch msg.(type) {
-		case *types.MsgCancelOrder, *types.MsgPlaceOrder:
+		case *types.MsgCancelOrder, *types.MsgPlaceOrder, *types.MsgBatchCancel:
 			hasMessage = true
 		}
 
@@ -164,7 +196,7 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 	if numMsgs > 1 {
 		return false, errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
-			"a transaction containing MsgCancelOrder or MsgPlaceOrder may not contain more than one message",
+			"a transaction containing MsgCancelOrder or MsgPlaceOrder or MsgBatchCancel may not contain more than one message",
 		)
 	}
 
@@ -172,8 +204,8 @@ func IsSingleClobMsgTx(tx sdk.Tx) (bool, error) {
 }
 
 // IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
-// (`MsgPlaceOrder` or `MsgCancelOrder`) which references a Short-Term Order. If `msgs` consist of multiple
-// clob messages, or a mix of on-chain and clob messages, an error is returned.
+// (`MsgPlaceOrder` or `MsgCancelOrder` or `MsgBatchCancel`) which references a Short-Term Order.
+// If `msgs` consist of multiple clob messages, or a mix of on-chain and clob messages, an error is returned.
 func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	msgs := tx.GetMsgs()
 
@@ -192,6 +224,11 @@ func IsShortTermClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 				if msg.Order.OrderId.IsShortTermOrder() {
 					isShortTermOrder = true
 				}
+			}
+		case *types.MsgBatchCancel:
+			{
+				// MsgBatchCancel processes only short term orders for now.
+				isShortTermOrder = true
 			}
 		}
 

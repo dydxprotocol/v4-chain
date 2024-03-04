@@ -1,8 +1,9 @@
 package encoding
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 	"testing"
+
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
 
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
@@ -73,6 +74,7 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		&clobtypes.MsgProposedOperations{},
 		&clobtypes.MsgPlaceOrder{},
 		&clobtypes.MsgCancelOrder{},
+		&clobtypes.MsgBatchCancel{},
 
 		// Perpetuals.
 		&perpetualtypes.MsgAddPremiumVotes{},

@@ -167,7 +167,11 @@ export interface MsgBatchCancelSDKType {
 export interface OrderBatch {
   /** The Clob Pair ID all orders in this order batch belong to. */
   clobPairId: number;
-  /** List of client ids in this order batch. */
+  /**
+   * List of client ids in this order batch.
+   * Note that this is serialized as a uint32 instead of a fixed32 to
+   * avoid issues when decoding repeated packed fixed32.
+   */
 
   clientIds: number[];
 }
@@ -180,7 +184,11 @@ export interface OrderBatch {
 export interface OrderBatchSDKType {
   /** The Clob Pair ID all orders in this order batch belong to. */
   clob_pair_id: number;
-  /** List of client ids in this order batch. */
+  /**
+   * List of client ids in this order batch.
+   * Note that this is serialized as a uint32 instead of a fixed32 to
+   * avoid issues when decoding repeated packed fixed32.
+   */
 
   client_ids: number[];
 }
@@ -802,7 +810,7 @@ export const OrderBatch = {
     writer.uint32(18).fork();
 
     for (const v of message.clientIds) {
-      writer.fixed32(v);
+      writer.uint32(v);
     }
 
     writer.ldelim();
@@ -827,10 +835,10 @@ export const OrderBatch = {
             const end2 = reader.uint32() + reader.pos;
 
             while (reader.pos < end2) {
-              message.clientIds.push(reader.fixed32());
+              message.clientIds.push(reader.uint32());
             }
           } else {
-            message.clientIds.push(reader.fixed32());
+            message.clientIds.push(reader.uint32());
           }
 
           break;

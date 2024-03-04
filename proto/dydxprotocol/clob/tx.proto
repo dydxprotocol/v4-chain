@@ -123,7 +123,9 @@ message OrderBatch {
   // The Clob Pair ID all orders in this order batch belong to.
   uint32 clob_pair_id = 1;
   // List of client ids in this order batch.
-  repeated fixed32 client_ids = 2;
+  // Note that this is serialized as a uint32 instead of a fixed32 to
+  // avoid issues when decoding repeated packed fixed32.
+  repeated uint32 client_ids = 2;
 }
 
 // MsgBatchCancelResponse is a response type used for batch canceling orders.

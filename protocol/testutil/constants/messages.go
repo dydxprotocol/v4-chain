@@ -21,6 +21,9 @@ func init() {
 	_ = TestTxBuilder.SetMsgs(Msg_CancelOrder)
 	Msg_CancelOrder_TxBtyes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
+	_ = TestTxBuilder.SetMsgs(Msg_BatchCancel)
+	Msg_BatchCancel_TxBtyes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
+
 	_ = TestTxBuilder.SetMsgs(Msg_Send)
 	Msg_Send_TxBytes, _ = TestEncodingCfg.TxConfig.TxEncoder()(TestTxBuilder.GetTx())
 
@@ -53,6 +56,18 @@ var (
 		Order: Order_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB15,
 	}
 	Msg_PlaceOrder_TxBtyes []byte
+
+	Msg_BatchCancel = &clobtypes.MsgBatchCancel{
+		SubaccountId: Alice_Num0,
+		ShortTermCancels: []clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{0},
+			},
+		},
+		GoodTilBlock: 5,
+	}
+	Msg_BatchCancel_TxBtyes []byte
 
 	Msg_PlaceOrder_LongTerm = &clobtypes.MsgPlaceOrder{
 		Order: LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15,

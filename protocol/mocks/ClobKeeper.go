@@ -50,6 +50,41 @@ func (_m *ClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobPair
 	return r0, r1
 }
 
+// BatchCancelShortTermOrder provides a mock function with given fields: ctx, msg
+func (_m *ClobKeeper) BatchCancelShortTermOrder(ctx types.Context, msg *clobtypes.MsgBatchCancel) ([]uint32, []uint32, error) {
+	ret := _m.Called(ctx, msg)
+
+	var r0 []uint32
+	var r1 []uint32
+	var r2 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgBatchCancel) ([]uint32, []uint32, error)); ok {
+		return rf(ctx, msg)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgBatchCancel) []uint32); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]uint32)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, *clobtypes.MsgBatchCancel) []uint32); ok {
+		r1 = rf(ctx, msg)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]uint32)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(types.Context, *clobtypes.MsgBatchCancel) error); ok {
+		r2 = rf(ctx, msg)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // CancelShortTermOrder provides a mock function with given fields: ctx, msg
 func (_m *ClobKeeper) CancelShortTermOrder(ctx types.Context, msg *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, msg)
