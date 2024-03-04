@@ -4,12 +4,15 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
+
 	"github.com/cosmos/gogoproto/proto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -112,8 +115,8 @@ func CreateOrderUpdateMessage(
 func MustCreateOrderRemoveMessageWithReason(
 	ctx sdk.Context,
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
-	removalStatus OrderRemoveV1_OrderRemovalStatus,
+	reason sharedtypes.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
 	msg, ok := CreateOrderRemoveMessageWithReason(ctx, orderId, reason, removalStatus)
 	if !ok {
@@ -127,8 +130,8 @@ func MustCreateOrderRemoveMessageWithReason(
 func CreateOrderRemoveMessageWithReason(
 	ctx sdk.Context,
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
-	removalStatus OrderRemoveV1_OrderRemovalStatus,
+	reason sharedtypes.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	errMessage := "Error creating off-chain update message for removing order."
 
@@ -167,7 +170,7 @@ func MustCreateOrderRemoveMessage(
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemoveV1_OrderRemovalStatus,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) msgsender.Message {
 	msg, ok := CreateOrderRemoveMessage(ctx, orderId, orderStatus, orderError, removalStatus)
 	if !ok {
@@ -183,7 +186,7 @@ func CreateOrderRemoveMessage(
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemoveV1_OrderRemovalStatus,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) (message msgsender.Message, success bool) {
 	reason, err := shared.GetOrderRemovalReason(orderStatus, orderError)
 	if err != nil {
@@ -210,10 +213,10 @@ func CreateOrderRemoveMessageWithDefaultReason(
 	orderId clobtypes.OrderId,
 	orderStatus clobtypes.OrderStatus,
 	orderError error,
-	removalStatus OrderRemoveV1_OrderRemovalStatus,
-	defaultRemovalReason shared.OrderRemovalReason,
+	removalStatus ocutypes.OrderRemoveV1_OrderRemovalStatus,
+	defaultRemovalReason sharedtypes.OrderRemovalReason,
 ) (message msgsender.Message, success bool) {
-	if defaultRemovalReason == shared.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED {
+	if defaultRemovalReason == sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED {
 		panic(
 			fmt.Errorf(
 				"Invalid parameter: " +
@@ -243,12 +246,12 @@ func newOrderPlaceMessage(
 	order clobtypes.Order,
 ) ([]byte, error) {
 	indexerOrder := v1.OrderToIndexerOrder(order)
-	update := OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderPlace{
-			&OrderPlaceV1{
+	update := ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderPlace{
+			OrderPlace: &ocutypes.OrderPlaceV1{
 				Order: &indexerOrder,
 				// Protocol will always send best effort opened messages to indexer.
-				PlacementStatus: OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
+				PlacementStatus: ocutypes.OrderPlaceV1_ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
 			},
 		},
 	}
@@ -260,13 +263,13 @@ func newOrderPlaceMessage(
 // The `OrderRemove` struct is instantiated with the given orderId, reason and status parameters.
 func newOrderRemoveMessage(
 	orderId clobtypes.OrderId,
-	reason shared.OrderRemovalReason,
-	status OrderRemoveV1_OrderRemovalStatus,
+	reason sharedtypes.OrderRemovalReason,
+	status ocutypes.OrderRemoveV1_OrderRemovalStatus,
 ) ([]byte, error) {
 	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
-	update := OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderRemove{
-			&OrderRemoveV1{
+	update := ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderRemove{
+			OrderRemove: &ocutypes.OrderRemoveV1{
 				RemovedOrderId: &indexerOrderId,
 				Reason:         reason,
 				RemovalStatus:  status,
@@ -284,9 +287,9 @@ func newOrderUpdateMessage(
 	totalFilled satypes.BaseQuantums,
 ) ([]byte, error) {
 	indexerOrderId := v1.OrderIdToIndexerOrderId(orderId)
-	update := OffChainUpdateV1{
-		UpdateMessage: &OffChainUpdateV1_OrderUpdate{
-			&OrderUpdateV1{
+	update := ocutypes.OffChainUpdateV1{
+		UpdateMessage: &ocutypes.OffChainUpdateV1_OrderUpdate{
+			OrderUpdate: &ocutypes.OrderUpdateV1{
 				OrderId:             &indexerOrderId,
 				TotalFilledQuantums: totalFilled.ToUint64(),
 			},
