@@ -245,23 +245,23 @@ func (_m *PerpetualsKeeper) PerformStatefulPremiumVotesValidation(ctx types.Cont
 	return r0
 }
 
-// SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional
-func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, impactNotional uint64) (perpetualstypes.LiquidityTier, error) {
-	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
+// SetLiquidityTier provides a mock function with given fields: ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap
+func (_m *PerpetualsKeeper) SetLiquidityTier(ctx types.Context, id uint32, name string, initialMarginPpm uint32, maintenanceFractionPpm uint32, impactNotional uint64, openInterestLowerCap uint64, openInterestUpperCap uint64) (perpetualstypes.LiquidityTier, error) {
+	ret := _m.Called(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap)
 
 	var r0 perpetualstypes.LiquidityTier
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64) (perpetualstypes.LiquidityTier, error)); ok {
-		return rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64, uint64) (perpetualstypes.LiquidityTier, error)); ok {
+		return rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64) perpetualstypes.LiquidityTier); ok {
-		r0 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64, uint64) perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap)
 	} else {
 		r0 = ret.Get(0).(perpetualstypes.LiquidityTier)
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, uint32, uint64) error); ok {
-		r1 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, string, uint32, uint32, uint64, uint64, uint64) error); ok {
+		r1 = rf(ctx, id, name, initialMarginPpm, maintenanceFractionPpm, impactNotional, openInterestLowerCap, openInterestUpperCap)
 	} else {
 		r1 = ret.Error(1)
 	}

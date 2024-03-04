@@ -862,7 +862,9 @@
           "impact_notional": 10000000000,
           "initial_margin_ppm": 50000,
           "maintenance_fraction_ppm": 600000,
-          "name": "Large-Cap"
+          "name": "Large-Cap",
+          "open_interest_lower_cap": 0,
+          "open_interest_upper_cap": 0
         },
         {
           "base_position_notional": 250000000000,
@@ -870,7 +872,8 @@
           "impact_notional": 5000000000,
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
-          "name": "Mid-Cap"
+          "name": "Mid-Cap",
+          "open_interest_lower_cap": 50000000000000
         },
         {
           "base_position_notional": 100000000000,
@@ -878,7 +881,8 @@
           "impact_notional": 2500000000,
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
-          "name": "Long-Tail"
+          "name": "Long-Tail",
+          "open_interest_lower_cap": 20000000000000
         },
         {
           "base_position_notional": 1000000000,
@@ -886,7 +890,9 @@
           "impact_notional": 2500000000,
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
-          "name": "Safety"
+          "name": "Safety",
+          "open_interest_lower_cap": 0,
+          "open_interest_upper_cap": 0
         }
       ],
       "params": {
@@ -1816,7 +1822,7 @@
       ]
     }
   },
-  "app_version": "4.0.0-dev0-59-g5530ea29",
+  "app_version": "4.0.0-dev0-60-geb100ae0",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

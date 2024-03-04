@@ -282,7 +282,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "name":"Large-Cap",
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
-			  "impact_notional":10000000000
+			  "impact_notional":10000000000,
+			  "open_interest_lower_cap":25000000000000,
+			  "open_interest_upper_cap":50000000000000
 		   }
 		],
 		"params":{
@@ -314,7 +316,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				 "liquidity_tier":0,
 				 "market_type":"PERPETUAL_MARKET_TYPE_CROSS"
 			  },
-			  "funding_index":"0"
+			  "funding_index":"0",
+			  "open_interest":"0"
 		   }
 		],
 		"liquidity_tiers":[
@@ -324,7 +327,9 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 			  "initial_margin_ppm":50000,
 			  "maintenance_fraction_ppm":500000,
 			  "base_position_notional":"0",
-			  "impact_notional":"10000000000"
+			  "impact_notional":"10000000000",
+			  "open_interest_lower_cap":"25000000000000",
+			  "open_interest_upper_cap":"50000000000000"
 		   }
 		],
 		"params":{

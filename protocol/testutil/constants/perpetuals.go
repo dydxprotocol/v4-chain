@@ -391,6 +391,8 @@ var (
 				InitialMarginPpm:       200_000,
 				MaintenanceFractionPpm: 500_000,
 				ImpactNotional:         2_500_000_000,
+				OpenInterestLowerCap:   0,
+				OpenInterestUpperCap:   0,
 			},
 			{
 				Id:                     uint32(1),
@@ -398,6 +400,8 @@ var (
 				InitialMarginPpm:       300_000,
 				MaintenanceFractionPpm: 600_000,
 				ImpactNotional:         1_667_000_000,
+				OpenInterestLowerCap:   25_000_000_000_000,
+				OpenInterestUpperCap:   50_000_000_000_000,
 			},
 			{
 				Id:                     uint32(2),
@@ -405,6 +409,8 @@ var (
 				InitialMarginPpm:       400_000,
 				MaintenanceFractionPpm: 700_000,
 				ImpactNotional:         1_250_000_000,
+				OpenInterestLowerCap:   10_000_000_000_000,
+				OpenInterestUpperCap:   20_000_000_000_000,
 			},
 		},
 		Params: PerpetualsGenesisParams,
@@ -417,6 +423,7 @@ var (
 					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
+				OpenInterest: dtypes.ZeroInt(),
 			},
 			{
 				Params: perptypes.PerpetualParams{
@@ -426,6 +433,7 @@ var (
 					MarketType:    perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
 				},
 				FundingIndex: dtypes.ZeroInt(),
+				OpenInterest: dtypes.ZeroInt(),
 			},
 		},
 	}
