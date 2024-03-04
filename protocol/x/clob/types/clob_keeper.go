@@ -25,7 +25,7 @@ type ClobKeeper interface {
 	BatchCancelShortTermOrder(
 		ctx sdk.Context,
 		msg *MsgBatchCancel,
-	) error
+	) (success []uint32, failure []uint32, err error)
 	CancelShortTermOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CancelStatefulOrder(ctx sdk.Context, msg *MsgCancelOrder) error
 	CreatePerpetualClobPair(

@@ -52,12 +52,12 @@ func (k Keeper) GetOperations(ctx sdk.Context) *types.MsgProposedOperations {
 // This message is not atomic. It will optimistically call `CancelShortTermOrder` for every order in the batch.
 // If any of the orders error, the error will be silently logged. This msg will only error if:
 // - Stateful validation fails
-// - Every cancel in the batch fails.
+// This function will return two client id lists, one for successes and one for failures.
 // This method assumes the provided MsgBatchCancel has already passed ValidateBasic in CheckTx.
 func (k Keeper) BatchCancelShortTermOrder(
 	ctx sdk.Context,
 	msg *types.MsgBatchCancel,
-) error {
+) (success []uint32, failure []uint32, err error) {
 	lib.AssertCheckTxMode(ctx)
 	// Note that we add `+1` here to account for the fact that `ctx.BlockHeight()` is technically the
 	// previously mined block, not the next block that will be proposed. This is due to the fact that
@@ -67,12 +67,12 @@ func (k Keeper) BatchCancelShortTermOrder(
 	// Statefully validate the GTB and the clob pair ids.
 	goodTilBlock := msg.GetGoodTilBlock()
 	if err := k.validateGoodTilBlock(goodTilBlock, nextBlockHeight); err != nil {
-		return err
+		return success, failure, err
 	}
 	for _, batchOrder := range msg.GetShortTermCancels() {
 		clobPairId := batchOrder.GetClobPairId()
 		if _, found := k.GetClobPair(ctx, types.ClobPairId(clobPairId)); !found {
-			return errorsmod.Wrapf(
+			return success, failure, errorsmod.Wrapf(
 				types.ErrInvalidClobPairParameter,
 				"Invalid clob pair id %+v",
 				clobPairId,
@@ -80,7 +80,6 @@ func (k Keeper) BatchCancelShortTermOrder(
 		}
 	}
 	subaccountId := msg.GetSubaccountId()
-	oneCancelSucceeded := false
 	for _, batchOrder := range msg.GetShortTermCancels() {
 		clobPairId := batchOrder.GetClobPairId()
 		for _, clientId := range batchOrder.GetClientIds() {
@@ -102,25 +101,19 @@ func (k Keeper) BatchCancelShortTermOrder(
 			)
 
 			if err != nil {
+				failure = append(failure, clientId)
 				log.InfoLog(
 					ctx,
 					"Failed to cancel short term order.",
 					log.Error, err,
 				)
 			} else {
-				oneCancelSucceeded = true
+				success = append(failure, clientId)
 			}
 		}
 	}
-	if !oneCancelSucceeded {
-		log.ErrorLog(
-			ctx,
-			"All cancels in this batch have failed.",
-		)
-		return types.ErrBatchCancelAllFailed
-	}
 
-	return nil
+	return success, failure, nil
 }
 
 // CancelShortTermOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures

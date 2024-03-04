@@ -1,8 +1,6 @@
 package ante
 
 import (
-	"fmt"
-
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	cometbftlog "github.com/cometbft/cometbft/libs/log"
@@ -46,7 +44,6 @@ func (cd ClobDecorator) AnteHandle(
 	simulate bool,
 	next sdk.AnteHandler,
 ) (sdk.Context, error) {
-	fmt.Println("clob ante handler")
 	// No need to process during `DeliverTx` or simulation, call next `AnteHandler`.
 	if lib.IsDeliverTxMode(ctx) || simulate {
 		return next(ctx, tx, simulate)
@@ -145,10 +142,19 @@ func (cd ClobDecorator) AnteHandle(
 			log.Handler, log.MsgBatchCancel,
 		)
 
-		err := cd.clobKeeper.BatchCancelShortTermOrder(
+		success, failures, err := cd.clobKeeper.BatchCancelShortTermOrder(
 			ctx,
 			msg,
 		)
+		// If there are no successful cancellations and no validation errors,
+		// return an error indicating no cancels have succeeded.
+		if len(success) == 0 && err == nil {
+			err = errorsmod.Wrapf(
+				types.ErrBatchCancelFailed,
+				"No successful cancellations. Failures: %+v",
+				failures,
+			)
+		}
 
 		log.DebugLog(
 			ctx,

@@ -211,10 +211,10 @@ var (
 		45,
 		"Invalid batch cancel message",
 	)
-	ErrBatchCancelAllFailed = errorsmod.Register(
+	ErrBatchCancelFailed = errorsmod.Register(
 		ModuleName,
 		46,
-		"All order cancels in this batch have failed",
+		"Batch cancel has failed",
 	)
 
 	// Liquidations errors.
