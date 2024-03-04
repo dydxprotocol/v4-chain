@@ -20,6 +20,7 @@ type GrpcStreamingManagerImpl struct {
 	nextId                 uint32
 }
 
+// OrderbookSubscription represents a active subscription to the orderbook updates stream.
 type OrderbookSubscription struct {
 	clobPairIds []uint32
 	srv         clobtypes.Query_StreamOrderbookUpdatesServer
@@ -37,6 +38,7 @@ func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 }
 
 // Subscribe subscribes to the orderbook updates stream.
+// This function returns a channel that is used to signal termination when an error occurs.
 func (sm *GrpcStreamingManagerImpl) Subscribe(
 	req clobtypes.StreamOrderbookUpdatesRequest,
 	srv clobtypes.Query_StreamOrderbookUpdatesServer,
