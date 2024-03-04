@@ -1983,6 +1983,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			bankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			bankKeeper.On(
 				"GetBalance",
 				mock.Anything,
 				mock.Anything,
@@ -4620,6 +4627,13 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			mockBankKeeper := &mocks.BankKeeper{}
 			mockBankKeeper.On(
 				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			mockBankKeeper.On(
+				"SendCoinsFromModuleToModule",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,

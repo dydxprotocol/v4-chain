@@ -350,18 +350,7 @@ var TestMarketPerpetuals = []perptypes.Perpetual{
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	},
-	{
-		Params: perptypes.PerpetualParams{
-			Id:                3,
-			Ticker:            "ISO-USD",
-			MarketId:          uint32(3),
-			AtomicResolution:  int32(-9),
-			DefaultFundingPpm: int32(0),
-			LiquidityTier:     uint32(3),
-			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
-		},
-		FundingIndex: dtypes.ZeroInt(),
-	},
+	IsoUsd_IsolatedMarket,
 }
 
 // AddPremiumVotes messages.

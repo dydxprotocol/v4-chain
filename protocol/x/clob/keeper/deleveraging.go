@@ -155,7 +155,7 @@ func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (ba
 func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
-		panic("GetInsuranceFundBalance: Usdc asset not found in state")
+		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
 	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
