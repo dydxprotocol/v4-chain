@@ -129,7 +129,9 @@ func TestGetCollateralPool(t *testing.T) {
 					Quantums:    dtypes.NewInt(100_000_000),
 				},
 			},
-			expectedAddress: authtypes.NewModuleAddress(types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId())),
+			expectedAddress: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
+			),
 		},
 		"collateral pool with no positions": {
 			perpetualPositions: make([]*types.PerpetualPosition, 0),
@@ -171,7 +173,6 @@ func TestGetCollateralPool(t *testing.T) {
 			},
 		)
 	}
-
 }
 
 func TestSubaccountGet(t *testing.T) {
