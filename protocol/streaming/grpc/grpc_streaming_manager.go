@@ -17,7 +17,7 @@ type GrpcStreamingManagerImpl struct {
 
 	// orderbookSubscriptions maps subscription IDs to their respective orderbook subscriptions.
 	orderbookSubscriptions map[uint32]*OrderbookSubscription
-	nextId                 uint32
+	nextSubscriptionId     uint32
 }
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
@@ -59,8 +59,8 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	sm.Lock()
 	defer sm.Unlock()
 
-	sm.orderbookSubscriptions[sm.nextId] = subscription
-	sm.nextId++
+	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
+	sm.nextSubscriptionId++
 
 	return nil
 }
@@ -112,6 +112,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	}
 
 	// Clean up subscriptions that have been closed.
+	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
 	for _, id := range idsToRemove {
 		delete(sm.orderbookSubscriptions, id)
 	}
