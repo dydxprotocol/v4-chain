@@ -6,6 +6,9 @@ import (
 	"strconv"
 	"testing"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -96,6 +99,79 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 			expectedSubaccoundIdToFundingPayments[update.SubaccountId],
 		)
 		require.Contains(t, subaccountUpdates, expecetedSubaccountUpdateEvent)
+	}
+}
+
+func TestGetCollateralPool(t *testing.T) {
+	tests := map[string]struct {
+		// state
+		perpetuals         []perptypes.Perpetual
+		perpetualPositions []*types.PerpetualPosition
+
+		expectedAddress sdk.AccAddress
+	}{
+		"collateral pool with cross margin markets": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				&constants.PerpetualPosition_OneBTCLong,
+			},
+			expectedAddress: authtypes.NewModuleAddress(types.ModuleName),
+		},
+		"collateral pool with isolated margin markets": {
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: constants.IsoUsd_IsolatedMarket.GetId(),
+					Quantums:    dtypes.NewInt(100_000_000),
+				},
+			},
+			expectedAddress: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
+			),
+		},
+		"collateral pool with no positions": {
+			perpetualPositions: make([]*types.PerpetualPosition, 0),
+			expectedAddress:    authtypes.NewModuleAddress(types.ModuleName),
+		},
+	}
+	for name, tc := range tests {
+		t.Run(
+			name, func(t *testing.T) {
+				ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
+					t,
+					true,
+				)
+
+				testutil.CreateTestMarkets(t, ctx, pricesKeeper)
+				testutil.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+
+				require.NoError(t, testutil.CreateUsdcAsset(ctx, assetsKeeper))
+				for _, p := range tc.perpetuals {
+					_, err := perpetualsKeeper.CreatePerpetual(
+						ctx,
+						p.Params.Id,
+						p.Params.Ticker,
+						p.Params.MarketId,
+						p.Params.AtomicResolution,
+						p.Params.DefaultFundingPpm,
+						p.Params.LiquidityTier,
+						p.Params.MarketType,
+					)
+					require.NoError(t, err)
+				}
+
+				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+				subaccount.PerpetualPositions = tc.perpetualPositions
+				keeper.SetSubaccount(ctx, subaccount)
+				collateralPoolAddr, err := keeper.GetCollateralPoolForSubaccount(ctx, *subaccount.Id)
+				require.NoError(t, err)
+				require.Equal(t, tc.expectedAddress, collateralPoolAddr)
+			},
+		)
 	}
 }
 
