@@ -2,12 +2,13 @@ package keeper_test
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var (
@@ -57,6 +58,7 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 				constants.MarketId0: constants.Exchange0_Price4_TimeT.Price,
 				constants.MarketId1: constants.Exchange1_Price1_TimeT.Price + 7,
 				constants.MarketId2: constants.Exchange2_Price2_TimeT.Price + 35,
+				constants.MarketId3: constants.Exchange3_Price3_TimeT.Price,
 				constants.MarketId7: constants.Price1,
 			},
 			linearInterpolateFunc: lib.Uint64LinearInterpolate,
@@ -78,18 +80,21 @@ func TestUpdateSmoothedPrices(t *testing.T) {
 			linearInterpolateFunc: errInterpolator,
 			expectedErr: "Error updating smoothed price for market 0: error while interpolating\n" +
 				"Error updating smoothed price for market 1: error while interpolating\n" +
-				"Error updating smoothed price for market 2: error while interpolating",
+				"Error updating smoothed price for market 2: error while interpolating\n" +
+				"Error updating smoothed price for market 3: error while interpolating",
 			expectedResult: constants.AtTimeTSingleExchangeSmoothedPricesPlus10, // no change
 		},
 		"Single interpolation error - returns error, continues updating other markets": {
 			indexPrices:           constants.AtTimeTSingleExchangePriceUpdate,
 			smoothedPrices:        constants.AtTimeTSingleExchangeSmoothedPricesPlus10,
 			linearInterpolateFunc: alternatingErrInterpolator(),
-			expectedErr:           "Error updating smoothed price for market 1: error while interpolating",
+			expectedErr: "Error updating smoothed price for market 1: error while interpolating\n" +
+				"Error updating smoothed price for market 3: error while interpolating",
 			expectedResult: map[uint32]uint64{
 				constants.MarketId0: constants.AtTimeTSingleExchangeSmoothedPricesPlus7[constants.MarketId0],  // update
 				constants.MarketId1: constants.AtTimeTSingleExchangeSmoothedPricesPlus10[constants.MarketId1], // no change
 				constants.MarketId2: constants.AtTimeTSingleExchangeSmoothedPricesPlus7[constants.MarketId2],  // update
+				constants.MarketId3: constants.AtTimeTSingleExchangeSmoothedPricesPlus10[constants.MarketId3], // update
 			}, // no change
 		},
 	}

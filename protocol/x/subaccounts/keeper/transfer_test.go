@@ -662,6 +662,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		// Module account state.
 		subaccountModuleAccBalance int64
 		insuranceFundBalance       int64
+		perpetual                  perptypes.Perpetual
 
 		// Transfer details.
 		quantums *big.Int
@@ -673,6 +674,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		expectedInsuranceFundBalance        int64
 	}{
 		"success - send to insurance fund module account": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(500),
@@ -680,6 +682,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedInsuranceFundBalance:        3000, // 2500 + 500
 		},
 		"success - send from insurance fund module account": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(-500),
@@ -687,13 +690,31 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedInsuranceFundBalance:        2000, // 2500 - 500
 		},
 		"success - can send zero payment": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(0),
 			expectedSubaccountsModuleAccBalance: 600,
 			expectedInsuranceFundBalance:        2500,
 		},
+		"success - send to isolated insurance fund account": {
+			perpetual:                           constants.IsoUsd_IsolatedMarket,
+			insuranceFundBalance:                2500,
+			subaccountModuleAccBalance:          600,
+			quantums:                            big.NewInt(500),
+			expectedSubaccountsModuleAccBalance: 100,  // 600 - 500
+			expectedInsuranceFundBalance:        3000, // 2500 + 500
+		},
+		"success - send from isolated insurance fund account": {
+			perpetual:                           constants.IsoUsd_IsolatedMarket,
+			insuranceFundBalance:                2500,
+			subaccountModuleAccBalance:          600,
+			quantums:                            big.NewInt(-500),
+			expectedSubaccountsModuleAccBalance: 1100, // 600 + 500
+			expectedInsuranceFundBalance:        2000, // 2500 - 500
+		},
 		"failure - subaccounts module does not have sufficient funds": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          300,
 			quantums:                            big.NewInt(500),
@@ -702,6 +723,16 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"failure - insurance fund does not have sufficient funds": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
+			insuranceFundBalance:                300,
+			subaccountModuleAccBalance:          2500,
+			quantums:                            big.NewInt(-500),
+			expectedSubaccountsModuleAccBalance: 2500,
+			expectedInsuranceFundBalance:        300,
+			expectedErr:                         sdkerrors.ErrInsufficientFunds,
+		},
+		"failure - isolated market insurance fund does not have sufficient funds": {
+			perpetual:                           constants.IsoUsd_IsolatedMarket,
 			insuranceFundBalance:                300,
 			subaccountModuleAccBalance:          2500,
 			quantums:                            big.NewInt(-500),
@@ -710,6 +741,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"panics - asset doesn't exist": {
+			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                1500,
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
@@ -723,8 +755,12 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, _, accountKeeper, bankKeeper, assetsKeeper, _, _ := keepertest.SubaccountsKeepers(t, true)
+			ctx, keeper, pricesKeeper, perpsKeeper, accountKeeper, bankKeeper, assetsKeeper, _, _ :=
+				keepertest.SubaccountsKeepers(t, true)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpsKeeper)
 
 			// Set up Subaccounts module account.
 			auth_testutil.CreateTestModuleAccount(ctx, accountKeeper, types.ModuleName, []string{})
@@ -742,11 +778,26 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 				},
 			})
 
+			_, err := perpsKeeper.CreatePerpetual(
+				ctx,
+				tc.perpetual.GetId(),
+				tc.perpetual.Params.Ticker,
+				tc.perpetual.Params.MarketId,
+				tc.perpetual.Params.AtomicResolution,
+				tc.perpetual.Params.DefaultFundingPpm,
+				tc.perpetual.Params.LiquidityTier,
+				tc.perpetual.Params.MarketType,
+			)
+			require.NoError(t, err)
+
+			insuranceFundName, err := perpsKeeper.GetInsuranceFundName(ctx, tc.perpetual.GetId())
+			require.NoError(t, err)
+
 			// Mint asset in the receipt/sender module account for transfer.
 			if tc.insuranceFundBalance > 0 {
-				err := bank_testutil.FundModuleAccount(
+				err := bank_testutil.FundAccount(
 					ctx,
-					perptypes.InsuranceFundName,
+					authtypes.NewModuleAddress(insuranceFundName),
 					sdk.Coins{
 						sdk.NewInt64Coin(constants.Usdc.Denom, tc.insuranceFundBalance),
 					},
@@ -779,18 +830,18 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 						tc.expectedErr.Error(),
 						func() {
 							//nolint:errcheck
-							keeper.TransferInsuranceFundPayments(ctx, tc.quantums)
+							keeper.TransferInsuranceFundPayments(ctx, tc.quantums, tc.perpetual.GetId())
 						},
 					)
 				} else {
 					require.ErrorIs(
 						t,
-						keeper.TransferInsuranceFundPayments(ctx, tc.quantums),
+						keeper.TransferInsuranceFundPayments(ctx, tc.quantums, tc.perpetual.GetId()),
 						tc.expectedErr,
 					)
 				}
 			} else {
-				require.NoError(t, keeper.TransferInsuranceFundPayments(ctx, tc.quantums))
+				require.NoError(t, keeper.TransferInsuranceFundPayments(ctx, tc.quantums, tc.perpetual.GetId()))
 			}
 
 			// Check the subaccount module balance.
@@ -803,7 +854,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 
 			// Check the fee module account balance has been updated as expected.
 			toModuleBalance := bankKeeper.GetBalance(
-				ctx, authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+				ctx, authtypes.NewModuleAddress(insuranceFundName),
 				constants.Usdc.Denom,
 			)
 			require.Equal(t,

@@ -34,6 +34,8 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 		// Setup
 		assets               []assettypes.Asset
 		insuranceFundBalance *big.Int
+		perpetualId          uint32
+		perpetual            *perptypes.Perpetual
 
 		// Expectations.
 		expectedInsuranceFundBalance *big.Int
@@ -43,6 +45,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			assets: []assettypes.Asset{
 				*constants.Usdc,
 			},
+			perpetualId:                  0,
 			insuranceFundBalance:         new(big.Int),
 			expectedInsuranceFundBalance: big.NewInt(0),
 		},
@@ -50,6 +53,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			assets: []assettypes.Asset{
 				*constants.Usdc,
 			},
+			perpetualId:                  0,
 			insuranceFundBalance:         big.NewInt(100),
 			expectedInsuranceFundBalance: big.NewInt(100),
 		},
@@ -57,6 +61,7 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			assets: []assettypes.Asset{
 				*constants.Usdc,
 			},
+			perpetualId: 0,
 			insuranceFundBalance: new(big.Int).Add(
 				new(big.Int).SetUint64(math.MaxUint64),
 				new(big.Int).SetUint64(math.MaxUint64),
@@ -66,8 +71,25 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 				new(big.Int).SetUint64(math.MaxUint64),
 			),
 		},
+		"can get zero balance - isolated market": {
+			assets: []assettypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  3, // Isolated market.
+			insuranceFundBalance:         new(big.Int),
+			expectedInsuranceFundBalance: big.NewInt(0),
+		},
+		"can get positive balance - isolated market": {
+			assets: []assettypes.Asset{
+				*constants.Usdc,
+			},
+			perpetualId:                  3, // Isolated market.
+			insuranceFundBalance:         big.NewInt(100),
+			expectedInsuranceFundBalance: big.NewInt(100),
+		},
 		"panics when asset not found in state": {
 			assets:        []assettypes.Asset{},
+			perpetualId:   0,
 			expectedError: errors.New("GetInsuranceFundBalance: Usdc asset not found in state"),
 		},
 	}
@@ -78,6 +100,15 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			bankMock := &mocks.BankKeeper{}
 			ks := keepertest.NewClobKeepersTestContext(t, memClob, bankMock, &mocks.IndexerEventManager{})
+
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			// Create the default markets.
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			keepertest.CreateTestPerpetuals(t, ctx, ks.PerpetualsKeeper)
 
 			for _, a := range tc.assets {
 				_, err := ks.AssetsKeeper.CreateAsset(
@@ -93,11 +124,13 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			insuranceFundAddr, err := ks.PerpetualsKeeper.GetInsuranceFundModuleAddress(ks.Ctx, tc.perpetualId)
+			require.NoError(t, err)
 			if tc.insuranceFundBalance != nil {
 				bankMock.On(
 					"GetBalance",
 					mock.Anything,
-					perptypes.InsuranceFundModuleAddress,
+					insuranceFundAddr,
 					constants.Usdc.Denom,
 				).Return(
 					sdk.NewCoin(constants.Usdc.Denom, sdkmath.NewIntFromBigInt(tc.insuranceFundBalance)),
@@ -109,14 +142,14 @@ func TestGetInsuranceFundBalance(t *testing.T) {
 					t,
 					tc.expectedError.Error(),
 					func() {
-						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx)
+						ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId)
 					},
 				)
 			} else {
 				require.Equal(
 					t,
 					tc.expectedInsuranceFundBalance,
-					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx),
+					ks.ClobKeeper.GetInsuranceFundBalance(ks.Ctx, tc.perpetualId),
 				)
 			}
 		})
@@ -192,6 +225,14 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
+			ctx := ks.Ctx.WithIsCheckTx(true)
+			keepertest.CreateTestMarkets(t, ctx, ks.PricesKeeper)
+
+			// Create liquidity tiers.
+			keepertest.CreateTestLiquidityTiers(t, ctx, ks.PerpetualsKeeper)
+
+			keepertest.CreateTestPerpetuals(t, ctx, ks.PerpetualsKeeper)
+
 			bankMock.On(
 				"GetBalance",
 				mock.Anything,
@@ -203,10 +244,7 @@ func TestIsValidInsuranceFundDelta(t *testing.T) {
 			require.Equal(
 				t,
 				tc.expectedIsValidInsuranceFundDelta,
-				ks.ClobKeeper.IsValidInsuranceFundDelta(
-					ks.Ctx,
-					tc.insuranceFundDelta,
-				),
+				ks.ClobKeeper.IsValidInsuranceFundDelta(ks.Ctx, tc.insuranceFundDelta, 0),
 			)
 		})
 	}

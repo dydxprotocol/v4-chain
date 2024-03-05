@@ -3,8 +3,6 @@ package keeper
 import (
 	"math/big"
 
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -260,6 +258,7 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 func (k Keeper) TransferInsuranceFundPayments(
 	ctx sdk.Context,
 	insuranceFundDelta *big.Int,
+	perpetualId uint32,
 ) error {
 	if insuranceFundDelta.Sign() == 0 {
 		return nil
@@ -278,7 +277,10 @@ func (k Keeper) TransferInsuranceFundPayments(
 	// Determine the sender and receiver.
 	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
 	fromModule := types.ModuleName
-	toModule := perptypes.InsuranceFundName
+	toModule, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
+	if err != nil {
+		panic(err)
+	}
 
 	if insuranceFundDelta.Sign() < 0 {
 		// Insurance fund needs to cover losses from liquidations.
@@ -286,10 +288,12 @@ func (k Keeper) TransferInsuranceFundPayments(
 		fromModule, toModule = toModule, fromModule
 	}
 
-	return k.bankKeeper.SendCoinsFromModuleToModule(
+	// Use SendCoins API instead of SendCoinsFromModuleToModule since we don't need the
+	// module account features
+	return k.bankKeeper.SendCoins(
 		ctx,
-		fromModule,
-		toModule,
+		authtypes.NewModuleAddress(fromModule),
+		authtypes.NewModuleAddress(toModule),
 		[]sdk.Coin{coinToTransfer},
 	)
 }

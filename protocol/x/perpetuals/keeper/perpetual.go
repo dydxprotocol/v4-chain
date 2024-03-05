@@ -7,6 +7,8 @@ import (
 	"sort"
 	"time"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+
 	storetypes "cosmossdk.io/store/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
@@ -28,6 +30,33 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
+
+// GetInsuranceFundName returns the name of the insurance fund account for a given perpetual.
+// For isolated markets, the name is "insurance-fund:<perpetualId>".
+// For cross markets, the name is "insurance-fund".
+func (k Keeper) GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error) {
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return "", err
+	}
+
+	if perpetual.Params.MarketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return types.InsuranceFundName + ":" + lib.UintToString(perpetualId), nil
+	} else if perpetual.Params.MarketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS {
+		return types.InsuranceFundName, nil
+	}
+
+	panic(fmt.Sprintf("invalid market type %v for perpetual %d", perpetual.Params.MarketType, perpetualId))
+}
+
+// GetInsuranceFundModuleAddress returns the address of the insurance fund account for a given perpetual.
+func (k Keeper) GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error) {
+	insuranceFundName, err := k.GetInsuranceFundName(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+	return authtypes.NewModuleAddress(insuranceFundName), nil
+}
 
 // CreatePerpetual creates a new perpetual in the store.
 // Returns an error if any of the perpetual fields fail validation,

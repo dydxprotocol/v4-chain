@@ -13,6 +13,7 @@ var (
 	MarketId0 = uint32(0)
 	MarketId1 = uint32(1)
 	MarketId2 = uint32(2)
+	MarketId3 = uint32(3)
 
 	MarketId7  = uint32(7)
 	MarketId8  = uint32(8)
@@ -269,23 +270,32 @@ var (
 				Exchange2_Price2_TimeT,
 			},
 		},
+		{
+			MarketId: MarketId3,
+			ExchangePrices: []*api.ExchangePrice{
+				Exchange3_Price3_TimeT,
+			},
+		},
 	}
 	AtTimeTSingleExchangeSmoothedPrices = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price,
 		MarketId1: Exchange1_Price1_TimeT.Price,
 		MarketId2: Exchange2_Price2_TimeT.Price,
+		MarketId3: Exchange3_Price3_TimeT.Price,
 	}
 
 	AtTimeTSingleExchangeSmoothedPricesPlus10 = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price + 10,
 		MarketId1: Exchange1_Price1_TimeT.Price + 10,
 		MarketId2: Exchange2_Price2_TimeT.Price + 10,
+		MarketId3: Exchange3_Price3_TimeT.Price + 10,
 	}
 
 	AtTimeTSingleExchangeSmoothedPricesPlus7 = map[uint32]uint64{
 		MarketId0: Exchange0_Price4_TimeT.Price + 7,
 		MarketId1: Exchange1_Price1_TimeT.Price + 7,
 		MarketId2: Exchange2_Price2_TimeT.Price + 7,
+		MarketId3: Exchange3_Price3_TimeT.Price + 7,
 	}
 
 	MixedTimePriceUpdate = []*api.MarketPriceUpdate{

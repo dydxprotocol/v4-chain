@@ -167,6 +167,22 @@ func PopulateTestPremiumStore(
 	}
 }
 
+func CreateTestPerpetuals(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
+	for _, p := range constants.TestMarketPerpetuals {
+		_, err := k.CreatePerpetual(
+			ctx,
+			p.Params.Id,
+			p.Params.Ticker,
+			p.Params.MarketId,
+			p.Params.AtomicResolution,
+			p.Params.DefaultFundingPpm,
+			p.Params.LiquidityTier,
+			p.Params.MarketType,
+		)
+		require.NoError(t, err)
+	}
+}
+
 func CreateTestLiquidityTiers(t *testing.T, ctx sdk.Context, k *keeper.Keeper) {
 	for _, l := range constants.LiquidityTiers {
 		_, err := k.SetLiquidityTier(

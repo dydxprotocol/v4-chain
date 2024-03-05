@@ -6,7 +6,7 @@ import (
 	"math/big"
 	"time"
 
-	types2 "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -130,20 +130,36 @@ func (k Keeper) MaybeDeleverageSubaccount(
 	return quantumsDeleveraged, err
 }
 
-// GetInsuranceFundBalance returns the current balance of the insurance fund (in quote quantums).
+// GetInsuranceFundBalance returns the current balance of the specific insurance fund based on the
+// perpetual (in quote quantums).
 // This calls the Bank Keeper’s GetBalance() function for the Module Address of the insurance fund.
-func (k Keeper) GetInsuranceFundBalance(
-	ctx sdk.Context,
-) (
-	balance *big.Int,
-) {
+func (k Keeper) GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int) {
 	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
 	if !exists {
 		panic("GetInsuranceFundBalance: Usdc asset not found in state")
 	}
+	insuranceFundAddr, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
+	if err != nil {
+		return nil
+	}
 	insuranceFundBalance := k.bankKeeper.GetBalance(
 		ctx,
-		types2.InsuranceFundModuleAddress,
+		insuranceFundAddr,
+		usdcAsset.Denom,
+	)
+
+	// Return as big.Int.
+	return insuranceFundBalance.Amount.BigInt()
+}
+
+func (k Keeper) GetCrossInsuranceFundBalance(ctx sdk.Context) (balance *big.Int) {
+	usdcAsset, exists := k.assetsKeeper.GetAsset(ctx, assettypes.AssetUsdc.Id)
+	if !exists {
+		panic("GetCrossInsuranceFundBalance: Usdc asset not found in state")
+	}
+	insuranceFundBalance := k.bankKeeper.GetBalance(
+		ctx,
+		perptypes.InsuranceFundModuleAddress,
 		usdcAsset.Denom,
 	)
 
@@ -261,10 +277,7 @@ func (k Keeper) GateWithdrawalsIfNegativeTncSubaccountSeen(
 // fund delta. Specifically, this function returns true if either of the following are true:
 // - The `insuranceFundDelta` is non-negative.
 // - The insurance fund balance + `insuranceFundDelta` is greater-than-or-equal-to 0.
-func (k Keeper) IsValidInsuranceFundDelta(
-	ctx sdk.Context,
-	insuranceFundDelta *big.Int,
-) bool {
+func (k Keeper) IsValidInsuranceFundDelta(ctx sdk.Context, insuranceFundDelta *big.Int, perpetualId uint32) bool {
 	// Non-negative insurance fund deltas are valid.
 	if insuranceFundDelta.Sign() >= 0 {
 		return true
@@ -272,7 +285,7 @@ func (k Keeper) IsValidInsuranceFundDelta(
 
 	// The insurance fund delta is valid if the insurance fund balance is non-negative after adding
 	// the delta.
-	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx)
+	currentInsuranceFundBalance := k.GetInsuranceFundBalance(ctx, perpetualId)
 	return new(big.Int).Add(currentInsuranceFundBalance, insuranceFundDelta).Sign() >= 0
 }
 
