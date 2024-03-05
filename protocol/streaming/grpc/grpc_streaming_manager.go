@@ -37,7 +37,6 @@ func (sm *GrpcStreamingManagerImpl) Enabled() bool {
 }
 
 // Subscribe subscribes to the orderbook updates stream.
-// This function returns a channel that is used to signal termination when an error occurs.
 func (sm *GrpcStreamingManagerImpl) Subscribe(
 	req clobtypes.StreamOrderbookUpdatesRequest,
 	srv clobtypes.Query_StreamOrderbookUpdatesServer,
