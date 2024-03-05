@@ -66,7 +66,6 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	if err != nil {
 		return nil, err
 	}
-
 	return authtypes.NewModuleAddress(poolName), nil
 }
 
@@ -91,18 +90,11 @@ func (k Keeper) GetCollateralPoolNameForSubaccount(ctx sdk.Context, subaccountId
 
 // IsIsolatedMarketSubaccount returns whether a subaccount is isolated to a specific market.
 func (k Keeper) IsIsolatedMarketSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (bool, error) {
-	subaccount := k.GetSubaccount(ctx, subaccountId)
-	if len(subaccount.PerpetualPositions) == 0 {
-		return false, nil
-	}
-
-	// Get the first perpetual position and return whether it is an isolated market.
-	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, subaccount.PerpetualPositions[0].PerpetualId)
+	poolName, err := k.GetCollateralPoolNameForSubaccount(ctx, subaccountId)
 	if err != nil {
-		return false, err
+		panic(fmt.Sprintf("IsIsolatedMarketSubaccount: %v", err))
 	}
-
-	return perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED, nil
+	return poolName != types.ModuleName, nil
 }
 
 // GetSubaccount returns a subaccount from its index.
