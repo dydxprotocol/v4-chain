@@ -36,6 +36,11 @@ export enum ComplianceAction {
   CONNECT = 'CONNECT',
 }
 
+const complianceProgression: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
+  [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE,
+  [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
+};
+
 @Route('compliance')
 class ComplianceV2Controller extends Controller {
   private ipAddress: string;
@@ -216,16 +221,16 @@ router.post(
        * - if the request is from a restricted country:
        *  - if the action is ONBOARD, set the status to BLOCKED
        *  - if the action is CONNECT, set the status to FIRST_STRIKE
-       * - else if the request is not from a non-restricted country:
+       * - else if the request is from a non-restricted country:
        *  - set the status to COMPLIANT
        *
        * if the address is COMPLIANT:
-       * - the ONLY action should be CONNECT
+       * - the ONLY action should be CONNECT. ONBOARD is a no-op.
        * - if the request is from a restricted country:
        *  - set the status to FIRST_STRIKE
        *
        * if the address is FIRST_STRIKE:
-       * - the ONLY action should be CONNECT
+       * - the ONLY action should be CONNECT. ONBOARD is a no-op.
        * - if the request is from a restricted country:
        *  - set the status to CLOSE_ONLY
        */
@@ -277,11 +282,6 @@ router.post(
             isRestrictedCountryHeaders(req.headers as CountryHeaders) &&
             action === ComplianceAction.CONNECT
           ) {
-            const complianceProgression: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
-              [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE,
-              [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
-            };
-
             complianceStatusFromDatabase = await ComplianceStatusTable.update({
               address,
               status: complianceProgression[complianceStatus[0].status],

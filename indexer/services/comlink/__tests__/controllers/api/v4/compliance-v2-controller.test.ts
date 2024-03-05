@@ -10,7 +10,7 @@ import {
 import { getIpAddr } from '../../../../src/lib/utils';
 import { sendRequest } from '../../../helpers/helpers';
 import { RequestMethod } from '../../../../src/types';
-import { stats } from '@dydxprotocol-indexer/base';
+import { logger, stats } from '@dydxprotocol-indexer/base';
 import { redis } from '@dydxprotocol-indexer/redis';
 import { ratelimitRedis } from '../../../../src/caches/rate-limiters';
 import { ComplianceControllerHelper } from '../../../../src/controllers/api/v4/compliance-controller';
@@ -239,6 +239,15 @@ describe('ComplianceV2Controller', () => {
     let getGeoComplianceReasonSpy: jest.SpyInstance;
     let isRestrictedCountryHeadersSpy: jest.SpyInstance;
 
+    const body: any = {
+      address: testConstants.defaultAddress,
+      message: 'Test message',
+      action: ComplianceAction.ONBOARD,
+      signedMessage: sha256(Buffer.from('msg')),
+      pubkey: new Uint8Array([/* public key bytes */]),
+      timestamp: 1620000000,
+    };
+
     beforeEach(async () => {
       getGeoComplianceReasonSpy = getGeoComplianceReason as unknown as jest.Mock;
       isRestrictedCountryHeadersSpy = isRestrictedCountryHeaders as unknown as jest.Mock;
@@ -267,12 +276,8 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
         body: {
+          ...body,
           address: '0x123', // Non-dYdX address
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000,
         },
         expectedStatus: 400,
       });
@@ -283,11 +288,7 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
         body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
+          ...body,
           timestamp: 1619996600, // More than 30 seconds difference
         },
         expectedStatus: 400,
@@ -301,14 +302,7 @@ describe('ComplianceV2Controller', () => {
       await sendRequest({
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
-        body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000,
-        },
+        body,
         expectedStatus: 400,
       });
     });
@@ -319,14 +313,7 @@ describe('ComplianceV2Controller', () => {
       const response: any = await sendRequest({
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
-        body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
-        },
+        body,
       });
 
       expect(response.status).toEqual(200);
@@ -341,14 +328,7 @@ describe('ComplianceV2Controller', () => {
       const response: any = await sendRequest({
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
-        body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
-        },
+        body,
         expectedStatus: 200,
       });
 
@@ -373,12 +353,8 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
         body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
+          ...body,
           action: ComplianceAction.CONNECT,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
         },
         expectedStatus: 200,
       });
@@ -402,14 +378,7 @@ describe('ComplianceV2Controller', () => {
       const response: any = await sendRequest({
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
-        body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
-          action: ComplianceAction.ONBOARD, // Or CONNECT, should work the same
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
-        },
+        body,
         expectedStatus: 200,
       });
 
@@ -436,12 +405,8 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
         body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
+          ...body,
           action: ComplianceAction.CONNECT,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
         },
         expectedStatus: 200,
       });
@@ -454,6 +419,69 @@ describe('ComplianceV2Controller', () => {
         reason: ComplianceReason.US_GEO,
       }));
 
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
+      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+    });
+
+    it('should be a no-op for ONBOARD action with existing COMPLIANT status', async () => {
+      const loggerError = jest.spyOn(logger, 'error');
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body,
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.COMPLIANT,
+      }));
+
+      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'ComplianceV2Controller POST /geoblock',
+        message: 'Invalid action for current compliance status',
+      }));
+      expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
+    });
+
+    it('should be a no-op for ONBOARD action with existing FIRST_STRIKE status', async () => {
+      const loggerError = jest.spyOn(logger, 'error');
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+        reason: ComplianceReason.US_GEO,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body,
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+        reason: ComplianceReason.US_GEO,
+      }));
+
+      expect(loggerError).toHaveBeenCalledWith(expect.objectContaining({
+        at: 'ComplianceV2Controller POST /geoblock',
+        message: 'Invalid action for current compliance status',
+      }));
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
     });
@@ -472,12 +500,8 @@ describe('ComplianceV2Controller', () => {
         type: RequestMethod.POST,
         path: '/v4/compliance/geoblock',
         body: {
-          address: testConstants.defaultAddress,
-          message: 'Test message',
+          ...body,
           action: ComplianceAction.CONNECT,
-          signedMessage: sha256(Buffer.from('msg')),
-          pubkey: new Uint8Array([/* public key bytes */]),
-          timestamp: 1620000000, // Valid timestamp
         },
         expectedStatus: 200,
       });
