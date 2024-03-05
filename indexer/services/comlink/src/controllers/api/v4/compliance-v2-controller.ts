@@ -36,7 +36,7 @@ export enum ComplianceAction {
   CONNECT = 'CONNECT',
 }
 
-const complianceProgression: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
+const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
   [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE,
   [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
 };
@@ -284,7 +284,7 @@ router.post(
           ) {
             complianceStatusFromDatabase = await ComplianceStatusTable.update({
               address,
-              status: complianceProgression[complianceStatus[0].status],
+              status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
               updatedAt: DateTime.utc().toISO(),
             });
