@@ -1498,6 +1498,7 @@ const GenesisState = `{
       "port_id": "transfer"
     },
     "upgrade": {},
+    "vault": {},
     "vest": {
       "vest_entries": [
         {
