@@ -837,6 +837,13 @@ func TestRecordMevMetrics(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			mockBankKeeper.On(
 				"GetBalance",
 				mock.Anything,
 				perptypes.InsuranceFundModuleAddress,

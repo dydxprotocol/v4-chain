@@ -242,10 +242,10 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				mock.Anything,
 			).Return(nil)
 			mockBankKeeper.On(
-				"SendCoinsFromModuleToModule",
+				"SendCoins",
 				mock.Anything,
-				satypes.ModuleName,
-				perptypes.InsuranceFundName,
+				authtypes.NewModuleAddress(satypes.ModuleName),
+				authtypes.NewModuleAddress(perptypes.InsuranceFundName),
 				mock.Anything,
 			).Return(nil)
 			// Fee collector does not have any funds.
@@ -874,6 +874,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 					mock.Anything,
 				).Return(nil)
 				bk.On(
+					"SendCoins",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
 					"GetBalance",
 					mock.Anything,
 					mock.Anything,
@@ -949,6 +956,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bk.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -1074,6 +1088,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			} else {
 				bankKeeper.On(
 					"SendCoinsFromModuleToModule",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(nil)
+				bankKeeper.On(
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
 					mock.Anything,
@@ -1956,6 +1977,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			bankKeeper := &mocks.BankKeeper{}
 			bankKeeper.On(
 				"SendCoinsFromModuleToModule",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
+			bankKeeper.On(
+				"SendCoins",
 				mock.Anything,
 				mock.Anything,
 				mock.Anything,
@@ -4597,6 +4625,13 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
 			mockBankKeeper := &mocks.BankKeeper{}
+			mockBankKeeper.On(
+				"SendCoins",
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+				mock.Anything,
+			).Return(nil)
 			mockBankKeeper.On(
 				"SendCoinsFromModuleToModule",
 				mock.Anything,

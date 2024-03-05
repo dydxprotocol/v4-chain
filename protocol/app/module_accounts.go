@@ -39,7 +39,7 @@ var (
 		bridgemoduletypes.ModuleName: {authtypes.Minter},
 		// subaccounts module account holds tokens for all subaccounts.
 		satypes.ModuleName: nil,
-		// clob insurance fund account manages insurance fund for liquidations.
+		// insurance fund account manages insurance fund for liquidations.
 		perpetualsmoduletypes.InsuranceFundName: nil,
 		// rewards treasury account distribute funds trading accounts.
 		rewardsmoduletypes.TreasuryAccountName: nil,

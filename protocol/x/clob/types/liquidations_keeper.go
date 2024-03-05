@@ -51,11 +51,7 @@ type LiquidationsKeeper interface {
 		fillablePrice *big.Rat,
 		err error,
 	)
-	GetInsuranceFundBalance(
-		ctx sdk.Context,
-	) (
-		balance *big.Int,
-	)
+	GetInsuranceFundBalance(ctx sdk.Context, perpetualId uint32) (balance *big.Int)
 	GetLiquidationInsuranceFundDelta(
 		ctx sdk.Context,
 		subaccountId satypes.SubaccountId,
