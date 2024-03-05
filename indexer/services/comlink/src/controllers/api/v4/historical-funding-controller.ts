@@ -20,7 +20,6 @@ import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import { CheckEffectiveBeforeOrAtSchema, CheckLimitSchema, CheckTickerParamSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
@@ -80,7 +79,6 @@ class HistoricalFundingController extends Controller {
 
 router.get(
   '/:ticker',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ...CheckLimitSchema,
   ...CheckTickerParamSchema,
