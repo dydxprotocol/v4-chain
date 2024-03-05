@@ -8,7 +8,6 @@ import config from '../../../config';
 import { NotFoundError } from '../../../lib/errors';
 import { handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { rejectRestrictedCountries } from '../../../lib/restrict-countries';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { HeightResponse } from '../../../types';
 
@@ -33,7 +32,6 @@ class HeightController extends Controller {
 
 router.get(
   '/',
-  rejectRestrictedCountries,
   rateLimiterMiddleware(getReqRateLimiter),
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {

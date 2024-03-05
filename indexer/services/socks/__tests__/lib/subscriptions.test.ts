@@ -10,7 +10,6 @@ import { btcTicker, invalidChannel, invalidTicker } from '../constants';
 import { axiosRequest } from '../../src/lib/axios';
 import { AxiosSafeServerError, makeAxiosSafeServerError } from '@dydxprotocol-indexer/base';
 import { BlockedError } from '../../src/lib/errors';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 
 jest.mock('ws');
 jest.mock('../../src/helpers/wss');
@@ -58,8 +57,7 @@ describe('Subscriptions', () => {
     [Channel.V4_TRADES]: ['/v4/trades/perpetualMarket/.+'],
   };
   const initialMessage: Object = { a: 'b' };
-  const restrictedCountry: string = 'US';
-  const nonRestrictedCountry: string = 'AR';
+  const country: string = 'AR';
 
   beforeAll(async () => {
     await dbHelpers.migrate();
@@ -83,9 +81,6 @@ describe('Subscriptions', () => {
     axiosRequestMock = (axiosRequest as jest.Mock);
     axiosRequestMock.mockClear();
     axiosRequestMock.mockImplementation(() => (JSON.stringify(initialMessage)));
-    (isRestrictedCountry as jest.Mock).mockImplementation((country: string): boolean => {
-      return country === restrictedCountry;
-    });
   });
 
   describe('subscribe', () => {
@@ -106,7 +101,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        nonRestrictedCountry,
+        country,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -126,6 +121,9 @@ describe('Subscriptions', () => {
         for (const urlPattern of urlPatterns) {
           expect(axiosRequestMock).toHaveBeenCalledWith(expect.objectContaining({
             url: expect.stringMatching(RegExp(urlPattern)),
+            headers: {
+              'cf-ipcountry': country,
+            },
           }));
         }
       } else {
@@ -150,7 +148,6 @@ describe('Subscriptions', () => {
           initialMsgId,
           id,
           false,
-          nonRestrictedCountry,
         );
 
         expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -179,7 +176,6 @@ describe('Subscriptions', () => {
             initialMsgId,
             defaultId,
             false,
-            nonRestrictedCountry,
           );
         },
       ).rejects.toEqual(new Error(`Invalid channel: ${invalidChannel}`));
@@ -194,7 +190,6 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -217,7 +212,6 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -253,32 +247,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
-      );
-
-      expect(sendMessageMock).toHaveBeenCalledTimes(1);
-      expect(sendMessageMock).toHaveBeenCalledWith(
-        mockWs,
-        connectionId,
-        expect.objectContaining({
-          connection_id: connectionId,
-          type: 'error',
-          message: expectedError.message,
-        }));
-      expect(subscriptions.subscriptions[Channel.V4_ACCOUNTS]).toBeUndefined();
-      expect(subscriptions.subscriptionLists[connectionId]).toBeUndefined();
-    });
-
-    it('sends blocked error if subscribing to subaccount from restricted country', async () => {
-      const expectedError: BlockedError = new BlockedError();
-      await subscriptions.subscribe(
-        mockWs,
-        Channel.V4_ACCOUNTS,
-        connectionId,
-        initialMsgId,
-        mockSubaccountId,
-        false,
-        restrictedCountry,
+        country,
       );
 
       expect(sendMessageMock).toHaveBeenCalledTimes(1);
@@ -305,7 +274,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
+        country,
       );
 
       expect(sendMessageStringMock).toHaveBeenCalledTimes(1);
@@ -342,7 +311,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         id,
         false,
-        nonRestrictedCountry,
+        country,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -362,7 +331,7 @@ describe('Subscriptions', () => {
         initialMsgId,
         mockSubaccountId,
         false,
-        nonRestrictedCountry,
+        country,
       );
       subscriptions.unsubscribe(
         connectionId,
@@ -386,7 +355,6 @@ describe('Subscriptions', () => {
           initialMsgId,
           validIds[channel],
           false,
-          nonRestrictedCountry,
         );
       }));
 

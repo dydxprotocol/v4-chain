@@ -3,7 +3,6 @@ import {
   logger,
   stats,
 } from '@dydxprotocol-indexer/base';
-import { isRestrictedCountry } from '@dydxprotocol-indexer/compliance';
 import { CandleResolution, perpetualMarketRefresher } from '@dydxprotocol-indexer/postgres';
 import WebSocket from 'ws';
 
@@ -491,13 +490,6 @@ export class Subscriptions {
       throw new Error('Invalid undefined id');
     }
 
-    // TODO(IND-508): Change this to match technical spec for persistent geo-blocking. This may
-    // either have to replicate any blocking logic added on comlink, or re-direct to comlink to
-    // determine if subscribing to a specific subaccount is blocked.
-    if (country !== undefined && isRestrictedCountry(country)) {
-      throw new BlockedError();
-    }
-
     try {
       const {
         address,
@@ -518,6 +510,9 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/addresses/${address}/subaccountNumber/${subaccountNumber}`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
           transformResponse: (res) => res,
         }),
         // TODO(DEC-1462): Use the /active-orders endpoint once it's added.
@@ -525,6 +520,9 @@ export class Subscriptions {
           method: RequestMethod.GET,
           url: `${COMLINK_URL}/v4/orders?address=${address}&subaccountNumber=${subaccountNumber}&status=OPEN,UNTRIGGERED,BEST_EFFORT_OPENED`,
           timeout: config.INITIAL_GET_TIMEOUT_MS,
+          headers: {
+            'cf-ipcountry': country,
+          },
           transformResponse: (res) => res,
         }),
       ]);
@@ -597,6 +595,9 @@ export class Subscriptions {
       method: RequestMethod.GET,
       url: endpoint,
       timeout: config.INITIAL_GET_TIMEOUT_MS,
+      headers: {
+        'cf-ipcountry': country,
+      },
       transformResponse: (res) => res, // Disables JSON parsing
     });
   }
