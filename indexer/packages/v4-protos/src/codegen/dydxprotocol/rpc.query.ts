@@ -24,6 +24,7 @@ export const createRPCQueryClient = async ({
       sending: (await import("./sending/query.rpc.Query")).createRpcQueryExtension(client),
       stats: (await import("./stats/query.rpc.Query")).createRpcQueryExtension(client),
       subaccounts: (await import("./subaccounts/query.rpc.Query")).createRpcQueryExtension(client),
+      vault: (await import("./vault/query.rpc.Query")).createRpcQueryExtension(client),
       vest: (await import("./vest/query.rpc.Query")).createRpcQueryExtension(client)
     }
   };

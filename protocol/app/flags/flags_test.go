@@ -2,8 +2,9 @@ package flags_test
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/config"
 	"testing"
+
+	"github.com/cosmos/cosmos-sdk/server/config"
 
 	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -27,7 +28,11 @@ func TestAddFlagsToCommand(t *testing.T) {
 		},
 		fmt.Sprintf("Has %s flag", flags.DdTraceAgentPort): {
 			flagName: flags.DdTraceAgentPort,
-		}}
+		},
+		fmt.Sprintf("Has %s flag", flags.GrpcStreamingEnabled): {
+			flagName: flags.GrpcStreamingEnabled,
+		},
+	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -62,6 +67,22 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server"),
 		},
+		"failure - gRPC streaming enabled for validating nodes": {
+			flags: flags.Flags{
+				NonValidatingFullNode: false,
+				GrpcEnable:            true,
+				GrpcStreamingEnabled:  true,
+			},
+			expectedErr: fmt.Errorf("grpc-streaming-enabled can only be set to true for non-validating full nodes"),
+		},
+		"failure - gRPC streaming enabled with gRPC disabled": {
+			flags: flags.Flags{
+				NonValidatingFullNode: true,
+				GrpcEnable:            false,
+				GrpcStreamingEnabled:  true,
+			},
+			expectedErr: fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server"),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -86,6 +107,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 		expectedDdTraceAgentPort          uint16
 		expectedGrpcAddress               string
 		expectedGrpcEnable                bool
+		expectedGrpcStreamingEnable       bool
 	}{
 		"Sets to default if unset": {
 			expectedNonValidatingFullNodeFlag: false,
@@ -93,6 +115,7 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 			expectedDdTraceAgentPort:          8126,
 			expectedGrpcAddress:               "localhost:9090",
 			expectedGrpcEnable:                true,
+			expectedGrpcStreamingEnable:       false,
 		},
 		"Sets values from options": {
 			optsMap: map[string]any{
@@ -101,12 +124,14 @@ func TestGetFlagValuesFromOptions(t *testing.T) {
 				flags.DdTraceAgentPort:          uint16(777),
 				flags.GrpcEnable:                false,
 				flags.GrpcAddress:               "localhost:9091",
+				flags.GrpcStreamingEnabled:      "true",
 			},
 			expectedNonValidatingFullNodeFlag: true,
 			expectedDdAgentHost:               "agentHostTest",
 			expectedDdTraceAgentPort:          777,
 			expectedGrpcEnable:                false,
 			expectedGrpcAddress:               "localhost:9091",
+			expectedGrpcStreamingEnable:       true,
 		},
 	}
 
