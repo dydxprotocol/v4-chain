@@ -599,7 +599,7 @@ func New(
 		indexerFlags.SendOffchainData,
 	)
 
-	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, appOpts, logger)
+	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
 
 	timeProvider := &timelib.TimeProviderImpl{}
 
@@ -1608,9 +1608,11 @@ func getIndexerFromOptions(
 // options. This function will default to returning a no-op instance.
 func getGrpcStreamingManagerFromOptions(
 	appFlags flags.Flags,
-	appOpts servertypes.AppOptions,
 	logger log.Logger,
 ) (manager streamingtypes.GrpcStreamingManager) {
-	// TODO(CT-625): add command line flags for full node streaming.
-	return streaming.NewGrpcStreamingManager()
+	if appFlags.GrpcStreamingEnabled {
+		logger.Info("GRPC streaming is enabled")
+		return streaming.NewGrpcStreamingManager()
+	}
+	return streaming.NewNoopGrpcStreamingManager()
 }
