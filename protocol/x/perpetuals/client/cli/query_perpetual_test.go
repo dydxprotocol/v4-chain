@@ -156,7 +156,6 @@ func TestShowPerpetual(t *testing.T) {
 // FundingIndex field is ignored since it can vary depending on funding-tick epoch.
 // TODO(DEC-606): Improve end-to-end testing related to ticking epochs.
 func checkExpectedPerp(t *testing.T, expected types.Perpetual, received types.Perpetual) {
-
 	if diff := cmp.Diff(expected, received, serializableIntCmpOpts...); diff != "" {
 		t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
 	}
