@@ -885,7 +885,9 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
-	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
+	memClob := clobmodulememclob.NewMemClobPriceTimePriority(
+		app.IndexerEventManager.Enabled() || app.GrpcStreamingManager.Enabled(),
+	)
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
@@ -1610,8 +1612,5 @@ func getGrpcStreamingManagerFromOptions(
 	logger log.Logger,
 ) (manager streamingtypes.GrpcStreamingManager) {
 	// TODO(CT-625): add command line flags for full node streaming.
-	if appFlags.NonValidatingFullNode {
-		return streaming.NewGrpcStreamingManager()
-	}
-	return streaming.NewNoopGrpcStreamingManager()
+	return streaming.NewGrpcStreamingManager()
 }
