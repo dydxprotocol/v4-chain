@@ -173,6 +173,9 @@ import (
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
 	subaccountsmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
+	vaultmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
+	vaultmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	vestmodulekeeper "github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
 	vestmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
@@ -294,6 +297,8 @@ type App struct {
 	SendingKeeper sendingmodulekeeper.Keeper
 
 	EpochsKeeper epochsmodulekeeper.Keeper
+
+	VaultKeeper vaultmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	ModuleManager *module.Manager
@@ -397,6 +402,7 @@ func New(
 		delaymsgmoduletypes.StoreKey,
 		epochsmoduletypes.StoreKey,
 		govplusmoduletypes.StoreKey,
+		vaultmoduletypes.StoreKey,
 	)
 	keys[authtypes.StoreKey] = keys[authtypes.StoreKey].WithLocking()
 	tkeys := storetypes.NewTransientStoreKeys(
@@ -1034,6 +1040,16 @@ func New(
 	)
 	govPlusModule := govplusmodule.NewAppModule(appCodec, app.GovPlusKeeper)
 
+	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
+		appCodec,
+		keys[vaultmoduletypes.StoreKey],
+		[]string{
+			lib.GovModuleAddress.String(),
+			delaymsgmoduletypes.ModuleAddress.String(),
+		},
+	)
+	vaultModule := vaultmodule.NewAppModule(appCodec, app.VaultKeeper)
+
 	/****  Module Options ****/
 
 	// NOTE: we may consider parsing `appOpts` inside module constructors. For the moment
@@ -1101,6 +1117,7 @@ func New(
 		delayMsgModule,
 		epochsModule,
 		rateLimitModule,
+		vaultModule,
 	)
 
 	app.ModuleManager.SetOrderPreBlockers(
@@ -1145,6 +1162,7 @@ func New(
 		sendingmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		vaultmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
@@ -1184,6 +1202,7 @@ func New(
 		epochsmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		vaultmoduletypes.ModuleName,
 		authz.ModuleName,                // No-op.
 		blocktimemoduletypes.ModuleName, // Must be last
 	)
@@ -1227,6 +1246,7 @@ func New(
 		sendingmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		vaultmoduletypes.ModuleName,
 		authz.ModuleName,
 	)
 
@@ -1266,6 +1286,7 @@ func New(
 		sendingmoduletypes.ModuleName,
 		govplusmoduletypes.ModuleName,
 		delaymsgmoduletypes.ModuleName,
+		vaultmoduletypes.ModuleName,
 		authz.ModuleName,
 
 		// Auth must be migrated after staking.

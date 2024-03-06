@@ -47,6 +47,7 @@ import (
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/typ.v4/slices"
@@ -220,6 +221,7 @@ func TestModuleBasics(t *testing.T) {
 		delaymsgmodule.AppModuleBasic{},
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
+		vaultmodule.AppModuleBasic{},
 	)
 
 	app := testapp.DefaultTestApp(nil)
