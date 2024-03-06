@@ -873,7 +873,8 @@
           "initial_margin_ppm": 100000,
           "maintenance_fraction_ppm": 500000,
           "name": "Mid-Cap",
-          "open_interest_lower_cap": 50000000000000
+          "open_interest_lower_cap": 25000000000000,
+          "open_interest_upper_cap": 50000000000000
         },
         {
           "base_position_notional": 100000000000,
@@ -882,7 +883,8 @@
           "initial_margin_ppm": 200000,
           "maintenance_fraction_ppm": 500000,
           "name": "Long-Tail",
-          "open_interest_lower_cap": 20000000000000
+          "open_interest_lower_cap": 10000000000000,
+          "open_interest_upper_cap": 20000000000000
         },
         {
           "base_position_notional": 1000000000,
@@ -1822,7 +1824,7 @@
       ]
     }
   },
-  "app_version": "4.0.0-dev0-60-geb100ae0",
+  "app_version": "4.0.0-dev0-62-g95853be5",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {

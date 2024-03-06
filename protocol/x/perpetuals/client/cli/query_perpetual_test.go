@@ -24,6 +24,19 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
+var (
+	serializableIntCmpOpts = cmp.Options{
+		cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex"), // existing ignore option
+		cmp.FilterValues(
+			func(x, y dtypes.SerializableInt) bool {
+				// This will apply the custom comparer only to SerializableInt fields
+				return true // Apply this filter to all SerializableInt values
+			},
+			cmp.Comparer(func(x, y dtypes.SerializableInt) bool { return x.Cmp(y) == 0 }),
+		),
+	}
+)
+
 func networkWithLiquidityTierAndPerpetualObjects(
 	t *testing.T,
 	m int,
@@ -75,6 +88,7 @@ func networkWithLiquidityTierAndPerpetualObjects(
 				MarketType:    marketType,
 			},
 			FundingIndex: dtypes.ZeroInt(),
+			OpenInterest: dtypes.ZeroInt(),
 		}
 		nullify.Fill(&perpetual) //nolint:staticcheck
 		state.Perpetuals = append(state.Perpetuals, perpetual)
@@ -142,7 +156,8 @@ func TestShowPerpetual(t *testing.T) {
 // FundingIndex field is ignored since it can vary depending on funding-tick epoch.
 // TODO(DEC-606): Improve end-to-end testing related to ticking epochs.
 func checkExpectedPerp(t *testing.T, expected types.Perpetual, received types.Perpetual) {
-	if diff := cmp.Diff(expected, received, cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex")); diff != "" {
+
+	if diff := cmp.Diff(expected, received, serializableIntCmpOpts...); diff != "" {
 		t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
 	}
 }
@@ -215,12 +230,13 @@ func TestListPerpetual(t *testing.T) {
 		require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 		require.NoError(t, err)
 		require.Equal(t, len(objs), int(resp.Pagination.Total))
-		cmpOptions := []cmp.Option{
-			cmpopts.IgnoreFields(types.Perpetual{}, "FundingIndex"),
+		cmpOptions := append(
+			serializableIntCmpOpts,
 			cmpopts.SortSlices(func(x, y types.Perpetual) bool {
 				return x.Params.Id > y.Params.Id
 			}),
-		}
+		)
+
 		if diff := cmp.Diff(objs, resp.Perpetual, cmpOptions...); diff != "" {
 			t.Errorf("resp.Perpetual mismatch (-want +received):\n%s", diff)
 		}
