@@ -276,7 +276,6 @@ func (k Keeper) PlaceStatefulOrder(
 			)
 		}
 	}()
-
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.Order
 	order.OrderId.MustBeStatefulOrder()

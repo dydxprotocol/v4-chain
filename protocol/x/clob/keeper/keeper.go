@@ -210,3 +210,7 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
+
+func (k *Keeper) GetMemClob() types.MemClob {
+	return k.MemClob
+}

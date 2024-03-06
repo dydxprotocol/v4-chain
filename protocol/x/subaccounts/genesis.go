@@ -1,6 +1,9 @@
 package subaccounts
 
 import (
+	"fmt"
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
@@ -30,6 +33,18 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 			),
 		)
 	}
+
+	err := k.DepositFundsFromAccountToSubaccount(
+		ctx,
+		sdk.MustAccAddressFromBech32("dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"),
+		types.SubaccountId{
+			Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+			Number: 0,
+		},
+		0,
+		big.NewInt(1000000000000000000),
+	)
+	fmt.Println("deposit into bridge subaccount 0, err: ", err)
 }
 
 // ExportGenesis returns the subaccounts module's exported genesis.

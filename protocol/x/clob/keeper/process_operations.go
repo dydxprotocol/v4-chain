@@ -28,6 +28,7 @@ func (k Keeper) ProcessProposerOperations(
 	ctx sdk.Context,
 	rawOperations []types.OperationRaw,
 ) error {
+	fmt.Println("height", ctx.BlockHeight(), "process proposer operations, len(rawOperations):", len(rawOperations))
 	// This function should be only run in DeliverTx mode.
 	lib.AssertDeliverTxMode(ctx)
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), metrics.ProcessOperations)

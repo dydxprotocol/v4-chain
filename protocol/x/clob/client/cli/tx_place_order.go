@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -16,6 +18,7 @@ func CmdPlaceOrder() *cobra.Command {
 		Short: "Broadcast message place_order",
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			fmt.Println("in place order CLI")
 			argOwner := args[0]
 
 			argNumber, err := cast.ToUint32E(args[1])
@@ -77,6 +80,7 @@ func CmdPlaceOrder() *cobra.Command {
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+			fmt.Println("place order passed validate basic")
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
