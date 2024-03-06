@@ -72,7 +72,7 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 }
 
 // GetCollateralPoolForSubaccountWithPerpetuals returns the collateral pool address based on the
-// perpetual passes in as an argument.
+// perpetual passed in as an argument.
 func (k Keeper) GetCollateralPoolFromPerpetualId(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error) {
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
 	if err != nil {

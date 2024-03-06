@@ -37,6 +37,8 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		subaccountModuleAccBalance *big.Int
 		accAddressBalance          *big.Int
 
+		collateralPoolAddr sdk.AccAddress
+
 		// Transfer details.
 		quantums *big.Int
 
@@ -56,6 +58,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedQuoteBalance:                big.NewInt(0),    // 500 - 500
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 100
 			expectedAccAddressBalance:           big.NewInt(3000), // 500 + 2500
@@ -70,6 +73,9 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+			),
 			expectedQuoteBalance:                big.NewInt(0),    // 500 - 500
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 100
 			expectedAccAddressBalance:           big.NewInt(3000), // 500 + 2500
@@ -94,6 +100,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedQuoteBalance:                big.NewInt(10_000_001), // $1.0001, untransfered $0.0001 remains.
 			expectedSubaccountsModuleAccBalance: big.NewInt(8_000_000),  // $8
 			expectedAccAddressBalance:           big.NewInt(4_500_000),  // $2.5 + $2
@@ -108,6 +115,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedQuoteBalance:                big.NewInt(650),  // 150 + 500
 			expectedSubaccountsModuleAccBalance: big.NewInt(700),  // 200 + 500
 			expectedAccAddressBalance:           big.NewInt(1500), // 2000 - 500
@@ -122,6 +130,9 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+			),
 			expectedQuoteBalance:                big.NewInt(650),  // 150 + 500
 			expectedSubaccountsModuleAccBalance: big.NewInt(700),  // 200 + 500
 			expectedAccAddressBalance:           big.NewInt(1500), // 2000 - 500
@@ -144,6 +155,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedQuoteBalance:                big.NewInt(607_100),   // $1.05 + $5.021
 			expectedSubaccountsModuleAccBalance: big.NewInt(7_021_000), // $2 + $5.021
 			expectedAccAddressBalance:           big.NewInt(3_979_000), // $9 - $5.021
@@ -160,6 +172,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
+			collateralPoolAddr: types.ModuleAddress,
 			expectedQuoteBalance: new(big.Int).Add(
 				new(big.Int).SetUint64(math.MaxUint64),
 				big.NewInt(400),
@@ -229,13 +242,10 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			keeper.SetSubaccount(ctx, subaccount)
 
-			collateralPoolAddr, err := keeper.GetCollateralPoolForSubaccount(ctx, *subaccount.Id)
-			require.NoError(t, err)
-
 			if tc.subaccountModuleAccBalance.Sign() > 0 {
 				err := bank_testutil.FundAccount(
 					ctx,
-					collateralPoolAddr,
+					tc.collateralPoolAddr,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
@@ -279,7 +289,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, collateralPoolAddr, tc.asset.Denom)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -312,6 +322,8 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		subaccountModuleAccBalance *big.Int
 		accAddressBalance          *big.Int
 
+		collateralPoolAddr sdk.AccAddress
+
 		// Transfer details
 		quantums *big.Int
 
@@ -325,6 +337,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(500),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrFailedToUpdateSubaccounts,
 		},
 		"WithdrawFundsFromSubaccountToAccount: subaccounts module account does not have enough balance": {
@@ -334,6 +347,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			accAddressBalance:          big.NewInt(5000),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                sdkerrors.ErrInsufficientFunds,
 		},
 		"WithdrawFundsFromSubaccountToAccount: isolated market subaccounts module account does not have enough balance": {
@@ -346,6 +360,9 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+			),
 			expectedErr: sdkerrors.ErrInsufficientFunds,
 		},
 		"WithdrawFundsFromSubaccountToAccount: transfer quantums is zero": {
@@ -355,6 +372,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(600),
 			quantums:                   big.NewInt(0),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"WithdrawFundsFromSubaccountToAccount: transfer quantums is negative": {
@@ -364,6 +382,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(600),
 			quantums:                   big.NewInt(-100),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"WithdrawFundsFromSubaccountToAccount: do not support assets other than USDC": {
@@ -373,6 +392,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(500),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferThroughBankNotImplemented,
 		},
 		"WithdrawFundsFromSubaccountToAccount: asset ID doesn't exist": {
@@ -383,6 +403,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(500),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                asstypes.ErrAssetDoesNotExist,
 		},
 		"DepositFundsFromAccountToSubaccount: fee-collector does not have enough balance to transfer": {
@@ -392,6 +413,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(2000),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                sdkerrors.ErrInsufficientFunds,
 		},
 		"DepositFundsFromAccountToSubaccount: transfer quantums is zero": {
@@ -401,6 +423,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(600),
 			quantums:                   big.NewInt(0),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"DepositFundsFromAccountToSubaccount: do not support assets other than USDC": {
@@ -410,6 +433,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(500),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferThroughBankNotImplemented,
 		},
 		"DepositFundsFromAccountToSubaccount: failure, asset ID doesn't exist": {
@@ -420,6 +444,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			subaccountModuleAccBalance: big.NewInt(500),
 			quantums:                   big.NewInt(500),
 			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                asstypes.ErrAssetDoesNotExist,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
@@ -485,13 +510,10 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 
 			keeper.SetSubaccount(ctx, subaccount)
 
-			collateralPoolAddr, err := keeper.GetCollateralPoolForSubaccount(ctx, *subaccount.Id)
-			require.NoError(t, err)
-
 			if tc.subaccountModuleAccBalance.Sign() > 0 {
 				err := bank_testutil.FundAccount(
 					ctx,
-					collateralPoolAddr,
+					tc.collateralPoolAddr,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
@@ -533,7 +555,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 
 			// Check the subaccount module balance stays the same.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, collateralPoolAddr, tc.asset.Denom)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -565,6 +587,8 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 		quantums    *big.Int
 		perpetualId uint32
 
+		collateralPoolAddr sdk.AccAddress
+
 		// Expectations.
 		expectedErr                         error
 		expectedSubaccountsModuleAccBalance *big.Int
@@ -575,15 +599,19 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			feeModuleAccBalance:                 big.NewInt(2500),
 			subaccountModuleAccBalance:          big.NewInt(600),
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
 		},
 		"success - send to fee-collector module account from isolated market account": {
-			asset:                               *constants.Usdc,
-			feeModuleAccBalance:                 big.NewInt(2500),
-			subaccountModuleAccBalance:          big.NewInt(600),
-			quantums:                            big.NewInt(500),
-			perpetualId:                         3,                // Isolated market perpetual ID
+			asset:                      *constants.Usdc,
+			feeModuleAccBalance:        big.NewInt(2500),
+			subaccountModuleAccBalance: big.NewInt(600),
+			quantums:                   big.NewInt(500),
+			perpetualId:                3, // Isolated market perpetual ID
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(3),
+			),
 			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
 			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
 		},
@@ -592,6 +620,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			feeModuleAccBalance:                 big.NewInt(2500),
 			subaccountModuleAccBalance:          big.NewInt(600),
 			quantums:                            big.NewInt(0),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(600),  // 600
 			expectedFeeModuleAccBalance:         big.NewInt(2500), // 2500
 		},
@@ -600,16 +629,20 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			feeModuleAccBalance:                 big.NewInt(2500),
 			subaccountModuleAccBalance:          big.NewInt(300),
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(300),
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"failure - isolated markets subaccounts module does not have sufficient funds": {
-			asset:                               *constants.Usdc,
-			feeModuleAccBalance:                 big.NewInt(2500),
-			subaccountModuleAccBalance:          big.NewInt(300),
-			quantums:                            big.NewInt(500),
-			perpetualId:                         3, // Isolated market perpetual ID
+			asset:                      *constants.Usdc,
+			feeModuleAccBalance:        big.NewInt(2500),
+			subaccountModuleAccBalance: big.NewInt(300),
+			quantums:                   big.NewInt(500),
+			perpetualId:                3, // Isolated market perpetual ID
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.IntToString(3),
+			),
 			expectedSubaccountsModuleAccBalance: big.NewInt(300),
 			expectedFeeModuleAccBalance:         big.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
@@ -620,6 +653,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			asset:                               *constants.Usdc,
 			subaccountModuleAccBalance:          big.NewInt(500),
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         asstypes.ErrAssetDoesNotExist,
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
@@ -629,6 +663,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			asset:                               *constants.BtcUsd,
 			subaccountModuleAccBalance:          big.NewInt(500),
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         types.ErrAssetTransferThroughBankNotImplemented,
 			expectedSubaccountsModuleAccBalance: big.NewInt(500),
 			expectedFeeModuleAccBalance:         big.NewInt(1500),
@@ -638,6 +673,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			asset:                               *constants.Usdc,
 			subaccountModuleAccBalance:          big.NewInt(500),
 			quantums:                            big.NewInt(-500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: big.NewInt(1000),
 			expectedFeeModuleAccBalance:         big.NewInt(1000),
 		},
@@ -684,13 +720,10 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			collateralPoolAddr, err := keeper.GetCollateralPoolFromPerpetualId(ctx, tc.perpetualId)
-			require.NoError(t, err)
-
 			if tc.subaccountModuleAccBalance.Sign() > 0 {
 				err := bank_testutil.FundAccount(
 					ctx,
-					collateralPoolAddr,
+					tc.collateralPoolAddr,
 					sdk.Coins{
 						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
 					},
@@ -719,7 +752,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			err = keeper.TransferFeesToFeeCollectorModule(ctx, tc.asset.Id, tc.quantums, tc.perpetualId)
+			err := keeper.TransferFeesToFeeCollectorModule(ctx, tc.asset.Id, tc.quantums, tc.perpetualId)
 
 			if tc.expectedErr != nil {
 				require.ErrorIs(t,
@@ -731,7 +764,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, collateralPoolAddr, tc.asset.Denom)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
 				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
 				subaccountsModuleAccBalance,
@@ -758,6 +791,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		subaccountModuleAccBalance int64
 		insuranceFundBalance       int64
 		perpetual                  perptypes.Perpetual
+		collateralPoolAddr         sdk.AccAddress
 
 		// Transfer details.
 		quantums *big.Int
@@ -773,6 +807,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 100,  // 600 - 500
 			expectedInsuranceFundBalance:        3000, // 2500 + 500
 		},
@@ -781,6 +816,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(-500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 1100, // 600 + 500
 			expectedInsuranceFundBalance:        2000, // 2500 - 500
 		},
@@ -789,22 +825,29 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
 			quantums:                            big.NewInt(0),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 600,
 			expectedInsuranceFundBalance:        2500,
 		},
 		"success - send to isolated insurance fund account": {
-			perpetual:                           constants.IsoUsd_IsolatedMarket,
-			insuranceFundBalance:                2500,
-			subaccountModuleAccBalance:          600,
-			quantums:                            big.NewInt(500),
+			perpetual:                  constants.IsoUsd_IsolatedMarket,
+			insuranceFundBalance:       2500,
+			subaccountModuleAccBalance: 600,
+			quantums:                   big.NewInt(500),
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
+			),
 			expectedSubaccountsModuleAccBalance: 100,  // 600 - 500
 			expectedInsuranceFundBalance:        3000, // 2500 + 500
 		},
 		"success - send from isolated insurance fund account": {
-			perpetual:                           constants.IsoUsd_IsolatedMarket,
-			insuranceFundBalance:                2500,
-			subaccountModuleAccBalance:          600,
-			quantums:                            big.NewInt(-500),
+			perpetual:                  constants.IsoUsd_IsolatedMarket,
+			insuranceFundBalance:       2500,
+			subaccountModuleAccBalance: 600,
+			quantums:                   big.NewInt(-500),
+			collateralPoolAddr: authtypes.NewModuleAddress(
+				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
+			),
 			expectedSubaccountsModuleAccBalance: 1100, // 600 + 500
 			expectedInsuranceFundBalance:        2000, // 2500 - 500
 		},
@@ -813,6 +856,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          300,
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 300,
 			expectedInsuranceFundBalance:        2500,
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
@@ -822,6 +866,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                300,
 			subaccountModuleAccBalance:          2500,
 			quantums:                            big.NewInt(-500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 2500,
 			expectedInsuranceFundBalance:        300,
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
@@ -841,6 +886,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
 			quantums:                            big.NewInt(500),
+			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.UintToString(uint32(0))),
 			expectedSubaccountsModuleAccBalance: 500,
 			expectedInsuranceFundBalance:        1500,
@@ -888,9 +934,6 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundAddr, err := perpsKeeper.GetInsuranceFundModuleAddress(ctx, tc.perpetual.GetId())
 			require.NoError(t, err)
 
-			collateralPoolAddr, err := keeper.GetCollateralPoolFromPerpetualId(ctx, tc.perpetual.GetId())
-			require.NoError(t, err)
-
 			// Mint asset in the receipt/sender module account for transfer.
 			if tc.insuranceFundBalance > 0 {
 				err := bank_testutil.FundAccount(
@@ -907,7 +950,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			if tc.subaccountModuleAccBalance > 0 {
 				err := bank_testutil.FundAccount(
 					ctx,
-					collateralPoolAddr,
+					tc.collateralPoolAddr,
 					sdk.Coins{
 						sdk.NewInt64Coin(constants.Usdc.Denom, tc.subaccountModuleAccBalance),
 					},
@@ -943,7 +986,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			}
 
 			// Check the subaccount module balance.
-			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, collateralPoolAddr, constants.Usdc.Denom)
+			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, constants.Usdc.Denom)
 			require.Equal(
 				t,
 				sdk.NewInt64Coin(constants.Usdc.Denom, tc.expectedSubaccountsModuleAccBalance),

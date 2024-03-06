@@ -242,18 +242,18 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 	}
 
 	// Send coins from `subaccounts` to the `auth` module fee collector account.
-	fromModule := collateralPoolAddr
-	toModule := authtypes.NewModuleAddress(authtypes.FeeCollectorName)
+	fromModuleAddr := collateralPoolAddr
+	toModuleAddr := authtypes.NewModuleAddress(authtypes.FeeCollectorName)
 
 	if quantums.Sign() < 0 {
 		// In the case of a liquidation, net fees can be negative if the maker gets a rebate.
-		fromModule, toModule = toModule, fromModule
+		fromModuleAddr, toModuleAddr = toModuleAddr, fromModuleAddr
 	}
 
 	if err := k.bankKeeper.SendCoins(
 		ctx,
-		fromModule,
-		toModule,
+		fromModuleAddr,
+		toModuleAddr,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
 		return err
