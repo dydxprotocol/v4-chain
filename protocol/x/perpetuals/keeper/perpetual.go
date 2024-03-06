@@ -185,6 +185,34 @@ func (k Keeper) ModifyPerpetual(
 	return perpetual, nil
 }
 
+func (k Keeper) SetPerpetualMarketType(
+	ctx sdk.Context,
+	perpetualId uint32,
+	marketType types.PerpetualMarketType,
+) (types.Perpetual, error) {
+
+	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("market type %v", marketType),
+		)
+	}
+
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return perpetual, err
+	}
+
+	// Modify perpetual.
+	perpetual.Params.MarketType = marketType
+
+	// Store the modified perpetual.
+	k.setPerpetual(ctx, perpetual)
+
+	return perpetual, nil
+}
+
 // GetPerpetual returns a perpetual from its id.
 func (k Keeper) GetPerpetual(
 	ctx sdk.Context,

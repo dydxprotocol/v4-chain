@@ -3,6 +3,8 @@ package app
 import (
 	"fmt"
 
+	v5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
@@ -14,6 +16,7 @@ var (
 	// New upgrades should be added to this slice after they are implemented.
 	Upgrades = []upgrades.Upgrade{
 		v4_0_0.Upgrade,
+		v5_0_0.Upgrade,
 	}
 	Forks = []upgrades.Fork{}
 )
@@ -30,6 +33,18 @@ func (app *App) setupUpgradeHandlers() {
 			app.ModuleManager,
 			app.configurator,
 			app.RatelimitKeeper,
+		),
+	)
+
+	if app.UpgradeKeeper.HasHandler(v5_0_0.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v5_0_0.UpgradeName))
+	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5_0_0.UpgradeName,
+		v5_0_0.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
+			app.PerpetualsKeeper,
 		),
 	)
 }
