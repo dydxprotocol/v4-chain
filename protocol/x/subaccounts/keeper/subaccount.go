@@ -69,6 +69,19 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	return authtypes.NewModuleAddress(poolName), nil
 }
 
+func (k Keeper) GetCollateralPoolFromPerpetualId(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error) {
+	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return nil, err
+	}
+
+	if perpetual.Params.MarketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
+		return authtypes.NewModuleAddress(types.ModuleName + ":" + lib.UintToString(perpetual.GetId())), nil
+	}
+
+	return authtypes.NewModuleAddress(types.ModuleName), nil
+}
+
 func (k Keeper) GetCollateralPoolNameForSubaccount(ctx sdk.Context, subaccountId types.SubaccountId) (string, error) {
 	subaccount := k.GetSubaccount(ctx, subaccountId)
 	if len(subaccount.PerpetualPositions) == 0 {

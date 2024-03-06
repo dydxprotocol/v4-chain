@@ -442,6 +442,7 @@ func (k Keeper) persistMatchedOrders(
 		ctx,
 		assettypes.AssetUsdc.Id,
 		bigTotalFeeQuoteQuantums,
+		0,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
 			types.ErrSubaccountFeeTransferFailed,
