@@ -1,7 +1,6 @@
 package clob_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/crypto/tmhash"
@@ -803,9 +802,6 @@ func TestBatchCancelOffchainUpdates(t *testing.T) {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, batch) {
 					tApp.CheckTx(checkTx)
 				}
-			}
-			for _, msg := range msgSender.GetOffchainMessages() {
-				fmt.Println("jonathan wrote this", msg.Value)
 			}
 
 			// Verify offchain messages
