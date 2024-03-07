@@ -219,3 +219,22 @@ func (k Keeper) InitMemStore(ctx sdk.Context) {
 func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
+
+// InitializeNewGrpcStreams initializes new gRPC streams for all uninitialized clob pairs
+// by sending the corresponding orderbook snapshots.
+func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
+	streamingManager := k.GetGrpcStreamingManager()
+	allUpdates := types.NewOffchainUpdates()
+
+	uninitializedClobPairIds := streamingManager.GetUninitializedClobPairIds()
+	for _, clobPairId := range uninitializedClobPairIds {
+		update := k.MemClob.GetOffchainUpdatesForOrderbookSnapshot(
+			ctx,
+			types.ClobPairId(clobPairId),
+		)
+
+		allUpdates.Append(update)
+	}
+
+	streamingManager.SendOrderbookUpdates(allUpdates, true)
+}

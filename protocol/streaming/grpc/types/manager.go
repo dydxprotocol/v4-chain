@@ -14,5 +14,9 @@ type GrpcStreamingManager interface {
 	) (
 		err error,
 	)
-	SendOrderbookUpdates(*clobtypes.OffchainUpdates)
+	GetUninitializedClobPairIds() []uint32
+	SendOrderbookUpdates(
+		offchainUpdates *clobtypes.OffchainUpdates,
+		snapshot bool,
+	)
 }
