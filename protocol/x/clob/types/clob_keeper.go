@@ -131,4 +131,5 @@ type ClobKeeper interface {
 		clobPair ClobPair,
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
+	InitializeNewGrpcStreams(ctx sdk.Context)
 }

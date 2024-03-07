@@ -557,6 +557,11 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 	return r0
 }
 
+// InitializeNewGrpcStreams provides a mock function with given fields: ctx
+func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // IsLiquidatable provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
 	ret := _m.Called(ctx, subaccountId)
