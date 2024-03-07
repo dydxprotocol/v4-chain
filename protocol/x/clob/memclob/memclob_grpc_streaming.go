@@ -54,7 +54,9 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 	return offchainUpdates
 }
 
-// GetOffchainUpdatesForClobOrder returns the offchain updates for the clob order.
+// GetOffchainUpdatesForOrder returns a place order offchain message and
+// a update order offchain message used to construct an order for
+// the orderbook snapshot grpc stream.
 func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrder(
 	ctx sdk.Context,
 	order types.Order,
