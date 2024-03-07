@@ -672,10 +672,6 @@ func (_m *QueryClient) StreamOrderbookUpdates(ctx context.Context, in *clobtypes
 	ret := _m.Called(_ca...)
 
 	var r0 clobtypes.Query_StreamOrderbookUpdatesClient
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) (clobtypes.Query_StreamOrderbookUpdatesClient, error)); ok {
-		return rf(ctx, in, opts...)
-	}
 	if rf, ok := ret.Get(0).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) clobtypes.Query_StreamOrderbookUpdatesClient); ok {
 		r0 = rf(ctx, in, opts...)
 	} else {
@@ -684,6 +680,7 @@ func (_m *QueryClient) StreamOrderbookUpdates(ctx context.Context, in *clobtypes
 		}
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, *clobtypes.StreamOrderbookUpdatesRequest, ...grpc.CallOption) error); ok {
 		r1 = rf(ctx, in, opts...)
 	} else {

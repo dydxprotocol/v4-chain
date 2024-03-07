@@ -137,4 +137,8 @@ type MemClob interface {
 		bestAsk Order,
 		exists bool,
 	)
+	GetOffchainUpdatesForOrderbookSnapshot(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) (offchainUpdates *OffchainUpdates)
 }

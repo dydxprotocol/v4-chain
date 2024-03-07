@@ -226,6 +226,9 @@ func PrepareCheckState(
 		ctx.BlockHeight(),
 	)
 
+	// Initialize new GRPC streams with orderbook snapshots, if any.
+	keeper.InitializeNewGrpcStreams(ctx)
+
 	// Set per-orderbook gauges.
 	keeper.MemClob.SetMemclobGauges(ctx)
 }
