@@ -193,17 +193,17 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $250 to insurance fund for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000_000)),
 				).Return(nil).Once()
@@ -271,10 +271,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(10_100_000)),
 				).Return(nil)
 				bk.On(
@@ -286,8 +286,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
-					authtypes.NewModuleAddress(satypes.ModuleName),
+					perptypes.InsuranceFundModuleAddress,
+					satypes.ModuleAddress,
 					// Insurance fund covers $1 loss for liquidating 1 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1_000_000)),
 				).Return(nil).Once()
@@ -357,17 +357,17 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(2_500_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $62.5 to insurance fund for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(62_500_000)),
 				).Return(nil).Twice()
@@ -455,10 +455,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(2_525_000)),
 				).Return(nil)
 				bk.On(
@@ -470,8 +470,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
-					authtypes.NewModuleAddress(satypes.ModuleName),
+					perptypes.InsuranceFundModuleAddress,
+					satypes.ModuleAddress,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
 				).Return(nil).Twice()
@@ -560,10 +560,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.Anything,
 				).Return(nil)
 				bk.On(
@@ -575,16 +575,16 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.75 for liquidating 0.75 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(750_000)),
 				).Return(nil).Once()
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
-					authtypes.NewModuleAddress(satypes.ModuleName),
+					perptypes.InsuranceFundModuleAddress,
+					satypes.ModuleAddress,
 					// Insurance fund covers $0.25 loss for liquidating 0.25 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(250_000)),
 				).Return(nil).Once()
@@ -664,10 +664,10 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.Anything,
 				).Return(nil)
 				bk.On(
@@ -679,8 +679,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.378735 (capped by MaxLiquidationFeePpm)
 					// for liquidating 0.75 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(378_735)),
@@ -688,8 +688,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Pays insurance fund $0.121265.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(121_265)),
 				).Return(nil).Once()
@@ -777,17 +777,17 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(5_000_000)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					// Subaccount pays $125 to insurance fund for liquidating 0.5 BTC.
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(125_000_000)),
 				).Return(nil).Once()
@@ -890,17 +890,17 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
-					satypes.ModuleName,
-					authtypes.FeeCollectorName,
+					satypes.ModuleAddress,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(1)),
 				).Return(nil)
 				bk.On(
 					"SendCoins",
 					mock.Anything,
-					authtypes.NewModuleAddress(satypes.ModuleName),
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					satypes.ModuleAddress,
+					perptypes.InsuranceFundModuleAddress,
 					mock.MatchedBy(testutil_bank.MatchUsdcOfAmount(25)),
 				).Return(nil)
 			},
@@ -1263,17 +1263,17 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			},
 			setupMockBankKeeper: func(bk *mocks.BankKeeper) {
 				bk.On(
-					"SendCoinsFromModuleToModule",
+					"SendCoins",
 					mock.Anything,
 					mock.Anything,
-					authtypes.FeeCollectorName,
+					authtypes.NewModuleAddress(authtypes.FeeCollectorName),
 					mock.Anything,
 				).Return(fmt.Errorf("transfer failed"))
 				bk.On(
 					"SendCoins",
 					mock.Anything,
 					mock.Anything,
-					authtypes.NewModuleAddress(perptypes.InsuranceFundName),
+					perptypes.InsuranceFundModuleAddress,
 					mock.Anything,
 				).Return(nil)
 			},

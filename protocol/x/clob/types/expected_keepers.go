@@ -63,11 +63,7 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		blockHeight uint32,
 	)
-	TransferFeesToFeeCollectorModule(
-		ctx sdk.Context,
-		assetId uint32,
-		amount *big.Int,
-	) error
+	TransferFeesToFeeCollectorModule(ctx sdk.Context, assetId uint32, amount *big.Int, perpetualId uint32) error
 	TransferInsuranceFundPayments(
 		ctx sdk.Context,
 		amount *big.Int,

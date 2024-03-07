@@ -73,6 +73,13 @@ var (
 		PerpetualId: 1,
 		Quantums:    dtypes.NewIntFromBigInt(BigNegMaxUint64()), // 18,446,744,070 ETH, -$55,340,232,210,000 notional.
 	}
+	// Long position for arbitrary isolated market
+	PerpetualPosition_OneISOLong = satypes.PerpetualPosition{
+		PerpetualId:  3,
+		Quantums:     dtypes.NewInt(100_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+
 	// Asset Positions
 	Usdc_Asset_0 = satypes.AssetPosition{
 		AssetId:  0,
