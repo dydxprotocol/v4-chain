@@ -7,6 +7,7 @@ set -eo pipefail
 source "./genesis.sh"
 
 CHAIN_ID="localdydxprotocol"
+PREUPGRADE_VERSION="v4.0.0"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
@@ -153,22 +154,27 @@ setup_cosmovisor() {
 	done
 }
 
-copy_preupgrade_binary_arch() {
+download_preupgrade_binary() {
 	arch="$(apk --print-arch)"
-	file_arch=""
+	url_arch=""
 	case "$arch" in
 		'x86_64')
-			file_arch='amd64'
+			url_arch='amd64'
 			;;
 		'aarch64')
-			file_arch='arm64'
+			url_arch='arm64'
 			;;
 		*)
 			echo >&2 "unexpected architecture '$arch'"
 			exit 1
 			;;
 	esac
-	cp /bin/dydxprotocold_preupgrade_${file_arch} /bin/dydxprotocold_preupgrade
+	tar_url="https://github.com/dydxprotocol/v4-chain/releases/download/protocol%2F$PREUPGRADE_VERSION/dydxprotocold-$PREUPGRADE_VERSION-linux-$url_arch.tar.gz"
+	tar_path='/tmp/dydxprotocold/dydxprotocold.tar.gz'
+	mkdir -p /tmp/dydxprotocold
+	curl -vL $tar_url -o $tar_path
+	dydxprotocold_path=$(tar -xvf $tar_path --directory /tmp/dydxprotocold)
+	cp /tmp/dydxprotocold/$dydxprotocold_path /bin/dydxprotocold_preupgrade
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.

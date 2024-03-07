@@ -7,6 +7,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
 	v4_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v4.0.0"
+	v5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
 )
 
 var (
@@ -30,6 +31,17 @@ func (app *App) setupUpgradeHandlers() {
 			app.ModuleManager,
 			app.configurator,
 			app.RatelimitKeeper,
+		),
+	)
+
+	if app.UpgradeKeeper.HasHandler(v5_0_0.UpgradeName) {
+		panic(fmt.Sprintf("Cannot register duplicate upgrade handler '%s'", v5_0_0.UpgradeName))
+	}
+	app.UpgradeKeeper.SetUpgradeHandler(
+		v5_0_0.UpgradeName,
+		v5_0_0.CreateUpgradeHandler(
+			app.ModuleManager,
+			app.configurator,
 		),
 	)
 }
