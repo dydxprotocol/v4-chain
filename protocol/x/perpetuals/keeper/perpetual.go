@@ -191,7 +191,6 @@ func (k Keeper) SetPerpetualMarketType(
 	perpetualId uint32,
 	marketType types.PerpetualMarketType,
 ) (types.Perpetual, error) {
-
 	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
 		return types.Perpetual{}, errorsmod.Wrap(
 			types.ErrInvalidMarketType,

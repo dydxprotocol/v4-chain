@@ -17,8 +17,7 @@ import (
 func perpetualsUpgrade(
 	ctx sdk.Context,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
-) error {
-
+) {
 	// Set all perpetuals to cross market type
 	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
 	for _, p := range perpetuals {
@@ -29,8 +28,6 @@ func perpetualsUpgrade(
 			panic(fmt.Sprintf("failed to set perpetual market type for perpetual %d: %s", p.GetId(), err))
 		}
 	}
-
-	return nil
 }
 
 func CreateUpgradeHandler(
