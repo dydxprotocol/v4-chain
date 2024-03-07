@@ -7,7 +7,7 @@ set -eo pipefail
 source "./genesis.sh"
 
 CHAIN_ID="localdydxprotocol"
-PREUPGRADE_VERSION="v4.0.0"
+PREUPGRADE_VERSION="v4.0.0-rc1"
 
 # Define mnemonics for all validators.
 MNEMONICS=(
@@ -193,5 +193,5 @@ edit_config() {
 
 install_prerequisites
 setup_cosmovisor
-copy_preupgrade_binary_arch
+download_preupgrade_binary
 create_validators
