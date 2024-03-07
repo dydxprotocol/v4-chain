@@ -38,5 +38,7 @@ export function getConfigForHost(host: string) : Knex.Config {
 
 export const knexPrimaryConfigForEnv: Knex.Config = getConfigForHost(config.DB_HOSTNAME);
 
-export const knexReadReplicaConfigForEnv:
-Knex.Config = getConfigForHost(config.DB_READONLY_HOSTNAME);
+const readOnlyHostnames = config.DB_READONLY_HOSTNAME.split(',');
+
+export const knexReadReplicaConfigForEnvs:
+Knex.Config[] = readOnlyHostnames.map((hostname: string) => getConfigForHost(hostname.trim()));

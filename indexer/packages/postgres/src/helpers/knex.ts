@@ -4,7 +4,7 @@ import { Model } from 'objection';
 import config from '../config';
 import {
   knexPrimaryConfigForEnv,
-  knexReadReplicaConfigForEnv,
+  knexReadReplicaConfigForEnvs,
 } from '../db/knexfile';
 
 // TODO: add specific logger for the logging of knex
@@ -18,23 +18,24 @@ const logging = {
 };
 
 class KnexReadReplica {
-  private knexReadReplica: Knex | null = null;
+  private knexReadReplicas: Knex[] = [];
 
-  constructor(isUsingReadOnlyDB: boolean, knexConfig: Knex.Config) {
+  constructor(isUsingReadOnlyDB: boolean, knexConfigs: Knex.Config[]) {
     if (isUsingReadOnlyDB) {
-      this.knexReadReplica = Knex({
+      this.knexReadReplicas = knexConfigs.map((knexConfig: Knex.Config) => Knex({
         ...knexConfig,
         ...logging,
-      });
+      }),
+      );
     }
   }
 
   public getConnection(): Knex {
-    if (!this.knexReadReplica) {
-      throw new Error('Service is not configured to use read only DB');
+    if (this.knexReadReplicas.length === 0) {
+      throw new Error('Service is not configured to use a read replica');
     }
-
-    return this.knexReadReplica;
+    const randomIndex = Math.floor(Math.random() * this.knexReadReplicas.length);
+    return this.knexReadReplicas[randomIndex];
   }
 }
 export const knexPrimary: Knex = Knex({
@@ -44,7 +45,7 @@ export const knexPrimary: Knex = Knex({
 
 export const knexReadReplica: KnexReadReplica = new KnexReadReplica(
   config.IS_USING_DB_READONLY,
-  knexReadReplicaConfigForEnv,
+  knexReadReplicaConfigForEnvs,
 );
 
 // Bind all Models to the primary knex instance. You only
