@@ -2,7 +2,7 @@
   "app_name": "dydxprotocold",
   "app_version": "4.0.0-rc3",
   "genesis_time": "2023-01-01T00:00:00Z",
-  "chain_id": "localdydxprotocol1",
+  "chain_id": "localdydxprotocol",
   "initial_height": 1,
   "app_hash": null,
   "app_state": {
@@ -37,9 +37,30 @@
         },
         {
           "@type": "/cosmos.auth.v1beta1.BaseAccount",
-          "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+          "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
           "pub_key": null,
           "account_number": "1",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+          "pub_key": null,
+          "account_number": "2",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+          "pub_key": null,
+          "account_number": "3",
+          "sequence": "0"
+        },
+        {
+          "@type": "/cosmos.auth.v1beta1.BaseAccount",
+          "address": "dydx1nzuttarf5k2j0nug5yzhr6p74t9avehn9hlh8m",
+          "pub_key": null,
+          "account_number": "4",
           "sequence": "0"
         }
       ]
@@ -58,7 +79,7 @@
           "coins": [
             {
               "denom": "adv4tnt",
-              "amount": "798000000000000000000000000"
+              "amount": "795000000000000000000000000"
             }
           ]
         },
@@ -76,11 +97,50 @@
           ]
         },
         {
+          "address": "dydx1fjg6zp6vv8t9wvy4lps03r5l4g7tkjw9wvmh70",
+          "coins": [
+            {
+              "denom": "adv4tnt",
+              "amount": "1000000000000000000000000"
+            },
+            {
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
+            }
+          ]
+        },
+        {
           "address": "dydx1v88c3xv9xyv3eetdx0tvcmq7ung3dywp5upwc6",
           "coins": [
             {
               "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
-              "amount": "1000000000000000000"
+              "amount": "1300000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "dydx1wau5mja7j7zdavtfq9lu7ejef05hm6ffenlcsn",
+          "coins": [
+            {
+              "denom": "adv4tnt",
+              "amount": "1000000000000000000000000"
+            },
+            {
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
+            }
+          ]
+        },
+        {
+          "address": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs",
+          "coins": [
+            {
+              "denom": "adv4tnt",
+              "amount": "1000000000000000000000000"
+            },
+            {
+              "denom": "ibc/8E27BA2D5493AF5636760E354E46004562C46AB7EC0CC4C1CA14E9E20E2545B5",
+              "amount": "100000000000000000"
             }
           ]
         },
