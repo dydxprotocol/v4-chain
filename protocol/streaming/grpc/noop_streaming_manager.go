@@ -28,5 +28,10 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
+	snapshot bool,
 ) {
+}
+
+func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
+	return []uint32{}
 }

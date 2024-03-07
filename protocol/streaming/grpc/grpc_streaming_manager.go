@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -22,8 +23,14 @@ type GrpcStreamingManagerImpl struct {
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
 type OrderbookSubscription struct {
+	// Initialize the subscription with orderbook snapshots.
+	initialize sync.Once
+
+	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
-	srv         clobtypes.Query_StreamOrderbookUpdatesServer
+
+	// Stream
+	srv clobtypes.Query_StreamOrderbookUpdatesServer
 }
 
 func NewGrpcStreamingManager() *GrpcStreamingManagerImpl {
@@ -68,6 +75,7 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
+	snapshot bool,
 ) {
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
@@ -100,7 +108,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 				if err := subscription.srv.Send(
 					&clobtypes.StreamOrderbookUpdatesResponse{
 						Updates:  updates,
-						Snapshot: false,
+						Snapshot: snapshot,
 					},
 				); err != nil {
 					idsToRemove = append(idsToRemove, id)
@@ -115,6 +123,25 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	for _, id := range idsToRemove {
 		delete(sm.orderbookSubscriptions, id)
 	}
+}
+
+// GetUninitializedClobPairIds returns the clob pair ids that have not been initialized.
+func (sm *GrpcStreamingManagerImpl) GetUninitializedClobPairIds() []uint32 {
+	sm.Lock()
+	defer sm.Unlock()
+
+	clobPairIds := make(map[uint32]bool)
+	for _, subscription := range sm.orderbookSubscriptions {
+		subscription.initialize.Do(
+			func() {
+				for _, clobPairId := range subscription.clobPairIds {
+					clobPairIds[clobPairId] = true
+				}
+			},
+		)
+	}
+
+	return lib.GetSortedKeys[lib.Sortable[uint32]](clobPairIds)
 }
 
 // GetOffchainUpdatesV1 unmarshals messages in offchain updates to OffchainUpdateV1.

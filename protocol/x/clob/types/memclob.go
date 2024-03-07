@@ -133,4 +133,8 @@ type MemClob interface {
 		subaccountId satypes.SubaccountId,
 		perpetualId uint32,
 	)
+	GetOffchainUpdatesForOrderbookSnapshot(
+		ctx sdk.Context,
+		clobPairId ClobPairId,
+	) (offchainUpdates *OffchainUpdates)
 }
