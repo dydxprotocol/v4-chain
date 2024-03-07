@@ -50,7 +50,7 @@ By clicking the above links to third-party clients, you will leave the dYdX Trad
 
 `proto` — Contains all protocol buffers used by protocol and indexer.
 
-`protocol` — Contains source code for the Cosmos SDK app that runs the protocol. See its [README](https://github.com/dydxprotocol/v4-chain/blob/main/indexer/README.md) for developer documentation.
+`protocol` — Contains source code for the Cosmos SDK app that runs the protocol. See its [README](https://github.com/dydxprotocol/v4-chain/blob/main/protocol/README.md) for developer documentation.
 
 `v4-proto-js` — Scripts for publishing proto package to [npm](https://www.npmjs.com/package/@dydxprotocol/v4-proto).
 
