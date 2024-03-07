@@ -220,7 +220,8 @@ func (k *Keeper) SetAnteHandler(anteHandler sdk.AnteHandler) {
 	k.antehandler = anteHandler
 }
 
-// InitializeNewGrpcStreams initializes new gRPC streams for all uninitialized clob pairs.
+// InitializeNewGrpcStreams initializes new gRPC streams for all uninitialized clob pairs
+// by sending the corresponding orderbook snapshots.
 func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 	streamingManager := k.GetGrpcStreamingManager()
 	allUpdates := types.NewOffchainUpdates()

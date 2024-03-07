@@ -23,8 +23,8 @@ type GrpcStreamingManagerImpl struct {
 
 // OrderbookSubscription represents a active subscription to the orderbook updates stream.
 type OrderbookSubscription struct {
-	// Indicate whether the subscription has been initialized with a snapshot.
-	initialized bool
+	// Initialize the subscription with orderbook snapshots.
+	initialize sync.Once
 
 	// Clob pair ids to subscribe to.
 	clobPairIds []uint32
@@ -58,7 +58,6 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	}
 
 	subscription := &OrderbookSubscription{
-		initialized: false,
 		clobPairIds: clobPairIds,
 		srv:         srv,
 	}
@@ -117,11 +116,6 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 				}
 			}
 		}
-
-		// Mark the subscription as initialized after sending the snapshot update.
-		if snapshot && !subscription.initialized {
-			subscription.initialized = true
-		}
 	}
 
 	// Clean up subscriptions that have been closed.
@@ -138,11 +132,13 @@ func (sm *GrpcStreamingManagerImpl) GetUninitializedClobPairIds() []uint32 {
 
 	clobPairIds := make(map[uint32]bool)
 	for _, subscription := range sm.orderbookSubscriptions {
-		if !subscription.initialized {
-			for _, clobPairId := range subscription.clobPairIds {
-				clobPairIds[clobPairId] = true
-			}
-		}
+		subscription.initialize.Do(
+			func() {
+				for _, clobPairId := range subscription.clobPairIds {
+					clobPairIds[clobPairId] = true
+				}
+			},
+		)
 	}
 
 	return lib.GetSortedKeys[lib.Sortable[uint32]](clobPairIds)
