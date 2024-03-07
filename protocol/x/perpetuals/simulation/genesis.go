@@ -203,6 +203,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				MarketType:        marketType,
 			},
 			FundingIndex: dtypes.ZeroInt(),
+			OpenInterest: dtypes.ZeroInt(),
 		}
 	}
 

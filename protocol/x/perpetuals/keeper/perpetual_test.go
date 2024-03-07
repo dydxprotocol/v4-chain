@@ -685,6 +685,8 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				1, // dummy impact notional value
+				0, // dummy open interest lower cap
+				0, // dummy open interest upper cap
 			)
 			require.NoError(t, err)
 
@@ -2825,6 +2827,8 @@ func TestGetAllLiquidityTiers_Sorted(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2863,6 +2867,8 @@ func TestHasLiquidityTier(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2887,6 +2893,8 @@ func TestCreateLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 
@@ -2911,6 +2919,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		openInterestLowerCap   uint64
+		openInterestUpperCap   uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -2919,6 +2929,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -2927,6 +2939,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -2935,6 +2949,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          types.ErrImpactNotionalIsZero,
 		},
 	}
@@ -2952,6 +2968,8 @@ func TestSetLiquidityTier_New_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.openInterestLowerCap,
+				tc.openInterestUpperCap,
 			)
 
 			require.Error(t, err)
@@ -2970,6 +2988,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			lt.InitialMarginPpm,
 			lt.MaintenanceFractionPpm,
 			lt.ImpactNotional,
+			lt.OpenInterestLowerCap,
+			lt.OpenInterestUpperCap,
 		)
 		require.NoError(t, err)
 	}
@@ -2981,6 +3001,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 		initialMarginPpm := uint32(i * 2)
 		maintenanceFractionPpm := uint32(i * 2)
 		impactNotional := uint64((i + 1) * 500_000_000)
+		openInterestLowerCap := uint64(0)
+		openInterestUpperCap := uint64(0)
 		modifiedLt, err := pc.PerpetualsKeeper.SetLiquidityTier(
 			pc.Ctx,
 			lt.Id,
@@ -2988,6 +3010,8 @@ func TestModifyLiquidityTier_Success(t *testing.T) {
 			initialMarginPpm,
 			maintenanceFractionPpm,
 			impactNotional,
+			openInterestLowerCap,
+			openInterestUpperCap,
 		)
 		require.NoError(t, err)
 		obtainedLt, err := pc.PerpetualsKeeper.GetLiquidityTier(pc.Ctx, lt.Id)
@@ -3029,6 +3053,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 		initialMarginPpm       uint32
 		maintenanceFractionPpm uint32
 		impactNotional         uint64
+		openInterestLowerCap   uint64
+		openInterestUpperCap   uint64
 		expectedError          error
 	}{
 		"Initial Margin Ppm exceeds maximum": {
@@ -3037,6 +3063,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       lib.OneMillion + 1,
 			maintenanceFractionPpm: 500_000,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrInitialMarginPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Maintenance Fraction Ppm exceeds maximum": {
@@ -3045,6 +3073,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion + 1,
 			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          errorsmod.Wrap(types.ErrMaintenanceFractionPpmExceedsMax, fmt.Sprint(lib.OneMillion+1)),
 		},
 		"Impact Notional is zero": {
@@ -3053,7 +3083,24 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 			initialMarginPpm:       500_000,
 			maintenanceFractionPpm: lib.OneMillion,
 			impactNotional:         uint64(0),
+			openInterestLowerCap:   0,
+			openInterestUpperCap:   0,
 			expectedError:          types.ErrImpactNotionalIsZero,
+		},
+		"Invalid open interest caps": {
+			id:                     1,
+			name:                   "Small-Cap",
+			initialMarginPpm:       500_000,
+			maintenanceFractionPpm: lib.OneMillion,
+			impactNotional:         uint64(lib.OneMillion),
+			openInterestLowerCap:   50_000_000_000_000,
+			openInterestUpperCap:   25_000_000_000_000,
+			expectedError: errorsmod.Wrapf(
+				types.ErrOpenInterestLowerCapLargerThanUpperCap,
+				"open_interest_lower_cap: %d, open_interest_upper_cap: %d",
+				50_000_000_000_000,
+				25_000_000_000_000,
+			),
 		},
 	}
 
@@ -3071,6 +3118,8 @@ func TestSetLiquidityTier_Existing_Failure(t *testing.T) {
 				tc.initialMarginPpm,
 				tc.maintenanceFractionPpm,
 				tc.impactNotional,
+				tc.openInterestLowerCap,
+				tc.openInterestUpperCap,
 			)
 
 			require.Error(t, err)
