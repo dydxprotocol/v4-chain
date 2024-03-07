@@ -297,6 +297,12 @@ var (
 			testapp.DefaultGenesis(),
 		),
 	)
+	PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30 = *clobtypes.NewMsgPlaceOrder(
+		testapp.MustScaleOrder(
+			constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30,
+			testapp.DefaultGenesis(),
+		),
+	)
 	PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20 = *clobtypes.NewMsgPlaceOrder(
 		testapp.MustScaleOrder(
 			constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20,
@@ -526,6 +532,66 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 				constants.Order_Alice_Num1_Id3_Clob0_Sell100_Price100000_GTB20.OrderId: 25,
 			},
 		},
+		"Batch cancel nonexistent orders": {
+			firstBlockOrders: []clobtypes.MsgPlaceOrder{},
+			firstBlockBatchCancel: []clobtypes.MsgBatchCancel{
+				{
+					SubaccountId: PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Order.OrderId.SubaccountId,
+					ShortTermCancels: []clobtypes.OrderBatch{
+						{
+							ClobPairId: 0,
+							ClientIds:  []uint32{0, 3},
+						},
+						{
+							ClobPairId: 1,
+							ClientIds:  []uint32{1, 4, 5},
+						},
+					},
+					GoodTilBlock: 25,
+				},
+			},
+			secondBlockOrders: map[clobtypes.MsgPlaceOrder]bool{
+				PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20:      false,
+				PlaceOrder_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20:      false,
+				PlaceOrder_Alice_Num1_Id3_Clob0_Sell100_Price100000_GTB20: false,
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{},
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.OrderId:      25,
+				constants.Order_Alice_Num1_Id1_Clob1_Sell10_Price15_GTB20.OrderId:      25,
+				constants.Order_Alice_Num1_Id3_Clob0_Sell100_Price100000_GTB20.OrderId: 25,
+				constants.Order_Alice_Num1_Id4_Clob1_Sell10_Price15_GTB20_PO.OrderId:   25,
+				PlaceOrder_Alice_Num1_Id5_Clob1_Buy10_Price15_GTB23.Order.OrderId:      25,
+			},
+		},
+		"Batch cancel does not prevent orders with higher gtb from being placed": {
+			firstBlockOrders: []clobtypes.MsgPlaceOrder{},
+			firstBlockBatchCancel: []clobtypes.MsgBatchCancel{
+				{
+					SubaccountId: PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB20.Order.OrderId.SubaccountId,
+					ShortTermCancels: []clobtypes.OrderBatch{
+						{
+							ClobPairId: 0,
+							ClientIds:  []uint32{0, 3},
+						},
+						{
+							ClobPairId: 1,
+							ClientIds:  []uint32{1, 4, 5},
+						},
+					},
+					GoodTilBlock: 25,
+				},
+			},
+			secondBlockOrders: map[clobtypes.MsgPlaceOrder]bool{
+				PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30: true,
+			},
+			expectedOrderIdsInMemclob: map[clobtypes.OrderId]bool{
+				PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30.Order.OrderId: true,
+			},
+			expectedCancelExpirationsInMemclob: map[clobtypes.OrderId]uint32{
+				PlaceOrder_Alice_Num1_Id0_Clob0_Sell10_Price10_GTB30.Order.OrderId: 25,
+			},
+		},
 	}
 
 	for name, tc := range tests {
@@ -536,6 +602,14 @@ func TestBatchCancelBatchFunctionality(t *testing.T) {
 					&genesis,
 					func(genesisState *clobtypes.GenesisState) {
 						genesisState.EquityTierLimitConfig = clobtypes.EquityTierLimitConfiguration{}
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{
+							constants.Alice_Num1_100_000USD,
+						}
 					},
 				)
 				return genesis
