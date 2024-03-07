@@ -112,6 +112,11 @@ var (
 		23,
 		"Market type is invalid",
 	)
+	ErrOpenInterestLowerCapLargerThanUpperCap = errorsmod.Register(
+		ModuleName,
+		24,
+		"open interest lower cap is larger than upper cap",
+	)
 
 	// Errors for Not Implemented
 	ErrNotImplementedFunding = errorsmod.Register(ModuleName, 1001, "Not Implemented: Perpetuals Funding")

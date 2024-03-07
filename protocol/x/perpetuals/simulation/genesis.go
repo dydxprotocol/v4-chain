@@ -190,9 +190,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 		marketId := marketsForPerp[i]
 
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
-		if i%2 == 0 {
-			marketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED
-		}
+		// TODO: add isolated markets when order placements for isolated markets are supported
 
 		perpetuals[i] = types.Perpetual{
 			Params: types.PerpetualParams{
@@ -205,6 +203,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 				MarketType:        marketType,
 			},
 			FundingIndex: dtypes.ZeroInt(),
+			OpenInterest: dtypes.ZeroInt(),
 		}
 	}
 

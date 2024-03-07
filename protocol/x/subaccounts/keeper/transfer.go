@@ -123,11 +123,16 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 		return err
 	}
 
+	collateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, toSubaccountId)
+	if err != nil {
+		return err
+	}
+
 	// Send coins from `fromModule` to the `subaccounts` module account.
-	if err := k.bankKeeper.SendCoinsFromAccountToModule(
+	if err := k.bankKeeper.SendCoins(
 		ctx,
 		fromAccount,
-		types.ModuleName,
+		collateralPoolAddr,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
 		return err
@@ -143,7 +148,7 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 
 // WithdrawFundsFromSubaccountToAccount returns an error if the call to `k.CanUpdateSubaccounts()`
 // fails. Otherwise, deducts the asset quantums from the subaccount, translates the
-// `assetId` and `quantums` into a `sdk.Coin`, and calls `bankKeeper.SendCoinsFromModuleToAccount()`.
+// `assetId` and `quantums` into a `sdk.Coin`, and calls `bankKeeper.SendCoins()`.
 func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	ctx sdk.Context,
 	fromSubaccountId types.SubaccountId,
@@ -181,10 +186,15 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 		return err
 	}
 
+	collateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, fromSubaccountId)
+	if err != nil {
+		return err
+	}
+
 	// Send coins from `fromModule` to the `subaccounts` module account.
-	if err := k.bankKeeper.SendCoinsFromModuleToAccount(
+	if err := k.bankKeeper.SendCoins(
 		ctx,
-		types.ModuleName,
+		collateralPoolAddr,
 		toAccount,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
@@ -201,11 +211,12 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 
 // TransferFeesToFeeCollectorModule translates the assetId and quantums into a sdk.Coin,
 // and moves the funds from subaccounts module to the `fee_collector` module account by calling
-// bankKeeper.SendCoinsFromModuleToModule(). Does not change any individual subaccount state.
+// bankKeeper.SendCoins(). Does not change any individual subaccount state.
 func (k Keeper) TransferFeesToFeeCollectorModule(
 	ctx sdk.Context,
 	assetId uint32,
 	quantums *big.Int,
+	perpetualId uint32,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
 	if assetId != assettypes.AssetUsdc.Id {
@@ -225,19 +236,24 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 		return err
 	}
 
+	collateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
 	// Send coins from `subaccounts` to the `auth` module fee collector account.
-	fromModule := types.ModuleName
-	toModule := authtypes.FeeCollectorName
+	fromModuleAddr := collateralPoolAddr
+	toModuleAddr := authtypes.NewModuleAddress(authtypes.FeeCollectorName)
 
 	if quantums.Sign() < 0 {
 		// In the case of a liquidation, net fees can be negative if the maker gets a rebate.
-		fromModule, toModule = toModule, fromModule
+		fromModuleAddr, toModuleAddr = toModuleAddr, fromModuleAddr
 	}
 
-	if err := k.bankKeeper.SendCoinsFromModuleToModule(
+	if err := k.bankKeeper.SendCoins(
 		ctx,
-		fromModule,
-		toModule,
+		fromModuleAddr,
+		toModuleAddr,
 		[]sdk.Coin{coinToTransfer},
 	); err != nil {
 		return err
@@ -247,7 +263,7 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 }
 
 // TransferInsuranceFundPayments transfers funds in and out of the insurance fund to the subaccounts
-// module by calling `bankKeeper.SendCoinsFromModuleToModule`.
+// module by calling `bankKeeper.SendCoins`.
 // This function transfers funds
 //   - from the insurance fund to the subaccounts module when `insuranceFundDelta` is negative.
 //   - from the subaccounts module to the insurance fund when `insuranceFundDelta` is positive.
@@ -276,8 +292,11 @@ func (k Keeper) TransferInsuranceFundPayments(
 
 	// Determine the sender and receiver.
 	// Send coins from `subaccounts` to the `insurance_fund` module account by default.
-	fromModule := types.ModuleName
-	toModule, err := k.perpetualsKeeper.GetInsuranceFundName(ctx, perpetualId)
+	fromModule, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		panic(err)
+	}
+	toModule, err := k.perpetualsKeeper.GetInsuranceFundModuleAddress(ctx, perpetualId)
 	if err != nil {
 		panic(err)
 	}
@@ -292,8 +311,8 @@ func (k Keeper) TransferInsuranceFundPayments(
 	// module account features
 	return k.bankKeeper.SendCoins(
 		ctx,
-		authtypes.NewModuleAddress(fromModule),
-		authtypes.NewModuleAddress(toModule),
+		fromModule,
+		toModule,
 		[]sdk.Coin{coinToTransfer},
 	)
 }

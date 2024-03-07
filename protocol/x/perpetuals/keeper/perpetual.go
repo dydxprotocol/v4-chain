@@ -100,6 +100,7 @@ func (k Keeper) CreatePerpetual(
 			MarketType:        marketType,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 
 	if err := k.validatePerpetual(
@@ -1434,6 +1435,8 @@ func (k Keeper) SetLiquidityTier(
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
 	impactNotional uint64,
+	openInterestLowerCap uint64,
+	openInterestUpperCap uint64,
 ) (
 	liquidityTier types.LiquidityTier,
 	err error,
@@ -1445,6 +1448,8 @@ func (k Keeper) SetLiquidityTier(
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
 		ImpactNotional:         impactNotional,
+		OpenInterestLowerCap:   openInterestLowerCap,
+		OpenInterestUpperCap:   openInterestUpperCap,
 	}
 
 	// Validate liquidity tier's fields.

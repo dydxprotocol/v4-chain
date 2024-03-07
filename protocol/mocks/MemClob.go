@@ -153,6 +153,22 @@ func (_m *MemClob) GetMidPrice(ctx types.Context, clobPairId clobtypes.ClobPairI
 	return r0, r1, r2, r3
 }
 
+// GetOffchainUpdatesForOrderbookSnapshot provides a mock function with given fields: ctx, clobPairId
+func (_m *MemClob) GetOffchainUpdatesForOrderbookSnapshot(ctx types.Context, clobPairId clobtypes.ClobPairId) *clobtypes.OffchainUpdates {
+	ret := _m.Called(ctx, clobPairId)
+
+	var r0 *clobtypes.OffchainUpdates
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.ClobPairId) *clobtypes.OffchainUpdates); ok {
+		r0 = rf(ctx, clobPairId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	return r0
+}
+
 // GetOperationsRaw provides a mock function with given fields: ctx
 func (_m *MemClob) GetOperationsRaw(ctx types.Context) []clobtypes.OperationRaw {
 	ret := _m.Called(ctx)

@@ -1,8 +1,10 @@
-package v5_0_0
+package v_5_0_0
 
 import (
 	store "cosmossdk.io/store/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
+
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 const (
@@ -12,6 +14,9 @@ const (
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: UpgradeName,
 	StoreUpgrades: store.StoreUpgrades{
-		Added: []string{},
+
+		Added: []string{
+			vaulttypes.StoreKey,
+		},
 	},
 }

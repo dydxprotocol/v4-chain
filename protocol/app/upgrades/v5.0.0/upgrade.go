@@ -1,4 +1,4 @@
-package v5_0_0
+package v_5_0_0
 
 import (
 	"context"
@@ -20,12 +20,10 @@ func perpetualsUpgrade(
 ) error {
 
 	// Set all perpetuals to cross market type
-	perpetuals, err := perpetualsKeeper.GetAllPerpetuals(ctx)
-	if err != nil {
-		panic(fmt.Sprintf("failed to get all perpetuals: %s", err))
-	}
+	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
 	for _, p := range perpetuals {
-		_, err = perpetualsKeeper.SetPerpetualMarketType(ctx, p.GetId(),
+		_, err := perpetualsKeeper.SetPerpetualMarketType(
+			ctx, p.GetId(),
 			perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS)
 		if err != nil {
 			panic(fmt.Sprintf("failed to set perpetual market type for perpetual %d: %s", p.GetId(), err))
@@ -46,6 +44,8 @@ func CreateUpgradeHandler(
 
 		// Set all perpetuals to cross market type
 		perpetualsUpgrade(sdkCtx, perpetualsKeeper)
+
+		// TODO(TRA-93): Initialize `x/vault` module.
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
