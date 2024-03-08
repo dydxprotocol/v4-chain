@@ -86,10 +86,10 @@ func ContextuallySetGaugeWithLabels(
 	keys []string,
 	val float32,
 	labels []gometrics.Label,
-	modes []sdk.ExecMode,
+	allowedModes []sdk.ExecMode,
 ) {
 	contextExecMode := ctx.ExecMode()
-	for _, mode := range modes {
+	for _, mode := range allowedModes {
 		if contextExecMode == mode {
 			telemetry.SetGaugeWithLabels(keys, val, labels)
 		}
