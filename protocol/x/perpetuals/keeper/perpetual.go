@@ -111,7 +111,7 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	// Store the new perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -165,7 +165,7 @@ func (k Keeper) ModifyPerpetual(
 	}
 
 	// Store the modified perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -204,11 +204,18 @@ func (k Keeper) SetPerpetualMarketType(
 		return perpetual, err
 	}
 
+	if perpetual.Params.MarketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("perpetual %d already has market type %v", perpetualId, perpetual.Params.MarketType),
+		)
+	}
+
 	// Modify perpetual.
 	perpetual.Params.MarketType = marketType
 
 	// Store the modified perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	return perpetual, nil
 }
@@ -1208,7 +1215,7 @@ func (k Keeper) ModifyFundingIndex(
 	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 	return nil
 }
 
@@ -1234,7 +1241,7 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) setPerpetual(
+func (k Keeper) SetPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {

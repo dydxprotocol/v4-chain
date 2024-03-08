@@ -324,6 +324,8 @@ func TestSetPerpetualMarketType_Success(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
 	perp := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)[0]
+	perp.Params.MarketType = types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED
+	pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, perp)
 
 	_, err := pc.PerpetualsKeeper.SetPerpetualMarketType(
 		pc.Ctx,
@@ -344,7 +346,7 @@ func TestSetPerpetualMarketType_Success(t *testing.T) {
 	)
 }
 
-func TestSetPerpetualMarketType_Failure(t *testing.T) {
+func TestSetPerpetualMarketType_Failure_SettingToUnspecified(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
 	perp := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)[0]
@@ -360,6 +362,23 @@ func TestSetPerpetualMarketType_Failure(t *testing.T) {
 			"invalid market type %v for perpetual %d",
 			types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perp.GetId(),
 		),
+	)
+	require.EqualError(t, err, expectedErr.Error())
+}
+
+func TestSetPerpetualMarketType_Failure_MarketTypeAlreadySet(t *testing.T) {
+	pc := keepertest.PerpetualsKeepers(t)
+	// Create liquidity tiers and perpetuals,
+	perp := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)[0]
+
+	_, err := pc.PerpetualsKeeper.SetPerpetualMarketType(
+		pc.Ctx,
+		perp.Params.Id,
+		types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+	)
+	expectedErr := errorsmod.Wrap(
+		types.ErrInvalidMarketType,
+		fmt.Sprintf("perpetual %d already has market type %v", perp.GetId(), perp.Params.MarketType),
 	)
 	require.EqualError(t, err, expectedErr.Error())
 }
