@@ -292,7 +292,7 @@ var TestMarketPrices = []types.MarketPrice{
 	{
 		Id:       4,
 		Exponent: Iso2UsdExponent,
-		Price:    ThreeBillion, // 300$ == 1 ISO
+		Price:    ThreeBillion, // 300$ == 1 ISO2
 	},
 }
 
