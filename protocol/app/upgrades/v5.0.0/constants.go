@@ -14,7 +14,6 @@ const (
 var Upgrade = upgrades.Upgrade{
 	UpgradeName: UpgradeName,
 	StoreUpgrades: store.StoreUpgrades{
-
 		Added: []string{
 			vaulttypes.StoreKey,
 		},
