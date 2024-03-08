@@ -34,6 +34,16 @@ message BlockRateLimitConfiguration {
   repeated MaxPerNBlocksRateLimit
       max_short_term_order_cancellations_per_n_blocks = 3
       [ (gogoproto.nullable) = false ];
+
+  // How many batch cancellation attempts (successful and failed) are
+  // allowed for an account per N blocks. Note that the rate limits are
+  // applied in an AND fashion such that a batch cancellation must pass all
+  // rate limit configurations.
+  //
+  // Specifying 0 values disables this rate limit.
+  repeated MaxPerNBlocksRateLimit
+      max_batch_cancels_per_n_blocks = 4
+      [ (gogoproto.nullable) = false ];
 }
 
 // Defines a rate limit over a specific number of blocks.
