@@ -38,4 +38,10 @@ var (
 		ModuleName, 500, "asset transfer quantums is not positive")
 	ErrAssetTransferThroughBankNotImplemented = errorsmod.Register(
 		ModuleName, 501, "asset transfer (other than USDC) through the bank module is not implemented")
+
+	// 600 - 699: isolated markets related.
+	ErrFailedToUpdateIsolatedSubaccount = errorsmod.Register(
+		ModuleName, 600, "failed to update subaccount with perpetual position in isolated market")
+	ErrMixedIsolatedCrossUpdatesNotSupported = errorsmod.Register(
+		ModuleName, 601, "updating isolated and cross perpetual positions is not supported")
 )

@@ -292,6 +292,13 @@ func (k Keeper) UpdateSubaccounts(
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
 	}
 
+	// Check if the updates satisfy the isolated perpetual constraints.
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx, settledUpdates, allPerps)
+	if !success || err != nil {
+		return success, successPerUpdate, err
+	}
+
 	// Apply the updates to perpetual positions.
 	UpdatePerpetualPositions(
 		settledUpdates,
