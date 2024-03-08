@@ -61,8 +61,11 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 // perpetuals. This function assumes the settled subaccount is valid and does not violate the
 // the constraints.
 // The constraint being checked is:
-// - the subaccount after the update cannot have a perpetual position in multiple perpetuals where
-// one of the perpetuals is an isolated perpetual
+//   - a subaccount with a position in an isolated perpetual cannot have updates other perpetuals
+//   - a subaccount with a position in a non-isolated perpetual cannot have updates for isolated
+//     perpetuals
+//   - a subaccount with no positions cannot be updated to have positions in multiple isolated
+//     perpetuals or a combination of isolated and non-isolated perpetuals
 func isValidIsolatedPerpetualUpdates(
 	settledUpdate settledUpdate,
 	perpIdToMarketType map[uint32]perptypes.PerpetualMarketType,
