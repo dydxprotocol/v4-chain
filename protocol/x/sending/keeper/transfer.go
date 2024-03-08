@@ -114,6 +114,7 @@ func (k Keeper) ProcessDepositToSubaccount(
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
 			},
+			// sdk.ExecModeFinalize is used here to ensure metrics are only emitted in the Finalize ExecMode.
 			[]sdk.ExecMode{sdk.ExecModeFinalize},
 		)
 
