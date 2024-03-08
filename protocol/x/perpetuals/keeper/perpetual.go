@@ -111,7 +111,7 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	// Store the new perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -165,7 +165,7 @@ func (k Keeper) ModifyPerpetual(
 	}
 
 	// Store the modified perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -182,6 +182,40 @@ func (k Keeper) ModifyPerpetual(
 			),
 		),
 	)
+
+	return perpetual, nil
+}
+
+func (k Keeper) SetPerpetualMarketType(
+	ctx sdk.Context,
+	perpetualId uint32,
+	marketType types.PerpetualMarketType,
+) (types.Perpetual, error) {
+	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("invalid market type %v for perpetual %d", marketType, perpetualId),
+		)
+	}
+
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return perpetual, err
+	}
+
+	if perpetual.Params.MarketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("perpetual %d already has market type %v", perpetualId, perpetual.Params.MarketType),
+		)
+	}
+
+	// Modify perpetual.
+	perpetual.Params.MarketType = marketType
+
+	// Store the modified perpetual.
+	k.SetPerpetual(ctx, perpetual)
 
 	return perpetual, nil
 }
@@ -1181,7 +1215,7 @@ func (k Keeper) ModifyFundingIndex(
 	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 	return nil
 }
 
@@ -1207,7 +1241,7 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) setPerpetual(
+func (k Keeper) SetPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {
