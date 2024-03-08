@@ -1420,6 +1420,10 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[]' -v "{}"
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[1].limit' -v '20'
 	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_stateful_orders_per_n_blocks.[1].num_blocks' -v '100'
+	# Max 5 batch cancels per 100 blocks
+	dasel put -t json -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_batch_cancels_per_n_blocks.[]' -v "{}"
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_batch_cancels_per_n_blocks.[0].limit' -v '5'
+	dasel put -t int -f "$GENESIS" '.app_state.clob.block_rate_limit_config.max_batch_cancels_per_n_blocks.[0].num_blocks' -v '100'
 
 	# Equity Tier Limit
 	# Max 0 open short term orders for $0 USDC TNC
