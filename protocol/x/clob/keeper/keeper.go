@@ -58,6 +58,7 @@ type (
 
 		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
 		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
+		batchCancelRateLimiter rate_limit.RateLimiter[*types.MsgBatchCancel]
 
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}

@@ -11,6 +11,8 @@ const (
 	MaxShortTermOrderCancellationsPerNBlocksLimit     = 10_000_000
 	MaxStatefulOrdersPerNBlocksNumBlocks              = 10_000
 	MaxStatefulOrdersPerNBlocksLimit                  = 1_000_000
+	MaxBatchCancelsPerNBlocksNumBlocks                = 1_000
+	MaxBatchCancelsPerNBlocksLimit                    = 1_000
 )
 
 // Validate validates each individual MaxPerNBlocksRateLimit.
@@ -24,6 +26,8 @@ const (
 //     cancellation rate limits.
 //   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrderCancellationsPerNBlocksLimit` for short term order
 //     cancellation rate limits.
+//   - `NumBlocks == 0` || `NumBlocks > MaxBatchCancelOrdersPerNBlocksLimit` for batch cancel
+//     rate limits.
 //   - There are multiple rate limits for the same `NumBlocks` in `MaxShortTermOrdersPerNBlocks`,
 //     `MaxStatefulOrdersPerNBlocks`, or `MaxShortTermOrderCancellationsPerNBlocks`.
 func (lc BlockRateLimitConfiguration) Validate() error {
@@ -45,6 +49,13 @@ func (lc BlockRateLimitConfiguration) Validate() error {
 		"MaxShortTermOrderCancellationsPerNBlocks",
 		MaxShortTermOrderCancellationsPerNBlocksNumBlocks,
 		MaxShortTermOrderCancellationsPerNBlocksLimit,
+	); err != nil {
+		return err
+	}
+	if err := (maxPerNBlocksRateLimits)(lc.MaxBatchCancelsPerNBlocks).validate(
+		"MaxBatchCancelsPerNBlocks",
+		MaxBatchCancelsPerNBlocksNumBlocks,
+		MaxBatchCancelsPerNBlocksLimit,
 	); err != nil {
 		return err
 	}
