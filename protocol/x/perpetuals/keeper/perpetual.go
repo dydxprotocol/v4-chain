@@ -1016,7 +1016,10 @@ func GetMarginRequirementsInQuoteQuantums(
 	)
 
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums)
+	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		big.NewInt(0), // Temporary for open interest notional. TODO(OTE-214): replace with actual value.
+	)
 
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(

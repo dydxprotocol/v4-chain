@@ -72,14 +72,102 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 	)
 }
 
-// GetInitialMarginQuoteQuantums returns initial margin in quote quantums.
+// GetInitialMarginQuoteQuantums returns initial margin requirement (IMR) in quote quantums.
 //
-// marginQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
+// Now that OIMF is introduced, the calculation of IMR is as follows:
 //
-// note: divisions are delayed for precision purposes.
-func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(bigQuoteQuantums *big.Int) *big.Int {
-	result := new(big.Rat).SetInt(bigQuoteQuantums)
-	// Multiply above result with `initialMarginPpm` and divide by 1 million.
-	result = lib.BigRatMulPpm(result, liquidityTier.InitialMarginPpm)
-	return lib.BigRatRound(result, true) // Round up initial margin.
+// - Each market has a `Lower Cap` and `Upper Cap` denominated in USDC.
+// - Each market already has a `Base IMF`.
+// - At any point in time, for each market:
+//   - Define
+//   - `Open Notional = Open Interest * Oracle Price`
+//   - `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
+//   - `IMF Increase = Scaling Factor * (1 - Base IMF)`
+//   - Then a market’s `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
+//
+// - I.e. the effective IMF is the base IMF while the OI < lower cap, and increases linearly until OI = Upper Cap,
+// at which point the IMF stays at 1.0 (requiring 1:1 collateral for trading).
+// - initialMarginQuoteQuantums = scaledInitialMarginPpm * quoteQuantums / 1_000_000
+//
+// note:
+// - divisions are delayed for precision purposes.
+// - input `openInterestQuoteQuantums“ is modified for memory efficiency
+func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
+	bigQuoteQuantums *big.Int,
+	openInterestQuoteQuantums *big.Int,
+) *big.Int {
+	bigOpenInterestUpperCap := new(big.Int).SetUint64(liquidityTier.OpenInterestUpperCap)
+
+	// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
+	ratQuoteQuantums := new(big.Rat).SetInt(bigQuoteQuantums)
+	ratBaseIMR := lib.BigRatMulPpm(ratQuoteQuantums, liquidityTier.InitialMarginPpm)
+
+	// If `open_interest_upper_cap` is 0, OIMF is disabled (always use base IMF)
+	if liquidityTier.OpenInterestUpperCap == 0 {
+		return lib.BigRatRound(ratBaseIMR, true) // Round up initial margin.
+	}
+
+	// If `open_interest` > `open_interest_upper_cap`,
+	// OIMF = 1.0 so return input quote quantums as the IMR.
+	if openInterestQuoteQuantums.Cmp(
+		bigOpenInterestUpperCap,
+	) >= 0 {
+		return bigQuoteQuantums
+	}
+
+	// If `current_interest` < `open_interest_lower_cap`, use base IMF as OIMF.
+	bigOpenInterestLowerCap := new(big.Int).SetUint64(liquidityTier.OpenInterestLowerCap)
+	if openInterestQuoteQuantums.Cmp(
+		bigOpenInterestLowerCap,
+	) <= 0 {
+		return lib.BigRatRound(ratBaseIMR, true) // Round up initial margin.
+	}
+
+	// If `open_interest_lower_cap` <= `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
+	// `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
+	ratScalingFactor := new(big.Rat).SetFrac(
+		openInterestQuoteQuantums.Sub(
+			openInterestQuoteQuantums, // reuse pointer for memory efficiency
+			bigOpenInterestLowerCap,
+		),
+		bigOpenInterestUpperCap.Sub(
+			bigOpenInterestUpperCap, // reuse pointer for memory efficiency
+			bigOpenInterestLowerCap,
+		),
+	)
+
+	// `IMF Increase = Scaling Factor * (1 - Base IMF)`
+	ratIMFIncrease := ratScalingFactor.Mul(
+		ratScalingFactor, // reuse pointer for memory efficiency
+		new(big.Rat).SetFrac64(
+			int64(lib.OneMillion-liquidityTier.InitialMarginPpm), // >= 0, since we check in `liquidityTier.Validate()`
+			int64(lib.OneMillion),
+		),
+	)
+
+	// Calculate `Max(IMF Increase, 0)`.
+	if ratIMFIncrease.Sign() < 0 {
+		ratIMFIncrease.SetUint64(0)
+	}
+	// `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
+	// Multiply `quoteQuantums` on both sides:
+	// `Effective IMR = Min(Base IMR + Max(IMF Increase, 0) * quoteQuantums, quoteQuantums)`
+	ratIMRIncrease := ratIMFIncrease.Mul(
+		ratIMFIncrease, // reuse pointer for memory efficiency
+		ratQuoteQuantums,
+	)
+
+	bigIMREffective := lib.BigRatRound(
+		ratBaseIMR.Add(
+			ratBaseIMR, // reuse pointer for memory efficiency
+			ratIMRIncrease,
+		),
+		true, // Round up initial margin.
+	)
+
+	// Return `Min(Effective IMR, quoteQuantums)`.
+	if bigIMREffective.Cmp(bigQuoteQuantums) < 0 {
+		return bigIMREffective
+	}
+	return bigQuoteQuantums
 }
