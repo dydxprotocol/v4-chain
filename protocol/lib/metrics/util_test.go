@@ -277,7 +277,7 @@ func TestSetGaugeWithLabelsAndContext(t *testing.T) {
 	)
 
 	FinalizeModeKeyFound := false
-	SimateModeKeyFound := false
+	SimulateModeKeyFound := false
 	for _, metrics := range sink.Data() {
 		metrics.RLock()
 		defer metrics.RUnlock()
@@ -293,9 +293,9 @@ func TestSetGaugeWithLabelsAndContext(t *testing.T) {
 			FinalizeModeKeyFound = true
 		}
 		if _, ok := metrics.Gauges["testService.testKey2;testLabel=testLabelValue"]; ok {
-			SimateModeKeyFound = true
+			SimulateModeKeyFound = true
 		}
 	}
 	require.True(t, FinalizeModeKeyFound)
-	require.False(t, SimateModeKeyFound)
+	require.False(t, SimulateModeKeyFound)
 }
