@@ -1,7 +1,6 @@
 package client_test
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"testing"
@@ -15,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -64,29 +64,6 @@ func TestStart_UnixSocketConnectionFails(t *testing.T) {
 	mockGrpcClient.AssertNumberOfCalls(t, "CloseConnection", 1)
 }
 
-// FakeSubTaskRunner is a mock implementation of the SubTaskRunner interface for testing.
-type FakeSubTaskRunner struct {
-	err    error
-	called bool
-}
-
-func NewFakeSubTaskRunnerWithError(err error) *FakeSubTaskRunner {
-	return &FakeSubTaskRunner{
-		err: err,
-	}
-}
-
-// RunLiquidationDaemonTaskLoop is a mock implementation of the SubTaskRunner interface. It records the
-// call as a sanity check, and returns the error set by NewFakeSubTaskRunnerWithError.
-func (f *FakeSubTaskRunner) RunLiquidationDaemonTaskLoop(
-	_ context.Context,
-	_ *client.Client,
-	_ flags.LiquidationFlags,
-) error {
-	f.called = true
-	return f.err
-}
-
 func TestHealthCheck_Mixed(t *testing.T) {
 	tests := map[string]struct {
 		// taskLoopResponses is a list of errors returned by the task loop. If the error is nil, the task loop is
@@ -118,6 +95,10 @@ func TestHealthCheck_Mixed(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			c := client.NewClient(log.NewNopLogger())
+			c.SubaccountQueryClient = &mocks.QueryClient{}
+			c.ClobQueryClient = &mocks.QueryClient{}
+			c.LiquidationServiceClient = &mocks.QueryClient{}
+			taskRunner := &mocks.LiquidationDaemonTaskRunner{}
 
 			// Sanity check - the client should be unhealthy before the first successful update.
 			require.ErrorContains(
@@ -130,21 +111,26 @@ func TestHealthCheck_Mixed(t *testing.T) {
 			for _, taskLoopError := range tc.taskLoopResponses {
 				ticker, stop := daemontestutils.SingleTickTickerAndStop()
 
-				c.SubaccountQueryClient = &mocks.QueryClient{}
-				c.ClobQueryClient = &mocks.QueryClient{}
-				c.LiquidationServiceClient = &mocks.QueryClient{}
+				taskRunner.On(
+					"RunLiquidationDaemonTaskLoop",
+					mock.Anything,
+					mock.Anything,
+					mock.Anything,
+				).Return(taskLoopError).Once()
 
 				// Start the daemon task loop. Since we created a single-tick ticker, this will run for one iteration and
 				// return.
 				client.StartLiquidationsDaemonTaskLoop(
 					c,
 					grpc.Ctx,
-					NewFakeSubTaskRunnerWithError(taskLoopError),
+					taskRunner,
 					flags.GetDefaultDaemonFlags(),
 					ticker,
 					stop,
 				)
 			}
+
+			taskRunner.AssertExpectations(t)
 
 			if tc.expectedHealthStatus == nil {
 				require.NoError(t, c.HealthCheck())
