@@ -36,9 +36,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	}
 
 	for i, u := range settledUpdates {
-		_, exists := idOfSettledUpdates[*u.SettledSubaccount.Id]
-
-		if exists {
+		if _, exists := idOfSettledUpdates[*u.SettledSubaccount.Id]; exists {
 			return false, nil, types.ErrNonUniqueUpdatesSubaccount
 		}
 
@@ -61,7 +59,8 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 // perpetuals. This function assumes the settled subaccount is valid and does not violate the
 // the constraints.
 // The constraint being checked is:
-//   - a subaccount with a position in an isolated perpetual cannot have updates other perpetuals
+//   - a subaccount with a position in an isolated perpetual cannot have updates for other
+//     perpetuals
 //   - a subaccount with a position in a non-isolated perpetual cannot have updates for isolated
 //     perpetuals
 //   - a subaccount with no positions cannot be updated to have positions in multiple isolated
@@ -90,6 +89,7 @@ func isValidIsolatedPerpetualUpdates(
 		if marketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
 			hasIsolatedUpdate = true
 			isolatedUpdatePerpetualId = perpetualUpdate.PerpetualId
+			break
 		}
 	}
 
@@ -109,6 +109,7 @@ func isValidIsolatedPerpetualUpdates(
 		if marketType == perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED {
 			isIsolatedSubaccount = true
 			isolatedPositionPerpetualId = perpetualPosition.PerpetualId
+			break
 		}
 	}
 
@@ -130,7 +131,7 @@ func isValidIsolatedPerpetualUpdates(
 		return types.ViolatesIsolatedSubaccountConstraints, nil
 	}
 
-	// Note  we can assume that if `hasIsolatedUpdate` is true, there is only a single perpetual
+	// Note we can assume that if `hasIsolatedUpdate` is true, there is only a single perpetual
 	// update for the subaccount, given the above check.
 	// A subaccount with a perpetual position in an isolated perpetual cannot have an update to
 	// another isolated perpetual.
