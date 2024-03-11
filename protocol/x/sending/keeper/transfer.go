@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"math/big"
-	"strings"
 	"time"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -110,7 +109,7 @@ func (k Keeper) ProcessDepositToSubaccount(
 			// sdk.ExecModeFinalize is used here to ensure metrics are only emitted in the Finalize ExecMode.
 			[]sdk.ExecMode{sdk.ExecModeFinalize},
 			metrics.SetGaugeWithLabels,
-			strings.Join([]string{types.ModuleName, metrics.ProcessDepositToSubaccount}, "_"),
+			metrics.SendingProcessDepositToSubaccount,
 			float32(msgDepositToSubaccount.Quantums),
 			metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
 		)
