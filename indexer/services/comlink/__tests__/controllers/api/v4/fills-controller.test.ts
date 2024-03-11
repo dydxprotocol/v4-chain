@@ -60,8 +60,8 @@ describe('fills-controller#V4', () => {
         createdAtHeight: testConstants.defaultFill.createdAtHeight,
       };
 
-      expect(response.body.fills).toHaveLength(1);
-      expect(response.body.fills).toEqual(
+      expect(response.body).toHaveLength(1);
+      expect(response.body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...expected,
@@ -110,8 +110,8 @@ describe('fills-controller#V4', () => {
       };
 
       // Only the ETH-USD order should be returned
-      expect(response.body.fills).toHaveLength(1);
-      expect(response.body.fills).toEqual(
+      expect(response.body).toHaveLength(1);
+      expect(response.body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...expected,
@@ -175,8 +175,8 @@ describe('fills-controller#V4', () => {
       ];
 
       // Fills should be returned sorted by createdAtHeight in descending order.
-      expect(response.body.fills).toHaveLength(2);
-      expect(response.body.fills).toEqual(
+      expect(response.body).toHaveLength(2);
+      expect(response.body).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             ...expected[0],
@@ -200,7 +200,7 @@ describe('fills-controller#V4', () => {
           `&market=${testConstants.defaultPerpetualMarket2.ticker}&marketType=${MarketType.PERPETUAL}`,
       });
 
-      expect(response.body.fills).toEqual([]);
+      expect(response.body).toEqual([]);
     });
 
     it.each([

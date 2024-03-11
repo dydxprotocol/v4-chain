@@ -32,7 +32,7 @@ import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import { fillToResponseObject } from '../../../request-helpers/request-transformer';
 import {
-  FillRequest, FillResponse, FillResponseObject, MarketAndTypeByClobPairId, MarketType,
+  FillRequest, FillResponseObject, MarketAndTypeByClobPairId, MarketType,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -49,7 +49,7 @@ class FillsController extends Controller {
       @Query() limit: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
-  ): Promise<FillResponse> {
+  ): Promise<FillResponseObject[]> {
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
     let clobPairId: string | undefined;
@@ -88,11 +88,9 @@ class FillsController extends Controller {
       },
     );
 
-    return {
-      fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
-        return fillToResponseObject(fill, clobPairIdToMarket);
-      }),
-    };
+    return fills.map((fill: FillFromDatabase): FillResponseObject => {
+      return fillToResponseObject(fill, clobPairIdToMarket);
+    });
   }
 }
 
@@ -143,7 +141,7 @@ router.get(
     // querying the DB.
     try {
       const controller: FillsController = new FillsController();
-      const response: FillResponse = await controller.getFills(
+      const response: FillResponseObject[] = await controller.getFills(
         address,
         subaccountNumber,
         market,

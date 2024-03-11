@@ -565,32 +565,67 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
 > 200 Response
 
 ```json
-{
-  "fills": [
-    {
-      "id": "string",
-      "side": "BUY",
-      "liquidity": "TAKER",
-      "type": "LIMIT",
-      "market": "string",
-      "marketType": "PERPETUAL",
-      "price": "string",
-      "size": "string",
-      "fee": "string",
-      "createdAt": "string",
-      "createdAtHeight": "string",
-      "orderId": "string",
-      "clientMetadata": "string"
-    }
-  ]
-}
+[
+  {
+    "id": "string",
+    "side": "BUY",
+    "liquidity": "TAKER",
+    "type": "LIMIT",
+    "market": "string",
+    "marketType": "PERPETUAL",
+    "price": "string",
+    "size": "string",
+    "fee": "string",
+    "createdAt": "string",
+    "createdAtHeight": "string",
+    "orderId": "string",
+    "clientMetadata": "string"
+  }
+]
 ```
 
 ### Responses
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[FillResponse](#schemafillresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|Inline|
+
+### Response Schema
+
+Status Code **200**
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|[[FillResponseObject](#schemafillresponseobject)]|false|none|none|
+|» id|string|true|none|none|
+|» side|[OrderSide](#schemaorderside)|true|none|none|
+|» liquidity|[Liquidity](#schemaliquidity)|true|none|none|
+|» type|[FillType](#schemafilltype)|true|none|none|
+|» market|string|true|none|none|
+|» marketType|[MarketType](#schemamarkettype)|true|none|none|
+|» price|string|true|none|none|
+|» size|string|true|none|none|
+|» fee|string|true|none|none|
+|» createdAt|[IsoString](#schemaisostring)|true|none|none|
+|» createdAtHeight|string|true|none|none|
+|» orderId|string|false|none|none|
+|» clientMetadata|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|side|BUY|
+|side|SELL|
+|liquidity|TAKER|
+|liquidity|MAKER|
+|type|LIMIT|
+|type|LIQUIDATED|
+|type|LIQUIDATION|
+|type|DELEVERAGED|
+|type|OFFSETTING|
+|marketType|PERPETUAL|
+|marketType|SPOT|
 
 <aside class="success">
 This operation does not require authentication
@@ -2630,42 +2665,6 @@ This operation does not require authentication
 |createdAtHeight|string|true|none|none|
 |orderId|string|false|none|none|
 |clientMetadata|string|false|none|none|
-
-## FillResponse
-
-<a id="schemafillresponse"></a>
-<a id="schema_FillResponse"></a>
-<a id="tocSfillresponse"></a>
-<a id="tocsfillresponse"></a>
-
-```json
-{
-  "fills": [
-    {
-      "id": "string",
-      "side": "BUY",
-      "liquidity": "TAKER",
-      "type": "LIMIT",
-      "market": "string",
-      "marketType": "PERPETUAL",
-      "price": "string",
-      "size": "string",
-      "fee": "string",
-      "createdAt": "string",
-      "createdAtHeight": "string",
-      "orderId": "string",
-      "clientMetadata": "string"
-    }
-  ]
-}
-
-```
-
-### Properties
-
-|Name|Type|Required|Restrictions|Description|
-|---|---|---|---|---|
-|fills|[[FillResponseObject](#schemafillresponseobject)]|true|none|none|
 
 ## HeightResponse
 
