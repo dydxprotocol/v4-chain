@@ -31,6 +31,7 @@ const (
 	ClobConditionalOrderTriggerPrice          = "clob_conditional_order_trigger_price"
 	ClobConditionalOrderTriggered             = "clob_conditional_order_triggered"
 	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
+	SendingProcessDepositToSubaccount         = "sending_process_deposit_to_subaccount"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
