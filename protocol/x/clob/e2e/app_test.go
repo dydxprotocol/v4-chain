@@ -254,6 +254,16 @@ var (
 		},
 		20,
 	)
+	BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num1,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
 )
 
 // We place 300 orders that match and 700 orders followed by their cancellations concurrently.
