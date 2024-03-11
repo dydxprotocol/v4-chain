@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSetGaugeWithLabelsAndContext(t *testing.T) {
+func TestSetGaugeWithLabelsForExecMode(t *testing.T) {
 	t.Cleanup(gometrics.Shutdown)
 	context := sdk.Context{}
 	conf := gometrics.DefaultConfig("testService")
