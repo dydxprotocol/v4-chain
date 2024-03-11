@@ -13,8 +13,7 @@ import (
 // that supports float64 (i.e hashicorp go-metrics)
 
 type Label = gometrics.Label
-type TelemetryEmitWithLabelsFunc func(key []string, val float32, labels []gometrics.Label)
-type TelemetryEmityFunc func(key []string, val float32)
+type TelemetryEmitWithLabelsFunc func(key string, val float32, labels ...gometrics.Label)
 
 // IncrCounterWithLabels provides a wrapper functionality for emitting a counter
 // metric with global labels (if any) along with the provided labels.
@@ -111,23 +110,11 @@ func EmitTelemetryWithLabelsForExecMode(
 	ctx sdk.Context,
 	allowedModes []sdk.ExecMode,
 	telemtryFuncWithLabels TelemetryEmitWithLabelsFunc,
-	key []string,
+	key string,
 	val float32,
-	labels []gometrics.Label,
+	labels ...gometrics.Label,
 ) {
 	if isAllowedExecutionMode(ctx, allowedModes) {
-		telemtryFuncWithLabels(key, val, labels)
-	}
-}
-
-func EmitTelemetryForExecMode(
-	ctx sdk.Context,
-	allowedModes []sdk.ExecMode,
-	telemtryFunc TelemetryEmityFunc,
-	key []string,
-	val float32,
-) {
-	if isAllowedExecutionMode(ctx, allowedModes) {
-		telemtryFunc(key, val)
+		telemtryFuncWithLabels(key, val, labels...)
 	}
 }

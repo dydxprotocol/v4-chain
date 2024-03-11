@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"math/big"
+	"strings"
 	"time"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -108,15 +109,10 @@ func (k Keeper) ProcessDepositToSubaccount(
 			ctx,
 			// sdk.ExecModeFinalize is used here to ensure metrics are only emitted in the Finalize ExecMode.
 			[]sdk.ExecMode{sdk.ExecModeFinalize},
-			telemetry.SetGaugeWithLabels,
-			[]string{
-				types.ModuleName,
-				metrics.ProcessDepositToSubaccount,
-			},
+			metrics.SetGaugeWithLabels,
+			strings.Join([]string{types.ModuleName, metrics.ProcessDepositToSubaccount}, "_"),
 			float32(msgDepositToSubaccount.Quantums),
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
-			},
+			metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
 		)
 
 		// Add deposit event to Indexer block message.

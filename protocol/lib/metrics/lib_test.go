@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -25,25 +24,25 @@ func TestSetGaugeWithLabelsForExecMode(t *testing.T) {
 	metrics.EmitTelemetryWithLabelsForExecMode(
 		context,
 		[]sdk.ExecMode{sdk.ExecModeFinalize},
-		telemetry.SetGaugeWithLabels,
-		[]string{"testKey1"},
+		metrics.SetGaugeWithLabels,
+		"testKey1",
 		3.14,
-		[]gometrics.Label{{
+		gometrics.Label{
 			Name:  "testLabel",
 			Value: "testLabelValue",
-		}},
+		},
 	)
 
 	metrics.EmitTelemetryWithLabelsForExecMode(
 		context,
 		[]sdk.ExecMode{sdk.ExecModeSimulate},
-		telemetry.SetGaugeWithLabels,
-		[]string{"testKey2"},
+		metrics.SetGaugeWithLabels,
+		"testKey2",
 		3.14,
-		[]gometrics.Label{{
+		gometrics.Label{
 			Name:  "testLabel",
 			Value: "testLabelValue",
-		}},
+		},
 	)
 
 	FinalizeModeKeyFound := false
