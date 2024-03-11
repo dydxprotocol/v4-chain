@@ -2,7 +2,10 @@ package types
 
 // DONTCOVER
 
-import errorsmod "cosmossdk.io/errors"
+import (
+	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
+)
 
 // x/subaccounts module sentinel errors
 var (
@@ -18,9 +21,13 @@ var (
 	ErrProductPositionNotUpdatable = errorsmod.Register(ModuleName, 103, "product position is not updatable")
 
 	// 200 - 299: subaccount id related.
-	ErrInvalidSubaccountIdNumber = errorsmod.Register(ModuleName, 200, "subaccount id number cannot exceed 127")
-	ErrInvalidSubaccountIdOwner  = errorsmod.Register(ModuleName, 201, "subaccount id owner is an invalid address")
-	ErrDuplicateSubaccountIds    = errorsmod.Register(ModuleName, 202, "duplicate subaccount id found in genesis")
+	ErrInvalidSubaccountIdNumber = errorsmod.Register(
+		ModuleName,
+		200,
+		"subaccount id number cannot exceed "+lib.IntToString(MaxSubaccountIdNumber),
+	)
+	ErrInvalidSubaccountIdOwner = errorsmod.Register(ModuleName, 201, "subaccount id owner is an invalid address")
+	ErrDuplicateSubaccountIds   = errorsmod.Register(ModuleName, 202, "duplicate subaccount id found in genesis")
 
 	// 300 - 399: asset position related.
 	ErrAssetPositionsOutOfOrder       = errorsmod.Register(ModuleName, 300, "asset positions are out of order")
