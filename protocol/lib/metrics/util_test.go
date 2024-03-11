@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -242,60 +241,4 @@ func TestModuleMeasureSinceWithLabels(t *testing.T) {
 		}
 	}
 	require.True(t, found)
-}
-
-func TestSetGaugeWithLabelsAndContext(t *testing.T) {
-	t.Cleanup(gometrics.Shutdown)
-	context := sdk.Context{}
-	conf := gometrics.DefaultConfig("testService")
-	conf.EnableHostname = false
-	sink := gometrics.NewInmemSink(time.Hour, time.Hour)
-	_, err := gometrics.NewGlobal(conf, sink)
-	require.NoError(t, err)
-
-	context = context.WithExecMode(sdk.ExecModeFinalize)
-	metrics.ContextuallySetGaugeWithLabels(
-		context,
-		[]string{"testKey1"},
-		3.14,
-		[]gometrics.Label{{
-			Name:  "testLabel",
-			Value: "testLabelValue",
-		}},
-		[]sdk.ExecMode{sdk.ExecModeFinalize},
-	)
-
-	metrics.ContextuallySetGaugeWithLabels(
-		context,
-		[]string{"testKey2"},
-		3.14,
-		[]gometrics.Label{{
-			Name:  "testLabel",
-			Value: "testLabelValue",
-		}},
-		[]sdk.ExecMode{sdk.ExecModeSimulate},
-	)
-
-	FinalizeModeKeyFound := false
-	SimulateModeKeyFound := false
-	for _, metrics := range sink.Data() {
-		metrics.RLock()
-		defer metrics.RUnlock()
-
-		if metric, ok := metrics.Gauges["testService.testKey1;testLabel=testLabelValue"]; ok {
-			require.Equal(t,
-				[]gometrics.Label{{
-					Name:  "testLabel",
-					Value: "testLabelValue",
-				}},
-				metric.Labels)
-			require.Equal(t, float32(3.14), metric.Value)
-			FinalizeModeKeyFound = true
-		}
-		if _, ok := metrics.Gauges["testService.testKey2;testLabel=testLabelValue"]; ok {
-			SimulateModeKeyFound = true
-		}
-	}
-	require.True(t, FinalizeModeKeyFound)
-	require.False(t, SimulateModeKeyFound)
 }

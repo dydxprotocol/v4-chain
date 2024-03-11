@@ -80,18 +80,3 @@ func GetCallbackMetricFromCtx(ctx sdk.Context) string {
 
 	return DeliverTx
 }
-
-func ContextuallySetGaugeWithLabels(
-	ctx sdk.Context,
-	keys []string,
-	val float32,
-	labels []gometrics.Label,
-	allowedModes []sdk.ExecMode,
-) {
-	contextExecMode := ctx.ExecMode()
-	for _, mode := range allowedModes {
-		if contextExecMode == mode {
-			telemetry.SetGaugeWithLabels(keys, val, labels)
-		}
-	}
-}

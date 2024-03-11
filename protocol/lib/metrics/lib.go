@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
@@ -12,6 +13,8 @@ import (
 // that supports float64 (i.e hashicorp go-metrics)
 
 type Label = gometrics.Label
+type TelemetryEmitWithLabelsFunc func(key []string, val float32, labels []gometrics.Label)
+type TelemetryEmityFunc func(key []string, val float32)
 
 // IncrCounterWithLabels provides a wrapper functionality for emitting a counter
 // metric with global labels (if any) along with the provided labels.
@@ -89,4 +92,42 @@ func ModuleMeasureSinceWithLabels(
 			labels...,
 		),
 	)
+}
+
+func isAllowedExecutionMode(
+	ctx sdk.Context,
+	allowedModes []sdk.ExecMode,
+) bool {
+	contextExecMode := ctx.ExecMode()
+	for _, mode := range allowedModes {
+		if contextExecMode == mode {
+			return true
+		}
+	}
+	return false
+}
+
+func EmitTelemetryWithLabelsForExecMode(
+	ctx sdk.Context,
+	allowedModes []sdk.ExecMode,
+	telemtryFuncWithLabels TelemetryEmitWithLabelsFunc,
+	key []string,
+	val float32,
+	labels []gometrics.Label,
+) {
+	if isAllowedExecutionMode(ctx, allowedModes) {
+		telemtryFuncWithLabels(key, val, labels)
+	}
+}
+
+func EmitTelemetryForExecMode(
+	ctx sdk.Context,
+	allowedModes []sdk.ExecMode,
+	telemtryFunc TelemetryEmityFunc,
+	key []string,
+	val float32,
+) {
+	if isAllowedExecutionMode(ctx, allowedModes) {
+		telemtryFunc(key, val)
+	}
 }
