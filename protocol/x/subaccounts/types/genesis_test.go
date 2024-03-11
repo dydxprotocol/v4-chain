@@ -1,8 +1,9 @@
 package types_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"testing"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
@@ -85,13 +86,13 @@ func TestGenesisState_Validate(t *testing.T) {
 			},
 			expectedError: types.ErrInvalidSubaccountIdOwner,
 		},
-		"invalid: id number is greater than 127": {
+		"invalid: id number is greater than 128_000": {
 			genState: &types.GenesisState{
 				Subaccounts: []types.Subaccount{
 					{
 						Id: &types.SubaccountId{
 							Owner:  sample.AccAddress(),
-							Number: uint32(128),
+							Number: uint32(128_001),
 						},
 					},
 				},

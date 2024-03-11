@@ -53,7 +53,7 @@ func TestSubaccountIdValidate(t *testing.T) {
 		},
 		"invalid number": {
 			owner:         sample.AccAddress(),
-			number:        128,
+			number:        128_001,
 			expectedError: types.ErrInvalidSubaccountIdNumber,
 		},
 	}
