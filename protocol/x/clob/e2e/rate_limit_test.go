@@ -1,8 +1,9 @@
 package clob_test
 
 import (
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -512,6 +513,20 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			replayGreaterGTB: &CancelOrder_Alice_Num0_Id0_Clob0_GTB27,
 			firstValidGTB:    &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
 			secondValidGTB:   &CancelOrder_Alice_Num1_Id0_Clob0_GTB20,
+		},
+		"Batch cancellations": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxBatchCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 1,
+						Limit:     1,
+					},
+				},
+			},
+			replayLessGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
+			replayGreaterGTB: &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27,
+			firstValidGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
+			secondValidGTB:   &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
 		},
 	}
 
