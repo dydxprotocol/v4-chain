@@ -537,9 +537,6 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	success = true
-	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
-
 	// Check if the updates satisfy the isolated perpetual constraints.
 	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
 		ctx,
