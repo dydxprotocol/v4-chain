@@ -88,7 +88,7 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 				mockClobKeeper,
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},
-				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
