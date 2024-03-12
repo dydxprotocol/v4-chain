@@ -12,6 +12,8 @@ import (
 
 // checkIsolatedSubaccountConstaints will validate all `updates` to the relevant subaccounts against
 // isolated subaccount constraints.
+// This function checks each update in isolation, so if multiple updates for the same subaccount id
+// are passed in, they are evaluated together
 // The input subaccounts must be settled.
 //
 // Returns a `success` value of `true` if all updates are valid.
@@ -22,7 +24,6 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
 	perpetuals []perptypes.Perpetual,
-	uniqueSubaccounts bool,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -30,7 +31,6 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
-	var idOfSettledUpdates = make(map[types.SubaccountId]struct{})
 	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType)
 
 	for _, perpetual := range perpetuals {
@@ -38,12 +38,6 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	}
 
 	for i, u := range settledUpdates {
-		if uniqueSubaccounts {
-			if _, exists := idOfSettledUpdates[*u.SettledSubaccount.Id]; exists {
-				return false, nil, types.ErrNonUniqueUpdatesSubaccount
-			}
-		}
-
 		result, err := isValidIsolatedPerpetualUpdates(u, perpIdToMarketType)
 		if err != nil {
 			return false, nil, err
@@ -53,7 +47,6 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 		}
 
 		successPerUpdate[i] = result
-		idOfSettledUpdates[*u.SettledSubaccount.Id] = struct{}{}
 	}
 
 	return success, successPerUpdate, nil

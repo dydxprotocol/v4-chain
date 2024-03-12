@@ -280,19 +280,13 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	// Check if the updates satisfy the isolated perpetual constraints.
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(
 		ctx,
 		settledUpdates,
+		updateType,
 		allPerps,
-		true, // uniqueSubaccounts
 	)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
-
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
@@ -389,19 +383,8 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	// Check if the updates satisfy the isolated perpetual constraints.
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
-		ctx,
-		settledUpdates,
-		allPerps,
-		false, // uniqueSubaccounts
-	)
-	if !success || err != nil {
-		return success, successPerUpdate, err
-	}
-
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
+	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -534,6 +517,7 @@ func checkPositionUpdatable(
 
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
+// The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
 // with the same `Subaccount`, they are validated without respect to each
 // other.
@@ -547,6 +531,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
 	updateType types.UpdateType,
+	perpetuals []perptypes.Perpetual,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -554,6 +539,19 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+
+	// Check if the updates satisfy the isolated perpetual constraints.
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx,
+		settledUpdates,
+		perpetuals,
+	)
+	if err != nil {
+		return false, nil, err
+	}
+	if !success {
+		return success, successPerUpdate, nil
+	}
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
