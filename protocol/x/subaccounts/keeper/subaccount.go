@@ -280,23 +280,27 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
+	// Check if the updates satisfy the isolated perpetual constraints.
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx,
+		settledUpdates,
+		allPerps,
+		true, // uniqueSubaccounts
+	)
+	if !success || err != nil {
+		return success, successPerUpdate, err
+	}
+
 	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
 
 	// Get a mapping from perpetual Id to current perpetual funding index.
-	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
 	for _, perp := range allPerps {
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
-	}
-
-	// Check if the updates satisfy the isolated perpetual constraints.
-	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
-		ctx, settledUpdates, allPerps)
-	if !success || err != nil {
-		return success, successPerUpdate, err
 	}
 
 	// Apply the updates to perpetual positions.
@@ -383,6 +387,18 @@ func (k Keeper) CanUpdateSubaccounts(
 	settledUpdates, _, err := k.getSettledUpdates(ctx, updates, false)
 	if err != nil {
 		return false, nil, err
+	}
+
+	// Check if the updates satisfy the isolated perpetual constraints.
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx,
+		settledUpdates,
+		allPerps,
+		false, // uniqueSubaccounts
+	)
+	if !success || err != nil {
+		return success, successPerUpdate, err
 	}
 
 	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)

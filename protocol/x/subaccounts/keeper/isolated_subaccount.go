@@ -1,6 +1,8 @@
 package keeper
 
 import (
+	"math"
+
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -10,7 +12,6 @@ import (
 
 // checkIsolatedSubaccountConstaints will validate all `updates` to the relevant subaccounts against
 // isolated subaccount constraints.
-// The `updates` have to contain `Subaccounts` with unique `SubaccountIds`.
 // The input subaccounts must be settled.
 //
 // Returns a `success` value of `true` if all updates are valid.
@@ -21,6 +22,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
 	perpetuals []perptypes.Perpetual,
+	uniqueSubaccounts bool,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
@@ -36,8 +38,10 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	}
 
 	for i, u := range settledUpdates {
-		if _, exists := idOfSettledUpdates[*u.SettledSubaccount.Id]; exists {
-			return false, nil, types.ErrNonUniqueUpdatesSubaccount
+		if uniqueSubaccounts {
+			if _, exists := idOfSettledUpdates[*u.SettledSubaccount.Id]; exists {
+				return false, nil, types.ErrNonUniqueUpdatesSubaccount
+			}
 		}
 
 		result, err := isValidIsolatedPerpetualUpdates(u, perpIdToMarketType)
@@ -77,7 +81,7 @@ func isValidIsolatedPerpetualUpdates(
 
 	// Check if the updates contain an update to an isolated perpetual.
 	hasIsolatedUpdate := false
-	isolatedUpdatePerpetualId := uint32(0)
+	isolatedUpdatePerpetualId := uint32(math.MaxUint32)
 	for _, perpetualUpdate := range settledUpdate.PerpetualUpdates {
 		marketType, exists := perpIdToMarketType[perpetualUpdate.PerpetualId]
 		if !exists {
@@ -96,7 +100,7 @@ func isValidIsolatedPerpetualUpdates(
 	// Check if the subaccount has a position in an isolated perpetual.
 	// Assumes the subaccount itself does not violate the isolated perpetual constraints.
 	isIsolatedSubaccount := false
-	isolatedPositionPerpetualId := uint32(0)
+	isolatedPositionPerpetualId := uint32(math.MaxUint32)
 	hasPerpetualPositions := len(settledUpdate.SettledSubaccount.PerpetualPositions) > 0
 	for _, perpetualPosition := range settledUpdate.SettledSubaccount.PerpetualPositions {
 		marketType, exists := perpIdToMarketType[perpetualPosition.PerpetualId]

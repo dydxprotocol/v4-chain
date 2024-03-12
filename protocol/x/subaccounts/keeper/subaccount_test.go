@@ -3638,6 +3638,130 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				},
 			},
 		},
+		"Isolated subaccounts - has update for both an isolated perpetual and non-isolated perpetual": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+						},
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						},
+					},
+				},
+			},
+		},
+		"Isolated subaccounts - has update for both 2 isolated perpetuals": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(-1_000_000_000), // 1 ISO
+						},
+						{
+							PerpetualId:      uint32(4),
+							BigQuantumsDelta: big.NewInt(10_000_000), // 1 ISO2
+						},
+					},
+				},
+			},
+		},
+		"Isolated subaccounts - subaccount with isolated perpetual position has update for non-isolated perpetual": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+						},
+					},
+				},
+			},
+		},
+		"Isolated subaccounts - subaccount with isolated perpetual position has update for another isolated perpetual": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(4),
+							BigQuantumsDelta: big.NewInt(-10_000_000), // -1 ISO2
+						},
+					},
+				},
+			},
+		},
+		"Isolated subaccounts - subaccount with non-isolated perpetual position has update for isolated perpetual": {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.ViolatesIsolatedSubaccountConstraints},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(-1_000_000_000), // -1 ISO
+						},
+					},
+				},
+			},
+		},
 	}
 
 	for name, tc := range tests {
