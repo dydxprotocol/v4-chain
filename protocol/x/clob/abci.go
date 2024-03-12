@@ -14,7 +14,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.
@@ -123,42 +122,39 @@ func EndBlocker(
 		metrics.GetMetricValueFromBigInt(keeper.GetInsuranceFundBalance(ctx)),
 	)
 
-	fmt.Println("height", ctx.BlockHeight(), "endblocker all stateful orders: ", keeper.GetAllStatefulOrders(ctx))
+	fmt.Println("height", ctx.BlockHeight(), "clob endblocker all stateful orders: ", keeper.GetAllStatefulOrders(ctx))
 	// vault step 1. cancel stateful order if present
-	orderId := types.OrderId{
-		SubaccountId: satypes.SubaccountId{
-			Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
-			Number: 0,
-		},
-		ClientId:   0,
-		OrderFlags: types.OrderIdFlags_LongTerm,
-		ClobPairId: 0,
-	}
-	ltop, exists := keeper.GetLongTermOrderPlacement(ctx, orderId)
-	fmt.Println("height", ctx.BlockHeight(), "PCS ltop: ", ltop, exists)
-	if _, exists := keeper.GetLongTermOrderPlacement(ctx, orderId); exists {
-		keeper.MustRemoveStatefulOrder(ctx, orderId)
-		fmt.Println("height", ctx.BlockHeight(), "PCS removed stateful order for clob pair: ", 0, orderId)
-		// processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
-		// 	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-		// 	orderId,
-		// )
-		// fmt.Println("height", ctx.BlockHeight(), "PCS appended to PlacedStatefulCancellationOrderIds: ", processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
-	}
-	// vault step 2. add stateful order
-	order := types.Order{
-		OrderId:      orderId,
-		Side:         types.Order_SIDE_BUY,
-		Quantums:     1_000_000,
-		Subticks:     100_000,
-		GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + 100},
-	}
-	keeper.SetLongTermOrderPlacement(ctx, order, uint32(ctx.BlockHeight()))
-	keeper.MustAddOrderToStatefulOrdersTimeSlice(
-		ctx,
-		order.MustGetUnixGoodTilBlockTime(),
-		order.GetOrderId(),
-	)
+	// orderId := types.OrderId{
+	// 	SubaccountId: satypes.SubaccountId{
+	// 		Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+	// 		Number: 0,
+	// 	},
+	// 	ClientId:   0,
+	// 	OrderFlags: types.OrderIdFlags_LongTerm,
+	// 	ClobPairId: 0,
+	// }
+	// ltop, exists := keeper.GetLongTermOrderPlacement(ctx, orderId)
+	// fmt.Println("height", ctx.BlockHeight(), "PCS ltop: ", ltop, exists)
+	// if _, exists := keeper.GetLongTermOrderPlacement(ctx, orderId); exists {
+	// 	keeper.CancelStatefulOrder(
+	// 		ctx,
+	// 		&types.MsgCancelOrder{
+	// 			OrderId:      orderId,
+	// 			GoodTilOneof: &types.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + 100},
+	// 		},
+	// 	)
+	// 	fmt.Println("height", ctx.BlockHeight(), "PCS cancelled stateful order for clob pair: ", 0, orderId)
+	// }
+	// vault step 2. place stateful order
+	// order := types.Order{
+	// 	OrderId:      orderId,
+	// 	Side:         types.Order_SIDE_BUY,
+	// 	Quantums:     1_000_000,
+	// 	Subticks:     100_000,
+	// 	GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + 100},
+	// }
+	// err := keeper.PlaceStatefulOrder(ctx, &types.MsgPlaceOrder{Order: order})
+	// fmt.Println("height", ctx.BlockHeight(), "endblocker placed stateful order for clob pair: ", 0, order, err)
 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
@@ -172,7 +168,7 @@ func PrepareCheckState(
 		log.BlockHeight, ctx.BlockHeight()+1,
 	)
 
-	fmt.Println("height", ctx.BlockHeight(), "PCS all stateful orders: ", keeper.GetAllStatefulOrders(ctx))
+	fmt.Println("height", ctx.BlockHeight(), "clob PCS all stateful orders: ", keeper.GetAllStatefulOrders(ctx))
 
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
@@ -196,24 +192,24 @@ func PrepareCheckState(
 	keeper.MemClob.RemoveAndClearOperationsQueue(ctx, localValidatorOperationsQueue)
 
 	// vault step 1 - remove stateful order from memclob if present.
-	orderId := types.OrderId{
-		SubaccountId: satypes.SubaccountId{
-			Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
-			Number: 0,
-		},
-		ClientId:   0,
-		OrderFlags: types.OrderIdFlags_LongTerm,
-		ClobPairId: 0,
-	}
-	ltop, exists := keeper.GetLongTermOrderPlacement(ctx, orderId)
-	fmt.Println("height", ctx.BlockHeight(), "PCS long term order: ", ltop, "exists", exists)
-	if _, exists := keeper.GetLongTermOrderPlacement(ctx, orderId); exists {
-		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
-			processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
-			orderId,
-		)
-		fmt.Println("height", ctx.BlockHeight(), "PCS appended to PlacedStatefulCancellationOrderIds: ", processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
-	}
+	// orderId := types.OrderId{
+	// 	SubaccountId: satypes.SubaccountId{
+	// 		Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+	// 		Number: 0,
+	// 	},
+	// 	ClientId:   0,
+	// 	OrderFlags: types.OrderIdFlags_LongTerm,
+	// 	ClobPairId: 0,
+	// }
+	// ltop, exists := keeper.GetLongTermOrderPlacement(ctx, orderId)
+	// fmt.Println("height", ctx.BlockHeight(), "PCS long term order: ", ltop, "exists", exists)
+	// if _, exists := keeper.GetLongTermOrderPlacement(ctx, orderId); exists {
+	// 	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
+	// 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
+	// 		orderId,
+	// 	)
+	// 	fmt.Println("height", ctx.BlockHeight(), "PCS appended to PlacedStatefulCancellationOrderIds: ", processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	// }
 
 	// 2. Purge invalid state from the memclob.
 	offchainUpdates := types.NewOffchainUpdates()
@@ -227,11 +223,11 @@ func PrepareCheckState(
 	)
 
 	// vault step 2 - add stateful order to memclob.
-	processProposerMatchesEvents.PlacedLongTermOrderIds = append(
-		processProposerMatchesEvents.PlacedLongTermOrderIds,
-		orderId,
-	)
-	fmt.Println("height", ctx.BlockHeight(), "PCS PlacedLongTermOrderIds: ", processProposerMatchesEvents.PlacedLongTermOrderIds)
+	// processProposerMatchesEvents.PlacedLongTermOrderIds = append(
+	// 	processProposerMatchesEvents.PlacedLongTermOrderIds,
+	// 	orderId,
+	// )
+	// fmt.Println("height", ctx.BlockHeight(), "PCS PlacedLongTermOrderIds: ", processProposerMatchesEvents.PlacedLongTermOrderIds)
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`

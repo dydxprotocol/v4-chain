@@ -15,7 +15,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	// satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type (
@@ -76,6 +76,10 @@ func (k Keeper) ProvideLiquidity(ctx sdk.Context) error {
 	}
 
 	for _, clobPair := range clobPairs {
+		if clobPair.Id != 0 {
+			continue
+		}
+
 		switch clobPair.Metadata.(type) {
 		case *clobtypes.ClobPair_PerpetualClobMetadata:
 			perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
@@ -90,7 +94,7 @@ func (k Keeper) ProvideLiquidity(ctx sdk.Context) error {
 			)
 			fmt.Println("marketPrice for clob pair: ", clobPair.Id, marketPrice)
 			fmt.Println("subticks for clob pair: ", clobPair.Id, subticks.String())
-			fmt.Println("subticksPerTick for clob pair: ", clobPair.Id, clobPair.SubticksPerTick)
+			// fmt.Println("subticksPerTick for clob pair: ", clobPair.Id, clobPair.SubticksPerTick)
 
 			buySubticks := new(big.Rat).Mul(subticks, big.NewRat(98, 100))
 			fmt.Println("buySubticks", clobPair.Id, buySubticks.String())
@@ -100,52 +104,58 @@ func (k Keeper) ProvideLiquidity(ctx sdk.Context) error {
 				false,
 			)
 			fmt.Println("buySubticksRoundedDown", clobPair.Id, buySubticksRoundedDown)
-			// buyOrder := clobtypes.Order{
-			// 	OrderId: clobtypes.OrderId{
-			// 		SubaccountId: satypes.SubaccountId{
-			// 			Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
-			// 			Number: 0,
-			// 		},
-			// 		ClientId:   clobPair.Id,
-			// 		ClobPairId: clobPair.Id,
-			// 	},
-			// 	Side:     clobtypes.Order_SIDE_BUY,
-			// 	Quantums: clobPair.StepBaseQuantums,
-			// 	Subticks: RoundToNearestMultiple(
-			// 		new(big.Rat).Mul(subticks, big.NewRat(98, 100)),
-			// 		clobPair.SubticksPerTick,
-			// 		false,
-			// 	),
-			// 	GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: uint32(ctx.BlockHeight()) + 17},
-			// }
+			buyOrder := clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					SubaccountId: satypes.SubaccountId{
+						Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
+						Number: 0,
+					},
+					ClientId:   clobPair.Id,
+					OrderFlags: clobtypes.OrderIdFlags_LongTerm,
+					ClobPairId: clobPair.Id,
+				},
+				Side:     clobtypes.Order_SIDE_BUY,
+				Quantums: clobPair.StepBaseQuantums,
+				// Subticks: RoundToNearestMultiple(
+				// 	new(big.Rat).Mul(subticks, big.NewRat(98, 100)),
+				// 	clobPair.SubticksPerTick,
+				// 	false,
+				// ),
+				Subticks:     100_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + 100},
+			}
 
-			sellSubticks := new(big.Rat).Mul(subticks, big.NewRat(102, 100))
-			fmt.Println("sellSubticks", clobPair.Id, sellSubticks.String())
-			sellSubticksRoundedUp := RoundToNearestMultiple(
-				new(big.Rat).Mul(subticks, big.NewRat(102, 100)),
-				clobPair.SubticksPerTick,
-				true,
+			ppme := k.clobKeeper.GetProcessProposerMatchesEvents(ctx)
+			// 1. Cancel existing orders
+			if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, buyOrder.OrderId); exists {
+				err := k.clobKeeper.CancelStatefulOrder(ctx, &clobtypes.MsgCancelOrder{
+					OrderId:      buyOrder.OrderId,
+					GoodTilOneof: &clobtypes.MsgCancelOrder_GoodTilBlockTime{GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + 100},
+				})
+				if err != nil {
+					fmt.Println("error cancelling order: ", err)
+				}
+				ppme.PlacedStatefulCancellationOrderIds = append(
+					ppme.PlacedStatefulCancellationOrderIds,
+					buyOrder.OrderId,
+				)
+				fmt.Println("cancelled existing order")
+			}
+
+			// 2. Place new orders
+			err := k.clobKeeper.PlaceStatefulOrder(ctx, &clobtypes.MsgPlaceOrder{
+				Order: buyOrder,
+			})
+			if err != nil {
+				fmt.Println("error placing order: ", err)
+			}
+			ppme.PlacedLongTermOrderIds = append(
+				ppme.PlacedLongTermOrderIds,
+				buyOrder.OrderId,
 			)
-			fmt.Println("sellSubticksRoundedUp", clobPair.Id, sellSubticksRoundedUp)
-			// sellOrder := clobtypes.Order{
-			// 	OrderId: clobtypes.OrderId{ // needs to be different from buyOrder's OrderId
-			// 		SubaccountId: satypes.SubaccountId{
-			// 			Owner:  "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
-			// 			Number: 0,
-			// 		},
-			// 		// ClientId: uint32(rand.Intn(1000000000)),
-			// 		ClientId:   clobPair.Id,
-			// 		ClobPairId: clobPair.Id,
-			// 	},
-			// 	Side:     clobtypes.Order_SIDE_SELL,
-			// 	Quantums: clobPair.StepBaseQuantums,
-			// 	Subticks: RoundToNearestMultiple(
-			// 		new(big.Rat).Mul(subticks, big.NewRat(102, 100)),
-			// 		clobPair.SubticksPerTick,
-			// 		true,
-			// 	),
-			// 	GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: uint32(ctx.BlockHeight()) + 17},
-			// }
+			fmt.Println("placed new order")
+
+			k.clobKeeper.MustSetProcessProposerMatchesEvents(ctx, ppme)
 		default:
 			panic("unexpected clob pair metadata type")
 		}

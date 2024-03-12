@@ -1160,7 +1160,7 @@ func New(
 
 	app.ModuleManager.SetOrderPrepareCheckStaters(
 		clobmoduletypes.ModuleName,
-		vaultmoduletypes.ModuleName,
+		// vaultmoduletypes.ModuleName,
 	)
 
 	app.ModuleManager.SetOrderEndBlockers(

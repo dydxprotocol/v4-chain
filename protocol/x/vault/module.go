@@ -27,11 +27,11 @@ var (
 	_ module.AppModuleBasic   = AppModuleBasic{}
 	_ module.HasGenesisBasics = AppModuleBasic{}
 
-	_ appmodule.AppModule            = AppModule{}
-	_ appmodule.HasPrepareCheckState = AppModule{}
-	_ module.HasConsensusVersion     = AppModule{}
-	_ module.HasGenesis              = AppModule{}
-	_ module.HasServices             = AppModule{}
+	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
+	_ module.HasConsensusVersion = AppModule{}
+	_ module.HasGenesis          = AppModule{}
+	_ module.HasServices         = AppModule{}
 )
 
 // ----------------------------------------------------------------------------
@@ -149,9 +149,19 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 func (AppModule) ConsensusVersion() uint64 { return 1 }
 
 // PrepareCheckState executes all ABCI PrepareCheckState logic respective to the clob module.
-func (am AppModule) PrepareCheckState(ctx context.Context) error {
-	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
-	PrepareCheckState(
+// func (am AppModule) PrepareCheckState(ctx context.Context) error {
+// 	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyPrepareCheckStater)
+// 	PrepareCheckState(
+// 		lib.UnwrapSDKContext(ctx, types.ModuleName),
+// 		&am.keeper,
+// 	)
+// 	return nil
+// }
+
+// EndBlock executes all ABCI EndBlock logic respective to the vault module.
+func (am AppModule) EndBlock(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
+	EndBlocker(
 		lib.UnwrapSDKContext(ctx, types.ModuleName),
 		&am.keeper,
 	)

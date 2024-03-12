@@ -482,7 +482,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// Attempt to match the order against the orderbook.
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
-	fmt.Println("height", ctx.BlockHeight(), "memclob PlaceOrder takerOrderStatus", takerOrderStatus, "err", err)
+	fmt.Println("height", ctx.BlockHeight(), "memclob PlaceOrder takerOrderStatus", takerOrderStatus, "err", err, "order", order)
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -529,7 +529,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 	}
 
 	remainingSize := takerOrderStatus.RemainingQuantums
-	fmt.Println("height", ctx.BlockHeight(), "memclob PlaceOrder remainingSize", remainingSize)
+	fmt.Println("height", ctx.BlockHeight(), "memclob PlaceOrder remainingSize", remainingSize, "order", order)
 	orderSizeOptimisticallyFilledFromMatchingQuantums = takerOrderStatus.OrderOptimisticallyFilledQuantums
 
 	// If the status of the taker order is not successful, do not attempt to add the order to the orderbook.
@@ -613,7 +613,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 		ctx,
 		order,
 	)
-	fmt.Println("in memclob PlaceOrder addOrderOrderStatus", addOrderOrderStatus)
+	fmt.Println("in memclob PlaceOrder addOrderOrderStatus", addOrderOrderStatus, "order", order)
 
 	// If the add order to orderbook collateralization check failed, we cannot add the order to the orderbook.
 	if !addOrderOrderStatus.IsSuccess() {
@@ -1220,6 +1220,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 
 	// Remove all fully-filled order IDs from the memclob if they exist.
 	for _, orderId := range filledOrderIds {
+		fmt.Println("height", ctx.BlockHeight(), "memclob RemoveOrderIfFilled", orderId)
 		m.RemoveOrderIfFilled(ctx, orderId)
 	}
 
@@ -1234,9 +1235,9 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		)
 	}
 
-	fmt.Println("height", ctx.BlockHeight(), "purge stateful orders")
+	// fmt.Println("height", ctx.BlockHeight(), "purge stateful orders")
 	for _, statefulOrderId := range canceledStatefulOrderIds {
-		fmt.Println("height", ctx.BlockHeight(), "purge statefulOrderId", statefulOrderId)
+		// fmt.Println("height", ctx.BlockHeight(), "purge statefulOrderId", statefulOrderId)
 		statefulOrderId.MustBeStatefulOrder()
 
 		// TODO(DEC-798/DEC-1279): Update this logic once we've determined how to rewind `MsgRemoveOrder` messages.
@@ -1244,7 +1245,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		// check failures, self-trade errors, etc and will not be removed from state. Therefore it
 		// is possible that when they are canceled they will not exist on the orderbook.
 		if m.openOrders.hasOrder(ctx, statefulOrderId) {
-			fmt.Println("height", ctx.BlockHeight(), "m.mustRemoveOrder", statefulOrderId)
+			// fmt.Println("height", ctx.BlockHeight(), "m.mustRemoveOrder", statefulOrderId)
 			m.mustRemoveOrder(ctx, statefulOrderId)
 		}
 	}

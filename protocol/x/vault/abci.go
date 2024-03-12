@@ -5,7 +5,14 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 )
 
-func PrepareCheckState(
+// func PrepareCheckState(
+// 	ctx sdk.Context,
+// 	keeper *keeper.Keeper,
+// ) {
+// 	keeper.ProvideLiquidity(ctx)
+// }
+
+func EndBlocker(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {

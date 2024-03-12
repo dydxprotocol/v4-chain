@@ -15,8 +15,22 @@ type BankKeeper interface {
 
 type ClobKeeper interface {
 	GetAllClobPairs(ctx sdk.Context) (list []clobtypes.ClobPair)
+	GetLongTermOrderPlacement(
+		ctx sdk.Context,
+		orderId clobtypes.OrderId,
+	) (val clobtypes.LongTermOrderPlacement, found bool)
 
 	PlaceStatefulOrder(ctx sdk.Context, msg *clobtypes.MsgPlaceOrder) error
+	CancelStatefulOrder(
+		ctx sdk.Context,
+		msg *clobtypes.MsgCancelOrder,
+	) (err error)
+
+	GetProcessProposerMatchesEvents(ctx sdk.Context) clobtypes.ProcessProposerMatchesEvents
+	MustSetProcessProposerMatchesEvents(
+		ctx sdk.Context,
+		processProposerMatchesEvents clobtypes.ProcessProposerMatchesEvents,
+	)
 }
 
 type PerpetualsKeeper interface {
