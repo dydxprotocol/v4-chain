@@ -1254,6 +1254,15 @@ func (k Keeper) ModifyOpenInterest(
 		openInterestDeltaBaseQuantums,
 	)
 
+	if bigOpenInterest.Sign() < 0 {
+		return errorsmod.Wrapf(
+			types.ErrOpenInterestWouldBecomeNegative,
+			"perpetualId = %d, openInterest = %s",
+			perpetualId,
+			bigOpenInterest.String(),
+		)
+	}
+
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
 	k.SetPerpetual(ctx, perpetual)
 	return nil

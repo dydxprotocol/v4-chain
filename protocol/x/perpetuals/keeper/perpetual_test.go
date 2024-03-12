@@ -552,7 +552,50 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 	)
 }
 
-func TestModifyOpenInterest(t *testing.T) {
+func TestModifyOpenInterest_Failure(t *testing.T) {
+	testCases := map[string]struct {
+		id                uint32
+		initOpenInterest  *big.Int
+		openInterestDelta *big.Int
+		err               error
+	}{
+		"Would become negative": {
+			id:                0,
+			initOpenInterest:  big.NewInt(1_000),
+			openInterestDelta: big.NewInt(-1_001),
+			err:               types.ErrOpenInterestWouldBecomeNegative,
+		},
+		"Non-existent perp Id": {
+			id:                1111,
+			initOpenInterest:  big.NewInt(1_000),
+			openInterestDelta: big.NewInt(0),
+			err:               types.ErrPerpetualDoesNotExist,
+		},
+	}
+
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			pc := keepertest.PerpetualsKeepers(t)
+			perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 1)
+
+			// Set up initial open interest
+			require.NoError(t, pc.PerpetualsKeeper.ModifyOpenInterest(
+				pc.Ctx,
+				perps[0].Params.Id,
+				tc.initOpenInterest,
+			))
+
+			err := pc.PerpetualsKeeper.ModifyOpenInterest(
+				pc.Ctx,
+				tc.id,
+				tc.openInterestDelta,
+			)
+			require.ErrorContains(t, err, tc.err.Error())
+		})
+	}
+}
+
+func TestModifyOpenInterest_Mixed(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	// Create liquidity tiers and perpetuals,
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
@@ -566,16 +609,34 @@ func TestModifyOpenInterest(t *testing.T) {
 			perp.Params.Id,
 			openInterestDeltaBaseQuantums,
 		)
-		require.NoError(t, err)
 
-		newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
-		require.NoError(t, err)
+		// If Id is even, the modification is negagive and should fail.
+		if perp.Params.Id%2 == 0 {
+			require.ErrorContains(t,
+				err,
+				types.ErrOpenInterestWouldBecomeNegative.Error(),
+			)
 
-		require.Equal(
-			t,
-			openInterestDeltaBaseQuantums,
-			newPerp.OpenInterest.BigInt(),
-		)
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				big.NewInt(0), // open interest should remain 0
+				newPerp.OpenInterest.BigInt(),
+			)
+		} else {
+			require.NoError(t, err)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				openInterestDeltaBaseQuantums,
+				newPerp.OpenInterest.BigInt(),
+			)
+		}
 
 		// Add `openInterestDeltaBaseQuantums` again
 		err = pc.PerpetualsKeeper.ModifyOpenInterest(
@@ -583,20 +644,37 @@ func TestModifyOpenInterest(t *testing.T) {
 			perp.Params.Id,
 			openInterestDeltaBaseQuantums,
 		)
-		require.NoError(t, err)
+		// If Id is even, the modification is negagive and should fail.
+		if perp.Params.Id%2 == 0 {
+			require.ErrorContains(t,
+				err,
+				types.ErrOpenInterestWouldBecomeNegative.Error(),
+			)
 
-		newPerp, err = pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
-		require.NoError(t, err)
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
 
-		require.Equal(
-			t,
-			// open interest should be 2 * delta now
-			openInterestDeltaBaseQuantums.Mul(
-				openInterestDeltaBaseQuantums,
-				big.NewInt(2),
-			),
-			newPerp.OpenInterest.BigInt(),
-		)
+			require.Equal(
+				t,
+				big.NewInt(0), // open interest should remain 0
+				newPerp.OpenInterest.BigInt(),
+			)
+		} else {
+			require.NoError(t, err)
+
+			newPerp, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
+			require.NoError(t, err)
+
+			require.Equal(
+				t,
+				// open interest should be 2 * delta now
+				openInterestDeltaBaseQuantums.Mul(
+					openInterestDeltaBaseQuantums,
+					big.NewInt(2),
+				),
+				newPerp.OpenInterest.BigInt(),
+			)
+		}
 	}
 }
 
