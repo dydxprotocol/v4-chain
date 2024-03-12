@@ -172,17 +172,9 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 		true, // Round up initial margin.
 	)
 
-	if bigIMREffective.Cmp(bigQuoteQuantums) > 0 {
-		panic(
-			fmt.Sprintf(
-				"GetInitialMarginQuoteQuantums: bigIMREffective (%v) > bigQuoteQuantums (%v), "+
-					"liquidityTier: %+v, openInterestQuoteQuantums: %s",
-				bigIMREffective,
-				bigQuoteQuantums,
-				liquidityTier,
-				openInterestQuoteQuantums.String(),
-			),
-		)
+	// Return min(Effective IMR, Quote Quantums)
+	if bigIMREffective.Cmp(bigQuoteQuantums) >= 0 {
+		return bigQuoteQuantums
 	}
 	return bigIMREffective
 }
