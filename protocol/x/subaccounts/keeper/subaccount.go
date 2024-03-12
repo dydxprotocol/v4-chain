@@ -537,6 +537,8 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
+	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
+	// constraint.
 	// Check if the updates satisfy the isolated perpetual constraints.
 	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
 		ctx,
