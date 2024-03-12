@@ -6,24 +6,27 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
-// A RateLimiter which rate limits types.MsgPlaceOrder.
+// A RateLimiter which rate limits types.MsgPlaceOrder, types.MsgCancelOrder, and
+// types.MsgBatchCancel.
 //
 // The rate limiting keeps track of short term and stateful orders placed during
 // CheckTx.
-type placeOrderRateLimiter struct {
-	checkStateShortTermOrderRateLimiter RateLimiter[string]
-	checkStateStatefulOrderRateLimiter  RateLimiter[string]
+type placeAndCancelOrderRateLimiter struct {
+	checkStateShortTermOrderPlaceCancelRateLimiter RateLimiter[string]
+	checkStateStatefulOrderRateLimiter             RateLimiter[string]
 	// The set of rate limited accounts is only stored for telemetry purposes.
 	rateLimitedAccounts map[string]bool
 }
 
-var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
+var _ RateLimiter[sdk.Msg] = (*placeAndCancelOrderRateLimiter)(nil)
 
-// NewPlaceOrderRateLimiter returns a RateLimiter which rate limits types.MsgPlaceOrder based upon the provided
-// types.BlockRateLimitConfiguration. The rate limiter currently supports limiting based upon:
-//   - how many short term orders per account (by using string).
+// NewPlaceCancelOrderRateLimiter returns a RateLimiter which rate limits types.MsgPlaceOrder, types.MsgCancelOrder,
+// types.MsgBatchCancel based upon the provided types.BlockRateLimitConfiguration. The rate limiter currently
+// supports limiting based upon:
+//   - how many short term place/cancel orders per account (by using string).
 //   - how many stateful order per account (by using string).
 //
 // The rate limiting must only be used during `CheckTx` because the rate limiting information is not recovered
@@ -34,31 +37,31 @@ var _ RateLimiter[*types.MsgPlaceOrder] = (*placeOrderRateLimiter)(nil)
 //   - `ctx.BlockHeight()` in PruneRateLimits and should be invoked during `EndBlocker`. If invoked
 //     during `PrepareCheckState` one must supply a `ctx` with the previous block height via
 //     `ctx.WithBlockHeight(ctx.BlockHeight()-1)`.
-func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimiter[*types.MsgPlaceOrder] {
+func NewPlaceCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimiter[sdk.Msg] {
 	if err := config.Validate(); err != nil {
 		panic(err)
 	}
 
 	// Return the no-op rate limiter if the configuration is empty.
-	if len(config.MaxShortTermOrdersPerNBlocks)+len(config.MaxStatefulOrdersPerNBlocks) == 0 {
-		return noOpRateLimiter[*types.MsgPlaceOrder]{}
+	if len(config.MaxShortTermOrdersAndCancelsPerNBlocks)+len(config.MaxStatefulOrdersPerNBlocks) == 0 {
+		return noOpRateLimiter[sdk.Msg]{}
 	}
 
-	r := placeOrderRateLimiter{
+	r := placeAndCancelOrderRateLimiter{
 		rateLimitedAccounts: make(map[string]bool, 0),
 	}
-	if len(config.MaxShortTermOrdersPerNBlocks) == 0 {
-		r.checkStateShortTermOrderRateLimiter = NewNoOpRateLimiter[string]()
-	} else if len(config.MaxShortTermOrdersPerNBlocks) == 1 &&
-		config.MaxShortTermOrdersPerNBlocks[0].NumBlocks == 1 {
-		r.checkStateShortTermOrderRateLimiter = NewSingleBlockRateLimiter[string](
-			"MaxShortTermOrdersPerNBlocks",
-			config.MaxShortTermOrdersPerNBlocks[0],
+	if len(config.MaxShortTermOrdersAndCancelsPerNBlocks) == 0 {
+		r.checkStateShortTermOrderPlaceCancelRateLimiter = NewNoOpRateLimiter[string]()
+	} else if len(config.MaxShortTermOrdersAndCancelsPerNBlocks) == 1 &&
+		config.MaxShortTermOrdersAndCancelsPerNBlocks[0].NumBlocks == 1 {
+		r.checkStateShortTermOrderPlaceCancelRateLimiter = NewSingleBlockRateLimiter[string](
+			"MaxShortTermOrdersAndCancelsPerNBlocks",
+			config.MaxShortTermOrdersAndCancelsPerNBlocks[0],
 		)
 	} else {
-		r.checkStateShortTermOrderRateLimiter = NewMultiBlockRateLimiter[string](
-			"MaxShortTermOrdersPerNBlocks",
-			config.MaxShortTermOrdersPerNBlocks,
+		r.checkStateShortTermOrderPlaceCancelRateLimiter = NewMultiBlockRateLimiter[string](
+			"MaxShortTermOrdersAndCancelsPerNBlocks",
+			config.MaxShortTermOrdersAndCancelsPerNBlocks,
 		)
 	}
 	if len(config.MaxStatefulOrdersPerNBlocks) == 0 {
@@ -79,11 +82,27 @@ func NewPlaceOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimi
 	return &r
 }
 
-func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOrder) (err error) {
+func (r *placeAndCancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg sdk.Msg) (err error) {
 	lib.AssertCheckTxMode(ctx)
+	switch castedMsg := (msg).(type) {
+	case *types.MsgCancelOrder:
+		err = r.RateLimitCancelOrder(ctx, *castedMsg)
+	case *types.MsgPlaceOrder:
+		err = r.RateLimitPlaceOrder(ctx, *castedMsg)
+	case *types.MsgBatchCancel:
+		err = r.RateLimitBatchCancelOrder(ctx, *castedMsg)
+	}
+	return err
+}
 
+func (r *placeAndCancelOrderRateLimiter) RateLimitIncrBy(ctx sdk.Context, msg sdk.Msg, incrBy uint32) (err error) {
+	panic("PlaceAndCancelOrderRateLimiter is a top-level rate limiter. It should not use IncrBy.")
+}
+
+func (r *placeAndCancelOrderRateLimiter) RateLimitPlaceOrder(ctx sdk.Context, msg clobtypes.MsgPlaceOrder) (err error) {
+	lib.AssertCheckTxMode(ctx)
 	if msg.Order.IsShortTermOrder() {
-		err = r.checkStateShortTermOrderRateLimiter.RateLimit(
+		err = r.checkStateShortTermOrderPlaceCancelRateLimiter.RateLimit(
 			ctx,
 			msg.Order.OrderId.SubaccountId.Owner,
 		)
@@ -103,81 +122,11 @@ func (r *placeOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgPlaceOr
 	return err
 }
 
-func (r *placeOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
-	telemetry.IncrCounter(
-		float32(len(r.rateLimitedAccounts)),
-		types.ModuleName,
-		metrics.RateLimit,
-		metrics.PlaceOrderAccounts,
-		metrics.Count,
-	)
-	// Note that this method for clearing the map is optimized by the go compiler significantly
-	// and will leave the relative size of the map the same so that it doesn't need to be resized
-	// often.
-	for key := range r.rateLimitedAccounts {
-		delete(r.rateLimitedAccounts, key)
-	}
-	r.checkStateShortTermOrderRateLimiter.PruneRateLimits(ctx)
-	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
-}
-
-// A RateLimiter which rate limits types.MsgCancelOrder.
-//
-// The rate limiting keeps track of short term order cancellations during CheckTx.
-type cancelOrderRateLimiter struct {
-	checkStateShortTermRateLimiter RateLimiter[string]
-	// The set of rate limited accounts is only stored for telemetry purposes.
-	rateLimitedAccounts map[string]bool
-}
-
-var _ RateLimiter[*types.MsgCancelOrder] = (*cancelOrderRateLimiter)(nil)
-
-// NewCancelOrderRateLimiter returns a RateLimiter which rate limits types.MsgCancelOrder based upon the provided
-// types.BlockRateLimitConfiguration. The rate limiter currently supports limiting based upon:
-//   - how many short term order cancellations per account (by using string).
-//
-// The rate limiting must only be used during `CheckTx` because the rate limiting information is not recovered
-// on application restart preventing it from being deterministic during `DeliverTx`.
-//
-// Depending upon the provided types.BlockRateLimitConfiguration, the returned RateLimiter may rely on:
-//   - `ctx.BlockHeight()` in RateLimit to track which block the rate limit should apply to.
-//   - `ctx.BlockHeight()` in PruneRateLimits and should be invoked during `EndBlocker`. If invoked
-//     during `PrepareCheckState` one must supply a `ctx` with the previous block height via
-//     `ctx.WithBlockHeight(ctx.BlockHeight()-1)`.
-func NewCancelOrderRateLimiter(config types.BlockRateLimitConfiguration) RateLimiter[*types.MsgCancelOrder] {
-	if err := config.Validate(); err != nil {
-		panic(err)
-	}
-
-	// Return the no-op rate limiter if the configuration is empty.
-	if len(config.MaxShortTermOrderCancellationsPerNBlocks) == 0 {
-		return noOpRateLimiter[*types.MsgCancelOrder]{}
-	}
-
-	rateLimiter := cancelOrderRateLimiter{
-		rateLimitedAccounts: make(map[string]bool, 0),
-	}
-	if len(config.MaxShortTermOrderCancellationsPerNBlocks) == 1 &&
-		config.MaxShortTermOrderCancellationsPerNBlocks[0].NumBlocks == 1 {
-		rateLimiter.checkStateShortTermRateLimiter = NewSingleBlockRateLimiter[string](
-			"MaxShortTermOrdersPerNBlocks",
-			config.MaxShortTermOrderCancellationsPerNBlocks[0],
-		)
-		return &rateLimiter
-	} else {
-		rateLimiter.checkStateShortTermRateLimiter = NewMultiBlockRateLimiter[string](
-			"MaxShortTermOrdersPerNBlocks",
-			config.MaxShortTermOrderCancellationsPerNBlocks,
-		)
-		return &rateLimiter
-	}
-}
-
-func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancelOrder) (err error) {
+func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(ctx sdk.Context, msg clobtypes.MsgCancelOrder) (err error) {
 	lib.AssertCheckTxMode(ctx)
 
 	if msg.OrderId.IsShortTermOrder() {
-		err = r.checkStateShortTermRateLimiter.RateLimit(
+		err = r.checkStateShortTermOrderPlaceCancelRateLimiter.RateLimit(
 			ctx,
 			msg.OrderId.SubaccountId.Owner,
 		)
@@ -193,12 +142,34 @@ func (r *cancelOrderRateLimiter) RateLimit(ctx sdk.Context, msg *types.MsgCancel
 	return err
 }
 
-func (r *cancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
+func (r *placeAndCancelOrderRateLimiter) RateLimitBatchCancelOrder(ctx sdk.Context, msg clobtypes.MsgBatchCancel) (err error) {
+	lib.AssertCheckTxMode(ctx)
+
+	// calcualate how mcuh each batch cancel should be weighted. Use 2 for now.
+	weight := uint32(2)
+
+	err = r.checkStateShortTermOrderPlaceCancelRateLimiter.RateLimitIncrBy(
+		ctx,
+		msg.SubaccountId.Owner,
+		weight,
+	)
+	if err != nil {
+		telemetry.IncrCounterWithLabels(
+			[]string{types.ModuleName, metrics.RateLimit, metrics.PlaceOrder, metrics.Count},
+			1,
+			[]metrics.Label{},
+		)
+		r.rateLimitedAccounts[msg.SubaccountId.Owner] = true
+	}
+	return err
+}
+
+func (r *placeAndCancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 	telemetry.IncrCounter(
 		float32(len(r.rateLimitedAccounts)),
 		types.ModuleName,
 		metrics.RateLimit,
-		metrics.CancelOrderAccounts,
+		metrics.PlaceOrderAccounts,
 		metrics.Count,
 	)
 	// Note that this method for clearing the map is optimized by the go compiler significantly
@@ -207,5 +178,15 @@ func (r *cancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 	for key := range r.rateLimitedAccounts {
 		delete(r.rateLimitedAccounts, key)
 	}
-	r.checkStateShortTermRateLimiter.PruneRateLimits(ctx)
+	r.checkStateShortTermOrderPlaceCancelRateLimiter.PruneRateLimits(ctx)
+	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
+}
+
+// A RateLimiter which rate limits types.MsgCancelOrder.
+//
+// The rate limiting keeps track of short term order cancellations during CheckTx.
+type cancelOrderRateLimiter struct {
+	checkStateShortTermRateLimiter RateLimiter[string]
+	// The set of rate limited accounts is only stored for telemetry purposes.
+	rateLimitedAccounts map[string]bool
 }

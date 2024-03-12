@@ -844,6 +844,20 @@ func (_m *ClobKeeper) PruneStateFillAmountsForShortTermOrders(ctx types.Context)
 	_m.Called(ctx)
 }
 
+// RateLimitBatchCancel provides a mock function with given fields: ctx, order
+func (_m *ClobKeeper) RateLimitBatchCancel(ctx types.Context, order *clobtypes.MsgBatchCancel) error {
+	ret := _m.Called(ctx, order)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgBatchCancel) error); ok {
+		r0 = rf(ctx, order)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RateLimitCancelOrder provides a mock function with given fields: ctx, order
 func (_m *ClobKeeper) RateLimitCancelOrder(ctx types.Context, order *clobtypes.MsgCancelOrder) error {
 	ret := _m.Called(ctx, order)

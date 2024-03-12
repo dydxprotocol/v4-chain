@@ -337,7 +337,7 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	require.Equal(
 		t,
 		clob_types.BlockRateLimitConfiguration{
-			MaxShortTermOrdersPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
+			MaxShortTermOrdersAndCancelsPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
 				{
 					Limit:     200,
 					NumBlocks: 1,
@@ -351,12 +351,6 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 				{
 					Limit:     20,
 					NumBlocks: 100,
-				},
-			},
-			MaxShortTermOrderCancellationsPerNBlocks: []clob_types.MaxPerNBlocksRateLimit{
-				{
-					Limit:     200,
-					NumBlocks: 1,
 				},
 			},
 		},

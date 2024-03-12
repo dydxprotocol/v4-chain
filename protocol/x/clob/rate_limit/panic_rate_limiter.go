@@ -19,6 +19,10 @@ func (n panicRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
 	panic("Unexpected invocation of RateLimit")
 }
 
+func (n panicRateLimiter[K]) RateLimitIncrBy(ctx sdk.Context, key K, incrBy uint32) error {
+	panic("Unexpected invocation of RateLimit")
+}
+
 func (n panicRateLimiter[K]) PruneRateLimits(ctx sdk.Context) {
 	panic("Unexpected invocation of PruneRateLimits")
 }

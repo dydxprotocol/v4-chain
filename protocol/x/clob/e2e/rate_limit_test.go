@@ -1,8 +1,9 @@
 package clob_test
 
 import (
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"testing"
+
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
@@ -24,7 +25,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 	}{
 		"Short term orders with same subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
@@ -36,7 +37,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 		},
 		"Short term orders with different subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
@@ -72,7 +73,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 		},
 		"Short term order cancellations with same subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
@@ -84,7 +85,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 		},
 		"Short term order cancellations with different subaccounts": {
 			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
 						Limit:     1,
@@ -487,7 +488,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 	}{
 		"Short term order placements": {
 			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 1,
 						Limit:     1,
@@ -501,7 +502,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 		},
 		"Short term order cancellations": {
 			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
-				MaxShortTermOrderCancellationsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 1,
 						Limit:     1,
