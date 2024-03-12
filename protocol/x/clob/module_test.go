@@ -47,7 +47,7 @@ func getValidGenesisStr() string {
 	gs += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	gs += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
 	gs += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
-	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}],`
+	gs += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},{"limit": 20,"num_blocks":100}]},`
 	gs += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	gs += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	gs += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
@@ -166,7 +166,7 @@ func TestAppModuleBasic_DefaultGenesis(t *testing.T) {
 	expected += `{"max_notional_liquidated":"100000000000000","max_quantums_insurance_lost":"100000000000000"},`
 	expected += `"fillable_price_config":{"bankruptcy_adjustment_ppm":1000000,`
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
-	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[],`
+	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[],"max_stateful_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[], "stateful_order_equity_tiers":[]}}`
 
 	require.JSONEq(t, expected, string(json))

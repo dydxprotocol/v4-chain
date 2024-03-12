@@ -233,12 +233,6 @@ const GenesisState = `{
             "num_blocks": 100,
             "limit": 20
           }
-        ],
-        "max_short_term_order_cancellations_per_n_blocks": [
-          {
-            "num_blocks": 1,
-            "limit": 200
-          }
         ]
       },
       "clob_pairs": [
