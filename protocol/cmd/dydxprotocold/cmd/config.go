@@ -7,6 +7,7 @@ import (
 	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	oracleconfig "github.com/skip-mev/slinky/oracle/config"
 )
 
 const (
@@ -25,6 +26,7 @@ const (
 // DydxAppConfig specifies dYdX app specific config.
 type DydxAppConfig struct {
 	serverconfig.Config
+	Oracle oracleconfig.AppConfig `mapstructure:"oracle"`
 }
 
 // TODO(DEC-1718): Audit tendermint and app config parameters for mainnet.
@@ -65,7 +67,7 @@ func initAppConfig() (string, *DydxAppConfig) {
 	// GRPC.
 	appConfig.GRPC.Address = "0.0.0.0:9090"
 
-	appTemplate := serverconfig.DefaultConfigTemplate
+	appTemplate := serverconfig.DefaultConfigTemplate + oracleconfig.DefaultConfigTemplate
 
 	return appTemplate, &appConfig
 }
