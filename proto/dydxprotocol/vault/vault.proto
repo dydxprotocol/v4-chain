@@ -1,0 +1,34 @@
+syntax = "proto3";
+package dydxprotocol.vault;
+
+import "gogoproto/gogo.proto";
+
+option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
+
+// VaultType represents different types of vaults.
+enum VaultType {
+  // Default value, invalid and unused.
+  VAULT_TYPE_UNSPECIFIED = 0;
+
+  // Vault is associated with a CLOB pair.
+  VAULT_TYPE_CLOB = 1;
+}
+
+// VaultId uniquely identifies a vault by its type and number.
+message VaultId {
+  // Type of the vault.
+  VaultType type = 1;
+
+  // Unique ID of the vault within above type.
+  uint32 number = 2;
+}
+
+// NumShares represents the number of shares in a vault.
+message NumShares {
+  // Number of shares.
+  bytes num_shares = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}

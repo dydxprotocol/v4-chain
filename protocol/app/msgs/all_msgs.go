@@ -234,6 +234,9 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
+		// vault
+		"/dydxprotocol.vault.MsgDepositToVault": {},
+
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
 		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},
