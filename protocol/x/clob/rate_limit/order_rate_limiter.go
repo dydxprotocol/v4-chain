@@ -6,7 +6,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
 // A RateLimiter which rate limits types.MsgPlaceOrder, types.MsgCancelOrder, and
@@ -99,7 +98,7 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitIncrBy(ctx sdk.Context, msg sd
 	panic("PlaceAndCancelOrderRateLimiter is a top-level rate limiter. It should not use IncrBy.")
 }
 
-func (r *placeAndCancelOrderRateLimiter) RateLimitPlaceOrder(ctx sdk.Context, msg clobtypes.MsgPlaceOrder) (err error) {
+func (r *placeAndCancelOrderRateLimiter) RateLimitPlaceOrder(ctx sdk.Context, msg types.MsgPlaceOrder) (err error) {
 	lib.AssertCheckTxMode(ctx)
 	if msg.Order.IsShortTermOrder() {
 		err = r.checkStateShortTermOrderPlaceCancelRateLimiter.RateLimit(
@@ -122,7 +121,10 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitPlaceOrder(ctx sdk.Context, ms
 	return err
 }
 
-func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(ctx sdk.Context, msg clobtypes.MsgCancelOrder) (err error) {
+func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(
+	ctx sdk.Context,
+	msg types.MsgCancelOrder,
+) (err error) {
 	lib.AssertCheckTxMode(ctx)
 
 	if msg.OrderId.IsShortTermOrder() {
@@ -142,7 +144,10 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(ctx sdk.Context, m
 	return err
 }
 
-func (r *placeAndCancelOrderRateLimiter) RateLimitBatchCancelOrder(ctx sdk.Context, msg clobtypes.MsgBatchCancel) (err error) {
+func (r *placeAndCancelOrderRateLimiter) RateLimitBatchCancelOrder(
+	ctx sdk.Context,
+	msg types.MsgBatchCancel,
+) (err error) {
 	lib.AssertCheckTxMode(ctx)
 
 	// calcualate how mcuh each batch cancel should be weighted. Use 2 for now.

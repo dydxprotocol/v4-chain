@@ -14,7 +14,8 @@ const (
 // Validate validates each individual MaxPerNBlocksRateLimit.
 // It returns an error if any of the rate limits fail the following validations:
 //   - `Limit == 0` || `Limit > MaxShortTermOrdersAndCancelsPerNBlocksLimit` for short term order/cancel rate limits.
-//   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrdersAndCancelsPerNBlocksNumBlocks` for short term order/cancel rate
+//   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrdersAndCancelsPerNBlocksNumBlocks`
+//     for short term order/cancel rate
 //     limits.
 //   - `Limit == 0` || `Limit > MaxStatefulOrdersPerNBlocksLimit` for stateful order rate limits.
 //   - `NumBlocks == 0` || `NumBlocks > MaxStatefulOrdersPerNBlocksNumBlocks` for stateful order rate limits.
