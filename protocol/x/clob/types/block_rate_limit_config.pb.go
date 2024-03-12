@@ -25,13 +25,15 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
 // Defines the block rate limits for CLOB specific operations.
 type BlockRateLimitConfiguration struct {
-	// How many short term order place and cancel attempts (successful and failed)
-	// are allowed for an account per N blocks. Note that the rate limits are
-	// applied in an AND fashion such that an order placement must pass all rate
-	// limit configurations.
+	// How many short term order attempts (successful and failed) are allowed for
+	// an account per N blocks. Note that the rate limits are applied
+	// in an AND fashion such that an order placement must pass all rate limit
+	// configurations.
 	//
 	// Specifying 0 values disables this rate limit.
-	MaxShortTermOrdersAndCancelsPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,1,rep,name=max_short_term_orders_and_cancels_per_n_blocks,json=maxShortTermOrdersAndCancelsPerNBlocks,proto3" json:"max_short_term_orders_and_cancels_per_n_blocks"`
+	// Deprecated in favor of `max_short_term_orders_and_cancels_per_n_blocks`
+	// for v5.x onwards.
+	MaxShortTermOrdersPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,1,rep,name=max_short_term_orders_per_n_blocks,json=maxShortTermOrdersPerNBlocks,proto3" json:"max_short_term_orders_per_n_blocks"` // Deprecated: Do not use.
 	// How many stateful order attempts (successful and failed) are allowed for
 	// an account per N blocks. Note that the rate limits are applied
 	// in an AND fashion such that an order placement must pass all rate limit
@@ -39,6 +41,22 @@ type BlockRateLimitConfiguration struct {
 	//
 	// Specifying 0 values disables this rate limit.
 	MaxStatefulOrdersPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,2,rep,name=max_stateful_orders_per_n_blocks,json=maxStatefulOrdersPerNBlocks,proto3" json:"max_stateful_orders_per_n_blocks"`
+	// How many short term order cancellation attempts (successful and failed) are
+	// allowed for an account per N blocks. Note that the rate limits are
+	// applied in an AND fashion such that an order cancellation must pass all
+	// rate limit configurations.
+	//
+	// Specifying 0 values disables this rate limit.
+	// Deprecated in favor of `max_short_term_orders_and_cancels_per_n_blocks`
+	// for v5.x onwards.
+	MaxShortTermOrderCancellationsPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,3,rep,name=max_short_term_order_cancellations_per_n_blocks,json=maxShortTermOrderCancellationsPerNBlocks,proto3" json:"max_short_term_order_cancellations_per_n_blocks"` // Deprecated: Do not use.
+	// How many short term order place and cancel attempts (successful and failed)
+	// are allowed for an account per N blocks. Note that the rate limits are
+	// applied in an AND fashion such that an order placement must pass all rate
+	// limit configurations.
+	//
+	// Specifying 0 values disables this rate limit.
+	MaxShortTermOrdersAndCancelsPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,4,rep,name=max_short_term_orders_and_cancels_per_n_blocks,json=maxShortTermOrdersAndCancelsPerNBlocks,proto3" json:"max_short_term_orders_and_cancels_per_n_blocks"`
 }
 
 func (m *BlockRateLimitConfiguration) Reset()         { *m = BlockRateLimitConfiguration{} }
@@ -74,9 +92,10 @@ func (m *BlockRateLimitConfiguration) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_BlockRateLimitConfiguration proto.InternalMessageInfo
 
-func (m *BlockRateLimitConfiguration) GetMaxShortTermOrdersAndCancelsPerNBlocks() []MaxPerNBlocksRateLimit {
+// Deprecated: Do not use.
+func (m *BlockRateLimitConfiguration) GetMaxShortTermOrdersPerNBlocks() []MaxPerNBlocksRateLimit {
 	if m != nil {
-		return m.MaxShortTermOrdersAndCancelsPerNBlocks
+		return m.MaxShortTermOrdersPerNBlocks
 	}
 	return nil
 }
@@ -84,6 +103,21 @@ func (m *BlockRateLimitConfiguration) GetMaxShortTermOrdersAndCancelsPerNBlocks(
 func (m *BlockRateLimitConfiguration) GetMaxStatefulOrdersPerNBlocks() []MaxPerNBlocksRateLimit {
 	if m != nil {
 		return m.MaxStatefulOrdersPerNBlocks
+	}
+	return nil
+}
+
+// Deprecated: Do not use.
+func (m *BlockRateLimitConfiguration) GetMaxShortTermOrderCancellationsPerNBlocks() []MaxPerNBlocksRateLimit {
+	if m != nil {
+		return m.MaxShortTermOrderCancellationsPerNBlocks
+	}
+	return nil
+}
+
+func (m *BlockRateLimitConfiguration) GetMaxShortTermOrdersAndCancelsPerNBlocks() []MaxPerNBlocksRateLimit {
+	if m != nil {
+		return m.MaxShortTermOrdersAndCancelsPerNBlocks
 	}
 	return nil
 }
@@ -155,29 +189,32 @@ func init() {
 }
 
 var fileDescriptor_0b7d196450032f13 = []byte{
-	// 343 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x92, 0x4f, 0x4f, 0xfa, 0x30,
-	0x18, 0xc7, 0x37, 0x7e, 0x3f, 0x4d, 0xac, 0xf1, 0xe0, 0x42, 0x0c, 0x91, 0x38, 0x09, 0x07, 0x83,
-	0x07, 0xb7, 0x44, 0x8d, 0x77, 0xe1, 0x2a, 0x4a, 0xd0, 0x93, 0x97, 0xa6, 0xeb, 0xca, 0x58, 0x5c,
-	0xfb, 0x90, 0xb6, 0x23, 0xe3, 0x55, 0xe8, 0xbb, 0xf0, 0xad, 0x70, 0xe4, 0xe8, 0xc9, 0x18, 0x78,
-	0x23, 0xa6, 0x1d, 0x82, 0x44, 0x4f, 0xde, 0xb6, 0xa7, 0xdf, 0x3f, 0x9f, 0xe6, 0x29, 0x0a, 0xe3,
-	0x49, 0x5c, 0x8c, 0x24, 0x68, 0xa0, 0x90, 0x85, 0x34, 0x83, 0x28, 0x8c, 0x32, 0xa0, 0x4f, 0x58,
-	0x12, 0xcd, 0x70, 0x96, 0xf2, 0x54, 0x63, 0x0a, 0x62, 0x90, 0x26, 0x81, 0x55, 0x79, 0xfb, 0xdf,
-	0x0d, 0x81, 0x31, 0x1c, 0x56, 0x13, 0x48, 0xc0, 0x8e, 0x42, 0xf3, 0x55, 0x0a, 0x9b, 0xaf, 0x15,
-	0x54, 0x6f, 0x9b, 0xa8, 0x3e, 0xd1, 0xec, 0xc6, 0x04, 0x75, 0x6c, 0x4e, 0x2e, 0x89, 0x4e, 0x41,
-	0x78, 0xcf, 0x2e, 0x0a, 0x38, 0x29, 0xb0, 0x1a, 0x82, 0xd4, 0x58, 0x33, 0xc9, 0x31, 0xc8, 0x98,
-	0x49, 0x85, 0x89, 0x88, 0x31, 0x25, 0x82, 0xb2, 0x4c, 0xe1, 0x11, 0x93, 0x58, 0x60, 0x8b, 0xa4,
-	0x6a, 0x6e, 0xe3, 0x5f, 0x6b, 0xf7, 0xfc, 0x34, 0xf8, 0x81, 0x10, 0x74, 0x49, 0xd1, 0x63, 0xf2,
-	0xd6, 0xf6, 0xa9, 0x55, 0x61, 0xfb, 0xff, 0xf4, 0xfd, 0xd8, 0xe9, 0x9f, 0x70, 0x52, 0xdc, 0x9b,
-	0x96, 0x07, 0x26, 0xf9, 0x9d, 0xed, 0xb8, 0x16, 0x71, 0xa7, 0x6c, 0x58, 0xdb, 0xbc, 0x31, 0x6a,
-	0x58, 0x20, 0x4d, 0x34, 0x1b, 0xe4, 0xd9, 0x17, 0xce, 0x06, 0x42, 0xe5, 0x6f, 0x08, 0x75, 0x83,
-	0xb0, 0xcc, 0x2d, 0x09, 0xd6, 0xda, 0x66, 0x17, 0x1d, 0xfc, 0x6e, 0xf6, 0x8e, 0x10, 0x12, 0x39,
-	0x5f, 0x5f, 0xdf, 0x6d, 0xed, 0xf5, 0x77, 0x44, 0xce, 0x97, 0xc0, 0x55, 0xb4, 0x65, 0x37, 0x54,
-	0xab, 0xd8, 0x93, 0xf2, 0xa7, 0xdd, 0x9b, 0xce, 0x7d, 0x77, 0x36, 0xf7, 0xdd, 0x8f, 0xb9, 0xef,
-	0xbe, 0x2c, 0x7c, 0x67, 0xb6, 0xf0, 0x9d, 0xb7, 0x85, 0xef, 0x3c, 0x5e, 0x25, 0xa9, 0x1e, 0xe6,
-	0x51, 0x40, 0x81, 0x6f, 0xee, 0x7d, 0x7c, 0x79, 0x46, 0x87, 0x24, 0x15, 0xe1, 0x6a, 0x52, 0x94,
-	0x6f, 0x41, 0x4f, 0x46, 0x4c, 0x45, 0xdb, 0x76, 0x7c, 0xf1, 0x19, 0x00, 0x00, 0xff, 0xff, 0x72,
-	0x9e, 0xcd, 0xfc, 0x2d, 0x02, 0x00, 0x00,
+	// 391 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x9c, 0x93, 0xc1, 0x6e, 0xda, 0x30,
+	0x18, 0xc7, 0x63, 0x60, 0x48, 0xf3, 0xb4, 0xc3, 0x22, 0x34, 0xa1, 0xb1, 0x65, 0x88, 0xc3, 0xc4,
+	0x0e, 0x4b, 0xa4, 0x6d, 0xea, 0xbd, 0x70, 0x2d, 0x2d, 0x4a, 0x7b, 0xea, 0xc5, 0x72, 0x1c, 0x13,
+	0xa2, 0xc6, 0x36, 0x72, 0x1c, 0x14, 0xd4, 0x87, 0x68, 0x0f, 0x7d, 0x9b, 0xbe, 0x00, 0x47, 0x8e,
+	0x3d, 0x55, 0x15, 0xbc, 0x48, 0x15, 0x07, 0x41, 0x4a, 0x72, 0x29, 0xb7, 0xe4, 0xf3, 0xe7, 0xff,
+	0xef, 0xef, 0xbf, 0xfd, 0x41, 0xc7, 0x5f, 0xf8, 0xe9, 0x4c, 0x0a, 0x25, 0x88, 0x88, 0x1c, 0x12,
+	0x09, 0xcf, 0xf1, 0x22, 0x41, 0x6e, 0x90, 0xc4, 0x8a, 0xa2, 0x28, 0x64, 0xa1, 0x42, 0x44, 0xf0,
+	0x49, 0x18, 0xd8, 0xba, 0xcb, 0xfc, 0x52, 0xdc, 0x60, 0x67, 0x1b, 0xbe, 0xb5, 0x02, 0x11, 0x08,
+	0x5d, 0x72, 0xb2, 0xaf, 0xbc, 0xb1, 0xf7, 0xd8, 0x80, 0x9d, 0x41, 0x26, 0xe5, 0x62, 0x45, 0xcf,
+	0x32, 0xa1, 0xa1, 0xd6, 0x49, 0x24, 0x56, 0xa1, 0xe0, 0xe6, 0x2d, 0xec, 0x31, 0x9c, 0xa2, 0x78,
+	0x2a, 0xa4, 0x42, 0x8a, 0x4a, 0x86, 0x84, 0xf4, 0xa9, 0x8c, 0xd1, 0x8c, 0x4a, 0xc4, 0x91, 0x76,
+	0x11, 0xb7, 0x41, 0xb7, 0xde, 0xff, 0xf4, 0xf7, 0xb7, 0x5d, 0xa2, 0xda, 0x23, 0x9c, 0x8e, 0xa9,
+	0x3c, 0xd7, 0x88, 0x78, 0xc7, 0x18, 0x34, 0x97, 0xcf, 0x3f, 0x8d, 0x36, 0x70, 0xbf, 0x33, 0x9c,
+	0x5e, 0x66, 0xda, 0x57, 0x54, 0xb2, 0x0b, 0xad, 0xbc, 0x6f, 0x37, 0xe7, 0xb0, 0xab, 0xe1, 0x0a,
+	0x2b, 0x3a, 0x49, 0xa2, 0x4a, 0x74, 0xed, 0xbd, 0xe8, 0x46, 0x86, 0x76, 0x3b, 0x19, 0x78, 0xab,
+	0x5b, 0xe2, 0x3e, 0x00, 0xe8, 0x54, 0x9d, 0x1a, 0x11, 0xcc, 0x09, 0x8d, 0x22, 0x1d, 0xcd, 0x81,
+	0x8f, 0xfa, 0xb1, 0x11, 0xf4, 0x4b, 0x11, 0x0c, 0x8b, 0x94, 0x82, 0xad, 0x3b, 0x00, 0xed, 0xea,
+	0xcb, 0xc0, 0xdc, 0xdf, 0x7a, 0x3b, 0x70, 0xd5, 0x38, 0x2e, 0x9d, 0x5f, 0xe5, 0x6b, 0x39, 0xe5,
+	0x7e, 0xee, 0xab, 0xe0, 0xa8, 0x37, 0x82, 0x5f, 0xab, 0x75, 0xcc, 0x1f, 0x10, 0xf2, 0x84, 0xed,
+	0xdf, 0x07, 0xe8, 0x7f, 0x76, 0x3f, 0xf2, 0x84, 0x6d, 0x8f, 0xd2, 0x82, 0x1f, 0xf4, 0xab, 0x6d,
+	0xd7, 0xf4, 0x4a, 0xfe, 0x33, 0x18, 0x2f, 0xd7, 0x16, 0x58, 0xad, 0x2d, 0xf0, 0xb2, 0xb6, 0xc0,
+	0xfd, 0xc6, 0x32, 0x56, 0x1b, 0xcb, 0x78, 0xda, 0x58, 0xc6, 0xf5, 0x49, 0x10, 0xaa, 0x69, 0xe2,
+	0xd9, 0x44, 0xb0, 0xb7, 0xb3, 0x30, 0xff, 0xff, 0x87, 0x4c, 0x71, 0xc8, 0x9d, 0x5d, 0x25, 0xcd,
+	0xe7, 0x43, 0x2d, 0x66, 0x34, 0xf6, 0x9a, 0xba, 0xfc, 0xef, 0x35, 0x00, 0x00, 0xff, 0xff, 0x04,
+	0x33, 0x7f, 0xa5, 0x41, 0x03, 0x00, 0x00,
 }
 
 func (m *BlockRateLimitConfiguration) Marshal() (dAtA []byte, err error) {
@@ -200,6 +237,34 @@ func (m *BlockRateLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
+	if len(m.MaxShortTermOrdersAndCancelsPerNBlocks) > 0 {
+		for iNdEx := len(m.MaxShortTermOrdersAndCancelsPerNBlocks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MaxShortTermOrdersAndCancelsPerNBlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintBlockRateLimitConfig(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x22
+		}
+	}
+	if len(m.MaxShortTermOrderCancellationsPerNBlocks) > 0 {
+		for iNdEx := len(m.MaxShortTermOrderCancellationsPerNBlocks) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.MaxShortTermOrderCancellationsPerNBlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintBlockRateLimitConfig(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x1a
+		}
+	}
 	if len(m.MaxStatefulOrdersPerNBlocks) > 0 {
 		for iNdEx := len(m.MaxStatefulOrdersPerNBlocks) - 1; iNdEx >= 0; iNdEx-- {
 			{
@@ -214,10 +279,10 @@ func (m *BlockRateLimitConfiguration) MarshalToSizedBuffer(dAtA []byte) (int, er
 			dAtA[i] = 0x12
 		}
 	}
-	if len(m.MaxShortTermOrdersAndCancelsPerNBlocks) > 0 {
-		for iNdEx := len(m.MaxShortTermOrdersAndCancelsPerNBlocks) - 1; iNdEx >= 0; iNdEx-- {
+	if len(m.MaxShortTermOrdersPerNBlocks) > 0 {
+		for iNdEx := len(m.MaxShortTermOrdersPerNBlocks) - 1; iNdEx >= 0; iNdEx-- {
 			{
-				size, err := m.MaxShortTermOrdersAndCancelsPerNBlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				size, err := m.MaxShortTermOrdersPerNBlocks[iNdEx].MarshalToSizedBuffer(dAtA[:i])
 				if err != nil {
 					return 0, err
 				}
@@ -281,14 +346,26 @@ func (m *BlockRateLimitConfiguration) Size() (n int) {
 	}
 	var l int
 	_ = l
-	if len(m.MaxShortTermOrdersAndCancelsPerNBlocks) > 0 {
-		for _, e := range m.MaxShortTermOrdersAndCancelsPerNBlocks {
+	if len(m.MaxShortTermOrdersPerNBlocks) > 0 {
+		for _, e := range m.MaxShortTermOrdersPerNBlocks {
 			l = e.Size()
 			n += 1 + l + sovBlockRateLimitConfig(uint64(l))
 		}
 	}
 	if len(m.MaxStatefulOrdersPerNBlocks) > 0 {
 		for _, e := range m.MaxStatefulOrdersPerNBlocks {
+			l = e.Size()
+			n += 1 + l + sovBlockRateLimitConfig(uint64(l))
+		}
+	}
+	if len(m.MaxShortTermOrderCancellationsPerNBlocks) > 0 {
+		for _, e := range m.MaxShortTermOrderCancellationsPerNBlocks {
+			l = e.Size()
+			n += 1 + l + sovBlockRateLimitConfig(uint64(l))
+		}
+	}
+	if len(m.MaxShortTermOrdersAndCancelsPerNBlocks) > 0 {
+		for _, e := range m.MaxShortTermOrdersAndCancelsPerNBlocks {
 			l = e.Size()
 			n += 1 + l + sovBlockRateLimitConfig(uint64(l))
 		}
@@ -348,7 +425,7 @@ func (m *BlockRateLimitConfiguration) Unmarshal(dAtA []byte) error {
 		switch fieldNum {
 		case 1:
 			if wireType != 2 {
-				return fmt.Errorf("proto: wrong wireType = %d for field MaxShortTermOrdersAndCancelsPerNBlocks", wireType)
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxShortTermOrdersPerNBlocks", wireType)
 			}
 			var msglen int
 			for shift := uint(0); ; shift += 7 {
@@ -375,8 +452,8 @@ func (m *BlockRateLimitConfiguration) Unmarshal(dAtA []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.MaxShortTermOrdersAndCancelsPerNBlocks = append(m.MaxShortTermOrdersAndCancelsPerNBlocks, MaxPerNBlocksRateLimit{})
-			if err := m.MaxShortTermOrdersAndCancelsPerNBlocks[len(m.MaxShortTermOrdersAndCancelsPerNBlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+			m.MaxShortTermOrdersPerNBlocks = append(m.MaxShortTermOrdersPerNBlocks, MaxPerNBlocksRateLimit{})
+			if err := m.MaxShortTermOrdersPerNBlocks[len(m.MaxShortTermOrdersPerNBlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex
@@ -411,6 +488,74 @@ func (m *BlockRateLimitConfiguration) Unmarshal(dAtA []byte) error {
 			}
 			m.MaxStatefulOrdersPerNBlocks = append(m.MaxStatefulOrdersPerNBlocks, MaxPerNBlocksRateLimit{})
 			if err := m.MaxStatefulOrdersPerNBlocks[len(m.MaxStatefulOrdersPerNBlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxShortTermOrderCancellationsPerNBlocks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBlockRateLimitConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBlockRateLimitConfig
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBlockRateLimitConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MaxShortTermOrderCancellationsPerNBlocks = append(m.MaxShortTermOrderCancellationsPerNBlocks, MaxPerNBlocksRateLimit{})
+			if err := m.MaxShortTermOrderCancellationsPerNBlocks[len(m.MaxShortTermOrderCancellationsPerNBlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field MaxShortTermOrdersAndCancelsPerNBlocks", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowBlockRateLimitConfig
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthBlockRateLimitConfig
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthBlockRateLimitConfig
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.MaxShortTermOrdersAndCancelsPerNBlocks = append(m.MaxShortTermOrdersAndCancelsPerNBlocks, MaxPerNBlocksRateLimit{})
+			if err := m.MaxShortTermOrdersAndCancelsPerNBlocks[len(m.MaxShortTermOrdersAndCancelsPerNBlocks)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
 				return err
 			}
 			iNdEx = postIndex

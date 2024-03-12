@@ -7,15 +7,16 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
 // Defines the block rate limits for CLOB specific operations.
 message BlockRateLimitConfiguration {
-  // How many short term order place and cancel attempts (successful and failed)
-  // are allowed for an account per N blocks. Note that the rate limits are
-  // applied in an AND fashion such that an order placement must pass all rate
-  // limit configurations.
+  // How many short term order attempts (successful and failed) are allowed for
+  // an account per N blocks. Note that the rate limits are applied
+  // in an AND fashion such that an order placement must pass all rate limit
+  // configurations.
   //
   // Specifying 0 values disables this rate limit.
-  repeated MaxPerNBlocksRateLimit
-      max_short_term_orders_and_cancels_per_n_blocks = 1
-      [ (gogoproto.nullable) = false ];
+  // Deprecated in favor of `max_short_term_orders_and_cancels_per_n_blocks`
+  // for v5.x onwards.
+  repeated MaxPerNBlocksRateLimit max_short_term_orders_per_n_blocks = 1
+      [ (gogoproto.nullable) = false, deprecated = true ];
 
   // How many stateful order attempts (successful and failed) are allowed for
   // an account per N blocks. Note that the rate limits are applied
@@ -24,6 +25,28 @@ message BlockRateLimitConfiguration {
   //
   // Specifying 0 values disables this rate limit.
   repeated MaxPerNBlocksRateLimit max_stateful_orders_per_n_blocks = 2
+      [ (gogoproto.nullable) = false ];
+
+  // How many short term order cancellation attempts (successful and failed) are
+  // allowed for an account per N blocks. Note that the rate limits are
+  // applied in an AND fashion such that an order cancellation must pass all
+  // rate limit configurations.
+  //
+  // Specifying 0 values disables this rate limit.
+  // Deprecated in favor of `max_short_term_orders_and_cancels_per_n_blocks`
+  // for v5.x onwards.
+  repeated MaxPerNBlocksRateLimit
+      max_short_term_order_cancellations_per_n_blocks = 3
+      [ (gogoproto.nullable) = false, deprecated = true ];
+
+  // How many short term order place and cancel attempts (successful and failed)
+  // are allowed for an account per N blocks. Note that the rate limits are
+  // applied in an AND fashion such that an order placement must pass all rate
+  // limit configurations.
+  //
+  // Specifying 0 values disables this rate limit.
+  repeated MaxPerNBlocksRateLimit
+      max_short_term_orders_and_cancels_per_n_blocks = 4
       [ (gogoproto.nullable) = false ];
 }
 
