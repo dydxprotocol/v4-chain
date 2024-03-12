@@ -87,7 +87,7 @@
     },
     "block_rate_limit_config": {
       "max_short_term_orders_and_cancels_per_n_blocks": [],
-      "max_stateful_orders_per_n_blocks": [],
+      "max_stateful_orders_per_n_blocks": []
     },
     "equity_tier_limit_config": {
       "short_term_order_equity_tiers": [],

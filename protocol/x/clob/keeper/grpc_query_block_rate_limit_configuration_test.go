@@ -23,7 +23,7 @@ func TestGetBlockRateLimitConfiguration(t *testing.T) {
 					MaxShortTermOrdersAndCancelsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
-							Limit:     200,
+							Limit:     400,
 						},
 					},
 					MaxStatefulOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
