@@ -33,7 +33,7 @@ class HistoricalTradingRewardAggregationsController extends Controller {
   async getAggregations(
     @Path() address: string,
       @Query() period: TradingRewardAggregationPeriod,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() startingBeforeOrAt?: IsoString,
       @Query() startingBeforeOrAtHeight?: string,
   ): Promise<HistoricalTradingRewardAggregationsResponse> {

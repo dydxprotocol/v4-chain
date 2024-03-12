@@ -26,7 +26,7 @@ class CandleController extends Controller {
   async getCandles(
     @Path() ticker: string,
       @Query() resolution: CandleResolution,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() fromISO?: string,
       @Query() toISO?: string,
   ): Promise<CandleResponse> {
