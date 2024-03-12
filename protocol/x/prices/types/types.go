@@ -3,6 +3,8 @@ package types
 import (
 	"cosmossdk.io/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 )
 
 type PricesKeeper interface {
@@ -43,7 +45,15 @@ type PricesKeeper interface {
 		ctx sdk.Context,
 		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
 	) error
+	GetValidMarketPriceUpdates(
+		ctx sdk.Context,
+	) *MsgUpdateMarketPrices
 
 	// Misc.
 	Logger(ctx sdk.Context) log.Logger
+
+	// Slinky compat
+	GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
+	GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
+	GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error)
 }
