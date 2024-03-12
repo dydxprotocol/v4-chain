@@ -181,12 +181,3 @@ func (r *placeAndCancelOrderRateLimiter) PruneRateLimits(ctx sdk.Context) {
 	r.checkStateShortTermOrderPlaceCancelRateLimiter.PruneRateLimits(ctx)
 	r.checkStateStatefulOrderRateLimiter.PruneRateLimits(ctx)
 }
-
-// A RateLimiter which rate limits types.MsgCancelOrder.
-//
-// The rate limiting keeps track of short term order cancellations during CheckTx.
-type cancelOrderRateLimiter struct {
-	checkStateShortTermRateLimiter RateLimiter[string]
-	// The set of rate limited accounts is only stored for telemetry purposes.
-	rateLimitedAccounts map[string]bool
-}

@@ -26,9 +26,9 @@ const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 // Defines the block rate limits for CLOB specific operations.
 type BlockRateLimitConfiguration struct {
 	// How many short term order place and cancel attempts (successful and failed)
-	// are allowed for an account per N blocks. Note that the rate limits are applied
-	// in an AND fashion such that an order placement must pass all rate limit
-	// configurations.
+	// are allowed for an account per N blocks. Note that the rate limits are
+	// applied in an AND fashion such that an order placement must pass all rate
+	// limit configurations.
 	//
 	// Specifying 0 values disables this rate limit.
 	MaxShortTermOrdersAndCancelsPerNBlocks []MaxPerNBlocksRateLimit `protobuf:"bytes,1,rep,name=max_short_term_orders_and_cancels_per_n_blocks,json=maxShortTermOrdersAndCancelsPerNBlocks,proto3" json:"max_short_term_orders_and_cancels_per_n_blocks"`
