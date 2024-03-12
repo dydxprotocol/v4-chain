@@ -99,9 +99,9 @@
     },
     "clob": {
       "block_rate_limit_config": {
-        "max_short_term_orders_per_n_blocks": [
+        "max_short_term_orders_and_cancels_per_n_blocks": [
           {
-            "limit": 200,
+            "limit": 400,
             "num_blocks": 1
           }
         ],
@@ -1818,7 +1818,7 @@
       ]
     }
   },
-  "app_version": "4.0.0-dev0-62-g95853be5",
+  "app_version": "4.0.0-dev0-88-g3ba93334",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
