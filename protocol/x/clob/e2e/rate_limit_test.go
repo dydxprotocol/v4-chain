@@ -100,7 +100,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
-						Limit:     1,
+						Limit:     3,
 					},
 				},
 			},
@@ -112,7 +112,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
-						Limit:     1,
+						Limit:     3,
 					},
 				},
 			},
@@ -190,6 +190,180 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			// Advancing two blocks should make the total count 0 now and the msg should be accepted.
 			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
+			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+		})
+	}
+}
+
+func TestCombinedPlaceCancelBatchCancel_RateLimitsAreEnforced(t *testing.T) {
+	tests := map[string]struct {
+		blockRateLimitConfig clobtypes.BlockRateLimitConfiguration
+		firstBatch           []sdktypes.Msg
+		secondBatch          []sdktypes.Msg
+		thirdBatch           []sdktypes.Msg
+		firstBatchSuccess    []bool
+		secondBatchSuccess   []bool
+		thirdBatchSuccess    []bool
+		lastOrder            sdktypes.Msg
+	}{
+		"Combination Place, Cancel, BatchCancel orders": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     6, // TODO FIX THIS AFTER SETTLE ON A NUM
+					},
+				},
+			},
+			firstBatch: []sdktypes.Msg{
+				&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20, // 1-weight success @ 1
+				&PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20, // 1-weight success @ 2
+				&CancelOrder_Alice_Num0_Id0_Clob0_GTB20,             // 1-weight success @ 3
+			},
+			firstBatchSuccess: []bool{
+				true,
+				true,
+				true,
+			},
+			secondBatch: []sdktypes.Msg{
+				&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB23, // 1-weight success @ 4
+				&CancelOrder_Alice_Num1_Id0_Clob0_GTB20,             // 1-weight success @ 5
+				&BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,           // 2-weight failure @ 7
+				&CancelOrder_Alice_Num0_Id0_Clob0_GTB23,             // 1-weight failure @ 8
+			},
+			secondBatchSuccess: []bool{
+				true,
+				true,
+				false,
+				false,
+			},
+			// advance one block, subtract 3 for a count of 5
+			thirdBatch: []sdktypes.Msg{
+				&PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB24, // 1-weight success @ 6
+				&BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,           // 2-weight failure @ 8
+				&CancelOrder_Alice_Num0_Id0_Clob0_GTB20,             // 1-weight failure @ 9
+			},
+			thirdBatchSuccess: []bool{
+				true,
+				false,
+				false,
+			},
+			// advance one block, subtract 5 for a count of 4
+			lastOrder: &BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20, // 2-weight pass @ 6
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			tApp := testapp.NewTestAppBuilder(t).
+				// Disable non-determinism checks since we mutate keeper state directly.
+				WithNonDeterminismChecksEnabled(false).
+				WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+					genesis = testapp.DefaultGenesis()
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *clobtypes.GenesisState) {
+							genesisState.BlockRateLimitConfig = tc.blockRateLimitConfig
+						},
+					)
+					testapp.UpdateGenesisDocWithAppStateForModule(
+						&genesis,
+						func(genesisState *satypes.GenesisState) {
+							genesisState.Subaccounts = []satypes.Subaccount{
+								constants.Alice_Num0_10_000USD,
+								constants.Alice_Num1_10_000USD,
+							}
+						})
+					return genesis
+				}).Build()
+			ctx := tApp.InitChain()
+
+			firstCheckTxArray := []abcitypes.RequestCheckTx{}
+			for _, msg := range tc.firstBatch {
+				checkTx := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), msg),
+					},
+					msg,
+				)
+				firstCheckTxArray = append(firstCheckTxArray, checkTx)
+			}
+			secondCheckTxArray := []abcitypes.RequestCheckTx{}
+			for _, msg := range tc.secondBatch {
+				checkTx := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), msg),
+					},
+					msg,
+				)
+				secondCheckTxArray = append(secondCheckTxArray, checkTx)
+			}
+			thirdCheckTxArray := []abcitypes.RequestCheckTx{}
+			for _, msg := range tc.thirdBatch {
+				checkTx := testapp.MustMakeCheckTx(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), msg),
+					},
+					msg,
+				)
+				thirdCheckTxArray = append(thirdCheckTxArray, checkTx)
+			}
+
+			tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
+			// First batch of transactions.
+			for idx, checkTx := range firstCheckTxArray {
+				resp := tApp.CheckTx(checkTx)
+				shouldSucceed := tc.firstBatchSuccess[idx]
+				if shouldSucceed {
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				} else {
+					require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+					require.Contains(t, resp.Log, "exceeds configured block rate limit")
+				}
+			}
+			// Advance one block
+			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
+			// Second batch of transactions.
+			for idx, checkTx := range secondCheckTxArray {
+				resp := tApp.CheckTx(checkTx)
+				shouldSucceed := tc.secondBatchSuccess[idx]
+				if shouldSucceed {
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				} else {
+					require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+					require.Contains(t, resp.Log, "exceeds configured block rate limit")
+				}
+			}
+			// Advance one block
+			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
+			// Third batch of transactions.
+			for idx, checkTx := range thirdCheckTxArray {
+				resp := tApp.CheckTx(checkTx)
+				shouldSucceed := tc.thirdBatchSuccess[idx]
+				if shouldSucceed {
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				} else {
+					require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
+					require.Contains(t, resp.Log, "exceeds configured block rate limit")
+				}
+			}
+			// Advance one block
+			tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
+			lastCheckTx := testapp.MustMakeCheckTx(
+				ctx,
+				tApp.App,
+				testapp.MustMakeCheckTxOptions{
+					AccAddressForSigning: testtx.MustGetOnlySignerAddress(tApp.App.AppCodec(), tc.lastOrder),
+				},
+				tc.lastOrder,
+			)
+			resp := tApp.CheckTx(lastCheckTx)
 			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 		})
 	}
