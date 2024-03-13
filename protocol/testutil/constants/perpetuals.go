@@ -327,6 +327,18 @@ var (
 		},
 		FundingIndex: dtypes.ZeroInt(),
 	}
+	Iso2Usd_IsolatedMarket = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                4,
+			Ticker:            "ISO2-USD",
+			MarketId:          uint32(4),
+			AtomicResolution:  int32(-7),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+	}
 )
 
 var TestMarketPerpetuals = []perptypes.Perpetual{
