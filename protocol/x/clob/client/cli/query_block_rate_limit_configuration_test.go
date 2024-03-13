@@ -4,12 +4,13 @@ package cli_test
 
 import (
 	"fmt"
+	"testing"
+
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 var (
@@ -17,6 +18,7 @@ var (
 		MaxShortTermOrdersPerNBlocks:             []types.MaxPerNBlocksRateLimit{},
 		MaxStatefulOrdersPerNBlocks:              []types.MaxPerNBlocksRateLimit{},
 		MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{},
+		MaxShortTermOrdersAndCancelsPerNBlocks:   []types.MaxPerNBlocksRateLimit{},
 	}
 )
 
