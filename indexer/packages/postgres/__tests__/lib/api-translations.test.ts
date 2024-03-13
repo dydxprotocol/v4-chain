@@ -42,6 +42,7 @@ describe('apiTranslations', () => {
       const childSubaccounts = getChildSubaccountNums(0);
       expect(childSubaccounts.length).toEqual(1000);
       expect(childSubaccounts[0]).toEqual(0);
+      expect(childSubaccounts[127]).toEqual(127);
       expect(childSubaccounts[1]).toEqual(128);
       expect(childSubaccounts[999]).toEqual(128 * 999);
     });

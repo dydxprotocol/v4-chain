@@ -37,7 +37,7 @@ export function getChildSubaccountNums(parentSubaccountNum: number): number[] {
 
 /**
  * Gets the parent subaccount number from a child subaccount number
- * Parent subaccount = childSubaccount / 128
+ * Parent subaccount = childSubaccount % 128
  * @param childSubaccountNum
  * @returns
  */
