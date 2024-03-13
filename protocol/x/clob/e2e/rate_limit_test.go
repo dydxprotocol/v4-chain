@@ -19,12 +19,12 @@ import (
 
 func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 	tests := map[string]struct {
-		blockRateLimitConifg clobtypes.BlockRateLimitConfiguration
+		blockRateLimitConfig clobtypes.BlockRateLimitConfiguration
 		firstMsg             sdktypes.Msg
 		secondMsg            sdktypes.Msg
 	}{
 		"Short term orders with same subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -36,7 +36,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			secondMsg: &PlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTB20,
 		},
 		"Short term orders with different subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -48,7 +48,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			secondMsg: &PlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTB20,
 		},
 		"Stateful orders with same subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -60,7 +60,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			secondMsg: &LongTermPlaceOrder_Alice_Num0_Id0_Clob1_Buy5_Price10_GTBT5,
 		},
 		"Stateful orders with different subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -72,7 +72,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			secondMsg: &LongTermPlaceOrder_Alice_Num1_Id0_Clob0_Buy5_Price10_GTBT5,
 		},
 		"Short term order cancellations with same subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -84,7 +84,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			secondMsg: &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
 		},
 		"Short term order cancellations with different subaccounts": {
-			blockRateLimitConifg: clobtypes.BlockRateLimitConfiguration{
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
@@ -94,6 +94,30 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			},
 			firstMsg:  &CancelOrder_Alice_Num0_Id0_Clob1_GTB5,
 			secondMsg: &CancelOrder_Alice_Num1_Id0_Clob0_GTB20,
+		},
+		"Batch cancellations with same subaccounts": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:  &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
+			secondMsg: &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
+		},
+		"Batch cancellations with different subaccounts": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 2,
+						Limit:     1,
+					},
+				},
+			},
+			firstMsg:  &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
+			secondMsg: &BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20,
 		},
 	}
 
@@ -107,7 +131,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 					testapp.UpdateGenesisDocWithAppStateForModule(
 						&genesis,
 						func(genesisState *clobtypes.GenesisState) {
-							genesisState.BlockRateLimitConfig = tc.blockRateLimitConifg
+							genesisState.BlockRateLimitConfig = tc.blockRateLimitConfig
 						},
 					)
 					testapp.UpdateGenesisDocWithAppStateForModule(
@@ -514,6 +538,20 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			firstValidGTB:    &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
 			secondValidGTB:   &CancelOrder_Alice_Num1_Id0_Clob0_GTB20,
 		},
+		"Batch cancellations": {
+			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
+				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
+					{
+						NumBlocks: 1,
+						Limit:     3, // TODO FIX THIS ONCE WEIGHTS ARE DECIDED
+					},
+				},
+			},
+			replayLessGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
+			replayGreaterGTB: &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27,
+			firstValidGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
+			secondValidGTB:   &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
+		},
 	}
 
 	for name, tc := range tests {
@@ -586,7 +624,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
+			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 		})
 	}
 }

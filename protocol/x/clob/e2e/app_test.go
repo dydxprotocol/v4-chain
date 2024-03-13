@@ -223,6 +223,47 @@ var (
 		constants.ConditionalOrder_Alice_Num1_Id0_Clob0_Sell5_Price10_GTB15,
 		testapp.DefaultGenesis(),
 	))
+
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		5,
+	)
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		27,
+	)
+	BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
+	BatchCancel_Alice_Num1_Clob0_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num1,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
 )
 
 // We place 300 orders that match and 700 orders followed by their cancellations concurrently.
