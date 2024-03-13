@@ -291,7 +291,7 @@ func TestUpgrade(t *testing.T) {
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
 	nodeAddress := constants.AliceAccAddress.String()
-	upgradeTestnet(nodeAddress, t, node)
+	err = upgradeTestnet(nodeAddress, t, node)
 	require.NoError(t, err)
 }
 
