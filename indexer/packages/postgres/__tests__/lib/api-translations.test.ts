@@ -38,13 +38,19 @@ describe('apiTranslations', () => {
   });
 
   describe('getChildSubaccountNums', () => {
-    it('Gets a list of all possible child subaccount numbers for a parent subaccount number', () => {
+    it('Gets a list of all possible child subaccount numbers for a parent subaccount 0', () => {
       const childSubaccounts = getChildSubaccountNums(0);
       expect(childSubaccounts.length).toEqual(1000);
       expect(childSubaccounts[0]).toEqual(0);
-      expect(childSubaccounts[127]).toEqual(127);
       expect(childSubaccounts[1]).toEqual(128);
       expect(childSubaccounts[999]).toEqual(128 * 999);
+    });
+    it('Gets a list of all possible child subaccount numbers for a parent subaccount 127', () => {
+      const childSubaccounts = getChildSubaccountNums(127);
+      expect(childSubaccounts.length).toEqual(1000);
+      expect(childSubaccounts[0]).toEqual(127);
+      expect(childSubaccounts[1]).toEqual(128 + 127);
+      expect(childSubaccounts[999]).toEqual(128 * 999 + 127);
     });
   });
 
