@@ -34,6 +34,7 @@ func BeginBlocker(
 			BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 		},
 	)
+	fmt.Println("height", ctx.BlockHeight(), "beginblocker PPME", keeper.GetProcessProposerMatchesEvents(ctx))
 }
 
 // EndBlocker executes all ABCI EndBlock logic respective to the clob module.
@@ -41,6 +42,8 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	fmt.Println("height", ctx.BlockHeight(), "endblocker all stateful orders: ", keeper.GetAllStatefulOrders(ctx))
+
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Handler, log.EndBlocker,
 		log.BlockHeight, ctx.BlockHeight(),

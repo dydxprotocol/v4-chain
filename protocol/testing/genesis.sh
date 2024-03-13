@@ -1089,6 +1089,9 @@ function edit_genesis() {
 	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].denom" -v "${NATIVE_TOKEN}"
 	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[0].amount" -v "${bridge_module_account_balance}"
+	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[]" -v "{}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[1].denom" -v "${USDC_DENOM}"
+	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[$next_bank_idx].coins.[1].amount" -v "100000000000000000000"
 
 	# Set denom metadata
 	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"

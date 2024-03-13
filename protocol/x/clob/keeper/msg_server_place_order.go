@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -85,6 +86,7 @@ func (k Keeper) HandleMsgPlaceOrder(
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
 	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	fmt.Println("height", ctx.BlockHeight(), "cancelledOrderIds", cancelledOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
 		return errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,

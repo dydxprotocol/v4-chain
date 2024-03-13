@@ -1070,6 +1070,10 @@ func New(
 	app.VaultKeeper = *vaultmodulekeeper.NewKeeper(
 		appCodec,
 		keys[vaultmoduletypes.StoreKey],
+		app.ClobKeeper,
+		app.PerpetualsKeeper,
+		app.PricesKeeper,
+		app.SubaccountsKeeper,
 		[]string{
 			lib.GovModuleAddress.String(),
 			delaymsgmoduletypes.ModuleAddress.String(),

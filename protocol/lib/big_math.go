@@ -265,3 +265,22 @@ func warmCache() map[uint64]*big.Int {
 
 	return bigExponentValues
 }
+
+// BigRatRoundToNearestMultiple rounds `value` up/down to the nearest multiple of `base`.
+func BigRatRoundToNearestMultiple(
+	value *big.Rat,
+	base uint32,
+	up bool,
+) uint64 {
+	quotient := new(big.Rat).Quo(
+		value,
+		new(big.Rat).SetUint64(uint64(base)),
+	)
+	quotientFloored := new(big.Int).Div(quotient.Num(), quotient.Denom())
+
+	if up && quotientFloored.Cmp(quotient.Num()) != 0 {
+		return (quotientFloored.Uint64() + 1) * uint64(base)
+	}
+
+	return quotientFloored.Uint64() * uint64(base)
+}
