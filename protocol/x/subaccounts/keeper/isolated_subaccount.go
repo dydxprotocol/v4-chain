@@ -13,7 +13,7 @@ import (
 // checkIsolatedSubaccountConstaints will validate all `updates` to the relevant subaccounts against
 // isolated subaccount constraints.
 // This function checks each update in isolation, so if multiple updates for the same subaccount id
-// are passed in, they are evaluated together
+// are passed in, they are not evaluated separately.
 // The input subaccounts must be settled.
 //
 // Returns a `success` value of `true` if all updates are valid.

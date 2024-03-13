@@ -517,7 +517,6 @@ func checkPositionUpdatable(
 
 // internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
-// The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
 // with the same `Subaccount`, they are validated without respect to each
 // other.
