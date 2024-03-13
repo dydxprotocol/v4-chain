@@ -111,7 +111,7 @@ func (k Keeper) CreatePerpetual(
 	}
 
 	// Store the new perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	k.SetEmptyPremiumSamples(ctx)
 	k.SetEmptyPremiumVotes(ctx)
@@ -165,7 +165,7 @@ func (k Keeper) ModifyPerpetual(
 	}
 
 	// Store the modified perpetual.
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
 
 	// Emit indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -182,6 +182,40 @@ func (k Keeper) ModifyPerpetual(
 			),
 		),
 	)
+
+	return perpetual, nil
+}
+
+func (k Keeper) SetPerpetualMarketType(
+	ctx sdk.Context,
+	perpetualId uint32,
+	marketType types.PerpetualMarketType,
+) (types.Perpetual, error) {
+	if marketType == types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("invalid market type %v for perpetual %d", marketType, perpetualId),
+		)
+	}
+
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return perpetual, err
+	}
+
+	if perpetual.Params.MarketType != types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED {
+		return types.Perpetual{}, errorsmod.Wrap(
+			types.ErrInvalidMarketType,
+			fmt.Sprintf("perpetual %d already has market type %v", perpetualId, perpetual.Params.MarketType),
+		)
+	}
+
+	// Modify perpetual.
+	perpetual.Params.MarketType = marketType
+
+	// Store the modified perpetual.
+	k.SetPerpetual(ctx, perpetual)
 
 	return perpetual, nil
 }
@@ -974,23 +1008,38 @@ func GetMarginRequirementsInQuoteQuantums(
 	// Always consider the magnitude of the position regardless of whether it is long/short.
 	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
 
+	// Calculate the notional value of the position in quote quantums.
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
 		bigAbsQuantums,
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
+	// Calculate the perpetual's open interest in quote quantums.
+	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
+		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
 
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(bigQuoteQuantums)
-
+	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		big.NewInt(0), // pass in 0 as open interest to get base IMR.
+	)
 	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
 	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
 		lib.BigRatMulPpm(
-			new(big.Rat).SetInt(bigInitialMarginQuoteQuantums),
+			new(big.Rat).SetInt(bigBaseInitialMarginQuoteQuantums),
 			liquidityTier.MaintenanceFractionPpm,
 		),
 		true,
+	)
+
+	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
+		bigQuoteQuantums,
+		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
 	)
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
 }
@@ -1181,7 +1230,41 @@ func (k Keeper) ModifyFundingIndex(
 	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
 
 	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
-	k.setPerpetual(ctx, perpetual)
+	k.SetPerpetual(ctx, perpetual)
+	return nil
+}
+
+// Modify the open interest of a perpetual in state.
+func (k Keeper) ModifyOpenInterest(
+	ctx sdk.Context,
+	perpetualId uint32,
+	openInterestDeltaBaseQuantums *big.Int,
+) (
+	err error,
+) {
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	bigOpenInterest := perpetual.OpenInterest.BigInt()
+	bigOpenInterest.Add(
+		bigOpenInterest, // reuse pointer for efficiency
+		openInterestDeltaBaseQuantums,
+	)
+
+	if bigOpenInterest.Sign() < 0 {
+		return errorsmod.Wrapf(
+			types.ErrOpenInterestWouldBecomeNegative,
+			"perpetualId = %d, openInterest = %s",
+			perpetualId,
+			bigOpenInterest.String(),
+		)
+	}
+
+	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
+	k.SetPerpetual(ctx, perpetual)
 	return nil
 }
 
@@ -1207,7 +1290,7 @@ func (k Keeper) SetEmptyPremiumVotes(
 	)
 }
 
-func (k Keeper) setPerpetual(
+func (k Keeper) SetPerpetual(
 	ctx sdk.Context,
 	perpetual types.Perpetual,
 ) {

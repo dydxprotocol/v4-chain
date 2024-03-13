@@ -3,10 +3,11 @@ package app
 import (
 	"fmt"
 
+	v5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
+
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
-	v5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
 )
 
 var (
@@ -29,6 +30,7 @@ func (app *App) setupUpgradeHandlers() {
 		v5_0_0.CreateUpgradeHandler(
 			app.ModuleManager,
 			app.configurator,
+			app.PerpetualsKeeper,
 		),
 	)
 }

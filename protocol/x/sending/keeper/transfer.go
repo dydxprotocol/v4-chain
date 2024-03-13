@@ -104,15 +104,14 @@ func (k Keeper) ProcessDepositToSubaccount(
 
 	// Emit gauge metric with labels if deposit to subaccount succeeds.
 	if err == nil {
-		telemetry.SetGaugeWithLabels(
-			[]string{
-				types.ModuleName,
-				metrics.ProcessDepositToSubaccount,
-			},
+		metrics.EmitTelemetryWithLabelsForExecMode(
+			ctx,
+			// sdk.ExecModeFinalize is used here to ensure metrics are only emitted in the Finalize ExecMode.
+			[]sdk.ExecMode{sdk.ExecModeFinalize},
+			metrics.SetGaugeWithLabels,
+			metrics.SendingProcessDepositToSubaccount,
 			float32(msgDepositToSubaccount.Quantums),
-			[]gometrics.Label{
-				metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
-			},
+			metrics.GetLabelForIntValue(metrics.AssetId, int(msgDepositToSubaccount.AssetId)),
 		)
 
 		// Add deposit event to Indexer block message.

@@ -1276,7 +1276,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1394,7 +1394,7 @@
           {
             "in": "query",
             "name": "market",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -1402,7 +1402,7 @@
           {
             "in": "query",
             "name": "marketType",
-            "required": true,
+            "required": false,
             "schema": {
               "$ref": "#/components/schemas/MarketType"
             }
@@ -1410,7 +1410,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1483,7 +1483,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1536,7 +1536,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1599,7 +1599,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1678,7 +1678,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1771,7 +1771,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1888,7 +1888,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -1942,7 +1942,7 @@
           {
             "in": "query",
             "name": "status",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "array",
               "items": {
@@ -1953,7 +1953,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -2054,7 +2054,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"
@@ -2117,7 +2117,7 @@
           {
             "in": "query",
             "name": "limit",
-            "required": true,
+            "required": false,
             "schema": {
               "format": "double",
               "type": "number"

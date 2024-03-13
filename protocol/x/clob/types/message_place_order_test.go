@@ -32,7 +32,7 @@ func TestMsgPlaceOrder_ValidateBasic(t *testing.T) {
 					OrderId: OrderId{
 						SubaccountId: satypes.SubaccountId{
 							Owner:  sample.AccAddress(),
-							Number: uint32(9999),
+							Number: uint32(999_999),
 						},
 					},
 				},
