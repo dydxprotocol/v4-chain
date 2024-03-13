@@ -3,7 +3,7 @@ import {
   getChildSubaccountNums,
   getParentSubaccountNum,
   isOrderTIFPostOnly,
-  orderTIFToAPITIF
+  orderTIFToAPITIF,
 } from '../../src/lib/api-translations';
 
 describe('apiTranslations', () => {
