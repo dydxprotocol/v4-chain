@@ -1,5 +1,3 @@
-//go:build all || container_test
-
 package containertest
 
 import (
@@ -24,6 +22,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	prices "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/assert"
@@ -291,7 +290,54 @@ func TestUpgrade(t *testing.T) {
 	require.NoError(t, err)
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
+	nodeAddress := constants.AliceAccAddress.String()
+	upgradeTestnet(nodeAddress, t, node)
+	require.NoError(t, err)
+}
 
+func TestStateUpgradeForPerpetualMarketType(t *testing.T) {
+	testnet, err := NewTestnetWithPreupgradeGenesis()
+	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
+	err = testnet.Start()
+	require.NoError(t, err)
+	defer testnet.MustCleanUp()
+	node := testnet.Nodes["alice"]
+
+	nodeAddress := constants.AliceAccAddress.String()
+	queryClient := perpetuals.NewQueryClient
+	requestFunction := perpetuals.QueryClient.Perpetual
+	request := &perpetuals.QueryPerpetualRequest{
+		Id: 1,
+	}
+
+	resp, err := Query(
+		node,
+		queryClient,
+		requestFunction,
+		request,
+	)
+	require.NoError(t, err)
+	perpetualObject := &perpetuals.QueryPerpetualResponse{}
+	err = proto.UnmarshalText(resp.String(), perpetualObject)
+	require.NoError(t, err)
+	assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetualObject.Perpetual.Params.MarketType)
+
+	err = upgradeTestnet(nodeAddress, t, node)
+	require.NoError(t, err)
+
+	resp, err = Query(
+		node,
+		queryClient,
+		requestFunction,
+		request,
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), perpetualObject)
+	require.NoError(t, err)
+	assert.NotEqual(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetualObject.Perpetual.Params.MarketType)
+}
+
+func upgradeTestnet(nodeAddress string, t *testing.T, node *Node) error {
 	proposal, err := gov.NewMsgSubmitProposal(
 		[]sdk.Msg{
 			&upgrade.MsgSoftwareUpgrade{
@@ -303,7 +349,7 @@ func TestUpgrade(t *testing.T) {
 			},
 		},
 		testapp.TestDeposit,
-		constants.AliceAccAddress.String(),
+		nodeAddress,
 		testapp.TestMetadata,
 		testapp.TestTitle,
 		testapp.TestSummary,
@@ -314,7 +360,7 @@ func TestUpgrade(t *testing.T) {
 	require.NoError(t, BroadcastTx(
 		node,
 		proposal,
-		constants.AliceAccAddress.String(),
+		nodeAddress,
 	))
 	err = node.Wait(2)
 	require.NoError(t, err)
@@ -332,5 +378,5 @@ func TestUpgrade(t *testing.T) {
 	}
 
 	err = node.WaitUntilBlockHeight(12)
-	require.NoError(t, err)
+	return err
 }
