@@ -328,7 +328,7 @@ func RunMarketParamUpdaterTaskLoop(
 	logger = logger.With(constants.SubmoduleLogKey, constants.MarketParamUpdaterSubmoduleName)
 
 	// Query all market params from the query client.
-	getAllMarketsResponse, err := pricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
+	marketParams, err := daemontypes.AllPaginatedMarketParams(ctx, pricesQueryClient)
 	if err != nil {
 		var logMethod = logger.Info
 		if isPastGracePeriod {
@@ -352,9 +352,9 @@ func RunMarketParamUpdaterTaskLoop(
 	}
 
 	// Update shared, in-memory config with the latest market params. Report update success/failure via logging/metrics.
-	marketParamErrors, err := configs.UpdateMarkets(getAllMarketsResponse.MarketParams)
+	marketParamErrors, err := configs.UpdateMarkets(marketParams)
 
-	for _, marketParam := range getAllMarketsResponse.MarketParams {
+	for _, marketParam := range marketParams {
 		outcome := metrics.Success
 
 		// Mark this update as an error either if this market failed to update, or if all markets failed.

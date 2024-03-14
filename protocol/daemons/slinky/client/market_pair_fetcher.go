@@ -87,12 +87,12 @@ func (m *MarketPairFetcherImpl) GetIDForPair(cp slinkytypes.CurrencyPair) (uint3
 // CurrencyPair and MarketParam ID.
 func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	// fetch all market params
-	resp, err := m.PricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
+	marketParams, err := daemontypes.AllPaginatedMarketParams(ctx, m.PricesQueryClient)
 	if err != nil {
 		return err
 	}
-	var compatMappings = make(map[slinkytypes.CurrencyPair]uint32, len(resp.MarketParams))
-	for _, mp := range resp.MarketParams {
+	var compatMappings = make(map[slinkytypes.CurrencyPair]uint32, len(marketParams))
+	for _, mp := range marketParams {
 		cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
 		if err != nil {
 			return err
