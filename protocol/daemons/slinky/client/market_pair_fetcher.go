@@ -8,12 +8,11 @@ import (
 	"cosmossdk.io/log"
 	"google.golang.org/grpc"
 
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
-
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 )
 
 // MarketPairFetcher is a lightweight process run in a goroutine by the slinky client.
@@ -23,7 +22,7 @@ import (
 type MarketPairFetcher interface {
 	Start(context.Context, appflags.Flags, daemontypes.GrpcClient) error
 	Stop()
-	GetIDForPair(oracletypes.CurrencyPair) (uint32, error)
+	GetIDForPair(slinkytypes.CurrencyPair) (uint32, error)
 	FetchIdMappings(context.Context) error
 }
 
@@ -34,14 +33,14 @@ type MarketPairFetcherImpl struct {
 	PricesQueryClient pricetypes.QueryClient
 
 	// compatMappings stores a mapping between CurrencyPair and the corresponding market(param|price) ID
-	compatMappings map[oracletypes.CurrencyPair]uint32
+	compatMappings map[slinkytypes.CurrencyPair]uint32
 	compatMu       sync.RWMutex
 }
 
 func NewMarketPairFetcher(logger log.Logger) MarketPairFetcher {
 	return &MarketPairFetcherImpl{
 		Logger:         logger,
-		compatMappings: make(map[oracletypes.CurrencyPair]uint32),
+		compatMappings: make(map[slinkytypes.CurrencyPair]uint32),
 	}
 }
 
@@ -73,7 +72,7 @@ func (m *MarketPairFetcherImpl) Stop() {
 
 // GetIDForPair returns the ID corresponding to the currency pair in the x/prices module.
 // If the currency pair is not found it will return an error.
-func (m *MarketPairFetcherImpl) GetIDForPair(cp oracletypes.CurrencyPair) (uint32, error) {
+func (m *MarketPairFetcherImpl) GetIDForPair(cp slinkytypes.CurrencyPair) (uint32, error) {
 	var id uint32
 	m.compatMu.RLock()
 	defer m.compatMu.RUnlock()
@@ -92,7 +91,7 @@ func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	var compatMappings = make(map[oracletypes.CurrencyPair]uint32, len(resp.MarketParams))
+	var compatMappings = make(map[slinkytypes.CurrencyPair]uint32, len(resp.MarketParams))
 	for _, mp := range resp.MarketParams {
 		cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
 		if err != nil {

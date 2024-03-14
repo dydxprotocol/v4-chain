@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/skip-mev/slinky/x/oracle/types"
+	"github.com/skip-mev/slinky/pkg/types"
 	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
