@@ -295,46 +295,61 @@ func TestUpgrade(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestStateUpgradeForPerpetualMarketType(t *testing.T) {
+func TestStateUpgrade(t *testing.T) {
 	testnet, err := NewTestnetWithPreupgradeGenesis()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
 	err = testnet.Start()
 	require.NoError(t, err)
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
-
 	nodeAddress := constants.AliceAccAddress.String()
-	queryClient := perpetuals.NewQueryClient
-	requestFunction := perpetuals.QueryClient.Perpetual
-	request := &perpetuals.QueryPerpetualRequest{
-		Id: 1,
-	}
 
-	resp, err := Query(
-		node,
-		queryClient,
-		requestFunction,
-		request,
-	)
-	require.NoError(t, err)
-	perpetualObject := &perpetuals.QueryPerpetualResponse{}
-	err = proto.UnmarshalText(resp.String(), perpetualObject)
-	require.NoError(t, err)
-	assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetualObject.Perpetual.Params.MarketType)
+	preUpgradeChecks(node, t)
 
 	err = upgradeTestnet(nodeAddress, t, node)
 	require.NoError(t, err)
 
-	resp, err = Query(
+	postUpgradeChecks(node, t)
+}
+
+func preUpgradeChecks(node *Node, t *testing.T) {
+	preUpgradeCheckPerpetualMarketType(node, t)
+}
+
+func postUpgradeChecks(node *Node, t *testing.T) {
+	postUpgradecheckPerpetualMarketType(node, t)
+}
+
+func preUpgradeCheckPerpetualMarketType(node *Node, t *testing.T) {
+	perpetualsList := &perpetuals.QueryAllPerpetualsResponse{}
+	resp, err := Query(
 		node,
-		queryClient,
-		requestFunction,
-		request,
+		perpetuals.NewQueryClient,
+		perpetuals.QueryClient.AllPerpetuals,
+		&perpetuals.QueryAllPerpetualsRequest{},
 	)
 	require.NoError(t, err)
-	err = proto.UnmarshalText(resp.String(), perpetualObject)
+	err = proto.UnmarshalText(resp.String(), perpetualsList)
 	require.NoError(t, err)
-	assert.NotEqual(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetualObject.Perpetual.Params.MarketType)
+	for _, perpetual := range perpetualsList.Perpetual {
+		assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetual.Params.MarketType)
+	}
+}
+
+func postUpgradecheckPerpetualMarketType(node *Node, t *testing.T) {
+	perpetualsList := &perpetuals.QueryAllPerpetualsResponse{}
+	resp, err := Query(
+		node,
+		perpetuals.NewQueryClient,
+		perpetuals.QueryClient.AllPerpetuals,
+		&perpetuals.QueryAllPerpetualsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), perpetualsList)
+	require.NoError(t, err)
+	for _, perpetual := range perpetualsList.Perpetual {
+		assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, perpetual.Params.MarketType)
+	}
 }
 
 func upgradeTestnet(nodeAddress string, t *testing.T, node *Node) error {
