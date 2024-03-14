@@ -79,6 +79,22 @@ var (
 		Quantums:     dtypes.NewInt(100_000_000),
 		FundingIndex: dtypes.NewInt(0),
 	}
+	PerpetualPosition_OneISO2Long = satypes.PerpetualPosition{
+		PerpetualId:  4,
+		Quantums:     dtypes.NewInt(10_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+	// Short position for arbitary isolated market
+	PerpetualPosition_OneISOShort = satypes.PerpetualPosition{
+		PerpetualId:  3,
+		Quantums:     dtypes.NewInt(-100_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
+	PerpetualPosition_OneISO2Short = satypes.PerpetualPosition{
+		PerpetualId:  4,
+		Quantums:     dtypes.NewInt(-10_000_000),
+		FundingIndex: dtypes.NewInt(0),
+	}
 
 	// Asset Positions
 	Usdc_Asset_0 = satypes.AssetPosition{
