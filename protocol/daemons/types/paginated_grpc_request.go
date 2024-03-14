@@ -2,8 +2,8 @@ package types
 
 import (
 	"context"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 const (
@@ -11,7 +11,7 @@ const (
 	PaginatedRequestLimit = 10000
 )
 
-// AllPaginatedMarketParams returns all MarketParams from the prices module, paginating through the results and 
+// AllPaginatedMarketParams returns all MarketParams from the prices module, paginating through the results and
 // returning a list of all the aggregated market-params.
 func AllPaginatedMarketParams(ctx context.Context, client pricestypes.QueryClient) ([]pricestypes.MarketParam, error) {
 	mps := make([]pricestypes.MarketParam, 0)

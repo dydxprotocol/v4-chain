@@ -4,12 +4,12 @@ import (
 	"testing"
 
 	"fmt"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -23,17 +23,17 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	qc := mocks.NewQueryClient(t)
 
 	marketParam1 := pricestypes.MarketParam{
-		Id: 1,
+		Id:   1,
 		Pair: "BTC-USDC",
 	}
 
 	marketParam2 := pricestypes.MarketParam{
-		Id: 2,
+		Id:   2,
 		Pair: "ETH-USDC",
 	}
 
 	marketParam3 := pricestypes.MarketParam{
-		Id: 3,
+		Id:   3,
 		Pair: "LINK-USDC",
 	}
 
@@ -61,7 +61,7 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
 			Limit: types.PaginatedRequestLimit,
-			Key: nextKey1,
+			Key:   nextKey1,
 		},
 	}).Return(
 		&pricestypes.QueryAllMarketParamsResponse{
@@ -78,12 +78,12 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
 			Limit: types.PaginatedRequestLimit,
-			Key: nextKey2,
+			Key:   nextKey2,
 		},
 	}).Return(
 		&pricestypes.QueryAllMarketParamsResponse{
 			MarketParams: []pricestypes.MarketParam{marketParam3},
-			Pagination: &query.PageResponse{},
+			Pagination:   &query.PageResponse{},
 		},
 		nil,
 	)
@@ -100,7 +100,7 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 	qc := mocks.NewQueryClient(t)
 
 	marketParam1 := pricestypes.MarketParam{
-		Id: 1,
+		Id:   1,
 		Pair: "BTC-USDC",
 	}
 
@@ -128,7 +128,7 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
 			Limit: types.PaginatedRequestLimit,
-			Key: nextKey1,
+			Key:   nextKey1,
 		},
 	}).Return(
 		nil,
