@@ -51,10 +51,13 @@ message QueryCapacityByDenomResponse {
       [ (gogoproto.nullable) = false ];
 }
 
-// GetAllPendingSendPacketsRequest is a request type for the GetAllPendingSendPackets RPC
+// GetAllPendingSendPacketsRequest is a request type for the
+// GetAllPendingSendPackets RPC
 message GetAllPendingSendPacketsRequest {}
 
-// GetAllPendingSendPacketsResponse is a response type of the GetAllPendingSendPackets RPC
+// GetAllPendingSendPacketsResponse is a response type of the
+// GetAllPendingSendPackets RPC
 message GetAllPendingSendPacketsResponse {
-  repeated PendingSendPacket pending_send_packets = 1 [ (gogoproto.nullable) = false ];
+  repeated PendingSendPacket pending_send_packets = 1
+      [ (gogoproto.nullable) = false ];
 }

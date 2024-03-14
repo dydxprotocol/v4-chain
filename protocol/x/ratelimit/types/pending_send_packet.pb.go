@@ -22,7 +22,8 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
-// PendingSendPacket contains the channel_id and sequence pair to identify a pending packet
+// PendingSendPacket contains the channel_id and sequence pair to identify a
+// pending packet
 type PendingSendPacket struct {
 	ChannelId string `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
 	Sequence  uint64 `protobuf:"varint,2,opt,name=sequence,proto3" json:"sequence,omitempty"`

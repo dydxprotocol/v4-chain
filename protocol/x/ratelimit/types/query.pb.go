@@ -203,7 +203,8 @@ func (m *QueryCapacityByDenomResponse) GetLimiterCapacityList() []LimiterCapacit
 	return nil
 }
 
-// GetAllPendingSendPacketsRequest is a request type for the GetAllPendingSendPackets RPC
+// GetAllPendingSendPacketsRequest is a request type for the
+// GetAllPendingSendPackets RPC
 type GetAllPendingSendPacketsRequest struct {
 }
 
@@ -240,7 +241,8 @@ func (m *GetAllPendingSendPacketsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetAllPendingSendPacketsRequest proto.InternalMessageInfo
 
-// GetAllPendingSendPacketsResponse is a response type of the GetAllPendingSendPackets RPC
+// GetAllPendingSendPacketsResponse is a response type of the
+// GetAllPendingSendPackets RPC
 type GetAllPendingSendPacketsResponse struct {
 	PendingSendPackets []PendingSendPacket `protobuf:"bytes,1,rep,name=pending_send_packets,json=pendingSendPackets,proto3" json:"pending_send_packets"`
 }
