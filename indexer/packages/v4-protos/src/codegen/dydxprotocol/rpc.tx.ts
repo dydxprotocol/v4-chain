@@ -17,6 +17,7 @@ export const createRPCMsgClient = async ({
     rewards: new (await import("./rewards/tx.rpc.msg")).MsgClientImpl(rpc),
     sending: new (await import("./sending/tx.rpc.msg")).MsgClientImpl(rpc),
     stats: new (await import("./stats/tx.rpc.msg")).MsgClientImpl(rpc),
+    vault: new (await import("./vault/tx.rpc.msg")).MsgClientImpl(rpc),
     vest: new (await import("./vest/tx.rpc.msg")).MsgClientImpl(rpc)
   }
 });

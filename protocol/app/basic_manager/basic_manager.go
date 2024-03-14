@@ -36,6 +36,7 @@ import (
 	sendingmodule "github.com/dydxprotocol/v4-chain/protocol/x/sending"
 	statsmodule "github.com/dydxprotocol/v4-chain/protocol/x/stats"
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
 	vestmodule "github.com/dydxprotocol/v4-chain/protocol/x/vest"
 
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
@@ -91,5 +92,6 @@ var (
 		epochsmodule.AppModuleBasic{},
 		ratelimitmodule.AppModuleBasic{},
 		govplusmodule.AppModuleBasic{},
+		vaultmodule.AppModuleBasic{},
 	)
 )

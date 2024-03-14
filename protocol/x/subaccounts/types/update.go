@@ -52,11 +52,12 @@ func GetErrorFromUpdateResults(
 }
 
 var updateResultStringMap = map[UpdateResult]string{
-	Success:                        "Success",
-	NewlyUndercollateralized:       "NewlyUndercollateralized",
-	StillUndercollateralized:       "StillUndercollateralized",
-	WithdrawalsAndTransfersBlocked: "WithdrawalsAndTransfersBlocked",
-	UpdateCausedError:              "UpdateCausedError",
+	Success:                               "Success",
+	NewlyUndercollateralized:              "NewlyUndercollateralized",
+	StillUndercollateralized:              "StillUndercollateralized",
+	WithdrawalsAndTransfersBlocked:        "WithdrawalsAndTransfersBlocked",
+	UpdateCausedError:                     "UpdateCausedError",
+	ViolatesIsolatedSubaccountConstraints: "ViolatesIsolatedSubaccountConstraints",
 }
 
 const (
@@ -65,6 +66,7 @@ const (
 	StillUndercollateralized
 	WithdrawalsAndTransfersBlocked
 	UpdateCausedError
+	ViolatesIsolatedSubaccountConstraints
 )
 
 // Update is used by the subaccounts keeper to allow other modules
