@@ -139,3 +139,32 @@ func TestCapacityByDenom(t *testing.T) {
 		})
 	}
 }
+
+func TestGetAllPendingSendPacket(t *testing.T) {
+	tApp := testapp.NewTestAppBuilder(t).Build()
+	ctx := tApp.InitChain()
+	k := tApp.App.RatelimitKeeper
+
+	channels := []string{"channel-0", "channel-1"}
+	sequences := []uint64{20, 22}
+
+	for i := range channels {
+		k.SetPendingSendPacket(ctx, channels[i], sequences[i])
+	}
+
+	req := &types.GetAllPendingSendPacketsRequest{}
+	res, err := k.GetAllPendingSendPackets(ctx, req)
+	require.NoError(t, err)
+	require.Equal(t, &types.GetAllPendingSendPacketsResponse{
+		PendingSendPackets: []types.PendingSendPacket{
+			{
+				ChannelId: channels[0],
+				Sequence:  sequences[0],
+			},
+			{
+				ChannelId: channels[1],
+				Sequence:  sequences[1],
+			},
+		},
+	}, res)
+}

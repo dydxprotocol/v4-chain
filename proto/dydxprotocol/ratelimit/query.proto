@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "dydxprotocol/ratelimit/limit_params.proto";
 import "dydxprotocol/ratelimit/capacity.proto";
+import "dydxprotocol/ratelimit/pending_send_packet.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
 
@@ -22,6 +23,11 @@ service Query {
       returns (QueryCapacityByDenomResponse) {
     option (google.api.http).get =
         "/dydxprotocol/v4/ratelimit/capacity_by_denom";
+  }
+  rpc GetAllPendingSendPackets(GetAllPendingSendPacketsRequest)
+      returns (GetAllPendingSendPacketsResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/v4/ratelimit/get_all_pending_send_packet";
   }
 }
 
@@ -42,4 +48,10 @@ message QueryCapacityByDenomRequest { string denom = 1; }
 message QueryCapacityByDenomResponse {
   repeated LimiterCapacity limiter_capacity_list = 1
       [ (gogoproto.nullable) = false ];
+}
+
+message GetAllPendingSendPacketsRequest {}
+
+message GetAllPendingSendPacketsResponse {
+  repeated PendingSendPacket pending_send_packets = 1 [ (gogoproto.nullable) = false ];
 }

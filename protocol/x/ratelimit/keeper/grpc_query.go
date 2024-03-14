@@ -3,6 +3,7 @@ package keeper
 import (
 	"context"
 
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"google.golang.org/grpc/codes"
@@ -45,5 +46,30 @@ func (k Keeper) CapacityByDenom(
 
 	return &types.QueryCapacityByDenomResponse{
 		LimiterCapacityList: limiterCapacityList,
+	}, nil
+}
+
+func (k Keeper) GetAllPendingSendPackets(
+	ctx context.Context,
+	req *types.GetAllPendingSendPacketsRequest,
+) (*types.GetAllPendingSendPacketsResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid request")
+	}
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+	store := prefix.NewStore(sdkCtx.KVStore(k.storeKey), []byte(types.PendingSendPacketPrefix))
+	pendingPackets := make([]types.PendingSendPacket, 0)
+	iterator := store.Iterator(nil, nil)
+	defer iterator.Close()
+	for ; iterator.Valid(); iterator.Next() {
+		channelId, sequence := types.SplitPendingSendPacketKey(iterator.Key())
+		pendingPackets = append(pendingPackets, types.PendingSendPacket{
+			ChannelId: channelId,
+			Sequence:  sequence,
+		})
+	}
+	return &types.GetAllPendingSendPacketsResponse{
+		PendingSendPackets: pendingPackets,
 	}, nil
 }

@@ -1,6 +1,10 @@
 package types
 
-import fmt "fmt"
+import (
+	"bytes"
+	fmt "fmt"
+	"strconv"
+)
 
 // Module name and store keys
 const (
@@ -26,4 +30,17 @@ const ()
 
 func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {
 	return []byte(fmt.Sprintf("%s_%d", channelId, sequenceNumber))
+}
+
+func SplitPendingSendPacketKey(key []byte) (channelId string, sequenceNumber uint64) {
+	parts := bytes.Split(key, []byte("_"))
+	if len(parts) != 2 {
+		panic(fmt.Sprintf("unexpected key format: %s", key))
+	}
+	channelId = string(parts[0])
+	// convert parts[1] to uint64 parts[1] is is a byte array with numeric characters of variable length
+
+	sequenceNumberInt, _ := strconv.Atoi(string(parts[1]))
+	sequenceNumber = uint64(sequenceNumberInt)
+	return
 }
