@@ -54,7 +54,7 @@ func HandlePaginatedQuery(ctx context.Context, pq PaginatedQuery, initialPaginat
 		}
 
 		// break if there is no next-key
-		if len(resp.GetPagination().NextKey) == 0 {
+		if resp.GetPagination() == nil || len(resp.GetPagination().NextKey) == 0 {
 			return nil
 		}
 
