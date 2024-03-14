@@ -39,7 +39,7 @@ class HistoricalFundingController extends Controller {
   @Get('/:ticker')
   async getHistoricalFunding(
     @Path() ticker: string,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() effectiveBeforeOrAtHeight?: number,
       @Query() effectiveBeforeOrAt?: IsoString,
   ): Promise<HistoricalFundingResponse> {

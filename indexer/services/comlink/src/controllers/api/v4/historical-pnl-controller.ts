@@ -39,7 +39,7 @@ class HistoricalPnlController extends Controller {
   async getHistoricalPnl(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
       @Query() createdOnOrAfterHeight?: number,
