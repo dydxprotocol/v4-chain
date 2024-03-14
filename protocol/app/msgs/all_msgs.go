@@ -234,6 +234,10 @@ var (
 		"/dydxprotocol.stats.MsgUpdateParams":         {},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": {},
 
+		// vault
+		"/dydxprotocol.vault.MsgDepositToVault":         {},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse": {},
+
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},
 		"/dydxprotocol.vest.MsgSetVestEntryResponse":    {},

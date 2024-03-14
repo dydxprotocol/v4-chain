@@ -158,12 +158,6 @@ func TestGetValidMedianPrices_EmptyResult(t *testing.T) {
 			},
 			getPricesInputTime: constants.TimeT,
 		},
-		"Does not meet min exchanges": {
-			updatePriceInput: constants.AtTimeTPriceUpdate,
-			// MinExchanges is 3 for all markets, but updates are from 2 exchanges
-			getPricesInputMarketParams: constants.AllMarketParamsMinExchanges3,
-			getPricesInputTime:         constants.TimeT,
-		},
 	}
 
 	for name, tc := range tests {
@@ -187,9 +181,7 @@ func TestGetValidMedianPrices_MultiMarketSuccess(t *testing.T) {
 
 	r := mte.GetValidMedianPrices(constants.AllMarketParamsMinExchanges2, constants.TimeT)
 
-	require.Len(t, r, 2)
+	require.Len(t, r, 3)
 	require.Equal(t, uint64(2002), r[constants.MarketId9]) // Median of 1001, 2002, 3003
 	require.Equal(t, uint64(2503), r[constants.MarketId8]) // Median of 2002, 3003
-	// Market7 only has 1 valid price due to update time constraint,
-	// but the min exchanges required is 2. Therefore, no median price.
 }

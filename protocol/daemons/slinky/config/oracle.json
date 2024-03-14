@@ -1,0 +1,403 @@
+{
+  "updateInterval": 1500000000,
+  "maxPriceAge": 120000000000,
+  "providers": [
+    {
+      "name": "binance",
+      "api": {
+        "enabled": true,
+        "timeout": 500000000,
+        "interval": 150000000,
+        "maxQueries": 1,
+        "atomic": true,
+        "url": "https://api.binance.com/api/v3/ticker/price?symbols=%s%s%s",
+        "name": "binance"
+      },
+      "webSocket": {
+        "enabled": false,
+        "maxBufferSize": 0,
+        "reconnectionTimeout": 0,
+        "wss": "",
+        "name": "",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 0,
+        "enableCompression": false,
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "pingInterval": 0,
+        "maxReadErrorCount": 0,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "coinbase",
+      "api": {
+        "enabled": true,
+        "timeout": 500000000,
+        "interval": 20000000,
+        "maxQueries": 10,
+        "atomic": false,
+        "url": "https://api.coinbase.com/v2/prices/%s/spot",
+        "name": "coinbase"
+      },
+      "webSocket": {
+        "enabled": false,
+        "maxBufferSize": 0,
+        "reconnectionTimeout": 0,
+        "wss": "",
+        "name": "",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 0,
+        "enableCompression": false,
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "pingInterval": 0,
+        "maxReadErrorCount": 0,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "coingecko",
+      "api": {
+        "enabled": true,
+        "timeout": 500000000,
+        "interval": 15000000000,
+        "maxQueries": 1,
+        "atomic": true,
+        "url": "https://api.coingecko.com/api/v3",
+        "name": "coingecko"
+      },
+      "webSocket": {
+        "enabled": false,
+        "maxBufferSize": 0,
+        "reconnectionTimeout": 0,
+        "wss": "",
+        "name": "",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 0,
+        "enableCompression": false,
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "pingInterval": 0,
+        "maxReadErrorCount": 0,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "bitfinex",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://api-pub.bitfinex.com/ws/2",
+        "name": "bitfinex",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "bitstamp",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1024,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://ws.bitstamp.net",
+        "name": "bitstamp",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 10000000000,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "bybit",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://stream.bybit.com/v5/public/spot",
+        "name": "bybit",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 15000000000,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "coinbase_websocket",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1024,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://ws-feed.exchange.coinbase.com",
+        "name": "coinbase_websocket",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 5000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "crypto_dot_com",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1024,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://stream.crypto.com/exchange/v1/market",
+        "name": "crypto_dot_com",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "gate.io",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://api.gateio.ws/ws/v4/",
+        "name": "gate.io",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "huobi",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://api.huobi.pro/ws",
+        "name": "huobi",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "kraken",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://ws.kraken.com",
+        "name": "kraken",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "kucoin",
+      "api": {
+        "enabled": false,
+        "timeout": 5000000000,
+        "interval": 60000000000,
+        "maxQueries": 1,
+        "atomic": false,
+        "url": "https://api.kucoin.com",
+        "name": "kucoin"
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1024,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://ws-api-spot.kucoin.com/",
+        "name": "kucoin",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 10000000000,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "mexc",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://wbs.mexc.com/ws",
+        "name": "mexc",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 20000000000,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    },
+    {
+      "name": "okx",
+      "api": {
+        "enabled": false,
+        "timeout": 0,
+        "interval": 0,
+        "maxQueries": 0,
+        "atomic": false,
+        "url": "",
+        "name": ""
+      },
+      "webSocket": {
+        "enabled": true,
+        "maxBufferSize": 1000,
+        "reconnectionTimeout": 10000000000,
+        "wss": "wss://ws.okx.com:8443/ws/v5/public",
+        "name": "okx",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 45000000000,
+        "enableCompression": false,
+        "readTimeout": 45000000000,
+        "writeTimeout": 45000000000,
+        "pingInterval": 0,
+        "maxReadErrorCount": 100,
+        "maxSubscriptionsPerConnection": 0
+      }
+    }
+  ],
+  "production": false,
+  "metrics": {
+    "prometheusServerAddress": "0.0.0.0:8002",
+    "enabled": true
+  }
+}

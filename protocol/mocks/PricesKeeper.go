@@ -4,8 +4,12 @@ package mocks
 
 import (
 	log "cosmossdk.io/log"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 	mock "github.com/stretchr/testify/mock"
+
+	pkgtypes "github.com/skip-mev/slinky/pkg/types"
+
+	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -113,6 +117,62 @@ func (_m *PricesKeeper) GetAllMarketPrices(ctx types.Context) []pricestypes.Mark
 	return r0
 }
 
+// GetCurrencyPairFromID provides a mock function with given fields: ctx, id
+func (_m *PricesKeeper) GetCurrencyPairFromID(ctx types.Context, id uint64) (pkgtypes.CurrencyPair, bool) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCurrencyPairFromID")
+	}
+
+	var r0 pkgtypes.CurrencyPair
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, uint64) (pkgtypes.CurrencyPair, bool)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint64) pkgtypes.CurrencyPair); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(pkgtypes.CurrencyPair)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint64) bool); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
+// GetIDForCurrencyPair provides a mock function with given fields: ctx, cp
+func (_m *PricesKeeper) GetIDForCurrencyPair(ctx types.Context, cp pkgtypes.CurrencyPair) (uint64, bool) {
+	ret := _m.Called(ctx, cp)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetIDForCurrencyPair")
+	}
+
+	var r0 uint64
+	var r1 bool
+	if rf, ok := ret.Get(0).(func(types.Context, pkgtypes.CurrencyPair) (uint64, bool)); ok {
+		return rf(ctx, cp)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, pkgtypes.CurrencyPair) uint64); ok {
+		r0 = rf(ctx, cp)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, pkgtypes.CurrencyPair) bool); ok {
+		r1 = rf(ctx, cp)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	return r0, r1
+}
+
 // GetMarketIdToValidIndexPrice provides a mock function with given fields: ctx
 func (_m *PricesKeeper) GetMarketIdToValidIndexPrice(ctx types.Context) map[uint32]pricestypes.MarketPrice {
 	ret := _m.Called(ctx)
@@ -187,6 +247,54 @@ func (_m *PricesKeeper) GetMarketPrice(ctx types.Context, id uint32) (pricestype
 	}
 
 	return r0, r1
+}
+
+// GetPriceForCurrencyPair provides a mock function with given fields: ctx, cp
+func (_m *PricesKeeper) GetPriceForCurrencyPair(ctx types.Context, cp pkgtypes.CurrencyPair) (oracletypes.QuotePrice, error) {
+	ret := _m.Called(ctx, cp)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPriceForCurrencyPair")
+	}
+
+	var r0 oracletypes.QuotePrice
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, pkgtypes.CurrencyPair) (oracletypes.QuotePrice, error)); ok {
+		return rf(ctx, cp)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, pkgtypes.CurrencyPair) oracletypes.QuotePrice); ok {
+		r0 = rf(ctx, cp)
+	} else {
+		r0 = ret.Get(0).(oracletypes.QuotePrice)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, pkgtypes.CurrencyPair) error); ok {
+		r1 = rf(ctx, cp)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetValidMarketPriceUpdates provides a mock function with given fields: ctx
+func (_m *PricesKeeper) GetValidMarketPriceUpdates(ctx types.Context) *pricestypes.MsgUpdateMarketPrices {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetValidMarketPriceUpdates")
+	}
+
+	var r0 *pricestypes.MsgUpdateMarketPrices
+	if rf, ok := ret.Get(0).(func(types.Context) *pricestypes.MsgUpdateMarketPrices); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*pricestypes.MsgUpdateMarketPrices)
+		}
+	}
+
+	return r0
 }
 
 // HasAuthority provides a mock function with given fields: authority

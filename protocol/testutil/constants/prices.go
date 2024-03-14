@@ -27,6 +27,7 @@ const (
 	SolUsdPair   = "SOL-USD"
 	LtcUsdPair   = "LTC-USD"
 	IsoUsdPair   = "ISO-USD"
+	Iso2UsdPair  = "ISO2-USD"
 
 	BtcUsdExponent   = -5
 	EthUsdExponent   = -6
@@ -36,6 +37,7 @@ const (
 	SolUsdExponent   = -8
 	LtcUsdExponent   = -7
 	IsoUsdExponent   = -8
+	Iso2UsdExponent  = -7
 
 	CoinbaseExchangeName  = "Coinbase"
 	BinanceExchangeName   = "Binance"
@@ -212,6 +214,15 @@ var TestMarketExchangeConfigs = map[pricefeedclient.MarketId]string{
 		  }
 		]
 	  }`,
+	exchange_config.MARKET_ISO2_USD: `{
+			"exchanges": [
+				{
+				"exchangeName": "Binance",
+				"ticker": "ISO2USDT",
+				"adjustByMarket": "USDT-USD"
+				}
+			]
+			}`,
 }
 
 var TestMarketParams = []types.MarketParam{
@@ -247,6 +258,14 @@ var TestMarketParams = []types.MarketParam{
 		MinPriceChangePpm:  50,
 		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO_USD],
 	},
+	{
+		Id:                 4,
+		Pair:               Iso2UsdPair,
+		Exponent:           Iso2UsdExponent,
+		MinExchanges:       1,
+		MinPriceChangePpm:  50,
+		ExchangeConfigJson: TestMarketExchangeConfigs[exchange_config.MARKET_ISO2_USD],
+	},
 }
 
 var TestMarketPrices = []types.MarketPrice{
@@ -270,6 +289,11 @@ var TestMarketPrices = []types.MarketPrice{
 		Exponent: IsoUsdExponent,
 		Price:    FiveBillion, // 50$ == 1 ISO
 	},
+	{
+		Id:       4,
+		Exponent: Iso2UsdExponent,
+		Price:    ThreeBillion, // 300$ == 1 ISO2
+	},
 }
 
 var TestMarketIdsToExponents = map[uint32]int32{
@@ -277,6 +301,7 @@ var TestMarketIdsToExponents = map[uint32]int32{
 	1: EthUsdExponent,
 	2: SolUsdExponent,
 	3: IsoUsdExponent,
+	4: Iso2UsdExponent,
 }
 
 var TestPricesGenesisState = types.GenesisState{
@@ -290,6 +315,7 @@ var (
 		types.NewMarketPriceUpdate(MarketId1, Price6),
 		types.NewMarketPriceUpdate(MarketId2, Price7),
 		types.NewMarketPriceUpdate(MarketId3, Price4),
+		types.NewMarketPriceUpdate(MarketId4, Price3),
 	}
 
 	// `MsgUpdateMarketPrices`.

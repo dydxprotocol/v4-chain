@@ -62,7 +62,7 @@ class OrdersController extends Controller {
   async listOrders(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() ticker?: string,
       @Query() side?: OrderSide,
       @Query() type?: OrderType,
@@ -169,7 +169,7 @@ class OrdersController extends Controller {
     return sortAndLimitResponses(
       mergedResponses,
       ordering,
-      limit,
+      limit || config.API_LIMIT_V4,
     );
   }
 

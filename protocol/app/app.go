@@ -124,6 +124,7 @@ import (
 	bridgedaemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
+	slinkyclient "github.com/dydxprotocol/v4-chain/protocol/daemons/slinky/client"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 
 	// Modules
@@ -202,6 +203,11 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	// Slinky
+	oracleconfig "github.com/skip-mev/slinky/oracle/config"
+	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
+	servicemetrics "github.com/skip-mev/slinky/service/metrics"
 
 	// Grpc Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
@@ -323,6 +329,9 @@ type App struct {
 	BridgeClient       *bridgeclient.Client
 
 	DaemonHealthMonitor *daemonservertypes.HealthMonitor
+
+	// Slinky
+	SlinkyClient *slinkyclient.Client
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -432,6 +441,9 @@ func New(
 			}
 			if app.Server != nil {
 				app.Server.Stop()
+			}
+			if app.SlinkyClient != nil {
+				app.SlinkyClient.Stop()
 			}
 			return nil
 		},
@@ -767,25 +779,39 @@ func New(
 			}()
 		}
 
-		// Non-validating full-nodes have no need to run the price daemon.
-		if !appFlags.NonValidatingFullNode && daemonFlags.Price.Enabled {
-			exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
-			// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
-			// are retrieved via third-party APIs like Binance and then are encoded in-memory and
-			// periodically sent via gRPC to a shared socket with the server.
-			app.PriceFeedClient = pricefeedclient.StartNewClient(
-				// The client will use `context.Background` so that it can have a different context from
-				// the main application.
-				context.Background(),
-				daemonFlags,
-				appFlags,
-				logger,
-				&daemontypes.GrpcClientImpl{},
-				exchangeQueryConfig,
-				constants.StaticExchangeDetails,
-				&pricefeedclient.SubTaskRunnerImpl{},
-			)
-			app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+		// Non-validating full-nodes have no need to run the oracle.
+		if !appFlags.NonValidatingFullNode {
+			if daemonFlags.Price.Enabled {
+				exchangeQueryConfig := configs.ReadExchangeQueryConfigFile(homePath)
+				// Start pricefeed client for sending prices for the pricefeed server to consume. These prices
+				// are retrieved via third-party APIs like Binance and then are encoded in-memory and
+				// periodically sent via gRPC to a shared socket with the server.
+				app.PriceFeedClient = pricefeedclient.StartNewClient(
+					// The client will use `context.Background` so that it can have a different context from
+					// the main application.
+					context.Background(),
+					daemonFlags,
+					appFlags,
+					logger,
+					&daemontypes.GrpcClientImpl{},
+					exchangeQueryConfig,
+					constants.StaticExchangeDetails,
+					&pricefeedclient.SubTaskRunnerImpl{},
+				)
+				app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
+			}
+			if daemonFlags.Slinky.Enabled {
+				app.SlinkyClient = slinkyclient.StartNewClient(
+					context.Background(),
+					app.initSlinkySidecarClient(appOpts),
+					indexPriceCache,
+					&daemontypes.GrpcClientImpl{},
+					daemonFlags,
+					appFlags,
+					logger,
+				)
+				app.RegisterDaemonWithHealthMonitor(app.SlinkyClient, maxDaemonUnhealthyDuration)
+			}
 		}
 
 		// Start Bridge Daemon.
@@ -1422,6 +1448,28 @@ func New(
 	)
 
 	return app
+}
+
+func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oracleclient.OracleClient {
+	// Slinky setup
+	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	// Create the oracle service.
+	slinkyClient, err := oracleclient.NewClientFromConfig(
+		cfg,
+		app.Logger().With("client", "oracle"),
+		oracleMetrics,
+	)
+	if err != nil {
+		panic(err)
+	}
+	return slinkyClient
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring

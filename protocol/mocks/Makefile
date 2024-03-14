@@ -56,4 +56,8 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=BridgeQueryClient --dir=./daemons/bridge/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=EthClient --dir=./daemons/bridge/client/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PriceUpdateGenerator --dir=./app/prepare/prices --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=PriceFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=MarketPairFetcher --dir=./daemons/slinky/client --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=OracleClient --dir=$(GOPATH)/pkg/mod/github.com/skip-mev/slinky@$(SLINKY_VERSION)/service/clients/oracle --filename=oracle_client.go --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=ExtendVoteHandler --dir=$(GOPATH)/pkg/mod/github.com/dydxprotocol/cosmos-sdk@$(COSMOS_VERSION)/types --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=UpdateMarketPriceTxDecoder --dir=./app/process --recursive --output=./mocks

@@ -58,8 +58,8 @@ class PerpetualPositionsController extends Controller {
   async listPositions(
     @Query() address: string,
       @Query() subaccountNumber: number,
-      @Query() status: PerpetualPositionStatus[],
-      @Query() limit: number,
+      @Query() status?: PerpetualPositionStatus[],
+      @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<PerpetualPositionResponse> {
