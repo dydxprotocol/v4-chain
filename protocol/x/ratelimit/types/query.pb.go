@@ -203,6 +203,7 @@ func (m *QueryCapacityByDenomResponse) GetLimiterCapacityList() []LimiterCapacit
 	return nil
 }
 
+// GetAllPendingSendPacketsRequest is a request type for the GetAllPendingSendPackets RPC
 type GetAllPendingSendPacketsRequest struct {
 }
 
@@ -239,6 +240,7 @@ func (m *GetAllPendingSendPacketsRequest) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_GetAllPendingSendPacketsRequest proto.InternalMessageInfo
 
+// GetAllPendingSendPacketsResponse is a response type of the GetAllPendingSendPackets RPC
 type GetAllPendingSendPacketsResponse struct {
 	PendingSendPackets []PendingSendPacket `protobuf:"bytes,1,rep,name=pending_send_packets,json=pendingSendPackets,proto3" json:"pending_send_packets"`
 }
@@ -349,6 +351,7 @@ type QueryClient interface {
 	ListLimitParams(ctx context.Context, in *ListLimitParamsRequest, opts ...grpc.CallOption) (*ListLimitParamsResponse, error)
 	// Query capacity by denom.
 	CapacityByDenom(ctx context.Context, in *QueryCapacityByDenomRequest, opts ...grpc.CallOption) (*QueryCapacityByDenomResponse, error)
+	// Get all pending send packets
 	GetAllPendingSendPackets(ctx context.Context, in *GetAllPendingSendPacketsRequest, opts ...grpc.CallOption) (*GetAllPendingSendPacketsResponse, error)
 }
 
@@ -393,6 +396,7 @@ type QueryServer interface {
 	ListLimitParams(context.Context, *ListLimitParamsRequest) (*ListLimitParamsResponse, error)
 	// Query capacity by denom.
 	CapacityByDenom(context.Context, *QueryCapacityByDenomRequest) (*QueryCapacityByDenomResponse, error)
+	// Get all pending send packets
 	GetAllPendingSendPackets(context.Context, *GetAllPendingSendPacketsRequest) (*GetAllPendingSendPacketsResponse, error)
 }
 
