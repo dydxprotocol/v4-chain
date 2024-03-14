@@ -387,6 +387,7 @@ func newApp(
 		baseapp.SetIndexEvents(cast.ToStringSlice(appOpts.Get(server.FlagIndexEvents))),
 		baseapp.SetSnapshot(snapshotStore, snapshotOptions),
 		baseapp.SetIAVLCacheSize(int(cast.ToUint64(appOpts.Get(flagIAVLCacheSize)))),
+		baseapp.SetIAVLDisableFastNode(true),
 		baseapp.SetChainID(chainID),
 	)
 }
