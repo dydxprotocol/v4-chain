@@ -1,7 +1,33 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/vault/vault.proto";
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // Msg defines the Msg service.
-service Msg {}
+service Msg {
+  // DepositToVault deposits funds into a vault.
+  rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
+}
+
+// MsgDepositToVault is the Msg/DepositToVault request type.
+message MsgDepositToVault {
+  // The vault to deposit into.
+  VaultId vault_id = 1;
+
+  // The subaccount to deposit from.
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2;
+
+  // Number of quote quantums to deposit.
+  bytes quote_quantums = 3 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
+
+// MsgDepositToVaultResponse is the Msg/DepositToVault response type.
+message MsgDepositToVaultResponse {}
