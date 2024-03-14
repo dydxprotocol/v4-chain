@@ -37,6 +37,7 @@ func ProcessProposalHandler(
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
 	pricesKeeper ProcessPricesKeeper,
+	pricesTxDecoder UpdateMarketPriceTxDecoder,
 ) sdk.ProcessProposalHandler {
 	// Keep track of the current block height and consensus round.
 	currentBlockHeight := int64(0)
@@ -72,7 +73,7 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesTxDecoder)
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)
