@@ -57,8 +57,6 @@ func (mte *MarketToExchangePrices) UpdatePrices(
 // a price is valid iff
 // 1) the last update time is within a predefined threshold away from the given
 // read time.
-// 2) the number of prices that meet 1) are greater than the minimum number of
-// exchanges specified in the given input.
 func (mte *MarketToExchangePrices) GetValidMedianPrices(
 	marketParams []types.MarketParam,
 	readTime time.Time,
@@ -101,26 +99,23 @@ func (mte *MarketToExchangePrices) GetValidMedianPrices(
 			},
 		)
 
-		// The number of valid prices must be >= min number of exchanges.
-		if len(validPrices) >= int(marketParam.MinExchanges) {
-			// Calculate the median. Returns an error if the input is empty.
-			median, err := lib.Median(validPrices)
-			if err != nil {
-				telemetry.IncrCounterWithLabels(
-					[]string{
-						metrics.PricefeedServer,
-						metrics.NoValidMedianPrice,
-						metrics.Count,
-					},
-					1,
-					[]gometrics.Label{
-						pricefeedmetrics.GetLabelForMarketId(marketId),
-					},
-				)
-				continue
-			}
-			marketIdToMedianPrice[marketId] = median
+		// Calculate the median. Returns an error if the input is empty.
+		median, err := lib.Median(validPrices)
+		if err != nil {
+			telemetry.IncrCounterWithLabels(
+				[]string{
+					metrics.PricefeedServer,
+					metrics.NoValidMedianPrice,
+					metrics.Count,
+				},
+				1,
+				[]gometrics.Label{
+					pricefeedmetrics.GetLabelForMarketId(marketId),
+				},
+			)
+			continue
 		}
+		marketIdToMedianPrice[marketId] = median
 	}
 
 	return marketIdToMedianPrice

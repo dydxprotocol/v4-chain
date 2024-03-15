@@ -2,8 +2,10 @@ package flags
 
 import (
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
+	oracleconfig "github.com/skip-mev/slinky/oracle/config"
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
+	"time"
 )
 
 // List of CLI flags for Server and Client.
@@ -23,6 +25,13 @@ const (
 	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
 	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
+
+	// Oracle flags
+	FlagOracleEnabled                 = "oracle.enabled"
+	FlagOracleAddress                 = "oracle.oracle_address"
+	FlagOracleClientTimeout           = "oracle.client_timeout"
+	FlagOracleMetricsEnabled          = "oracle.metrics_enabled"
+	FlagOraclePrometheusServerAddress = "oracle.prometheus_server_address"
 )
 
 // Shared flags contains configuration flags shared by all daemons.
@@ -63,12 +72,17 @@ type PriceFlags struct {
 	LoopDelayMs uint32
 }
 
+type SlinkyFlags struct {
+	oracleconfig.AppConfig
+}
+
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
 	Bridge      BridgeFlags
 	Liquidation LiquidationFlags
 	Price       PriceFlags
+	Slinky      SlinkyFlags
 }
 
 var defaultDaemonFlags *DaemonFlags
@@ -95,6 +109,14 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			Price: PriceFlags{
 				Enabled:     true,
 				LoopDelayMs: 3_000,
+			},
+			Slinky: SlinkyFlags{
+				AppConfig: oracleconfig.AppConfig{
+					OracleAddress:           "localhost:8080",
+					ClientTimeout:           time.Second * 2,
+					MetricsEnabled:          false,
+					PrometheusServerAddress: "",
+				},
 			},
 		}
 	}
@@ -173,6 +195,33 @@ func AddDaemonFlagsToCmd(
 		df.Price.LoopDelayMs,
 		"Delay in milliseconds between sending price updates to the application.",
 	)
+
+	// Slinky Daemon.
+	cmd.Flags().Bool(
+		FlagOracleEnabled,
+		df.Slinky.AppConfig.Enabled,
+		"Enable the slinky oracle.",
+	)
+	cmd.Flags().String(
+		FlagOracleAddress,
+		df.Slinky.AppConfig.OracleAddress,
+		"Address of the oracle sidecar.",
+	)
+	cmd.Flags().Duration(
+		FlagOracleClientTimeout,
+		df.Slinky.AppConfig.ClientTimeout,
+		"Time out of the oracle sidecar client.",
+	)
+	cmd.Flags().Bool(
+		FlagOracleMetricsEnabled,
+		df.Slinky.AppConfig.MetricsEnabled,
+		"Enable the oracle metrics reporting for Slinky.",
+	)
+	cmd.Flags().String(
+		FlagOraclePrometheusServerAddress,
+		df.Slinky.AppConfig.PrometheusServerAddress,
+		"The address of the exposed prometheus address for Slinky metrics.",
+	)
 }
 
 // GetDaemonFlagValuesFromOptions gets all daemon flag values from the `AppOptions` struct.
@@ -242,6 +291,33 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagPriceDaemonLoopDelayMs); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Price.LoopDelayMs = v
+		}
+	}
+
+	// Slinky Daemon.
+	if option := appOpts.Get(FlagOracleEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Slinky.AppConfig.Enabled = v
+		}
+	}
+	if option := appOpts.Get(FlagOracleAddress); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.Slinky.AppConfig.OracleAddress = v
+		}
+	}
+	if option := appOpts.Get(FlagOracleClientTimeout); option != nil {
+		if v, err := cast.ToDurationE(option); err == nil {
+			result.Slinky.AppConfig.ClientTimeout = v
+		}
+	}
+	if option := appOpts.Get(FlagOracleMetricsEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.Slinky.AppConfig.MetricsEnabled = v
+		}
+	}
+	if option := appOpts.Get(FlagOraclePrometheusServerAddress); option != nil {
+		if v, err := cast.ToStringE(option); err == nil {
+			result.Slinky.AppConfig.PrometheusServerAddress = v
 		}
 	}
 

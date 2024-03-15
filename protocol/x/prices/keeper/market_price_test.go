@@ -160,9 +160,8 @@ func TestGetMarketIdToValidIndexPrice(t *testing.T) {
 	marketIdToIndexPrice := keeper.GetMarketIdToValidIndexPrice(ctx)
 	// While there are 4 markets in state, only 7, 8, 9 have index prices,
 	// and only 8, 9 have valid median index prices.
-	// Market7 only has 1 valid price due to update time constraint,
-	// but the min exchanges required is 2. Therefore, no median price.
-	require.Len(t, marketIdToIndexPrice, 2)
+	// Market7 only has 1 valid price due to update time constraint.
+	require.Len(t, marketIdToIndexPrice, 3)
 	require.Equal(t,
 		types.MarketPrice{
 			Id:       constants.MarketId9,

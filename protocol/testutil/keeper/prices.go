@@ -123,7 +123,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 	numExistingMarkets := GetNumMarkets(t, ctx, keeper)
 	for i := range items {
 		items[i].Param.Id = uint32(i) + numExistingMarkets
-		items[i].Param.Pair = fmt.Sprintf("%v", i)
+		items[i].Param.Pair = fmt.Sprintf("%v-%v", i, i)
 		items[i].Param.Exponent = int32(i)
 		items[i].Param.ExchangeConfigJson = ""
 		items[i].Param.MinExchanges = uint32(1)

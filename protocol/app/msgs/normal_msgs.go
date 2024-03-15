@@ -19,6 +19,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
 var (
@@ -233,5 +234,9 @@ var (
 		"/dydxprotocol.sending.MsgDepositToSubaccountResponse":    nil,
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccount":         &sending.MsgWithdrawFromSubaccount{},
 		"/dydxprotocol.sending.MsgWithdrawFromSubaccountResponse": nil,
+
+		// vault
+		"/dydxprotocol.vault.MsgDepositToVault":         &vault.MsgDepositToVault{},
+		"/dydxprotocol.vault.MsgDepositToVaultResponse": nil,
 	}
 )

@@ -43,7 +43,7 @@ const controllerName: string = 'perpetual-markets-controller';
 class PerpetualMarketsController extends Controller {
   @Get('/')
   async listPerpetualMarkets(
-    @Query() limit: number,
+    @Query() limit?: number,
       @Query() ticker?: string,
   ): Promise<PerpetualMarketResponse> {
     const liquidityTiersMap: LiquidityTiersMap = liquidityTierRefresher.getLiquidityTiersMap();

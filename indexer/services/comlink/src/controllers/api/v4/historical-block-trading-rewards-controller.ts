@@ -31,7 +31,7 @@ class HistoricalBlockTradingRewardsController extends Controller {
   @Get('/:address')
   async getTradingRewards(
     @Path() address: string,
-      @Query() limit: number,
+      @Query() limit?: number,
       @Query() startingBeforeOrAt?: IsoString,
       @Query() startingBeforeOrAtHeight?: string,
   ): Promise<HistoricalBlockTradingRewardsResponse> {

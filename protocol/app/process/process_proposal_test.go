@@ -285,6 +285,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
