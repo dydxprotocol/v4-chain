@@ -132,7 +132,8 @@ func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
 
 	cmd := am.GetQueryCmd()
 	require.Equal(t, "ratelimit", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
+	require.Equal(t, 3, len(cmd.Commands()))
 	require.Equal(t, "capacity-by-denom", cmd.Commands()[0].Name())
 	require.Equal(t, "list-limit-params", cmd.Commands()[1].Name())
+	require.Equal(t, "pending-send-packets", cmd.Commands()[2].Name())
 }
