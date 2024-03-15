@@ -40,7 +40,8 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// ON ...
-	// a query that returns a single-market param with a next-key-1 on receiving a page-request with a limit of types.PaginatedRequestLimit
+	// a query that returns a single-market param with a next-key-1 on receiving a page-request
+	// with a limit of types.PaginatedRequestLimit
 	initialPagination := &query.PageRequest{
 		Limit: types.PaginatedRequestLimit,
 	}
@@ -56,8 +57,8 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 		nil,
 	)
 
-	// a query that returns a single-market param with a next-key-2 on receiving a page-request with a limit of types.PaginatedRequestLimit
-	// with the next-key-1 return marketParam2 and next-key-2
+	// a query that returns a single-market param with a next-key-2 on receiving a page-request
+	// with a limit of types.PaginatedRequestLimit with the next-key-1 return marketParam2 and next-key-2
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
 			Limit: types.PaginatedRequestLimit,
@@ -73,8 +74,8 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 		nil,
 	)
 
-	// a query that returns a single-market param with no next-key on receiving a page-request with a limit of types.PaginatedRequestLimit
-	// with the next-key-2 return marketParam3 and no next-key
+	// a query that returns a single-market param with no next-key on receiving a page-request with a limit
+	// of types.PaginatedRequestLimit with the next-key-2 return marketParam3 and no next-key
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
 			Limit: types.PaginatedRequestLimit,
@@ -107,7 +108,8 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 	ctx := sdk.Context{}
 
 	// ON ...
-	// a query that returns a single-market param with a next-key-1 on receiving a page-request with a limit of types.PaginatedRequestLimit
+	// a query that returns a single-market param with a next-key-1 on receiving a page-request
+	// with a limit of types.PaginatedRequestLimit
 	initialPagination := &query.PageRequest{
 		Limit: types.PaginatedRequestLimit,
 	}
