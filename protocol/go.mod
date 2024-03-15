@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	cosmossdk.io/api v0.7.3 // indirect
+	cosmossdk.io/api v0.7.3
 	cosmossdk.io/math v1.3.0
 	github.com/Shopify/sarama v1.37.2
 	github.com/cometbft/cometbft v0.38.5
@@ -21,7 +21,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/google/go-cmp v0.6.0
-	github.com/gorilla/mux v1.8.1 // indirect
+	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/h2non/gock v1.2.0
 	github.com/ory/dockertest v3.3.5+incompatible
@@ -69,6 +69,7 @@ require (
 	github.com/skip-mev/slinky v0.2.1-0.20240301171048-53cc00fdca4e
 	github.com/spf13/viper v1.18.2
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
+	go.uber.org/zap v1.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80
 	google.golang.org/protobuf v1.32.0
 )
@@ -393,7 +394,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231219180239-dc181d75b848 // indirect
 	golang.org/x/mod v0.15.0 // indirect
