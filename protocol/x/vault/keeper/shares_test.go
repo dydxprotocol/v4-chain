@@ -47,7 +47,7 @@ func TestGetSetTotalShares(t *testing.T) {
 	require.Equal(t, dtypes.NewInt(0), numShares.NumShares)
 
 	// Set total shares for the first vault again and then get.
-	k.SetTotalShares(ctx, constants.Vault_Clob_0, types.NumShares{
+	err = k.SetTotalShares(ctx, constants.Vault_Clob_0, types.NumShares{
 		NumShares: dtypes.NewInt(123),
 	})
 	require.NoError(t, err)
