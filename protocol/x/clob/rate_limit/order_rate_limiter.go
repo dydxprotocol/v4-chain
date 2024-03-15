@@ -8,6 +8,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
+var (
+	BATCH_CANCEL_RATE_LIMIT_WEIGHT = uint32(2),
+)
+
 // A RateLimiter which rate limits types.MsgPlaceOrder, types.MsgCancelOrder, and
 // types.MsgBatchCancel.
 //
@@ -150,13 +154,12 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitBatchCancelOrder(
 ) (err error) {
 	lib.AssertCheckTxMode(ctx)
 
-	// calcualate how mcuh each batch cancel should be weighted. Use 2 for now.
-	weight := uint32(2)
-
+	// TODO(CT-688) Use a scaling function such as (1 + ceil(0.1 * #cancels)) to calculate batch
+	// cancel rate limit weights.
 	err = r.checkStateShortTermOrderPlaceCancelRateLimiter.RateLimitIncrBy(
 		ctx,
 		msg.SubaccountId.Owner,
-		weight,
+		BATCH_CANCEL_RATE_LIMIT_WEIGHT,
 	)
 	if err != nil {
 		telemetry.IncrCounterWithLabels(
