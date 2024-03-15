@@ -186,6 +186,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	// Grpc Streaming
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 )
 
 var (
@@ -284,8 +288,9 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	IndexerEventManager indexer_manager.IndexerEventManager
-	Server              *daemonserver.Server
+	IndexerEventManager  indexer_manager.IndexerEventManager
+	GrpcStreamingManager streamingtypes.GrpcStreamingManager
+	Server               *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -593,6 +598,9 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
+
+	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
+
 	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
@@ -877,7 +885,9 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
-	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
+	memClob := clobmodulememclob.NewMemClobPriceTimePriority(
+		app.IndexerEventManager.Enabled() || app.GrpcStreamingManager.Enabled(),
+	)
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
@@ -899,6 +909,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.IndexerEventManager,
+		app.GrpcStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
@@ -1591,4 +1602,17 @@ func getIndexerFromOptions(
 		}
 	}
 	return indexerMessageSender, indexerFlags
+}
+
+// getGrpcStreamingManagerFromOptions returns an instance of a streamingtypes.GrpcStreamingManager from the specified
+// options. This function will default to returning a no-op instance.
+func getGrpcStreamingManagerFromOptions(
+	appFlags flags.Flags,
+	logger log.Logger,
+) (manager streamingtypes.GrpcStreamingManager) {
+	if appFlags.GrpcStreamingEnabled {
+		logger.Info("GRPC streaming is enabled")
+		return streaming.NewGrpcStreamingManager()
+	}
+	return streaming.NewNoopGrpcStreamingManager()
 }

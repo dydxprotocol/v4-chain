@@ -4,14 +4,15 @@ import (
 	"fmt"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 func SubaccountIdToIndexerSubaccountId(
 	subaccountId satypes.SubaccountId,
-) IndexerSubaccountId {
-	return IndexerSubaccountId{
+) v1types.IndexerSubaccountId {
+	return v1types.IndexerSubaccountId{
 		Owner:  subaccountId.Owner,
 		Number: subaccountId.Number,
 	}
@@ -20,8 +21,8 @@ func SubaccountIdToIndexerSubaccountId(
 func PerpetualPositionToIndexerPerpetualPosition(
 	perpetualPosition *satypes.PerpetualPosition,
 	fundingPayment dtypes.SerializableInt,
-) *IndexerPerpetualPosition {
-	return &IndexerPerpetualPosition{
+) *v1types.IndexerPerpetualPosition {
+	return &v1types.IndexerPerpetualPosition{
 		PerpetualId:    perpetualPosition.PerpetualId,
 		Quantums:       perpetualPosition.Quantums,
 		FundingIndex:   perpetualPosition.FundingIndex,
@@ -32,11 +33,11 @@ func PerpetualPositionToIndexerPerpetualPosition(
 func PerpetualPositionsToIndexerPerpetualPositions(
 	perpetualPositions []*satypes.PerpetualPosition,
 	fundingPayments map[uint32]dtypes.SerializableInt,
-) []*IndexerPerpetualPosition {
+) []*v1types.IndexerPerpetualPosition {
 	if perpetualPositions == nil {
 		return nil
 	}
-	indexerPerpetualPositions := make([]*IndexerPerpetualPosition, 0, len(perpetualPositions))
+	indexerPerpetualPositions := make([]*v1types.IndexerPerpetualPosition, 0, len(perpetualPositions))
 	for _, perpetualPosition := range perpetualPositions {
 		// Retrieve funding payment for this perpetual position (0 by default).
 		fundingPayment, exists := fundingPayments[perpetualPosition.PerpetualId]
@@ -56,8 +57,8 @@ func PerpetualPositionsToIndexerPerpetualPositions(
 
 func AssetPositionToIndexerAssetPosition(
 	assetPosition *satypes.AssetPosition,
-) *IndexerAssetPosition {
-	return &IndexerAssetPosition{
+) *v1types.IndexerAssetPosition {
+	return &v1types.IndexerAssetPosition{
 		AssetId:  assetPosition.AssetId,
 		Quantums: assetPosition.Quantums,
 		Index:    assetPosition.Index,
@@ -66,11 +67,11 @@ func AssetPositionToIndexerAssetPosition(
 
 func AssetPositionsToIndexerAssetPositions(
 	assetPositions []*satypes.AssetPosition,
-) []*IndexerAssetPosition {
+) []*v1types.IndexerAssetPosition {
 	if assetPositions == nil {
 		return nil
 	}
-	indexerAssetPositions := make([]*IndexerAssetPosition, 0, len(assetPositions))
+	indexerAssetPositions := make([]*v1types.IndexerAssetPosition, 0, len(assetPositions))
 	for _, assetPosition := range assetPositions {
 		indexerAssetPositions = append(
 			indexerAssetPositions,
@@ -82,8 +83,8 @@ func AssetPositionsToIndexerAssetPositions(
 
 func OrderIdToIndexerOrderId(
 	orderId clobtypes.OrderId,
-) IndexerOrderId {
-	return IndexerOrderId{
+) v1types.IndexerOrderId {
+	return v1types.IndexerOrderId{
 		SubaccountId: SubaccountIdToIndexerSubaccountId(orderId.SubaccountId),
 		ClientId:     orderId.ClientId,
 		OrderFlags:   orderId.OrderFlags,
@@ -93,35 +94,35 @@ func OrderIdToIndexerOrderId(
 
 func OrderSideToIndexerOrderSide(
 	orderSide clobtypes.Order_Side,
-) IndexerOrder_Side {
-	return IndexerOrder_Side(orderSide)
+) v1types.IndexerOrder_Side {
+	return v1types.IndexerOrder_Side(orderSide)
 }
 
 func OrderTimeInForceToIndexerOrderTimeInForce(
 	orderTimeInForce clobtypes.Order_TimeInForce,
-) IndexerOrder_TimeInForce {
-	return IndexerOrder_TimeInForce(orderTimeInForce)
+) v1types.IndexerOrder_TimeInForce {
+	return v1types.IndexerOrder_TimeInForce(orderTimeInForce)
 }
 
 func OrderConditionTypeToIndexerOrderConditionType(
 	orderConditionType clobtypes.Order_ConditionType,
-) IndexerOrder_ConditionType {
-	return IndexerOrder_ConditionType(orderConditionType)
+) v1types.IndexerOrder_ConditionType {
+	return v1types.IndexerOrder_ConditionType(orderConditionType)
 }
 
 func OrderToIndexerOrder(
 	order clobtypes.Order,
-) IndexerOrder {
+) v1types.IndexerOrder {
 	switch goodTil := order.GoodTilOneof.(type) {
 	case *clobtypes.Order_GoodTilBlock:
 		return orderToIndexerOrder_GoodTilBlock(
 			order,
-			IndexerOrder_GoodTilBlock{GoodTilBlock: goodTil.GoodTilBlock},
+			v1types.IndexerOrder_GoodTilBlock{GoodTilBlock: goodTil.GoodTilBlock},
 		)
 	case *clobtypes.Order_GoodTilBlockTime:
 		return orderToIndexerOrder_GoodTilBlockTime(
 			order,
-			IndexerOrder_GoodTilBlockTime{GoodTilBlockTime: goodTil.GoodTilBlockTime},
+			v1types.IndexerOrder_GoodTilBlockTime{GoodTilBlockTime: goodTil.GoodTilBlockTime},
 		)
 	default:
 		panic(fmt.Errorf("Unexpected GoodTilOneof in Order: %+v", order))
@@ -130,9 +131,9 @@ func OrderToIndexerOrder(
 
 func orderToIndexerOrder_GoodTilBlock(
 	order clobtypes.Order,
-	goodTilBlock IndexerOrder_GoodTilBlock,
-) IndexerOrder {
-	return IndexerOrder{
+	goodTilBlock v1types.IndexerOrder_GoodTilBlock,
+) v1types.IndexerOrder {
+	return v1types.IndexerOrder{
 		OrderId:                         OrderIdToIndexerOrderId(order.OrderId),
 		Side:                            OrderSideToIndexerOrderSide(order.Side),
 		Quantums:                        order.Quantums,
@@ -148,9 +149,9 @@ func orderToIndexerOrder_GoodTilBlock(
 
 func orderToIndexerOrder_GoodTilBlockTime(
 	order clobtypes.Order,
-	goodTilBlockTime IndexerOrder_GoodTilBlockTime,
-) IndexerOrder {
-	return IndexerOrder{
+	goodTilBlockTime v1types.IndexerOrder_GoodTilBlockTime,
+) v1types.IndexerOrder {
+	return v1types.IndexerOrder{
 		OrderId:                         OrderIdToIndexerOrderId(order.OrderId),
 		Side:                            OrderSideToIndexerOrderSide(order.Side),
 		Quantums:                        order.Quantums,
@@ -164,20 +165,20 @@ func orderToIndexerOrder_GoodTilBlockTime(
 	}
 }
 
-func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) ClobPairStatus {
+func ConvertToClobPairStatus(status clobtypes.ClobPair_Status) v1types.ClobPairStatus {
 	switch status {
 	case clobtypes.ClobPair_STATUS_ACTIVE:
-		return ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_ACTIVE
 	case clobtypes.ClobPair_STATUS_PAUSED:
-		return ClobPairStatus_CLOB_PAIR_STATUS_PAUSED
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_PAUSED
 	case clobtypes.ClobPair_STATUS_CANCEL_ONLY:
-		return ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_CANCEL_ONLY
 	case clobtypes.ClobPair_STATUS_POST_ONLY:
-		return ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_POST_ONLY
 	case clobtypes.ClobPair_STATUS_INITIALIZING:
-		return ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_INITIALIZING
 	case clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT:
-		return ClobPairStatus_CLOB_PAIR_STATUS_FINAL_SETTLEMENT
+		return v1types.ClobPairStatus_CLOB_PAIR_STATUS_FINAL_SETTLEMENT
 	default:
 		panic(
 			fmt.Sprintf(

@@ -71,6 +71,7 @@ func newTestHandlerOptions() HandlerOptions {
 		nil,
 		nil,
 		nil,
+		nil,
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
 		rate_limit.NewNoOpRateLimiter[*types.MsgCancelOrder](),
