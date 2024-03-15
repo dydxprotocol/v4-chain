@@ -84,7 +84,7 @@ var (
 		Quantums:     dtypes.NewInt(10_000_000),
 		FundingIndex: dtypes.NewInt(0),
 	}
-	// Short position for arbitary isolated market
+	// Short position for arbitrary isolated market
 	PerpetualPosition_OneISOShort = satypes.PerpetualPosition{
 		PerpetualId:  3,
 		Quantums:     dtypes.NewInt(-100_000_000),
