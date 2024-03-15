@@ -15,10 +15,8 @@ import (
 
 var (
 	emptyConfig = types.BlockRateLimitConfiguration{
-		MaxShortTermOrdersPerNBlocks:             []types.MaxPerNBlocksRateLimit{},
-		MaxStatefulOrdersPerNBlocks:              []types.MaxPerNBlocksRateLimit{},
-		MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{},
-		MaxShortTermOrdersAndCancelsPerNBlocks:   []types.MaxPerNBlocksRateLimit{},
+		MaxStatefulOrdersPerNBlocks:            []types.MaxPerNBlocksRateLimit{},
+		MaxShortTermOrdersAndCancelsPerNBlocks: []types.MaxPerNBlocksRateLimit{},
 	}
 )
 
