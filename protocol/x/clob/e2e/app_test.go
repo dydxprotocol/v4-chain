@@ -194,6 +194,14 @@ var (
 		},
 		20,
 	)
+	CancelOrder_Alice_Num0_Id1_Clob0_GTB20 = *clobtypes.NewMsgCancelOrderShortTerm(
+		clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			ClobPairId:   1,
+		},
+		20,
+	)
 	PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20 = *clobtypes.NewMsgPlaceOrder(testapp.MustScaleOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 0},
@@ -277,6 +285,16 @@ var (
 		[]clobtypes.OrderBatch{
 			{
 				ClobPairId: 0,
+				ClientIds:  []uint32{1, 2, 3},
+			},
+		},
+		20,
+	)
+	BatchCancel_Alice_Num0_Clob1_1_2_3_GTB20 = *clobtypes.NewMsgBatchCancel(
+		constants.Alice_Num0,
+		[]clobtypes.OrderBatch{
+			{
+				ClobPairId: 1,
 				ClientIds:  []uint32{1, 2, 3},
 			},
 		},
