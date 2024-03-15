@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -exo pipefail
 
 # This file initializes muliple validators for local and CI testing purposes.
 # This file should be run as part of `docker-compose.yml`.

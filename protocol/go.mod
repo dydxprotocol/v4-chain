@@ -5,7 +5,7 @@ go 1.22
 toolchain go1.22.0
 
 require (
-	cosmossdk.io/api v0.7.3
+	cosmossdk.io/api v0.7.3 // indirect
 	cosmossdk.io/math v1.3.0
 	github.com/Shopify/sarama v1.37.2
 	github.com/cometbft/cometbft v0.38.5
@@ -21,7 +21,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/google/go-cmp v0.6.0
-	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/mux v1.8.1 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/h2non/gock v1.2.0
 	github.com/ory/dockertest v3.3.5+incompatible
@@ -54,7 +54,7 @@ require (
 	cosmossdk.io/x/upgrade v0.1.1
 	github.com/burdiyan/kafkautil v0.0.0-20190131162249-eaf83ed22d5b
 	github.com/cosmos/cosmos-db v1.0.2
-	github.com/cosmos/iavl v1.1.1-0.20240313174921-bfaf5fcda7b3
+	github.com/cosmos/iavl v1.0.1
 	github.com/cosmos/ibc-go/modules/capability v1.0.0
 	github.com/cosmos/ibc-go/v8 v8.0.0
 	github.com/cosmos/rosetta v0.50.3
