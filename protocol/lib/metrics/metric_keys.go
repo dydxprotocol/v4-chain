@@ -24,6 +24,7 @@ const (
 	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 	ChainOutageSeen                                    = "chain_outage_seen"
 	SubaccountCreatedCount                             = "subaccount_created_count"
+	RateLimitWithdrawalAmount                          = "rate_limit_withdrawal_amount"
 
 	// Gauges
 	InsuranceFundBalance                      = "insurance_fund_balance"

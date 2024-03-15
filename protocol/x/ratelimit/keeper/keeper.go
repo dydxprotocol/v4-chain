@@ -77,6 +77,15 @@ func (k Keeper) ProcessWithdrawal(
 			)
 		}
 
+		metrics.EmitTelemetryWithLabelsForExecMode(
+			ctx,
+			[]sdk.ExecMode{sdk.ExecModeFinalize},
+			metrics.IncrCounterWithLabels,
+			metrics.RateLimitWithdrawalAmount,
+			metrics.GetMetricValueFromBigInt(amount),
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, denom),
+		)
+
 		// Debit each capacity in the list by the amount of withdrawal.
 		newCapacityList[i] = dtypes.NewIntFromBigInt(
 			new(big.Int).Sub(
