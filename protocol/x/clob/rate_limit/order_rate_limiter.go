@@ -9,7 +9,7 @@ import (
 )
 
 var (
-	BATCH_CANCEL_RATE_LIMIT_WEIGHT = uint32(2),
+	BATCH_CANCEL_RATE_LIMIT_WEIGHT = uint32(2)
 )
 
 // A RateLimiter which rate limits types.MsgPlaceOrder, types.MsgCancelOrder, and
