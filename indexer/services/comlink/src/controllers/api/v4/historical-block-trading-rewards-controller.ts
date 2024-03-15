@@ -25,7 +25,7 @@ import { tradingRewardToResponse } from '../../../request-helpers/request-transf
 import { HistoricalBlockTradingRewardRequest as HistoricalBlockTradingRewardsRequest, HistoricalBlockTradingRewardsResponse } from '../../../types';
 
 const router: express.Router = express.Router();
-const controllerName: string = 'height-controller';
+const controllerName: string = 'historical-block-trading-rewards-controller';
 
 @Route('historicalBlockTradingRewards')
 class HistoricalBlockTradingRewardsController extends Controller {
