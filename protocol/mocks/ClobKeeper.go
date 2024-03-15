@@ -625,6 +625,24 @@ func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.Msg
 	return r0
 }
 
+// HandleMsgPlaceOrder provides a mock function with given fields: ctx, msg
+func (_m *ClobKeeper) HandleMsgPlaceOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder) error {
+	ret := _m.Called(ctx, msg)
+
+	if len(ret) == 0 {
+		panic("no return value specified for HandleMsgPlaceOrder")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) error); ok {
+		r0 = rf(ctx, msg)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // HasAuthority provides a mock function with given fields: authority
 func (_m *ClobKeeper) HasAuthority(authority string) bool {
 	ret := _m.Called(authority)

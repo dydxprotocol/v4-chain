@@ -25,6 +25,23 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 ) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
+	if err := k.Keeper.HandleMsgPlaceOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgPlaceOrderResponse{}, nil
+}
+
+// HandleMsgPlaceOrder handles a MsgPlaceOrder by
+// 1. persisting the placement on chain.
+// 2. updating ProcessProposerMatchesEvents with the new stateful order placement.
+// 3. adding order placement on-chain indexer event.
+func (k Keeper) HandleMsgPlaceOrder(
+	ctx sdk.Context,
+	msg *types.MsgPlaceOrder,
+) (err error) {
+	lib.AssertDeliverTxMode(ctx)
+
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,
 		log.Module, log.Clob,
@@ -66,10 +83,10 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	order.MustBeStatefulOrder()
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
-	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
+	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
 	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
 	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
-		return nil, errorsmod.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyCancelled,
 			"PlaceOrder: order (%+v)",
 			order,
@@ -77,7 +94,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	}
 	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 	if _, found := removedOrderIds[order.GetOrderId()]; found {
-		return nil, errorsmod.Wrapf(
+		return errorsmod.Wrapf(
 			types.ErrStatefulOrderPreviouslyRemoved,
 			"PlaceOrder: order (%+v)",
 			order,
@@ -88,13 +105,13 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 	//   - stateful order validation.
 	//   - collateralization check.
 	//   - writing the order to state and the memstore.
-	if err := k.Keeper.PlaceStatefulOrder(ctx, msg); err != nil {
-		return nil, err
+	if err := k.PlaceStatefulOrder(ctx, msg); err != nil {
+		return err
 	}
 
 	// 4. Emit the new order placement indexer event.
 	if order.IsConditionalOrder() {
-		k.Keeper.GetIndexerEventManager().AddTxnEvent(
+		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
 			indexerevents.StatefulOrderEventVersion,
@@ -109,7 +126,7 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 			order.OrderId,
 		)
 	} else {
-		k.Keeper.GetIndexerEventManager().AddTxnEvent(
+		k.GetIndexerEventManager().AddTxnEvent(
 			ctx,
 			indexerevents.SubtypeStatefulOrder,
 			indexerevents.StatefulOrderEventVersion,
@@ -125,10 +142,10 @@ func (k msgServer) PlaceOrder(goCtx context.Context, msg *types.MsgPlaceOrder) (
 		)
 	}
 	// 5. Add the newly-placed stateful order to `ProcessProposerMatchesEvents` for use in `PrepareCheckState`.
-	k.Keeper.MustSetProcessProposerMatchesEvents(
+	k.MustSetProcessProposerMatchesEvents(
 		ctx,
 		processProposerMatchesEvents,
 	)
 
-	return &types.MsgPlaceOrderResponse{}, nil
+	return nil
 }
