@@ -21,6 +21,10 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Buy(t *testing.T) {
 		mock.Anything,
 		mock.Anything,
 	).Return(false, satypes.BaseQuantums(0), uint32(0))
+	clobKeeper.On(
+		"Logger",
+		mock.Anything,
+	).Return(ctx.Logger())
 
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(clobKeeper)
@@ -60,6 +64,10 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Sell(t *testing.T) {
 		mock.Anything,
 		mock.Anything,
 	).Return(false, satypes.BaseQuantums(0), uint32(0))
+	clobKeeper.On(
+		"Logger",
+		mock.Anything,
+	).Return(ctx.Logger())
 
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(clobKeeper)
