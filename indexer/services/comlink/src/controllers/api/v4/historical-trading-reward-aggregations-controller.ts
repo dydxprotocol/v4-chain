@@ -26,7 +26,7 @@ import { tradingRewardAggregationToResponse } from '../../../request-helpers/req
 import { HistoricalTradingRewardAggregationRequest, HistoricalTradingRewardAggregationsResponse } from '../../../types';
 
 const router: express.Router = express.Router();
-const controllerName: string = 'height-controller';
+const controllerName: string = 'historical-trading-reward-aggregations-controller';
 
 @Route('historicalTradingRewardAggregations')
 class HistoricalTradingRewardAggregationsController extends Controller {
