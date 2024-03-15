@@ -40,6 +40,10 @@ type ClobKeeper interface {
 		ClobPair,
 		error,
 	)
+	HandleMsgCancelOrder(
+		ctx sdk.Context,
+		msg *MsgCancelOrder,
+	) (err error)
 	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
 	HasAuthority(authority string) bool

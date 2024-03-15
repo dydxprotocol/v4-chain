@@ -316,3 +316,90 @@ func (k Keeper) TransferInsuranceFundPayments(
 		[]sdk.Coin{coinToTransfer},
 	)
 }
+
+// TransferFundsFromSubaccountToSubaccount returns an error if the call to `k.CanUpdateSubaccounts()`
+// fails. Otherwise, updates the asset quantums in the subaccounts, translates the
+// `assetId` and `quantums` into a `sdk.Coin`, and call `bankKeeper.SendCoins()` if the collateral
+// pools for the two subaccounts are different.
+// TODO(CORE-168): Change function interface to accept `denom` and `amount` instead of `assetId` and
+// `quantums`.
+func (k Keeper) TransferFundsFromSubaccountToSubaccount(
+	ctx sdk.Context,
+	senderSubaccountId types.SubaccountId,
+	recipientSubaccountId types.SubaccountId,
+	assetId uint32,
+	quantums *big.Int,
+) error {
+	// TODO(DEC-715): Support non-USDC assets.
+	if assetId != assettypes.AssetUsdc.Id {
+		return types.ErrAssetTransferThroughBankNotImplemented
+	}
+
+	updates := []types.Update{
+		{
+			SubaccountId: senderSubaccountId,
+			AssetUpdates: []types.AssetUpdate{
+				{
+					AssetId:          assettypes.AssetUsdc.Id,
+					BigQuantumsDelta: new(big.Int).Neg(quantums),
+				},
+			},
+		},
+		{
+			SubaccountId: recipientSubaccountId,
+			AssetUpdates: []types.AssetUpdate{
+				{
+					AssetId:          assettypes.AssetUsdc.Id,
+					BigQuantumsDelta: new(big.Int).Set(quantums),
+				},
+			},
+		},
+	}
+	success, successPerUpdate, err := k.CanUpdateSubaccounts(ctx, updates, types.Transfer)
+	if err != nil {
+		return err
+	}
+	if err := types.GetErrorFromUpdateResults(success, successPerUpdate, updates); err != nil {
+		return err
+	}
+
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		assetId,
+		quantums,
+	)
+	if err != nil {
+		return err
+	}
+
+	senderCollateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, senderSubaccountId)
+	if err != nil {
+		return err
+	}
+
+	recipientCollateralPoolAddr, err := k.GetCollateralPoolForSubaccount(ctx, recipientSubaccountId)
+	if err != nil {
+		return err
+	}
+
+	// Different collateral pool address, need to do a bank send.
+	if !senderCollateralPoolAddr.Equals(recipientCollateralPoolAddr) {
+		// Use SendCoins API instead of SendCoinsFromModuleToModule since we don't need the
+		// module account feature
+		if err := k.bankKeeper.SendCoins(
+			ctx,
+			senderCollateralPoolAddr,
+			recipientCollateralPoolAddr,
+			[]sdk.Coin{coinToTransfer},
+		); err != nil {
+			return err
+		}
+	}
+
+	// Apply subaccount updates.
+	return k.applyValidSubaccountUpdateForTransfer(
+		ctx,
+		updates,
+		types.Transfer,
+	)
+}
