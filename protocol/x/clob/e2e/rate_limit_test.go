@@ -710,21 +710,21 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			replayLessGTB:    &CancelOrder_Alice_Num0_Id0_Clob0_GTB5,
 			replayGreaterGTB: &CancelOrder_Alice_Num0_Id0_Clob0_GTB27,
 			firstValidGTB:    &CancelOrder_Alice_Num0_Id0_Clob0_GTB20,
-			secondValidGTB:   &CancelOrder_Alice_Num1_Id0_Clob0_GTB20,
+			secondValidGTB:   &CancelOrder_Alice_Num0_Id1_Clob0_GTB20,
 		},
 		"Batch cancellations": {
 			blockRateLimitConfig: clobtypes.BlockRateLimitConfiguration{
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 1,
-						Limit:     3, // TODO FIX THIS ONCE WEIGHTS ARE DECIDED
+						Limit:     2,
 					},
 				},
 			},
 			replayLessGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB5,
 			replayGreaterGTB: &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB27,
 			firstValidGTB:    &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
-			secondValidGTB:   &BatchCancel_Alice_Num0_Clob0_1_2_3_GTB20,
+			secondValidGTB:   &BatchCancel_Alice_Num0_Clob1_1_2_3_GTB20,
 		},
 	}
 
@@ -750,6 +750,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			}).Build()
 			ctx := tApp.AdvanceToBlock(5, testapp.AdvanceToBlockOptions{})
 
+			// First tx fails due to GTB being too low.
 			replayLessGTBTx := testapp.MustMakeCheckTx(
 				ctx,
 				tApp.App,
@@ -762,6 +763,7 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrHeightExceedsGoodTilBlock.ABCICode(), resp.Code)
 
+			// Second tx fails due to GTB being too high.
 			replayGreaterGTBTx := testapp.MustMakeCheckTx(
 				ctx,
 				tApp.App,
@@ -782,7 +784,8 @@ func TestRateLimitingShortTermOrders_GuardedAgainstReplayAttacks(t *testing.T) {
 				},
 				tc.firstValidGTB,
 			)
-			// First transaction should be allowed.
+			// First transaction should be allowed due to GTB being valid. The first two tx do not count towards
+			// the rate limit.
 			resp = tApp.CheckTx(firstCheckTx)
 			require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 
