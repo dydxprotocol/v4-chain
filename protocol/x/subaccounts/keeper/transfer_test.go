@@ -668,7 +668,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 			expectedSenderCollateralPoolBalance:    big.NewInt(100),  // 600 - 500
 			expectedRecipientCollateralPoolBalance: big.NewInt(1200), // 700 + 500
 		},
-		"Send USDC from isolated subaccount to isolated subaccount (same collateral pool)": {
+		"Send USDC from isolated subaccount to isolated subaccount (same perp)": {
 			asset:                *constants.Usdc,
 			quantums:             big.NewInt(500),
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
@@ -693,7 +693,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 			expectedSenderCollateralPoolBalance:    big.NewInt(1100), // no changes to collateral pools
 			expectedRecipientCollateralPoolBalance: big.NewInt(1100),
 		},
-		"Send USDC from isolated subaccount to isolated subaccount (different collateral pool)": {
+		"Send USDC from isolated subaccount to isolated subaccount (different perp)": {
 			asset:                *constants.Usdc,
 			quantums:             big.NewInt(500),
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
@@ -866,7 +866,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 		// Expectations.
 		expectedErr error
 	}{
-		"Send from non-isolated subaccount to non-isolated subaccount, sender does not have enough balance to transfer": {
+		"Send from non-isolated subaccount to non-isolated subaccount, sender does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -883,7 +883,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:                       big.NewInt(500),
 			expectedErr:                    types.ErrFailedToUpdateSubaccounts,
 		},
-		"Send from isolated subaccount to isolated subaccount (same collateral pool), sender does not have enough balance to transfer": {
+		"Send between isolated subaccounts (same perp), sender does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -904,7 +904,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:    big.NewInt(500),
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
-		"Send from isolated subaccount to isolated subaccount (different collateral pool), sender does not have enough balance to transfer": {
+		"Send between isolated subaccounts (different perp), sender does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -925,7 +925,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:    big.NewInt(500),
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
-		"Send from isolated subaccount to non-isolated subaccount, sender does not have enough balance to transfer": {
+		"Send from isolated subaccount to non-isolated subaccount, sender does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -944,7 +944,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:                    big.NewInt(500),
 			expectedErr:                 types.ErrFailedToUpdateSubaccounts,
 		},
-		"Send from non-isolated subaccount to isolated subaccount, collateral pool does not have enough balance to transfer": {
+		"Send from non-isolated subaccount to isolated subaccount, collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -963,7 +963,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:    big.NewInt(500),
 			expectedErr: sdkerrors.ErrInsufficientFunds,
 		},
-		"Send from isolated subaccount to nonisolated subaccount, collateral pool does not have enough balance to transfer": {
+		"Send from isolated subaccount to non-isolated subaccount, collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
@@ -982,7 +982,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			quantums:                    big.NewInt(500),
 			expectedErr:                 sdkerrors.ErrInsufficientFunds,
 		},
-		"Send from isolated subaccount to isolated subaccoun (different collateral pools), collateral pool does not have enough balance to transfer": {
+		"Send between isolated subaccounts (different perp), collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
 			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
