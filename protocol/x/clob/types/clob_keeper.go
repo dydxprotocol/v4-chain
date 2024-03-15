@@ -44,6 +44,10 @@ type ClobKeeper interface {
 		ctx sdk.Context,
 		msg *MsgCancelOrder,
 	) (err error)
+	HandleMsgPlaceOrder(
+		ctx sdk.Context,
+		msg *MsgPlaceOrder,
+	) (err error)
 	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
 	HasAuthority(authority string) bool
@@ -53,6 +57,7 @@ type ClobKeeper interface {
 		err error,
 	)
 	PlaceStatefulOrder(ctx sdk.Context, msg *MsgPlaceOrder) error
+
 	PruneStateFillAmountsForShortTermOrders(
 		ctx sdk.Context,
 	)
