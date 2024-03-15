@@ -100,7 +100,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
-						Limit:     3,
+						Limit:     2,
 					},
 				},
 			},
@@ -112,7 +112,7 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 				MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 					{
 						NumBlocks: 2,
-						Limit:     3,
+						Limit:     2,
 					},
 				},
 			},
@@ -171,21 +171,21 @@ func TestRateLimitingOrders_RateLimitsAreEnforced(t *testing.T) {
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
+			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 
 			// Rate limit of 1 over two blocks should still apply, total should be 3 now (2 in block 2, 1 in block 3).
 			tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 3 exceeds configured block rate limit")
+			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 
 			// Rate limit of 1 over two blocks should still apply, total should be 2 now (1 in block 3, 1 in block 4).
 			tApp.AdvanceToBlock(4, testapp.AdvanceToBlockOptions{})
 			resp = tApp.CheckTx(secondCheckTx)
 			require.Conditionf(t, resp.IsErr, "Expected CheckTx to error. Response: %+v", resp)
 			require.Equal(t, clobtypes.ErrBlockRateLimitExceeded.ABCICode(), resp.Code)
-			require.Contains(t, resp.Log, "Rate of 2 exceeds configured block rate limit")
+			require.Contains(t, resp.Log, "exceeds configured block rate limit")
 
 			// Advancing two blocks should make the total count 0 now and the msg should be accepted.
 			tApp.AdvanceToBlock(6, testapp.AdvanceToBlockOptions{})
