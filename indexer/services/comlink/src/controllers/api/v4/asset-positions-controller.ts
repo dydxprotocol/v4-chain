@@ -1,4 +1,4 @@
-import {parseNumber, stats} from '@dydxprotocol-indexer/base';
+import { stats } from '@dydxprotocol-indexer/base';
 import {
   AssetColumns,
   AssetFromDatabase,
