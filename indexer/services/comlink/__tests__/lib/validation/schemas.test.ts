@@ -10,6 +10,7 @@ describe('schemas', () => {
   const positiveNonInteger: number = 3.2;
   const negativeInteger: number = -1;
   const zeroInteger: number = 0;
+  const stringNumber: any = '3';
   const defaultSubaccountNumber: number = testConstants.defaultSubaccount.subaccountNumber;
   const defaultAddress: string = testConstants.defaultSubaccount.address;
   describe('CheckSubaccountSchema', () => {

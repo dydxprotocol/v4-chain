@@ -105,6 +105,7 @@ export interface AssetPositionResponseObject {
   side: PositionSide;
   size: string;
   assetId: string;
+  subaccountNumber: number;
 }
 
 export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject };
