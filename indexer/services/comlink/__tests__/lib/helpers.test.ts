@@ -392,6 +392,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
       const unsettledFunding: Big = Big('300');
@@ -458,6 +459,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -513,6 +515,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -569,6 +572,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
