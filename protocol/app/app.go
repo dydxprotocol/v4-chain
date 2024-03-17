@@ -1468,9 +1468,8 @@ func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oraclecl
 func (app *App) createProposalHandlers(
 	appFlags flags.Flags,
 	txConfig client.TxConfig,
-	appOpts servertypes.AppOptions
-	) (sdk.PrepareProposalHandler, sdk.ProcessProposalHandler) {
-
+	appOpts servertypes.AppOptions,
+) (sdk.PrepareProposalHandler, sdk.ProcessProposalHandler) {
 	strategy := currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper)
 	veCodec := compression.NewCompressionVoteExtensionCodec(
 		compression.NewDefaultVoteExtensionCodec(),
