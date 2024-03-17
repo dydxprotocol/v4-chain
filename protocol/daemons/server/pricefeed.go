@@ -69,6 +69,9 @@ func (s *Server) UpdateMarketPrices(
 	// Capture valid responses in metrics.
 	s.reportValidResponse(types.PricefeedDaemonServiceName)
 
+	// Report updated index prices in metrics.
+	s.marketToExchange.ReportIndexPrices()
+
 	return &api.UpdateMarketPricesResponse{}, nil
 }
 
