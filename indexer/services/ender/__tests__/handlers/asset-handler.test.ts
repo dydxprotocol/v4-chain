@@ -24,7 +24,6 @@ import {
   createIndexerTendermintBlock,
   createIndexerTendermintEvent,
 } from '../helpers/indexer-proto-helpers';
-import { AssetCreationHandler } from '../../src/handlers/asset-handler';
 import {
   defaultAssetCreateEvent,
   defaultHeight,
@@ -63,36 +62,6 @@ describe('assetHandler', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
-  });
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.ASSET,
-        AssetCreateEventV1.encode(defaultAssetCreateEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: AssetCreationHandler = new AssetCreationHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultAssetCreateEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
-    });
   });
 
   it('fails when market doesnt exist for asset', async () => {

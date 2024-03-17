@@ -16,10 +16,6 @@ import { Handler } from './handler';
 export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
   eventType: string = 'LiquidityTierUpsertEvent';
 
-  public getParallelizationIds(): string[] {
-    return [];
-  }
-
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const liquidityTier: LiquidityTiersFromDatabase = LiquidityTiersModel.fromJson(

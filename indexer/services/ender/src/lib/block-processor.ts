@@ -27,7 +27,6 @@ import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
-import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
 import { KafkaPublisher } from './kafka-publisher';
 import { SyncHandlers, SYNCHRONOUS_SUBTYPES } from './sync-handlers';
@@ -75,8 +74,8 @@ export class BlockProcessor {
   sqlEventPromises: Promise<object>[];
   sqlBlock: DecodedIndexerTendermintBlock;
   txId: number;
-  batchedHandlers: BatchedHandlers;
-  syncHandlers: SyncHandlers;
+  unorderedHandlers: SyncHandlers;
+  orderedHandlers: SyncHandlers;
 
   constructor(
     block: IndexerTendermintBlock,
@@ -89,8 +88,8 @@ export class BlockProcessor {
       events: new Array(this.block.events.length),
     };
     this.sqlEventPromises = new Array(this.block.events.length);
-    this.batchedHandlers = new BatchedHandlers();
-    this.syncHandlers = new SyncHandlers();
+    this.unorderedHandlers = new SyncHandlers();
+    this.orderedHandlers = new SyncHandlers();
   }
 
   /**
@@ -209,9 +208,9 @@ export class BlockProcessor {
 
     _.map(handlers, (handler: Handler<EventMessage>) => {
       if (SYNCHRONOUS_SUBTYPES.includes(eventProto.type as DydxIndexerSubtypes)) {
-        this.syncHandlers.addHandler(eventProto.type, handler);
+        this.orderedHandlers.addHandler(handler);
       } else {
-        this.batchedHandlers.addHandler(handler);
+        this.unorderedHandlers.addHandler(handler);
       }
     });
   }
@@ -265,11 +264,11 @@ export class BlockProcessor {
     // in genesis, handle sync events first, then batched events.
     // in other blocks, handle batched events first, then sync events.
     if (this.block.height === 0) {
-      await this.syncHandlers.process(kafkaPublisher, resultRow);
-      await this.batchedHandlers.process(kafkaPublisher, resultRow);
+      await this.orderedHandlers.process(kafkaPublisher, resultRow);
+      await this.unorderedHandlers.process(kafkaPublisher, resultRow);
     } else {
-      await this.batchedHandlers.process(kafkaPublisher, resultRow);
-      await this.syncHandlers.process(kafkaPublisher, resultRow);
+      await this.unorderedHandlers.process(kafkaPublisher, resultRow);
+      await this.orderedHandlers.process(kafkaPublisher, resultRow);
     }
     return kafkaPublisher;
   }

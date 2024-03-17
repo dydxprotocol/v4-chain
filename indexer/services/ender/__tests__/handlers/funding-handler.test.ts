@@ -16,13 +16,11 @@ import {
   Ordering,
   perpetualMarketRefresher,
   protocolTranslations,
-  TendermintEventTable,
   testConstants,
   testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes, FundingEventMessage } from '../../src/lib/types';
 import { createIndexerTendermintBlock, createIndexerTendermintEvent } from '../helpers/indexer-proto-helpers';
-import { FundingHandler } from '../../src/handlers/funding-handler';
 import {
   defaultFundingRateEvent,
   defaultFundingUpdateSampleEvent,
@@ -32,7 +30,6 @@ import {
   defaultTime,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
-import { indexerTendermintEventToTransactionIndex } from '../../src/lib/helper';
 import { KafkaMessage } from 'kafkajs';
 import { createKafkaMessage } from '@dydxprotocol-indexer/kafka';
 import { onMessage } from '../../src/lib/on-message';
@@ -72,46 +69,6 @@ describe('fundingHandler', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
-  });
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.FUNDING,
-        FundingEventV1.encode(defaultFundingUpdateSampleEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [],
-      );
-
-      const handler: FundingHandler = new FundingHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultFundingUpdateSampleEvent,
-      );
-
-      const id: string = FundingIndexUpdatesTable.uuid(
-        block.txHashes[transactionIndex],
-        TendermintEventTable.createEventId(
-          block.height.toString(),
-          indexerTendermintEventToTransactionIndex(indexerTendermintEvent),
-          indexerTendermintEvent.eventIndex,
-        ),
-        defaultFundingUpdateSampleEvent.updates[0].perpetualId.toString(),
-      );
-      const expectedParallelizationId: string = `FundingEvent_${id}`;
-      expect(handler.getParallelizationIds()).toEqual([expectedParallelizationId]);
-    });
   });
 
   it('successfully processes single premium sample event', async () => {

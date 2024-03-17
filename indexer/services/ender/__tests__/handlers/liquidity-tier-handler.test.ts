@@ -28,7 +28,6 @@ import {
   createIndexerTendermintEvent,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
-import { LiquidityTierHandler } from '../../src/handlers/liquidity-tier-handler';
 import {
   defaultHeight, defaultLiquidityTierUpsertEvent, defaultPreviousHeight, defaultTime, defaultTxHash,
 } from '../helpers/constants';
@@ -66,36 +65,6 @@ describe('liquidityTierHandler', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
-  });
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.LIQUIDITY_TIER,
-        LiquidityTierUpsertEventV1.encode(defaultLiquidityTierUpsertEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: LiquidityTierHandler = new LiquidityTierHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultLiquidityTierUpsertEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
-    });
   });
 
   it('creates new liquidity tier', async () => {

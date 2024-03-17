@@ -28,7 +28,6 @@ import {
   expectPerpetualMarket,
   expectPerpetualMarketKafkaMessage,
 } from '../helpers/indexer-proto-helpers';
-import { PerpetualMarketCreationHandler } from '../../src/handlers/perpetual-market-handler';
 import {
   defaultPerpetualMarketCreateEvent,
   defaultHeight,
@@ -69,36 +68,6 @@ describe('perpetualMarketHandler', () => {
   afterAll(async () => {
     await dbHelpers.teardown();
     jest.resetAllMocks();
-  });
-
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
-      const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.PERPETUAL_MARKET,
-        PerpetualMarketCreateEventV1.encode(defaultPerpetualMarketCreateEvent).finish(),
-        transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: PerpetualMarketCreationHandler = new PerpetualMarketCreationHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultPerpetualMarketCreateEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
-    });
   });
 
   it('fails when market doesnt exist for perpetual market', async () => {

@@ -13,10 +13,6 @@ import { Handler } from './handler';
 export class UpdateClobPairHandler extends Handler<UpdateClobPairEventV1> {
   eventType: string = 'UpdateClobPairEventV1';
 
-  public getParallelizationIds(): string[] {
-    return [];
-  }
-
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const perpetualMarket: PerpetualMarketFromDatabase = PerpetualMarketModel.fromJson(
