@@ -107,6 +107,7 @@ describe('fills-controller#V4', () => {
         orderId: ethOrder.id,
         createdAt: ethFill.createdAt,
         createdAtHeight: ethFill.createdAtHeight,
+        subaccountNumber: defaultSubaccountNumber,
       };
 
       // Only the ETH-USD order should be returned

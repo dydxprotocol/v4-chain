@@ -192,6 +192,24 @@ func (_m *SubaccountsKeeper) SetSubaccount(ctx types.Context, subaccount subacco
 	_m.Called(ctx, subaccount)
 }
 
+// TransferFundsFromSubaccountToSubaccount provides a mock function with given fields: ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums
+func (_m *SubaccountsKeeper) TransferFundsFromSubaccountToSubaccount(ctx types.Context, senderSubaccountId subaccountstypes.SubaccountId, recipientSubaccountId subaccountstypes.SubaccountId, assetId uint32, quantums *big.Int) error {
+	ret := _m.Called(ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums)
+
+	if len(ret) == 0 {
+		panic("no return value specified for TransferFundsFromSubaccountToSubaccount")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+		r0 = rf(ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateSubaccounts provides a mock function with given fields: ctx, updates, updateType
 func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []subaccountstypes.Update, updateType subaccountstypes.UpdateType) (bool, []subaccountstypes.UpdateResult, error) {
 	ret := _m.Called(ctx, updates, updateType)

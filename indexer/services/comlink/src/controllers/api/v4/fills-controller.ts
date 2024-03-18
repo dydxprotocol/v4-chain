@@ -90,7 +90,7 @@ class FillsController extends Controller {
 
     return {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
-        return fillToResponseObject(fill, clobPairIdToMarket);
+        return fillToResponseObject(fill, clobPairIdToMarket, subaccountNumber);
       }),
     };
   }
@@ -139,13 +139,16 @@ router.get(
       createdBeforeOrAt,
     }: FillRequest = matchedData(req) as FillRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const subaccountNum : number = +subaccountNumber;
+
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
     try {
       const controller: FillsController = new FillsController();
       const response: FillResponse = await controller.getFills(
         address,
-        subaccountNumber,
+        subaccountNum,
         market,
         marketType,
         limit,
