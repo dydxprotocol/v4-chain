@@ -51,7 +51,7 @@ const (
 	DefaultDdErrorTrackingFormat = false
 
 	DefaultGrpcStreamingEnabled = false
-	DefaultVEOracleEnabled      = false
+	DefaultVEOracleEnabled      = true
 )
 
 // AddFlagsToCmd adds flags to app initialization.

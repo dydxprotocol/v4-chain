@@ -109,17 +109,17 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				QueryPageLimit: 1_000,
 			},
 			Price: PriceFlags{
-				Enabled:     true,
+				Enabled:     false,
 				LoopDelayMs: 3_000,
 			},
 			Slinky: SlinkyFlags{
 				AppConfig: oracleconfig.AppConfig{
 					OracleAddress:           "localhost:8080",
 					ClientTimeout:           time.Second * 2,
-					MetricsEnabled:          false,
-					PrometheusServerAddress: "",
+					MetricsEnabled:          true,
+					PrometheusServerAddress: "0.0.0.0:8001",
 				},
-				Enabled: false,
+				Enabled: true,
 			},
 		}
 	}

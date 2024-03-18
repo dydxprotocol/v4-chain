@@ -1470,7 +1470,28 @@ func (app *App) createProposalHandlers(
 	txConfig client.TxConfig,
 	appOpts servertypes.AppOptions,
 ) (sdk.PrepareProposalHandler, sdk.ProcessProposalHandler) {
+	var priceUpdateDecoder process.UpdateMarketPriceTxDecoder = process.NewDefaultUpdateMarketPriceTxDecoder(
+		app.PricesKeeper, app.txConfig.TxDecoder())
+	// If the node is a NonValidatingFullNode, we don't need to run any oracle code
+	// Note: If the command-line flag `--non-validating-full-node` is enabled, this node will use
+	// an implementation of `ProcessProposal` which always returns `abci.ResponseProcessProposal_ACCEPT`.
+	// Full-nodes do not participate in consensus, and therefore should not participate in voting / `ProcessProposal`.
+	if appFlags.NonValidatingFullNode {
+		if app.oracleMetrics == nil {
+			app.oracleMetrics = servicemetrics.NewNopMetrics()
+		}
+		return prepare.FullNodePrepareProposalHandler(), process.FullNodeProcessProposalHandler(
+			txConfig,
+			app.BridgeKeeper,
+			app.ClobKeeper,
+			app.StakingKeeper,
+			app.PerpetualsKeeper,
+			priceUpdateDecoder,
+		)
+	}
 	strategy := currencypair.NewDefaultCurrencyPairStrategy(app.PricesKeeper)
+	var priceUpdateGenerator prices.PriceUpdateGenerator = prices.NewDefaultPriceUpdateGenerator(app.PricesKeeper)
+
 	veCodec := compression.NewCompressionVoteExtensionCodec(
 		compression.NewDefaultVoteExtensionCodec(),
 		compression.NewZLibCompressor(),
@@ -1480,10 +1501,7 @@ func (app *App) createProposalHandlers(
 		compression.NewZLibCompressor(),
 	)
 
-	var priceUpdateGenerator prices.PriceUpdateGenerator = prices.NewDefaultPriceUpdateGenerator(app.PricesKeeper)
-	var priceUpdateDecoder process.UpdateMarketPriceTxDecoder = process.NewDefaultUpdateMarketPriceTxDecoder(
-		app.PricesKeeper, app.txConfig.TxDecoder())
-
+	// Set Price Update Generators/Decoders for Slinky
 	if appFlags.VEOracleEnabled {
 		priceUpdateGenerator = prices.NewSlinkyPriceUpdateGenerator(
 			aggregator.NewDefaultVoteAggregator(
@@ -1504,6 +1522,7 @@ func (app *App) createProposalHandlers(
 			priceUpdateGenerator,
 		)
 	}
+	// Generate the dydx handlers
 	dydxPrepareProposalHandler := prepare.PrepareProposalHandler(
 		txConfig,
 		app.BridgeKeeper,
@@ -1511,46 +1530,24 @@ func (app *App) createProposalHandlers(
 		app.PerpetualsKeeper,
 		priceUpdateGenerator,
 	)
-	// if the node is a NonValidatingFullNode, we don't need to run any of the oracle code
-	if appFlags.NonValidatingFullNode {
-		dydxPrepareProposalHandler = prepare.FullNodePrepareProposalHandler()
-	} else {
+
+	// ProcessProposal setup.
+	var dydxProcessProposalHandler = process.ProcessProposalHandler(
+		txConfig,
+		app.BridgeKeeper,
+		app.ClobKeeper,
+		app.StakingKeeper,
+		app.PerpetualsKeeper,
+		app.PricesKeeper,
+		priceUpdateDecoder,
+	)
+
+	// Wrap dydx handlers with slinky handlers
+	if appFlags.VEOracleEnabled {
 		if app.oracleMetrics == nil {
 			app.oracleMetrics = app.initOracleMetrics(appOpts)
 		}
 		app.initOracle(priceUpdateDecoder)
-	}
-	if app.oracleMetrics == nil {
-		app.oracleMetrics = servicemetrics.NewNopMetrics()
-	}
-
-	// ProcessProposal setup.
-	var dydxProcessProposalHandler sdk.ProcessProposalHandler
-	if appFlags.NonValidatingFullNode {
-		// Note: If the command-line flag `--non-validating-full-node` is enabled, this node will use
-		// an implementation of `ProcessProposal` which always returns `abci.ResponseProcessProposal_ACCEPT`.
-		// Full-nodes do not participate in consensus, and therefore should not participate in voting / `ProcessProposal`.
-		dydxProcessProposalHandler = process.FullNodeProcessProposalHandler(
-			txConfig,
-			app.BridgeKeeper,
-			app.ClobKeeper,
-			app.StakingKeeper,
-			app.PerpetualsKeeper,
-			priceUpdateDecoder,
-		)
-	} else {
-		dydxProcessProposalHandler = process.ProcessProposalHandler(
-			txConfig,
-			app.BridgeKeeper,
-			app.ClobKeeper,
-			app.StakingKeeper,
-			app.PerpetualsKeeper,
-			app.PricesKeeper,
-			priceUpdateDecoder,
-		)
-	}
-
-	if appFlags.VEOracleEnabled {
 		proposalHandler := slinkyproposals.NewProposalHandler(
 			app.Logger(),
 			dydxPrepareProposalHandler,
@@ -1563,9 +1560,8 @@ func (app *App) createProposalHandlers(
 			slinkyproposals.RetainOracleDataInWrappedProposalHandler(),
 		)
 		return proposalHandler.PrepareProposalHandler(), proposalHandler.ProcessProposalHandler()
-	} else {
-		return dydxPrepareProposalHandler, dydxProcessProposalHandler
 	}
+	return dydxPrepareProposalHandler, dydxProcessProposalHandler
 }
 
 func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
