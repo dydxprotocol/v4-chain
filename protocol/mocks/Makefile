@@ -4,6 +4,7 @@ COSMOS_VERSION=$(shell go list -m all | grep "github.com/dydxprotocol/cosmos-sdk
 COSMOS_STORE_VERSION=$(shell go list -m all | grep "cosmossdk.io/store[^/]" | awk '{print $$NF}')
 COSMOS_LOG_VERSION=$(shell go list -m all | grep "cosmossdk.io/log[^/]" | awk '{print $$NF}')
 COSMOS_GOGOPROTO_VERSION=$(shell go list -m all | grep "github.com/cosmos/gogoproto[^/]" | awk '{print $$NF}')
+SLINKY_VERSION=$(shell go list -m all | grep "github.com/skip-mev/slinky[^/]" | awk '{print $$NF}')
 
 mock-clean:
 	@rm -f ./mocks/*.go
@@ -24,7 +25,7 @@ mock-gen:
 	@go run github.com/vektra/mockery/v2 --name=PrepareBridgeKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PrepareClobKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=PreparePerpetualsKeeper --dir=./app/prepare --recursive --output=./mocks
-	@go run github.com/vektra/mockery/v2 --name=PreparePricesKeeper --dir=./app/prepare --recursive --output=./mocks
+	@go run github.com/vektra/mockery/v2 --name=PricesKeeper --dir=./app/prepare --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessBridgeKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessClobKeeper --dir=./app/process --recursive --output=./mocks
 	@go run github.com/vektra/mockery/v2 --name=ProcessStakingKeeper --dir=./app/process --recursive --output=./mocks
