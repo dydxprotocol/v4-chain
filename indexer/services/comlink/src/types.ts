@@ -111,10 +111,6 @@ export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject 
 
 /* ------- FILL TYPES ------- */
 
-export interface FillResponse {
-  fills: FillResponseObject[],
-}
-
 export interface FillResponseObject {
   id: string,
   side: OrderSide,

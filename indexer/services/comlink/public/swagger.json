@@ -427,21 +427,6 @@
         "type": "object",
         "additionalProperties": false
       },
-      "FillResponse": {
-        "properties": {
-          "fills": {
-            "items": {
-              "$ref": "#/components/schemas/FillResponseObject"
-            },
-            "type": "array"
-          }
-        },
-        "required": [
-          "fills"
-        ],
-        "type": "object",
-        "additionalProperties": false
-      },
       "HeightResponse": {
         "properties": {
           "height": {
@@ -1366,7 +1351,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FillResponse"
+                  "items": {
+                    "$ref": "#/components/schemas/FillResponseObject"
+                  },
+                  "type": "array"
                 }
               }
             }
