@@ -12,7 +12,7 @@ var (
 		AssetPositions: []*satypes.AssetPosition{
 			&Usdc_Asset_10_000,
 		},
-		PerpetualPositions: []*satypes.PerpetualPosition{},
+		PerpetualPositions: nil,
 	}
 	Alice_Num0_100_000USD = satypes.Subaccount{
 		Id: &Alice_Num0,
@@ -20,6 +20,19 @@ var (
 			&Usdc_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
+	Alice_Num0_1ISO_LONG_10_000USD = satypes.Subaccount{
+		Id: &Alice_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_10_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  3,
+				Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
 	}
 	Alice_Num1_10_000USD = satypes.Subaccount{
 		Id: &Alice_Num1,
@@ -64,7 +77,7 @@ var (
 		AssetPositions: []*satypes.AssetPosition{
 			&Usdc_Asset_10_000,
 		},
-		PerpetualPositions: []*satypes.PerpetualPosition{},
+		PerpetualPositions: nil,
 	}
 	Bob_Num0_100_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
@@ -72,6 +85,19 @@ var (
 			&Usdc_Asset_100_000,
 		},
 		PerpetualPositions: []*satypes.PerpetualPosition{},
+	}
+	Bob_Num0_1ISO2_LONG_10_000USD = satypes.Subaccount{
+		Id: &Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_10_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  4,
+				Quantums:     dtypes.NewInt(10_000_000), // 1 ISO2
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
 	}
 	Carl_Num0_100BTC_Short_10100USD = satypes.Subaccount{
 		Id: &Carl_Num0,
