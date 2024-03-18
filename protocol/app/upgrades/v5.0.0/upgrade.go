@@ -31,27 +31,49 @@ func perpetualsUpgrade(
 	}
 }
 
+// blockRateLimitConfigUpdate upgrades the block rate limit. It searches for the
+// 1-block window limit for short term and cancellations, sums them, and creates a new
+// combined rate limit.
 func blockRateLimitConfigUpdate(
 	ctx sdk.Context,
 	clobKeeper clobtypes.ClobKeeper,
 ) {
+	oldBlockRateLimitConfig := clobKeeper.GetBlockRateLimitConfiguration(ctx)
+	numAllowedShortTermOrderPlacementsInOneBlock := 0
+	numAllowedShortTermOrderCancellationsInOneBlock := 0
+	oldShortTermOrderRateLimits := oldBlockRateLimitConfig.MaxShortTermOrdersPerNBlocks
+	for _, limit := range oldShortTermOrderRateLimits {
+		if limit.NumBlocks == 1 {
+			numAllowedShortTermOrderPlacementsInOneBlock += int(limit.NumBlocks)
+			break
+		}
+	}
+	if numAllowedShortTermOrderPlacementsInOneBlock == 0 {
+		panic("Failed to find MaxShortTermOrdersPerNBlocks with window 1.")
+	}
+
+	oldShortTermOrderCancellationRateLimits := oldBlockRateLimitConfig.MaxShortTermOrderCancellationsPerNBlocks
+	for _, limit := range oldShortTermOrderCancellationRateLimits {
+		if limit.NumBlocks == 1 {
+			numAllowedShortTermOrderCancellationsInOneBlock += int(limit.NumBlocks)
+			break
+		}
+	}
+	if numAllowedShortTermOrderCancellationsInOneBlock == 0 {
+		panic("Failed to find MaxShortTermOrdersPerNBlocks with window 1.")
+	}
+
+	allowedNumShortTermPlaceAndCancelInFiveBlocks :=
+		(numAllowedShortTermOrderPlacementsInOneBlock + numAllowedShortTermOrderCancellationsInOneBlock) * 5
+
 	// Based off of https://docs.dydx.exchange/trading/rate_limits
 	blockRateLimitConfig := clobtypes.BlockRateLimitConfiguration{
 		// Kept the same
-		MaxStatefulOrdersPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
-			{
-				NumBlocks: 2,
-				Limit:     1,
-			},
-			{
-				NumBlocks: 20,
-				Limit:     100,
-			},
-		},
+		MaxStatefulOrdersPerNBlocks: oldBlockRateLimitConfig.MaxStatefulOrdersPerNBlocks,
 		MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 			{
 				NumBlocks: 5,
-				Limit:     2000,
+				Limit:     uint32(allowedNumShortTermPlaceAndCancelInFiveBlocks),
 			},
 		},
 	}
