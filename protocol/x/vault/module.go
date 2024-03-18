@@ -1,8 +1,10 @@
 package vault
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"cosmossdk.io/core/appmodule"
 
@@ -12,8 +14,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/client/cli"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -24,6 +28,7 @@ var (
 	_ module.HasGenesisBasics = AppModuleBasic{}
 
 	_ appmodule.AppModule        = AppModule{}
+	_ appmodule.HasEndBlocker    = AppModule{}
 	_ module.HasConsensusVersion = AppModule{}
 	_ module.HasGenesis          = AppModule{}
 	_ module.HasServices         = AppModule{}
@@ -141,3 +146,13 @@ func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.Raw
 // consensus-breaking change introduced by the module. To avoid wrong/empty versions, the initial version should
 // be set to 1.
 func (AppModule) ConsensusVersion() uint64 { return 1 }
+
+// EndBlock executes all ABCI EndBlock logic respective to the vault module.
+func (am AppModule) EndBlock(ctx context.Context) error {
+	defer telemetry.ModuleMeasureSince(am.Name(), time.Now(), telemetry.MetricKeyEndBlocker)
+	EndBlocker(
+		lib.UnwrapSDKContext(ctx, types.ModuleName),
+		&am.keeper,
+	)
+	return nil
+}
