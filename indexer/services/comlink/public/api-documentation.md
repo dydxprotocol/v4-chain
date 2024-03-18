@@ -580,7 +580,8 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
-      "clientMetadata": "string"
+      "clientMetadata": "string",
+      "subaccountNumber": 0
     }
   ]
 }
@@ -2598,7 +2599,8 @@ This operation does not require authentication
   "createdAt": "string",
   "createdAtHeight": "string",
   "orderId": "string",
-  "clientMetadata": "string"
+  "clientMetadata": "string",
+  "subaccountNumber": 0
 }
 
 ```
@@ -2620,6 +2622,7 @@ This operation does not require authentication
 |createdAtHeight|string|true|none|none|
 |orderId|string|false|none|none|
 |clientMetadata|string|false|none|none|
+|subaccountNumber|number(double)|true|none|none|
 
 ## FillResponse
 
@@ -2644,7 +2647,8 @@ This operation does not require authentication
       "createdAt": "string",
       "createdAtHeight": "string",
       "orderId": "string",
-      "clientMetadata": "string"
+      "clientMetadata": "string",
+      "subaccountNumber": 0
     }
   ]
 }

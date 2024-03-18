@@ -759,7 +759,7 @@ describe('on-message', () => {
 
     await onMessage(kafkaMessage);
 
-    expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.block_already_parsed.failure`, 1);
+    expect(stats.increment).toHaveBeenCalledWith(`${config.SERVICE_NAME}.block_already_parsed`, 1);
     expect(stats.increment).toHaveBeenCalledWith('ender.received_kafka_message', 1);
     expect(stats.timing).toHaveBeenCalledWith(
       'ender.message_time_in_queue', expect.any(Number), 1, { topic: KafkaTopics.TO_ENDER });

@@ -51,7 +51,7 @@ export async function shouldSkipBlock(
   canRefreshCache: boolean = true,
 ): Promise<boolean> {
   if (blockAlreadyProcessed(blockHeight)) {
-    stats.increment(`${config.SERVICE_NAME}.block_already_parsed.failure`, 1);
+    stats.increment(`${config.SERVICE_NAME}.block_already_parsed`, 1);
     logger.info({
       at: 'onMessage#onMessage',
       message: `Already processed block with block height: ${blockHeight}, so skipping`,

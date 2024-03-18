@@ -379,6 +379,7 @@ var TestMarketPerpetuals = []perptypes.Perpetual{
 		FundingIndex: dtypes.ZeroInt(),
 	},
 	IsoUsd_IsolatedMarket,
+	Iso2Usd_IsolatedMarket,
 }
 
 // AddPremiumVotes messages.

@@ -409,6 +409,10 @@
           },
           "clientMetadata": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -422,7 +426,8 @@
           "size",
           "fee",
           "createdAt",
-          "createdAtHeight"
+          "createdAtHeight",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false

@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	errorsmod "cosmossdk.io/errors"
-
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -23,6 +22,23 @@ func (k msgServer) CancelOrder(
 	msg *types.MsgCancelOrder,
 ) (resp *types.MsgCancelOrderResponse, err error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
+
+	if err := k.Keeper.HandleMsgCancelOrder(ctx, msg); err != nil {
+		return nil, err
+	}
+
+	return &types.MsgCancelOrderResponse{}, nil
+}
+
+// HandleMsgCancelOrder handles a MsgCancelOrder by
+// 1. persisting the cancellation on chain.
+// 2. updating ProcessProposerMatchesEvents with the new stateful order cancellation.
+// 3. adding order cancellation on-chain indexer event.
+func (k Keeper) HandleMsgCancelOrder(
+	ctx sdk.Context,
+	msg *types.MsgCancelOrder,
+) (err error) {
+	lib.AssertDeliverTxMode(ctx)
 
 	// Attach various logging tags relative to this request. These should be static with no changes.
 	ctx = log.AddPersistentTagsToLogger(ctx,
@@ -48,7 +64,7 @@ func (k msgServer) CancelOrder(
 			// the order, it has already been removed from state due to errors encountered while matching.
 			// TODO(CLOB-778): Prevent invalid MsgCancelOrder messages from being included in the block.
 			if errors.Is(err, types.ErrStatefulOrderDoesNotExist) {
-				processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
+				processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
 				removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
 				if _, found := removedOrderIds[msg.GetOrderId()]; found {
 					telemetry.IncrCounterWithLabels(
@@ -80,22 +96,22 @@ func (k msgServer) CancelOrder(
 	// 2. Cancel the order on the ClobKeeper which is responsible for:
 	//   - stateful cancellation validation.
 	//   - removing the order from state and the memstore.
-	if err := k.Keeper.CancelStatefulOrder(ctx, msg); err != nil {
-		return nil, err
+	if err := k.CancelStatefulOrder(ctx, msg); err != nil {
+		return err
 	}
 
 	// 3. Update `ProcessProposerMatchesEvents` with the new stateful order cancellation.
-	processProposerMatchesEvents := k.Keeper.GetProcessProposerMatchesEvents(ctx)
+	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
 
 	processProposerMatchesEvents.PlacedStatefulCancellationOrderIds = append(
 		processProposerMatchesEvents.PlacedStatefulCancellationOrderIds,
 		msg.OrderId,
 	)
 
-	k.Keeper.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
+	k.MustSetProcessProposerMatchesEvents(ctx, processProposerMatchesEvents)
 
 	// 4. Add the relevant on-chain Indexer event for the cancellation.
-	k.Keeper.GetIndexerEventManager().AddTxnEvent(
+	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeStatefulOrder,
 		indexerevents.StatefulOrderEventVersion,
@@ -107,5 +123,5 @@ func (k msgServer) CancelOrder(
 		),
 	)
 
-	return &types.MsgCancelOrderResponse{}, nil
+	return nil
 }
