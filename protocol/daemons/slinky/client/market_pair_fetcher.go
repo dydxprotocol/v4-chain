@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
+	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
