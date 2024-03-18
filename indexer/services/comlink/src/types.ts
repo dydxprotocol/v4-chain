@@ -309,6 +309,10 @@ export interface SubaccountRequest extends AddressRequest {
   subaccountNumber: number,
 }
 
+export interface ParentSubaccountRequest extends AddressRequest {
+  parentSubaccountNumber: number,
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -341,6 +345,11 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  market: string,
+  marketType: MarketType,
+}
+
+export interface ParentSubaccountFillRequest extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
 }

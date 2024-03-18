@@ -18,6 +18,20 @@ export const CheckSubaccountSchema = checkSchema({
   },
 });
 
+export const CheckParentSubaccountSchema = checkSchema({
+  address: {
+    in: ['params', 'query'],
+    isString: true,
+  },
+  parentSubaccountNumber: {
+    in: ['params', 'query'],
+    isInt: {
+      options: { gt: -1, lt: MAX_SUBACCOUNT_NUMBER + 1 },
+    },
+    errorMessage: 'parentSubaccountNumber must be a non-negative integer less than 128',
+  },
+});
+
 export const checkAddressSchemaRecord: Record<string, ParamSchema> = {
   address: {
     in: ['params'],

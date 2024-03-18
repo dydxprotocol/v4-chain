@@ -597,6 +597,104 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
 This operation does not require authentication
 </aside>
 
+## GetFillsForParentSubaccount
+
+<a id="opIdGetFillsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /fills/parentSubaccount`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|market|query|string|false|none|
+|marketType|query|[MarketType](#schemamarkettype)|false|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|marketType|PERPETUAL|
+|marketType|SPOT|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "fills": [
+    {
+      "id": "string",
+      "side": "BUY",
+      "liquidity": "TAKER",
+      "type": "LIMIT",
+      "market": "string",
+      "marketType": "PERPETUAL",
+      "price": "string",
+      "size": "string",
+      "fee": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "orderId": "string",
+      "clientMetadata": "string",
+      "subaccountNumber": 0
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[FillResponse](#schemafillresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetHeight
 
 <a id="opIdGetHeight"></a>
