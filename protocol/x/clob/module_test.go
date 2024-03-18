@@ -427,7 +427,8 @@ func TestAppModule_InitExportGenesis(t *testing.T) {
 	expected += `"spread_to_maintenance_margin_ratio_ppm":100000}},"block_rate_limit_config":`
 	expected += `{"max_short_term_orders_and_cancels_per_n_blocks":[{"limit": 400,"num_blocks":1}],`
 	expected += `"max_stateful_orders_per_n_blocks":[{"limit": 2,"num_blocks":1},`
-	expected += `{"limit": 20,"num_blocks":100}]},`
+	expected += `{"limit": 20,"num_blocks":100}],"max_short_term_order_cancellations_per_n_blocks":[],`
+	expected += `"max_short_term_orders_per_n_blocks":[]},`
 	expected += `"equity_tier_limit_config":{"short_term_order_equity_tiers":[{"limit":0,"usd_tnc_required":"0"},`
 	expected += `{"limit":1,"usd_tnc_required":"20"},{"limit":5,"usd_tnc_required":"100"},`
 	expected += `{"limit":10,"usd_tnc_required":"1000"},{"limit":100,"usd_tnc_required":"10000"},`
