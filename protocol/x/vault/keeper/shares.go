@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"cosmossdk.io/store/prefix"
-	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
@@ -39,11 +38,4 @@ func (k Keeper) SetTotalShares(
 	totalSharesStore.Set(vaultId.ToStateKey(), b)
 
 	return nil
-}
-
-// getTotalSharesIterator returns an iterator over all TotalShares.
-func (k Keeper) getTotalSharesIterator(ctx sdk.Context) storetypes.Iterator {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.TotalSharesKeyPrefix))
-
-	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
