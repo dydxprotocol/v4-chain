@@ -109,13 +109,24 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 				"",
 			).Error(),
 		},
+		"Duplicate pair fails": {
+			targetId:           0,
+			pair:               "1-1",
+			minExchanges:       uint32(1),
+			minPriceChangePpm:  uint32(50),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrapf(
+				types.ErrMarketParamPairAlreadyExists,
+				"1-1",
+			).Error(),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			ctx, keeper, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
-			keepertest.CreateNMarkets(t, ctx, keeper, 1)
+			keepertest.CreateNMarkets(t, ctx, keeper, 2)
 			_, err := keeper.ModifyMarketParam(
 				ctx,
 				types.MarketParam{

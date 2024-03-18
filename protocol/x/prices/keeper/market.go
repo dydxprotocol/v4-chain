@@ -36,6 +36,15 @@ func (k Keeper) CreateMarket(
 	if err := marketPrice.ValidateFromParam(marketParam); err != nil {
 		return types.MarketParam{}, err
 	}
+	// Stateful Validation
+	for _, market := range k.GetAllMarketParams(ctx) {
+		if market.Pair == marketParam.Pair {
+			return types.MarketParam{}, errorsmod.Wrapf(
+				types.ErrMarketParamPairAlreadyExists,
+				marketParam.Pair,
+			)
+		}
+	}
 
 	paramBytes := k.cdc.MustMarshal(&marketParam)
 	priceBytes := k.cdc.MustMarshal(&marketPrice)

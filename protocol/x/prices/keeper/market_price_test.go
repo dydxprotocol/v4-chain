@@ -135,19 +135,23 @@ func TestGetMarketIdToValidIndexPrice(t *testing.T) {
 		keeper,
 		[]types.MarketParamPrice{
 			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithPair("0-0"),
 				pricestest.WithId(6),
 				pricestest.WithMinExchanges(2),
 			),
 			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithPair("1-1"),
 				pricestest.WithId(7),
 				pricestest.WithMinExchanges(2),
 			),
 			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithPair("2-2"),
 				pricestest.WithId(8),
 				pricestest.WithMinExchanges(2),
 				pricestest.WithExponent(-8),
 			),
 			*pricestest.GenerateMarketParamPrice(
+				pricestest.WithPair("3-3"),
 				pricestest.WithId(9),
 				pricestest.WithMinExchanges(2),
 				pricestest.WithExponent(-9),
