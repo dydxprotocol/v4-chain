@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 )
@@ -328,7 +329,7 @@ func RunMarketParamUpdaterTaskLoop(
 	logger = logger.With(constants.SubmoduleLogKey, constants.MarketParamUpdaterSubmoduleName)
 
 	// Query all market params from the query client.
-	marketParams, err := daemontypes.AllPaginatedMarketParams(ctx, pricesQueryClient)
+	marketParams, err := daemonlib.AllPaginatedMarketParams(ctx, pricesQueryClient)
 	if err != nil {
 		var logMethod = logger.Info
 		if isPastGracePeriod {

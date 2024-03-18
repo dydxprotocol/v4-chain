@@ -10,6 +10,7 @@ import (
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
@@ -87,7 +88,7 @@ func (m *MarketPairFetcherImpl) GetIDForPair(cp slinkytypes.CurrencyPair) (uint3
 // CurrencyPair and MarketParam ID.
 func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	// fetch all market params
-	marketParams, err := daemontypes.AllPaginatedMarketParams(ctx, m.PricesQueryClient)
+	marketParams, err := daemonlib.AllPaginatedMarketParams(ctx, m.PricesQueryClient)
 	if err != nil {
 		return err
 	}

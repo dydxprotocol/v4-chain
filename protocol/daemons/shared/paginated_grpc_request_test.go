@@ -1,4 +1,4 @@
-package types_test
+package shared_test
 
 import (
 	"testing"
@@ -6,7 +6,7 @@ import (
 	"fmt"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
@@ -43,7 +43,7 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	// a query that returns a single-market param with a next-key-1 on receiving a page-request
 	// with a limit of types.PaginatedRequestLimit
 	initialPagination := &query.PageRequest{
-		Limit: types.PaginatedRequestLimit,
+		Limit: shared.PaginatedRequestLimit,
 	}
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: initialPagination,
@@ -61,7 +61,7 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	// with a limit of types.PaginatedRequestLimit with the next-key-1 return marketParam2 and next-key-2
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
-			Limit: types.PaginatedRequestLimit,
+			Limit: shared.PaginatedRequestLimit,
 			Key:   nextKey1,
 		},
 	}).Return(
@@ -78,7 +78,7 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 	// of types.PaginatedRequestLimit with the next-key-2 return marketParam3 and no next-key
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
-			Limit: types.PaginatedRequestLimit,
+			Limit: shared.PaginatedRequestLimit,
 			Key:   nextKey2,
 		},
 	}).Return(
@@ -91,7 +91,7 @@ func TestPaginatedGRPCRequests(t *testing.T) {
 
 	// ... THEN
 	// the function should return all the market-params
-	marketParams, err := types.AllPaginatedMarketParams(ctx, qc)
+	marketParams, err := shared.AllPaginatedMarketParams(ctx, qc)
 	require.NoError(t, err)
 
 	require.Equal(t, []pricestypes.MarketParam{marketParam1, marketParam2, marketParam3}, marketParams)
@@ -111,7 +111,7 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 	// a query that returns a single-market param with a next-key-1 on receiving a page-request
 	// with a limit of types.PaginatedRequestLimit
 	initialPagination := &query.PageRequest{
-		Limit: types.PaginatedRequestLimit,
+		Limit: shared.PaginatedRequestLimit,
 	}
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: initialPagination,
@@ -129,7 +129,7 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 	// a query that returns an error on receiving a page-request with a limit of types.PaginatedRequestLimit + next-key-1
 	qc.On("AllMarketParams", ctx, &pricestypes.QueryAllMarketParamsRequest{
 		Pagination: &query.PageRequest{
-			Limit: types.PaginatedRequestLimit,
+			Limit: shared.PaginatedRequestLimit,
 			Key:   nextKey1,
 		},
 	}).Return(
@@ -139,6 +139,6 @@ func TestPaginatedGRPCRequestsWithError(t *testing.T) {
 
 	// ... THEN
 	// the function should return the error
-	_, err := types.AllPaginatedMarketParams(ctx, qc)
+	_, err := shared.AllPaginatedMarketParams(ctx, qc)
 	require.EqualError(t, err, expErr.Error())
 }
