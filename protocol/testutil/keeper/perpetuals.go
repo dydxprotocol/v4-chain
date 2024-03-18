@@ -237,8 +237,8 @@ func CreateNPerpetuals(
 	allLiquidityTiers := keeper.GetAllLiquidityTiers(ctx)
 	require.Greater(t, len(allLiquidityTiers), 0)
 
+	CreateNMarkets(t, ctx, pricesKeeper, n)
 	for i := range items {
-		CreateNMarkets(t, ctx, pricesKeeper, n)
 
 		var defaultFundingPpm int32
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
