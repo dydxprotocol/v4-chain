@@ -66,10 +66,10 @@ func blockRateLimitConfigUpdate(
 	allowedNumShortTermPlaceAndCancelInFiveBlocks :=
 		(numAllowedShortTermOrderPlacementsInOneBlock + numAllowedShortTermOrderCancellationsInOneBlock) * 5
 
-	// Based off of https://docs.dydx.exchange/trading/rate_limits
 	blockRateLimitConfig := clobtypes.BlockRateLimitConfiguration{
 		// Kept the same
 		MaxStatefulOrdersPerNBlocks: oldBlockRateLimitConfig.MaxStatefulOrdersPerNBlocks,
+		// Combine place and cancel, gate over 5 blocks to allow burst
 		MaxShortTermOrdersAndCancelsPerNBlocks: []clobtypes.MaxPerNBlocksRateLimit{
 			{
 				NumBlocks: 5,
