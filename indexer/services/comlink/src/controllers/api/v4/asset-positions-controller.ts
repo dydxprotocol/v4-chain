@@ -53,7 +53,7 @@ const controllerName: string = 'asset-positions-controller';
 
 @Route('assetPositions')
 class AssetPositionsController extends Controller {
-  @Get('/:address/:subaccountNumber')
+  @Get('/')
   async getAssetPositions(
     @Query() address: string,
       @Query() subaccountNumber: number,

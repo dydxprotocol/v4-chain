@@ -1208,7 +1208,7 @@
         ]
       }
     },
-    "/assetPositions/{address}/{subaccountNumber}": {
+    "/assetPositions": {
       "get": {
         "operationId": "GetAssetPositions",
         "responses": {

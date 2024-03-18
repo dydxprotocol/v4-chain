@@ -273,7 +273,7 @@ headers = {
   'Accept': 'application/json'
 }
 
-r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions/{address}/{subaccountNumber}', params={
+r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions', params={
   'address': 'string',  'subaccountNumber': '0'
 }, headers = headers)
 
@@ -287,7 +287,7 @@ const headers = {
   'Accept':'application/json'
 };
 
-fetch('https://dydx-testnet.imperator.co/v4/assetPositions/{address}/{subaccountNumber}?address=string&subaccountNumber=0',
+fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subaccountNumber=0',
 {
   method: 'GET',
 
@@ -301,7 +301,7 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions/{address}/{subaccount
 
 ```
 
-`GET /assetPositions/{address}/{subaccountNumber}`
+`GET /assetPositions`
 
 ### Parameters
 
