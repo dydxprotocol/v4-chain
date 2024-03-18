@@ -916,6 +916,7 @@
             "id": 0,
             "liquidity_tier": 0,
             "market_id": 0,
+            "market_type": 1,
             "ticker": "BTC-USD"
           }
         },
@@ -926,6 +927,7 @@
             "id": 1,
             "liquidity_tier": 0,
             "market_id": 1,
+            "market_type": 1,
             "ticker": "ETH-USD"
           }
         },
@@ -936,6 +938,7 @@
             "id": 2,
             "liquidity_tier": 1,
             "market_id": 2,
+            "market_type": 1,
             "ticker": "LINK-USD"
           }
         },
@@ -946,6 +949,7 @@
             "id": 3,
             "liquidity_tier": 1,
             "market_id": 3,
+            "market_type": 1,
             "ticker": "MATIC-USD"
           }
         },
@@ -956,6 +960,7 @@
             "id": 4,
             "liquidity_tier": 1,
             "market_id": 4,
+            "market_type": 1,
             "ticker": "CRV-USD"
           }
         },
@@ -966,6 +971,7 @@
             "id": 5,
             "liquidity_tier": 1,
             "market_id": 5,
+            "market_type": 1,
             "ticker": "SOL-USD"
           }
         },
@@ -976,6 +982,7 @@
             "id": 6,
             "liquidity_tier": 1,
             "market_id": 6,
+            "market_type": 1,
             "ticker": "ADA-USD"
           }
         },
@@ -986,6 +993,7 @@
             "id": 7,
             "liquidity_tier": 1,
             "market_id": 7,
+            "market_type": 1,
             "ticker": "AVAX-USD"
           }
         },
@@ -996,6 +1004,7 @@
             "id": 8,
             "liquidity_tier": 1,
             "market_id": 8,
+            "market_type": 1,
             "ticker": "FIL-USD"
           }
         },
@@ -1006,6 +1015,7 @@
             "id": 9,
             "liquidity_tier": 1,
             "market_id": 9,
+            "market_type": 1,
             "ticker": "LTC-USD"
           }
         },
@@ -1016,6 +1026,7 @@
             "id": 10,
             "liquidity_tier": 1,
             "market_id": 10,
+            "market_type": 1,
             "ticker": "DOGE-USD"
           }
         },
@@ -1026,6 +1037,7 @@
             "id": 11,
             "liquidity_tier": 1,
             "market_id": 11,
+            "market_type": 1,
             "ticker": "ATOM-USD"
           }
         },
@@ -1036,6 +1048,7 @@
             "id": 12,
             "liquidity_tier": 1,
             "market_id": 12,
+            "market_type": 1,
             "ticker": "DOT-USD"
           }
         },
@@ -1046,6 +1059,7 @@
             "id": 13,
             "liquidity_tier": 1,
             "market_id": 13,
+            "market_type": 1,
             "ticker": "UNI-USD"
           }
         },
@@ -1056,6 +1070,7 @@
             "id": 14,
             "liquidity_tier": 1,
             "market_id": 14,
+            "market_type": 1,
             "ticker": "BCH-USD"
           }
         },
@@ -1066,6 +1081,7 @@
             "id": 15,
             "liquidity_tier": 1,
             "market_id": 15,
+            "market_type": 1,
             "ticker": "TRX-USD"
           }
         },
@@ -1076,6 +1092,7 @@
             "id": 16,
             "liquidity_tier": 1,
             "market_id": 16,
+            "market_type": 1,
             "ticker": "NEAR-USD"
           }
         },
@@ -1086,6 +1103,7 @@
             "id": 17,
             "liquidity_tier": 2,
             "market_id": 17,
+            "market_type": 1,
             "ticker": "MKR-USD"
           }
         },
@@ -1096,6 +1114,7 @@
             "id": 18,
             "liquidity_tier": 1,
             "market_id": 18,
+            "market_type": 1,
             "ticker": "XLM-USD"
           }
         },
@@ -1106,6 +1125,7 @@
             "id": 19,
             "liquidity_tier": 1,
             "market_id": 19,
+            "market_type": 1,
             "ticker": "ETC-USD"
           }
         },
@@ -1116,6 +1136,7 @@
             "id": 20,
             "liquidity_tier": 2,
             "market_id": 20,
+            "market_type": 1,
             "ticker": "COMP-USD"
           }
         },
@@ -1126,6 +1147,7 @@
             "id": 21,
             "liquidity_tier": 1,
             "market_id": 21,
+            "market_type": 1,
             "ticker": "WLD-USD"
           }
         },
@@ -1136,6 +1158,7 @@
             "id": 22,
             "liquidity_tier": 2,
             "market_id": 22,
+            "market_type": 1,
             "ticker": "APE-USD"
           }
         },
@@ -1146,6 +1169,7 @@
             "id": 23,
             "liquidity_tier": 1,
             "market_id": 23,
+            "market_type": 1,
             "ticker": "APT-USD"
           }
         },
@@ -1156,6 +1180,7 @@
             "id": 24,
             "liquidity_tier": 1,
             "market_id": 24,
+            "market_type": 1,
             "ticker": "ARB-USD"
           }
         },
@@ -1166,6 +1191,7 @@
             "id": 25,
             "liquidity_tier": 2,
             "market_id": 25,
+            "market_type": 1,
             "ticker": "BLUR-USD"
           }
         },
@@ -1176,6 +1202,7 @@
             "id": 26,
             "liquidity_tier": 2,
             "market_id": 26,
+            "market_type": 1,
             "ticker": "LDO-USD"
           }
         },
@@ -1186,6 +1213,7 @@
             "id": 27,
             "liquidity_tier": 1,
             "market_id": 27,
+            "market_type": 1,
             "ticker": "OP-USD"
           }
         },
@@ -1196,6 +1224,7 @@
             "id": 28,
             "liquidity_tier": 1,
             "market_id": 28,
+            "market_type": 1,
             "ticker": "PEPE-USD"
           }
         },
@@ -1206,6 +1235,7 @@
             "id": 29,
             "liquidity_tier": 2,
             "market_id": 29,
+            "market_type": 1,
             "ticker": "SEI-USD"
           }
         },
@@ -1216,6 +1246,7 @@
             "id": 30,
             "liquidity_tier": 1,
             "market_id": 30,
+            "market_type": 1,
             "ticker": "SHIB-USD"
           }
         },
@@ -1226,6 +1257,7 @@
             "id": 31,
             "liquidity_tier": 1,
             "market_id": 31,
+            "market_type": 1,
             "ticker": "SUI-USD"
           }
         },
@@ -1236,6 +1268,7 @@
             "id": 32,
             "liquidity_tier": 1,
             "market_id": 32,
+            "market_type": 1,
             "ticker": "XRP-USD"
           }
         }
@@ -1797,7 +1830,7 @@
       ]
     }
   },
-  "app_version": "4.0.0-dev0-104-g16944b67",
+  "app_version": "4.0.0-dev0-107-gbf0c0767",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
