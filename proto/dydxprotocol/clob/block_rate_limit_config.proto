@@ -5,6 +5,7 @@ import "gogoproto/gogo.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
 
+// Defines the block rate limits for CLOB specific operations.
 message BlockRateLimitConfiguration {
   // How many short term order attempts (successful and failed) are allowed for
   // an account per N blocks. Note that the rate limits are applied

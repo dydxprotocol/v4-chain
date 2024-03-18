@@ -1,5 +1,7 @@
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial } from "../../helpers";
+/** Defines the block rate limits for CLOB specific operations. */
+
 export interface BlockRateLimitConfiguration {
   /**
    * How many short term order attempts (successful and failed) are allowed for
@@ -29,6 +31,8 @@ export interface BlockRateLimitConfiguration {
   maxShortTermOrderCancellationsPerNBlocks: MaxPerNBlocksRateLimit[];
   maxShortTermOrdersAndCancelsPerNBlocks: MaxPerNBlocksRateLimit[];
 }
+/** Defines the block rate limits for CLOB specific operations. */
+
 export interface BlockRateLimitConfigurationSDKType {
   /**
    * How many short term order attempts (successful and failed) are allowed for

@@ -23,6 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
 
+// Defines the block rate limits for CLOB specific operations.
 type BlockRateLimitConfiguration struct {
 	// How many short term order attempts (successful and failed) are allowed for
 	// an account per N blocks. Note that the rate limits are applied
