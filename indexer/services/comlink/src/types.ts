@@ -129,6 +129,7 @@ export interface FillResponseObject {
   createdAtHeight: string,
   orderId?: string,
   clientMetadata?: string,
+  subaccountNumber: number,
 }
 
 /* ------- TRANSFER TYPES ------- */
