@@ -384,7 +384,7 @@ export class AggregateTradingReward {
     const blocks: BlockFromDatabase[] = await BlockTable.findAll({
       createdOnOrAfter: time,
       limit: 1,
-    }, []);
+    }, [], { readReplica: true });
 
     if (blocks.length === 0) {
       logger.error({
