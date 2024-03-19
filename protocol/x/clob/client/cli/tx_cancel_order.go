@@ -13,7 +13,7 @@ import (
 func CmdCancelOrder() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "cancel-order owner number clientId clobPairId goodTilBlock",
-		Short: "Broadcast message cancel_order",
+		Short: "Broadcasts message cancel_order. Assumes short term order cancellation.",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
