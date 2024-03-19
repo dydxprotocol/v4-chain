@@ -2323,7 +2323,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 		},
 		`Isolated - subaccounts - subaccount has update to close position for isolated perpetual,
 		collateral is moved from isolated perpetual collateral pool to cross perpetual collateral pool`: {
-			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(999_900_000_000)),
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(999_900_000_000)), // $999,900 USDC
 			collateralPoolUsdcBalances: map[string]int64{
 				types.ModuleAddress.String(): 2_000_000_000_000, // $500,000 USDC
 				authtypes.NewModuleAddress(

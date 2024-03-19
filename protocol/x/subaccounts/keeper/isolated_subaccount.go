@@ -19,6 +19,20 @@ const (
 	closed
 )
 
+var positionStateTransitionStringMap = map[positionStateTransition]string{
+	opened: "opened",
+	closed: "closed",
+}
+
+func (t positionStateTransition) String() string {
+	result, exists := positionStateTransitionStringMap[t]
+	if !exists {
+		return "UnexpectedStateTransitionError"
+	}
+
+	return result
+}
+
 // Represents a state transition for an isolated perpetual.
 type isolatedPerpetualStateTransition struct {
 	perpetualId uint32
@@ -248,53 +262,71 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 	if err != nil {
 		return err
 	}
+	var toModuleAddr sdk.AccAddress
+	var fromModuleAddr sdk.AccAddress
+	var usdcQuantums *big.Int
 
 	// If an isolated perpetual position was opened in the subaccount, then move collateral equivalent
 	// to the USDC asset position size of the subaccount before the update from the
 	// cross-perpetual collateral pool to the isolated perpetual collateral pool.
 	if stateTransition.transition == opened {
-		_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-			ctx,
-			// TODO(DEC-715): Support non-USDC assets.
-			assettypes.AssetUsdc.Id,
-			stateTransition.usdcQuantumsBeforeUpdate,
-		)
-		if err != nil {
-			return err
-		}
-
-		if err := k.bankKeeper.SendCoins(
-			ctx,
-			types.ModuleAddress,
-			isolatedCollateralPoolAddr,
-			[]sdk.Coin{coinToTransfer},
-		); err != nil {
-			return err
-		}
-		return nil
+		toModuleAddr = isolatedCollateralPoolAddr
+		fromModuleAddr = types.ModuleAddress
+		usdcQuantums = stateTransition.usdcQuantumsBeforeUpdate
 		// If the isolated perpetual position was closed, then move collateral equivalent to the USDC
 		// asset position size of the subaccount after the update from the isolated perpetual collateral
 		// pool to the cross-perpetual collateral pool.
 	} else if stateTransition.transition == closed {
-		_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
-			ctx,
-			// TODO(DEC-715): Support non-USDC assets.
-			assettypes.AssetUsdc.Id,
-			updatedSubaccount.GetUsdcPosition(),
+		toModuleAddr = types.ModuleAddress
+		fromModuleAddr = isolatedCollateralPoolAddr
+		usdcQuantums = updatedSubaccount.GetUsdcPosition()
+	} else {
+		// Should never hit this.
+		return errorsmod.Wrapf(
+			types.ErrFailedToUpdateSubaccounts,
+			"Invalid state transition %v for isolated perpetual with id %d in subaccount with id %v",
+			stateTransition,
+			stateTransition.perpetualId,
+			updatedSubaccount.Id,
 		)
-		if err != nil {
-			return err
-		}
+	}
 
-		if err := k.bankKeeper.SendCoins(
-			ctx,
-			isolatedCollateralPoolAddr,
-			types.ModuleAddress,
-			[]sdk.Coin{coinToTransfer},
-		); err != nil {
-			return err
-		}
+	// If there are zero quantums to transfer, don't transfer collateral.
+	if usdcQuantums.Sign() == 0 {
 		return nil
+	}
+
+	// Invalid to transfer negative quantums. This should already be caught by collateralization
+	// checks as well.
+	if usdcQuantums.Sign() == -1 {
+		return errorsmod.Wrapf(
+			types.ErrFailedToUpdateSubaccounts,
+			"Subaccount with id %v %s perpteual position with perpetual id %d with negative collateral %s to transfer",
+			updatedSubaccount.Id,
+			stateTransition.transition.String(),
+			stateTransition.perpetualId,
+			usdcQuantums.String(),
+		)
+	}
+
+	// Transfer collateral between collateral pools.
+	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
+		ctx,
+		// TODO(DEC-715): Support non-USDC assets.
+		assettypes.AssetUsdc.Id,
+		usdcQuantums,
+	)
+	if err != nil {
+		return err
+	}
+
+	if err = k.bankKeeper.SendCoins(
+		ctx,
+		fromModuleAddr,
+		toModuleAddr,
+		[]sdk.Coin{coinToTransfer},
+	); err != nil {
+		return err
 	}
 
 	return nil
