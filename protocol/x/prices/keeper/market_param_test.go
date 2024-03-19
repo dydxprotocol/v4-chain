@@ -116,7 +116,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 			minPriceChangePpm:  uint32(50),
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr: errorsmod.Wrapf(
-				types.ErrMarketParamPairCannotBeUpdated,
+				types.ErrMarketParamPairAlreadyExists,
 				"1-1",
 			).Error(),
 		},
