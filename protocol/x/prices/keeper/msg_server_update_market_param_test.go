@@ -30,7 +30,7 @@ func TestUpdateMarketParam(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
-					Pair:               "PIKACHU-XXX",
+					Pair:               testMarketParam.Pair,
 					Exponent:           testMarketParam.Exponent,
 					MinExchanges:       72,
 					MinPriceChangePpm:  2_023,
