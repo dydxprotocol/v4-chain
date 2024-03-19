@@ -921,7 +921,7 @@ export interface PerpetualMarketCreateEventV1SDKType {
   liquidity_tier: number;
   /** Market type of the perpetual. */
 
-  marketType: PerpetualMarketTypeSDKType;
+  market_type: PerpetualMarketTypeSDKType;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
