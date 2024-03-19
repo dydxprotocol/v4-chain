@@ -55,12 +55,14 @@ func MsgCancelOrderExec(
 	owner sdk.AccAddress,
 	number uint32,
 	clientId uint64,
+	clobPairId uint32,
 	goodTilBlock uint32,
 ) (testutil.BufferWriter, error) {
 	args := []string{
 		owner.String(),
 		fmt.Sprint(number),
 		fmt.Sprint(clientId),
+		fmt.Sprint(clobPairId),
 		fmt.Sprint(goodTilBlock),
 	}
 
