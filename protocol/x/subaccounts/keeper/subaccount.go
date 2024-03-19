@@ -255,6 +255,9 @@ func (k Keeper) getSettledUpdates(
 // Returns a boolean indicating whether the update was successfully applied or not. If `false`, then no
 // updates to any subaccount were made. A second return value returns an array of `UpdateResult` which map
 // to the `updates` to indicate which of the updates caused a failure, if any.
+// This function also transfers collateral between the cross-perpetual collateral pool and isolated
+// perpetual collateral pools if any of the updates led to an isolated perpetual posititon to be opened
+// or closed. This is done using the `x/bank` keeper and updates `x/bank` state.
 //
 // Each `SubaccountId` in the `updates` must be unique or an error is returned.
 func (k Keeper) UpdateSubaccounts(
@@ -281,12 +284,13 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(
+	success, successPerUpdate, isolatedPerpetualStateTranisitions, err := k.internalCanUpdateSubaccounts(
 		ctx,
 		settledUpdates,
 		updateType,
 		allPerps,
 	)
+
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
@@ -305,6 +309,18 @@ func (k Keeper) UpdateSubaccounts(
 
 	// Apply the updates to asset positions.
 	UpdateAssetPositions(settledUpdates)
+
+	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
+	// state due to an update.
+	for i, stateTransition := range isolatedPerpetualStateTranisitions {
+		if err := k.transferCollateralForIsolatedPerpetual(
+			ctx,
+			settledUpdates[i].SettledSubaccount,
+			stateTransition,
+		); err != nil {
+			return false, nil, err
+		}
+	}
 
 	// Apply all updates, including a subaccount update event in the Indexer block message
 	// per update and emit a cometbft event for each settled funding payment.
@@ -384,7 +400,8 @@ func (k Keeper) CanUpdateSubaccounts(
 	}
 
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
+	success, successPerUpdate, _, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
+	return success, successPerUpdate, err
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -515,7 +532,8 @@ func checkPositionUpdatable(
 	return nil
 }
 
-// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts.
+// internalCanUpdateSubaccounts will validate all `updates` to the relevant subaccounts and compute
+// if any of the updates led to an isolated perpetual position being opened or closed.
 // The `updates` do not have to contain `Subaccounts` with unique `SubaccountIds`.
 // Each update is considered in isolation. Thus if two updates are provided
 // with the same `Subaccount`, they are validated without respect to each
@@ -526,6 +544,10 @@ func checkPositionUpdatable(
 // Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
 // These map to the updates and are used to indicate which of the updates
 // caused a failure, if any.
+// Returns a `isolatedPerpetualStateTransitions` value, which is a slice of
+// `isolatedPerpetualStateTransition`.
+// Thess map to the updates and are used to indicate which of the updates led to an isolated
+// perpetual position being opened or closed.
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
@@ -534,21 +556,22 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
+	isolatedPerpetualStateTransitions []*isolatedPerpetualStateTranisition,
 	err error,
 ) {
 	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
 	// constraint.
 	// Check if the updates satisfy the isolated perpetual constraints.
-	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+	success, successPerUpdate, isolatedPerpetualStateTranisitions, err := k.checkIsolatedSubaccountConstraints(
 		ctx,
 		settledUpdates,
 		perpetuals,
 	)
 	if err != nil {
-		return false, nil, err
+		return false, nil, nil, err
 	}
 	if !success {
-		return success, successPerUpdate, nil
+		return success, successPerUpdate, nil, nil
 	}
 
 	// Block all withdrawals and transfers if either of the following is true within the last
@@ -605,7 +628,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 				metrics.GetLabelForBoolValue(metrics.SubaccountsNegativeTncSubaccountSeen, negativeTncSubaccountSeen),
 				metrics.GetLabelForBoolValue(metrics.ChainOutageSeen, chainOutageSeen),
 			)
-			return success, successPerUpdate, nil
+			return success, successPerUpdate, nil, nil
 		}
 	}
 
@@ -619,7 +642,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		for _, perpUpdate := range u.PerpetualUpdates {
 			err := checkPositionUpdatable(ctx, k.perpetualsKeeper, perpUpdate)
 			if err != nil {
-				return false, nil, err
+				return false, nil, nil, err
 			}
 		}
 
@@ -627,7 +650,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		for _, assetUpdate := range u.AssetUpdates {
 			err := checkPositionUpdatable(ctx, k.assetsKeeper, assetUpdate)
 			if err != nil {
-				return false, nil, err
+				return false, nil, nil, err
 			}
 		}
 
@@ -637,7 +660,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			bigNewMaintenanceMargin,
 			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
 		if err != nil {
-			return false, nil, err
+			return false, nil, nil, err
 		}
 
 		var result = types.Success
@@ -652,7 +675,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 			bytes, err := proto.Marshal(u.SettledSubaccount.Id)
 			if err != nil {
-				return false, nil, err
+				return false, nil, nil, err
 			}
 			saKey := string(bytes)
 
@@ -666,7 +689,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 					emptyUpdate,
 				)
 				if err != nil {
-					return false, nil, err
+					return false, nil, nil, err
 				}
 			}
 
@@ -688,7 +711,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		successPerUpdate[i] = result
 	}
 
-	return success, successPerUpdate, nil
+	return success, successPerUpdate, isolatedPerpetualStateTranisitions, nil
 }
 
 // IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`

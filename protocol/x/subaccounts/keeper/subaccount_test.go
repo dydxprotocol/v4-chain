@@ -6,12 +6,15 @@ import (
 	"strconv"
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	bank_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
@@ -299,16 +302,20 @@ func TestUpdateSubaccounts(t *testing.T) {
 		perpetualPositions []*types.PerpetualPosition
 		assetPositions     []*types.AssetPosition
 
+		// collateral pool state
+		collateralPoolUsdcBalances map[string]int64
+
 		// updates
 		updates []types.Update
 
 		// expectations
-		expectedQuoteBalance       *big.Int
-		expectedPerpetualPositions []*types.PerpetualPosition
-		expectedAssetPositions     []*types.AssetPosition
-		expectedSuccess            bool
-		expectedSuccessPerUpdate   []types.UpdateResult
-		expectedErr                error
+		expectedCollateralPoolUsdcBalances map[string]int64
+		expectedQuoteBalance               *big.Int
+		expectedPerpetualPositions         []*types.PerpetualPosition
+		expectedAssetPositions             []*types.AssetPosition
+		expectedSuccess                    bool
+		expectedSuccessPerUpdate           []types.UpdateResult
+		expectedErr                        error
 
 		// Only contains the updated perpetual positions, to assert against the events included.
 		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
@@ -2252,11 +2259,212 @@ func TestUpdateSubaccounts(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 		},
+		`Isolated - subaccounts - empty subaccount has update to open position for isolated perpetual,
+		collateral is moved from cross-perpetual collateral pool to isolated perpetual collateral pool`: {
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			collateralPoolUsdcBalances: map[string]int64{
+				types.ModuleAddress.String(): 1_500_000_000_000, // $1,500,000 USDC
+			},
+			expectedCollateralPoolUsdcBalances: map[string]int64{
+				types.ModuleAddress.String(): 500_000_000_000, // $500,000 USDC
+				authtypes.NewModuleAddress(
+					types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+				).String(): 1_000_000_000_000, // $1,000,000 USDC
+			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:  uint32(3),
+						Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(999_900_000_000),
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				defaultSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(999_900_000_000),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100_000_000)), // -$100
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		`Isolated - subaccounts - subaccount has update to close position for isolated perpetual,
+		collateral is moved from isolated perpetual collateral pool to cross perpetual collateral pool`: {
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(999_900_000_000)),
+			collateralPoolUsdcBalances: map[string]int64{
+				types.ModuleAddress.String(): 2_000_000_000_000, // $500,000 USDC
+				authtypes.NewModuleAddress(
+					types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+				).String(): 1_500_000_000_000, // $1,500,000 USDC
+			},
+			expectedCollateralPoolUsdcBalances: map[string]int64{
+				types.ModuleAddress.String(): 3_000_000_000_000, // $3,000,000 USDC
+				authtypes.NewModuleAddress(
+					types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
+				).String(): 500_000_000_000, // $500,000 USDC
+			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:  uint32(3),
+						Quantums:     dtypes.NewInt(0),
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(1_000_000_000_000),
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				defaultSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(1_000_000_000_000),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100_000_000)), // $100
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(-1_000_000_000), // -1 ISO
+						},
+					},
+				},
+			},
+			msgSenderEnabled: true,
+		},
+		`Isolated subaccounts - empty subaccount has update to open position for isolated perpetual, 
+		errors out when collateral pool for cross perpetuals has no funds`: {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions:         []*types.PerpetualPosition{},
+			expectedPerpetualPositions: []*types.PerpetualPosition{},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(1_000_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100_000_000)), // -$100
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						},
+					},
+				},
+			},
+			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			msgSenderEnabled: true,
+		},
+		`Isolated subaccounts - isolated subaccount has update to close position for isolated perpetual, 
+		errors out when collateral pool for isolated perpetual has no funds`: {
+			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(1_000_000_000_000)),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(3),
+					Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(1_000_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100_000_000)), // $100
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(3),
+							BigQuantumsDelta: big.NewInt(-1_000_000_000), // -1 ISO
+						},
+					},
+				},
+			},
+			expectedErr:      sdkerrors.ErrInsufficientFunds,
+			msgSenderEnabled: true,
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, bankKeeper, assetsKeeper, _, _ := testutil.SubaccountsKeepers(
 				t,
 				tc.msgSenderEnabled,
 			)
@@ -2313,6 +2521,18 @@ func TestUpdateSubaccounts(t *testing.T) {
 				}
 			}
 
+			for collateralPoolAddr, usdcBal := range tc.collateralPoolUsdcBalances {
+				err := bank_testutil.FundAccount(
+					ctx,
+					sdk.MustAccAddressFromBech32(collateralPoolAddr),
+					sdk.Coins{
+						sdk.NewCoin(asstypes.AssetUsdc.Denom, sdkmath.NewInt(usdcBal)),
+					},
+					*bankKeeper,
+				)
+				require.NoError(t, err)
+			}
+
 			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
 			subaccount.PerpetualPositions = tc.perpetualPositions
 			subaccount.AssetPositions = tc.assetPositions
@@ -2364,6 +2584,18 @@ func TestUpdateSubaccounts(t *testing.T) {
 			require.Equal(t, len(newSubaccount.AssetPositions), len(tc.expectedAssetPositions))
 			for i, ep := range tc.expectedAssetPositions {
 				require.Equal(t, *ep, *newSubaccount.AssetPositions[i])
+			}
+
+			for collateralPoolAddr, expectedUsdcBal := range tc.expectedCollateralPoolUsdcBalances {
+				usdcBal := bankKeeper.GetBalance(
+					ctx,
+					sdk.MustAccAddressFromBech32(collateralPoolAddr),
+					asstypes.AssetUsdc.Denom,
+				)
+				require.Equal(t,
+					sdk.NewCoin(asstypes.AssetUsdc.Denom, sdkmath.NewInt(expectedUsdcBal)),
+					usdcBal,
+				)
 			}
 		})
 	}
