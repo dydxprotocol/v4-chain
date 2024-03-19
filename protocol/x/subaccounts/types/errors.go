@@ -7,6 +7,16 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
+// Panic strings
+const (
+	ErrMatchUpdatesMustHaveTwoUpdates = "internalCanUpdateSubaccounts: MATCH subaccount updates must consist of " +
+		"exactly 2 updates, got settledUpdates: %+v"
+	ErrMatchUpdatesMustUpdateOnePerp = "internalCanUpdateSubaccounts: MATCH subaccount updates must each have " +
+		"exactly 1 PerpetualUpdate, got settledUpdates: %+v"
+	ErrMatchUpdatesMustBeSamePerpId = "internalCanUpdateSubaccounts: MATCH subaccount updates must consists two " +
+		"updates on same perpetual Id, got settledUpdates: %+v"
+)
+
 // x/subaccounts module sentinel errors
 var (
 	// 0 - 99: generic.
@@ -38,7 +48,21 @@ var (
 
 	// 400 - 499: perpetual position related.
 	ErrPerpPositionsOutOfOrder = errorsmod.Register(ModuleName, 400, "perpetual positions are out of order")
-	ErrPerpPositionZeroQuantum = errorsmod.Register(ModuleName, 401, "perpetual position's quantum cannot be zero")
+	ErrPerpPositionZeroQuantum = errorsmod.Register(
+		ModuleName,
+		401,
+		"perpetual position's quantum cannot be zero",
+	)
+	ErrCannotModifyPerpOpenInterestForOIMF = errorsmod.Register(
+		ModuleName,
+		402,
+		"cannot temporarily modify perpetual open interest for OIMF calculation",
+	)
+	ErrCannotRevertPerpOpenInterestForOIMF = errorsmod.Register(
+		ModuleName,
+		403,
+		"cannot revert perpetual open interest for OIMF calculation",
+	)
 
 	// 500 - 599: transfer related.
 	ErrAssetTransferQuantumsNotPositive = errorsmod.Register(
