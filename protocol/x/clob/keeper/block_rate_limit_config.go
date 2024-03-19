@@ -37,8 +37,7 @@ func (k *Keeper) InitalizeBlockRateLimitFromStateIfExists(ctx sdk.Context) {
 	var config types.BlockRateLimitConfiguration
 	k.cdc.MustUnmarshal(b, &config)
 
-	k.placeOrderRateLimiter = rate_limit.NewPlaceOrderRateLimiter(config)
-	k.cancelOrderRateLimiter = rate_limit.NewCancelOrderRateLimiter(config)
+	k.placeCancelOrderRateLimiter = rate_limit.NewPlaceCancelOrderRateLimiter(config)
 }
 
 // InitializeBlockRateLimit initializes the block rate limit configuration in state and uses
@@ -61,8 +60,7 @@ func (k *Keeper) InitializeBlockRateLimit(
 	b := k.cdc.MustMarshal(&config)
 	store.Set([]byte(types.BlockRateLimitConfigKey), b)
 
-	k.placeOrderRateLimiter = rate_limit.NewPlaceOrderRateLimiter(config)
-	k.cancelOrderRateLimiter = rate_limit.NewCancelOrderRateLimiter(config)
+	k.placeCancelOrderRateLimiter = rate_limit.NewPlaceCancelOrderRateLimiter(config)
 
 	return nil
 }

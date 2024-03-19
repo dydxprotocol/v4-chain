@@ -1022,8 +1022,7 @@ func New(
 		app.GrpcStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
-		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
-		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgCancelOrder](),
+		rate_limit.NewPanicRateLimiter[sdk.Msg](),
 		daemonLiquidationInfo,
 	)
 	clobModule := clobmodule.NewAppModule(

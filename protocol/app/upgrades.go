@@ -31,6 +31,7 @@ func (app *App) setupUpgradeHandlers() {
 			app.ModuleManager,
 			app.configurator,
 			app.PerpetualsKeeper,
+			app.ClobKeeper,
 		),
 	)
 }

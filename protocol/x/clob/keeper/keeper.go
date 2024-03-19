@@ -56,8 +56,7 @@ type (
 		// Note that the antehandler is not set until after the BaseApp antehandler is also set.
 		antehandler sdk.AnteHandler
 
-		placeOrderRateLimiter  rate_limit.RateLimiter[*types.MsgPlaceOrder]
-		cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder]
+		placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg]
 
 		DaemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo
 	}
@@ -88,8 +87,7 @@ func NewKeeper(
 	grpcStreamingManager streamingtypes.GrpcStreamingManager,
 	txDecoder sdk.TxDecoder,
 	clobFlags flags.ClobFlags,
-	placeOrderRateLimiter rate_limit.RateLimiter[*types.MsgPlaceOrder],
-	cancelOrderRateLimiter rate_limit.RateLimiter[*types.MsgCancelOrder],
+	placeCancelOrderRateLimiter rate_limit.RateLimiter[sdk.Msg],
 	daemonLiquidationInfo *liquidationtypes.DaemonLiquidationInfo,
 ) *Keeper {
 	keeper := &Keeper{
@@ -119,10 +117,9 @@ func NewKeeper(
 			Hosts:      clobFlags.MevTelemetryHosts,
 			Identifier: clobFlags.MevTelemetryIdentifier,
 		},
-		Flags:                  clobFlags,
-		placeOrderRateLimiter:  placeOrderRateLimiter,
-		cancelOrderRateLimiter: cancelOrderRateLimiter,
-		DaemonLiquidationInfo:  daemonLiquidationInfo,
+		Flags:                       clobFlags,
+		placeCancelOrderRateLimiter: placeCancelOrderRateLimiter,
+		DaemonLiquidationInfo:       daemonLiquidationInfo,
 	}
 
 	// Provide the keeper to the MemClob.

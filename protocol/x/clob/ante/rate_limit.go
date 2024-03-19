@@ -8,14 +8,15 @@ import (
 var _ sdktypes.AnteDecorator = (*ClobRateLimitDecorator)(nil)
 
 // ClobRateLimitDecorator is an AnteDecorator which is responsible for rate limiting MsgCancelOrder and MsgPlaceOrder
-// requests.
+// and MsgBatchCancel requests.
 //
 // This AnteDecorator is a no-op if:
-//   - No messages in the transaction are `MsgCancelOrder` or `MsgPlaceOrder`.
+//   - No messages in the transaction are `MsgCancelOrder` or `MsgPlaceOrder` or `MsgBatchCancel`
 //
 // This AnteDecorator returns an error if:
 //   - The rate limit is exceeded for any `MsgCancelOrder` messages.
 //   - The rate limit is exceeded for any `MsgPlaceOrder` messages.
+//   - The rate limit is exceeded for any `MsgBatchCancel` messages.
 //
 // TODO(CLOB-721): Rate limit short term order cancellations.
 type ClobRateLimitDecorator struct {
@@ -41,6 +42,10 @@ func (r ClobRateLimitDecorator) AnteHandle(
 			}
 		case *types.MsgPlaceOrder:
 			if err = r.clobKeeper.RateLimitPlaceOrder(ctx, msg); err != nil {
+				return ctx, err
+			}
+		case *types.MsgBatchCancel:
+			if err = r.clobKeeper.RateLimitBatchCancel(ctx, msg); err != nil {
 				return ctx, err
 			}
 		}
