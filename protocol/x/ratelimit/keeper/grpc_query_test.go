@@ -152,10 +152,10 @@ func TestGetAllPendingSendPacket(t *testing.T) {
 		k.SetPendingSendPacket(ctx, channels[i], sequences[i])
 	}
 
-	req := &types.GetAllPendingSendPacketsRequest{}
-	res, err := k.GetAllPendingSendPackets(ctx, req)
+	req := &types.QueryAllPendingSendPacketsRequest{}
+	res, err := k.AllPendingSendPackets(ctx, req)
 	require.NoError(t, err)
-	require.Equal(t, &types.GetAllPendingSendPacketsResponse{
+	require.Equal(t, &types.QueryAllPendingSendPacketsResponse{
 		PendingSendPackets: []types.PendingSendPacket{
 			{
 				ChannelId: channels[0],

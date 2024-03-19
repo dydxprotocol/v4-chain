@@ -25,8 +25,8 @@ service Query {
         "/dydxprotocol/v4/ratelimit/capacity_by_denom";
   }
   // Get all pending send packets
-  rpc GetAllPendingSendPackets(GetAllPendingSendPacketsRequest)
-      returns (GetAllPendingSendPacketsResponse) {
+  rpc AllPendingSendPackets(QueryAllPendingSendPacketsRequest)
+      returns (QueryAllPendingSendPacketsResponse) {
     option (google.api.http).get =
         "/dydxprotocol/v4/ratelimit/get_all_pending_send_packet";
   }
@@ -51,13 +51,13 @@ message QueryCapacityByDenomResponse {
       [ (gogoproto.nullable) = false ];
 }
 
-// GetAllPendingSendPacketsRequest is a request type for the
-// GetAllPendingSendPackets RPC
-message GetAllPendingSendPacketsRequest {}
+// QueryAllPendingSendPacketsRequest is a request type for the
+// AllPendingSendPackets RPC
+message QueryAllPendingSendPacketsRequest {}
 
-// GetAllPendingSendPacketsResponse is a response type of the
-// GetAllPendingSendPackets RPC
-message GetAllPendingSendPacketsResponse {
+// QueryAllPendingSendPacketsResponse is a response type of the
+// AllPendingSendPackets RPC
+message QueryAllPendingSendPacketsResponse {
   repeated PendingSendPacket pending_send_packets = 1
       [ (gogoproto.nullable) = false ];
 }

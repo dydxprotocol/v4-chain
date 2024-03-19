@@ -49,10 +49,10 @@ func (k Keeper) CapacityByDenom(
 	}, nil
 }
 
-func (k Keeper) GetAllPendingSendPackets(
+func (k Keeper) AllPendingSendPackets(
 	ctx context.Context,
-	req *types.GetAllPendingSendPacketsRequest,
-) (*types.GetAllPendingSendPacketsResponse, error) {
+	req *types.QueryAllPendingSendPacketsRequest,
+) (*types.QueryAllPendingSendPacketsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -69,7 +69,7 @@ func (k Keeper) GetAllPendingSendPackets(
 			Sequence:  sequence,
 		})
 	}
-	return &types.GetAllPendingSendPacketsResponse{
+	return &types.QueryAllPendingSendPacketsResponse{
 		PendingSendPackets: pendingPackets,
 	}, nil
 }

@@ -20,7 +20,7 @@ func CmdPendingSendPackets() *cobra.Command {
 
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.GetAllPendingSendPackets(cmd.Context(), &types.GetAllPendingSendPacketsRequest{})
+			res, err := queryClient.AllPendingSendPackets(cmd.Context(), &types.QueryAllPendingSendPacketsRequest{})
 			if err != nil {
 				return err
 			}

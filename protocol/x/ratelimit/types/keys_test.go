@@ -16,3 +16,14 @@ func TestStateKeys(t *testing.T) {
 	require.Equal(t, "DenomCapacity:", types.DenomCapacityKeyPrefix)
 	require.Equal(t, "LimitParams:", types.LimitParamsKeyPrefix)
 }
+
+func TestSplitPendingSendPacketKey(t *testing.T) {
+	channelId := "channel-0"
+	sequenceNumber := uint64(2)
+	channelIdReceived, sequenceNumberReceived := types.SplitPendingSendPacketKey(
+		types.GetPendingSendPacketKey(channelId, sequenceNumber),
+	)
+
+	require.Equal(t, channelId, channelIdReceived)
+	require.Equal(t, sequenceNumber, sequenceNumberReceived)
+}

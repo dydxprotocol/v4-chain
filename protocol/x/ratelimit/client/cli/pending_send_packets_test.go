@@ -24,7 +24,7 @@ func TestPendingSendPackets(t *testing.T) {
 		})
 
 	require.NoError(t, err)
-	var resp types.GetAllPendingSendPacketsResponse
+	var resp types.QueryAllPendingSendPacketsResponse
 	require.NoError(t, net.Config.Codec.UnmarshalJSON(out.Bytes(), &resp))
 	assert.Equal(t, 0, len(resp.PendingSendPackets))
 }
