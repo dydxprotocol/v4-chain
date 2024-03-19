@@ -24,7 +24,7 @@ func CmdBatchCancel() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			argClientIds := make([]uint32, len(clientIds))
+			argClientIds := []uint32{}
 			for _, idString := range strings.Fields(clientIds) {
 				idUint64, err := strconv.ParseUint(idString, 10, 32)
 				if err != nil {

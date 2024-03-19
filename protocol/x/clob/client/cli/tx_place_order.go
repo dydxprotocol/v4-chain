@@ -12,13 +12,13 @@ import (
 
 func CmdPlaceOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "place-order owner number clientId clobPairId side quantums subticks goodTilBlock",
+		Use:   "place-order owner subaccount_number clientId clobPairId side quantums subticks goodTilBlock",
 		Short: "Broadcast message place_order. Assumes short term order placement.",
 		Args:  cobra.ExactArgs(8),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
 
-			argNumber, err := cast.ToUint32E(args[1])
+			argSubaccountNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}
@@ -64,7 +64,7 @@ func CmdPlaceOrder() *cobra.Command {
 						ClientId: argClientId,
 						SubaccountId: satypes.SubaccountId{
 							Owner:  argOwner,
-							Number: argNumber,
+							Number: argSubaccountNumber,
 						},
 						ClobPairId: argClobPairId,
 					},

@@ -12,13 +12,13 @@ import (
 
 func CmdCancelOrder() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "cancel-order owner number clientId clobPairId goodTilBlock",
+		Use:   "cancel-order owner subaccount_number clientId clobPairId goodTilBlock",
 		Short: "Broadcasts message cancel_order. Assumes short term order cancellation.",
 		Args:  cobra.ExactArgs(5),
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			argOwner := args[0]
 
-			argNumber, err := cast.ToUint32E(args[1])
+			argSubaccountNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}
@@ -49,7 +49,7 @@ func CmdCancelOrder() *cobra.Command {
 					ClientId:   argClientId,
 					SubaccountId: satypes.SubaccountId{
 						Owner:  argOwner,
-						Number: argNumber,
+						Number: argSubaccountNumber,
 					},
 				},
 				argGoodTilBlock,
