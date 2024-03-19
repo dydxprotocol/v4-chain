@@ -3,7 +3,6 @@ package client_test
 import (
 	"context"
 	"fmt"
-	"net"
 	"sync"
 	"testing"
 	"time"
@@ -32,11 +31,10 @@ func TestPriceFetcherTestSuite(t *testing.T) {
 
 type PriceFetcherTestSuite struct {
 	suite.Suite
-	daemonFlags      daemonflags.DaemonFlags
-	appFlags         appflags.Flags
-	daemonServer     *daemonserver.Server
-	pricesGrpcServer *grpc.Server
-	wg               sync.WaitGroup
+	daemonFlags  daemonflags.DaemonFlags
+	appFlags     appflags.Flags
+	daemonServer *daemonserver.Server
+	wg           sync.WaitGroup
 }
 
 func (p *PriceFetcherTestSuite) SetupTest() {
@@ -60,22 +58,10 @@ func (p *PriceFetcherTestSuite) SetupTest() {
 		defer p.wg.Done()
 		p.daemonServer.Start()
 	}()
-
-	// Create a gRPC server running on the default port and attach the mock prices query response.
-	p.pricesGrpcServer = grpc.NewServer()
-
-	p.wg.Add(1)
-	go func() {
-		defer p.wg.Done()
-		ls, err := net.Listen("tcp", p.appFlags.GrpcAddress)
-		p.Require().NoError(err)
-		_ = p.pricesGrpcServer.Serve(ls)
-	}()
 }
 
 func (p *PriceFetcherTestSuite) TearDownTest() {
 	p.daemonServer.Stop()
-	p.pricesGrpcServer.Stop()
 	p.wg.Wait()
 }
 
