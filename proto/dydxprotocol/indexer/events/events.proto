@@ -355,7 +355,7 @@ message PerpetualMarketCreateEventV1 {
   uint32 liquidity_tier = 10;
 
   // Market type of the perpetual.
-  dydxprotocol.indexer.protocol.v1.PerpetualMarketType marketType = 11;
+  dydxprotocol.indexer.protocol.v1.PerpetualMarketType market_type = 11;
 }
 
 // LiquidityTierUpsertEventV1 message contains all the information to
