@@ -49,7 +49,6 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   const start: number = Date.now();
   const indexerTendermintBlock: IndexerTendermintBlock | undefined = getIndexerTendermintBlock(
     message,
-    start,
   );
   if (indexerTendermintBlock === undefined) {
     return;
@@ -65,6 +64,15 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
   if (await shouldSkipBlock(blockHeight)) {
     return;
   }
+
+  stats.timing(
+    `${config.SERVICE_NAME}.message_time_in_queue`,
+    start - Number(message.timestamp),
+    STATS_NO_SAMPLING,
+    {
+      topic: KafkaTopics.TO_ENDER,
+    },
+  );
 
   let success: boolean = false;
   const txId: number = await Transaction.start();
@@ -141,7 +149,6 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
  */
 function getIndexerTendermintBlock(
   message: KafkaMessage,
-  start: number,
 ): IndexerTendermintBlock | undefined {
   if (!message || !message.value || !message.timestamp) {
     stats.increment(`${config.SERVICE_NAME}.empty_kafka_message`, 1);
@@ -151,15 +158,6 @@ function getIndexerTendermintBlock(
     });
     return undefined;
   }
-
-  stats.timing(
-    `${config.SERVICE_NAME}.message_time_in_queue`,
-    start - Number(message.timestamp),
-    STATS_NO_SAMPLING,
-    {
-      topic: KafkaTopics.TO_ENDER,
-    },
-  );
   try {
     const messageValueBinary: Uint8Array = new Uint8Array(message.value);
     logger.info({
