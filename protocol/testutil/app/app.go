@@ -1286,6 +1286,8 @@ func launchValidatorInDir(
 		"false",
 		"--bridge-daemon-eth-rpc-endpoint",
 		"https://eth-sepolia.g.alchemy.com/v2/demo",
+		"--oracle.enabled",
+		"false",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)

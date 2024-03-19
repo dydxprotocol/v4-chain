@@ -74,8 +74,6 @@ type PriceFlags struct {
 
 type SlinkyFlags struct {
 	oracleconfig.AppConfig
-	// Enabled toggles the slinky daemon on or off.
-	Enabled bool
 }
 
 // DaemonFlags contains the collected configuration flags for all daemons.
@@ -114,12 +112,12 @@ func GetDefaultDaemonFlags() DaemonFlags {
 			},
 			Slinky: SlinkyFlags{
 				AppConfig: oracleconfig.AppConfig{
+					Enabled:                 true,
 					OracleAddress:           "localhost:8080",
 					ClientTimeout:           time.Second * 2,
 					MetricsEnabled:          true,
 					PrometheusServerAddress: "0.0.0.0:8001",
 				},
-				Enabled: true,
 			},
 		}
 	}

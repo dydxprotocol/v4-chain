@@ -342,6 +342,7 @@ type App struct {
 
 	// Slinky
 	oraclePrometheusServer *promserver.PrometheusServer
+	oracleMetricsInit      func()
 	oracleMetrics          servicemetrics.Metrics
 }
 
@@ -457,6 +458,32 @@ func New(
 				app.SlinkyClient.Stop()
 			}
 			return nil
+		},
+	)
+	app.oracleMetricsInit = sync.OnceFunc(
+		func() {
+			cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+			if err != nil {
+				panic(err)
+			}
+			oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+			if err != nil {
+				panic(err)
+			}
+			// run prometheus metrics
+			if cfg.MetricsEnabled {
+				promLogger, err := zap.NewProduction()
+				if err != nil {
+					panic(err)
+				}
+				app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
+				if err != nil {
+					panic(err)
+				}
+				// start the prometheus server
+				go app.oraclePrometheusServer.Start()
+			}
+			app.oracleMetrics = oracleMetrics
 		},
 	)
 
@@ -811,7 +838,7 @@ func New(
 				)
 				app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 			}
-			if daemonFlags.Slinky.Enabled {
+			if daemonFlags.Slinky.AppConfig.Enabled {
 				app.SlinkyClient = slinkyclient.StartNewClient(
 					context.Background(),
 					app.initSlinkySidecarClient(appOpts),
@@ -1420,36 +1447,9 @@ func New(
 	return app
 }
 
-func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) servicemetrics.Metrics {
-	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
-	if err != nil {
-		panic(err)
-	}
-	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
-	if err != nil {
-		panic(err)
-	}
-	// run prometheus metrics
-	if cfg.MetricsEnabled {
-		promLogger, err := zap.NewProduction()
-		if err != nil {
-			panic(err)
-		}
-		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-		if err != nil {
-			panic(err)
-		}
-		// start the prometheus server
-		go app.oraclePrometheusServer.Start()
-	}
-	return oracleMetrics
-}
-
 func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oracleclient.OracleClient {
 	// Create the oracle service.
-	if app.oracleMetrics == nil {
-		app.oracleMetrics = app.initOracleMetrics(appOpts)
-	}
+	app.oracleMetricsInit()
 	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
 	if err != nil {
 		panic(err)
@@ -1544,9 +1544,7 @@ func (app *App) createProposalHandlers(
 
 	// Wrap dydx handlers with slinky handlers
 	if appFlags.VEOracleEnabled {
-		if app.oracleMetrics == nil {
-			app.oracleMetrics = app.initOracleMetrics(appOpts)
-		}
+		app.oracleMetricsInit()
 		app.initOracle(priceUpdateDecoder)
 		proposalHandler := slinkyproposals.NewProposalHandler(
 			app.Logger(),

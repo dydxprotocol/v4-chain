@@ -129,6 +129,7 @@ func GetFlagValuesFromOptions(
 		GrpcEnable:  true,
 
 		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
+		VEOracleEnabled:      true,
 	}
 
 	// Populate the flags if they exist.
