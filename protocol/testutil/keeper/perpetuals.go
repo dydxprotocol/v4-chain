@@ -239,7 +239,6 @@ func CreateNPerpetuals(
 
 	CreateNMarkets(t, ctx, pricesKeeper, n)
 	for i := range items {
-
 		var defaultFundingPpm int32
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 		if i%3 == 0 {
