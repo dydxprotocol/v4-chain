@@ -392,6 +392,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
       const unsettledFunding: Big = Big('300');
@@ -416,6 +417,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -429,6 +431,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
@@ -458,6 +461,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -481,6 +485,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -494,6 +499,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
@@ -513,6 +519,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -531,6 +538,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -544,6 +552,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(funding);
@@ -569,6 +578,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -592,6 +602,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -600,6 +611,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(ZERO.toString());
