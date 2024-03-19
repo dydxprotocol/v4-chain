@@ -8,19 +8,15 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
+	"github.com/skip-mev/slinky/service/servers/oracle/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/suite"
-	"google.golang.org/grpc"
-
-	"github.com/skip-mev/slinky/service/servers/oracle/types"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	pricefeed_types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
-	daemonserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server"
 	pricefeedserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/slinky/client"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 )
@@ -31,38 +27,18 @@ func TestPriceFetcherTestSuite(t *testing.T) {
 
 type PriceFetcherTestSuite struct {
 	suite.Suite
-	daemonFlags  daemonflags.DaemonFlags
-	appFlags     appflags.Flags
-	daemonServer *daemonserver.Server
-	wg           sync.WaitGroup
+	daemonFlags daemonflags.DaemonFlags
+	appFlags    appflags.Flags
+	wg          sync.WaitGroup
 }
 
 func (p *PriceFetcherTestSuite) SetupTest() {
 	// Setup daemon and grpc servers.
 	p.daemonFlags = daemonflags.GetDefaultDaemonFlags()
 	p.appFlags = appflags.GetFlagValuesFromOptions(appoptions.GetDefaultTestAppOptions("", nil))
-
-	// Configure and run daemon server.
-	p.daemonServer = daemonserver.NewServer(
-		log.NewNopLogger(),
-		grpc.NewServer(),
-		&daemontypes.FileHandlerImpl{},
-		p.daemonFlags.Shared.SocketAddress,
-	)
-	p.daemonServer.WithPriceFeedMarketToExchangePrices(
-		pricefeedserver_types.NewMarketToExchangePrices(5 * time.Second),
-	)
-
-	p.wg.Add(1)
-	go func() {
-		defer p.wg.Done()
-		p.daemonServer.Start()
-	}()
 }
 
 func (p *PriceFetcherTestSuite) TearDownTest() {
-	p.daemonServer.Stop()
-	p.wg.Wait()
 }
 
 func (p *PriceFetcherTestSuite) TestPriceFetcher() {

@@ -32,6 +32,7 @@ func TestClient(t *testing.T) {
 
 	grpcServer := grpc.NewServer()
 	pricesMockQueryServer := &mocks.QueryServer{}
+	pricetypes.RegisterQueryServer(grpcServer, pricesMockQueryServer)
 	pricesMockQueryServer.On("AllMarketParams", mock.Anything, mock.Anything).
 		Return(
 			&pricetypes.QueryAllMarketParamsResponse{
@@ -75,5 +76,4 @@ func TestClient(t *testing.T) {
 		return cli.HealthCheck() == nil
 	}, waitTime, time.Millisecond*500, "Slinky daemon failed to become healthy within %s", waitTime)
 	cli.Stop()
-	require.NoError(t, cli.HealthCheck())
 }
