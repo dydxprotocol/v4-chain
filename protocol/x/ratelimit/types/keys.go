@@ -32,10 +32,12 @@ func GetPendingSendPacketKey(channelId string, sequenceNumber uint64) []byte {
 	return []byte(fmt.Sprintf("%s_%d", channelId, sequenceNumber))
 }
 
-func SplitPendingSendPacketKey(key []byte) (channelId string, sequenceNumber uint64) {
+func SplitPendingSendPacketKey(key []byte) (channelId string, sequenceNumber uint64, err error) {
+	err = nil
 	parts := bytes.Split(key, []byte("_"))
 	if len(parts) != 2 {
-		panic(fmt.Sprintf("unexpected key format: %s", key))
+		err = fmt.Errorf("unexpected PendingSendPacket key format: %s", key)
+		return
 	}
 	channelId = string(parts[0])
 	// convert parts[1] to uint64 parts[1] is is a byte array with numeric characters of variable length

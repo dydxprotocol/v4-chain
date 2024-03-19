@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -63,7 +64,11 @@ func (k Keeper) AllPendingSendPackets(
 	iterator := store.Iterator(nil, nil)
 	defer iterator.Close()
 	for ; iterator.Valid(); iterator.Next() {
-		channelId, sequence := types.SplitPendingSendPacketKey(iterator.Key())
+		channelId, sequence, err := types.SplitPendingSendPacketKey(iterator.Key())
+		if err != nil {
+			log.ErrorLog(sdkCtx, "unexpected PendingSendPacket key format", err)
+			return nil, err
+		}
 		pendingPackets = append(pendingPackets, types.PendingSendPacket{
 			ChannelId: channelId,
 			Sequence:  sequence,
