@@ -9,6 +9,7 @@ import (
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
@@ -422,6 +423,51 @@ func TestConvertToClobPairStatus(t *testing.T) {
 					t,
 					tc.expectedStatus,
 					v1.ConvertToClobPairStatus(tc.status),
+				)
+			}
+		})
+	}
+}
+
+func TestConvertToPerpetualMarketType(t *testing.T) {
+	type convertToPerpetualMarketTypeTestCase struct {
+		status         perptypes.PerpetualMarketType
+		expectedStatus v1types.PerpetualMarketType
+		expectedPanic  string
+	}
+
+	tests := make(map[string]convertToPerpetualMarketTypeTestCase)
+	// Iterate through all the values for PerpetualMarketType to create test cases.
+	for name, value := range perptypes.PerpetualMarketType_value {
+		testName := fmt.Sprintf("Converts PerpetualMarketType %s to v1.PerpetualMarketType", name)
+		testCase := convertToPerpetualMarketTypeTestCase{
+			status:         perptypes.PerpetualMarketType(value),
+			expectedStatus: v1types.PerpetualMarketType(perptypes.PerpetualMarketType_value[name]),
+		}
+		if value == int32(perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED) {
+			testCase.expectedPanic = fmt.Sprintf(
+				"ConvertToPerpetualMarketType: invalid perpetual market type: %+v",
+				perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED,
+			)
+		}
+		tests[testName] = testCase
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			if tc.expectedPanic != "" {
+				require.PanicsWithValue(
+					t,
+					tc.expectedPanic,
+					func() {
+						v1.ConvertToPerpetualMarketType(tc.status)
+					},
+				)
+			} else {
+				require.Equal(
+					t,
+					tc.expectedStatus,
+					v1.ConvertToPerpetualMarketType(tc.status),
 				)
 			}
 		})
