@@ -1,8 +1,10 @@
 package keeper
 
 import (
+	"fmt"
 	"math/big"
 
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -45,24 +47,36 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 func (k Keeper) GetVaultClobOrders(
 	ctx sdk.Context,
 	vaultId types.VaultId,
-) (orders []clobtypes.Order) {
+) (orders []*clobtypes.Order, err error) {
 	// Get clob pair, perpetual, market parameter, and market price that correspond to this vault.
 	clobPair, exists := k.clobKeeper.GetClobPair(ctx, clobtypes.ClobPairId(vaultId.Number))
 	if !exists {
-		return orders
+		return orders, errorsmod.Wrap(
+			types.ErrClobPairNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
 	}
 	perpId := clobPair.Metadata.(*clobtypes.ClobPair_PerpetualClobMetadata).PerpetualClobMetadata.PerpetualId
 	perpetual, err := k.perpetualsKeeper.GetPerpetual(ctx, perpId)
 	if err != nil {
-		return orders
+		return orders, errorsmod.Wrap(
+			err,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
 	}
 	marketParam, exists := k.pricesKeeper.GetMarketParam(ctx, perpetual.Params.MarketId)
 	if !exists {
-		return orders
+		return orders, errorsmod.Wrap(
+			types.ErrMarketParamNotFound,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
 	}
 	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perpetual.Params.MarketId)
 	if err != nil {
-		return orders
+		return orders, errorsmod.Wrap(
+			err,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
 	}
 
 	// Get vault (subaccount 0 of corresponding module account).
@@ -87,9 +101,10 @@ func (k Keeper) GetVaultClobOrders(
 		GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + ORDER_EXPIRATION_SECONDS,
 	}
 	// Construct one ask and one bid for each layer.
+	orders = make([]*clobtypes.Order, 2*NUM_LAYERS)
 	askSubticks := new(big.Rat).Set(subticks)
 	bidSubticks := new(big.Rat).Set(subticks)
-	for layer := uint8(1); layer <= NUM_LAYERS; layer++ {
+	for i := uint8(0); i < NUM_LAYERS; i++ {
 		// Calculate ask and bid subticks for this layer.
 		askSubticks = lib.BigRatMulPpm(askSubticks, lib.OneMillion+spreadPpm)
 		bidSubticks = lib.BigRatMulPpm(bidSubticks, lib.OneMillion-spreadPpm)
@@ -98,7 +113,7 @@ func (k Keeper) GetVaultClobOrders(
 		ask := clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: vault,
-				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(layer)),
+				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(i+1)),
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
@@ -116,7 +131,7 @@ func (k Keeper) GetVaultClobOrders(
 		bid := clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: vault,
-				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(layer)),
+				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(i+1)),
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
@@ -130,10 +145,11 @@ func (k Keeper) GetVaultClobOrders(
 			GoodTilOneof: goodTilBlockTime,
 		}
 
-		orders = append(orders, ask, bid)
+		orders[2*i] = &ask
+		orders[2*i+1] = &bid
 	}
 
-	return orders
+	return orders, nil
 }
 
 // GetVaultClobOrderClientId returns the client ID for a CLOB order where

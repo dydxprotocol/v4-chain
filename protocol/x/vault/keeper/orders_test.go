@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -16,330 +15,201 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// TODO (TRA-118): store vault strategy constants in x/vault state.
+const (
+	numLayers                          = uint8(2)
+	minBaseSpreadPpm                   = uint32(3_000) // 30 bps
+	baseSpreadMinPriceChangePremiumPpm = uint32(1_500) // 15 bps
+	orderExpirationSeconds             = uint32(5)     // 5 seconds
+)
+
 func TestGetVaultClobOrders(t *testing.T) {
-	// Set up test clob pairs, markets, perpetuals, and vault params.
-	testClobPairs := []clobtypes.ClobPair{
-		constants.ClobPair_Btc,
-		constants.ClobPair_Eth,
-	}
-	testMarketParams := []pricestypes.MarketParam{
-		constants.TestMarketParams[0],
-		{
-			Id:                 constants.TestMarketParams[1].Id,
-			Pair:               constants.TestMarketParams[1].Pair,
-			Exponent:           constants.TestMarketParams[1].Exponent,
-			MinExchanges:       constants.TestMarketParams[1].MinExchanges,
-			MinPriceChangePpm:  4_200, // Set a high min price change to test spread calculation.
-			ExchangeConfigJson: constants.TestMarketParams[1].ExchangeConfigJson,
-		},
-	}
-	testMarketPrices := []pricestypes.MarketPrice{
-		constants.TestMarketPrices[0],
-		constants.TestMarketPrices[1],
-	}
-	testPerps := []perptypes.Perpetual{
-		constants.BtcUsd_0DefaultFunding_0AtomicResolution,
-		constants.EthUsd_0DefaultFunding_9AtomicResolution,
-	}
-	// TODO (TRA-118): store vault strategy constants in x/vault state.
-	minBaseSpreadPpm := uint32(3_000)                   // 30bps
-	baseSpreadMinPriceChangePremiumPpm := uint32(1_500) // 15bps
-	orderExpirationSeconds := uint32(5)                 // 5 seconds
-
-	// Initialize tApp and ctx with above test parameters.
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
-		genesis = testapp.DefaultGenesis()
-		// Initialize prices module with test markets.
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *pricestypes.GenesisState) {
-				genesisState.MarketParams = testMarketParams
-				genesisState.MarketPrices = testMarketPrices
-			},
-		)
-		// Initialize perpetuals module with test perpetuals.
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *perptypes.GenesisState) {
-				genesisState.LiquidityTiers = constants.LiquidityTiers
-				genesisState.Perpetuals = testPerps
-			},
-		)
-		// Initialize clob module with test clob pairs.
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *clobtypes.GenesisState) {
-				genesisState.ClobPairs = testClobPairs
-			},
-		)
-		return genesis
-	}).Build()
-	ctx := tApp.InitChain()
-
-	// Calculate subticks of BTC and ETH.
-	btcSubticks := clobtypes.PriceToSubticks(
-		testMarketPrices[0],
-		testClobPairs[0],
-		testPerps[0].Params.AtomicResolution,
-		lib.QuoteCurrencyAtomicResolution,
-	)
-	ethSubticks := clobtypes.PriceToSubticks(
-		testMarketPrices[1],
-		testClobPairs[1],
-		testPerps[1].Params.AtomicResolution,
-		lib.QuoteCurrencyAtomicResolution,
-	)
-	// Calculate spreads of BTC and ETH.
-	// - spread = max(minBaseSpreadPpm, baseSpreadMinPriceChangePremiumPpm + minPriceChangePpm)
-	// - btcSpreadPpm = max(3_000, 1_500+50) = 3_000
-	btcSpreadPpm := lib.Max(minBaseSpreadPpm, baseSpreadMinPriceChangePremiumPpm+testMarketParams[0].MinPriceChangePpm)
-	// - ethSpreadPpm = max(3_000, 1_500+4_200) = 5_700
-	ethSpreadPpm := lib.Max(minBaseSpreadPpm, baseSpreadMinPriceChangePremiumPpm+testMarketParams[1].MinPriceChangePpm)
-	// Calculate order good-till-block-time.
-	orderGtbt := &clobtypes.Order_GoodTilBlockTime{
-		GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + orderExpirationSeconds,
-	}
-
 	tests := map[string]struct {
 		/* --- Setup --- */
 		// Vault ID.
 		vaultId vaulttypes.VaultId
+		// Clob pair.
+		clobPair clobtypes.ClobPair
+		// Market param.
+		marketParam pricestypes.MarketParam
+		// Market price.
+		marketPrice pricestypes.MarketPrice
+		// Perpetual.
+		perpetual perptypes.Perpetual
 
 		/* --- Expectations --- */
-		// Expected orders.
-		expectedOrders []clobtypes.Order
+		expectedOrderSubticks []uint64
+		expectedOrderQuantums []uint64
+		expectedErr           error
 	}{
-		"Get orders from Vault for Clob Pair 0": {
-			vaultId: constants.Vault_Clob_0,
-			expectedOrders: []clobtypes.Order{
-				// ask at layer 1.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_0.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_SELL,
-							uint8(1),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_0.Number,
-					},
-					Side:     clobtypes.Order_SIDE_SELL,
-					Quantums: testClobPairs[0].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of ask_1 = subticks * (1 + spread)
-						lib.BigRatMulPpm(btcSubticks, lib.OneMillion+btcSpreadPpm),
-						testClobPairs[0].SubticksPerTick,
-						true, // round up for asks
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// bid at layer 1.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_0.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_BUY,
-							uint8(1),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_0.Number,
-					},
-					Side:     clobtypes.Order_SIDE_BUY,
-					Quantums: testClobPairs[0].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of bid_1 = subticks * (1 - spread)
-						lib.BigRatMulPpm(btcSubticks, lib.OneMillion-btcSpreadPpm),
-						testClobPairs[0].SubticksPerTick,
-						false, // round down for bids
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// ask at layer 2.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_0.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_SELL,
-							uint8(2),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_0.Number,
-					},
-					Side:     clobtypes.Order_SIDE_SELL,
-					Quantums: testClobPairs[0].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of ask_2 = subticks * (1 + spread)^2
-						lib.BigRatMulPpm(
-							lib.BigRatMulPpm(btcSubticks, lib.OneMillion+btcSpreadPpm),
-							lib.OneMillion+btcSpreadPpm,
-						),
-						testClobPairs[0].SubticksPerTick,
-						true, // round up for asks
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// bid at layer 2.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_0.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_BUY,
-							uint8(2),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_0.Number,
-					},
-					Side:     clobtypes.Order_SIDE_BUY,
-					Quantums: testClobPairs[0].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of bid_2 = subticks * (1 - spread)^2
-						lib.BigRatMulPpm(
-							lib.BigRatMulPpm(btcSubticks, lib.OneMillion-btcSpreadPpm),
-							lib.OneMillion-btcSpreadPpm,
-						),
-						testClobPairs[0].SubticksPerTick,
-						false, // round down for bids
-					),
-					GoodTilOneof: orderGtbt,
-				},
+		"Success - Get orders from Vault for Clob Pair 0": {
+			vaultId:     constants.Vault_Clob_0,
+			clobPair:    constants.ClobPair_Btc,
+			marketParam: constants.TestMarketParams[0],
+			marketPrice: constants.TestMarketPrices[0],
+			perpetual:   constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			// To calculate order subticks:
+			// 1. spreadPpm = max(minBaseSpreadPpm, baseSpreadMinPriceChangePremiumPpm + minPriceChangePpm)
+			// 2. priceSubticks = marketPrice.Price * 10^(marketPrice.Exponent - quantumConversionExponent +
+			//                    baseAtomicResolution - quoteAtomicResolution)
+			// 3. askSubticks at layer i = priceSubticks * (1 + spread)^i
+			//    bidSubticks at layer i = priceSubticks * (1 - spread)^i
+			// 4. subticks needs to be a multiple of subtickPerTick (round up for asks, round down for bids)
+			expectedOrderSubticks: []uint64{
+				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
+				// priceSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5 * 10^8
+				// a_1 = 5 * 10^8 * (1 + 0.003)^1 = 501_500_000
+				501_500_000,
+				// b_1 = 5 * 10^8 * (1 - 0.003)^1 = 498_500_000
+				498_500_000,
+				// a_2 = 5 * 10^8 * (1 + 0.003)^2 = 503_004_500
+				503_004_500,
+				// b_2 = 5 * 10^8 * (1 - 0.003)^2 = 497_004_500
+				497_004_500,
+			},
+			expectedOrderQuantums: []uint64{ // TODO (TRA-144): Implement order size
+				5,
+				5,
+				5,
+				5,
 			},
 		},
-		"Get orders from Vault for Clob Pair 1": {
-			vaultId: constants.Vault_Clob_1,
-			expectedOrders: []clobtypes.Order{
-				// ask at layer 1.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_1.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_SELL,
-							uint8(1),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_1.Number,
-					},
-					Side:     clobtypes.Order_SIDE_SELL,
-					Quantums: testClobPairs[1].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of ask_1 = subticks * (1 + spread)
-						lib.BigRatMulPpm(ethSubticks, lib.OneMillion+ethSpreadPpm),
-						testClobPairs[1].SubticksPerTick,
-						true, // round up for asks
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// bid at layer 1.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_1.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_BUY,
-							uint8(1),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_1.Number,
-					},
-					Side:     clobtypes.Order_SIDE_BUY,
-					Quantums: testClobPairs[1].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of bid_1 = subticks * (1 - spread)
-						lib.BigRatMulPpm(ethSubticks, lib.OneMillion-ethSpreadPpm),
-						testClobPairs[1].SubticksPerTick,
-						false, // round down for bids
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// ask at layer 2.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_1.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_SELL,
-							uint8(2),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_1.Number,
-					},
-					Side:     clobtypes.Order_SIDE_SELL,
-					Quantums: testClobPairs[1].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of ask_2 = subticks * (1 + spread)^2
-						lib.BigRatMulPpm(
-							lib.BigRatMulPpm(ethSubticks, lib.OneMillion+ethSpreadPpm),
-							lib.OneMillion+ethSpreadPpm,
-						),
-						testClobPairs[1].SubticksPerTick,
-						true, // round up for asks
-					),
-					GoodTilOneof: orderGtbt,
-				},
-				// bid at layer 2.
-				{
-					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  constants.Vault_Clob_1.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId: tApp.App.VaultKeeper.GetVaultClobOrderClientId(
-							ctx,
-							clobtypes.Order_SIDE_BUY,
-							uint8(2),
-						),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: constants.Vault_Clob_1.Number,
-					},
-					Side:     clobtypes.Order_SIDE_BUY,
-					Quantums: testClobPairs[1].StepBaseQuantums, // TODO (TRA-144): Implement order size
-					Subticks: lib.BigRatRoundToNearestMultiple(
-						// subticks of bid_2 = subticks * (1 - spread)^2
-						lib.BigRatMulPpm(
-							lib.BigRatMulPpm(ethSubticks, lib.OneMillion-ethSpreadPpm),
-							lib.OneMillion-ethSpreadPpm,
-						),
-						testClobPairs[1].SubticksPerTick,
-						false, // round down for bids
-					),
-					GoodTilOneof: orderGtbt,
-				},
+		"Success - Get orders from Vault for Clob Pair 1": {
+			vaultId:  constants.Vault_Clob_1,
+			clobPair: constants.ClobPair_Eth,
+			marketParam: pricestypes.MarketParam{
+				Id:                 constants.TestMarketParams[1].Id,
+				Pair:               constants.TestMarketParams[1].Pair,
+				Exponent:           constants.TestMarketParams[1].Exponent,
+				MinExchanges:       constants.TestMarketParams[1].MinExchanges,
+				MinPriceChangePpm:  4_200, // Set a high min price change to test spread calculation.
+				ExchangeConfigJson: constants.TestMarketParams[1].ExchangeConfigJson,
 			},
+			marketPrice: constants.TestMarketPrices[1],
+			perpetual:   constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			expectedOrderSubticks: []uint64{
+				// spreadPpm = max(3_000, 1_500 + 4_200) = 5_700
+				// priceSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
+				// a_1 = 3 * 10^9 * (1 + 0.0057)^1 = 3_017_100_000
+				3_017_100_000,
+				// b_1 = 3 * 10^9 * (1 - 0.0057)^1 = 2_982_900_000
+				2_982_900_000,
+				// a_2 = 3 * 10^9 * (1 + 0.0057)^2 = 3_034_297_470
+				// round up to nearest multiple of subticksPerTick=1000.
+				3_034_298_000,
+				// b_2 = 3 * 10^9 * (1 - 0.0057)^2 = 2_965_897_470
+				// round down to nearest multiple of subticksPerTick=1000.
+				2_965_897_000,
+			},
+			expectedOrderQuantums: []uint64{ // TODO (TRA-144): Implement order size
+				1000,
+				1000,
+				1000,
+				1000,
+			},
+		},
+		"Error - Clob Pair doesn't exist": {
+			vaultId:     constants.Vault_Clob_0,
+			clobPair:    constants.ClobPair_Eth,
+			marketParam: constants.TestMarketParams[1],
+			marketPrice: constants.TestMarketPrices[1],
+			perpetual:   constants.EthUsd_NoMarginRequirement,
+			expectedErr: vaulttypes.ErrClobPairNotFound,
 		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			vaultOrders := tApp.App.VaultKeeper.GetVaultClobOrders(
-				ctx,
-				tc.vaultId,
+			// Initialize tApp and ctx.
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Initialize prices module with test market param and market price.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *pricestypes.GenesisState) {
+						genesisState.MarketParams = []pricestypes.MarketParam{tc.marketParam}
+						genesisState.MarketPrices = []pricestypes.MarketPrice{tc.marketPrice}
+					},
+				)
+				// Initialize perpetuals module with test perpetual.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *perptypes.GenesisState) {
+						genesisState.LiquidityTiers = constants.LiquidityTiers
+						genesisState.Perpetuals = []perptypes.Perpetual{tc.perpetual}
+					},
+				)
+				// Initialize clob module with test clob pair.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *clobtypes.GenesisState) {
+						genesisState.ClobPairs = []clobtypes.ClobPair{tc.clobPair}
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain()
+
+			// Get vault orders.
+			orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, tc.vaultId)
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				return
+			}
+			require.NoError(t, err)
+
+			// Get expected orders.
+			buildVaultClobOrder := func(
+				layer uint8,
+				side clobtypes.Order_Side,
+				quantums uint64,
+				subticks uint64,
+			) *clobtypes.Order {
+				return &clobtypes.Order{
+					OrderId: clobtypes.OrderId{
+						SubaccountId: satypes.SubaccountId{
+							Owner:  tc.vaultId.ToModuleAccountAddress(),
+							Number: 0,
+						},
+						ClientId:   tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, side, layer),
+						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
+						ClobPairId: tc.vaultId.Number,
+					},
+					Side:     side,
+					Quantums: quantums,
+					Subticks: subticks,
+					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
+						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + orderExpirationSeconds,
+					},
+				}
+			}
+			expectedOrders := make([]*clobtypes.Order, 0)
+			for i := uint8(0); i < numLayers; i++ {
+				expectedOrders = append(
+					expectedOrders,
+					// ask.
+					buildVaultClobOrder(
+						i+1,
+						clobtypes.Order_SIDE_SELL,
+						tc.expectedOrderQuantums[2*i],
+						tc.expectedOrderSubticks[2*i],
+					),
+					// bid.
+					buildVaultClobOrder(
+						i+1,
+						clobtypes.Order_SIDE_BUY,
+						tc.expectedOrderQuantums[2*i+1],
+						tc.expectedOrderSubticks[2*i+1],
+					),
+				)
+			}
+
+			// Compare expected orders with actual orders.
+			require.Equal(
+				t,
+				expectedOrders,
+				orders,
 			)
-			require.Equal(t, tc.expectedOrders, vaultOrders)
 		})
 	}
 }
@@ -395,9 +265,11 @@ func TestGetVaultClobOrderClientId(t *testing.T) {
 			expectedClientId: 1<<31 | 1<<30 | 0<<22,
 		},
 		"Sell, Block Height Odd (negative), Layer 202": {
-			side:             clobtypes.Order_SIDE_SELL, // 1<<31
-			blockHeight:      -678987,                   // 1<<30
-			layer:            202,                       // 202<<22
+			side: clobtypes.Order_SIDE_SELL, // 1<<31
+			// Negative block height shouldn't happen but blockHeight
+			// is represented as int64.
+			blockHeight:      -678987, // 1<<30
+			layer:            202,     // 202<<22
 			expectedClientId: 1<<31 | 1<<30 | 202<<22,
 		},
 		"Buy, Block Height Even (zero), Layer 157": {
