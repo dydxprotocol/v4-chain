@@ -3,7 +3,6 @@ package process
 import (
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	error_lib "github.com/dydxprotocol/v4-chain/protocol/lib/error"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 
@@ -64,14 +63,6 @@ func ProcessProposalHandler(
 			ctx,
 			log.Module, ModuleName,
 		)
-
-		// Perform the update of smoothed prices here to ensure that smoothed prices are updated even if a block is later
-		// rejected by consensus. We want smoothed prices to be updated on fixed cadence, and we are piggybacking on
-		// consensus round to do so.
-		if err := pricesKeeper.UpdateSmoothedPrices(ctx, lib.Uint64LinearInterpolate); err != nil {
-			recordErrorMetricsWithLabel(metrics.UpdateSmoothedPrices)
-			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
-		}
 
 		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesTxDecoder)
 		if err != nil {

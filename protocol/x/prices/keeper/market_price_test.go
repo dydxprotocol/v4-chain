@@ -25,7 +25,7 @@ func createNMarketPriceUpdates(
 }
 
 func TestUpdateMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
@@ -60,7 +60,7 @@ func TestUpdateMarketPrices(t *testing.T) {
 }
 
 func TestUpdateMarketPrices_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	priceUpdates := createNMarketPriceUpdates(10)
@@ -89,7 +89,7 @@ func TestUpdateMarketPrices_NotFound(t *testing.T) {
 }
 
 func TestGetMarketPrice(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
@@ -104,13 +104,13 @@ func TestGetMarketPrice(t *testing.T) {
 }
 
 func TestGetMarketPrice_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
 	_, err := keeper.GetMarketPrice(ctx, uint32(0))
 	require.EqualError(t, err, "0: Market price does not exist")
 }
 
 func TestGetAllMarketPrices(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	prices := make([]types.MarketPrice, len(items))
@@ -126,7 +126,7 @@ func TestGetAllMarketPrices(t *testing.T) {
 }
 
 func TestGetMarketIdToValidIndexPrice(t *testing.T) {
-	ctx, keeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
 	// Now() is used by `GetMarketIdToValidIndexPrice` internally compare with the cutoff time
 	// of each price.
 	mockTimeProvider.On("Now").Return(constants.TimeT)

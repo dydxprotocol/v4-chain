@@ -360,7 +360,7 @@ func TestPrepareProposalHandler(t *testing.T) {
 			mockClobKeeper.On("GetOperations", mock.Anything, mock.Anything).
 				Return(tc.clobResp)
 
-			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				mockTxConfig,
@@ -440,7 +440,7 @@ func TestPrepareProposalHandler_OtherTxs(t *testing.T) {
 			mockBridgeKeeper.On("GetAcknowledgeBridges", mock.Anything, mock.Anything).
 				Return(constants.MsgAcknowledgeBridges_Ids0_1_Height0)
 
-			ctx, _, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, _, _, _, _ := keepertest.PricesKeepers(t)
 
 			handler := prepare.PrepareProposalHandler(
 				encodingCfg.TxConfig,

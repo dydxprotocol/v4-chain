@@ -9,16 +9,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// getProposalPrice returns the proposed price update for the next block, which is either the smoothed price or the
-// index price - whichever is closer to the current market price. In cases where the smoothed price and the index price
-// are equidistant from the current market price, the smoothed price is chosen.
-func getProposalPrice(smoothedPrice uint64, indexPrice uint64, marketPrice uint64) uint64 {
-	if lib.AbsDiffUint64(smoothedPrice, marketPrice) > lib.AbsDiffUint64(indexPrice, marketPrice) {
-		return indexPrice
-	}
-	return smoothedPrice
-}
-
 // isAboveRequiredMinPriceChange returns true if the new price meets the required min price change
 // for the market. Otherwise, returns false.
 func isAboveRequiredMinPriceChange(marketParamPrice types.MarketParamPrice, newPrice uint64) bool {

@@ -19,11 +19,6 @@ type ProcessPricesKeeper interface {
 		marketPriceUpdates *pricestypes.MsgUpdateMarketPrices,
 		performNonDeterministicValidation bool,
 	) error
-
-	UpdateSmoothedPrices(
-		ctx sdk.Context,
-		linearInterpolateFunc func(v0 uint64, v1 uint64, ppm uint32) (uint64, error),
-	) error
 }
 
 // ProcessClobKeeper defines the expected clob keeper used for `ProcessProposal`.
