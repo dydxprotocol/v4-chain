@@ -399,24 +399,6 @@ func (_m *PricesKeeper) UpdateMarketPrices(ctx types.Context, updates []*pricest
 	return r0
 }
 
-// UpdateSmoothedPrices provides a mock function with given fields: ctx, linearInterpolateFunc
-func (_m *PricesKeeper) UpdateSmoothedPrices(ctx types.Context, linearInterpolateFunc func(uint64, uint64, uint32) (uint64, error)) error {
-	ret := _m.Called(ctx, linearInterpolateFunc)
-
-	if len(ret) == 0 {
-		panic("no return value specified for UpdateSmoothedPrices")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, func(uint64, uint64, uint32) (uint64, error)) error); ok {
-		r0 = rf(ctx, linearInterpolateFunc)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // NewPricesKeeper creates a new instance of PricesKeeper. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewPricesKeeper(t interface {

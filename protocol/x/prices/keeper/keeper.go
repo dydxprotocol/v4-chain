@@ -17,14 +17,13 @@ import (
 
 type (
 	Keeper struct {
-		cdc                    codec.BinaryCodec
-		storeKey               storetypes.StoreKey
-		indexPriceCache        *pricefeedtypes.MarketToExchangePrices
-		marketToSmoothedPrices types.MarketToSmoothedPrices
-		timeProvider           libtime.TimeProvider
-		indexerEventManager    indexer_manager.IndexerEventManager
-		marketToCreatedAt      map[uint32]time.Time
-		authorities            map[string]struct{}
+		cdc                 codec.BinaryCodec
+		storeKey            storetypes.StoreKey
+		indexPriceCache     *pricefeedtypes.MarketToExchangePrices
+		timeProvider        libtime.TimeProvider
+		indexerEventManager indexer_manager.IndexerEventManager
+		marketToCreatedAt   map[uint32]time.Time
+		authorities         map[string]struct{}
 	}
 )
 
@@ -34,20 +33,18 @@ func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedtypes.MarketToExchangePrices,
-	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	timeProvider libtime.TimeProvider,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:                    cdc,
-		storeKey:               storeKey,
-		indexPriceCache:        indexPriceCache,
-		marketToSmoothedPrices: marketToSmoothedPrices,
-		timeProvider:           timeProvider,
-		indexerEventManager:    indexerEventManager,
-		marketToCreatedAt:      map[uint32]time.Time{},
-		authorities:            lib.UniqueSliceToSet(authorities),
+		cdc:                 cdc,
+		storeKey:            storeKey,
+		indexPriceCache:     indexPriceCache,
+		timeProvider:        timeProvider,
+		indexerEventManager: indexerEventManager,
+		marketToCreatedAt:   map[uint32]time.Time{},
+		authorities:         lib.UniqueSliceToSet(authorities),
 	}
 }
 
