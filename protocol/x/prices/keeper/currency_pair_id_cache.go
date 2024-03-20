@@ -54,3 +54,12 @@ func (c *CurrencyPairIDCache) GetIDForCurrencyPair(currencyPair string) (uint64,
 	id, found := c.currencyPairToID[currencyPair]
 	return id, found
 }
+
+// Remove removes the currency-pair (by ID) from the cache
+func (c *CurrencyPairIDCache) Remove(id uint64) {
+	currencyPair, found := c.idToCurrencyPair[id]
+	if found {
+		delete(c.idToCurrencyPair, id)
+		delete(c.currencyPairToID, currencyPair)
+	}
+}
