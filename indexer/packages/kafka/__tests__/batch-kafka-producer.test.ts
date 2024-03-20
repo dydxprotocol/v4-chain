@@ -1,16 +1,18 @@
 import { KafkaTopics } from '../src';
 import { BatchKafkaProducer, ProducerMessage } from '../src/batch-kafka-producer';
 import { producer } from '../src/producer';
+import { IHeaders } from 'kafkajs';
 import _ from 'lodash';
 
 interface TestMessage {
   key?: string,
   value: string,
+  headers?: IHeaders,
 }
 
 function testMessage2ProducerMessage(data: TestMessage): ProducerMessage {
   const key: Buffer | undefined = data.key === undefined ? undefined : Buffer.from(data.key);
-  return { key, value: Buffer.from(data.value) };
+  return { key, value: Buffer.from(data.value), headers: data.headers };
 }
 
 function testMessage2ProducerMessages(data: TestMessage[]): ProducerMessage[] {
@@ -35,7 +37,7 @@ describe('batch-kafka-producer', () => {
     [
       'will send key if key is not undefined',
       5,
-      [{ key: '1', value: 'a' }, { key: '2', value: 'b' }, { key: '3', value: 'c' }],
+      [{ key: '1', value: 'a' }, { key: '2', value: 'b' }, { key: '3', value: 'c', headers: { timestamp: 'value' } }],
       [[{ key: '1', value: 'a' }, { key: '2', value: 'b' }]],
       [{ key: '3', value: 'c' }],
     ],

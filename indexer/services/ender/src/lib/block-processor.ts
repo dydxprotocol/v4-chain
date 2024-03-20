@@ -77,13 +77,16 @@ export class BlockProcessor {
   txId: number;
   batchedHandlers: BatchedHandlers;
   syncHandlers: SyncHandlers;
+  messageReceivedTimestamp: string;
 
   constructor(
     block: IndexerTendermintBlock,
     txId: number,
+    messageReceivedTimestamp: string,
   ) {
     this.block = block;
     this.txId = txId;
+    this.messageReceivedTimestamp = messageReceivedTimestamp;
     this.sqlBlock = {
       ...this.block,
       events: new Array(this.block.events.length),
@@ -205,6 +208,7 @@ export class BlockProcessor {
     const handlers: Handler<EventMessage>[] = validator.createHandlers(
       eventProto.indexerTendermintEvent,
       this.txId,
+      this.messageReceivedTimestamp,
     );
 
     _.map(handlers, (handler: Handler<EventMessage>) => {

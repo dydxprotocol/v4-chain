@@ -46,6 +46,7 @@ export class TransferValidator extends Validator<TransferEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
+    _: string,
   ): Handler<TransferEventV1>[] {
     return [
       new TransferHandler(

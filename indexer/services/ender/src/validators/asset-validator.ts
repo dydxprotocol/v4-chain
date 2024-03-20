@@ -10,6 +10,7 @@ export class AssetValidator extends Validator<AssetCreateEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
+    _: string,
   ): Handler<AssetCreateEventV1>[] {
     const handler: Handler<AssetCreateEventV1> = new AssetCreationHandler(
       this.block,

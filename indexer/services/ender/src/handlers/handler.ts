@@ -33,6 +33,7 @@ export type HandlerInitializer = new (
   indexerTendermintEvent: IndexerTendermintEvent,
   txId: number,
   event: EventMessage,
+  messageReceivedTimestamp?: string,
 ) => Handler<EventMessage>;
 
 /**
@@ -49,6 +50,7 @@ export abstract class Handler<T> {
   blockEventIndex: number;
   event: T;
   abstract eventType: string;
+  messageReceivedTimestamp?: string;
 
   constructor(
     block: IndexerTendermintBlock,
@@ -56,6 +58,7 @@ export abstract class Handler<T> {
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
     event: T,
+    messageReceivedTimestamp?: string,
   ) {
     this.block = block;
     this.blockEventIndex = blockEventIndex;
@@ -63,6 +66,7 @@ export abstract class Handler<T> {
     this.timestamp = DateTime.fromJSDate(block.time!);
     this.txId = txId;
     this.event = event;
+    this.messageReceivedTimestamp = messageReceivedTimestamp;
   }
 
   /**
