@@ -228,8 +228,8 @@ func (m *QuerySubaccountAllResponse) GetPagination() *query.PageResponse {
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
-// fetching information about whether withdrawals and transfers are blocked for a specific
-// collateral pool.
+// fetching information about whether withdrawals and transfers are blocked for
+// a specific collateral pool.
 type QueryGetWithdrawalAndTransfersBlockedInfoRequest struct {
 	CollateralPoolAddress string `protobuf:"bytes,1,opt,name=collateral_pool_address,json=collateralPoolAddress,proto3" json:"collateral_pool_address,omitempty"`
 }
