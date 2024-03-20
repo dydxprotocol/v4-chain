@@ -1276,8 +1276,6 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
-
-	k.GetGrpcStreamingManager().SendOrderbookUpdates(offchainUpdates, false)
 }
 
 // getPessimisticCollateralCheckPrice returns the price in subticks we should use for collateralization checks.
