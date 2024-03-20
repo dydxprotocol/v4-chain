@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -22,6 +23,196 @@ const (
 	baseSpreadMinPriceChangePremiumPpm = uint32(1_500) // 15 bps
 	orderExpirationSeconds             = uint32(5)     // 5 seconds
 )
+
+func TestRefreshAllVaultOrders(t *testing.T) {
+	tests := map[string]struct {
+		// Vault IDs.
+		vaultIds []vaulttypes.VaultId
+		// Total Shares of each vault ID above.
+		totalShares []vaulttypes.NumShares
+	}{
+		"Two Vaults, Both Positive Shares": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []vaulttypes.NumShares{
+				{
+					NumShares: dtypes.NewInt(1_000),
+				},
+				{
+					NumShares: dtypes.NewInt(200),
+				},
+			},
+		},
+		"Two Vaults, One Positive Shares, One Zero Shares": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []vaulttypes.NumShares{
+				{
+					NumShares: dtypes.NewInt(1_000),
+				},
+				{
+					NumShares: dtypes.NewInt(0),
+				},
+			},
+		},
+		"Two Vaults, Both Zero Shares": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []vaulttypes.NumShares{
+				{
+					NumShares: dtypes.NewInt(0),
+				},
+				{
+					NumShares: dtypes.NewInt(0),
+				},
+			},
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize tApp and ctx (in deliverTx mode).
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Initialize each vault with quote quantums to be able to place orders.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						subaccounts := make([]satypes.Subaccount, len(tc.vaultIds))
+						for i, vaultId := range tc.vaultIds {
+							subaccounts[i] = satypes.Subaccount{
+								Id: vaultId.ToSubaccountId(),
+								AssetPositions: []*satypes.AssetPosition{
+									{
+										AssetId:  0,
+										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
+									},
+								},
+							}
+						}
+						genesisState.Subaccounts = subaccounts
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain().WithIsCheckTx(false)
+
+			// Set total shares for each vault ID.
+			for i, vaultId := range tc.vaultIds {
+				err := tApp.App.VaultKeeper.SetTotalShares(ctx, vaultId, tc.totalShares[i])
+				require.NoError(t, err)
+			}
+
+			// Check that there's no stateful orders yet.
+			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, allStatefulOrders, 0)
+
+			// Refresh all vault orders.
+			tApp.App.VaultKeeper.RefreshAllVaultOrders(ctx)
+
+			// Check orders are as expected.
+			numExpectedOrders := 0
+			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
+			for i, vaultId := range tc.vaultIds {
+				if tc.totalShares[i].NumShares.Cmp(dtypes.NewInt(0)) > 0 {
+					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
+					require.NoError(t, err)
+					numExpectedOrders += len(expectedOrders)
+					for _, order := range expectedOrders {
+						allExpectedOrderIds[order.OrderId] = true
+					}
+				}
+			}
+			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, allStatefulOrders, numExpectedOrders)
+			for _, order := range allStatefulOrders {
+				require.True(t, allExpectedOrderIds[order.OrderId])
+			}
+		})
+	}
+}
+
+func TestRefreshVaultClobOrders(t *testing.T) {
+	tests := map[string]struct {
+		/* --- Setup --- */
+		// Vault ID.
+		vaultId vaulttypes.VaultId
+
+		/* --- Expectations --- */
+		expectedErr error
+	}{
+		"Success - Refresh Orders from Vault for Clob Pair 0": {
+			vaultId: constants.Vault_Clob_0,
+		},
+		"Error - Refresh Orders from Vault for Clob Pair 4321 (non-existent clob pair)": {
+			vaultId: vaulttypes.VaultId{
+				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
+				Number: 4321,
+			},
+			expectedErr: vaulttypes.ErrClobPairNotFound,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize tApp and ctx (in deliverTx mode).
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis types.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				// Initialize vault with quote quantums to be able to place orders.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{
+							{
+								Id: tc.vaultId.ToSubaccountId(),
+								AssetPositions: []*satypes.AssetPosition{
+									{
+										AssetId:  0,
+										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
+									},
+								},
+							},
+						}
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain().WithIsCheckTx(false)
+
+			// Check that there's no stateful orders yet.
+			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			require.Len(t, allStatefulOrders, 0)
+
+			// Refresh vault orders.
+			err := tApp.App.VaultKeeper.RefreshVaultClobOrders(ctx, tc.vaultId)
+			allStatefulOrders = tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
+			if tc.expectedErr != nil {
+				// Check that the error is as expected.
+				require.ErrorContains(t, err, tc.expectedErr.Error())
+				// Check that there's no stateful orders.
+				require.Len(t, allStatefulOrders, 0)
+				return
+			} else {
+				// Check that there's no error.
+				require.NoError(t, err)
+				// Check that the number of orders is as expected.
+				require.Len(t, allStatefulOrders, int(numLayers)*2)
+				// Check that the orders are as expected.
+				expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, tc.vaultId)
+				require.NoError(t, err)
+				for i := uint8(0); i < numLayers*2; i++ {
+					require.Equal(t, *expectedOrders[i], allStatefulOrders[i])
+				}
+			}
+		})
+	}
+}
 
 func TestGetVaultClobOrders(t *testing.T) {
 	tests := map[string]struct {
@@ -167,13 +358,10 @@ func TestGetVaultClobOrders(t *testing.T) {
 			) *clobtypes.Order {
 				return &clobtypes.Order{
 					OrderId: clobtypes.OrderId{
-						SubaccountId: satypes.SubaccountId{
-							Owner:  tc.vaultId.ToModuleAccountAddress(),
-							Number: 0,
-						},
-						ClientId:   tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, side, layer),
-						OrderFlags: clobtypes.OrderIdFlags_LongTerm,
-						ClobPairId: tc.vaultId.Number,
+						SubaccountId: *tc.vaultId.ToSubaccountId(),
+						ClientId:     tApp.App.VaultKeeper.GetVaultClobOrderClientId(ctx, side, layer),
+						OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+						ClobPairId:   tc.vaultId.Number,
 					},
 					Side:     side,
 					Quantums: quantums,

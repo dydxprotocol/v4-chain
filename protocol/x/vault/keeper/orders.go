@@ -6,9 +6,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -30,10 +32,79 @@ const (
 )
 
 // RefreshAllVaultOrders refreshes all orders for all vaults by
-// TODO(TRA-134)
 // 1. Cancelling all existing orders.
 // 2. Placing new orders.
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
+	// Iterate through all vaults.
+	totalSharesIterator := k.getTotalSharesIterator(ctx)
+	defer totalSharesIterator.Close()
+	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
+		var vaultId types.VaultId
+		k.cdc.MustUnmarshal(totalSharesIterator.Key(), &vaultId)
+		var totalShares types.NumShares
+		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
+
+		// Skip if TotalShares is non-positive.
+		if totalShares.NumShares.Cmp(dtypes.NewInt(0)) <= 0 {
+			continue
+		}
+
+		// Refresh orders depending on vault type.
+		switch vaultId.Type {
+		case types.VaultType_VAULT_TYPE_CLOB:
+			err := k.RefreshVaultClobOrders(ctx, vaultId)
+			if err != nil {
+				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", vaultId)
+			}
+		}
+	}
+}
+
+// RefreshVaultClobOrders refreshes orders of a CLOB vault.
+func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (err error) {
+	// Cancel CLOB orders from last block.
+	ordersToCancel, err := k.GetVaultClobOrders(
+		ctx.WithBlockHeight(ctx.BlockHeight()-1),
+		vaultId,
+	)
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to cancel", err, "vaultId", vaultId)
+		return err
+	}
+	for _, order := range ordersToCancel {
+		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
+			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
+				order.OrderId,
+				uint32(ctx.BlockTime().Unix())+ORDER_EXPIRATION_SECONDS,
+			))
+			if err != nil {
+				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
+			}
+			vaultId.IncrCounterWithLabels(
+				metrics.VaultCancelOrder,
+				metrics.GetLabelForBoolValue(metrics.Success, err == nil),
+			)
+		}
+	}
+
+	// Place new CLOB orders.
+	ordersToPlace, err := k.GetVaultClobOrders(ctx, vaultId)
+	if err != nil {
+		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to place", err, "vaultId", vaultId)
+		return err
+	}
+	for _, order := range ordersToPlace {
+		err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order))
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
+		}
+		vaultId.IncrCounterWithLabels(
+			metrics.VaultPlaceOrder,
+			metrics.GetLabelForBoolValue(metrics.Success, err == nil),
+		)
+	}
+
+	return nil
 }
 
 // GetVaultClobOrders returns a list of long term orders for a given vault, with its corresponding
@@ -80,10 +151,7 @@ func (k Keeper) GetVaultClobOrders(
 	}
 
 	// Get vault (subaccount 0 of corresponding module account).
-	vault := satypes.SubaccountId{
-		Owner:  vaultId.ToModuleAccountAddress(),
-		Number: 0,
-	}
+	vault := vaultId.ToSubaccountId()
 	// Calculate spread.
 	spreadPpm := lib.Max(
 		MIN_BASE_SPREAD_PPM,
@@ -112,7 +180,7 @@ func (k Keeper) GetVaultClobOrders(
 		// Construct ask at this layer.
 		ask := clobtypes.Order{
 			OrderId: clobtypes.OrderId{
-				SubaccountId: vault,
+				SubaccountId: *vault,
 				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(i+1)),
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
@@ -130,7 +198,7 @@ func (k Keeper) GetVaultClobOrders(
 		// Construct bid at this layer.
 		bid := clobtypes.Order{
 			OrderId: clobtypes.OrderId{
-				SubaccountId: vault,
+				SubaccountId: *vault,
 				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(i+1)),
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,

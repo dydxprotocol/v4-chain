@@ -243,6 +243,12 @@ const (
 	DistributedRewardTokens          = "distributed_reward_tokens"
 	TreasuryBalanceAfterDistribution = "treasury_balance_after_distribution"
 
+	// Vault.
+	VaultCancelOrder = "vault_cancel_order"
+	VaultPlaceOrder  = "vault_place_order"
+	VaultType        = "vault_type"
+	VaultId          = "vault_id"
+
 	// Vest.
 	GetVestEntry          = "get_vest_entry"
 	VestAmount            = "vest_amount"
