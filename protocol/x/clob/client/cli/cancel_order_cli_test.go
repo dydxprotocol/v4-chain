@@ -207,6 +207,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 		s.validatorAddress,
 		cancelsSubaccountNumberZero,
 		clientId,
+		constants.ClobPair_Btc.Id,
 		goodTilBlock,
 	)
 	s.Require().NoError(err)
@@ -232,6 +233,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 		s.validatorAddress,
 		cancelsSubaccountNumberZero,
 		unknownClientId,
+		constants.ClobPair_Btc.Id,
 		goodTilBlock,
 	)
 	s.Require().NoError(err)
@@ -345,6 +347,7 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 		s.validatorAddress,
 		cancelsSubaccountNumberZero,
 		clientId,
+		constants.ClobPair_Btc.Id,
 		goodTilBlock,
 	)
 	s.Require().NoError(err)

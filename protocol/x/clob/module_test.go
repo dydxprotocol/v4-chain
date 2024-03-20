@@ -240,9 +240,10 @@ func TestAppModuleBasic_GetTxCmd(t *testing.T) {
 
 	cmd := am.GetTxCmd()
 	require.Equal(t, "clob", cmd.Use)
-	require.Equal(t, 2, len(cmd.Commands()))
-	require.Equal(t, "cancel-order", cmd.Commands()[0].Name())
-	require.Equal(t, "place-order", cmd.Commands()[1].Name())
+	require.Equal(t, 3, len(cmd.Commands()))
+	require.Equal(t, "batch-cancel", cmd.Commands()[0].Name())
+	require.Equal(t, "cancel-order", cmd.Commands()[1].Name())
+	require.Equal(t, "place-order", cmd.Commands()[2].Name())
 }
 
 func TestAppModuleBasic_GetQueryCmd(t *testing.T) {
