@@ -42,9 +42,17 @@ export class LCDQueryClient {
    if so which block they are re-enabled on. */
 
 
-  async getWithdrawalAndTransfersBlockedInfo(_params: QueryGetWithdrawalAndTransfersBlockedInfoRequest = {}): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType> {
+  async getWithdrawalAndTransfersBlockedInfo(params: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType> {
+    const options: any = {
+      params: {}
+    };
+
+    if (typeof params?.collateralPoolAddress !== "undefined") {
+      options.params.collateral_pool_address = params.collateralPoolAddress;
+    }
+
     const endpoint = `dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info`;
-    return await this.req.get<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType>(endpoint);
+    return await this.req.get<QueryGetWithdrawalAndTransfersBlockedInfoResponseSDKType>(endpoint, options);
   }
 
 }

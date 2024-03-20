@@ -56,10 +56,11 @@ message QuerySubaccountAllResponse {
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
-// fetching information about whether withdrawals and transfers are blocked for a specific
-// collateral pool.
+// fetching information about whether withdrawals and transfers are blocked for
+// a specific collateral pool.
 message QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  string collateral_pool_address = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  string collateral_pool_address = 1
+      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for

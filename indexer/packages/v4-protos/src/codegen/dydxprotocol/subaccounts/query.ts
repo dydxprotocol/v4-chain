@@ -48,16 +48,22 @@ export interface QuerySubaccountAllResponseSDKType {
 }
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a specific collateral pool.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  collateralPoolAddress: string;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a specific collateral pool.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {
+  collateral_pool_address: string;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
  * fetching information about whether withdrawals and transfers are blocked.
@@ -280,11 +286,17 @@ export const QuerySubaccountAllResponse = {
 };
 
 function createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest(): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  return {};
+  return {
+    collateralPoolAddress: ""
+  };
 }
 
 export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
-  encode(_: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.collateralPoolAddress !== "") {
+      writer.uint32(10).string(message.collateralPoolAddress);
+    }
+
     return writer;
   },
 
@@ -297,6 +309,10 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.collateralPoolAddress = reader.string();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -306,8 +322,9 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  fromPartial(object: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
     const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
+    message.collateralPoolAddress = object.collateralPoolAddress ?? "";
     return message;
   }
 
