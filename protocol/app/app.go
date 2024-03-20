@@ -342,7 +342,6 @@ type App struct {
 
 	// Slinky
 	oraclePrometheusServer *promserver.PrometheusServer
-	oracleMetricsInit      func()
 	oracleMetrics          servicemetrics.Metrics
 }
 
@@ -460,32 +459,7 @@ func New(
 			return nil
 		},
 	)
-	app.oracleMetricsInit = sync.OnceFunc(
-		func() {
-			cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
-			if err != nil {
-				panic(err)
-			}
-			oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
-			if err != nil {
-				panic(err)
-			}
-			// run prometheus metrics
-			if cfg.MetricsEnabled {
-				promLogger, err := zap.NewProduction()
-				if err != nil {
-					panic(err)
-				}
-				app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
-				if err != nil {
-					panic(err)
-				}
-				// start the prometheus server
-				go app.oraclePrometheusServer.Start()
-			}
-			app.oracleMetrics = oracleMetrics
-		},
-	)
+	app.initOracleMetrics(appOpts)
 
 	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
@@ -838,7 +812,7 @@ func New(
 				)
 				app.RegisterDaemonWithHealthMonitor(app.PriceFeedClient, maxDaemonUnhealthyDuration)
 			}
-			if daemonFlags.Slinky.AppConfig.Enabled {
+			if daemonFlags.Slinky.Enabled {
 				app.SlinkyClient = slinkyclient.StartNewClient(
 					context.Background(),
 					app.initSlinkySidecarClient(appOpts),
@@ -1449,7 +1423,6 @@ func New(
 
 func (app *App) initSlinkySidecarClient(appOpts servertypes.AppOptions) oracleclient.OracleClient {
 	// Create the oracle service.
-	app.oracleMetricsInit()
 	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
 	if err != nil {
 		panic(err)
@@ -1544,7 +1517,6 @@ func (app *App) createProposalHandlers(
 
 	// Wrap dydx handlers with slinky handlers
 	if appFlags.VEOracleEnabled {
-		app.oracleMetricsInit()
 		app.initOracle(priceUpdateDecoder)
 		proposalHandler := slinkyproposals.NewProposalHandler(
 			app.Logger(),
@@ -1585,6 +1557,31 @@ func (app *App) initOracle(pricesTxDecoder process.UpdateMarketPriceTxDecoder) {
 
 	app.SetExtendVoteHandler(dydxExtendVoteHandler.ExtendVoteHandler())
 	app.SetVerifyVoteExtensionHandler(slinkyVoteExtensionsHandler.VerifyVoteExtensionHandler())
+}
+
+func (app *App) initOracleMetrics(appOpts servertypes.AppOptions) {
+	cfg, err := oracleconfig.ReadConfigFromAppOpts(appOpts)
+	if err != nil {
+		panic(err)
+	}
+	oracleMetrics, err := servicemetrics.NewMetricsFromConfig(cfg, app.ChainID())
+	if err != nil {
+		panic(err)
+	}
+	// run prometheus metrics
+	if cfg.MetricsEnabled {
+		promLogger, err := zap.NewProduction()
+		if err != nil {
+			panic(err)
+		}
+		app.oraclePrometheusServer, err = promserver.NewPrometheusServer(cfg.PrometheusServerAddress, promLogger)
+		if err != nil {
+			panic(err)
+		}
+		// start the prometheus server
+		go app.oraclePrometheusServer.Start()
+	}
+	app.oracleMetrics = oracleMetrics
 }
 
 // RegisterDaemonWithHealthMonitor registers a daemon service with the update monitor, which will commence monitoring
