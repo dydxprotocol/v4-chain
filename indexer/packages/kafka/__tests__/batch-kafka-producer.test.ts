@@ -39,7 +39,7 @@ describe('batch-kafka-producer', () => {
       5,
       [{ key: '1', value: 'a' }, { key: '2', value: 'b' }, { key: '3', value: 'c', headers: { timestamp: 'value' } }],
       [[{ key: '1', value: 'a' }, { key: '2', value: 'b' }]],
-      [{ key: '3', value: 'c' }],
+      [{ key: '3', value: 'c', headers: { timestamp: 'value' } }],
     ],
     [
       'will not send message until the batch size is reached',
@@ -106,7 +106,9 @@ describe('batch-kafka-producer', () => {
 
     for (const msg of messages) {
       const key: Buffer | undefined = msg.key === undefined ? undefined : Buffer.from(msg.key);
-      batchProducer.addMessageAndMaybeFlush({ value: Buffer.from(msg.value), key, headers: msg.headers });
+      batchProducer.addMessageAndMaybeFlush(
+        { value: Buffer.from(msg.value), key, headers: msg.headers },
+      );
     }
 
     expect(producerSendMock.mock.calls).toHaveLength(expectedMessagesPerCall.length);
