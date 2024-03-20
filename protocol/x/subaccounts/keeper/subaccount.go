@@ -662,11 +662,15 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 
+		// Branch the state to calculate the new OIMF after OI increase.
+		// The branched state is only needed for this purpose and is always discarded.
+		branchedContext, _ := ctx.CacheContext()
+
 		// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
 		// `perpOpenInterestDeltas` is only present for `Match` update type.
 		if perpOpenInterestDelta != nil {
 			if err := k.perpetualsKeeper.ModifyOpenInterest(
-				ctx,
+				branchedContext,
 				perpOpenInterestDelta.PerpetualId,
 				perpOpenInterestDelta.BaseQuantumsDelta,
 			); err != nil {
@@ -685,28 +689,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			bigNewInitialMargin,
 			bigNewMaintenanceMargin,
 			err := k.internalGetNetCollateralAndMarginRequirements(
-			ctx,
+			branchedContext,
 			u,
 		)
 
-		// Revert the temporary open interest delta to perpetuals.
-		if perpOpenInterestDelta != nil {
-			if err := k.perpetualsKeeper.ModifyOpenInterest(
-				ctx,
-				perpOpenInterestDelta.PerpetualId,
-				new(big.Int).Neg(
-					perpOpenInterestDelta.BaseQuantumsDelta,
-				),
-			); err != nil {
-				return false, nil, errorsmod.Wrapf(
-					types.ErrCannotRevertPerpOpenInterestForOIMF,
-					"perpId = %v, delta = %v, settledUpdates = %+v",
-					perpOpenInterestDelta.PerpetualId,
-					perpOpenInterestDelta.BaseQuantumsDelta,
-					settledUpdates,
-				)
-			}
-		}
 		// if `internalGetNetCollateralAndMarginRequirements`, returns error.
 		if err != nil {
 			return false, nil, err

@@ -4524,6 +4524,18 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				require.Equal(t, tc.expectedSuccessPerUpdate, successPerUpdate)
 				require.Equal(t, tc.expectedSuccess, success)
 			}
+
+			for _, openInterest := range tc.openInterests {
+				// Check open interest for each perpetual did not change after the check.
+				perp, err := perpetualsKeeper.GetPerpetual(ctx, openInterest.PerpetualId)
+				require.NoError(t, err)
+				require.Zerof(t,
+					openInterest.BaseQuantumsDelta.Cmp(perp.OpenInterest.BigInt()),
+					"expected: %s, got: %s",
+					openInterest.BaseQuantumsDelta.String(),
+					perp.OpenInterest.String(),
+				)
+			}
 		})
 	}
 }
