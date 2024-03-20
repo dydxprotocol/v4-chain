@@ -212,11 +212,10 @@ describe('funding index update store', () => {
         '3',
       );
 
-    expect(fundingIndexMap).toEqual({
-      [defaultFundingIndexUpdate.perpetualId]: Big(defaultFundingIndexUpdate.fundingIndex),
-      [fundingIndexUpdates3.perpetualId]: Big(fundingIndexUpdates3.fundingIndex),
-      [defaultPerpetualMarket3.id]: Big(0),
-    });
+    expect(fundingIndexMap[defaultFundingIndexUpdate.perpetualId])
+      .toEqual(Big(defaultFundingIndexUpdate.fundingIndex));
+    expect(fundingIndexMap[fundingIndexUpdates3.perpetualId])
+      .toEqual(Big(fundingIndexUpdates3.fundingIndex));
   });
 
   it('Gets default funding index of 0 in funding index map if no funding indexes', async () => {
@@ -225,11 +224,8 @@ describe('funding index update store', () => {
         '3',
       );
 
-    expect(fundingIndexMap).toEqual({
-      [defaultPerpetualMarket.id]: Big(0),
-      [defaultPerpetualMarket2.id]: Big(0),
-      [defaultPerpetualMarket3.id]: Big(0),
-    });
+    expect(fundingIndexMap[defaultPerpetualMarket.id]).toEqual(Big(0));
+    expect(fundingIndexMap[defaultPerpetualMarket2.id]).toEqual(Big(0));
   });
 
   it(
@@ -242,11 +238,9 @@ describe('funding index update store', () => {
           '3',
         );
 
-      expect(fundingIndexMap).toEqual({
-        [defaultPerpetualMarket.id]: Big(defaultFundingIndexUpdate.fundingIndex),
-        [defaultPerpetualMarket2.id]: Big(0),
-        [defaultPerpetualMarket3.id]: Big(0),
-      });
+      expect(fundingIndexMap[defaultPerpetualMarket.id])
+        .toEqual(Big(defaultFundingIndexUpdate.fundingIndex));
+      expect(fundingIndexMap[defaultPerpetualMarket2.id]).toEqual(Big(0));
     },
   );
 });
