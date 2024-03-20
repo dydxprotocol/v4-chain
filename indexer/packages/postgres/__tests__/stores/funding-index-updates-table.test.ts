@@ -8,7 +8,6 @@ import {
   defaultFundingIndexUpdateId,
   defaultPerpetualMarket,
   defaultPerpetualMarket2,
-  defaultPerpetualMarket3,
   defaultTendermintEventId2,
   defaultTendermintEventId3,
 } from '../helpers/constants';

@@ -349,7 +349,8 @@ export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeReq
   marketType: MarketType,
 }
 
-export interface ParentSubaccountFillRequest extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+export interface ParentSubaccountFillRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
 }

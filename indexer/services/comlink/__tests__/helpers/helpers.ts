@@ -6,7 +6,7 @@ import {
   OrderCreateObject,
   OrderFromDatabase,
   OrderSide,
-  OrderTable, testConstants,
+  OrderTable,
 } from '@dydxprotocol-indexer/postgres';
 import Big from 'big.js';
 import e from 'express';
@@ -15,7 +15,7 @@ import request from 'supertest';
 
 import IndexV4 from '../../src/controllers/api/index-v4';
 import Server from '../../src/request-helpers/server';
-import {RequestMethod, FillResponseObject, MarketType} from '../../src/types';
+import { RequestMethod, FillResponseObject, MarketType } from '../../src/types';
 
 const app: e.Express = Server(IndexV4);
 
