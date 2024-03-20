@@ -92,6 +92,7 @@ func (m *MarketPairFetcherImpl) FetchIdMappings(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
 	var compatMappings = make(map[slinkytypes.CurrencyPair]uint32, len(marketParams))
 	for _, mp := range marketParams {
 		cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
