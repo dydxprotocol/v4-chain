@@ -1,6 +1,7 @@
 package gov_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
@@ -276,6 +277,7 @@ func TestUpdatePerpetualsParams(t *testing.T) {
 						for i, marketId := range append(tc.genesisMarketIds, TEST_PERPETUAL_PARAMS.MarketId) {
 							marketParamPrice := pricestest.GenerateMarketParamPrice(
 								pricestest.WithId(marketId),
+								pricestest.WithPair(fmt.Sprintf("%d-%d", i, i)),
 							)
 							marketParams[i] = marketParamPrice.Param
 							marketPrices[i] = marketParamPrice.Price

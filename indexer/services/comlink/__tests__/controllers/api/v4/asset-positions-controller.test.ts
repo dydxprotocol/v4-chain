@@ -46,6 +46,7 @@ describe('asset-positions-controller#V4', () => {
         side: PositionSide.LONG,
         size,
         assetId: testConstants.defaultAssetPosition.assetId,
+        subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
       };
 
       expect(response.body.positions).toEqual(
@@ -75,6 +76,7 @@ describe('asset-positions-controller#V4', () => {
         side: PositionSide.SHORT,
         size: testConstants.defaultAssetPosition.size,
         assetId: testConstants.defaultAssetPosition.assetId,
+        subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
       };
 
       expect(response.body.positions).toEqual(
@@ -110,6 +112,7 @@ describe('asset-positions-controller#V4', () => {
           size: testConstants.defaultAssetPosition.size,
           side: PositionSide.LONG,
           assetId: testConstants.defaultAssetPosition.assetId,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         }],
       );
     });
@@ -154,6 +157,7 @@ describe('asset-positions-controller#V4', () => {
           size: '9500',
           side: PositionSide.LONG,
           assetId: testConstants.defaultAssetPosition.assetId,
+          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         }],
       );
     });

@@ -24,6 +24,7 @@ import {
   OrderFillEventV1,
   OrderRemovalReason,
   PerpetualMarketCreateEventV1,
+  PerpetualMarketType,
   StatefulOrderEventV1,
   SubaccountMessage,
   SubaccountUpdateEventV1,
@@ -138,6 +139,7 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   subticksPerTick: 100,
   stepBaseQuantums: Long.fromValue(10, true),
   liquidityTier: 0,
+  marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
 };
 
 export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {

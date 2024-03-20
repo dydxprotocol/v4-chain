@@ -5,32 +5,27 @@ import (
 )
 
 const (
-	MaxShortTermOrdersPerNBlocksNumBlocks             = 1_000
-	MaxShortTermOrdersPerNBlocksLimit                 = 10_000_000
-	MaxShortTermOrderCancellationsPerNBlocksNumBlocks = 1_000
-	MaxShortTermOrderCancellationsPerNBlocksLimit     = 10_000_000
-	MaxStatefulOrdersPerNBlocksNumBlocks              = 10_000
-	MaxStatefulOrdersPerNBlocksLimit                  = 1_000_000
+	MaxShortTermOrdersAndCancelsPerNBlocksNumBlocks = 2_000
+	MaxShortTermOrdersAndCancelsPerNBlocksLimit     = 10_000_000
+	MaxStatefulOrdersPerNBlocksNumBlocks            = 10_000
+	MaxStatefulOrdersPerNBlocksLimit                = 1_000_000
 )
 
 // Validate validates each individual MaxPerNBlocksRateLimit.
 // It returns an error if any of the rate limits fail the following validations:
-//   - `Limit == 0` || `Limit > MaxShortTermOrdersPerNBlocksLimit` for short term order rate limits.
-//   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrdersPerNBlocksNumBlocks` for short term order rate
+//   - `Limit == 0` || `Limit > MaxShortTermOrdersAndCancelsPerNBlocksLimit` for short term order/cancel rate limits.
+//   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrdersAndCancelsPerNBlocksNumBlocks`
+//     for short term order/cancel rate
 //     limits.
 //   - `Limit == 0` || `Limit > MaxStatefulOrdersPerNBlocksLimit` for stateful order rate limits.
 //   - `NumBlocks == 0` || `NumBlocks > MaxStatefulOrdersPerNBlocksNumBlocks` for stateful order rate limits.
-//   - `Limit == 0` || `Limit > MaxShortTermOrderCancellationsPerNBlocksNumBlocks` for short term order
-//     cancellation rate limits.
-//   - `NumBlocks == 0` || `NumBlocks > MaxShortTermOrderCancellationsPerNBlocksLimit` for short term order
-//     cancellation rate limits.
-//   - There are multiple rate limits for the same `NumBlocks` in `MaxShortTermOrdersPerNBlocks`,
-//     `MaxStatefulOrdersPerNBlocks`, or `MaxShortTermOrderCancellationsPerNBlocks`.
+//   - There are multiple rate limits for the same `NumBlocks` in `MaxShortTermOrdersAndCancelsPerNBlocks`,
+//     `MaxStatefulOrdersPerNBlocks`.
 func (lc BlockRateLimitConfiguration) Validate() error {
-	if err := (maxPerNBlocksRateLimits)(lc.MaxShortTermOrdersPerNBlocks).validate(
-		"MaxShortTermOrdersPerNBlocks",
-		MaxShortTermOrdersPerNBlocksNumBlocks,
-		MaxShortTermOrdersPerNBlocksLimit,
+	if err := (maxPerNBlocksRateLimits)(lc.MaxShortTermOrdersAndCancelsPerNBlocks).validate(
+		"MaxShortTermOrdersAndCancelsPerNBlocks",
+		MaxShortTermOrdersAndCancelsPerNBlocksNumBlocks,
+		MaxShortTermOrdersAndCancelsPerNBlocksLimit,
 	); err != nil {
 		return err
 	}
@@ -38,13 +33,6 @@ func (lc BlockRateLimitConfiguration) Validate() error {
 		"MaxStatefulOrdersPerNBlocks",
 		MaxStatefulOrdersPerNBlocksNumBlocks,
 		MaxStatefulOrdersPerNBlocksLimit,
-	); err != nil {
-		return err
-	}
-	if err := (maxPerNBlocksRateLimits)(lc.MaxShortTermOrderCancellationsPerNBlocks).validate(
-		"MaxShortTermOrderCancellationsPerNBlocks",
-		MaxShortTermOrderCancellationsPerNBlocksNumBlocks,
-		MaxShortTermOrderCancellationsPerNBlocksLimit,
 	); err != nil {
 		return err
 	}

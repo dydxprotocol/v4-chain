@@ -171,6 +171,17 @@ func AssertMarketEventsNotInIndexerBlock(
 	require.Equal(t, 0, len(indexerMarketEvents))
 }
 
+// AssertNMarketEventsNotInIndexerBlock verifies that N market events were included in the Indexer block message.
+func AssertNMarketEventsNotInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	n int,
+) {
+	indexerMarketEvents := getMarketEventsFromIndexerBlock(ctx, k)
+	require.Equal(t, n, len(indexerMarketEvents))
+}
+
 // getMarketEventsFromIndexerBlock returns the market events from the Indexer Block event Kafka message.
 func getMarketEventsFromIndexerBlock(
 	ctx sdk.Context,

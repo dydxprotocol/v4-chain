@@ -13,6 +13,7 @@ export const ZERO_USDC_POSITION: AssetPositionResponseObject = {
   symbol: USDC_SYMBOL,
   side: PositionSide.LONG,
   assetId: USDC_ASSET_ID,
+  subaccountNumber: 0,
 };
 
 export const SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP:

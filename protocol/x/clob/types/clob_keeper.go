@@ -132,7 +132,11 @@ type ClobKeeper interface {
 	GetIndexerEventManager() indexer_manager.IndexerEventManager
 	RateLimitCancelOrder(ctx sdk.Context, order *MsgCancelOrder) error
 	RateLimitPlaceOrder(ctx sdk.Context, order *MsgPlaceOrder) error
+	RateLimitBatchCancel(ctx sdk.Context, order *MsgBatchCancel) error
 	InitializeBlockRateLimit(ctx sdk.Context, config BlockRateLimitConfiguration) error
+	GetBlockRateLimitConfiguration(
+		ctx sdk.Context,
+	) (config BlockRateLimitConfiguration)
 	InitializeEquityTierLimit(ctx sdk.Context, config EquityTierLimitConfiguration) error
 	Logger(ctx sdk.Context) log.Logger
 	UpdateClobPair(
