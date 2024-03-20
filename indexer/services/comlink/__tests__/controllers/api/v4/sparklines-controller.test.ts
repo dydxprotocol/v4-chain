@@ -6,7 +6,6 @@ import {
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
   testConstants,
-  testMocks,
 } from '@dydxprotocol-indexer/postgres';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
@@ -16,6 +15,44 @@ import { SPARKLINE_TIME_PERIOD_TO_LIMIT_MAP, SPARKLINE_TIME_PERIOD_TO_RESOLUTION
 import { RequestMethod, SparklineTimePeriod } from '../../../../src/types';
 import { sendRequest } from '../../../helpers/helpers';
 import Big from 'big.js';
+import * as SubaccountTable from '@dydxprotocol-indexer/postgres/build/src/stores/subaccount-table';
+import {
+  defaultLiquidityTier,
+  defaultLiquidityTier2,
+  defaultMarket,
+  defaultMarket2,
+  defaultMarket3,
+  defaultPerpetualMarket,
+  defaultPerpetualMarket2,
+  defaultPerpetualMarket3,
+  defaultSubaccount,
+  defaultSubaccount2,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
+import * as LiquidityTiersTable from '@dydxprotocol-indexer/postgres/build/src/stores/liquidity-tiers-table';
+import * as PerpetualMarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/perpetual-market-table';
+
+// helper function to seed data
+async function seedData() {
+  await Promise.all([
+    SubaccountTable.create(defaultSubaccount),
+    SubaccountTable.create(defaultSubaccount2),
+  ]);
+  await Promise.all([
+    MarketTable.create(defaultMarket),
+    MarketTable.create(defaultMarket2),
+    MarketTable.create(defaultMarket3),
+  ]);
+  await Promise.all([
+    LiquidityTiersTable.create(defaultLiquidityTier),
+    LiquidityTiersTable.create(defaultLiquidityTier2),
+  ]);
+  await Promise.all([
+    PerpetualMarketTable.create(defaultPerpetualMarket),
+    PerpetualMarketTable.create(defaultPerpetualMarket2),
+    PerpetualMarketTable.create(defaultPerpetualMarket3),
+  ]);
+}
 
 describe('sparklines-controller#V4', () => {
   beforeAll(async () => {
@@ -23,7 +60,7 @@ describe('sparklines-controller#V4', () => {
   });
 
   beforeEach(async () => {
-    await testMocks.seedData();
+    await seedData();
     await perpetualMarketRefresher.updatePerpetualMarkets();
   });
 
