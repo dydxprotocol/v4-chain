@@ -85,7 +85,7 @@ func blockRateLimitConfigUpdate(
 	}
 	ctx.Logger().Info(
 		fmt.Sprintf(
-			"Attempting to set rate limiting config to newly combined config: %+v\n\n",
+			"Attempting to set rate limiting config to newly combined config: %+v\n",
 			blockRateLimitConfig,
 		),
 	)
@@ -93,7 +93,7 @@ func blockRateLimitConfigUpdate(
 		panic(fmt.Sprintf("failed to update the block rate limit configuration: %s", err))
 	}
 	ctx.Logger().Info(
-		"Successfully upgraded block rate limit configuration to: %+v\n\n",
+		"Successfully upgraded block rate limit configuration to: %+v\n",
 		clobKeeper.GetBlockRateLimitConfiguration(ctx),
 	)
 }
