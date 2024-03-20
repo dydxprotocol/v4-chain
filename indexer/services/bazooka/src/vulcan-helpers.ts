@@ -22,6 +22,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { Long } from '@dydxprotocol-indexer/v4-protos/build/codegen/helpers';
 import Big from 'big.js';
+import { IHeaders } from 'kafkajs';
 import _ from 'lodash';
 
 import config from './config';
@@ -30,6 +31,7 @@ import { ZERO } from './constants';
 interface VulcanMessage {
   key: Buffer,
   value: OffChainUpdateV1,
+  headers?: IHeaders,
 }
 
 type IndexerOrderIdMap = { [orderUuid: string]: IndexerOrderId };
@@ -129,6 +131,7 @@ export async function sendStatefulOrderMessages() {
       return {
         key: message.key,
         value: Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(message.value).finish())),
+        headers: message.headers,
       };
     });
 
