@@ -166,6 +166,18 @@ func PrepareCheckState(
 		offchainUpdates,
 	)
 
+	// For orders that are filled in the last block, send an orderbook update to the grpc streams.
+	if keeper.GetGrpcStreamingManager().Enabled() {
+		allUpdates := types.NewOffchainUpdates()
+		for _, orderId := range processProposerMatchesEvents.OrderIdsFilledInLastBlock {
+			if _, exists := keeper.MemClob.GetOrder(ctx, orderId); exists {
+				orderbookUpdate := keeper.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
+				allUpdates.Append(orderbookUpdate)
+			}
+		}
+		keeper.SendOrderbookUpdates(allUpdates, false)
+	}
+
 	// 3. Place all stateful order placements included in the last block on the memclob.
 	// Note telemetry is measured outside of the function call because `PlaceStatefulOrdersFromLastBlock`
 	// is called within `PlaceConditionalOrdersTriggeredInLastBlock`.

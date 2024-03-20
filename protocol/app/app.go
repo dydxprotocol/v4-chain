@@ -994,9 +994,8 @@ func New(
 	clobFlags := clobflags.GetClobFlagValuesFromOptions(appOpts)
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
-	memClob := clobmodulememclob.NewMemClobPriceTimePriority(
-		app.IndexerEventManager.Enabled() || app.GrpcStreamingManager.Enabled(),
-	)
+	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
+	memClob.SetGenerateOrderbookUpdates(app.GrpcStreamingManager.Enabled())
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,

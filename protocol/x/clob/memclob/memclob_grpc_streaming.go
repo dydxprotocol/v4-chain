@@ -57,8 +57,8 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 }
 
 // GetOrderbookUpdatesForOrderPlacement returns a place order offchain message and
-// a update order offchain message used to construct an order for
-// the orderbook snapshot grpc stream.
+// a update order offchain message used to add an order for
+// the orderbook grpc stream.
 func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderPlacement(
 	ctx sdk.Context,
 	order types.Order,
@@ -89,7 +89,8 @@ func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderPlacement(
 	return offchainUpdates
 }
 
-// GetOrderbookUpdatesForOrderRemoval returns a place order offchain message and
+// GetOrderbookUpdatesForOrderRemoval returns a remove order offchain message
+// used to remove an order for the orderbook grpc stream.
 func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderRemoval(
 	ctx sdk.Context,
 	orderId types.OrderId,
@@ -106,7 +107,8 @@ func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderRemoval(
 	return offchainUpdates
 }
 
-// GetOrderbookUpdatesForOrderRemoval returns a place order offchain message and
+// GetOrderbookUpdatesForOrderUpdate returns an update order offchain message
+// used to update an order for the orderbook grpc stream.
 func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderUpdate(
 	ctx sdk.Context,
 	orderId types.OrderId,

@@ -47,6 +47,9 @@ type MemClobPriceTimePriority struct {
 
 	// ---- Fields for determining if off-chain update messages should be generated ----
 	generateOffchainUpdates bool
+
+	// ---- Fields for determining if orderbook updates should be generated ----
+	generateOrderbookUpdates bool
 }
 
 type OrderWithRemovalReason struct {
@@ -58,10 +61,11 @@ func NewMemClobPriceTimePriority(
 	generateOffchainUpdates bool,
 ) *MemClobPriceTimePriority {
 	return &MemClobPriceTimePriority{
-		openOrders:              newMemclobOpenOrders(),
-		cancels:                 newMemclobCancels(),
-		operationsToPropose:     *types.NewOperationsToPropose(),
-		generateOffchainUpdates: generateOffchainUpdates,
+		openOrders:               newMemclobOpenOrders(),
+		cancels:                  newMemclobCancels(),
+		operationsToPropose:      *types.NewOperationsToPropose(),
+		generateOffchainUpdates:  generateOffchainUpdates,
+		generateOrderbookUpdates: false,
 	}
 }
 
@@ -71,6 +75,11 @@ func NewMemClobPriceTimePriority(
 // due to the bidirectional dependency between the Keeper and the MemClob.
 func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper) {
 	m.clobKeeper = clobKeeper
+}
+
+// SetGenerateOffchainUpdates sets the `generateOffchainUpdates` field of the MemClob.
+func (m *MemClobPriceTimePriority) SetGenerateOrderbookUpdates(generateOrderbookUpdates bool) {
+	m.generateOrderbookUpdates = generateOrderbookUpdates
 }
 
 // CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
@@ -1216,18 +1225,6 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		m.RemoveOrderIfFilled(ctx, orderId)
 	}
 
-	// For order matches in the last block, send an orderbook update
-	// to the grpc streams.
-	// Note that fully filled orders are removed from the orderbook in `RemoveOrderIfFilled` above.
-	allUpdates := types.NewOffchainUpdates()
-	for _, orderId := range filledOrderIds {
-		if m.openOrders.hasOrder(ctx, orderId) {
-			orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-			allUpdates.Append(orderbookUpdate)
-		}
-	}
-	m.clobKeeper.SendOrderbookUpdates(allUpdates, false)
-
 	// Remove all canceled stateful order IDs from the memclob if they exist.
 	// If the slice has non-stateful order IDs or contains duplicates, panic.
 	if lib.ContainsDuplicates(canceledStatefulOrderIds) {
@@ -1523,9 +1520,11 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 
 	m.openOrders.mustAddOrderToOrderbook(ctx, newOrder, forceToFrontOfLevel)
 
-	// Send an orderbook update to grpc streams.
-	orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
-	m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
+		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+	}
 }
 
 // mustPerformTakerOrderMatching performs matching using the provided taker order while the order
@@ -1961,9 +1960,11 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 	}
 
-	// Send an orderbook update to grpc streams.
-	orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-	m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+	}
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
@@ -1992,8 +1993,10 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the order was fully filled, an orderbook update for removal was already sent in `mustRemoveOrder`.
 	// If the order was partially filled, send an orderbook update for the order's new total filled amount.
 	if newTotalFilledAmount < makerOrderBaseQuantums {
-		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+		if m.generateOrderbookUpdates {
+			orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+			m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+		}
 	}
 
 	if m.generateOffchainUpdates {
