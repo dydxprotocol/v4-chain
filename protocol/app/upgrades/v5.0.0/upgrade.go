@@ -39,12 +39,18 @@ func blockRateLimitConfigUpdate(
 	clobKeeper clobtypes.ClobKeeper,
 ) {
 	oldBlockRateLimitConfig := clobKeeper.GetBlockRateLimitConfiguration(ctx)
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Combining the short term order placement and cancellation limits of previous config: %+v\n",
+			oldBlockRateLimitConfig,
+		),
+	)
 	numAllowedShortTermOrderPlacementsInOneBlock := 0
 	numAllowedShortTermOrderCancellationsInOneBlock := 0
 	oldShortTermOrderRateLimits := oldBlockRateLimitConfig.MaxShortTermOrdersPerNBlocks
 	for _, limit := range oldShortTermOrderRateLimits {
 		if limit.NumBlocks == 1 {
-			numAllowedShortTermOrderPlacementsInOneBlock += int(limit.NumBlocks)
+			numAllowedShortTermOrderPlacementsInOneBlock += int(limit.Limit)
 			break
 		}
 	}
@@ -55,7 +61,7 @@ func blockRateLimitConfigUpdate(
 	oldShortTermOrderCancellationRateLimits := oldBlockRateLimitConfig.MaxShortTermOrderCancellationsPerNBlocks
 	for _, limit := range oldShortTermOrderCancellationRateLimits {
 		if limit.NumBlocks == 1 {
-			numAllowedShortTermOrderCancellationsInOneBlock += int(limit.NumBlocks)
+			numAllowedShortTermOrderCancellationsInOneBlock += int(limit.Limit)
 			break
 		}
 	}
@@ -77,10 +83,19 @@ func blockRateLimitConfigUpdate(
 			},
 		},
 	}
-
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Attempting to set rate limiting config to newly combined config: %+v\n\n",
+			blockRateLimitConfig,
+		),
+	)
 	if err := clobKeeper.InitializeBlockRateLimit(ctx, blockRateLimitConfig); err != nil {
 		panic(fmt.Sprintf("failed to update the block rate limit configuration: %s", err))
 	}
+	ctx.Logger().Info(
+		"Successfully upgraded block rate limit configuration to: %+v\n\n",
+		clobKeeper.GetBlockRateLimitConfiguration(ctx),
+	)
 }
 
 func CreateUpgradeHandler(
