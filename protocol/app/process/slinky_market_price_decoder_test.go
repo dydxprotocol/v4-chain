@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/skip-mev/slinky/abci/testutils"
+	"github.com/stretchr/testify/suite"
+
 	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/skip-mev/slinky/abci/testutils"
-	"github.com/stretchr/testify/suite"
 )
 
 type SlinkyMarketPriceDecoderSuite struct {
