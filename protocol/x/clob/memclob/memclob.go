@@ -1216,6 +1216,18 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 		m.RemoveOrderIfFilled(ctx, orderId)
 	}
 
+	// For order matches in the last block, send an orderbook update
+	// to the grpc streams.
+	// Note that fully filled orders are removed from the orderbook in `RemoveOrderIfFilled` above.
+	allUpdates := types.NewOffchainUpdates()
+	for _, orderId := range filledOrderIds {
+		if m.openOrders.hasOrder(ctx, orderId) {
+			orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
+			allUpdates.Append(orderbookUpdate)
+		}
+	}
+	m.clobKeeper.SendOrderbookUpdates(allUpdates, false)
+
 	// Remove all canceled stateful order IDs from the memclob if they exist.
 	// If the slice has non-stateful order IDs or contains duplicates, panic.
 	if lib.ContainsDuplicates(canceledStatefulOrderIds) {
@@ -1510,6 +1522,10 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	}
 
 	m.openOrders.mustAddOrderToOrderbook(ctx, newOrder, forceToFrontOfLevel)
+
+	// Send an orderbook update to grpc streams.
+	orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
+	m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
 }
 
 // mustPerformTakerOrderMatching performs matching using the provided taker order while the order
@@ -1944,6 +1960,10 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
 		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 	}
+
+	// Send an orderbook update to grpc streams.
+	orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+	m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
@@ -1967,6 +1987,13 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	if newTotalFilledAmount == makerOrderBaseQuantums {
 		makerOrderId := makerOrder.OrderId
 		m.mustRemoveOrder(ctx, makerOrderId)
+	}
+
+	// If the order was fully filled, an orderbook update for removal was already sent in `mustRemoveOrder`.
+	// If the order was partially filled, send an orderbook update for the order's new total filled amount.
+	if newTotalFilledAmount < makerOrderBaseQuantums {
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
 	}
 
 	if m.generateOffchainUpdates {

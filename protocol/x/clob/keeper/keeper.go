@@ -233,5 +233,13 @@ func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 		allUpdates.Append(update)
 	}
 
-	streamingManager.SendOrderbookUpdates(allUpdates, true)
+	k.SendOrderbookUpdates(allUpdates, true)
+}
+
+// SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
+func (k Keeper) SendOrderbookUpdates(
+	offchainUpdates *types.OffchainUpdates,
+	snapshot bool,
+) {
+	k.GetGrpcStreamingManager().SendOrderbookUpdates(offchainUpdates, snapshot)
 }

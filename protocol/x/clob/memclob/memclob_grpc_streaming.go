@@ -3,6 +3,8 @@ package memclob
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -27,7 +29,7 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 			level.LevelOrders.Front.Each(
 				func(order types.ClobOrder) {
 					offchainUpdates.Append(
-						m.GetOffchainUpdatesForOrder(ctx, order.Order),
+						m.GetOrderbookUpdatesForOrderPlacement(ctx, order.Order),
 					)
 				},
 			)
@@ -44,7 +46,7 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 			level.LevelOrders.Front.Each(
 				func(order types.ClobOrder) {
 					offchainUpdates.Append(
-						m.GetOffchainUpdatesForOrder(ctx, order.Order),
+						m.GetOrderbookUpdatesForOrderPlacement(ctx, order.Order),
 					)
 				},
 			)
@@ -54,10 +56,10 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrderbookSnapshot(
 	return offchainUpdates
 }
 
-// GetOffchainUpdatesForOrder returns a place order offchain message and
+// GetOrderbookUpdatesForOrderPlacement returns a place order offchain message and
 // a update order offchain message used to construct an order for
 // the orderbook snapshot grpc stream.
-func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrder(
+func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderPlacement(
 	ctx sdk.Context,
 	order types.Order,
 ) (offchainUpdates *types.OffchainUpdates) {
@@ -84,5 +86,43 @@ func (m *MemClobPriceTimePriority) GetOffchainUpdatesForOrder(
 		offchainUpdates.AddUpdateMessage(orderId, message)
 	}
 
+	return offchainUpdates
+}
+
+// GetOrderbookUpdatesForOrderRemoval returns a place order offchain message and
+func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderRemoval(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) (offchainUpdates *types.OffchainUpdates) {
+	offchainUpdates = types.NewOffchainUpdates()
+	if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
+		ctx,
+		orderId,
+		indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_UNSPECIFIED,
+		ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+	); success {
+		offchainUpdates.AddRemoveMessage(orderId, message)
+	}
+	return offchainUpdates
+}
+
+// GetOrderbookUpdatesForOrderRemoval returns a place order offchain message and
+func (m *MemClobPriceTimePriority) GetOrderbookUpdatesForOrderUpdate(
+	ctx sdk.Context,
+	orderId types.OrderId,
+) (offchainUpdates *types.OffchainUpdates) {
+	offchainUpdates = types.NewOffchainUpdates()
+
+	// Get the current fill amount of the order.
+	fillAmount := m.GetOrderFilledAmount(ctx, orderId)
+
+	// Generate an update message updating the total filled amount of order.
+	if message, success := off_chain_updates.CreateOrderUpdateMessage(
+		ctx,
+		orderId,
+		fillAmount,
+	); success {
+		offchainUpdates.AddUpdateMessage(orderId, message)
+	}
 	return offchainUpdates
 }
