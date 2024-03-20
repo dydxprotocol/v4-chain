@@ -90,7 +90,7 @@ describe('marketCreateHandler', () => {
     const transactionIndex: number = 0;
 
     const marketCreate: MarketEventV1 = {
-      marketId: 3,
+      marketId: 100,
       marketCreate: {
         base: {
           pair: 'DYDX-USD',
