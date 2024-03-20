@@ -16,7 +16,8 @@ import { OrderUpdateHandler } from '../handlers/order-update-handler';
 import { DydxRecordHeaderKeys } from './types';
 
 export type HandlerInitializer = new (
-  txHash?: string
+  txHash?: string,
+  kafkaMessageHeaders?: IHeaders,
 ) => Handler;
 
 function getHandler(update: OffChainUpdateV1): HandlerInitializer | undefined {
@@ -85,6 +86,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
 
     const handler: Handler = new (getHandler(update))!(
       getTransactionHashFromHeaders(message.headers),
+      message.headers,
     );
     await handler.handleUpdate(update);
 

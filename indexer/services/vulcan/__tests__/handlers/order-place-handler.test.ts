@@ -172,9 +172,15 @@ describe('order-place-handler', () => {
           OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED,
       },
     };
-    const replacementMessage: KafkaMessage = createKafkaMessage(
-      Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdate).finish())),
-    );
+    const replacementMessage: KafkaMessage = {
+      ...createKafkaMessage(
+        Buffer.from(Uint8Array.from(
+          OffChainUpdateV1.encode(replacementUpdate).finish(),
+        )),
+      ),
+      headers: { message_received_timestamp: '1687515635000', event_type: 'StatefulOrderPlacement' },
+    } as KafkaMessage;
+
     const replacementMessageGoodTilBlockTime: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(
         OffChainUpdateV1.encode(replacementUpdateGoodTilBlockTime).finish(),

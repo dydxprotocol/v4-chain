@@ -154,6 +154,7 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           placementStatus,
         ),
+        headers: this.kafkaMessageHeaders,
       };
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
@@ -167,6 +168,7 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           updatedQuantums,
         ),
+        headers: this.kafkaMessageHeaders,
       };
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
@@ -405,6 +407,7 @@ export class OrderPlaceHandler extends Handler {
       value: Buffer.from(
         Uint8Array.from(OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish()),
       ),
+      headers: this.kafkaMessageHeaders,
     };
     sendMessageWrapper(orderUpdateMessage, KafkaTopics.TO_VULCAN);
   }

@@ -4,15 +4,18 @@ import {
 } from '@dydxprotocol-indexer/kafka';
 import { OrderbookMessageContents, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
 import { OffChainUpdateV1, OrderbookMessage, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
+import { IHeaders } from 'kafkajs';
 import { OrderbookSide } from 'src/lib/types';
 
 import { orderSideToOrderbookSide } from './helpers';
 
 export abstract class Handler {
   public txHash?: string;
+  public kafkaMessageHeaders?: IHeaders;
 
-  public constructor(txHash?: string) {
+  public constructor(txHash?: string, kafkaMessageHeaders?: IHeaders) {
     this.txHash = txHash;
+    this.kafkaMessageHeaders = kafkaMessageHeaders;
   }
 
   protected abstract handle(update: OffChainUpdateV1): Promise<void>;

@@ -230,6 +230,7 @@ export class OrderRemoveHandler extends Handler {
         orderRemove,
         perpetualMarket.ticker,
       ),
+      headers: this.kafkaMessageHeaders,
     };
     sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
 
@@ -306,6 +307,7 @@ export class OrderRemoveHandler extends Handler {
         orderRemove,
         perpetualMarket,
       ),
+      headers: this.kafkaMessageHeaders,
     };
 
     if (this.shouldSendSubaccountMessage(orderRemove, removeOrderResult, stateRemainingQuantums)) {
@@ -352,6 +354,7 @@ export class OrderRemoveHandler extends Handler {
         perpetualMarket,
         updatedQuantums,
       ),
+      headers: this.kafkaMessageHeaders,
     };
     sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
   }
