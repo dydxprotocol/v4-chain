@@ -3085,7 +3085,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
 			if tc.negativeTncSubaccountSeenAtBlock != 0 {
-				keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, tc.negativeTncSubaccountSeenAtBlock)
+				keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, tc.negativeTncSubaccountSeenAtBlock)
 			}
 
 			// Set the current block number on the context.

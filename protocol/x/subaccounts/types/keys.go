@@ -13,7 +13,7 @@ const (
 const (
 	// SubaccountKeyPrefix is the prefix to retrieve all Subaccounts
 	SubaccountKeyPrefix = "SA:"
-	// NegativeTncSubaccountSeenAtBlockKey is the store key that stores the last
-	// block a negative TNC subaccount was seen in state.
-	NegativeTncSubaccountSeenAtBlockKey = "NegSA:"
+	// NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix is the prefix for the store key that
+	// stores the last block a negative TNC subaccount was seen in state for a specific collateral pool.
+	NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix = "NegSA:"
 )

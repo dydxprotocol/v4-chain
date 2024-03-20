@@ -25,7 +25,7 @@ func (k Keeper) GetWithdrawalAndTransfersBlockedInfo(
 	)
 	chainOutageSeenAtBlock, chainOutageExists := downtimeInfo.BlockInfo.Height,
 		downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
-	negativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlockExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+	negativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlockExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
 
 	// Withdrawals and transfers are blocked at non-zero block iff a chain outage or negative TNC subaccount exists.
 	withdrawalsAndTransfersBlockedUntilBlock := uint32(0)

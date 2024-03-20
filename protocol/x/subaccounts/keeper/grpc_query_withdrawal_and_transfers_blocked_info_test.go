@@ -48,7 +48,7 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		`Negative TNC subaccount seen in state returns withdrawals and transfers unblocked
             after the delay`: {
 			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 7)
+				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 7)
 			},
 
 			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
@@ -96,7 +96,7 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (negative TNC subaccount block greater)`: {
 			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 27)
+				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 27)
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -131,7 +131,7 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (chain outage block greater)`: {
 			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 37)
+				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 37)
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -166,7 +166,7 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (both blocks equal)`: {
 			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 3)
+				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 3)
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{

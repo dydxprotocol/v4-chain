@@ -61,6 +61,7 @@ type SubaccountsKeeper interface {
 	)
 	SetNegativeTncSubaccountSeenAtBlock(
 		ctx sdk.Context,
+		collateralPoolAddr sdk.AccAddress,
 		blockHeight uint32,
 	)
 	TransferFeesToFeeCollectorModule(ctx sdk.Context, assetId uint32, amount *big.Int, perpetualId uint32) error
