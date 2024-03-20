@@ -213,6 +213,37 @@ func TestTransfer_Isolated_Non_Isolated_Subaccounts(t *testing.T) {
 			},
 			expectedErr: "insufficient funds",
 		},
+		`Can transfer from isolated subaccount to isolated subaccount in the same isolated markets, no
+		coins are sent`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Bob_Num0_1ISO_LONG_10_000USD,
+			},
+			collateralPoolBalances: map[string]int64{
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 10_000_000_000, // $10,000 USDC
+			},
+			senderSubaccountId:   constants.Alice_Num0,
+			receiverSubaccountId: constants.Bob_Num0,
+			quantums:             100_000_000, // $100
+			liquidityTiers:       constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			expectedSubaccounts: []satypes.Subaccount{
+				changeUsdcBalance(constants.Alice_Num0_1ISO_LONG_10_000USD, -100_000_000),
+				changeUsdcBalance(constants.Bob_Num0_1ISO_LONG_10_000USD, 100_000_000),
+			},
+			expectedCollateralPoolBalances: map[string]int64{
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 10_000_000_000, // No change
+			},
+			expectedErr: "",
+		},
 	}
 
 	for name, tc := range tests {

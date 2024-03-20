@@ -88,6 +88,19 @@ var (
 		},
 		PerpetualPositions: nil,
 	}
+	Bob_Num0_1ISO_LONG_10_000USD = satypes.Subaccount{
+		Id: &Bob_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			&Usdc_Asset_10_000,
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  3,
+				Quantums:     dtypes.NewInt(10_000_000), // 1 ISO2
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}
 	Bob_Num0_1ISO2_LONG_10_000USD = satypes.Subaccount{
 		Id: &Bob_Num0,
 		AssetPositions: []*satypes.AssetPosition{
