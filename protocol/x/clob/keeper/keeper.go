@@ -241,5 +241,9 @@ func (k Keeper) SendOrderbookUpdates(
 	offchainUpdates *types.OffchainUpdates,
 	snapshot bool,
 ) {
+	if len(offchainUpdates.Messages) == 0 {
+		return
+	}
+
 	k.GetGrpcStreamingManager().SendOrderbookUpdates(offchainUpdates, snapshot)
 }

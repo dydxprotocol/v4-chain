@@ -1982,21 +1982,18 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 		panic("Total filled size of maker order greater than the order size")
 	}
 
+	// Send an orderbook update for the order's new total filled amount.
+	if m.generateOrderbookUpdates {
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+	}
+
 	// If the order is fully filled, remove it from the orderbook.
 	// Note we shouldn't remove Short-Term order hashes from `ShortTermOrderTxBytes` here since
 	// the order was matched.
 	if newTotalFilledAmount == makerOrderBaseQuantums {
 		makerOrderId := makerOrder.OrderId
 		m.mustRemoveOrder(ctx, makerOrderId)
-	}
-
-	// If the order was fully filled, an orderbook update for removal was already sent in `mustRemoveOrder`.
-	// If the order was partially filled, send an orderbook update for the order's new total filled amount.
-	if newTotalFilledAmount < makerOrderBaseQuantums {
-		if m.generateOrderbookUpdates {
-			orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-			m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
-		}
 	}
 
 	if m.generateOffchainUpdates {
