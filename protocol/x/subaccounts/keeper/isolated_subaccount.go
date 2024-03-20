@@ -12,37 +12,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
-type positionStateTransition uint
-
-const (
-	opened positionStateTransition = iota
-	closed
-)
-
-var positionStateTransitionStringMap = map[positionStateTransition]string{
-	opened: "opened",
-	closed: "closed",
-}
-
-func (t positionStateTransition) String() string {
-	result, exists := positionStateTransitionStringMap[t]
-	if !exists {
-		return "UnexpectedStateTransitionError"
-	}
-
-	return result
-}
-
-// Represents a state transition for an isolated perpetual.
-type isolatedPerpetualStateTransition struct {
-	perpetualId uint32
-	// TODO(DEC-715): Support non-USDC assets.
-	// USDC position size of the subaccount that has a state change for an isolated perpetual.
-	usdcQuantumsBeforeUpdate *big.Int
-	transition               positionStateTransition
-}
-
-// checkIsolatedSubaccountConstaints will validate all `updates` to the relevant subaccounts against
+// processIsolatedSubaccountUpdates will validate all `updates` to the relevant subaccounts against
 // isolated subaccount constraints and computes whether each update leads to a state change
 // (open / close) to an isolated perpetual occurred due to the updates if they are valid.
 // This function checks each update in isolation, so if multiple updates for the same subaccount id
@@ -54,22 +24,25 @@ type isolatedPerpetualStateTransition struct {
 // These map to the updates and are used to indicate which of the updates
 // caused a failure, if any.
 // Returns a `isolatedPerpetualStateTransitions` value, which is a slice of
-// `isolatedPerpetualStateTransition`.
+// `IsolatedPerpetualStateTransition`.
 // These map to the updates and are used to indicate which of the updates opened or closed an
 // isolated perpetual position.
-func (k Keeper) checkIsolatedSubaccountConstraints(
+func (k Keeper) processIsolatedSubaccountUpdates(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
 	perpetuals []perptypes.Perpetual,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
-	isolatedPerpetualStateTransitions []*isolatedPerpetualStateTransition,
+	isolatedPerpetualPositionStateTransitions []*types.IsolatedPerpetualPositionStateTransition,
 	err error,
 ) {
 	success = true
 	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
-	isolatedPerpetualStateTransitions = make([]*isolatedPerpetualStateTransition, len(settledUpdates))
+	isolatedPerpetualPositionStateTransitions = make(
+		[]*types.IsolatedPerpetualPositionStateTransition,
+		len(settledUpdates),
+	)
 	var perpIdToMarketType = make(map[uint32]perptypes.PerpetualMarketType)
 
 	for _, perpetual := range perpetuals {
@@ -77,7 +50,7 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 	}
 
 	for i, u := range settledUpdates {
-		result, stateTransition, err := processIsolatedPerpetualUpdates(u, perpIdToMarketType)
+		result, stateTransition, err := processSingleIsolatedSubaccountUpdate(u, perpIdToMarketType)
 		if err != nil {
 			return false, nil, nil, err
 		}
@@ -86,13 +59,13 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 		}
 
 		successPerUpdate[i] = result
-		isolatedPerpetualStateTransitions[i] = stateTransition
+		isolatedPerpetualPositionStateTransitions[i] = stateTransition
 	}
 
-	return success, successPerUpdate, isolatedPerpetualStateTransitions, nil
+	return success, successPerUpdate, isolatedPerpetualPositionStateTransitions, nil
 }
 
-// processIsolatedPerpetualUpdates checks whether the perpetual updates to a settled subaccount
+// processSingleIsolatedSubaccountUpdate checks whether the perpetual updates to a settled subaccount
 // violates constraints for isolated perpetuals and computes whether the perpetual updates result in
 // a state change (open / close) for an isolated perpetual position if the updates are valid.
 // This function assumes the settled subaccount is valid and does not violate the constraints.
@@ -106,10 +79,10 @@ func (k Keeper) checkIsolatedSubaccountConstraints(
 //
 // If there is a state change (open / close) from the perpetual updates, it is returned along with
 // the perpetual id of the isolated perpetual and the size of the USDC position in the subaccount.
-func processIsolatedPerpetualUpdates(
+func processSingleIsolatedSubaccountUpdate(
 	settledUpdate settledUpdate,
 	perpIdToMarketType map[uint32]perptypes.PerpetualMarketType,
-) (types.UpdateResult, *isolatedPerpetualStateTransition, error) {
+) (types.UpdateResult, *types.IsolatedPerpetualPositionStateTransition, error) {
 	// If there are no perpetual updates, then this update does not violate constraints for isolated
 	// markets.
 	if len(settledUpdate.PerpetualUpdates) == 0 {
@@ -190,22 +163,22 @@ func processIsolatedPerpetualUpdates(
 	}
 
 	return types.Success,
-		getIsolatedPerpetualStateTransition(
-			settledUpdate.SettledSubaccount,
+		GetIsolatedPerpetualStateTransition(
+			// TODO(DEC-715): Support non-USDC assets.
+			settledUpdate.SettledSubaccount.GetUsdcPosition(),
 			isolatedPerpetualPosition,
 			isolatedUpdate,
 		),
 		nil
 }
 
-// getIsolatedPerpetualStateTransition computes whether an isolated perpetual position will be
+// GetIsolatedPerpetualStateTransition computes whether an isolated perpetual position will be
 // opened or closed for a subaccount given an isolated perpetual update for the subaccount.
-// Input subaccount account must be settled.
-func getIsolatedPerpetualStateTransition(
-	settledSubaccount types.Subaccount,
+func GetIsolatedPerpetualStateTransition(
+	subaccountQuoteQuantums *big.Int,
 	isolatedPerpetualPosition *types.PerpetualPosition,
 	isolatedPerpetualUpdate *types.PerpetualUpdate,
-) *isolatedPerpetualStateTransition {
+) *types.IsolatedPerpetualPositionStateTransition {
 	// If there is no update to an isolated perpetual position, then no state transitions have
 	// happened for the isolated perpetual.
 	if isolatedPerpetualUpdate == nil {
@@ -213,16 +186,14 @@ func getIsolatedPerpetualStateTransition(
 	}
 
 	perpetualId := isolatedPerpetualUpdate.PerpetualId
-	// TODO(DEC-715): Support non-USDC assets.
-	usdcQuantumsBeforeUpdate := new(big.Int).Set(settledSubaccount.GetUsdcPosition())
 
 	// If the subaccount has no isolated perpetual position, then this update is opening an isolated
 	// perpetual position.
 	if isolatedPerpetualPosition == nil {
-		return &isolatedPerpetualStateTransition{
-			perpetualId:              perpetualId,
-			usdcQuantumsBeforeUpdate: usdcQuantumsBeforeUpdate,
-			transition:               opened,
+		return &types.IsolatedPerpetualPositionStateTransition{
+			PerpetualId:               perpetualId,
+			QuoteQuantumsBeforeUpdate: subaccountQuoteQuantums,
+			Transition:                types.Opened,
 		}
 	}
 
@@ -232,10 +203,10 @@ func getIsolatedPerpetualStateTransition(
 		isolatedPerpetualPosition.GetBigQuantums(),
 		isolatedPerpetualUpdate.GetBigQuantums(),
 	); finalPositionSize.Cmp(lib.BigInt0()) == 0 {
-		return &isolatedPerpetualStateTransition{
-			perpetualId:              perpetualId,
-			usdcQuantumsBeforeUpdate: usdcQuantumsBeforeUpdate,
-			transition:               closed,
+		return &types.IsolatedPerpetualPositionStateTransition{
+			PerpetualId:               perpetualId,
+			QuoteQuantumsBeforeUpdate: subaccountQuoteQuantums,
+			Transition:                types.Closed,
 		}
 	}
 
@@ -251,61 +222,61 @@ func getIsolatedPerpetualStateTransition(
 func (k *Keeper) transferCollateralForIsolatedPerpetual(
 	ctx sdk.Context,
 	updatedSubaccount types.Subaccount,
-	stateTransition *isolatedPerpetualStateTransition,
+	stateTransition *types.IsolatedPerpetualPositionStateTransition,
 ) error {
 	// No collateral to transfer if no state transition.
 	if stateTransition == nil {
 		return nil
 	}
 
-	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, stateTransition.perpetualId)
+	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, stateTransition.PerpetualId)
 	if err != nil {
 		return err
 	}
 	var toModuleAddr sdk.AccAddress
 	var fromModuleAddr sdk.AccAddress
-	var usdcQuantums *big.Int
+	var quoteQuantums *big.Int
 
 	// If an isolated perpetual position was opened in the subaccount, then move collateral equivalent
 	// to the USDC asset position size of the subaccount before the update from the
 	// cross-perpetual collateral pool to the isolated perpetual collateral pool.
-	if stateTransition.transition == opened {
+	if stateTransition.Transition == types.Opened {
 		toModuleAddr = isolatedCollateralPoolAddr
 		fromModuleAddr = types.ModuleAddress
-		usdcQuantums = stateTransition.usdcQuantumsBeforeUpdate
+		quoteQuantums = stateTransition.QuoteQuantumsBeforeUpdate
 		// If the isolated perpetual position was closed, then move collateral equivalent to the USDC
 		// asset position size of the subaccount after the update from the isolated perpetual collateral
 		// pool to the cross-perpetual collateral pool.
-	} else if stateTransition.transition == closed {
+	} else if stateTransition.Transition == types.Closed {
 		toModuleAddr = types.ModuleAddress
 		fromModuleAddr = isolatedCollateralPoolAddr
-		usdcQuantums = updatedSubaccount.GetUsdcPosition()
+		quoteQuantums = updatedSubaccount.GetUsdcPosition()
 	} else {
 		// Should never hit this.
 		return errorsmod.Wrapf(
 			types.ErrFailedToUpdateSubaccounts,
 			"Invalid state transition %v for isolated perpetual with id %d in subaccount with id %v",
 			stateTransition,
-			stateTransition.perpetualId,
+			stateTransition.PerpetualId,
 			updatedSubaccount.Id,
 		)
 	}
 
 	// If there are zero quantums to transfer, don't transfer collateral.
-	if usdcQuantums.Sign() == 0 {
+	if quoteQuantums.Sign() == 0 {
 		return nil
 	}
 
 	// Invalid to transfer negative quantums. This should already be caught by collateralization
 	// checks as well.
-	if usdcQuantums.Sign() == -1 {
+	if quoteQuantums.Sign() == -1 {
 		return errorsmod.Wrapf(
 			types.ErrFailedToUpdateSubaccounts,
 			"Subaccount with id %v %s perpteual position with perpetual id %d with negative collateral %s to transfer",
 			updatedSubaccount.Id,
-			stateTransition.transition.String(),
-			stateTransition.perpetualId,
-			usdcQuantums.String(),
+			stateTransition.Transition.String(),
+			stateTransition.PerpetualId,
+			quoteQuantums.String(),
 		)
 	}
 
@@ -314,7 +285,7 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 		ctx,
 		// TODO(DEC-715): Support non-USDC assets.
 		assettypes.AssetUsdc.Id,
-		usdcQuantums,
+		quoteQuantums,
 	)
 	if err != nil {
 		return err

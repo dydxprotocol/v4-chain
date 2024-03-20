@@ -284,7 +284,7 @@ func (k Keeper) UpdateSubaccounts(
 	}
 
 	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
-	success, successPerUpdate, isolatedPerpetualStateTransitions, err := k.internalCanUpdateSubaccounts(
+	success, successPerUpdate, isolatedPerpetualPositionStateTransitions, err := k.internalCanUpdateSubaccounts(
 		ctx,
 		settledUpdates,
 		updateType,
@@ -312,9 +312,13 @@ func (k Keeper) UpdateSubaccounts(
 
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
-	for i, stateTransition := range isolatedPerpetualStateTransitions {
+	for i, stateTransition := range isolatedPerpetualPositionStateTransitions {
 		if err := k.transferCollateralForIsolatedPerpetual(
 			ctx,
+			// settledUpdateds[i].SettledSubaccount has had the asset / perpetual updates applied to it
+			// above, so it is now an updated subaccount that can be passed into the function to execute
+			// the collateral transfers for isolated perpetual positions being opened/closed due to the
+			// updates.
 			settledUpdates[i].SettledSubaccount,
 			stateTransition,
 		); err != nil {
@@ -544,9 +548,9 @@ func checkPositionUpdatable(
 // Returns a `successPerUpdates` value, which is a slice of `UpdateResult`.
 // These map to the updates and are used to indicate which of the updates
 // caused a failure, if any.
-// Returns a `isolatedPerpetualStateTransitions` value, which is a slice of
-// `isolatedPerpetualStateTransition`.
-// Thess map to the updates and are used to indicate which of the updates led to an isolated
+// Returns a `isolatedPerpetualPositionStateTransitions` value, which is a slice of
+// `isolatedPerpetualPositionStateTransition`.
+// These map to the updates and are used to indicate which of the updates led to an isolated
 // perpetual position being opened or closed.
 func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
@@ -556,13 +560,13 @@ func (k Keeper) internalCanUpdateSubaccounts(
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
-	isolatedPerpetualStateTransitions []*isolatedPerpetualStateTransition,
+	isolatedPerpetualPositionStateTransitions []*types.IsolatedPerpetualPositionStateTransition,
 	err error,
 ) {
 	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
 	// constraint.
 	// Check if the updates satisfy the isolated perpetual constraints.
-	success, successPerUpdate, isolatedPerpetualStateTransitions, err = k.checkIsolatedSubaccountConstraints(
+	success, successPerUpdate, isolatedPerpetualPositionStateTransitions, err = k.processIsolatedSubaccountUpdates(
 		ctx,
 		settledUpdates,
 		perpetuals,
@@ -711,7 +715,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		successPerUpdate[i] = result
 	}
 
-	return success, successPerUpdate, isolatedPerpetualStateTransitions, nil
+	return success, successPerUpdate, isolatedPerpetualPositionStateTransitions, nil
 }
 
 // IsValidStateTransitionForUndercollateralizedSubaccount returns an `UpdateResult`
