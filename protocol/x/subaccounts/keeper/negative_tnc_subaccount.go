@@ -11,7 +11,7 @@ import (
 )
 
 // GetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was
-// seen in state and a boolean for whether it exists in state.
+// seen in state for the given collateral pool address and a boolean for whether it exists in state.
 func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
 	collateralPoolAddr sdk.AccAddress,
@@ -21,7 +21,8 @@ func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 }
 
 // getNegativeTncSubaccountSeenAtBlock is a helper function that takes a store and returns the last
-// block height a negative TNC subaccount was seen in state and a boolean for whether it exists in state.
+// block height a negative TNC subaccount was seen in state for the given collateral pool address
+// and a boolean for whether it exists in state.
 func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
 	store storetypes.KVStore,
 	collateralPoolAddr sdk.AccAddress,
@@ -63,7 +64,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 
 	blockHeightValue := gogotypes.UInt32Value{Value: blockHeight}
 	store.Set(
-		[]byte(collateralPoolAddr),
+		collateralPoolAddr.Bytes(),
 		k.cdc.MustMarshal(&blockHeightValue),
 	)
 }

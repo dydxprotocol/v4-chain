@@ -2411,7 +2411,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 		// Negative TNC subaccount state
 		currentBlock                     uint32
-		negativeTncSubaccountSeenAtBlock uint32
+		negativeTncSubaccountSeenAtBlock map[string]uint32
 
 		// Update type
 		updateType types.UpdateType
@@ -2441,8 +2441,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100,
+			},
 
 			updateType: types.Deposit,
 		},
@@ -2473,8 +2475,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Deposit,
 		},
@@ -2503,8 +2507,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 0,
+			},
 
 			updateType: types.Deposit,
 		},
@@ -2532,8 +2538,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2563,8 +2571,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2604,8 +2614,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2643,8 +2655,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 0,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2689,8 +2703,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: false,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100,
+			},
 
 			updateType: types.Match,
 		},
@@ -2737,8 +2753,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: false,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Match,
 		},
@@ -2783,8 +2801,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: false,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 0,
+			},
 
 			updateType: types.Match,
 		},
@@ -2814,9 +2834,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
-
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100,
+			},
 			updateType: types.Match,
 		},
 		`undercollateralized matches are not blocked if current block is within
@@ -2847,8 +2868,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Match,
 		},
@@ -2878,8 +2901,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 0,
+			},
 
 			updateType: types.Match,
 		},
@@ -2910,8 +2935,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2944,8 +2971,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2978,8 +3007,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -3010,8 +3041,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[string]uint32{
+				types.ModuleAddress.String(): 0,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -3084,8 +3117,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			subaccountId := *subaccounts[0].Id
 
 			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
-			if tc.negativeTncSubaccountSeenAtBlock != 0 {
-				keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, tc.negativeTncSubaccountSeenAtBlock)
+			for collateralPoolAddress, negativeTncSubaccountSeenAtBlock := range tc.negativeTncSubaccountSeenAtBlock {
+				if negativeTncSubaccountSeenAtBlock != 0 {
+					keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, sdk.MustAccAddressFromBech32(collateralPoolAddress), negativeTncSubaccountSeenAtBlock)
+				}
 			}
 
 			// Set the current block number on the context.

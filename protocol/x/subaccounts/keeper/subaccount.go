@@ -62,8 +62,16 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	sdk.AccAddress,
 	error,
 ) {
-	// Use the default collateral pool if the subaccount has no perpetual positions.
+
 	subaccount := k.GetSubaccount(ctx, subaccountId)
+	return k.getCollateralPoolForSubaccount(ctx, subaccount)
+}
+
+func (k Keeper) getCollateralPoolForSubaccount(ctx sdk.Context, subaccount types.Subaccount) (
+	sdk.AccAddress,
+	error,
+) {
+	// Use the default collateral pool if the subaccount has no perpetual positions.
 	if len(subaccount.PerpetualPositions) == 0 {
 		return types.ModuleAddress, nil
 	}
@@ -553,10 +561,14 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
-	// - There was a negative TNC subaccount seen.
+	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
+		collateralPoolAddresses, err := k.getCollateralPoolAddresses(ctx, settledUpdates)
+		if err != nil {
+			return false, nil, err
+		}
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.getLastBlockNegativeSubaccountSeen(ctx, collateralPoolAddresses)
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
@@ -950,4 +962,47 @@ func applyUpdatesToPositions[
 	}
 
 	return result, nil
+}
+
+// getCollateralPoolAddresses gets a slice of collateral pool addresses for the subaccounts in the
+// slice of `settledUpdate`s passed in.
+// The slice will be de-duplicated and will contain unique collateral pool addresses.
+func (k Keeper) getCollateralPoolAddresses(
+	ctx sdk.Context,
+	settledUpdates []settledUpdate,
+) ([]sdk.AccAddress, error) {
+	collateralPoolAddressMap := make(map[string]bool)
+	collateralPoolAddresses := make([]sdk.AccAddress, 0)
+	for _, u := range settledUpdates {
+		collateralPoolAddress, err := k.getCollateralPoolForSubaccount(ctx, u.SettledSubaccount)
+		if err != nil {
+			return nil, err
+		}
+		if _, exists := collateralPoolAddressMap[collateralPoolAddress.String()]; !exists {
+			collateralPoolAddresses = append(collateralPoolAddresses, collateralPoolAddress)
+			collateralPoolAddressMap[collateralPoolAddress.String()] = true
+		}
+	}
+	return collateralPoolAddresses, nil
+}
+
+// getLastBlockNegativeSubaccountSeen gets the last block where a subaccount with negative total net
+// collateral was seen for a slice of collateral pool addresses.
+func (k Keeper) getLastBlockNegativeSubaccountSeen(
+	ctx sdk.Context,
+	collateralPoolAddresses []sdk.AccAddress,
+) (
+	lastBlockNegativeSubaccountSeen uint32,
+	negativeSubaccountExists bool,
+) {
+	lastBlockNegativeSubaccountSeen = uint32(0)
+	negativeSubaccountExists = false
+	for _, collateralPoolAddress := range collateralPoolAddresses {
+		blockHeight, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddress)
+		if exists && blockHeight > lastBlockNegativeSubaccountSeen {
+			lastBlockNegativeSubaccountSeen = blockHeight
+			negativeSubaccountExists = true
+		}
+	}
+	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists
 }

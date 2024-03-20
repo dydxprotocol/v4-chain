@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	btkeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -37,7 +38,9 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
             at block 0`: {
 			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock:        0,
@@ -51,12 +54,31 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 7)
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 7,
 				ChainOutageSeenAtBlock:           0,
 				WithdrawalsAndTransfersUnblockedAtBlock: 7 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
+		},
+		`Negative TNC subaccount seen in state returns withdrawals and transfers unblocked
+            after the delay (for isolated collateral pool address)`: {
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
+				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, constants.IsoCollateralPoolAddress, 5)
+			},
+
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: constants.IsoCollateralPoolAddress.String(),
+			},
+
+			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
+				NegativeTncSubaccountSeenAtBlock: 5,
+				ChainOutageSeenAtBlock:           0,
+				WithdrawalsAndTransfersUnblockedAtBlock: 5 +
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
@@ -84,7 +106,9 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 					})
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 0,
@@ -119,7 +143,9 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 					})
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 27,
@@ -154,7 +180,9 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 					})
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 37,
@@ -189,7 +217,9 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 					})
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				CollateralPoolAddress: types.ModuleAddress.String(),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 3,

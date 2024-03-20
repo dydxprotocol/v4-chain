@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/tracer"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
@@ -12,6 +13,11 @@ import (
 )
 
 func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
+	testCollateralPoolAddresses := []sdk.AccAddress{
+		constants.IsoCollateralPoolAddress,
+		constants.Iso2CollateralPoolAddress,
+		types.ModuleAddress,
+	}
 	tests := map[string]struct {
 		// Setup.
 		setupTestAndPerformAssertions func(ctx sdk.Context, s keeper.Keeper)
@@ -21,104 +27,149 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 	}{
 		"Block height defaults to zero if not set and doesn't exist": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
-				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.False(t, exists)
-				require.Equal(
-					t,
-					uint32(0),
-					block,
-				)
+				for _, collateralPoolAddr := range testCollateralPoolAddresses {
+					block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.False(t, exists)
+					require.Equal(
+						t,
+						uint32(0),
+						block,
+					)
+				}
 			},
 
 			expectedMultiStoreWrites: []string{},
 		},
 		"Block height can be updated": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 1)
-				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(1),
-					block,
-				)
+				for _, collateralPoolAddr := range testCollateralPoolAddresses {
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 1)
+					block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(1),
+						block,
+					)
+				}
 			},
 
 			expectedMultiStoreWrites: []string{
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + string(constants.IsoCollateralPoolAddress),
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + string(constants.Iso2CollateralPoolAddress),
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + string(types.ModuleAddress),
 			},
 		},
 		"Block height can be updated more than once": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 1)
-				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(1),
-					block,
-				)
+				for _, collateralPoolAddr := range testCollateralPoolAddresses {
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 1)
+					block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(1),
+						block,
+					)
 
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 2)
-				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(2),
-					block,
-				)
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 2)
+					block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(2),
+						block,
+					)
 
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 3)
-				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(3),
-					block,
-				)
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 3)
+					block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(3),
+						block,
+					)
 
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 10)
-				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(10),
-					block,
-				)
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 10)
+					block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(10),
+						block,
+					)
+				}
 			},
 
-			expectedMultiStoreWrites: []string{
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
-			},
+			expectedMultiStoreWrites: append(
+				getWriteKeys(constants.IsoCollateralPoolAddress, 4),
+				append(
+					getWriteKeys(constants.Iso2CollateralPoolAddress, 4),
+					getWriteKeys(types.ModuleAddress, 4)...,
+				)...,
+			),
 		},
 		"Block height can be updated to same block height": {
 			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 0)
-				block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(0),
-					block,
-				)
+				for _, collateralPoolAddr := range testCollateralPoolAddresses {
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 0)
+					block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(0),
+						block,
+					)
 
-				k.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 0)
-				block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
-				require.True(t, exists)
-				require.Equal(
-					t,
-					uint32(0),
-					block,
-				)
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, 0)
+					block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(0),
+						block,
+					)
+				}
 			},
 
-			expectedMultiStoreWrites: []string{
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix,
+			expectedMultiStoreWrites: append(
+				getWriteKeys(constants.IsoCollateralPoolAddress, 2),
+				append(
+					getWriteKeys(constants.Iso2CollateralPoolAddress, 2),
+					getWriteKeys(types.ModuleAddress, 2)...,
+				)...,
+			),
+		},
+		"Block height can be updated to different block heights for each collateral pool address": {
+			setupTestAndPerformAssertions: func(ctx sdk.Context, k keeper.Keeper) {
+				for i, collateralPoolAddr := range testCollateralPoolAddresses {
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, uint32(i))
+					block, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(i),
+						block,
+					)
+
+					k.SetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr, uint32(2*i+1))
+					block, exists = k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddr)
+					require.True(t, exists)
+					require.Equal(
+						t,
+						uint32(2*i+1),
+						block,
+					)
+				}
 			},
+
+			expectedMultiStoreWrites: append(
+				getWriteKeys(constants.IsoCollateralPoolAddress, 2),
+				append(
+					getWriteKeys(constants.Iso2CollateralPoolAddress, 2),
+					getWriteKeys(types.ModuleAddress, 2)...,
+				)...,
+			),
 		},
 	}
 
@@ -152,4 +203,12 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock_PanicsOnDecreasingBlock(t *testi
 		"SetNegativeTncSubaccountSeenAtBlock: new block height (1) is less than the current block height (2)",
 		func() { subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress, 1) },
 	)
+}
+
+func getWriteKeys(address sdk.AccAddress, times int) []string {
+	writeKeys := make([]string, times)
+	for i := 0; i < times; i++ {
+		writeKeys[i] = types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + string(address)
+	}
+	return writeKeys
 }

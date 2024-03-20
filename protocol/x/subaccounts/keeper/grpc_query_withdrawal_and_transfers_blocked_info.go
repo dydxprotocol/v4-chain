@@ -3,6 +3,8 @@ package keeper
 import (
 	"context"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -25,7 +27,10 @@ func (k Keeper) GetWithdrawalAndTransfersBlockedInfo(
 	)
 	chainOutageSeenAtBlock, chainOutageExists := downtimeInfo.BlockInfo.Height,
 		downtimeInfo.BlockInfo.Height > 0 && downtimeInfo.Duration > 0
-	negativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlockExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, types.ModuleAddress)
+	negativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlockExists := k.GetNegativeTncSubaccountSeenAtBlock(
+		ctx,
+		sdk.MustAccAddressFromBech32(req.CollateralPoolAddress),
+	)
 
 	// Withdrawals and transfers are blocked at non-zero block iff a chain outage or negative TNC subaccount exists.
 	withdrawalsAndTransfersBlockedUntilBlock := uint32(0)
