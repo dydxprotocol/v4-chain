@@ -106,7 +106,7 @@ describe('batch-kafka-producer', () => {
 
     for (const msg of messages) {
       const key: Buffer | undefined = msg.key === undefined ? undefined : Buffer.from(msg.key);
-      batchProducer.addMessageAndMaybeFlush({ value: Buffer.from(msg.value), key });
+      batchProducer.addMessageAndMaybeFlush({ value: Buffer.from(msg.value), key, headers: msg.headers });
     }
 
     expect(producerSendMock.mock.calls).toHaveLength(expectedMessagesPerCall.length);

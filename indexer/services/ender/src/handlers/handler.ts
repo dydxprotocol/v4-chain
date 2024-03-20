@@ -18,6 +18,7 @@ import {
   OffChainUpdateV1,
   SubaccountId,
 } from '@dydxprotocol-indexer/v4-protos';
+import { IHeaders } from 'kafkajs';
 import { DateTime } from 'luxon';
 import * as pg from 'pg';
 
@@ -182,6 +183,7 @@ export abstract class Handler<T> {
   protected generateConsolidatedVulcanKafkaEvent(
     key: Buffer,
     offChainUpdate: OffChainUpdateV1,
+    headers?: IHeaders,
   ): ConsolidatedKafkaEvent {
     stats.increment(`${config.SERVICE_NAME}.create_vulcan_kafka_event`, 1);
 
@@ -190,6 +192,7 @@ export abstract class Handler<T> {
       message: {
         key,
         value: offChainUpdate,
+        headers,
       },
     };
   }
