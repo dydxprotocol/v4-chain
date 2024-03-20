@@ -28,7 +28,9 @@ import {
   defaultTendermintEvent4,
   defaultWallet,
   isolatedMarket,
-  isolatedMarket2, isolatedPerpetualMarket, isolatedPerpetualMarket2,
+  isolatedMarket2,
+  isolatedPerpetualMarket,
+  isolatedPerpetualMarket2,
   isolatedSubaccount,
   isolatedSubaccount2,
 } from './constants';

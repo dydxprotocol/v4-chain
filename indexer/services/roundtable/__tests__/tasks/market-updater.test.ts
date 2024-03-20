@@ -10,7 +10,6 @@ import {
   PerpetualPositionTable,
   testConstants,
   OraclePriceTable,
-  testMocks,
   PriceMap,
   BlockTable,
   LiquidityTiersFromDatabase,
@@ -31,11 +30,77 @@ import { NextFundingCache, redis } from '@dydxprotocol-indexer/redis';
 import { redisClient } from '../../src/helpers/redis';
 import Big from 'big.js';
 import { DateTime } from 'luxon';
+import * as SubaccountTable from '@dydxprotocol-indexer/postgres/build/src/stores/subaccount-table';
+import {
+  defaultAsset,
+  defaultAsset2,
+  defaultAsset3,
+  defaultBlock,
+  defaultBlock2,
+  defaultLiquidityTier,
+  defaultLiquidityTier2,
+  defaultMarket,
+  defaultMarket2,
+  defaultMarket3,
+  defaultPerpetualMarket,
+  defaultPerpetualMarket2,
+  defaultPerpetualMarket3,
+  defaultSubaccount,
+  defaultSubaccount2,
+  defaultTendermintEvent,
+  defaultTendermintEvent2,
+  defaultTendermintEvent3,
+  defaultTendermintEvent4,
+  defaultWallet,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
+import * as MarketTable from '@dydxprotocol-indexer/postgres/build/src/stores/market-table';
+import * as TendermintEventTable from '@dydxprotocol-indexer/postgres/build/src/stores/tendermint-event-table';
+import * as AssetTable from '@dydxprotocol-indexer/postgres/build/src/stores/asset-table';
+import * as WalletTable from '@dydxprotocol-indexer/postgres/build/src/stores/wallet-table';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
   wrapBackgroundTask: jest.fn(),
 }));
+
+async function seedData() {
+  await Promise.all([
+    SubaccountTable.create(defaultSubaccount),
+    SubaccountTable.create(defaultSubaccount2),
+  ]);
+  await Promise.all([
+    MarketTable.create(defaultMarket),
+    MarketTable.create(defaultMarket2),
+    MarketTable.create(defaultMarket3),
+  ]);
+  await Promise.all([
+    LiquidityTiersTable.create(defaultLiquidityTier),
+    LiquidityTiersTable.create(defaultLiquidityTier2),
+  ]);
+  await Promise.all([
+    PerpetualMarketTable.create(defaultPerpetualMarket),
+    PerpetualMarketTable.create(defaultPerpetualMarket2),
+    PerpetualMarketTable.create(defaultPerpetualMarket3),
+  ]);
+  await Promise.all([
+    BlockTable.create(defaultBlock),
+    BlockTable.create(defaultBlock2),
+  ]);
+  await Promise.all([
+    TendermintEventTable.create(defaultTendermintEvent),
+    TendermintEventTable.create(defaultTendermintEvent2),
+    TendermintEventTable.create(defaultTendermintEvent3),
+    TendermintEventTable.create(defaultTendermintEvent4),
+  ]);
+  await Promise.all([
+    AssetTable.create(defaultAsset),
+    AssetTable.create(defaultAsset2),
+    AssetTable.create(defaultAsset3),
+  ]);
+  await Promise.all([
+    WalletTable.create(defaultWallet),
+  ]);
+}
 
 describe('market-updater', () => {
 
@@ -65,7 +130,7 @@ describe('market-updater', () => {
   });
 
   beforeEach(async () => {
-    await testMocks.seedData();
+    await seedData();
   });
 
   afterAll(async () => {
