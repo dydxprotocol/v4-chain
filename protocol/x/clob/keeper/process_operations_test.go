@@ -2397,7 +2397,10 @@ func runProcessProposerOperationsTestCase(
 	}
 
 	// Verify the negative TNC subaccount seen block.
-	seenNegativeTncSubaccountBlock, exists := ks.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(ctx, satypes.ModuleAddress)
+	seenNegativeTncSubaccountBlock, exists := ks.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+		ctx,
+		satypes.ModuleAddress,
+	)
 	if tc.expectedNegativeTncSubaccountSeen {
 		require.True(t, exists)
 		require.Equal(t, uint32(ctx.BlockHeight()), seenNegativeTncSubaccountBlock)

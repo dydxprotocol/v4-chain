@@ -62,7 +62,6 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	sdk.AccAddress,
 	error,
 ) {
-
 	subaccount := k.GetSubaccount(ctx, subaccountId)
 	return k.getCollateralPoolForSubaccount(ctx, subaccount)
 }
@@ -568,7 +567,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		if err != nil {
 			return false, nil, err
 		}
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.getLastBlockNegativeSubaccountSeen(ctx, collateralPoolAddresses)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.getLastBlockNegativeSubaccountSeen(
+			ctx,
+			collateralPoolAddresses,
+		)
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.

@@ -16,7 +16,10 @@ func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
 	collateralPoolAddr sdk.AccAddress,
 ) (uint32, bool) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix))
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
+	)
 	return k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddr)
 }
 
@@ -48,7 +51,10 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 	collateralPoolAddr sdk.AccAddress,
 	blockHeight uint32,
 ) {
-	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix))
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
+	)
 
 	// Panic if the stored block height value exists and is greater than the new block height value.
 	currentValue, exists := k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddr)

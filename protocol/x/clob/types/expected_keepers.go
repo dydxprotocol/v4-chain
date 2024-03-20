@@ -70,6 +70,10 @@ type SubaccountsKeeper interface {
 		amount *big.Int,
 		perpetualId uint32,
 	) error
+	GetCollateralPoolFromPerpetualId(
+		ctx sdk.Context,
+		perpetualId uint32,
+	) (sdk.AccAddress, error)
 }
 
 type AssetsKeeper interface {
