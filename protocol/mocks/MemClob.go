@@ -319,6 +319,66 @@ func (_m *MemClob) GetOrderRemainingAmount(ctx types.Context, order clobtypes.Or
 	return r0, r1
 }
 
+// GetOrderbookUpdatesForOrderPlacement provides a mock function with given fields: ctx, order
+func (_m *MemClob) GetOrderbookUpdatesForOrderPlacement(ctx types.Context, order clobtypes.Order) *clobtypes.OffchainUpdates {
+	ret := _m.Called(ctx, order)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOrderbookUpdatesForOrderPlacement")
+	}
+
+	var r0 *clobtypes.OffchainUpdates
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.Order) *clobtypes.OffchainUpdates); ok {
+		r0 = rf(ctx, order)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	return r0
+}
+
+// GetOrderbookUpdatesForOrderRemoval provides a mock function with given fields: ctx, orderId
+func (_m *MemClob) GetOrderbookUpdatesForOrderRemoval(ctx types.Context, orderId clobtypes.OrderId) *clobtypes.OffchainUpdates {
+	ret := _m.Called(ctx, orderId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOrderbookUpdatesForOrderRemoval")
+	}
+
+	var r0 *clobtypes.OffchainUpdates
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) *clobtypes.OffchainUpdates); ok {
+		r0 = rf(ctx, orderId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	return r0
+}
+
+// GetOrderbookUpdatesForOrderUpdate provides a mock function with given fields: ctx, orderId
+func (_m *MemClob) GetOrderbookUpdatesForOrderUpdate(ctx types.Context, orderId clobtypes.OrderId) *clobtypes.OffchainUpdates {
+	ret := _m.Called(ctx, orderId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetOrderbookUpdatesForOrderUpdate")
+	}
+
+	var r0 *clobtypes.OffchainUpdates
+	if rf, ok := ret.Get(0).(func(types.Context, clobtypes.OrderId) *clobtypes.OffchainUpdates); ok {
+		r0 = rf(ctx, orderId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*clobtypes.OffchainUpdates)
+		}
+	}
+
+	return r0
+}
+
 // GetPricePremium provides a mock function with given fields: ctx, clobPair, params
 func (_m *MemClob) GetPricePremium(ctx types.Context, clobPair clobtypes.ClobPair, params perpetualstypes.GetPricePremiumParams) (int32, error) {
 	ret := _m.Called(ctx, clobPair, params)

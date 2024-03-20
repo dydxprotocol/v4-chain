@@ -1130,6 +1130,11 @@ func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes
 	_m.Called(ctx, orderId)
 }
 
+// SendOrderbookUpdates provides a mock function with given fields: offchainUpdates, snapshot
+func (_m *ClobKeeper) SendOrderbookUpdates(offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
+	_m.Called(offchainUpdates, snapshot)
+}
+
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
 func (_m *ClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
 	_m.Called(ctx, order, blockHeight)
