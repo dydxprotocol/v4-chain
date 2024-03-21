@@ -110,13 +110,15 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 			}
 		}
 
-		if err := subscription.srv.Send(
-			&clobtypes.StreamOrderbookUpdatesResponse{
-				Updates:  updatesToSend,
-				Snapshot: snapshot,
-			},
-		); err != nil {
-			idsToRemove = append(idsToRemove, id)
+		if len(updatesToSend) > 0 {
+			if err := subscription.srv.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates:  updatesToSend,
+					Snapshot: snapshot,
+				},
+			); err != nil {
+				idsToRemove = append(idsToRemove, id)
+			}
 		}
 	}
 
