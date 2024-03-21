@@ -3504,10 +3504,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
 						},
 					},
-					SubaccountId: types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					SubaccountId: constants.Bob_Num0,
 				},
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -3575,10 +3572,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
 						},
 					},
-					SubaccountId: types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					SubaccountId: constants.Bob_Num0,
 				},
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -3648,10 +3642,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
 						},
 					},
-					SubaccountId: types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					SubaccountId: constants.Bob_Num0,
 				},
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -3721,10 +3712,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
 						},
 					},
-					SubaccountId: types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					SubaccountId: constants.Bob_Num0,
 				},
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
@@ -3791,10 +3779,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
 						},
 					},
-					SubaccountId: types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					SubaccountId: constants.Bob_Num0,
 				},
 				{
 					PerpetualUpdates: []types.PerpetualUpdate{
