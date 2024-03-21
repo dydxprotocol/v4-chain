@@ -248,6 +248,11 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 		return nil
 	}
 
+	// If there are zero quantums to transfer, don't transfer collateral.
+	if stateTransition.QuoteQuantums.Sign() == 0 {
+		return nil
+	}
+
 	isolatedCollateralPoolAddr, err := k.GetCollateralPoolFromPerpetualId(ctx, stateTransition.PerpetualId)
 	if err != nil {
 		return err
@@ -274,11 +279,6 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 			stateTransition.PerpetualId,
 			stateTransition.SubaccountId,
 		)
-	}
-
-	// If there are zero quantums to transfer, don't transfer collateral.
-	if stateTransition.QuoteQuantums.Sign() == 0 {
-		return nil
 	}
 
 	// Invalid to transfer negative quantums. This should already be caught by collateralization
@@ -310,6 +310,35 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 		fromModuleAddr,
 		toModuleAddr,
 		[]sdk.Coin{coinToTransfer},
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// computeAndExecuteCollateralTransfer computes collateral transfers resulting from updates to
+// a subaccount and executes the collateral transfer using `x/bank`.`
+// The input `settledUpdate` must have an updated subaccount (`settledUpdate.SettledSubaccount`),
+// so all the updates must have been applied already to the subaccount.
+// Note: This uses the `x/bank` keeper and modifies `x/bank` state.
+func (k *Keeper) computeAndExecuteCollateralTransfer(
+	ctx sdk.Context,
+	settledUpdateWithUpdatedSubaccount SettledUpdate,
+	perpetuals []perptypes.Perpetual,
+) error {
+	// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
+	// and asset updates applied to it.
+	stateTransition, err := GetIsolatedPerpetualStateTransition(
+		settledUpdateWithUpdatedSubaccount,
+		perpetuals,
+	)
+	if err != nil {
+		return err
+	}
+	if err := k.transferCollateralForIsolatedPerpetual(
+		ctx,
+		stateTransition,
 	); err != nil {
 		return err
 	}

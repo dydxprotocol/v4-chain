@@ -313,18 +313,12 @@ func (k Keeper) UpdateSubaccounts(
 	// Transfer collateral between collateral pools for any isolated perpetual positions that changed
 	// state due to an update.
 	for _, settledUpdateWithUpdatedSubaccount := range settledUpdates {
-		// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
-		// and asset updates applied to it.
-		stateTransition, err := GetIsolatedPerpetualStateTransition(
+		if err := k.computeAndExecuteCollateralTransfer(
+			ctx,
+			// The subaccount in `settledUpdateWithUpdatedSubaccount` already has the perpetual updates
+			// and asset updates applied to it.
 			settledUpdateWithUpdatedSubaccount,
 			allPerps,
-		)
-		if err != nil {
-			return false, nil, err
-		}
-		if err := k.transferCollateralForIsolatedPerpetual(
-			ctx,
-			stateTransition,
 		); err != nil {
 			return false, nil, err
 		}
