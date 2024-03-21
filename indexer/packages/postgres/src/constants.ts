@@ -121,3 +121,7 @@ export const DEFAULT_POSTGRES_OPTIONS : Options = config.USE_READ_REPLICA
   ? {
     readReplica: true,
   } : {};
+
+export const MAX_PARENT_SUBACCOUNTS: number = 128;
+
+export const CHILD_SUBACCOUNT_MULTIPLIER: number = 1000;

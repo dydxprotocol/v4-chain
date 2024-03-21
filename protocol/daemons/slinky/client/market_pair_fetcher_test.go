@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
-	slinkytypes "github.com/skip-mev/slinky/x/oracle/types"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/slinky/client"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"

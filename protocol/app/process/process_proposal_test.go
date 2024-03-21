@@ -258,7 +258,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, marketToSmoothedPrices, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
@@ -285,6 +285,7 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},
 				pricesKeeper,
+				process.NewDefaultUpdateMarketPriceTxDecoder(pricesKeeper, constants.TestEncodingCfg.TxConfig.TxDecoder()),
 			)
 			req := abci.RequestProcessProposal{Txs: tc.txsBytes}
 
@@ -294,11 +295,6 @@ func TestProcessProposalHandler_Error(t *testing.T) {
 
 			// Validate.
 			require.Equal(t, tc.expectedResponse, *resp)
-			require.Equal(
-				t,
-				marketToSmoothedPrices.GetSmoothedPricesForTest(),
-				constants.AtTimeTSingleExchangeSmoothedPrices,
-			)
 		})
 	}
 }

@@ -63,7 +63,7 @@ func PerpetualsKeepersWithClobHelpers(
 			transientStoreKey storetypes.StoreKey,
 		) []GenesisInitializer {
 			// Define necessary keepers here for unit tests
-			pc.PricesKeeper, _, pc.IndexPriceCache, _, pc.MockTimeProvider = createPricesKeeper(
+			pc.PricesKeeper, _, pc.IndexPriceCache, pc.MockTimeProvider = createPricesKeeper(
 				stateStore,
 				db,
 				cdc,
@@ -237,9 +237,8 @@ func CreateNPerpetuals(
 	allLiquidityTiers := keeper.GetAllLiquidityTiers(ctx)
 	require.Greater(t, len(allLiquidityTiers), 0)
 
+	CreateNMarkets(t, ctx, pricesKeeper, n)
 	for i := range items {
-		CreateNMarkets(t, ctx, pricesKeeper, n)
-
 		var defaultFundingPpm int32
 		marketType := types.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS
 		if i%3 == 0 {

@@ -411,6 +411,7 @@ func TestGetAllMarketPrices(t *testing.T) {
 					MarketPrices: []pricestypes.MarketPrice{
 						constants.TestMarketPrices[2],
 						constants.TestMarketPrices[3],
+						constants.TestMarketPrices[4],
 					},
 				}
 				mck.On("AllMarketPrices", mock.Anything, req2).Return(response2, nil)

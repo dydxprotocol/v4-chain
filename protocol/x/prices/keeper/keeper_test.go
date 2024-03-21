@@ -8,7 +8,7 @@ import (
 )
 
 func TestLogger(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
 	logger := keeper.Logger(ctx)
 	require.NotNil(t, logger)
 }

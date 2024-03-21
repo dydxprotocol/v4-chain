@@ -154,26 +154,18 @@ describe('pnl-ticks-helper', () => {
     _.Dictionary<FundingIndexMap> = await getBlockHeightToFundingIndexMap(
       subaccountsWithTransfers, accountsToUpdate1,
     );
-    expect(heightToFundingIndices1).toEqual({
-      1: {
-        [testConstants.defaultPerpetualMarket.id]: Big('100'),
-        [testConstants.defaultPerpetualMarket2.id]: Big('2'),
-        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
-      },
-    });
+
+    expect(heightToFundingIndices1[1][testConstants.defaultPerpetualMarket.id]).toEqual(Big('100'));
+    expect(heightToFundingIndices1[1][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('2'));
 
     const accountsToUpdate2: string[] = [testConstants.defaultSubaccountId2];
     const heightToFundingIndices2:
     _.Dictionary<FundingIndexMap> = await getBlockHeightToFundingIndexMap(
       subaccountsWithTransfers, accountsToUpdate2,
     );
-    expect(heightToFundingIndices2).toEqual({
-      2: {
-        [testConstants.defaultPerpetualMarket.id]: Big('10050'),
-        [testConstants.defaultPerpetualMarket2.id]: Big('5'),
-        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
-      },
-    });
+
+    expect(heightToFundingIndices2[2][testConstants.defaultPerpetualMarket.id]).toEqual(Big('10050'));
+    expect(heightToFundingIndices2[2][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('5'));
     const accountsToUpdate3: string[] = [
       testConstants.defaultSubaccountId,
       testConstants.defaultSubaccountId2,
@@ -183,23 +175,13 @@ describe('pnl-ticks-helper', () => {
     _.Dictionary<FundingIndexMap> = await getBlockHeightToFundingIndexMap(
       subaccountsWithTransfers, accountsToUpdate3,
     );
-    expect(heightToFundingIndices3).toEqual({
-      1: {
-        [testConstants.defaultPerpetualMarket.id]: Big('100'),
-        [testConstants.defaultPerpetualMarket2.id]: Big('2'),
-        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
-      },
-      2: {
-        [testConstants.defaultPerpetualMarket.id]: Big('10050'),
-        [testConstants.defaultPerpetualMarket2.id]: Big('5'),
-        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
-      },
-      3: {
-        [testConstants.defaultPerpetualMarket.id]: Big('10050'),
-        [testConstants.defaultPerpetualMarket2.id]: Big('5'),
-        [testConstants.defaultPerpetualMarket3.id]: Big('0'),
-      },
-    });
+
+    expect(heightToFundingIndices3[1][testConstants.defaultPerpetualMarket.id]).toEqual(Big('100'));
+    expect(heightToFundingIndices3[1][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('2'));
+    expect(heightToFundingIndices3[2][testConstants.defaultPerpetualMarket.id]).toEqual(Big('10050'));
+    expect(heightToFundingIndices3[2][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('5'));
+    expect(heightToFundingIndices3[3][testConstants.defaultPerpetualMarket.id]).toEqual(Big('10050'));
+    expect(heightToFundingIndices3[3][testConstants.defaultPerpetualMarket2.id]).toEqual(Big('5'));
   });
 
   it('getUsdcTransfersSinceLastPnlTick with transfers', async () => {

@@ -43,6 +43,11 @@ func (k Keeper) ModifyMarketParam(
 		return types.MarketParam{},
 			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(updatedMarketParam.Id))
 	}
+	for _, market := range k.GetAllMarketParams(ctx) {
+		if market.Pair == updatedMarketParam.Pair && market.Id != updatedMarketParam.Id {
+			return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
+		}
+	}
 
 	// Store the modified market param.
 	marketParamStore := k.getMarketParamStore(ctx)

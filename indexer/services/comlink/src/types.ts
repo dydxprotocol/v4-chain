@@ -105,6 +105,7 @@ export interface AssetPositionResponseObject {
   side: PositionSide;
   size: string;
   assetId: string;
+  subaccountNumber: number;
 }
 
 export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject };
@@ -129,6 +130,7 @@ export interface FillResponseObject {
   createdAtHeight: string,
   orderId?: string,
   clientMetadata?: string,
+  subaccountNumber: number,
 }
 
 /* ------- TRANSFER TYPES ------- */
@@ -308,6 +310,10 @@ export interface SubaccountRequest extends AddressRequest {
   subaccountNumber: number,
 }
 
+export interface ParentSubaccountRequest extends AddressRequest {
+  parentSubaccountNumber: number,
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -340,6 +346,12 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  market: string,
+  marketType: MarketType,
+}
+
+export interface ParentSubaccountFillRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
 }

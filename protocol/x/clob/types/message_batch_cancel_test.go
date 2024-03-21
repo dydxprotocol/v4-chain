@@ -101,6 +101,27 @@ func TestMsgBatchCancel_ValidateBasic(t *testing.T) {
 					{
 						ClobPairId: 0,
 						ClientIds: []uint32{
+							0, 1, 2, 3,
+						},
+					},
+					{
+						ClobPairId: 0,
+						ClientIds: []uint32{
+							2, 3, 4,
+						},
+					},
+				},
+				10,
+			),
+			err: types.ErrInvalidBatchCancel,
+		},
+		"duplicate client ids": {
+			msg: *types.NewMsgBatchCancel(
+				constants.Alice_Num0,
+				[]types.OrderBatch{
+					{
+						ClobPairId: 0,
+						ClientIds: []uint32{
 							0, 1, 2, 3, 1,
 						},
 					},

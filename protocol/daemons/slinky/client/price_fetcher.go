@@ -5,9 +5,9 @@ import (
 	"strconv"
 
 	"cosmossdk.io/log"
+	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	oracleclient "github.com/skip-mev/slinky/service/clients/oracle"
 	"github.com/skip-mev/slinky/service/servers/oracle/types"
-	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
 	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
@@ -70,7 +70,7 @@ func (p *PriceFetcherImpl) FetchPrices(ctx context.Context) error {
 	var updates []*api.MarketPriceUpdate
 	for currencyPairString, priceString := range slinkyResponse.Prices {
 		// convert currency-pair string (index) into currency-pair object
-		currencyPair, err := oracletypes.CurrencyPairFromString(currencyPairString)
+		currencyPair, err := slinkytypes.CurrencyPairFromString(currencyPairString)
 		if err != nil {
 			return err
 		}

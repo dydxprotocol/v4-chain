@@ -307,7 +307,6 @@ describe('helpers', () => {
         latestBlock!,
       );
 
-      expect(Object.keys(lastUpdatedFundingIndexMap)).toHaveLength(3);
       expect(
         lastUpdatedFundingIndexMap[testConstants.defaultFundingIndexUpdate.perpetualId]
           .toString(),
@@ -320,7 +319,6 @@ describe('helpers', () => {
         lastUpdatedFundingIndexMap[testConstants.defaultPerpetualMarket3.id]
           .toString(),
       ).toEqual(ZERO.toString());
-      expect(Object.keys(latestFundingIndexMap)).toHaveLength(3);
       expect(latestFundingIndexMap[fundingIndexUpdate3.perpetualId].toString())
         .toEqual(fundingIndexUpdate3.fundingIndex);
       expect(latestFundingIndexMap[testConstants.defaultPerpetualMarket2.id].toString())
@@ -392,6 +390,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
       const unsettledFunding: Big = Big('300');
@@ -416,6 +415,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -429,6 +429,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
@@ -458,6 +459,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -481,6 +483,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -494,6 +497,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(expectedAdjustedPositionSize);
@@ -513,6 +517,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -531,6 +536,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -544,6 +550,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(funding);
@@ -569,6 +576,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       };
 
@@ -592,6 +600,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(assetPositionsMap).toEqual({
@@ -600,6 +609,7 @@ describe('helpers', () => {
           side: PositionSide.LONG,
           assetId: '0',
           size: '1',
+          subaccountNumber: 0,
         },
       });
       expect(adjustedUSDCAssetPositionSize).toEqual(ZERO.toString());

@@ -10,7 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/app/prepare/prices"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 var (
@@ -52,8 +55,8 @@ func PrepareProposalHandler(
 	txConfig client.TxConfig,
 	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
-	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
+	priceUpdateGenerator prices.PriceUpdateGenerator,
 ) sdk.PrepareProposalHandler {
 	return func(ctx sdk.Context, req *abci.RequestPrepareProposal) (*abci.ResponsePrepareProposal, error) {
 		defer telemetry.ModuleMeasureSince(
@@ -71,38 +74,53 @@ func PrepareProposalHandler(
 			return &EmptyResponse, nil
 		}
 
+		// Grab the injected VEs from the previous block.
+		// If VEs are not enabled, no tx will have been injected.
+		var extCommitBzTx []byte
+		if len(req.Txs) >= constants.OracleVEInjectedTxs {
+			extCommitBzTx = req.Txs[constants.OracleInfoIndex]
+		}
+
+		// get the update market prices tx
+		msg, err := priceUpdateGenerator.GetValidMarketPriceUpdates(ctx, extCommitBzTx)
+		if err != nil {
+			ctx.Logger().Error(fmt.Sprintf("GetValidMarketPriceUpdates error: %v", err))
+			recordErrorMetricsWithLabel(metrics.PricesTx)
+			return &EmptyResponse, nil
+		}
+
 		// Gather "FixedSize" group messages.
-		pricesTxResp, err := GetUpdateMarketPricesTx(ctx, txConfig, pricesKeeper)
+		pricesTxResp, err := EncodeMarketPriceUpdates(txConfig, msg)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetUpdateMarketPricesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PricesTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 		err = txs.SetUpdateMarketPricesTx(pricesTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetUpdateMarketPricesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.PricesTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
 		fundingTxResp, err := GetAddPremiumVotesTx(ctx, txConfig, perpetualKeeper)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 		err = txs.SetAddPremiumVotesTx(fundingTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
 		acknowledgeBridgesTxResp, err := GetAcknowledgeBridgesTx(ctx, txConfig, bridgeKeeper)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetAcknowledgeBridgesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 		// Set AcknowledgeBridgesTx whether there are bridge events or not to ensure
 		// consistent ordering of txs received by ProcessProposal.
@@ -110,7 +128,7 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetAcknowledgeBridgesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
 		// Gather "Other" group messages.
@@ -123,7 +141,7 @@ func PrepareProposalHandler(
 			if err != nil {
 				ctx.Logger().Error(fmt.Sprintf("AddOtherTxs error: %v", err))
 				recordErrorMetricsWithLabel(metrics.OtherTxs)
-				return &EmptyResponse, nil
+				return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 			}
 		}
 
@@ -133,13 +151,13 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 		err = txs.SetProposedOperationsTx(operationsTxResp.Tx)
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetProposedOperationsTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.OperationsTx)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
 		// Try to pack in more "Other" txs.
@@ -151,7 +169,7 @@ func PrepareProposalHandler(
 				if err != nil {
 					ctx.Logger().Error(fmt.Sprintf("AddOtherTxs (additional) error: %v", err))
 					recordErrorMetricsWithLabel(metrics.OtherTxs)
-					return &EmptyResponse, nil
+					return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 				}
 			}
 		}
@@ -160,7 +178,7 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("GetTxsInOrder error: %v", err))
 			recordErrorMetricsWithLabel(metrics.GetTxsInOrder)
-			return &EmptyResponse, nil
+			return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 		}
 
 		// Record a success metric.
@@ -180,19 +198,12 @@ func PrepareProposalHandler(
 	}
 }
 
-// GetUpdateMarketPricesTx returns a tx containing `MsgUpdateMarketPrices`.
-func GetUpdateMarketPricesTx(
-	ctx sdk.Context,
+// EncodeMarketPriceUpdates returns a tx containing `MsgUpdateMarketPrices`.
+func EncodeMarketPriceUpdates(
 	txConfig client.TxConfig,
-	pricesKeeper PreparePricesKeeper,
+	msg *pricetypes.MsgUpdateMarketPrices,
 ) (PricesTxResponse, error) {
-	// Get prices to update.
-	msgUpdateMarketPrices := pricesKeeper.GetValidMarketPriceUpdates(ctx)
-	if msgUpdateMarketPrices == nil {
-		return PricesTxResponse{}, fmt.Errorf("MsgUpdateMarketPrices cannot be nil")
-	}
-
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgUpdateMarketPrices)
+	tx, err := EncodeMsgsIntoTxBytes(txConfig, msg)
 	if err != nil {
 		return PricesTxResponse{}, err
 	}
@@ -202,7 +213,7 @@ func GetUpdateMarketPricesTx(
 
 	return PricesTxResponse{
 		Tx:         tx,
-		NumMarkets: len(msgUpdateMarketPrices.MarketPriceUpdates),
+		NumMarkets: len(msg.MarketPriceUpdates),
 	}, nil
 }
 

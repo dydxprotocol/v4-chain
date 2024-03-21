@@ -36,6 +36,7 @@ export class TradingRewardsValidator extends Validator<TradingRewardsEventV1> {
   public createHandlers(
     indexerTendermintEvent: IndexerTendermintEvent,
     txId: number,
+    __: string,
   ): Handler<TradingRewardsEventV1>[] {
     return [
       new TradingRewardsHandler(

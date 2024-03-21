@@ -3,15 +3,16 @@
   "maxPriceAge": 120000000000,
   "providers": [
     {
-      "name": "binance",
+      "name": "Binance",
       "api": {
         "enabled": true,
         "timeout": 500000000,
         "interval": 150000000,
+        "reconnectTimeout": 2000000000,
         "maxQueries": 1,
         "atomic": true,
         "url": "https://api.binance.com/api/v3/ticker/price?symbols=%s%s%s",
-        "name": "binance"
+        "name": "Binance"
       },
       "webSocket": {
         "enabled": false,
@@ -28,18 +29,20 @@
         "pingInterval": 0,
         "maxReadErrorCount": 0,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "coinbase",
+      "name": "CoinbaseProAPI",
       "api": {
         "enabled": true,
         "timeout": 500000000,
-        "interval": 20000000,
-        "maxQueries": 10,
+        "interval": 100000000,
+        "reconnectTimeout": 2000000000,
+        "maxQueries": 5,
         "atomic": false,
         "url": "https://api.coinbase.com/v2/prices/%s/spot",
-        "name": "coinbase"
+        "name": "CoinbaseProAPI"
       },
       "webSocket": {
         "enabled": false,
@@ -56,18 +59,20 @@
         "pingInterval": 0,
         "maxReadErrorCount": 0,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "coingecko",
+      "name": "Coingecko",
       "api": {
         "enabled": true,
         "timeout": 500000000,
         "interval": 15000000000,
+        "reconnectTimeout": 2000000000,
         "maxQueries": 1,
         "atomic": true,
         "url": "https://api.coingecko.com/api/v3",
-        "name": "coingecko"
+        "name": "Coingecko"
       },
       "webSocket": {
         "enabled": false,
@@ -84,14 +89,76 @@
         "pingInterval": 0,
         "maxReadErrorCount": 0,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "bitfinex",
+      "name": "GeckoTerminal",
+      "api": {
+        "enabled": true,
+        "timeout": 500000000,
+        "interval": 5000000000,
+        "reconnectTimeout": 2000000000,
+        "maxQueries": 1,
+        "atomic": false,
+        "url": "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/%s",
+        "name": "GeckoTerminal"
+      },
+      "webSocket": {
+        "enabled": false,
+        "maxBufferSize": 0,
+        "reconnectionTimeout": 0,
+        "wss": "",
+        "name": "",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 0,
+        "enableCompression": false,
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "pingInterval": 0,
+        "maxReadErrorCount": 0,
+        "maxSubscriptionsPerConnection": 0
+      },
+      "type": "price_provider"
+    },
+    {
+      "name": "KrakenAPI",
+      "api": {
+        "enabled": true,
+        "timeout": 500000000,
+        "interval": 150000000,
+        "reconnectTimeout": 2000000000,
+        "maxQueries": 1,
+        "atomic": true,
+        "url": "https://api.kraken.com/0/public/Ticker?pair=%s",
+        "name": "KrakenAPI"
+      },
+      "webSocket": {
+        "enabled": false,
+        "maxBufferSize": 0,
+        "reconnectionTimeout": 0,
+        "wss": "",
+        "name": "",
+        "readBufferSize": 0,
+        "writeBufferSize": 0,
+        "handshakeTimeout": 0,
+        "enableCompression": false,
+        "readTimeout": 0,
+        "writeTimeout": 0,
+        "pingInterval": 0,
+        "maxReadErrorCount": 0,
+        "maxSubscriptionsPerConnection": 0
+      },
+      "type": "price_provider"
+    },
+    {
+      "name": "Bitfinex",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -102,7 +169,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://api-pub.bitfinex.com/ws/2",
-        "name": "bitfinex",
+        "name": "Bitfinex",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -112,14 +179,16 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "bitstamp",
+      "name": "Bitstamp",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -130,7 +199,7 @@
         "maxBufferSize": 1024,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://ws.bitstamp.net",
-        "name": "bitstamp",
+        "name": "Bitstamp",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -140,14 +209,16 @@
         "pingInterval": 10000000000,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "bybit",
+      "name": "Bybit",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -158,7 +229,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://stream.bybit.com/v5/public/spot",
-        "name": "bybit",
+        "name": "Bybit",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -168,14 +239,16 @@
         "pingInterval": 15000000000,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "coinbase_websocket",
+      "name": "CoinbasePro",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -186,7 +259,7 @@
         "maxBufferSize": 1024,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://ws-feed.exchange.coinbase.com",
-        "name": "coinbase_websocket",
+        "name": "CoinbasePro",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -196,14 +269,16 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "crypto_dot_com",
+      "name": "CryptoCom",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -214,7 +289,7 @@
         "maxBufferSize": 1024,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://stream.crypto.com/exchange/v1/market",
-        "name": "crypto_dot_com",
+        "name": "CryptoCom",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -224,14 +299,16 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "gate.io",
+      "name": "Gate",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -242,7 +319,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://api.gateio.ws/ws/v4/",
-        "name": "gate.io",
+        "name": "Gate",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -252,14 +329,16 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "huobi",
+      "name": "Huobi",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -270,7 +349,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://api.huobi.pro/ws",
-        "name": "huobi",
+        "name": "Huobi",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -280,14 +359,16 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "kraken",
+      "name": "Kraken",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -298,7 +379,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://ws.kraken.com",
-        "name": "kraken",
+        "name": "Kraken",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -308,25 +389,27 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "kucoin",
+      "name": "Kucoin",
       "api": {
         "enabled": false,
         "timeout": 5000000000,
         "interval": 60000000000,
+        "reconnectTimeout": 0,
         "maxQueries": 1,
         "atomic": false,
         "url": "https://api.kucoin.com",
-        "name": "kucoin"
+        "name": "Kucoin"
       },
       "webSocket": {
         "enabled": true,
         "maxBufferSize": 1024,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://ws-api-spot.kucoin.com/",
-        "name": "kucoin",
+        "name": "Kucoin",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -336,14 +419,16 @@
         "pingInterval": 10000000000,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     },
     {
-      "name": "mexc",
+      "name": "Mexc",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -354,7 +439,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://wbs.mexc.com/ws",
-        "name": "mexc",
+        "name": "Mexc",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -363,15 +448,17 @@
         "writeTimeout": 45000000000,
         "pingInterval": 20000000000,
         "maxReadErrorCount": 100,
-        "maxSubscriptionsPerConnection": 0
-      }
+        "maxSubscriptionsPerConnection": 20
+      },
+      "type": "price_provider"
     },
     {
-      "name": "okx",
+      "name": "Okx",
       "api": {
         "enabled": false,
         "timeout": 0,
         "interval": 0,
+        "reconnectTimeout": 0,
         "maxQueries": 0,
         "atomic": false,
         "url": "",
@@ -382,7 +469,7 @@
         "maxBufferSize": 1000,
         "reconnectionTimeout": 10000000000,
         "wss": "wss://ws.okx.com:8443/ws/v5/public",
-        "name": "okx",
+        "name": "Okx",
         "readBufferSize": 0,
         "writeBufferSize": 0,
         "handshakeTimeout": 45000000000,
@@ -392,10 +479,11 @@
         "pingInterval": 0,
         "maxReadErrorCount": 100,
         "maxSubscriptionsPerConnection": 0
-      }
+      },
+      "type": "price_provider"
     }
   ],
-  "production": false,
+  "production": true,
   "metrics": {
     "prometheusServerAddress": "0.0.0.0:8002",
     "enabled": true

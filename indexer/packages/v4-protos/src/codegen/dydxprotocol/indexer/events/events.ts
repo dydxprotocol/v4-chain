@@ -1,6 +1,7 @@
 import { IndexerSubaccountId, IndexerSubaccountIdSDKType, IndexerPerpetualPosition, IndexerPerpetualPositionSDKType, IndexerAssetPosition, IndexerAssetPositionSDKType } from "../protocol/v1/subaccount";
 import { IndexerOrder, IndexerOrderSDKType, IndexerOrderId, IndexerOrderIdSDKType, ClobPairStatus, ClobPairStatusSDKType } from "../protocol/v1/clob";
 import { OrderRemovalReason, OrderRemovalReasonSDKType } from "../shared/removal_reason";
+import { PerpetualMarketType, PerpetualMarketTypeSDKType } from "../protocol/v1/perpetual";
 import * as _m0 from "protobufjs/minimal";
 import { DeepPartial, Long } from "../../../helpers";
 /** Type is the type for funding values. */
@@ -845,6 +846,9 @@ export interface PerpetualMarketCreateEventV1 {
    */
 
   liquidityTier: number;
+  /** Market type of the perpetual. */
+
+  marketType: PerpetualMarketType;
 }
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
@@ -915,6 +919,9 @@ export interface PerpetualMarketCreateEventV1SDKType {
    */
 
   liquidity_tier: number;
+  /** Market type of the perpetual. */
+
+  market_type: PerpetualMarketTypeSDKType;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -2528,7 +2535,8 @@ function createBasePerpetualMarketCreateEventV1(): PerpetualMarketCreateEventV1 
     atomicResolution: 0,
     subticksPerTick: 0,
     stepBaseQuantums: Long.UZERO,
-    liquidityTier: 0
+    liquidityTier: 0,
+    marketType: 0
   };
 }
 
@@ -2572,6 +2580,10 @@ export const PerpetualMarketCreateEventV1 = {
 
     if (message.liquidityTier !== 0) {
       writer.uint32(80).uint32(message.liquidityTier);
+    }
+
+    if (message.marketType !== 0) {
+      writer.uint32(88).int32(message.marketType);
     }
 
     return writer;
@@ -2626,6 +2638,10 @@ export const PerpetualMarketCreateEventV1 = {
           message.liquidityTier = reader.uint32();
           break;
 
+        case 11:
+          message.marketType = (reader.int32() as any);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2647,6 +2663,7 @@ export const PerpetualMarketCreateEventV1 = {
     message.subticksPerTick = object.subticksPerTick ?? 0;
     message.stepBaseQuantums = object.stepBaseQuantums !== undefined && object.stepBaseQuantums !== null ? Long.fromValue(object.stepBaseQuantums) : Long.UZERO;
     message.liquidityTier = object.liquidityTier ?? 0;
+    message.marketType = object.marketType ?? 0;
     return message;
   }
 

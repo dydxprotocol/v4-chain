@@ -280,13 +280,18 @@ func (k Keeper) UpdateSubaccounts(
 		return false, nil, err
 	}
 
-	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	success, successPerUpdate, err = k.internalCanUpdateSubaccounts(
+		ctx,
+		settledUpdates,
+		updateType,
+		allPerps,
+	)
 	if !success || err != nil {
 		return success, successPerUpdate, err
 	}
 
 	// Get a mapping from perpetual Id to current perpetual funding index.
-	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
 	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
 	for _, perp := range allPerps {
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
@@ -378,7 +383,8 @@ func (k Keeper) CanUpdateSubaccounts(
 		return false, nil, err
 	}
 
-	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType)
+	allPerps := k.perpetualsKeeper.GetAllPerpetuals(ctx)
+	return k.internalCanUpdateSubaccounts(ctx, settledUpdates, updateType, allPerps)
 }
 
 // getSettledSubaccount returns 1. a new settled subaccount given an unsettled subaccount,
@@ -524,13 +530,26 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
 	updateType types.UpdateType,
+	perpetuals []perptypes.Perpetual,
 ) (
 	success bool,
 	successPerUpdate []types.UpdateResult,
 	err error,
 ) {
-	success = true
-	successPerUpdate = make([]types.UpdateResult, len(settledUpdates))
+	// TODO(TRA-99): Add integration / E2E tests on order placement / matching with this new
+	// constraint.
+	// Check if the updates satisfy the isolated perpetual constraints.
+	success, successPerUpdate, err = k.checkIsolatedSubaccountConstraints(
+		ctx,
+		settledUpdates,
+		perpetuals,
+	)
+	if err != nil {
+		return false, nil, err
+	}
+	if !success {
+		return success, successPerUpdate, nil
+	}
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:

@@ -100,18 +100,14 @@
     },
     "clob": {
       "block_rate_limit_config": {
-        "max_short_term_order_cancellations_per_n_blocks": [
+        "max_short_term_order_cancellations_per_n_blocks": [],
+        "max_short_term_orders_and_cancels_per_n_blocks": [
           {
-            "limit": 200,
+            "limit": 400,
             "num_blocks": 1
           }
         ],
-        "max_short_term_orders_per_n_blocks": [
-          {
-            "limit": 200,
-            "num_blocks": 1
-          }
-        ],
+        "max_short_term_orders_per_n_blocks": [],
         "max_stateful_orders_per_n_blocks": [
           {
             "limit": 2,
@@ -1830,15 +1826,15 @@
       ]
     }
   },
-  "app_version": "4.0.0-dev0-101-g18028fd0",
+  "app_version": "4.0.0-dev0-134-gc65a2bfe",
   "chain_id": "dydx-sample-1",
   "consensus": {
     "params": {
       "abci": {
-        "vote_extensions_enable_height": "0"
+        "vote_extensions_enable_height": "1"
       },
       "block": {
-        "max_bytes": "22020096",
+        "max_bytes": "4194304",
         "max_gas": "-1"
       },
       "evidence": {
@@ -1854,12 +1850,6 @@
       "version": {
         "app": "0"
       }
-    }
-  },
-  "consensus_params": {
-    "block": {
-      "max_bytes": "4194304",
-      "max_gas": "-1"
     }
   },
   "genesis_time": "2023-12-31T00:00:00Z",

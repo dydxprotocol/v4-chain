@@ -63,6 +63,7 @@ import (
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
@@ -200,7 +201,8 @@ type GenesisStates interface {
 		bridgetypes.GenesisState |
 		govtypesv1.GenesisState |
 		ratelimittypes.GenesisState |
-		govplus.GenesisState
+		govplus.GenesisState |
+		vaulttypes.GenesisState
 }
 
 // UpdateGenesisDocWithAppStateForModule updates the supplied genesis doc using the provided function. The function
@@ -254,6 +256,8 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = ratelimittypes.ModuleName
 	case govplus.GenesisState:
 		moduleName = govplus.ModuleName
+	case vaulttypes.GenesisState:
+		moduleName = vaulttypes.ModuleName
 	default:
 		panic(fmt.Errorf("Unsupported type %T", t))
 	}
@@ -1255,6 +1259,7 @@ func launchValidatorInDir(
 			appConfig.API.Enable = false
 			// We disable telemetry since multiple instances of the application fail to register causing a panic.
 			appConfig.Telemetry.Enabled = false
+			appConfig.Oracle.MetricsEnabled = false
 			return s, appConfig
 		},
 		// Capture the application instance.
@@ -1282,6 +1287,8 @@ func launchValidatorInDir(
 		"false",
 		"--bridge-daemon-eth-rpc-endpoint",
 		"https://eth-sepolia.g.alchemy.com/v2/demo",
+		"--oracle.enabled=false",
+		"--oracle.metrics_enabled=false",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)

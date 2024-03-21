@@ -31,7 +31,6 @@ func PricesKeepers(
 	keeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
 	indexPriceCache *pricefeedserver_types.MarketToExchangePrices,
-	marketToSmoothedPrices types.MarketToSmoothedPrices,
 	mockTimeProvider *mocks.TimeProvider,
 ) {
 	ctx = initKeepers(t, func(
@@ -42,13 +41,13 @@ func PricesKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		// Define necessary keepers here for unit tests
-		keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider =
+		keeper, storeKey, indexPriceCache, mockTimeProvider =
 			createPricesKeeper(stateStore, db, cdc, transientStoreKey)
 
 		return []GenesisInitializer{keeper}
 	})
 
-	return ctx, keeper, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
+	return ctx, keeper, storeKey, indexPriceCache, mockTimeProvider
 }
 
 func createPricesKeeper(
@@ -60,7 +59,6 @@ func createPricesKeeper(
 	*keeper.Keeper,
 	storetypes.StoreKey,
 	*pricefeedserver_types.MarketToExchangePrices,
-	types.MarketToSmoothedPrices,
 	*mocks.TimeProvider,
 ) {
 	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
@@ -68,8 +66,6 @@ func createPricesKeeper(
 	stateStore.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 
 	indexPriceCache := pricefeedserver_types.NewMarketToExchangePrices(pricefeed_types.MaxPriceAge)
-
-	marketToSmoothedPrices := types.NewMarketToSmoothedPrices(types.SmoothedPriceTrackingBlockHistoryLength)
 
 	mockTimeProvider := &mocks.TimeProvider{}
 
@@ -84,7 +80,6 @@ func createPricesKeeper(
 		cdc,
 		storeKey,
 		indexPriceCache,
-		marketToSmoothedPrices,
 		mockTimeProvider,
 		mockIndexerEventsManager,
 		[]string{
@@ -93,7 +88,7 @@ func createPricesKeeper(
 		},
 	)
 
-	return k, storeKey, indexPriceCache, marketToSmoothedPrices, mockTimeProvider
+	return k, storeKey, indexPriceCache, mockTimeProvider
 }
 
 // CreateTestMarkets creates a standard set of test markets for testing.
@@ -123,7 +118,7 @@ func CreateNMarkets(t *testing.T, ctx sdk.Context, keeper *keeper.Keeper, n int)
 	numExistingMarkets := GetNumMarkets(t, ctx, keeper)
 	for i := range items {
 		items[i].Param.Id = uint32(i) + numExistingMarkets
-		items[i].Param.Pair = fmt.Sprintf("%v", i)
+		items[i].Param.Pair = fmt.Sprintf("%v-%v", i, i)
 		items[i].Param.Exponent = int32(i)
 		items[i].Param.ExchangeConfigJson = ""
 		items[i].Param.MinExchanges = uint32(1)
@@ -169,6 +164,17 @@ func AssertMarketEventsNotInIndexerBlock(
 ) {
 	indexerMarketEvents := getMarketEventsFromIndexerBlock(ctx, k)
 	require.Equal(t, 0, len(indexerMarketEvents))
+}
+
+// AssertNMarketEventsNotInIndexerBlock verifies that N market events were included in the Indexer block message.
+func AssertNMarketEventsNotInIndexerBlock(
+	t *testing.T,
+	k *keeper.Keeper,
+	ctx sdk.Context,
+	n int,
+) {
+	indexerMarketEvents := getMarketEventsFromIndexerBlock(ctx, k)
+	require.Equal(t, n, len(indexerMarketEvents))
 }
 
 // getMarketEventsFromIndexerBlock returns the market events from the Indexer Block event Kafka message.

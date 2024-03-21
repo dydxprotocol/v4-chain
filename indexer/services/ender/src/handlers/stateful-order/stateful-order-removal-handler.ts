@@ -42,6 +42,10 @@ export class StatefulOrderRemovalHandler extends
       this.generateConsolidatedVulcanKafkaEvent(
         getOrderIdHash(orderIdProto),
         offChainUpdate,
+        {
+          message_received_timestamp: this.messageReceivedTimestamp,
+          event_type: 'StatefulOrderRemoval',
+        },
       ),
     ];
   }

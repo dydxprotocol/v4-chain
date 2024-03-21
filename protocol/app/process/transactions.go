@@ -1,11 +1,12 @@
 package process
 
 import (
+	"slices"
+
 	errorsmod "cosmossdk.io/errors"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"slices"
 )
 
 const (
@@ -61,7 +62,7 @@ type ProcessProposalTxs struct {
 	ProposedOperationsTx *ProposedOperationsTx
 	AcknowledgeBridgesTx *AcknowledgeBridgesTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
-	UpdateMarketPricesTx *UpdateMarketPricesTx
+	UpdateMarketPricesTx *UpdateMarketPricesTx // abstract over MarketPriceUpdates from VEs or default.
 
 	// Multi msgs txs.
 	OtherTxs []*OtherMsgsTx
@@ -73,21 +74,33 @@ func DecodeProcessProposalTxs(
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
 	bridgeKeeper ProcessBridgeKeeper,
-	pricesKeeper ProcessPricesKeeper,
+	pricesTxDecoder UpdateMarketPriceTxDecoder,
 ) (*ProcessProposalTxs, error) {
-	// Check len.
+	// Check len (accounting for offset from injected vote-extensions if applicable)
+	offset := pricesTxDecoder.GetTxOffset(ctx)
+	injectedTxCount := minTxsCount + offset
 	numTxs := len(req.Txs)
-	if numTxs < minTxsCount {
+	if numTxs < injectedTxCount {
 		return nil, errorsmod.Wrapf(
 			ErrUnexpectedNumMsgs,
 			"Expected the proposal to contain at least %d txs, but got %d",
-			minTxsCount,
+			injectedTxCount,
 			numTxs,
 		)
 	}
 
+	// Price updates.
+	updatePricesTx, err := pricesTxDecoder.DecodeUpdateMarketPricesTx(
+		ctx,
+		req.Txs,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	// Operations.
-	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex])
+	// if vote-extensions were injected, offset will be incremented.
+	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex+offset])
 	if err != nil {
 		return nil, err
 	}
@@ -109,20 +122,10 @@ func DecodeProcessProposalTxs(
 		return nil, err
 	}
 
-	// Price updates.
-	updatePricesTx, err := DecodeUpdateMarketPricesTx(
-		ctx,
-		pricesKeeper,
-		decoder,
-		req.Txs[numTxs+updateMarketPricesTxLenOffset],
-	)
-	if err != nil {
-		return nil, err
-	}
-
 	// Other txs.
-	allOtherTxs := make([]*OtherMsgsTx, numTxs-minTxsCount)
-	for i, txBytes := range req.Txs[firstOtherTxIndex : numTxs+lastOtherTxLenOffset] {
+	// if vote-extensions were injected, offset will be incremented.
+	allOtherTxs := make([]*OtherMsgsTx, numTxs-injectedTxCount)
+	for i, txBytes := range req.Txs[firstOtherTxIndex+offset : numTxs+lastOtherTxLenOffset] {
 		otherTx, err := DecodeOtherMsgsTx(decoder, txBytes)
 		if err != nil {
 			return nil, err

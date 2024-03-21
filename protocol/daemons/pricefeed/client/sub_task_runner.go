@@ -17,6 +17,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	daemonlib "github.com/dydxprotocol/v4-chain/protocol/daemons/shared"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 )
@@ -328,7 +329,7 @@ func RunMarketParamUpdaterTaskLoop(
 	logger = logger.With(constants.SubmoduleLogKey, constants.MarketParamUpdaterSubmoduleName)
 
 	// Query all market params from the query client.
-	getAllMarketsResponse, err := pricesQueryClient.AllMarketParams(ctx, &pricetypes.QueryAllMarketParamsRequest{})
+	marketParams, err := daemonlib.AllPaginatedMarketParams(ctx, pricesQueryClient)
 	if err != nil {
 		var logMethod = logger.Info
 		if isPastGracePeriod {
@@ -352,9 +353,9 @@ func RunMarketParamUpdaterTaskLoop(
 	}
 
 	// Update shared, in-memory config with the latest market params. Report update success/failure via logging/metrics.
-	marketParamErrors, err := configs.UpdateMarkets(getAllMarketsResponse.MarketParams)
+	marketParamErrors, err := configs.UpdateMarkets(marketParams)
 
-	for _, marketParam := range getAllMarketsResponse.MarketParams {
+	for _, marketParam := range marketParams {
 		outcome := metrics.Success
 
 		// Mark this update as an error either if this market failed to update, or if all markets failed.

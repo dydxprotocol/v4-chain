@@ -103,17 +103,21 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
 	for id, subscription := range sm.orderbookSubscriptions {
+		updatesToSend := make([]ocutypes.OffChainUpdateV1, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if updates, ok := v1updates[clobPairId]; ok {
-				if err := subscription.srv.Send(
-					&clobtypes.StreamOrderbookUpdatesResponse{
-						Updates:  updates,
-						Snapshot: snapshot,
-					},
-				); err != nil {
-					idsToRemove = append(idsToRemove, id)
-					break
-				}
+				updatesToSend = append(updatesToSend, updates...)
+			}
+		}
+
+		if len(updatesToSend) > 0 {
+			if err := subscription.srv.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates:  updatesToSend,
+					Snapshot: snapshot,
+				},
+			); err != nil {
+				idsToRemove = append(idsToRemove, id)
 			}
 		}
 	}

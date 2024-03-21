@@ -15,7 +15,7 @@ import (
 )
 
 func TestModifyMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
@@ -26,7 +26,7 @@ func TestModifyMarketParam(t *testing.T) {
 			ctx,
 			types.MarketParam{
 				Id:                 item.Param.Id,
-				Pair:               fmt.Sprintf("foo_%v", i),
+				Pair:               item.Param.Pair,
 				MinExchanges:       uint32(2),
 				Exponent:           item.Param.Exponent,
 				MinPriceChangePpm:  uint32(9_999 - i),
@@ -35,11 +35,11 @@ func TestModifyMarketParam(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.Equal(t, uint32(i), newItem.Id)
-		require.Equal(t, fmt.Sprintf("foo_%v", i), newItem.Pair)
+		require.Equal(t, fmt.Sprintf("%v-%v", i, i), newItem.Pair)
 		require.Equal(t, item.Param.Exponent, newItem.Exponent)
 		require.Equal(t, uint32(2), newItem.MinExchanges)
 		require.Equal(t, uint32(9999-i), newItem.MinPriceChangePpm)
-		require.Equal(t, fmt.Sprintf("foo_%v", i), metrics.GetMarketPairForTelemetry(item.Param.Id))
+		require.Equal(t, fmt.Sprintf("%v-%v", i, i), metrics.GetMarketPairForTelemetry(item.Param.Id))
 		require.Equal(t, fmt.Sprintf(`{"id":"%v"}`, i), newItem.ExchangeConfigJson)
 		keepertest.AssertMarketModifyEventInIndexerBlock(t, keeper, ctx, newItem)
 	}
@@ -109,13 +109,24 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 				"",
 			).Error(),
 		},
+		"Updating pair fails": {
+			targetId:           0,
+			pair:               "1-1",
+			minExchanges:       uint32(1),
+			minPriceChangePpm:  uint32(50),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrapf(
+				types.ErrMarketParamPairAlreadyExists,
+				"1-1",
+			).Error(),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
-			keepertest.CreateNMarkets(t, ctx, keeper, 1)
+			keepertest.CreateNMarkets(t, ctx, keeper, 2)
 			_, err := keeper.ModifyMarketParam(
 				ctx,
 				types.MarketParam{
@@ -132,7 +143,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 }
 
 func TestGetMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
@@ -147,13 +158,13 @@ func TestGetMarketParam(t *testing.T) {
 }
 
 func TestGetMarketParam_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
 	_, exists := keeper.GetMarketParam(ctx, uint32(0))
 	require.False(t, exists)
 }
 
 func TestGetAllMarketParams(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	params := make([]types.MarketParam, len(items))

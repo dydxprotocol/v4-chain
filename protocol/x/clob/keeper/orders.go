@@ -105,7 +105,7 @@ func (k Keeper) BatchCancelShortTermOrder(
 				failure = append(failure, clientId)
 				log.InfoLog(
 					ctx,
-					"Failed to cancel short term order.",
+					"Batch Cancel: Failed to cancel a short term order.",
 					log.Error, err,
 				)
 			} else {
@@ -1310,8 +1310,6 @@ func (k Keeper) SendOffchainMessages(
 		}
 		k.GetIndexerEventManager().SendOffchainData(update)
 	}
-
-	k.GetGrpcStreamingManager().SendOrderbookUpdates(offchainUpdates, false)
 }
 
 // getFillQuoteQuantums returns the total fillAmount price in quote quantums based on the maker subticks.
