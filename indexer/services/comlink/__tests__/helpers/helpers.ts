@@ -152,7 +152,6 @@ export function fillResponseObjectFromFillCreateObject(
   const fillResponse: Partial<FillResponseObject> = {
     side: fill.side,
     liquidity: fill.liquidity,
-    // market: fill.ticker,
     marketType: MarketType.PERPETUAL,
     price: fill.price,
     size: fill.size,
