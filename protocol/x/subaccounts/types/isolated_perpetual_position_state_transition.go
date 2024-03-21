@@ -23,12 +23,13 @@ func (t PositionStateTransition) String() string {
 	return result
 }
 
-// Represents a state transition for an isolated perpetual position.
+// Represents a state transition for an isolated perpetual position in a subaccount.
 type IsolatedPerpetualPositionStateTransition struct {
-	PerpetualId uint32
+	SubaccountId *SubaccountId
+	PerpetualId  uint32
 	// TODO(DEC-715): Support non-USDC assets.
-	// Quote quantums position size of the subaccount that has a state change for an isolated perpetual.
-	QuoteQuantumsBeforeUpdate *big.Int
+	// Quote quantums of collateral to transfer as a result of the state transition.
+	QuoteQuantums *big.Int
 	// The state transition that occurred for the isolated perpetual positions.
 	Transition PositionStateTransition
 }
