@@ -1,42 +1,33 @@
+import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
+import { createSubaccountWebsocketMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import {
-  logger,
-  runFuncWithTimingStat,
-  stats,
-} from '@dydxprotocol-indexer/base';
-import { KafkaTopics, SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
-import {
-  APIOrderStatus,
-  APIOrderStatusEnum,
+  OrderFromDatabase,
   OrderTable,
   PerpetualMarketFromDatabase,
-  SubaccountMessageContents,
-  SubaccountTable,
-  TimeInForce,
-  apiTranslations,
   perpetualMarketRefresher,
   protocolTranslations,
-  OrderFromDatabase,
-  IsoString,
 } from '@dydxprotocol-indexer/postgres';
 import {
+  CanceledOrdersCache,
   OpenOrdersCache,
   OrderbookLevelsCache,
-  PlaceOrderResult,
   placeOrder,
-  CanceledOrdersCache,
+  PlaceOrderResult,
   StatefulOrderUpdatesCache,
 } from '@dydxprotocol-indexer/redis';
 import {
-  ORDER_FLAG_SHORT_TERM, getOrderIdHash, isStatefulOrder, requiresImmediateExecution,
+  getOrderIdHash,
+  isStatefulOrder,
+  ORDER_FLAG_SHORT_TERM,
+  requiresImmediateExecution,
 } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
-  OffChainUpdateV1,
   IndexerOrder,
+  OffChainUpdateV1,
   OrderPlaceV1,
   OrderPlaceV1_OrderPlacementStatus,
   OrderUpdateV1,
   RedisOrder,
-  SubaccountMessage,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { Message } from 'kafkajs';
@@ -45,7 +36,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { convertToRedisOrder, getTriggerPrice } from './helpers';
+import { convertToRedisOrder } from './helpers';
 
 /**
  * Handler for OrderPlace messages.
@@ -148,7 +139,7 @@ export class OrderPlaceHandler extends Handler {
         await this.sendCachedOrderUpdate(orderUuid);
       }
       const subaccountMessage: Message = {
-        value: this.createSubaccountWebsocketMessage(
+        value: createSubaccountWebsocketMessage(
           redisOrder,
           dbOrder,
           perpetualMarket,
@@ -272,65 +263,6 @@ export class OrderPlaceHandler extends Handler {
     }
   }
 
-  protected createSubaccountWebsocketMessage(
-    redisOrder: RedisOrder,
-    order: OrderFromDatabase | undefined,
-    perpetualMarket: PerpetualMarketFromDatabase,
-    placementStatus: OrderPlaceV1_OrderPlacementStatus,
-  ): Buffer {
-    const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
-      redisOrder.order!.timeInForce,
-    );
-    const status: APIOrderStatus = (
-      placementStatus === OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_OPENED
-        ? APIOrderStatusEnum.OPEN
-        : APIOrderStatusEnum.BEST_EFFORT_OPENED
-    );
-    const createdAtHeight: string | undefined = order?.createdAtHeight;
-    const updatedAt: IsoString | undefined = order?.updatedAt;
-    const updatedAtHeight: string | undefined = order?.updatedAtHeight;
-    const contents: SubaccountMessageContents = {
-      orders: [
-        {
-          id: OrderTable.orderIdToUuid(redisOrder.order!.orderId!),
-          subaccountId: SubaccountTable.subaccountIdToUuid(
-            redisOrder.order!.orderId!.subaccountId!,
-          ),
-          clientId: redisOrder.order!.orderId!.clientId.toString(),
-          clobPairId: perpetualMarket.clobPairId,
-          side: protocolTranslations.protocolOrderSideToOrderSide(redisOrder.order!.side),
-          size: redisOrder.size,
-          price: redisOrder.price,
-          status,
-          type: protocolTranslations.protocolConditionTypeToOrderType(
-            redisOrder.order!.conditionType,
-          ),
-          timeInForce: apiTranslations.orderTIFToAPITIF(orderTIF),
-          postOnly: apiTranslations.isOrderTIFPostOnly(orderTIF),
-          reduceOnly: redisOrder.order!.reduceOnly,
-          orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
-          goodTilBlock: protocolTranslations.getGoodTilBlock(redisOrder.order!)
-            ?.toString(),
-          goodTilBlockTime: protocolTranslations.getGoodTilBlockTime(redisOrder.order!),
-          ticker: redisOrder.ticker,
-          ...(createdAtHeight && { createdAtHeight }),
-          ...(updatedAt && { updatedAt }),
-          ...(updatedAtHeight && { updatedAtHeight }),
-          clientMetadata: redisOrder.order!.clientMetadata.toString(),
-          triggerPrice: getTriggerPrice(redisOrder.order!, perpetualMarket),
-        },
-      ],
-    };
-
-    const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
-      contents: JSON.stringify(contents),
-      subaccountId: redisOrder.order!.orderId!.subaccountId!,
-      version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
-    });
-
-    return Buffer.from(Uint8Array.from(SubaccountMessage.encode(subaccountMessage).finish()));
-  }
-
   /**
    * Determine whether to send a subaccount websocket message given the order place.
    * @param orderPlace
@@ -358,7 +290,7 @@ export class OrderPlaceHandler extends Handler {
     if (placeOrderResult.placed === false &&
       placeOrderResult.replaced === false &&
       placementStatus ===
-        OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED) {
+      OrderPlaceV1_OrderPlacementStatus.ORDER_PLACEMENT_STATUS_BEST_EFFORT_OPENED) {
       return false;
     }
     return true;

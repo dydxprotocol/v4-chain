@@ -1,5 +1,5 @@
 import { logger, runFuncWithTimingStat, stats } from '@dydxprotocol-indexer/base';
-import { KafkaTopics, SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION } from '@dydxprotocol-indexer/kafka';
+import { KafkaTopics, SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION, getTriggerPrice } from '@dydxprotocol-indexer/kafka';
 import {
   BlockTable,
   BlockFromDatabase,
@@ -44,7 +44,7 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { getStateRemainingQuantums, getTriggerPrice } from './helpers';
+import { getStateRemainingQuantums } from './helpers';
 
 /**
  * Handler for OrderRemove messages.
