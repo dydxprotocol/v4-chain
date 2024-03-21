@@ -54,16 +54,16 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	id := uint32(1)
 	oldParam := types.MarketParam{
 		Id:                 id,
-		Pair: "foo-bar",
+		Pair:               "foo-bar",
 		MinExchanges:       uint32(2),
 		Exponent:           8,
 		MinPriceChangePpm:  uint32(50),
 		ExchangeConfigJson: `{"id":"1"}`,
 	}
 	mp, err := keeper.CreateMarket(ctx, oldParam, types.MarketPrice{
-		Id:		id,
+		Id:       id,
 		Exponent: 8,
-		Price: 1,
+		Price:    1,
 	})
 	require.NoError(t, err)
 
@@ -75,7 +75,7 @@ func TestModifyMarketParamUpdatesCache(t *testing.T) {
 	cpID, found := keeper.GetIDForCurrencyPair(ctx, cp)
 	require.True(t, found)
 	require.Equal(t, uint64(id), cpID)
-	
+
 	// modify the market param
 	newParam, err := keeper.ModifyMarketParam(
 		ctx,

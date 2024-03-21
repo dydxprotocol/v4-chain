@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// CurrencyPairIDCache handles the caching logic of currency-pairs to their corresponding IDs. This 
+// CurrencyPairIDCache handles the caching logic of currency-pairs to their corresponding IDs. This
 // data-structure is thread-safe, allowing concurrent reads + synchronized writes.
 type CurrencyPairIDCache struct {
 	// ID -> CurrencyPair
@@ -39,7 +39,7 @@ func (c *CurrencyPairIDCache) AddCurrencyPair(id uint64, currencyPair string) {
 func (c *CurrencyPairIDCache) GetCurrencyPairFromID(id uint64) (string, bool) {
 	// acquire read lock
 	c.RLock()
-	defer c.RUnlock() 
+	defer c.RUnlock()
 
 	// get currency pair from cache
 	currencyPair, found := c.idToCurrencyPair[id]

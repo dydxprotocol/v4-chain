@@ -54,7 +54,7 @@ func (k Keeper) ModifyMarketParam(
 	marketParamStore := k.getMarketParamStore(ctx)
 	b := k.cdc.MustMarshal(&updatedMarketParam)
 	marketParamStore.Set(lib.Uint32ToKey(updatedMarketParam.Id), b)
-	
+
 	// if the market pair has been changed, we need to update the in-memory market pair cache
 	if existingParam.Pair != updatedMarketParam.Pair {
 		// remove the old cache entry
