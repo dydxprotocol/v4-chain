@@ -47,7 +47,7 @@ func TestModifyMarketParam(t *testing.T) {
 }
 
 func TestModifyMarketParamUpdatesCache(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 

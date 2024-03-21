@@ -1,6 +1,8 @@
 package keeper
 
-import "sync"
+import (
+	"sync"
+)
 
 // CurrencyPairIDCache handles the caching logic of currency-pairs to their corresponding IDs. This 
 // data-structure is thread-safe, allowing concurrent reads + synchronized writes.
@@ -55,8 +57,14 @@ func (c *CurrencyPairIDCache) GetIDForCurrencyPair(currencyPair string) (uint64,
 	return id, found
 }
 
-// Remove removes the currency-pair (by ID) from the cache
+// Remove removes the currency-pair (by ID) from the cache. This method takes out a write lock on the
+// cache or blocks until one is available before updating the cache.
 func (c *CurrencyPairIDCache) Remove(id uint64) {
+	// acquire write lock
+	c.Lock()
+	defer c.Unlock()
+
+	// remove currency pair from cache
 	currencyPair, found := c.idToCurrencyPair[id]
 	if found {
 		delete(c.idToCurrencyPair, id)

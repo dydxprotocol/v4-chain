@@ -41,7 +41,7 @@ func (k Keeper) GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytype
 		k.Logger(ctx).Error("CurrencyPairFromString", "error", err)
 		return cp, false
 	}
-	
+
 	return cp, true
 }
 

@@ -107,6 +107,26 @@ func (k Keeper) GetMarketParam(
 	return market, true
 }
 
+// LoadCurrencyPairIDCache loads the currency pair id cache from the store.
+func (k Keeper) LoadCurrencyPairIDCache(ctx sdk.Context) {
+	marketParamStore := k.getMarketParamStore(ctx)
+
+	iterator := marketParamStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketParam := types.MarketParam{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
+
+		cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
+		if err == nil {
+			k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
+		} else {
+			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", marketParam.Pair)
+		}
+	}
+}
+
 // GetAllMarketParams returns all market params.
 func (k Keeper) GetAllMarketParams(ctx sdk.Context) []types.MarketParam {
 	marketParamStore := k.getMarketParamStore(ctx)
