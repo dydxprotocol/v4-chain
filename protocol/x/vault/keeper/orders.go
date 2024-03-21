@@ -50,12 +50,15 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		}
 
 		// Refresh orders depending on vault type.
+		// Currently only supported vault type is CLOB.
 		switch vaultId.Type {
 		case types.VaultType_VAULT_TYPE_CLOB:
 			err := k.RefreshVaultClobOrders(ctx, vaultId)
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", vaultId)
 			}
+		default:
+			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", vaultId)
 		}
 	}
 }

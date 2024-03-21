@@ -113,10 +113,32 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			allStatefulOrders := tApp.App.ClobKeeper.GetAllStatefulOrders(ctx)
 			require.Len(t, allStatefulOrders, 0)
 
+			// Simulate vault orders placed in last block.
+			numPreviousOrders := 0
+			for i, vaultId := range tc.vaultIds {
+				if tc.totalShares[i].NumShares.Cmp(dtypes.NewInt(0)) > 0 {
+					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
+						ctx.WithBlockHeight(ctx.BlockHeight()-1),
+						vaultId,
+					)
+					require.NoError(t, err)
+					for _, order := range orders {
+						err := tApp.App.ClobKeeper.HandleMsgPlaceOrder(
+							ctx,
+							clobtypes.NewMsgPlaceOrder(*order),
+						)
+						require.NoError(t, err)
+					}
+					numPreviousOrders += len(orders)
+				}
+			}
+			require.Len(t, tApp.App.ClobKeeper.GetAllStatefulOrders(ctx), numPreviousOrders)
+
 			// Refresh all vault orders.
 			tApp.App.VaultKeeper.RefreshAllVaultOrders(ctx)
 
-			// Check orders are as expected.
+			// Check orders are as expected, i.e. orders from last block have been
+			// cancelled and orders from this block have been placed.
 			numExpectedOrders := 0
 			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
 			for i, vaultId := range tc.vaultIds {
