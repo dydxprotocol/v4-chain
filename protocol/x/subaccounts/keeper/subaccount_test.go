@@ -3480,10 +3480,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			additionalTestSubaccounts: []types.Subaccount{
 				{
-					Id: &types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					Id: &constants.Bob_Num0,
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
@@ -3547,10 +3544,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			additionalTestSubaccounts: []types.Subaccount{
 				{
-					Id: &types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					Id: &constants.Bob_Num0,
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
@@ -3621,10 +3615,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			additionalTestSubaccounts: []types.Subaccount{
 				{
-					Id: &types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					Id: &constants.Bob_Num0,
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
@@ -3697,10 +3688,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			additionalTestSubaccounts: []types.Subaccount{
 				{
-					Id: &types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					Id: &constants.Bob_Num0,
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),
@@ -3772,10 +3760,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			},
 			additionalTestSubaccounts: []types.Subaccount{
 				{
-					Id: &types.SubaccountId{
-						Owner:  "Bob",
-						Number: 0,
-					},
+					Id: &constants.Bob_Num0,
 					AssetPositions: []*types.AssetPosition{
 						{
 							AssetId: uint32(0),

@@ -68,7 +68,10 @@ func GetDeltaOpenInterestFromPerpMatchUpdates(
 		)
 	}
 
-	if settledUpdates[0].PerpetualUpdates[0].PerpetualId != settledUpdates[1].PerpetualUpdates[0].PerpetualId {
+	perpUpdate0 := settledUpdates[0].PerpetualUpdates[0]
+	perpUpdate1 := settledUpdates[1].PerpetualUpdates[0]
+
+	if perpUpdate0.PerpetualId != perpUpdate1.PerpetualId {
 		panic(
 			fmt.Sprintf(
 				types.ErrMatchUpdatesMustBeSamePerpId,
@@ -77,6 +80,16 @@ func GetDeltaOpenInterestFromPerpMatchUpdates(
 		)
 	} else {
 		updatedPerpId = settledUpdates[0].PerpetualUpdates[0].PerpetualId
+	}
+
+	if (perpUpdate0.BigQuantumsDelta.Sign()*perpUpdate1.BigQuantumsDelta.Sign() > 0) ||
+		perpUpdate0.BigQuantumsDelta.CmpAbs(perpUpdate1.BigQuantumsDelta) != 0 {
+		panic(
+			fmt.Sprintf(
+				types.ErrMatchUpdatesInvalidSize,
+				settledUpdates,
+			),
+		)
 	}
 
 	deltaOpenInterest = big.NewInt(0)

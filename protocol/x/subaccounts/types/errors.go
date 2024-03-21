@@ -13,8 +13,10 @@ const (
 		"exactly 2 updates, got settledUpdates: %+v"
 	ErrMatchUpdatesMustUpdateOnePerp = "internalCanUpdateSubaccounts: MATCH subaccount updates must each have " +
 		"exactly 1 PerpetualUpdate, got settledUpdates: %+v"
-	ErrMatchUpdatesMustBeSamePerpId = "internalCanUpdateSubaccounts: MATCH subaccount updates must consists two " +
+	ErrMatchUpdatesMustBeSamePerpId = "internalCanUpdateSubaccounts: MATCH subaccount updates must consists of two " +
 		"updates on same perpetual Id, got settledUpdates: %+v"
+	ErrMatchUpdatesInvalidSize = "internalCanUpdateSubaccounts: MATCH subaccount updates must consists of two " +
+		"updates of equal absolute base quantums and opposite sign: %+v"
 )
 
 // x/subaccounts module sentinel errors

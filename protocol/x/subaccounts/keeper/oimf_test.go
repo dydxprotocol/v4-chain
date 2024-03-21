@@ -89,6 +89,60 @@ func TestGetDeltaOpenInterestFromPerpMatchUpdates(t *testing.T) {
 			},
 			panicErr: types.ErrMatchUpdatesMustBeSamePerpId,
 		},
+		"Invalid: updates don't have opposite signs": {
+			settledUpdates: []keeper.SettledUpdate{
+				{
+					SettledSubaccount: types.Subaccount{
+						Id: aliceSubaccountId,
+					},
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      1,
+							BigQuantumsDelta: big.NewInt(500),
+						},
+					},
+				},
+				{
+					SettledSubaccount: types.Subaccount{
+						Id: bobSubaccountId,
+					},
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      1,
+							BigQuantumsDelta: big.NewInt(500),
+						},
+					},
+				},
+			},
+			panicErr: types.ErrMatchUpdatesInvalidSize,
+		},
+		"Invalid: updates don't have equal absolute base quantums": {
+			settledUpdates: []keeper.SettledUpdate{
+				{
+					SettledSubaccount: types.Subaccount{
+						Id: aliceSubaccountId,
+					},
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      1,
+							BigQuantumsDelta: big.NewInt(500),
+						},
+					},
+				},
+				{
+					SettledSubaccount: types.Subaccount{
+						Id: bobSubaccountId,
+					},
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      1,
+							BigQuantumsDelta: big.NewInt(-499),
+						},
+					},
+				},
+			},
+			panicErr: types.ErrMatchUpdatesInvalidSize,
+		},
 		"Valid: 0 -> -500, 0 -> 500, delta = 500": {
 			settledUpdates: []keeper.SettledUpdate{
 				{
