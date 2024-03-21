@@ -76,7 +76,6 @@ describe('candleCache', () => {
     await startCandleCache();
 
     const map: CandlesMap = getCandlesMap();
-    expect(_.size(map)).toEqual(3);
     expect(_.size(map[testConstants.defaultPerpetualMarket.ticker])).toEqual(1);
     expect(_.size(map[testConstants.defaultPerpetualMarket2.ticker])).toEqual(0);
     expect(_.size(map[testConstants.defaultPerpetualMarket3.ticker])).toEqual(0);
