@@ -345,6 +345,10 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
+export interface ParentSubaccountTransferRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+}
+
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
