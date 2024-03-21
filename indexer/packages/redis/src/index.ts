@@ -15,6 +15,7 @@ export * as StateFilledQuantumsCache from './caches/state-filled-quantums-cache'
 export { placeOrder } from './caches/place-order';
 export { removeOrder } from './caches/remove-order';
 export { updateOrder } from './caches/update-order';
+export * from './helpers/order-helper';
 
 export * from './types';
 export { redisConfigSchema } from './config';
