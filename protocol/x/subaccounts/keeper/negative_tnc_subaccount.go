@@ -14,13 +14,13 @@ import (
 // seen in state for the given collateral pool address and a boolean for whether it exists in state.
 func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
-	collateralPoolAddr sdk.AccAddress,
+	collateralPoolAddress sdk.AccAddress,
 ) (uint32, bool) {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
 		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
 	)
-	return k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddr)
+	return k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddress)
 }
 
 // getNegativeTncSubaccountSeenAtBlock is a helper function that takes a store and returns the last
@@ -28,10 +28,10 @@ func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 // and a boolean for whether it exists in state.
 func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
 	store storetypes.KVStore,
-	collateralPoolAddr sdk.AccAddress,
+	collateralPoolAddress sdk.AccAddress,
 ) (uint32, bool) {
 	b := store.Get(
-		collateralPoolAddr,
+		collateralPoolAddress,
 	)
 	blockHeight := gogotypes.UInt32Value{Value: 0}
 	exists := false
@@ -48,7 +48,7 @@ func (k Keeper) getNegativeTncSubaccountSeenAtBlock(
 // This function will panic if the old block height is greater than the new block height.
 func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
-	collateralPoolAddr sdk.AccAddress,
+	perpetualId uint32,
 	blockHeight uint32,
 ) {
 	store := prefix.NewStore(
@@ -56,8 +56,18 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
 	)
 
+	collateralPoolAddress, err := k.GetCollateralPoolFromPerpetualId(ctx, perpetualId)
+	if err != nil {
+		panic(
+			fmt.Sprintf(
+				"SetNegativeTncSubaccountSeenAtBlock: non-existent perpetual id %d",
+				perpetualId,
+			),
+		)
+	}
+
 	// Panic if the stored block height value exists and is greater than the new block height value.
-	currentValue, exists := k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddr)
+	currentValue, exists := k.getNegativeTncSubaccountSeenAtBlock(store, collateralPoolAddress)
 	if exists && blockHeight < currentValue {
 		panic(
 			fmt.Sprintf(
@@ -70,7 +80,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 
 	blockHeightValue := gogotypes.UInt32Value{Value: blockHeight}
 	store.Set(
-		collateralPoolAddr.Bytes(),
+		collateralPoolAddress.Bytes(),
 		k.cdc.MustMarshal(&blockHeightValue),
 	)
 }

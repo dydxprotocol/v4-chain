@@ -2411,7 +2411,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 		// Negative TNC subaccount state
 		currentBlock                     uint32
-		negativeTncSubaccountSeenAtBlock map[string]uint32
+		negativeTncSubaccountSeenAtBlock map[uint32]uint32
 
 		// Update type
 		updateType types.UpdateType
@@ -2420,6 +2420,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
@@ -2444,8 +2447,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
 			},
 
 			updateType: types.Deposit,
@@ -2455,6 +2458,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
@@ -2479,8 +2485,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2490,6 +2496,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
@@ -2514,8 +2523,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 0,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Deposit,
@@ -2545,8 +2554,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
 			},
 
 			updateType: types.Withdrawal,
@@ -2577,8 +2586,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2622,8 +2631,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 
@@ -2666,8 +2675,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 0,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Withdrawal,
@@ -2680,6 +2689,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
@@ -2711,8 +2721,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2746,8 +2756,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2790,10 +2800,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
-				types.ModuleAddress.String(): 0,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Withdrawal,
@@ -2836,10 +2846,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
-				types.ModuleAddress.String(): 100 -
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 
@@ -2885,9 +2895,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 0,
-				constants.Iso2CollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 0,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2934,10 +2944,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
-				constants.Iso2CollateralPoolAddress.String(): 100 -
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -2987,8 +2997,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: false,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
 			},
 
 			updateType: types.Match,
@@ -3038,8 +3048,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: false,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3089,8 +3099,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: false,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 0,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Match,
@@ -3122,8 +3132,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
 			},
 			updateType: types.Match,
 		},
@@ -3155,8 +3165,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3189,8 +3199,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 0,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Match,
@@ -3202,7 +3212,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 				types.WithdrawalsAndTransfersBlocked,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
@@ -3223,8 +3235,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
 			},
 
 			updateType: types.Transfer,
@@ -3237,7 +3249,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 				types.WithdrawalsAndTransfersBlocked,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
@@ -3258,8 +3272,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3273,7 +3287,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.NewlyUndercollateralized,
 				types.Success,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
@@ -3294,8 +3310,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 
@@ -3308,7 +3324,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.NewlyUndercollateralized,
 				types.Success,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
 			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
@@ -3329,8 +3347,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				types.ModuleAddress.String(): 0,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Transfer,
@@ -3346,6 +3364,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			perpetuals: []perptypes.Perpetual{
 				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
 			},
 			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
@@ -3371,8 +3390,8 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.Iso2CollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3389,6 +3408,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 			},
 			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
 				constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -3415,10 +3435,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
-				types.ModuleAddress.String(): 0,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
 			},
 
 			updateType: types.Transfer,
@@ -3435,6 +3455,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 			},
 			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
 				constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
@@ -3461,10 +3482,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
-				types.ModuleAddress.String(): 100 -
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 
@@ -3510,9 +3531,9 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 0,
-				constants.Iso2CollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 0,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3559,10 +3580,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: map[string]uint32{
-				constants.IsoCollateralPoolAddress.String(): 100 -
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
-				constants.Iso2CollateralPoolAddress.String(): 100 -
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
 			},
 
@@ -3646,10 +3667,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			subaccountId := *subaccounts[0].Id
 
 			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
-			for collateralPoolAddress, negativeTncSubaccountSeenAtBlock := range tc.negativeTncSubaccountSeenAtBlock {
+			for perpetualId, negativeTncSubaccountSeenAtBlock := range tc.negativeTncSubaccountSeenAtBlock {
 				if negativeTncSubaccountSeenAtBlock != 0 {
 					keeper.SetNegativeTncSubaccountSeenAtBlock(
-						ctx, sdk.MustAccAddressFromBech32(collateralPoolAddress),
+						ctx,
+						perpetualId,
 						negativeTncSubaccountSeenAtBlock,
 					)
 				}
