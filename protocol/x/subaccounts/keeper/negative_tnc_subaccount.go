@@ -22,7 +22,7 @@ func (k Keeper) GetNegativeTncSubaccountSeenAtBlock(
 		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
 	)
 
-	suffix, err := k.getNegativeTncSubaccountStoreSuffx(ctx, perpetualId)
+	suffix, err := k.getNegativeTncSubaccountStoreSuffix(ctx, perpetualId)
 	if err != nil {
 		return 0, false, err
 	}
@@ -77,7 +77,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 		[]byte(types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix),
 	)
 
-	storeSuffix, err := k.getNegativeTncSubaccountStoreSuffx(ctx, perpetualId)
+	storeSuffix, err := k.getNegativeTncSubaccountStoreSuffix(ctx, perpetualId)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (k Keeper) SetNegativeTncSubaccountSeenAtBlock(
 	return nil
 }
 
-func (k Keeper) getNegativeTncSubaccountStoreSuffx(
+func (k Keeper) getNegativeTncSubaccountStoreSuffix(
 	ctx sdk.Context,
 	perpetualId uint32,
 ) (string, error) {
@@ -135,7 +135,7 @@ func (k Keeper) getNegativeTncSubaccountStoresuffixes(
 		if len(u.SettledSubaccount.PerpetualPositions) == 0 {
 			suffix = types.CrossCollateralSuffix
 		} else {
-			suffix, err = k.getNegativeTncSubaccountStoreSuffx(ctx, u.SettledSubaccount.PerpetualPositions[0].PerpetualId)
+			suffix, err = k.getNegativeTncSubaccountStoreSuffix(ctx, u.SettledSubaccount.PerpetualPositions[0].PerpetualId)
 			if err != nil {
 				return nil, err
 			}
