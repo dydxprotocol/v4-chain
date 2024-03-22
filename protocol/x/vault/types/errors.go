@@ -20,4 +20,14 @@ var (
 		3,
 		"MarketParam not found",
 	)
+	ErrInvalidDepositAmount = errorsmod.Register(
+		ModuleName,
+		4,
+		"Deposit amount is invalid",
+	)
+	ErrNonPositiveEquity = errorsmod.Register(
+		ModuleName,
+		5,
+		"Equity is non-positive",
+	)
 )

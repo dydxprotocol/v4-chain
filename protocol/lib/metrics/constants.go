@@ -248,6 +248,8 @@ const (
 	VaultPlaceOrder  = "vault_place_order"
 	VaultType        = "vault_type"
 	VaultId          = "vault_id"
+	VaultEquity      = "vault_equity"
+	TotalShares      = "total_shares"
 
 	// Vest.
 	GetVestEntry          = "get_vest_entry"

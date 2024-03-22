@@ -1,6 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/vault.proto";
 import "gogoproto/gogo.proto";
@@ -15,6 +16,8 @@ service Msg {
 
 // MsgDepositToVault is the Msg/DepositToVault request type.
 message MsgDepositToVault {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
   // The vault to deposit into.
   VaultId vault_id = 1;
 
