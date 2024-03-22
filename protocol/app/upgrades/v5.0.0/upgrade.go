@@ -8,6 +8,7 @@ import (
 
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -98,11 +99,41 @@ func blockRateLimitConfigUpdate(
 	)
 }
 
+func negativeTncSubaccountSeenAtBlockUpgrade(
+	ctx sdk.Context,
+	perpetualsKeeper perptypes.PerpetualsKeeper,
+	subaccountsKeeper satypes.SubaccountsKeeper,
+) {
+	// Get block height stored by v4.x.x.
+	blockHeight, exists := subaccountsKeeper.LegacyGetNegativeTncSubaccountSeenAtBlock(ctx)
+	// If no block height was stored in the legacy store, no migration needed.
+	if !exists {
+		return
+	}
+
+	// If there are no perpetuals, then no new state needs to be stored, as there can be no
+	// negative tnc subaccounts w/o perpetuals.
+	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
+	if len(perpetuals) == 0 {
+		return
+	}
+
+	// Migrate the value from the legacy store to the new store.
+	if err := subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+		ctx,
+		perpetuals[0].Params.Id, // must be a cross-margined perpetual due to `perpetualsUpgrade`.
+		blockHeight,
+	); err != nil {
+		panic(fmt.Sprintf("failed to set negative tnc subaccount seen at block with value %d: %s", blockHeight, err))
+	}
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
 	clobKeeper clobtypes.ClobKeeper,
+	subaccountsKeeper satypes.SubaccountsKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -113,6 +144,11 @@ func CreateUpgradeHandler(
 
 		// Set block rate limit configuration
 		blockRateLimitConfigUpdate(sdkCtx, clobKeeper)
+
+		// Migrate state from legacy store for negative tnc subaccount seen to new store for
+		// negative tnc subaccount seen.
+		// Note, must be done after the upgrade to perpetuals to cross market type.
+		negativeTncSubaccountSeenAtBlockUpgrade(sdkCtx, perpetualsKeeper, subaccountsKeeper)
 
 		// TODO(TRA-93): Initialize `x/vault` module.
 
