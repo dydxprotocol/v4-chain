@@ -583,14 +583,13 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		negativeTncSubaccountStoreSuffices, err := k.getNegativeTncSubaccountStoreSuffices(ctx, settledUpdates)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.getLastBlockNegativeSubaccountSeen(
+			ctx,
+			settledUpdates,
+		)
 		if err != nil {
 			return false, nil, err
 		}
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.getLastBlockNegativeSubaccountSeen(
-			ctx,
-			negativeTncSubaccountStoreSuffices,
-		)
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.

@@ -149,14 +149,22 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffices(
 }
 
 // getLastBlockNegativeSubaccountSeen gets the last block where a subaccount with negative total net
-// collateral was seen for a slice of negative tnc subaccount store suffices.
+// collateral was seen for subaccounts in a slice of settled updates.
 func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	ctx sdk.Context,
-	negativeTncSubaccountStoreSuffices []string,
+	settledUpdates []SettledUpdate,
 ) (
 	lastBlockNegativeSubaccountSeen uint32,
 	negativeSubaccountExists bool,
+	err error,
 ) {
+	negativeTncSubaccountStoreSuffices, err := k.getNegativeTncSubaccountStoreSuffices(
+		ctx,
+		settledUpdates,
+	)
+	if err != nil {
+		return uint32(0), false, err
+	}
 	lastBlockNegativeSubaccountSeen = uint32(0)
 	negativeSubaccountExists = false
 	for _, storeSuffix := range negativeTncSubaccountStoreSuffices {
@@ -166,5 +174,5 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 			negativeSubaccountExists = true
 		}
 	}
-	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists
+	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists, nil
 }
