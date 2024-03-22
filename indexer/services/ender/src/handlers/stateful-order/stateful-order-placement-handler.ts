@@ -92,9 +92,6 @@ export class StatefulOrderPlacementHandler
       const perpetualMarket: PerpetualMarketFromDatabase = perpetualMarketRefresher
         .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString())!;
       const dbOrder: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
-      if (dbOrder === undefined) {
-        throw new Error(`Order id not found in database: ${this.getOrderId()}`);
-      }
       const redisOrder: RedisOrder = convertToRedisOrder(order, perpetualMarket);
       const subaccountContent: SubaccountMessageContents = generateSubaccountMessageContents(
         redisOrder,
