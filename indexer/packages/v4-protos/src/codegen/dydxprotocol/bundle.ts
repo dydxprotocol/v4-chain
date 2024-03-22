@@ -49,6 +49,7 @@ import * as _52 from "./indexer/events/events";
 import * as _53 from "./indexer/indexer_manager/event";
 import * as _54 from "./indexer/off_chain_updates/off_chain_updates";
 import * as _55 from "./indexer/protocol/v1/clob";
+<<<<<<< HEAD
 import * as _56 from "./indexer/protocol/v1/subaccount";
 import * as _57 from "./indexer/redis/redis_order";
 import * as _58 from "./indexer/shared/removal_reason";
@@ -137,22 +138,131 @@ import * as _147 from "./vest/tx.rpc.msg";
 import * as _148 from "./lcd";
 import * as _149 from "./rpc.query";
 import * as _150 from "./rpc.tx";
+=======
+import * as _56 from "./indexer/protocol/v1/perpetual";
+import * as _57 from "./indexer/protocol/v1/subaccount";
+import * as _58 from "./indexer/redis/redis_order";
+import * as _59 from "./indexer/shared/removal_reason";
+import * as _60 from "./indexer/socks/messages";
+import * as _61 from "./perpetuals/genesis";
+import * as _62 from "./perpetuals/params";
+import * as _63 from "./perpetuals/perpetual";
+import * as _64 from "./perpetuals/query";
+import * as _65 from "./perpetuals/tx";
+import * as _66 from "./prices/genesis";
+import * as _67 from "./prices/market_param";
+import * as _68 from "./prices/market_price";
+import * as _69 from "./prices/query";
+import * as _70 from "./prices/tx";
+import * as _71 from "./ratelimit/capacity";
+import * as _72 from "./ratelimit/genesis";
+import * as _73 from "./ratelimit/limit_params";
+import * as _74 from "./ratelimit/pending_send_packet";
+import * as _75 from "./ratelimit/query";
+import * as _76 from "./ratelimit/tx";
+import * as _77 from "./rewards/genesis";
+import * as _78 from "./rewards/params";
+import * as _79 from "./rewards/query";
+import * as _80 from "./rewards/reward_share";
+import * as _81 from "./rewards/tx";
+import * as _82 from "./sending/genesis";
+import * as _83 from "./sending/query";
+import * as _84 from "./sending/transfer";
+import * as _85 from "./sending/tx";
+import * as _86 from "./stats/genesis";
+import * as _87 from "./stats/params";
+import * as _88 from "./stats/query";
+import * as _89 from "./stats/stats";
+import * as _90 from "./stats/tx";
+import * as _91 from "./subaccounts/asset_position";
+import * as _92 from "./subaccounts/genesis";
+import * as _93 from "./subaccounts/perpetual_position";
+import * as _94 from "./subaccounts/query";
+import * as _95 from "./subaccounts/subaccount";
+import * as _96 from "./vault/genesis";
+import * as _97 from "./vault/query";
+import * as _98 from "./vault/tx";
+import * as _99 from "./vault/vault";
+import * as _100 from "./vest/genesis";
+import * as _101 from "./vest/query";
+import * as _102 from "./vest/tx";
+import * as _103 from "./vest/vest_entry";
+import * as _111 from "./assets/query.lcd";
+import * as _112 from "./blocktime/query.lcd";
+import * as _113 from "./bridge/query.lcd";
+import * as _114 from "./clob/query.lcd";
+import * as _115 from "./delaymsg/query.lcd";
+import * as _116 from "./epochs/query.lcd";
+import * as _117 from "./feetiers/query.lcd";
+import * as _118 from "./perpetuals/query.lcd";
+import * as _119 from "./prices/query.lcd";
+import * as _120 from "./ratelimit/query.lcd";
+import * as _121 from "./rewards/query.lcd";
+import * as _122 from "./stats/query.lcd";
+import * as _123 from "./subaccounts/query.lcd";
+import * as _124 from "./vest/query.lcd";
+import * as _125 from "./assets/query.rpc.Query";
+import * as _126 from "./blocktime/query.rpc.Query";
+import * as _127 from "./bridge/query.rpc.Query";
+import * as _128 from "./clob/query.rpc.Query";
+import * as _129 from "./delaymsg/query.rpc.Query";
+import * as _130 from "./epochs/query.rpc.Query";
+import * as _131 from "./feetiers/query.rpc.Query";
+import * as _132 from "./govplus/query.rpc.Query";
+import * as _133 from "./perpetuals/query.rpc.Query";
+import * as _134 from "./prices/query.rpc.Query";
+import * as _135 from "./ratelimit/query.rpc.Query";
+import * as _136 from "./rewards/query.rpc.Query";
+import * as _137 from "./sending/query.rpc.Query";
+import * as _138 from "./stats/query.rpc.Query";
+import * as _139 from "./subaccounts/query.rpc.Query";
+import * as _140 from "./vault/query.rpc.Query";
+import * as _141 from "./vest/query.rpc.Query";
+import * as _142 from "./blocktime/tx.rpc.msg";
+import * as _143 from "./bridge/tx.rpc.msg";
+import * as _144 from "./clob/tx.rpc.msg";
+import * as _145 from "./delaymsg/tx.rpc.msg";
+import * as _146 from "./feetiers/tx.rpc.msg";
+import * as _147 from "./govplus/tx.rpc.msg";
+import * as _148 from "./perpetuals/tx.rpc.msg";
+import * as _149 from "./prices/tx.rpc.msg";
+import * as _150 from "./ratelimit/tx.rpc.msg";
+import * as _151 from "./rewards/tx.rpc.msg";
+import * as _152 from "./sending/tx.rpc.msg";
+import * as _153 from "./stats/tx.rpc.msg";
+import * as _154 from "./vault/tx.rpc.msg";
+import * as _155 from "./vest/tx.rpc.msg";
+import * as _156 from "./lcd";
+import * as _157 from "./rpc.query";
+import * as _158 from "./rpc.tx";
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
 export namespace dydxprotocol {
   export const assets = { ..._5,
     ..._6,
     ..._7,
     ..._8,
+<<<<<<< HEAD
     ..._105,
     ..._119
+=======
+    ..._111,
+    ..._125
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const blocktime = { ..._9,
     ..._10,
     ..._11,
     ..._12,
     ..._13,
+<<<<<<< HEAD
     ..._106,
     ..._120,
     ..._135
+=======
+    ..._112,
+    ..._126,
+    ..._142
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const bridge = { ..._14,
     ..._15,
@@ -160,9 +270,15 @@ export namespace dydxprotocol {
     ..._17,
     ..._18,
     ..._19,
+<<<<<<< HEAD
     ..._107,
     ..._121,
     ..._136
+=======
+    ..._113,
+    ..._127,
+    ..._143
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const clob = { ..._20,
     ..._21,
@@ -178,9 +294,15 @@ export namespace dydxprotocol {
     ..._31,
     ..._32,
     ..._33,
+<<<<<<< HEAD
     ..._108,
     ..._122,
     ..._137
+=======
+    ..._114,
+    ..._128,
+    ..._144
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export namespace daemons {
     export const bridge = { ..._34
@@ -195,29 +317,51 @@ export namespace dydxprotocol {
     ..._39,
     ..._40,
     ..._41,
+<<<<<<< HEAD
     ..._109,
     ..._123,
     ..._138
+=======
+    ..._115,
+    ..._129,
+    ..._145
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const epochs = { ..._42,
     ..._43,
     ..._44,
+<<<<<<< HEAD
     ..._110,
     ..._124
+=======
+    ..._116,
+    ..._130
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const feetiers = { ..._45,
     ..._46,
     ..._47,
     ..._48,
+<<<<<<< HEAD
     ..._111,
     ..._125,
     ..._139
+=======
+    ..._117,
+    ..._131,
+    ..._146
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const govplus = { ..._49,
     ..._50,
     ..._51,
+<<<<<<< HEAD
     ..._126,
     ..._140
+=======
+    ..._132,
+    ..._147
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export namespace indexer {
     export const events = { ..._52
@@ -243,24 +387,39 @@ export namespace dydxprotocol {
     ..._62,
     ..._63,
     ..._64,
+<<<<<<< HEAD
     ..._112,
     ..._127,
     ..._141
+=======
+    ..._65,
+    ..._118,
+    ..._133,
+    ..._148
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const prices = { ..._65,
     ..._66,
     ..._67,
     ..._68,
     ..._69,
+<<<<<<< HEAD
     ..._113,
     ..._128,
     ..._142
+=======
+    ..._70,
+    ..._119,
+    ..._134,
+    ..._149
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
   export const ratelimit = { ..._70,
     ..._71,
     ..._72,
     ..._73,
     ..._74,
+<<<<<<< HEAD
     ..._114,
     ..._129,
     ..._143
@@ -309,5 +468,64 @@ export namespace dydxprotocol {
   export const ClientFactory = { ..._148,
     ..._149,
     ..._150
+=======
+    ..._75,
+    ..._76,
+    ..._120,
+    ..._135,
+    ..._150
+  };
+  export const rewards = { ..._77,
+    ..._78,
+    ..._79,
+    ..._80,
+    ..._81,
+    ..._121,
+    ..._136,
+    ..._151
+  };
+  export const sending = { ..._82,
+    ..._83,
+    ..._84,
+    ..._85,
+    ..._137,
+    ..._152
+  };
+  export const stats = { ..._86,
+    ..._87,
+    ..._88,
+    ..._89,
+    ..._90,
+    ..._122,
+    ..._138,
+    ..._153
+  };
+  export const subaccounts = { ..._91,
+    ..._92,
+    ..._93,
+    ..._94,
+    ..._95,
+    ..._123,
+    ..._139
+  };
+  export const vault = { ..._96,
+    ..._97,
+    ..._98,
+    ..._99,
+    ..._140,
+    ..._154
+  };
+  export const vest = { ..._100,
+    ..._101,
+    ..._102,
+    ..._103,
+    ..._124,
+    ..._141,
+    ..._155
+  };
+  export const ClientFactory = { ..._156,
+    ..._157,
+    ..._158
+>>>>>>> e545bbfe ([OTE-221] Add query for PendingSendPacket (#1176))
   };
 }
