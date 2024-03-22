@@ -35,10 +35,6 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-# libsecp256k1_sdk is disabled by default as both ethereum/go-ethereum and cosmos/cosmos-sdk will define duplicate symbols
-ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += libsecp256k1_sdk # Requires CGO_ENABLED=1
-endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif

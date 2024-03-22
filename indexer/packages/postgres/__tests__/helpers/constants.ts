@@ -87,6 +87,20 @@ export const defaultSubaccount3: SubaccountCreateObject = {
   updatedAtHeight: createdHeight,
 };
 
+export const isolatedSubaccount: SubaccountCreateObject = {
+  address: defaultAddress,
+  subaccountNumber: 128,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
+export const isolatedSubaccount2: SubaccountCreateObject = {
+  address: defaultAddress,
+  subaccountNumber: 256,
+  updatedAt: createdDateTime.toISO(),
+  updatedAtHeight: createdHeight,
+};
+
 export const defaultWalletAddress: string = 'defaultWalletAddress';
 
 export const defaultSubaccountId: string = SubaccountTable.uuid(
@@ -100,6 +114,14 @@ export const defaultSubaccountId2: string = SubaccountTable.uuid(
 export const defaultSubaccountId3: string = SubaccountTable.uuid(
   defaultAddress,
   defaultSubaccount3.subaccountNumber,
+);
+export const isolatedSubaccountId: string = SubaccountTable.uuid(
+  defaultAddress,
+  isolatedSubaccount.subaccountNumber,
+);
+export const isolatedSubaccountId2: string = SubaccountTable.uuid(
+  defaultAddress,
+  isolatedSubaccount2.subaccountNumber,
 );
 
 // ============== Wallets ==============
@@ -212,12 +234,67 @@ export const defaultPerpetualMarket3: PerpetualMarketCreateObject = {
   liquidityTierId: 0,
 };
 
+export const isolatedPerpetualMarket: PerpetualMarketCreateObject = {
+  id: '3',
+  clobPairId: '4',
+  ticker: 'ISO-USD',
+  marketId: 3,
+  status: PerpetualMarketStatus.ACTIVE,
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+};
+
+export const isolatedPerpetualMarket2: PerpetualMarketCreateObject = {
+  id: '4',
+  clobPairId: '5',
+  ticker: 'ISO2-USD',
+  marketId: 4,
+  status: PerpetualMarketStatus.ACTIVE,
+  priceChange24H: '0.000000001',
+  volume24H: '10000000',
+  trades24H: 200,
+  nextFundingRate: '1.2',
+  openInterest: '40000',
+  quantumConversionExponent: -16,
+  atomicResolution: -2,
+  subticksPerTick: 10,
+  stepBaseQuantums: 1,
+  liquidityTierId: 0,
+};
+
 // ============== Orders ==============
 
 export const defaultOrder: OrderCreateObject = {
   subaccountId: defaultSubaccountId,
   clientId: '1',
   clobPairId: '1',
+  side: OrderSide.BUY,
+  size: '25',
+  totalFilled: '0',
+  price: '20000',
+  type: OrderType.LIMIT,
+  status: OrderStatus.OPEN,
+  timeInForce: TimeInForce.FOK,
+  reduceOnly: false,
+  goodTilBlock: '100',
+  orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+  clientMetadata: '0',
+  updatedAt: '2023-01-22T00:00:00.000Z',
+  updatedAtHeight: '1',
+};
+
+export const isolatedMarketOrder: OrderCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  clientId: '1',
+  clobPairId: '4',
   side: OrderSide.BUY,
   size: '25',
   totalFilled: '0',
@@ -255,6 +332,13 @@ export const defaultOrderId: string = OrderTable.uuid(
   defaultOrder.clientId,
   defaultOrder.clobPairId,
   defaultOrder.orderFlags,
+);
+
+export const isolatedMarketOrderId: string = OrderTable.uuid(
+  isolatedMarketOrder.subaccountId,
+  isolatedMarketOrder.clientId,
+  isolatedMarketOrder.clobPairId,
+  isolatedMarketOrder.orderFlags,
 );
 
 export const defaultOrderGoodTilBlockTimeId: string = OrderTable.uuid(
@@ -381,6 +465,42 @@ export const defaultFill: FillCreateObject = {
   fee: '1.1',
 };
 
+export const isolatedMarketFill: FillCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  side: OrderSide.BUY,
+  liquidity: Liquidity.TAKER,
+  type: FillType.LIMIT,
+  clobPairId: '4',
+  orderId: isolatedMarketOrderId,
+  size: '10',
+  price: '20000',
+  quoteAmount: '200000',
+  eventId: defaultTendermintEventId2,
+  transactionHash: '', // TODO: Add a real transaction Hash
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  clientMetadata: '0',
+  fee: '1.1',
+};
+
+export const isolatedMarketFill2: FillCreateObject = {
+  subaccountId: isolatedSubaccountId2,
+  side: OrderSide.BUY,
+  liquidity: Liquidity.TAKER,
+  type: FillType.LIMIT,
+  clobPairId: '4',
+  orderId: isolatedMarketOrderId,
+  size: '10',
+  price: '20000',
+  quoteAmount: '200000',
+  eventId: defaultTendermintEventId3,
+  transactionHash: '', // TODO: Add a real transaction Hash
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  clientMetadata: '0',
+  fee: '1.1',
+};
+
 // ============== Transfers ==============
 
 export const defaultTransfer: TransferCreateObject = {
@@ -478,6 +598,22 @@ export const defaultMarket3: MarketCreateObject = {
   exponent: -12,
   minPriceChangePpm: 50,
   oraclePrice: '0.000000065',
+};
+
+export const isolatedMarket: MarketCreateObject = {
+  id: 3,
+  pair: 'ISO-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000075',
+};
+
+export const isolatedMarket2: MarketCreateObject = {
+  id: 4,
+  pair: 'ISO2-USD',
+  exponent: -12,
+  minPriceChangePpm: 50,
+  oraclePrice: '0.000000085',
 };
 
 // ============== LiquidityTiers ==============

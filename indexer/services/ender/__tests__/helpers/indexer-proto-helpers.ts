@@ -51,7 +51,7 @@ import {
   PerpetualMarketCreateEventV1,
   DeleveragingEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
-import { Message, ProducerRecord } from 'kafkajs';
+import { IHeaders, Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
 
 import {
@@ -318,10 +318,12 @@ export function expectVulcanKafkaMessage({
   producerSendMock,
   orderId,
   offchainUpdate,
+  headers,
 }: {
   producerSendMock: jest.SpyInstance,
   orderId: IndexerOrderId,
   offchainUpdate: OffChainUpdateV1,
+  headers?: IHeaders,
 }): void {
   expect(producerSendMock.mock.calls.length).toBeGreaterThanOrEqual(1);
   expect(producerSendMock.mock.calls[0].length).toBeGreaterThanOrEqual(1);
@@ -339,7 +341,6 @@ export function expectVulcanKafkaMessage({
     vulcanProducerRecord.messages,
     (message: Message): VulcanMessage => {
       expect(Buffer.isBuffer(message.value));
-
       const messageValueBinary: Uint8Array = new Uint8Array(
         // Can assume Buffer, since we check above that it is a buffer
         message.value as Buffer,
@@ -348,6 +349,7 @@ export function expectVulcanKafkaMessage({
       return {
         key: message.key as Buffer,
         value: OffChainUpdateV1.decode(messageValueBinary),
+        headers: message.headers,
       };
     },
   );
@@ -355,6 +357,7 @@ export function expectVulcanKafkaMessage({
   expect(vulcanMessages).toContainEqual({
     key: getOrderIdHash(orderId),
     value: offchainUpdate,
+    headers,
   });
 }
 

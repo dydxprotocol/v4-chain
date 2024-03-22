@@ -180,6 +180,7 @@ describe('statefulOrderPlacementHandler', () => {
       producerSendMock,
       orderId: defaultOrder.orderId!,
       offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'StatefulOrderPlacement' },
     });
   });
 

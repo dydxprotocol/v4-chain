@@ -22,6 +22,7 @@ type Flags struct {
 
 	// Grpc Streaming
 	GrpcStreamingEnabled bool
+	VEOracleEnabled      bool // Slinky Vote Extensions
 }
 
 // List of CLI flags.
@@ -37,6 +38,9 @@ const (
 
 	// Grpc Streaming
 	GrpcStreamingEnabled = "grpc-streaming-enabled"
+
+	// Slinky VEs enabled
+	VEOracleEnabled = "slinky-vote-extension-oracle-enabled"
 )
 
 // Default values.
@@ -47,6 +51,7 @@ const (
 	DefaultDdErrorTrackingFormat = false
 
 	DefaultGrpcStreamingEnabled = false
+	DefaultVEOracleEnabled      = true
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -79,6 +84,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		GrpcStreamingEnabled,
 		DefaultGrpcStreamingEnabled,
 		"Whether to enable grpc streaming for full nodes",
+	)
+	cmd.Flags().Bool(
+		VEOracleEnabled,
+		DefaultVEOracleEnabled,
+		"Whether to run on-chain oracle via slinky vote extensions",
 	)
 }
 
@@ -119,6 +129,7 @@ func GetFlagValuesFromOptions(
 		GrpcEnable:  true,
 
 		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
+		VEOracleEnabled:      true,
 	}
 
 	// Populate the flags if they exist.
@@ -161,6 +172,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcStreamingEnabled = v
+		}
+	}
+
+	if option := appOpts.Get(VEOracleEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.VEOracleEnabled = v
 		}
 	}
 

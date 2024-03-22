@@ -10,6 +10,7 @@ import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
   producer,
   SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
+  getTriggerPrice,
 } from '@dydxprotocol-indexer/kafka';
 import {
   APIOrderStatus,
@@ -55,7 +56,7 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
-import { convertToRedisOrder, getTriggerPrice } from '../../src/handlers/helpers';
+import { convertToRedisOrder } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';

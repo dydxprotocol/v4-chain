@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -exo pipefail
 
 # This file initializes muliple validators for local and CI testing purposes.
 # This file should be run as part of `docker-compose.yml`.
@@ -159,8 +159,9 @@ use_slinky() {
   # Disable pricefeed-daemon
   dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'price-daemon-enabled' -v false
   # Enable slinky daemon
-  dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'slinky-daemon-enabled' -v true
-	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml '.oracle.oracle_address' -v 'slinky0:8080'
+  dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'oracle.enabled' -v true
+	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'oracle.oracle_address' -v 'slinky0:8080'
+	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'slinky-vote-extension-oracle-enabled' -v 'true'
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.

@@ -90,7 +90,7 @@ func TestCreateOracleMarket(t *testing.T) {
 
 	for name, tc := range testCases {
 		t.Run(name, func(t *testing.T) {
-			ctx, pricesKeeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			tc.setup(t, ctx, pricesKeeper)

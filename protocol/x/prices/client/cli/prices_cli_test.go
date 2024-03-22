@@ -95,6 +95,7 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 			// Enable the Price daemon.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)
 			appOptions.Set(daemonflags.FlagPriceDaemonLoopDelayMs, 1_000)
+			appOptions.Set(daemonflags.FlagOracleEnabled, false)
 
 			homeDir := filepath.Join(testval.Dir, "simd")
 			configs.WriteDefaultPricefeedExchangeToml(homeDir) // must manually create config file.

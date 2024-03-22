@@ -143,6 +143,7 @@ describe('conditionalOrderTriggeredHandler', () => {
       producerSendMock,
       orderId: conditionalOrderId,
       offchainUpdate: expectedOffchainUpdate,
+      headers: { message_received_timestamp: kafkaMessage.timestamp, event_type: 'ConditionalOrderTriggered' },
     });
   });
 

@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"testing"
 
 	oracletypes "github.com/skip-mev/slinky/pkg/types"
@@ -14,7 +13,7 @@ import (
 )
 
 func TestGetCurrencyPairFromID(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -31,7 +30,7 @@ func TestGetCurrencyPairFromID(t *testing.T) {
 }
 
 func TestIDForCurrencyPair(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -55,7 +54,7 @@ func TestIDForCurrencyPair(t *testing.T) {
 }
 
 func TestGetPriceForCurrencyPair(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	marketNumber := 10
@@ -79,7 +78,7 @@ func TestGetPriceForCurrencyPair(t *testing.T) {
 }
 
 func TestBadMarketData(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 
 	_, err := keeper.CreateMarket(
@@ -102,29 +101,4 @@ func TestBadMarketData(t *testing.T) {
 
 	_, err = keeper.GetPriceForCurrencyPair(ctx, oracletypes.CurrencyPair{})
 	require.Error(t, err)
-}
-
-func TestMarketPairToCurrencyPair(t *testing.T) {
-	testCases := []struct {
-		marketPair        string
-		currencyPairBase  string
-		currencyPairQuote string
-		shouldFail        bool
-	}{
-		{"0-0", "0", "0", false},
-		{"0/0", "", "", true},
-		{"00", "", "", true},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.marketPair, func(t *testing.T) {
-			cp, err := slinky.MarketPairToCurrencyPair(tc.marketPair)
-			if tc.shouldFail {
-				require.Error(t, err)
-			} else {
-				require.NoError(t, err)
-				require.Equal(t, tc.currencyPairBase, cp.Base)
-				require.Equal(t, tc.currencyPairQuote, cp.Quote)
-			}
-		})
-	}
 }

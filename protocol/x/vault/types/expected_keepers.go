@@ -9,7 +9,7 @@ import (
 
 type ClobKeeper interface {
 	// Clob Pair.
-	GetAllClobPairs(ctx sdk.Context) (list []clobtypes.ClobPair)
+	GetClobPair(ctx sdk.Context, id clobtypes.ClobPairId) (val clobtypes.ClobPair, found bool)
 
 	// Order.
 	GetLongTermOrderPlacement(
@@ -27,11 +27,21 @@ type ClobKeeper interface {
 }
 
 type PerpetualsKeeper interface {
-	GetAllPerpetuals(ctx sdk.Context) (list []perptypes.Perpetual)
+	GetPerpetual(
+		ctx sdk.Context,
+		id uint32,
+	) (val perptypes.Perpetual, err error)
 }
 
 type PricesKeeper interface {
-	GetAllMarketPrices(ctx sdk.Context) (marketPrices []pricestypes.MarketPrice)
+	GetMarketParam(
+		ctx sdk.Context,
+		id uint32,
+	) (market pricestypes.MarketParam, exists bool)
+	GetMarketPrice(
+		ctx sdk.Context,
+		id uint32,
+	) (pricestypes.MarketPrice, error)
 }
 
 type SubaccountsKeeper interface {

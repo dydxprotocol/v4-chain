@@ -1831,10 +1831,10 @@
   "consensus": {
     "params": {
       "abci": {
-        "vote_extensions_enable_height": "0"
+        "vote_extensions_enable_height": "1"
       },
       "block": {
-        "max_bytes": "22020096",
+        "max_bytes": "4194304",
         "max_gas": "-1"
       },
       "evidence": {
@@ -1850,12 +1850,6 @@
       "version": {
         "app": "0"
       }
-    }
-  },
-  "consensus_params": {
-    "block": {
-      "max_bytes": "4194304",
-      "max_gas": "-1"
     }
   },
   "genesis_time": "2023-12-31T00:00:00Z",

@@ -69,6 +69,7 @@ require (
 	github.com/skip-mev/slinky v0.2.1-0.20240301171048-53cc00fdca4e
 	github.com/spf13/viper v1.18.2
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d
+	go.uber.org/zap v1.27.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20240123012728-ef4313101c80
 	google.golang.org/protobuf v1.32.0
 )
@@ -393,7 +394,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.21.0 // indirect
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20231219180239-dc181d75b848 // indirect
 	golang.org/x/mod v0.15.0 // indirect
@@ -436,7 +436,7 @@ replace (
 	// Use dYdX fork of CometBFT
 	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240229050000-3b085f30b462
 	// Use dYdX fork of Cosmos SDK
-	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240227194839-f4e166bc1057
+	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240320193634-44a06cd9428e
 )
 
 replace (
