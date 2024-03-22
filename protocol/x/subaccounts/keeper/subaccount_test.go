@@ -2609,7 +2609,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		Number: 0,
 	}
 	secondSubaccountId := types.SubaccountId{
-		Owner:  "0",
+		Owner:  "1",
 		Number: 1,
 	}
 
@@ -2621,16 +2621,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		marketParamPrices []pricestypes.MarketParamPrice
 
 		// subaccount state
-		perpetualPositions []*types.PerpetualPosition
-		assetPositions     []*types.AssetPosition
+		perpetualPositions map[types.SubaccountId][]*types.PerpetualPosition
+		assetPositions     map[types.SubaccountId][]*types.AssetPosition
 
 		// updates
 		updates []types.Update
 
 		// expectations
 		expectedQuoteBalance       *big.Int
-		expectedPerpetualPositions []*types.PerpetualPosition
-		expectedAssetPositions     []*types.AssetPosition
+		expectedPerpetualPositions map[types.SubaccountId][]*types.PerpetualPosition
+		expectedAssetPositions     map[types.SubaccountId][]*types.AssetPosition
 		expectedSuccess            bool
 		expectedSuccessPerUpdate   []types.UpdateResult
 		expectedErr                error
@@ -2643,7 +2643,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 
 		// Negative TNC subaccount state
 		currentBlock                     uint32
-		negativeTncSubaccountSeenAtBlock uint32
+		negativeTncSubaccountSeenAtBlock map[uint32]uint32
 
 		// Update type
 		updateType types.UpdateType
@@ -2652,46 +2652,20 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(100), // 100 USDC
-				},
-			},
-			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {
 					{
 						AssetId:  uint32(0),
 						Quantums: dtypes.NewInt(100), // 100 USDC
 					},
-				},
-			},
-			msgSenderEnabled: true,
-
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
-
-			updateType: types.Deposit,
-		},
-		`deposits are not blocked if current block is within
-			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
-			expectedQuoteBalance:     big.NewInt(100),
-			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
-			updates: []types.Update{
-				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
-				},
-			},
-			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(100), // 100 USDC
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -2705,24 +2679,31 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
+			},
 
 			updateType: types.Deposit,
 		},
-		"deposits are not blocked if negative TNC subaccount was never seen": {
+		`deposits are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
 			expectedQuoteBalance:     big.NewInt(100),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
 				},
 			},
-			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(100), // 100 USDC
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -2735,8 +2716,48 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Deposit,
+		},
+		"deposits are not blocked if negative TNC subaccount was never seen": {
+			expectedQuoteBalance:     big.NewInt(100),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(100), // 100 USDC
+					},
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
 			updateType: types.Deposit,
 		},
@@ -2747,13 +2768,13 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedAssetPositions: []*types.AssetPosition{},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {},
 			},
@@ -2764,8 +2785,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2777,13 +2800,13 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedAssetPositions: []*types.AssetPosition{},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {},
 			},
@@ -2795,8 +2818,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2808,16 +2833,18 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(-100), // 100 USDC
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -2836,8 +2863,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
 
 			updateType: types.Withdrawal,
 		},
@@ -2848,16 +2877,18 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedAssetPositions: []*types.AssetPosition{
-				{
-					AssetId:  uint32(0),
-					Quantums: dtypes.NewInt(-100), // 100 USDC
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
+					},
 				},
 			},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
@@ -2875,88 +2906,307 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
 			updateType: types.Withdrawal,
 		},
-		"well-collateralized matches are not blocked if negative TNC subaccount was seen at current block": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
-			expectedQuoteBalance:     big.NewInt(0),
+		`withdrawals are not blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
+		collateral pool`: {
+			expectedQuoteBalance:     big.NewInt(-100),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_NoMarginRequirement,
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneAndHalfBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {
-					&constants.PerpetualPosition_OneAndHalfBTCLong,
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
+					},
 				},
 			},
-			expectedAssetPositions: []*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {
 					{
 						AssetId:  uint32(0),
-						Quantums: dtypes.NewInt(0),
+						Quantums: dtypes.NewInt(-100), // 100 USDC
 					},
 				},
 			},
 			updates: []types.Update{
 				{
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
-					PerpetualUpdates: []types.PerpetualUpdate{
-						{
-							PerpetualId:      uint32(0),
-							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
-						},
-					},
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for an isolated
+		perpetual collateral pool`: {
+			expectedQuoteBalance:     big.NewInt(-100),
+			expectedSuccess:          false,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.WithdrawalsAndTransfersBlocked},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
+		collateral pool, both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 				{
 					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
-					PerpetualUpdates: []types.PerpetualUpdate{
-						{
-							PerpetualId:      uint32(0),
-							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
-						},
-					},
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
 				},
 			},
-			msgSenderEnabled: false,
+			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
-			updateType: types.Match,
+			updateType: types.Withdrawal,
 		},
-		`well-collateralized matches are not blocked if current block is within
-			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+		`withdrawals are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
+		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+		both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was never seen for another isolated
+		collateral pool, both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 0,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Withdrawal,
+		},
+		`withdrawals are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was seen for another isolated perpetual
+		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+		both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Withdrawal,
+		},
+		"well-collateralized matches are not blocked if negative TNC subaccount was seen at current block": {
+			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneAndHalfBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneAndHalfBTCLong},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				firstSubaccountId: {
 					&constants.PerpetualPosition_OneAndHalfBTCLong,
 				},
 			},
-			expectedAssetPositions: []*types.AssetPosition{},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {
 					{
@@ -2989,31 +3239,35 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: false,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
+			},
 
 			updateType: types.Match,
 		},
-		"well-collateralized matches are not blocked if negative TNC subaccount was never seen": {
-			assetPositions:           testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+		`well-collateralized matches are not blocked if current block is within
+			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
+			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneAndHalfBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneAndHalfBTCLong},
 			},
 			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
 				firstSubaccountId: {
 					&constants.PerpetualPosition_OneAndHalfBTCLong,
 				},
 			},
-			expectedAssetPositions: []*types.AssetPosition{},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId: {
 					{
@@ -3045,8 +3299,71 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: false,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Match,
+		},
+		"well-collateralized matches are not blocked if negative TNC subaccount was never seen": {
+			assetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: testutil.CreateUsdcAssetPosition(big.NewInt(25_000_000_000)), // $25,000
+			},
+			expectedQuoteBalance:     big.NewInt(0),
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneBTCLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneAndHalfBTCLong},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {
+					&constants.PerpetualPosition_OneAndHalfBTCLong,
+				},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(0),
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-25_000_000_000)), // -$25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
+						},
+					},
+				},
+			},
+			msgSenderEnabled: false,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
 			updateType: types.Match,
 		},
@@ -3060,11 +3377,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
 			updates: []types.Update{
 				{
@@ -3089,9 +3406,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
-
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
+			},
 			updateType: types.Match,
 		},
 		`undercollateralized matches are not blocked if current block is within
@@ -3105,11 +3423,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
 			updates: []types.Update{
 				{
@@ -3135,8 +3453,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
 			updateType: types.Match,
 		},
@@ -3150,11 +3470,11 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			perpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
-			expectedPerpetualPositions: []*types.PerpetualPosition{
-				&constants.PerpetualPosition_OneHundredthBTCLong,
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId: {&constants.PerpetualPosition_OneHundredthBTCLong},
 			},
 			updates: []types.Update{
 				{
@@ -3179,8 +3499,10 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
 			updateType: types.Match,
 		},
@@ -3191,10 +3513,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 				types.WithdrawalsAndTransfersBlocked,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
-			perpetualPositions:         []*types.PerpetualPosition{},
-			expectedPerpetualPositions: []*types.PerpetualPosition{},
-			expectedAssetPositions:     []*types.AssetPosition{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId:  {},
 				secondSubaccountId: {},
@@ -3211,10 +3535,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 100,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100,
+			},
 
-			updateType: types.Withdrawal,
+			updateType: types.Transfer,
 		},
 		`transfers are blocked if negative TNC subaccount was seen within
 			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
@@ -3224,10 +3550,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.WithdrawalsAndTransfersBlocked,
 				types.WithdrawalsAndTransfersBlocked,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
-			perpetualPositions:         []*types.PerpetualPosition{},
-			expectedPerpetualPositions: []*types.PerpetualPosition{},
-			expectedAssetPositions:     []*types.AssetPosition{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId:  {},
 				secondSubaccountId: {},
@@ -3245,10 +3573,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
 
-			updateType: types.Withdrawal,
+			updateType: types.Transfer,
 		},
 		`transfers are not blocked if negative TNC subaccount was seen after
 			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
@@ -3258,10 +3588,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.NewlyUndercollateralized,
 				types.Success,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
-			perpetualPositions:         []*types.PerpetualPosition{},
-			expectedPerpetualPositions: []*types.PerpetualPosition{},
-			expectedAssetPositions:     []*types.AssetPosition{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId:  {},
 				secondSubaccountId: {},
@@ -3279,10 +3611,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			msgSenderEnabled: true,
 
 			currentBlock: 100,
-			negativeTncSubaccountSeenAtBlock: 100 -
-				types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
 
-			updateType: types.Withdrawal,
+			updateType: types.Transfer,
 		},
 		"transfers are not blocked if negative TNC subaccount was never seen": {
 			expectedQuoteBalance: big.NewInt(-100),
@@ -3291,10 +3625,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				types.NewlyUndercollateralized,
 				types.Success,
 			},
-			perpetuals:                 []perptypes.Perpetual{},
-			perpetualPositions:         []*types.PerpetualPosition{},
-			expectedPerpetualPositions: []*types.PerpetualPosition{},
-			expectedAssetPositions:     []*types.AssetPosition{},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+			},
+			perpetualPositions:         map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{},
+			expectedAssetPositions:     map[types.SubaccountId][]*types.AssetPosition{},
 			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
 				firstSubaccountId:  {},
 				secondSubaccountId: {},
@@ -3311,10 +3647,248 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			msgSenderEnabled: true,
 
-			currentBlock:                     100,
-			negativeTncSubaccountSeenAtBlock: 0,
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
 
-			updateType: types.Withdrawal,
+			updateType: types.Transfer,
+		},
+		`transfers are not blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for a different
+		collateral pool from the ones associated with the subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.Success,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Transfer,
+		},
+		`transfers are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was never seen for the cross-perpetual
+		collateral pool, both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 0,
+			},
+
+			updateType: types.Transfer,
+		},
+		`transferss are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was seen for the cross-perpetual
+		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+		both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_SmallMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				secondSubaccountId: {&constants.PerpetualPosition_OneISOLong},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+				constants.BtcUsd_NoMarginRequirement.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
+
+			updateType: types.Transfer,
+		},
+		`transfers are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was never seen for another isolated perpetual
+		collateral pool, both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 0,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Transfer,
+		},
+		`transferss are blocked if negative TNC subaccount was seen within 
+		WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS for one isolated
+		perpetual collateral pool and negative TNC subaccount was seen for another the cross-perpetual
+		collateral pool after WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+		both of which are associated with subaccounts being updated`: {
+			expectedQuoteBalance: big.NewInt(-100),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.WithdrawalsAndTransfersBlocked,
+				types.WithdrawalsAndTransfersBlocked,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
+			},
+			perpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				firstSubaccountId:  {&constants.PerpetualPosition_OneISOLong},
+				secondSubaccountId: {&constants.PerpetualPosition_OneISO2Long},
+			},
+			expectedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				firstSubaccountId:  {},
+				secondSubaccountId: {},
+			},
+			updates: []types.Update{
+				{
+					SubaccountId: firstSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(100)),
+				},
+			},
+			msgSenderEnabled: true,
+
+			currentBlock: 100,
+			negativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+				constants.Iso2Usd_IsolatedMarket.Params.Id: 100 -
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS + 1,
+			},
+
+			updateType: types.Transfer,
 		},
 	}
 
@@ -3378,15 +3952,31 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			}
 
 			subaccounts := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
-			subaccounts[0].PerpetualPositions = tc.perpetualPositions
-			subaccounts[0].AssetPositions = tc.assetPositions
-			keeper.SetSubaccount(ctx, subaccounts[0])
-			keeper.SetSubaccount(ctx, subaccounts[1])
+			for _, subaccount := range subaccounts {
+				if perpetualPositions, exists := tc.perpetualPositions[*subaccount.Id]; exists {
+					subaccount.PerpetualPositions = perpetualPositions
+				} else {
+					subaccount.PerpetualPositions = []*types.PerpetualPosition{}
+				}
+				if assetPositions, exists := tc.assetPositions[*subaccount.Id]; exists {
+					subaccount.AssetPositions = assetPositions
+				} else {
+					subaccount.AssetPositions = []*types.AssetPosition{}
+				}
+				keeper.SetSubaccount(ctx, subaccount)
+			}
 			subaccountId := *subaccounts[0].Id
 
 			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
-			if tc.negativeTncSubaccountSeenAtBlock != 0 {
-				keeper.SetNegativeTncSubaccountSeenAtBlock(ctx, tc.negativeTncSubaccountSeenAtBlock)
+			for perpetualId, negativeTncSubaccountSeenAtBlock := range tc.negativeTncSubaccountSeenAtBlock {
+				if negativeTncSubaccountSeenAtBlock != 0 {
+					err := keeper.SetNegativeTncSubaccountSeenAtBlock(
+						ctx,
+						perpetualId,
+						negativeTncSubaccountSeenAtBlock,
+					)
+					require.NoError(t, err)
+				}
 			}
 
 			// Set the current block number on the context.
@@ -3429,14 +4019,19 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 				)
 			}
 
-			newSubaccount := keeper.GetSubaccount(ctx, subaccountId)
-			require.Equal(t, len(tc.expectedPerpetualPositions), len(newSubaccount.PerpetualPositions))
-			for i, ep := range tc.expectedPerpetualPositions {
-				require.Equal(t, *ep, *newSubaccount.PerpetualPositions[i])
+			for subaccountIdToCheck, expectedPerpetualPositions := range tc.expectedPerpetualPositions {
+				newSubaccount := keeper.GetSubaccount(ctx, subaccountIdToCheck)
+				require.Equal(t, len(expectedPerpetualPositions), len(newSubaccount.PerpetualPositions))
+				for i, ep := range expectedPerpetualPositions {
+					require.Equal(t, *ep, *newSubaccount.PerpetualPositions[i])
+				}
 			}
-			require.Equal(t, len(tc.expectedAssetPositions), len(newSubaccount.AssetPositions))
-			for i, ep := range tc.expectedAssetPositions {
-				require.Equal(t, *ep, *newSubaccount.AssetPositions[i])
+			for subaccountIdToCheck, expectedAssetPositions := range tc.expectedAssetPositions {
+				newSubaccount := keeper.GetSubaccount(ctx, subaccountIdToCheck)
+				require.Equal(t, len(expectedAssetPositions), len(newSubaccount.AssetPositions))
+				for i, ap := range expectedAssetPositions {
+					require.Equal(t, *ap, *newSubaccount.AssetPositions[i])
+				}
 			}
 		})
 	}
