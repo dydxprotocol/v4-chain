@@ -146,7 +146,7 @@ func TestWindDownMarketProposal(t *testing.T) {
 						genesisState.Params = constants.PerpetualsGenesisParams
 						genesisState.LiquidityTiers = constants.LiquidityTiers
 						genesisState.Perpetuals = []perptypes.Perpetual{
-							constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+							constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 						}
 					},
 				)
