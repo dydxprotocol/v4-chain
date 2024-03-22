@@ -108,6 +108,9 @@ func CreateUpgradeHandler(
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
 
+		// Migrate pruneable orders to new format
+		clobKeeper.MigratePruneableOrders(sdkCtx)
+
 		// Set all perpetuals to cross market type
 		perpetualsUpgrade(sdkCtx, perpetualsKeeper)
 

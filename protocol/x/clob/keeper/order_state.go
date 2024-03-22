@@ -1,6 +1,9 @@
 package keeper
 
 import (
+	"bytes"
+	"encoding/binary"
+
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -125,14 +128,32 @@ func (k Keeper) GetOrderFillAmount(
 	return true, satypes.BaseQuantums(orderFillState.FillAmount), orderFillState.PrunableBlockHeight
 }
 
-// AddOrdersForPruning creates or updates a slice of `orderIds` to state for potential future pruning from state.
-// These orders will be checked for pruning from state at `prunableBlockHeight`. If the `orderIds` slice provided
-// contains duplicates, the duplicates will be ignored.
+func (k Keeper) GetPruneableOrdersStore(ctx sdk.Context, height uint32) prefix.Store {
+	var buf bytes.Buffer
+	buf.Write([]byte(types.PrunableOrdersKeyPrefix))
+	buf.Write(lib.Uint32ToKey(height))
+	buf.Write([]byte(":"))
+	return prefix.NewStore(ctx.KVStore(k.storeKey), buf.Bytes())
+}
+
+// AddOrdersForPruning creates or updates `orderIds` to state for potential future pruning from state.
 func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, prunableBlockHeight uint32) {
+	store := k.GetPruneableOrdersStore(ctx, prunableBlockHeight)
+	for _, orderId := range orderIds {
+		store.Set(
+			orderId.ToStateKey(),
+			k.cdc.MustMarshal(&orderId),
+		)
+	}
+}
+
+// LegacyAddOrdersForPruning is the old key-per-height way of storing orders to prune.
+// DO NOT USE. Retained for testing purposes.
+func (k Keeper) LegacyAddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, prunableBlockHeight uint32) {
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix),
 	)
 
 	// Retrieve the `PotentiallyPrunableOrders` bytes from the store.
@@ -187,27 +208,13 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 // Note: An order is only deemed prunable if the `prunableBlockHeight` on the `OrderFillState` is less than or equal
 // to the provided `blockHeight` passed this method. Returns a slice of unique `OrderIds` which were pruned from state.
 func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (prunedOrderIds []types.OrderId) {
-	// Retrieve an instance of the stores.
-	blockHeightToPotentiallyPrunableOrdersStore := prefix.NewStore(
-		ctx.KVStore(k.storeKey),
-		[]byte(types.BlockHeightToPotentiallyPrunableOrdersPrefix),
-	)
+	potentiallyPrunableOrdersStore := k.GetPruneableOrdersStore(ctx, blockHeight)
+	it := potentiallyPrunableOrdersStore.Iterator(nil, nil)
+	defer it.Close()
 
-	// Retrieve the raw bytes of the `prunableOrders`.
-	potentiallyPrunableOrderBytes := blockHeightToPotentiallyPrunableOrdersStore.Get(
-		lib.Uint32ToKey(blockHeight),
-	)
-
-	// If there are no prunable orders for this block, then there is nothing to do. Early return.
-	if potentiallyPrunableOrderBytes == nil {
-		return
-	}
-
-	var potentiallyPrunableOrders types.PotentiallyPrunableOrders
-	k.cdc.MustUnmarshal(potentiallyPrunableOrderBytes, &potentiallyPrunableOrders)
-
-	for _, orderId := range potentiallyPrunableOrders.OrderIds {
-		// Check if the order can be pruned, and prune if so.
+	for ; it.Valid(); it.Next() {
+		var orderId types.OrderId
+		k.cdc.MustUnmarshal(it.Value(), &orderId)
 		exists, _, prunableBlockHeight := k.GetOrderFillAmount(ctx, orderId)
 		if exists && prunableBlockHeight <= blockHeight {
 			k.RemoveOrderFillAmount(ctx, orderId)
@@ -221,14 +228,31 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 				)
 			}
 		}
+		potentiallyPrunableOrdersStore.Delete(it.Key())
 	}
 
-	// Delete the key for prunable orders at this block height.
-	blockHeightToPotentiallyPrunableOrdersStore.Delete(
-		lib.Uint32ToKey(blockHeight),
-	)
-
 	return prunedOrderIds
+}
+
+// MigratePruneableOrders is used to migrate prunable orders from key-per-height to key-per-order format.
+func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
+	store := prefix.NewStore(
+		ctx.KVStore(k.storeKey),
+		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix),
+	)
+	it := store.Iterator(nil, nil)
+	defer it.Close()
+
+	for ; it.Valid(); it.Next() {
+		if it.Value() == nil {
+			continue
+		}
+
+		height := binary.BigEndian.Uint32(it.Value())
+		var potentiallyPrunableOrders types.PotentiallyPrunableOrders
+		k.cdc.MustUnmarshal(it.Value(), &potentiallyPrunableOrders)
+		k.AddOrdersForPruning(ctx, potentiallyPrunableOrders.OrderIds, height)
+	}
 }
 
 // RemoveOrderFillAmount removes the fill amount of an Order from state and the memstore.
