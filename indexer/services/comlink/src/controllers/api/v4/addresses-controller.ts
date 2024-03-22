@@ -48,10 +48,10 @@ import {
   getTotalUnsettledFunding,
   handleControllerError,
   getPerpetualPositionsWithUpdatedFunding,
-  initializePerpetualPositionsWithFunding,
+  initializePerpetualPositionsWithFunding, getChildSubaccountNums,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
-import { CheckAddressSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
+import { CheckAddressSchema, CheckParentSubaccountSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
 import {
@@ -69,7 +69,7 @@ import {
   AssetPositionResponseObject,
   AssetPositionsMap,
   PerpetualPositionWithFunding,
-  AddressResponse,
+  AddressResponse, ParentSubaccountResponse, ParentSubaccountRequest,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -241,6 +241,107 @@ class AddressesController extends Controller {
     );
     return subaccountResponse;
   }
+
+  @Get('/:address/parentSubaccountNumber/:parentSubaccountNumber')
+  public async getParentSubaccount(
+    @Path() address: string,
+      @Path() parentSubaccountNumber: number,
+  ): Promise<ParentSubaccountResponse> {
+
+    const childSubaccountIds: string[] = getChildSubaccountNums(parentSubaccountNumber).map(
+      (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
+    );
+
+    // TODO(IND-189): Use a transaction across all the DB queries
+    const [subaccounts, latestBlock]: [
+      SubaccountFromDatabase[],
+      BlockFromDatabase,
+    ] = await Promise.all([
+      SubaccountTable.findAll(
+        {
+          id: childSubaccountIds,
+          address,
+        },
+        [],
+      ),
+      BlockTable.getLatest(),
+    ]);
+
+    if (subaccounts.length === 0) {
+      throw new NotFoundError(`No subaccounts found for address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`);
+    }
+
+    const latestFundingIndexMap: FundingIndexMap = await FundingIndexUpdatesTable
+      .findFundingIndexMap(
+        latestBlock.blockHeight,
+      );
+
+    const subaccountResponses: SubaccountResponseObject[] = await Promise.all(subaccounts.map(
+      async (subaccount: SubaccountFromDatabase): Promise<SubaccountResponseObject> => {
+        const [
+          perpetualPositions,
+          assetPositions,
+          assets,
+          markets,
+          lastUpdatedFundingIndexMap,
+        ] = await Promise.all([
+          getOpenPerpetualPositionsForSubaccount(
+            subaccount.id,
+          ),
+          getAssetPositionsForSubaccount(
+            subaccount.id,
+          ),
+          AssetTable.findAll(
+            {},
+            [],
+          ),
+          MarketTable.findAll(
+            {},
+            [],
+          ),
+          FundingIndexUpdatesTable.findFundingIndexMap(
+            subaccount.updatedAtHeight,
+          ),
+        ]);
+        const unsettledFunding: Big = getTotalUnsettledFunding(
+          perpetualPositions,
+          latestFundingIndexMap,
+          lastUpdatedFundingIndexMap,
+        );
+
+        const updatedPerpetualPositions:
+        PerpetualPositionWithFunding[] = getPerpetualPositionsWithUpdatedFunding(
+          initializePerpetualPositionsWithFunding(perpetualPositions),
+          latestFundingIndexMap,
+          lastUpdatedFundingIndexMap,
+        );
+
+        return getSubaccountResponse(
+          subaccount,
+          updatedPerpetualPositions,
+          assetPositions,
+          assets,
+          markets,
+          unsettledFunding,
+        );
+      },
+    ));
+
+    return {
+      address,
+      parentSubaccountNumber,
+      equity: subaccountResponses.reduce(
+        (acc: Big, subaccount: SubaccountResponseObject): Big => acc.plus(subaccount.equity),
+        Big(0),
+      ).toString(),
+      freeCollateral: subaccountResponses.reduce(
+        // eslint-disable-next-line max-len
+        (acc: Big, subaccount: SubaccountResponseObject): Big => acc.plus(subaccount.freeCollateral),
+        Big(0),
+      ).toString(),
+      childSubaccounts: subaccountResponses,
+    };
+  }
 }
 
 router.get(
@@ -306,6 +407,53 @@ router.get(
     } catch (error) {
       return handleControllerError(
         'AddressesController GET /:address/subaccountNumber/:subaccountNumber',
+        'Addresses subaccount error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_addresses.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/:address/parentSubaccountNumber/:parentSubaccountNumber',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckParentSubaccountSchema,
+  handleValidationErrors,
+  complianceAndGeoCheck,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    const {
+      address,
+      parentSubaccountNumber,
+    }: {
+      address: string,
+      parentSubaccountNumber: number,
+    } = matchedData(req) as ParentSubaccountRequest;
+
+    // Convert parentSubaccount to a number since
+    const parentSubaccountNum = +parentSubaccountNumber;
+
+    try {
+      const controller: AddressesController = new AddressesController();
+      const subaccountResponse: ParentSubaccountResponse = await controller.getParentSubaccount(
+        address,
+        parentSubaccountNum,
+      );
+
+      return res.send({
+        subaccount: subaccountResponse,
+      });
+    } catch (error) {
+      return handleControllerError(
+        'AddressesController GET /:address/parentSubaccountNumber/:parentSubaccountNumber',
         'Addresses subaccount error',
         error,
         req,
@@ -387,6 +535,7 @@ async function getSubaccountResponse(
     assetPositionResponses,
     'symbol',
   );
+
   const {
     assetPositionsMap: adjustedAssetPositionsMap,
     adjustedUSDCAssetPositionSize,
