@@ -19,7 +19,7 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 		constants.Iso2Usd_IsolatedMarket.Params.Id,
 		constants.BtcUsd_NoMarginRequirement.Params.Id,
 	}
-	testSuffices := []string{
+	testsuffixes := []string{
 		lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 		lib.UintToString(constants.Iso2Usd_IsolatedMarket.Params.Id),
 		types.CrossCollateralSuffix,
@@ -68,9 +68,9 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: []string{
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testSuffices[0],
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testSuffices[1],
-				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testSuffices[2],
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testsuffixes[0],
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testsuffixes[1],
+				types.NegativeTncSubaccountForCollateralPoolSeenAtBlockKeyPrefix + testsuffixes[2],
 			},
 		},
 		"Block height can be updated more than once": {
@@ -132,10 +132,10 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: append(
-				getWriteKeys(testSuffices[0], 4),
+				getWriteKeys(testsuffixes[0], 4),
 				append(
-					getWriteKeys(testSuffices[1], 4),
-					getWriteKeys(testSuffices[2], 4)...,
+					getWriteKeys(testsuffixes[1], 4),
+					getWriteKeys(testsuffixes[2], 4)...,
 				)...,
 			),
 		},
@@ -172,10 +172,10 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: append(
-				getWriteKeys(testSuffices[0], 2),
+				getWriteKeys(testsuffixes[0], 2),
 				append(
-					getWriteKeys(testSuffices[1], 2),
-					getWriteKeys(testSuffices[2], 2)...,
+					getWriteKeys(testsuffixes[1], 2),
+					getWriteKeys(testsuffixes[2], 2)...,
 				)...,
 			),
 		},
@@ -212,10 +212,10 @@ func TestGetSetNegativeTncSubaccountSeenAtBlock(t *testing.T) {
 			},
 
 			expectedMultiStoreWrites: append(
-				getWriteKeys(testSuffices[0], 2),
+				getWriteKeys(testsuffixes[0], 2),
 				append(
-					getWriteKeys(testSuffices[1], 2),
-					getWriteKeys(testSuffices[2], 2)...,
+					getWriteKeys(testsuffixes[1], 2),
+					getWriteKeys(testsuffixes[2], 2)...,
 				)...,
 			),
 		},

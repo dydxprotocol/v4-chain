@@ -118,18 +118,18 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffx(
 	}
 }
 
-// getNegativeTncSubaccountStoreSuffices gets a slice of negative tnc subaccount store suffices for
+// getNegativeTncSubaccountStoresuffixes gets a slice of negative tnc subaccount store suffixes for
 // the subaccounts in the slice of `settledUpdate`s passed in.
-// The slice will be de-duplicated and will contain unique store suffices.
-func (k Keeper) getNegativeTncSubaccountStoreSuffices(
+// The slice will be de-duplicated and will contain unique store suffixes.
+func (k Keeper) getNegativeTncSubaccountStoresuffixes(
 	ctx sdk.Context,
 	settledUpdates []SettledUpdate,
 ) (
-	suffices []string,
+	suffixes []string,
 	err error,
 ) {
-	sufficesMap := make(map[string]bool)
-	suffices = make([]string, 0)
+	suffixesMap := make(map[string]bool)
+	suffixes = make([]string, 0)
 	for _, u := range settledUpdates {
 		var suffix string
 		if len(u.SettledSubaccount.PerpetualPositions) == 0 {
@@ -140,12 +140,12 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffices(
 				return nil, err
 			}
 		}
-		if _, exists := sufficesMap[suffix]; !exists {
-			suffices = append(suffices, suffix)
-			sufficesMap[suffix] = true
+		if _, exists := suffixesMap[suffix]; !exists {
+			suffixes = append(suffixes, suffix)
+			suffixesMap[suffix] = true
 		}
 	}
-	return suffices, nil
+	return suffixes, nil
 }
 
 // getLastBlockNegativeSubaccountSeen gets the last block where a subaccount with negative total net
@@ -158,7 +158,7 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	negativeSubaccountExists bool,
 	err error,
 ) {
-	negativeTncSubaccountStoreSuffices, err := k.getNegativeTncSubaccountStoreSuffices(
+	negativeTncSubaccountStoresuffixes, err := k.getNegativeTncSubaccountStoresuffixes(
 		ctx,
 		settledUpdates,
 	)
@@ -167,7 +167,7 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	}
 	lastBlockNegativeSubaccountSeen = uint32(0)
 	negativeSubaccountExists = false
-	for _, storeSuffix := range negativeTncSubaccountStoreSuffices {
+	for _, storeSuffix := range negativeTncSubaccountStoresuffixes {
 		blockHeight, exists := k.getNegativeTncSubaccountSeenAtBlockWithSuffix(ctx, storeSuffix)
 		if exists && blockHeight > lastBlockNegativeSubaccountSeen {
 			lastBlockNegativeSubaccountSeen = blockHeight
