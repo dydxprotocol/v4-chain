@@ -127,7 +127,7 @@ var (
 		QuantumConversionExponent: -8,
 		Status:                    clobtypes.ClobPair_STATUS_PAUSED,
 	}
-	ClobPair_Iso = clobtypes.ClobPair{
+	ClobPair_3_Iso = clobtypes.ClobPair{
 		Id: 3,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
@@ -139,7 +139,7 @@ var (
 		QuantumConversionExponent: -8,
 		Status:                    clobtypes.ClobPair_STATUS_ACTIVE,
 	}
-	ClobPair_Iso_Final_Settlement = clobtypes.ClobPair{
+	ClobPair_3_Iso_Final_Settlement = clobtypes.ClobPair{
 		Id: 3,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{
@@ -151,7 +151,7 @@ var (
 		QuantumConversionExponent: -8,
 		Status:                    clobtypes.ClobPair_STATUS_FINAL_SETTLEMENT,
 	}
-	ClobPair_Iso2 = clobtypes.ClobPair{
+	ClobPair_4_Iso2 = clobtypes.ClobPair{
 		Id: 4,
 		Metadata: &clobtypes.ClobPair_PerpetualClobMetadata{
 			PerpetualClobMetadata: &clobtypes.PerpetualClobMetadata{

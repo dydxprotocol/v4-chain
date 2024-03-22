@@ -1120,7 +1120,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Iso,
+				constants.ClobPair_3_Iso,
 			},
 			subaccounts: []satypes.Subaccount{
 				// deleverageable since TNC = -$1
@@ -1163,7 +1163,7 @@ func TestProcessProposerOperations(t *testing.T) {
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
 				constants.ClobPair_Btc,
-				constants.ClobPair_Iso_Final_Settlement,
+				constants.ClobPair_3_Iso_Final_Settlement,
 			},
 			subaccounts: []satypes.Subaccount{
 				// deleveragable: TNC = -$1.
@@ -1207,8 +1207,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
-				constants.ClobPair_Iso,
-				constants.ClobPair_Iso2,
+				constants.ClobPair_3_Iso,
+				constants.ClobPair_4_Iso2,
 			},
 			subaccounts: []satypes.Subaccount{
 				// deleverageable since TNC = -$1
