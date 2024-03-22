@@ -28,18 +28,6 @@ var nodeAddresses = []string{
 	constants.DaveAccAddress.String(),
 }
 
-func TestUpgrade(t *testing.T) {
-	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
-	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
-	err = testnet.Start()
-	require.NoError(t, err)
-	defer testnet.MustCleanUp()
-	node := testnet.Nodes["alice"]
-	nodeAddress := constants.AliceAccAddress.String()
-	err = upgradeTestnet(nodeAddress, t, node, v_5_0_0.UpgradeName)
-	require.NoError(t, err)
-}
-
 func TestStateUpgrade(t *testing.T) {
 	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
 	require.NoError(t, err, "failed to create testnet - is docker daemon running?")
