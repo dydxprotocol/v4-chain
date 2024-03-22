@@ -117,3 +117,54 @@ func (k Keeper) getNegativeTncSubaccountStoreSuffx(
 		return lib.UintToString(perpetualId), nil
 	}
 }
+
+// getNegativeTncSubaccountStoreSuffices gets a slice of negative tnc subaccount store suffices for
+// the subaccounts in the slice of `settledUpdate`s passed in.
+// The slice will be de-duplicated and will contain unique store suffices.
+func (k Keeper) getNegativeTncSubaccountStoreSuffices(
+	ctx sdk.Context,
+	settledUpdates []SettledUpdate,
+) (
+	suffices []string,
+	err error,
+) {
+	sufficesMap := make(map[string]bool)
+	suffices = make([]string, 0)
+	for _, u := range settledUpdates {
+		var suffix string
+		if len(u.SettledSubaccount.PerpetualPositions) == 0 {
+			suffix = types.CrossCollateralSuffix
+		} else {
+			suffix, err = k.getNegativeTncSubaccountStoreSuffx(ctx, u.SettledSubaccount.PerpetualPositions[0].PerpetualId)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if _, exists := sufficesMap[suffix]; !exists {
+			suffices = append(suffices, suffix)
+			sufficesMap[suffix] = true
+		}
+	}
+	return suffices, nil
+}
+
+// getLastBlockNegativeSubaccountSeen gets the last block where a subaccount with negative total net
+// collateral was seen for a slice of negative tnc subaccount store suffices.
+func (k Keeper) getLastBlockNegativeSubaccountSeen(
+	ctx sdk.Context,
+	negativeTncSubaccountStoreSuffices []string,
+) (
+	lastBlockNegativeSubaccountSeen uint32,
+	negativeSubaccountExists bool,
+) {
+	lastBlockNegativeSubaccountSeen = uint32(0)
+	negativeSubaccountExists = false
+	for _, storeSuffix := range negativeTncSubaccountStoreSuffices {
+		blockHeight, exists := k.getNegativeTncSubaccountSeenAtBlockWithSuffix(ctx, storeSuffix)
+		if exists && blockHeight > lastBlockNegativeSubaccountSeen {
+			lastBlockNegativeSubaccountSeen = blockHeight
+			negativeSubaccountExists = true
+		}
+	}
+	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists
+}
