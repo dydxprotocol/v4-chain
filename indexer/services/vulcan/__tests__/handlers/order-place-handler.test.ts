@@ -62,7 +62,8 @@ import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -81,6 +82,10 @@ describe('order-place-handler', () => {
 
   afterAll(() => {
     jest.useRealTimers();
+  });
+
+  afterEach(() => {
+    config.DONT_SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = false;
   });
 
   describe('handle', () => {
@@ -831,19 +836,38 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
+        false,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         dbConditionalOrder,
+        false,
+      ],
+      [
+        'good-til-block-time',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+        true,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        true,
       ],
     ])('handles order place with OPEN placement status, exists initially (with %s)', async (
       _name: string,
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
       placedOrder: OrderFromDatabase,
+      dontSendSubaccountWebsocketMessage: boolean,
     ) => {
+      // eslint-disable-next-line max-len
+      config.DONT_SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = dontSendSubaccountWebsocketMessage;
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
@@ -884,7 +908,9 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
-        true,
+        !(
+          isLongTermOrder(expectedRedisOrder.order!.orderId!.orderFlags) &&
+          dontSendSubaccountWebsocketMessage),
       );
 
       expect(logger.error).not.toHaveBeenCalled();
