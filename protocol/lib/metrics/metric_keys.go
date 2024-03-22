@@ -24,6 +24,9 @@ const (
 	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 	ChainOutageSeen                                    = "chain_outage_seen"
 	SubaccountCreatedCount                             = "subaccount_created_count"
+	ClobRateLimitPlaceOrderCount                       = "clob_rate_limit_place_order_count"
+	ClobRateLimitCancelOrderCount                      = "clob_rate_limit_cancel_order_count"
+	ClobRateLimitBatchCancelCount                      = "clob_rate_limit_batch_cancel_count"
 
 	// Gauges
 	InsuranceFundBalance                      = "insurance_fund_balance"
