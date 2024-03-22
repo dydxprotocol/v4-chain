@@ -49,20 +49,20 @@ export interface QuerySubaccountAllResponseSDKType {
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
  * fetching information about whether withdrawals and transfers are blocked for
- * a specific collateral pool.
+ * a collateral pool associated with the passed in perpetual id.
  */
 
 export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  collateralPoolAddress: string;
+  perpetualId: number;
 }
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
  * fetching information about whether withdrawals and transfers are blocked for
- * a specific collateral pool.
+ * a collateral pool associated with the passed in perpetual id.
  */
 
 export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {
-  collateral_pool_address: string;
+  perpetual_id: number;
 }
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
@@ -287,14 +287,14 @@ export const QuerySubaccountAllResponse = {
 
 function createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest(): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
   return {
-    collateralPoolAddress: ""
+    perpetualId: 0
   };
 }
 
 export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
   encode(message: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.collateralPoolAddress !== "") {
-      writer.uint32(10).string(message.collateralPoolAddress);
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
     }
 
     return writer;
@@ -310,7 +310,7 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
 
       switch (tag >>> 3) {
         case 1:
-          message.collateralPoolAddress = reader.string();
+          message.perpetualId = reader.uint32();
           break;
 
         default:
@@ -324,7 +324,7 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
 
   fromPartial(object: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
     const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
-    message.collateralPoolAddress = object.collateralPoolAddress ?? "";
+    message.perpetualId = object.perpetualId ?? 0;
     return message;
   }
 

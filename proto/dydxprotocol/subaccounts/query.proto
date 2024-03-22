@@ -57,10 +57,9 @@ message QuerySubaccountAllResponse {
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
 // fetching information about whether withdrawals and transfers are blocked for
-// a specific collateral pool.
+// a collateral pool associated with the passed in perpetual id.
 message QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  string collateral_pool_address = 1
-      [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  uint32 perpetual_id = 1;
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for

@@ -66,7 +66,7 @@ type processProposerOperationsTestCase struct {
 	expectedQuoteBalances                map[satypes.SubaccountId]int64
 	expectedPerpetualPositions           map[satypes.SubaccountId][]*satypes.PerpetualPosition
 	expectedSubaccountLiquidationInfo    map[satypes.SubaccountId]types.SubaccountLiquidationInfo
-	expectedNegativeTncSubaccountSeen    map[string]bool
+	expectedNegativeTncSubaccountSeen    map[uint32]bool
 	expectedError                        error
 	expectedPanics                       string
 }
@@ -957,8 +957,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Id: true,
 			},
 		},
 		"Zero-fill deleveraging succeeds when the account is negative TNC and has a position in final settlement" +
@@ -998,8 +998,8 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
 				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_100PercentMarginRequirement.Params.Id: true,
 			},
 		},
 		"Zero-fill deleveraging succeeds when there's multiple zero-fill deleveraging events for the same subaccount " +
@@ -1044,8 +1044,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1BTC_Short_50499USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Id: true,
 			},
 		},
 		"Zero-fill deleverage succeeds after the same subaccount is partially deleveraged": {
@@ -1108,14 +1108,15 @@ func TestProcessProposerOperations(t *testing.T) {
 					},
 				},
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Id: true,
 			},
 		},
 		"Zero-fill deleveraging succeeds when the account is negative TNC and updates the last negative TNC subaccount " +
 			"seen block number in state for an isolated perpetual collateral pool if the subaccount is isolated to the " +
 			"isolated perpetual": {
 			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_NoMarginRequirement,
 				&constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
@@ -1148,9 +1149,9 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedPerpetualPositions: map[satypes.SubaccountId][]*satypes.PerpetualPosition{
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String():              false,
-				constants.IsoCollateralPoolAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: false,
+				constants.IsoUsd_IsolatedMarket.Params.Id:      true,
 			},
 		},
 		"Zero-fill deleveraging succeeds when the account is negative TNC and has a position in final settlement" +
@@ -1193,15 +1194,16 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
 				constants.Dave_Num0: constants.Dave_Num0_1BTC_Long_50000USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String():              false,
-				constants.IsoCollateralPoolAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: false,
+				constants.IsoUsd_IsolatedMarket.Params.Id:      true,
 			},
 		},
 		"Zero-fill deleveraging succeeds when there's multiple zero-fill deleveraging events for the different subaccount " +
 			"and perpetual ID. It updates the last negative TNC subaccount seen block number in state for both isolated " +
 			"perpetual collateral pools if the subaccounts are isolated to different isolated perpetuals": {
 			perpetuals: []*perptypes.Perpetual{
+				&constants.BtcUsd_NoMarginRequirement,
 				&constants.IsoUsd_IsolatedMarket,
 				&constants.Iso2Usd_IsolatedMarket,
 			},
@@ -1248,10 +1250,10 @@ func TestProcessProposerOperations(t *testing.T) {
 				constants.Carl_Num0: constants.Carl_Num0_1ISO_Short_49USD.GetPerpetualPositions(),
 				constants.Dave_Num0: constants.Dave_Num0_1ISO2_Short_499USD.GetPerpetualPositions(),
 			},
-			expectedNegativeTncSubaccountSeen: map[string]bool{
-				satypes.ModuleAddress.String():               false,
-				constants.IsoCollateralPoolAddress.String():  true,
-				constants.Iso2CollateralPoolAddress.String(): true,
+			expectedNegativeTncSubaccountSeen: map[uint32]bool{
+				constants.BtcUsd_NoMarginRequirement.Params.Id: false,
+				constants.IsoUsd_IsolatedMarket.Params.Id:      true,
+				constants.Iso2Usd_IsolatedMarket.Params.Id:     true,
 			},
 		},
 		"Succeeds order removal operations with previous stateful orders": {
@@ -2545,12 +2547,13 @@ func runProcessProposerOperationsTestCase(
 		require.Equal(t, fillAmount, actualFillAmount)
 	}
 
-	for collateralPoolAddress, expectedNegativeTncSubaccountSeen := range tc.expectedNegativeTncSubaccountSeen {
+	for perpetualId, expectedNegativeTncSubaccountSeen := range tc.expectedNegativeTncSubaccountSeen {
 		// Verify the negative TNC subaccount seen block.
-		seenNegativeTncSubaccountBlock, exists := ks.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+		seenNegativeTncSubaccountBlock, exists, err := ks.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
 			ctx,
-			sdk.MustAccAddressFromBech32(collateralPoolAddress),
+			perpetualId,
 		)
+		require.NoError(t, err)
 		if expectedNegativeTncSubaccountSeen {
 			require.True(t, exists)
 			require.Equal(t, uint32(ctx.BlockHeight()), seenNegativeTncSubaccountBlock)

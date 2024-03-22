@@ -563,13 +563,13 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		collateralPoolAddresses, err := k.getCollateralPoolAddresses(ctx, settledUpdates)
+		negativeTncSubaccountStoreSuffices, err := k.getNegativeTncSubaccountStoreSuffices(ctx, settledUpdates)
 		if err != nil {
 			return false, nil, err
 		}
 		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.getLastBlockNegativeSubaccountSeen(
 			ctx,
-			collateralPoolAddresses,
+			negativeTncSubaccountStoreSuffices,
 		)
 		currentBlock := uint32(ctx.BlockHeight())
 
@@ -966,41 +966,49 @@ func applyUpdatesToPositions[
 	return result, nil
 }
 
-// getCollateralPoolAddresses gets a slice of collateral pool addresses for the subaccounts in the
-// slice of `settledUpdate`s passed in.
-// The slice will be de-duplicated and will contain unique collateral pool addresses.
-func (k Keeper) getCollateralPoolAddresses(
+// getNegativeTncSubaccountStoreSuffices gets a slice of negative tnc subaccount store suffices for
+// the subaccounts in the slice of `settledUpdate`s passed in.
+// The slice will be de-duplicated and will contain unique store suffices.
+func (k Keeper) getNegativeTncSubaccountStoreSuffices(
 	ctx sdk.Context,
 	settledUpdates []settledUpdate,
-) ([]sdk.AccAddress, error) {
-	collateralPoolAddressMap := make(map[string]bool)
-	collateralPoolAddresses := make([]sdk.AccAddress, 0)
+) (
+	suffices []string,
+	err error,
+) {
+	sufficesMap := make(map[string]bool)
+	suffices = make([]string, 0)
 	for _, u := range settledUpdates {
-		collateralPoolAddress, err := k.getCollateralPoolForSubaccount(ctx, u.SettledSubaccount)
-		if err != nil {
-			return nil, err
+		var suffix string
+		if len(u.SettledSubaccount.PerpetualPositions) == 0 {
+			suffix = types.CrossCollateralSuffix
+		} else {
+			suffix, err = k.getNegativeTncSubaccountStoreSuffx(ctx, u.SettledSubaccount.PerpetualPositions[0].PerpetualId)
+			if err != nil {
+				return nil, err
+			}
 		}
-		if _, exists := collateralPoolAddressMap[collateralPoolAddress.String()]; !exists {
-			collateralPoolAddresses = append(collateralPoolAddresses, collateralPoolAddress)
-			collateralPoolAddressMap[collateralPoolAddress.String()] = true
+		if _, exists := sufficesMap[suffix]; !exists {
+			suffices = append(suffices, suffix)
+			sufficesMap[suffix] = true
 		}
 	}
-	return collateralPoolAddresses, nil
+	return suffices, nil
 }
 
 // getLastBlockNegativeSubaccountSeen gets the last block where a subaccount with negative total net
-// collateral was seen for a slice of collateral pool addresses.
+// collateral was seen for a slice of negative tnc subaccount store suffices.
 func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	ctx sdk.Context,
-	collateralPoolAddresses []sdk.AccAddress,
+	negativeTncSubaccountStoreSuffices []string,
 ) (
 	lastBlockNegativeSubaccountSeen uint32,
 	negativeSubaccountExists bool,
 ) {
 	lastBlockNegativeSubaccountSeen = uint32(0)
 	negativeSubaccountExists = false
-	for _, collateralPoolAddress := range collateralPoolAddresses {
-		blockHeight, exists := k.GetNegativeTncSubaccountSeenAtBlock(ctx, collateralPoolAddress)
+	for _, storeSuffix := range negativeTncSubaccountStoreSuffices {
+		blockHeight, exists := k.getNegativeTncSubaccountSeenAtBlockWithSuffix(ctx, storeSuffix)
 		if exists && blockHeight > lastBlockNegativeSubaccountSeen {
 			lastBlockNegativeSubaccountSeen = blockHeight
 			negativeSubaccountExists = true

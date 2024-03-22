@@ -3669,11 +3669,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			// Set the negative TNC subaccount seen at block in state if it's greater than 0.
 			for perpetualId, negativeTncSubaccountSeenAtBlock := range tc.negativeTncSubaccountSeenAtBlock {
 				if negativeTncSubaccountSeenAtBlock != 0 {
-					keeper.SetNegativeTncSubaccountSeenAtBlock(
+					err := keeper.SetNegativeTncSubaccountSeenAtBlock(
 						ctx,
 						perpetualId,
 						negativeTncSubaccountSeenAtBlock,
 					)
+					require.NoError(t, err)
 				}
 			}
 

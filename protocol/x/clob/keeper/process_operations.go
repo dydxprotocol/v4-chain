@@ -694,11 +694,13 @@ func (k Keeper) PersistMatchDeleveragingToState(
 			metrics.GetLabelForBoolValue(metrics.IsLong, position.GetIsLong()),
 			metrics.GetLabelForBoolValue(metrics.DeliverTx, true),
 		)
-		k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+		if err = k.subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
 			ctx,
 			perpetualId,
 			lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
-		)
+		); err != nil {
+			return err
+		}
 		return nil
 	}
 

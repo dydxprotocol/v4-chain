@@ -47,8 +47,8 @@ export class LCDQueryClient {
       params: {}
     };
 
-    if (typeof params?.collateralPoolAddress !== "undefined") {
-      options.params.collateral_pool_address = params.collateralPoolAddress;
+    if (typeof params?.perpetualId !== "undefined") {
+      options.params.perpetual_id = params.perpetualId;
     }
 
     const endpoint = `dydxprotocol/subaccounts/withdrawals_and_transfers_blocked_info`;
