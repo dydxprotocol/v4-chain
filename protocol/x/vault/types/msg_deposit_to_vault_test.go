@@ -45,7 +45,7 @@ func TestMsgDepositToVault_ValidateBasic(t *testing.T) {
 					Owner:  "invalid-owner",
 					Number: 0,
 				},
-				QuoteQuantums: dtypes.NewInt(-1),
+				QuoteQuantums: dtypes.NewInt(1),
 			},
 			expectedErr: "subaccount id owner is an invalid address",
 		},

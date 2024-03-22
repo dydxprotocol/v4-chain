@@ -217,7 +217,7 @@ func TestMsgDepositToVault(t *testing.T) {
 						subaccounts := make([]satypes.Subaccount, len(tc.depositorSetups))
 						for i, setup := range tc.depositorSetups {
 							subaccounts[i] = satypes.Subaccount{
-								Id: &setup.depositor,
+								Id: &(setup.depositor),
 								AssetPositions: []*satypes.AssetPosition{
 									{
 										AssetId:  0,
@@ -237,8 +237,8 @@ func TestMsgDepositToVault(t *testing.T) {
 			for i, depositInstance := range tc.depositInstances {
 				// Construct message.
 				msgDepositToVault := vaulttypes.MsgDepositToVault{
-					VaultId:       &tc.vaultId,
-					SubaccountId:  &depositInstance.depositor,
+					VaultId:       &(tc.vaultId),
+					SubaccountId:  &(depositInstance.depositor),
 					QuoteQuantums: dtypes.NewIntFromBigInt(depositInstance.depositAmount),
 				}
 
