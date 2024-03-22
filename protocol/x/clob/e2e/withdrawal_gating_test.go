@@ -73,7 +73,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
@@ -112,7 +112,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,

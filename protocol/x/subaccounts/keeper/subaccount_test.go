@@ -2547,7 +2547,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, types.Match)
+			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, types.CollatCheck)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
@@ -2918,7 +2918,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 				constants.IsoUsd_IsolatedMarket,
@@ -2948,6 +2948,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
+						},
+					},
 				},
 			},
 			msgSenderEnabled: true,
@@ -3191,7 +3201,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -3225,6 +3235,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						},
 					},
 				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
+						},
+					},
+				},
 			},
 			msgSenderEnabled: false,
 
@@ -3242,7 +3262,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -3273,6 +3293,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						{
 							PerpetualId:      uint32(0),
 							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
 						},
 					},
 				},
@@ -3338,9 +3368,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updateType: types.Match,
 		},
 		"undercollateralized matches are not blocked if negative TNC subaccount was seen at current block": {
-			expectedQuoteBalance:     big.NewInt(0),
-			expectedSuccess:          false,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			expectedQuoteBalance: big.NewInt(0),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.NewlyUndercollateralized,
+			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
@@ -3360,6 +3393,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						},
 					},
 				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
+						},
+					},
+				},
 			},
 			msgSenderEnabled: true,
 
@@ -3371,9 +3414,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		},
 		`undercollateralized matches are not blocked if current block is within
 			WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`: {
-			expectedQuoteBalance:     big.NewInt(0),
-			expectedSuccess:          false,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			expectedQuoteBalance: big.NewInt(0),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.NewlyUndercollateralized,
+			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
@@ -3390,6 +3436,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						{
 							PerpetualId:      uint32(0),
 							BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						},
+					},
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-100_000_000), // 1 BTC
 						},
 					},
 				},
@@ -3405,9 +3461,12 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updateType: types.Match,
 		},
 		"undercollateralized matches are not blocked if negative TNC subaccount was never seen": {
-			expectedQuoteBalance:     big.NewInt(0),
-			expectedSuccess:          false,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.NewlyUndercollateralized},
+			expectedQuoteBalance: big.NewInt(0),
+			expectedSuccess:      false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.NewlyUndercollateralized,
+			},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
@@ -3424,6 +3483,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						{
 							PerpetualId:      uint32(0),
 							BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						},
+					},
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(50_000_000_000)), // $50,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-100_000_000), // -1 BTC
 						},
 					},
 				},
@@ -3974,20 +4043,356 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 		perpetuals        []perptypes.Perpetual
 		assets            []*asstypes.Asset
 		marketParamPrices []pricestypes.MarketParamPrice
+		openInterests     []perptypes.OpenInterestDelta
 
 		// Subaccount state.
-		useEmptySubaccount bool
-		perpetualPositions []*types.PerpetualPosition
-		assetPositions     []*types.AssetPosition
+		useEmptySubaccount        bool
+		perpetualPositions        []*types.PerpetualPosition
+		assetPositions            []*types.AssetPosition
+		additionalTestSubaccounts []types.Subaccount
 
 		// Updates.
-		updates []types.Update
+		updates    []types.Update
+		updateType types.UpdateType
 
 		// Expectations.
 		expectedSuccess          bool
 		expectedSuccessPerUpdate []types.UpdateResult
 		expectedErr              error
 	}{
+		"(OIMF) OI increased, still at base IMF, match is collateralized": {
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			},
+			assetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					Quantums: dtypes.NewInt(900_000_000_000),
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*types.AssetPosition{
+						{
+							AssetId: uint32(0),
+							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							Quantums: dtypes.NewInt(900_000_000_000),
+						},
+					},
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+		},
+		"(OIMF) current OI soft lower cap, match collateralized at base IMF but not OIMF": {
+			expectedSuccess: false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.NewlyUndercollateralized,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap,
+			},
+			assetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					Quantums: dtypes.NewInt(900_000_000_000),
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*types.AssetPosition{
+						{
+							AssetId: uint32(0),
+							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							Quantums: dtypes.NewInt(900_000_000_000),
+						},
+					},
+				},
+			},
+			openInterests: []perptypes.OpenInterestDelta{
+				{
+					PerpetualId: uint32(0),
+					// 500 BTC. At $50,000, this is $25,000,000 of OI.
+					BaseQuantumsDelta: big.NewInt(50_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+		},
+		"(OIMF) match collateralized at base IMF and just collateralized at OIMF": {
+			expectedSuccess: true,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.Success,
+				types.Success,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap,
+			},
+			assetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					Quantums: dtypes.NewInt(900_000_000_000),
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*types.AssetPosition{
+						{
+							AssetId: uint32(0),
+							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							Quantums: dtypes.NewInt(900_000_000_000),
+						},
+					},
+				},
+			},
+			openInterests: []perptypes.OpenInterestDelta{
+				{
+					PerpetualId: uint32(0),
+					// (Only difference from prevoius test case)
+					// 410 BTC. At $50,000, this is $20,500,000 of OI.
+					// OI would be $25,000,000 after the Match updates, so OIMF is still at base IMF.
+					BaseQuantumsDelta: big.NewInt(41_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+		},
+		"(OIMF) match collateralized at base IMF and just failed collateralization at OIMF": {
+			expectedSuccess: false,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.NewlyUndercollateralized,
+				types.NewlyUndercollateralized,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap,
+			},
+			assetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+					Quantums: dtypes.NewInt(900_000_000_000),
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*types.AssetPosition{
+						{
+							AssetId: uint32(0),
+							// 900_000 USDC (just enough to colalteralize 90 BTC at $50_000 and 20% IMF)
+							Quantums: dtypes.NewInt(900_000_000_000),
+						},
+					},
+				},
+			},
+			openInterests: []perptypes.OpenInterestDelta{
+				{
+					PerpetualId: uint32(0),
+					// (Only difference from prevoius test case)
+					// 410 BTC + 1 base quantum. At $50,000, this is > $20,500,000 of OI.
+					// OI would be just past $25,000,000 after the Match updates, so OIMF > IMF = 20%
+					BaseQuantumsDelta: big.NewInt(41_000_000_001),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+		},
+		"(OIMF) OIMF caps at 100%, un-leveraged trade always succeeds": {
+			expectedSuccess: true,
+			expectedSuccessPerUpdate: []types.UpdateResult{
+				types.Success,
+				types.Success,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap,
+			},
+			assetPositions: []*types.AssetPosition{
+				{
+					AssetId: uint32(0),
+					// 4_500_000 USDC (just enough to collateralize 90 BTC at $50_000 and 100% IMF)
+					Quantums: dtypes.NewInt(4_500_000_000_000)},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: []*types.AssetPosition{
+						{
+							AssetId: uint32(0),
+							// 4_500_000 USDC (just enough to collateralize 90 BTC at $50_000 and 100% IMF)
+							Quantums: dtypes.NewInt(4_500_000_000_000),
+						},
+					},
+				},
+			},
+			openInterests: []perptypes.OpenInterestDelta{
+				{
+					PerpetualId: uint32(0),
+					// 10_000 BTC. At $50,000, this is $500mm of OI which way past upper cap
+					BaseQuantumsDelta: big.NewInt(1_000_000_000_000),
+				},
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+		},
 		"one update with no existing position and no margin requirements": {
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
@@ -4012,6 +4417,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
 				},
 			},
+			updateType:               types.Deposit,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
@@ -4049,6 +4455,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					},
 				},
 			},
+			updateType:               types.Deposit,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
@@ -4374,6 +4781,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			updates: []types.Update{
 				{},
 			},
+			updateType:               types.Deposit,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
@@ -4394,6 +4802,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 			updates: []types.Update{
 				{},
 			},
+			updateType:               types.Deposit,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
@@ -4416,6 +4825,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(3)), // $3
 				},
 			},
+			updateType:               types.Deposit,
 			expectedSuccess:          true,
 			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 		},
@@ -4637,6 +5047,15 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			for _, openInterest := range tc.openInterests {
+				// Update open interest for each perpetual from default `0`.
+				require.NoError(t, perpetualsKeeper.ModifyOpenInterest(
+					ctx,
+					openInterest.PerpetualId,
+					openInterest.BaseQuantumsDelta,
+				))
+			}
+
 			subaccountId := types.SubaccountId{Owner: "foo", Number: 0}
 			if !tc.useEmptySubaccount {
 				subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
@@ -4653,13 +5072,34 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates, types.Match)
+			for _, sa := range tc.additionalTestSubaccounts {
+				keeper.SetSubaccount(ctx, sa)
+			}
+
+			// If test case has unspecified update type, use `CollatCheck` as default.
+			updateType := tc.updateType
+			if updateType == types.UpdateTypeUnspecified {
+				updateType = types.CollatCheck
+			}
+			success, successPerUpdate, err := keeper.CanUpdateSubaccounts(ctx, tc.updates, updateType)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
 				require.NoError(t, err)
 				require.Equal(t, tc.expectedSuccessPerUpdate, successPerUpdate)
 				require.Equal(t, tc.expectedSuccess, success)
+			}
+
+			for _, openInterest := range tc.openInterests {
+				// Check open interest for each perpetual did not change after the check.
+				perp, err := perpetualsKeeper.GetPerpetual(ctx, openInterest.PerpetualId)
+				require.NoError(t, err)
+				require.Zerof(t,
+					openInterest.BaseQuantumsDelta.Cmp(perp.OpenInterest.BigInt()),
+					"expected: %s, got: %s",
+					openInterest.BaseQuantumsDelta.String(),
+					perp.OpenInterest.String(),
+				)
 			}
 		})
 	}
