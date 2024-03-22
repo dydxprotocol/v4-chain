@@ -1,6 +1,6 @@
 import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
 import {
-  OrderFromDatabase,
+  OrderFromDatabase, OrderModel,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,
@@ -56,7 +56,7 @@ export class StatefulOrderPlacementHandler
   }
 
   // eslint-disable-next-line @typescript-eslint/require-await
-  public async internalHandle(_: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
+  public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     let order: IndexerOrder;
     // TODO(IND-334): Remove after deprecating StatefulOrderPlacementEvent
     if (this.event.orderPlace !== undefined) {
@@ -64,10 +64,13 @@ export class StatefulOrderPlacementHandler
     } else {
       order = this.event.longTermOrderPlacement!.order!;
     }
-    return this.createKafkaEvents(order);
+    return this.createKafkaEvents(order, resultRow);
   }
 
-  private async createKafkaEvents(order: IndexerOrder): Promise<ConsolidatedKafkaEvent[]> {
+  private createKafkaEvents(
+    order: IndexerOrder,
+    resultRow: pg.QueryResultRow,
+  ): ConsolidatedKafkaEvent[] {
     const kafkaEvents: ConsolidatedKafkaEvent[] = [];
 
     const offChainUpdate: OffChainUpdateV1 = OffChainUpdateV1.fromPartial({
@@ -88,7 +91,7 @@ export class StatefulOrderPlacementHandler
     if (config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS) {
       const perpetualMarket: PerpetualMarketFromDatabase = perpetualMarketRefresher
         .getPerpetualMarketFromClobPairId(order.orderId!.clobPairId.toString())!;
-      const dbOrder: OrderFromDatabase | undefined = await OrderTable.findById(this.getOrderId());
+      const dbOrder: OrderFromDatabase = OrderModel.fromJson(resultRow.order) as OrderFromDatabase;
       if (dbOrder === undefined) {
         throw new Error(`Order id not found in database: ${this.getOrderId()}`);
       }
