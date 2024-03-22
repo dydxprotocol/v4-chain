@@ -31,9 +31,9 @@ import (
 func TestProcessProposerMatches_Liquidation_Undercollateralized_Determinism(t *testing.T) {
 	// TODO(DEC-908): Set up correct `bankKeeper` mock to verify fee transfer.
 	tc := processProposerOperationsTestCase{
-		perpetuals: []*perptypes.Perpetual{
-			&constants.BtcUsd_100PercentMarginRequirement,
-			&constants.EthUsd_20PercentInitial_10PercentMaintenance,
+		perpetuals: []perptypes.Perpetual{
+			constants.BtcUsd_100PercentMarginRequirement,
+			constants.EthUsd_20PercentInitial_10PercentMaintenance,
 		},
 		subaccounts: []satypes.Subaccount{
 			constants.Carl_Num0_1BTC_Short,
@@ -166,7 +166,7 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 	blockHeight := uint32(5)
 	tests := map[string]processProposerOperationsTestCase{
 		"Liquidation succeeds no fills": {
-			perpetuals:                 []*perptypes.Perpetual{&constants.BtcUsd_100PercentMarginRequirement},
+			perpetuals:                 []perptypes.Perpetual{constants.BtcUsd_100PercentMarginRequirement},
 			subaccounts:                []satypes.Subaccount{},
 			perpetualFeeParams:         &constants.PerpetualFeeParams,
 			setupMockBankKeeper:        func(bk *mocks.BankKeeper) {},
@@ -180,8 +180,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			expectedSubaccountLiquidationInfo: map[satypes.SubaccountId]types.SubaccountLiquidationInfo{},
 		},
 		"Liquidation succeeds when order is completely filled": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -258,8 +258,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with negative insurance fund delta when order is completely filled": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -344,8 +344,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with multiple partial fills": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -442,8 +442,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with multiple partial fills - negative insurance fund delta": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -547,8 +547,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with both positive and negative insurance fund delta": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -651,8 +651,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Insurance fund delta calculation accounts for state changes from previous fills": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -764,8 +764,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds if matches does not exceed the order quantums when considering state fill amounts": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -863,8 +863,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 			},
 		},
 		"Liquidation succeeds with position size smaller than clobPair.StepBaseQuantums": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1066,8 +1066,8 @@ func TestProcessProposerMatches_Liquidation_Success(t *testing.T) {
 func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		"Liquidation returns error if order quantums is not divisible by StepBaseQuantums": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1106,8 +1106,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			expectedError: errors.New("Order Quantums 9 must be a multiple of the ClobPair's StepBaseQuantums"),
 		},
 		"Liquidation returns error if fillAmount is not divisible by StepBaseQuantums": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1146,8 +1146,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			expectedError: types.ErrFillAmountNotDivisibleByStepSize,
 		},
 		"Liquidation returns error if collateralization check fails with non-success": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -1204,8 +1204,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			),
 		},
 		"Liquidation fails if matches exceed the order quantums when considering state fill amounts": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1250,8 +1250,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 			),
 		},
 		"Returns error when order filled, subaccounts updated, but transfer to fee module acc failed": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1409,8 +1409,8 @@ func TestProcessProposerMatches_Liquidation_Failure(t *testing.T) {
 func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		"Stateful order validation: subaccount is not liquidatable": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -1443,8 +1443,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrSubaccountNotLiquidatable,
 		},
 		"Stateful order validation: invalid clob": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1477,9 +1477,9 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrInvalidClob,
 		},
 		"Stateful order validation: subaccount has no open position for perpetual id": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1516,8 +1516,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrNoPerpetualPositionsToLiquidate,
 		},
 		"Stateful order validation: size of liquidation order exceeds position size": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1550,8 +1550,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Stateful order validation: liquidation order is on the wrong side": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1584,9 +1584,9 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrInvalidLiquidationOrderSide,
 		},
 		"Stateful match validation: clob pair and perpetual ids do not match": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1630,8 +1630,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrClobPairAndPerpetualDoNotMatch,
 		},
 		"Stateful match validation: fails if collateralization check does not succeed": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -1690,8 +1690,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			),
 		},
 		"Stateless match validation: self trade": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1724,8 +1724,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("Match constitutes a self-trade"),
 		},
 		"Stateless match validation: fillAmount must be greater than 0": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1765,9 +1765,9 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrFillAmountIsZero,
 		},
 		"Stateless match validation: clobPairIds do not match": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.EthUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.EthUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1811,8 +1811,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("ClobPairIds do not match"),
 		},
 		"Stateless match validation: maker and taker on the same side": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD, // Buy to cover short position.
@@ -1855,8 +1855,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: errors.New("Orders are not on opposing sides of the book in match"),
 		},
 		"Stateless match validation: liquidation buy order doesn't cross with maker sell order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -1900,8 +1900,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        errors.New("Orders do not cross in match"),
 		},
 		"Stateless match validation: liquidation sell order doesn't cross with maker buy order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short,
@@ -1945,8 +1945,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        errors.New("Orders do not cross in match"),
 		},
 		"Stateless match validation: minimum initial order quantums exceeds fill amount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -2053,8 +2053,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 		// 	expectedError:     types.ErrLiquidationOrderSizeSmallerThanMin,
 		// },
 		"Subaccount block limit: fails when trying to liquidate the same perpetual id": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -2102,8 +2102,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError: types.ErrSubaccountHasLiquidatedPerpetual,
 		},
 		"Subaccount block limit: fails when liquidation exceeds subaccount notional amount limit": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_54999USD,
@@ -2137,8 +2137,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:     types.ErrInvalidLiquidationOrderTotalSize,
 		},
 		"Subaccount block limit: fails when a single liquidation fill exceeds max insurance lost block limit": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -2183,8 +2183,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 		},
 		"Subaccount block limit: fails when insurance lost from multiple liquidation fills exceed block limit": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -2236,8 +2236,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 			expectedError:        types.ErrLiquidationExceedsSubaccountMaxInsuranceLost,
 		},
 		"Liquidation checks insurance fund delta for individual fills and not the entire liquidation order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -2323,8 +2323,8 @@ func TestProcessProposerMatches_Liquidation_Validation_Failure(t *testing.T) {
 func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 	tests := map[string]processProposerOperationsTestCase{
 		"Fails when insurance fund is empty": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -2360,8 +2360,8 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
 		"Fails when insurance fund is non empty but does not have enough to cover liquidation": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,
@@ -2397,8 +2397,8 @@ func TestValidateProposerMatches_InsuranceFund(t *testing.T) {
 			expectedError:        types.ErrInsuranceFundHasInsufficientFunds,
 		},
 		"Succeeds when insurance fund has enough balance": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			subaccounts: []satypes.Subaccount{
 				constants.Carl_Num0_1BTC_Short_50499USD,

@@ -11,6 +11,7 @@ import (
 
 	cmt "github.com/cometbft/cometbft/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 
@@ -684,6 +685,13 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
@@ -911,6 +919,13 @@ func TestAddPreexistingStatefulOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {

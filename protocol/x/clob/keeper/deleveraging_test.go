@@ -18,6 +18,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
@@ -766,6 +767,13 @@ func TestOffsetSubaccountPerpetualPosition(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				perps,
+			)
+
 			clobPairs := []types.ClobPair{
 				constants.ClobPair_Btc,
 				constants.ClobPair_Eth,
@@ -1214,10 +1222,11 @@ func TestProcessDeleveraging(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1230,6 +1239,13 @@ func TestProcessDeleveraging(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
@@ -1425,10 +1441,11 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1441,6 +1458,13 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
@@ -1587,10 +1611,11 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ks.Ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, p := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-			} {
+			}
+			for _, p := range testPerps {
 				_, err := ks.PerpetualsKeeper.CreatePerpetual(
 					ks.Ctx,
 					p.Params.Id,
@@ -1603,6 +1628,13 @@ func TestProcessDeleveraging_Rounding(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
