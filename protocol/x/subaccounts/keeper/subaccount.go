@@ -991,7 +991,7 @@ func applyUpdatesToPositions[
 // The slice will be de-duplicated and will contain unique store suffices.
 func (k Keeper) getNegativeTncSubaccountStoreSuffices(
 	ctx sdk.Context,
-	settledUpdates []settledUpdate,
+	settledUpdates []SettledUpdate,
 ) (
 	suffices []string,
 	err error,
