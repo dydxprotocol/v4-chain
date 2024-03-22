@@ -343,7 +343,6 @@ func TestGetDeltaOpenInterestFromPerpMatchUpdates(t *testing.T) {
 				tc.expectedUpdatedPerpId,
 				updatedPerpId,
 			)
-			fmt.Printf("deltaOpenInterest: %+v, tc.expectedDelta: %+v\n", deltaOpenInterest == nil, tc.expectedDelta == nil)
 			require.Zerof(
 				t,
 				tc.expectedDelta.Cmp(deltaOpenInterest),

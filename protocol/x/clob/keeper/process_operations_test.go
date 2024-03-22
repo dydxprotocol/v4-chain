@@ -1116,9 +1116,9 @@ func TestProcessProposerOperations(t *testing.T) {
 		"Zero-fill deleveraging succeeds when the account is negative TNC and updates the last negative TNC subaccount " +
 			"seen block number in state for an isolated perpetual collateral pool if the subaccount is isolated to the " +
 			"isolated perpetual": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_NoMarginRequirement,
-				&constants.IsoUsd_IsolatedMarket,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1158,9 +1158,9 @@ func TestProcessProposerOperations(t *testing.T) {
 		"Zero-fill deleveraging succeeds when the account is negative TNC and has a position in final settlement" +
 			" market. It updates the last negative TNC subaccount seen block number in state for an isolated perpetual" +
 			" collateral pool if the subaccount is isolated to the isolated perpetual": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
-				&constants.IsoUsd_IsolatedMarket,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1203,10 +1203,10 @@ func TestProcessProposerOperations(t *testing.T) {
 		"Zero-fill deleveraging succeeds when there's multiple zero-fill deleveraging events for the different subaccount " +
 			"and perpetual ID. It updates the last negative TNC subaccount seen block number in state for both isolated " +
 			"perpetual collateral pools if the subaccounts are isolated to different isolated perpetuals": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_NoMarginRequirement,
-				&constants.IsoUsd_IsolatedMarket,
-				&constants.Iso2Usd_IsolatedMarket,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_NoMarginRequirement,
+				constants.IsoUsd_IsolatedMarket,
+				constants.Iso2Usd_IsolatedMarket,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{

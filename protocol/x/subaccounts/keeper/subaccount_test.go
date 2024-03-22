@@ -2918,7 +2918,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 		collateral pool`: {
 			expectedQuoteBalance:     big.NewInt(-100),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 				constants.IsoUsd_IsolatedMarket,
@@ -2948,16 +2948,6 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			updates: []types.Update{
 				{
 					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-100)),
-				},
-				{
-					SubaccountId: secondSubaccountId,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
-					PerpetualUpdates: []types.PerpetualUpdate{
-						{
-							PerpetualId:      uint32(0),
-							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
-						},
-					},
 				},
 			},
 			msgSenderEnabled: true,
@@ -3323,7 +3313,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 			},
 			expectedQuoteBalance:     big.NewInt(0),
 			expectedSuccess:          true,
-			expectedSuccessPerUpdate: []types.UpdateResult{types.Success},
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
@@ -3354,6 +3344,16 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 						{
 							PerpetualId:      uint32(0),
 							BigQuantumsDelta: big.NewInt(50_000_000), // .5 BTC
+						},
+					},
+				},
+				{
+					SubaccountId: secondSubaccountId,
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(25_000_000_000)), // $25,000
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-50_000_000), // .5 BTC
 						},
 					},
 				},
