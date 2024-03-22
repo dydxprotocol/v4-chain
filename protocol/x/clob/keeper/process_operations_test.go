@@ -20,6 +20,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -41,7 +42,7 @@ type MatchWithOrdersForTesting struct {
 
 type processProposerOperationsTestCase struct {
 	// State
-	perpetuals                    []*perptypes.Perpetual
+	perpetuals                    []perptypes.Perpetual
 	perpetualFeeParams            *feetierstypes.PerpetualFeeParams
 	clobPairs                     []types.ClobPair
 	subaccounts                   []satypes.Subaccount
@@ -75,7 +76,7 @@ func TestProcessProposerOperations(t *testing.T) {
 	blockHeight := uint32(5)
 	tests := map[string]processProposerOperationsTestCase{
 		"Succeeds no operations": {
-			perpetuals:                []*perptypes.Perpetual{},
+			perpetuals:                []perptypes.Perpetual{},
 			perpetualFeeParams:        &constants.PerpetualFeeParams,
 			clobPairs:                 []types.ClobPair{},
 			subaccounts:               []satypes.Subaccount{},
@@ -87,8 +88,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Succeeds no operations with previous stateful orders": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -106,8 +107,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Succeeds with singular match of a short term maker and short term taker": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -230,8 +231,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Succeeds with maker rebate": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParamsMakerRebate,
 			clobPairs: []types.ClobPair{
@@ -354,8 +355,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Succeeds with singular match of a preexisting maker and short term taker": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -465,8 +466,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Succeeds with singular match of a preexisting maker and newly placed long term taker": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -557,8 +558,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"preexisting stateful maker order partially matches with 2 short term taker orders": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -731,8 +732,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// $49,999 is transferred to Dave and Carl's $1 is paid to the insurance fund, leaving him
 		// with nothing.
 		"Succeeds with liquidation order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -797,8 +798,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// is negative.
 		// Deleveraging happens at the bankruptcy price ($50,499) so Dave ends up with all of Carl's money.
 		"Succeeds with deleveraging with no liquidation order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -847,8 +848,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// In this example, the liquidation and deleveraging
 		// both happen at bankruptcy price resulting in all of Carl's funds being transferred to Dave.
 		"Succeeds with deleveraging and partially filled liquidation": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -924,8 +925,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		},
 		"Zero-fill deleveraging succeeds when the account is negative TNC and updates the last negative TNC subaccount " +
 			"seen block number in state": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -961,8 +962,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		},
 		"Zero-fill deleveraging succeeds when the account is negative TNC and has a position in final settlement" +
 			" market. It updates the last negative TNC subaccount seen block number in state": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1001,8 +1002,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		},
 		"Zero-fill deleveraging succeeds when there's multiple zero-fill deleveraging events for the same subaccount " +
 			"and perpetual ID": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1044,8 +1045,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedNegativeTncSubaccountSeen: true,
 		},
 		"Zero-fill deleverage succeeds after the same subaccount is partially deleveraged": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1106,8 +1107,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedNegativeTncSubaccountSeen: true,
 		},
 		"Succeeds order removal operations with previous stateful orders": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1139,8 +1140,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Fails when attempting to match order with invalid order side": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1214,8 +1215,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
 		// subaccount is not liquidatable, so the match operation should be rejected.
 		"Fails with deleveraging match for non-liquidatable subaccount": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1252,8 +1253,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// This test proposes an invalid perpetual deleveraging liquidation match operation. The
 		// subaccount has zero TNC, so the deleveraging operation should be rejected.
 		"Fails with deleveraging match for subaccount with zero TNC": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1291,8 +1292,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrInvalidDeleveragedSubaccount,
 		},
 		"Conditional: succeeds with singular match of a triggered conditional order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1385,8 +1386,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			},
 		},
 		"Conditional: panics with a non-existent conditional order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1439,8 +1440,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			),
 		},
 		"Conditional: panics with an untriggered conditional order": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1494,8 +1495,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			),
 		},
 		"Fails with clob pair not found": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			rawOperations: []types.OperationRaw{
@@ -1512,8 +1513,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrInvalidClob,
 		},
 		"Panics with unsupported clob pair status": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			rawOperations: []types.OperationRaw{
@@ -1537,8 +1538,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedPanics: "validateInternalOperationAgainstClobPairStatus: ClobPair's status is not supported",
 		},
 		"Returns error if zero-fill deleveraging operation proposed for non-negative TNC subaccount in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1573,8 +1574,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrZeroFillDeleveragingForNonNegativeTncSubaccount,
 		},
 		"Fails with clob match for market in initializing mode": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1594,8 +1595,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 		"Fails with short term order placement for market in initializing mode": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1609,8 +1610,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 		"Fails with order removal for market in initializing mode": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1628,8 +1629,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 		"Fails with order removal reason fully filled": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1647,8 +1648,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrInvalidOrderRemoval,
 		},
 		"Fails with order removal for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1663,8 +1664,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 		"Fails with short-term order placement for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1678,8 +1679,8 @@ func TestProcessProposerOperations(t *testing.T) {
 			expectedError: types.ErrOperationConflictsWithClobPairStatus,
 		},
 		"Fails with ClobMatch_MatchOrders for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1701,8 +1702,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// Liquidations are disallowed for markets in final settlement because they may result
 		// in a position increasing in size. This is not allowed for markets in final settlement.
 		"Fails with ClobMatch_MatchPerpetualLiquidation for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1730,8 +1731,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// Deleveraging is allowed for markets in final settlement to close out all open positions. A deleveraging
 		// event with IsFinalSettlement set to false represents a negative TNC subaccount in the market getting deleveraged.
 		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is false for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1775,8 +1776,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// event with IsFinalSettlement set to true represents a non-negative TNC subaccount having its position closed
 		// at the oracle price against other subaccounts with open positions on the opposing side of the book.
 		"Succeeds with ClobMatch_MatchPerpetualDeleveraging, IsFinalSettlement is true for market in final settlement": {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1818,8 +1819,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// shouldFinalSettlePosition, but the IsFinalSettlement flag is set to true.
 		`Fails with ClobMatch_MatchPerpetualDeleveraging for negative TNC subaccount,
 			IsFinalSettlement is true for market not in final settlement`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1855,8 +1856,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// using the bankruptcy price.
 		`Fails with ClobMatch_MatchPerpetualDeleveraging for negative TNC subaccount,
 			IsFinalSettlement is true for market in final settlement`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1894,8 +1895,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		// a non-negative TNC subaccount in a market not in final settlement.
 		`Fails with ClobMatch_MatchPerpetualDeleveraging for non-negative TNC subaccount,
 			IsFinalSettlement is true for market not in final settlement`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -1927,8 +1928,8 @@ func TestProcessProposerOperations(t *testing.T) {
 		},
 		`Fails with ClobMatch_MatchPerpetualDeleveraging for non-negative TNC subaccount,
 			IsFinalSettlement is false for market in final settlement`: {
-			perpetuals: []*perptypes.Perpetual{
-				&constants.BtcUsd_100PercentMarginRequirement,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_100PercentMarginRequirement,
 			},
 			perpetualFeeParams: &constants.PerpetualFeeParams,
 			clobPairs: []types.ClobPair{
@@ -2233,6 +2234,13 @@ func setupProcessProposerOperationsTestCase(
 		)
 		require.NoError(t, err)
 	}
+
+	perptest.SetUpDefaultPerpOIsForTest(
+		t,
+		ks.Ctx,
+		ks.PerpetualsKeeper,
+		tc.perpetuals,
+	)
 
 	// Create all subaccounts.
 	for _, subaccount := range tc.subaccounts {
