@@ -45,7 +45,8 @@ func getDeltaLongFromSettledUpdate(
 }
 
 // For `Match` updates:
-//   - returns the delta_open_interest if input updates were applied. returns nil if delta is zero.
+//   - returns a struct `OpenInterestDelta` if input updates results in OI delta.
+//   - returns nil if OI delta is zero.
 //   - panics if update format is invalid.
 //
 // For other update types, returns nil.
