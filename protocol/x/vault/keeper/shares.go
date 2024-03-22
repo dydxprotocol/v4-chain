@@ -85,9 +85,9 @@ func (k Keeper) MintShares(
 		}
 		// Mint `deposit * existing shares / vault equity` number of shares.
 		// For example:
-		// - a vault currently has 5000 shares and $4000 equity
-		// - each $1 is worth 5000 / 4000 = 1.25 shares
-		// - a deposit of $1000 should thus be given 1000 * 1.25 = 1250 shares
+		// - a vault currently has 5000 shares and 4000 equity (in quote quantums)
+		// - each quote quantum is worth 5000 / 4000 = 1.25 shares
+		// - a deposit of 1000 quote quantums should thus be given 1000 * 1.25 = 1250 shares
 		sharesToMint = sharesToMint.Mul(quantumsToDeposit, existingTotalShares)
 		sharesToMint = sharesToMint.Quo(sharesToMint, equity)
 	} else {

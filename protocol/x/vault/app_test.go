@@ -53,7 +53,9 @@ func TestMsgDepositToVault(t *testing.T) {
 
 		/* --- Expectations --- */
 		// Vault total shares after each of the above deposit instances.
-		totalSharesHisotry []*big.Int
+		totalSharesHistory []*big.Int
+		// Vault equity after each of the above deposit instances.
+		vaultEquityHistory []*big.Int
 	}{
 		"Two successful deposits, Same depositor": {
 			vaultId: constants.Vault_Clob_0,
@@ -75,7 +77,11 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:     constants.Alice_Num0.Owner,
 				},
 			},
-			totalSharesHisotry: []*big.Int{
+			totalSharesHistory: []*big.Int{
+				big.NewInt(123),
+				big.NewInt(444),
+			},
+			vaultEquityHistory: []*big.Int{
 				big.NewInt(123),
 				big.NewInt(444),
 			},
@@ -104,7 +110,11 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:     constants.Bob_Num1.Owner,
 				},
 			},
-			totalSharesHisotry: []*big.Int{
+			totalSharesHistory: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(1_500),
+			},
+			vaultEquityHistory: []*big.Int{
 				big.NewInt(1_000),
 				big.NewInt(1_500),
 			},
@@ -134,7 +144,11 @@ func TestMsgDepositToVault(t *testing.T) {
 					deliverTxFails: true,
 				},
 			},
-			totalSharesHisotry: []*big.Int{
+			totalSharesHistory: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(1_000),
+			},
+			vaultEquityHistory: []*big.Int{
 				big.NewInt(1_000),
 				big.NewInt(1_000),
 			},
@@ -165,7 +179,11 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:     constants.Alice_Num0.Owner,
 				},
 			},
-			totalSharesHisotry: []*big.Int{
+			totalSharesHistory: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(1_000),
+			},
+			vaultEquityHistory: []*big.Int{
 				big.NewInt(0),
 				big.NewInt(1_000),
 			},
@@ -198,7 +216,11 @@ func TestMsgDepositToVault(t *testing.T) {
 					checkTxResponseContains: "Deposit amount is invalid",
 				},
 			},
-			totalSharesHisotry: []*big.Int{
+			totalSharesHistory: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
+			},
+			vaultEquityHistory: []*big.Int{
 				big.NewInt(0),
 				big.NewInt(0),
 			},
@@ -293,7 +315,11 @@ func TestMsgDepositToVault(t *testing.T) {
 				// Check that total shares of the vault is as expected.
 				totalShares, exists := tApp.App.VaultKeeper.GetTotalShares(ctx, tc.vaultId)
 				require.True(t, exists)
-				require.Equal(t, tc.totalSharesHisotry[i], totalShares.NumShares.BigInt())
+				require.Equal(t, tc.totalSharesHistory[i], totalShares.NumShares.BigInt())
+				// Check that equity of the vault is as expected.
+				vaultEquity, err := tApp.App.VaultKeeper.GetVaultEquity(ctx, tc.vaultId)
+				require.NoError(t, err)
+				require.Equal(t, tc.vaultEquityHistory[i], vaultEquity)
 			}
 		})
 	}
