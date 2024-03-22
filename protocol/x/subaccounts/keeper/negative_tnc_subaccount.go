@@ -179,7 +179,8 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 
 // LegacyGetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was
 // seen in state and a boolean for whether it exists in state.
-// Note: This is the legacy implementation and meant to be used for the v5.0.0 state migration.
+// Deprecated: This is the legacy implementation and meant to be used for the v5.0.0 state migration.
+// Use `GetNegativeTncSubaccountSeenAtBlock` instead.
 func (k Keeper) LegacyGetNegativeTncSubaccountSeenAtBlock(
 	ctx sdk.Context,
 ) (uint32, bool) {

@@ -106,6 +106,13 @@ func negativeTncSubaccountSeenAtBlockUpgrade(
 ) {
 	// Get block height stored by v4.x.x.
 	blockHeight, exists := subaccountsKeeper.LegacyGetNegativeTncSubaccountSeenAtBlock(ctx)
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Retrieved block height from store for negative tnc subaccount seen at block: %d, exists: %t\n",
+			blockHeight,
+			exists,
+		),
+	)
 	// If no block height was stored in the legacy store, no migration needed.
 	if !exists {
 		return
@@ -114,10 +121,23 @@ func negativeTncSubaccountSeenAtBlockUpgrade(
 	// If there are no perpetuals, then no new state needs to be stored, as there can be no
 	// negative tnc subaccounts w/o perpetuals.
 	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Retrieved all perpetuals for negative tnc subaccount migration, # of perpetuals is %d\n",
+			len(perpetuals),
+		),
+	)
 	if len(perpetuals) == 0 {
 		return
 	}
 
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Migrating negative tnc subaccount seen store, storing block height %d for perpetual %d\n",
+			perpetuals[0].Params.Id,
+			blockHeight,
+		),
+	)
 	// Migrate the value from the legacy store to the new store.
 	if err := subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
 		ctx,
@@ -126,6 +146,12 @@ func negativeTncSubaccountSeenAtBlockUpgrade(
 	); err != nil {
 		panic(fmt.Sprintf("failed to set negative tnc subaccount seen at block with value %d: %s", blockHeight, err))
 	}
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Successfully migrated negative tnc subaccount seen at block with block height %d\n",
+			blockHeight,
+		),
+	)
 }
 
 func CreateUpgradeHandler(
