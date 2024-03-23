@@ -76,7 +76,7 @@ var (
 	// Long position for arbitrary isolated market
 	PerpetualPosition_OneISOLong = satypes.PerpetualPosition{
 		PerpetualId:  3,
-		Quantums:     dtypes.NewInt(100_000_000),
+		Quantums:     dtypes.NewInt(1_000_000_000),
 		FundingIndex: dtypes.NewInt(0),
 	}
 	PerpetualPosition_OneISO2Long = satypes.PerpetualPosition{

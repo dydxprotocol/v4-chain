@@ -1,5 +1,5 @@
 import { LCDClient } from "@osmonauts/lcd";
-import { ListLimitParamsRequest, ListLimitParamsResponseSDKType, QueryCapacityByDenomRequest, QueryCapacityByDenomResponseSDKType } from "./query";
+import { ListLimitParamsRequest, ListLimitParamsResponseSDKType, QueryCapacityByDenomRequest, QueryCapacityByDenomResponseSDKType, QueryAllPendingSendPacketsRequest, QueryAllPendingSendPacketsResponseSDKType } from "./query";
 export class LCDQueryClient {
   req: LCDClient;
 
@@ -11,6 +11,7 @@ export class LCDQueryClient {
     this.req = requestClient;
     this.listLimitParams = this.listLimitParams.bind(this);
     this.capacityByDenom = this.capacityByDenom.bind(this);
+    this.allPendingSendPackets = this.allPendingSendPackets.bind(this);
   }
   /* List all limit params. */
 
@@ -33,6 +34,13 @@ export class LCDQueryClient {
 
     const endpoint = `dydxprotocol/v4/ratelimit/capacity_by_denom`;
     return await this.req.get<QueryCapacityByDenomResponseSDKType>(endpoint, options);
+  }
+  /* Get all pending send packets */
+
+
+  async allPendingSendPackets(_params: QueryAllPendingSendPacketsRequest = {}): Promise<QueryAllPendingSendPacketsResponseSDKType> {
+    const endpoint = `dydxprotocol/v4/ratelimit/get_all_pending_send_packet`;
+    return await this.req.get<QueryAllPendingSendPacketsResponseSDKType>(endpoint);
   }
 
 }

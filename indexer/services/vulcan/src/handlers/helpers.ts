@@ -1,16 +1,7 @@
-import {
-  OrderTable,
-  PerpetualMarketFromDatabase,
-  protocolTranslations,
-} from '@dydxprotocol-indexer/postgres';
-import { subticksToPrice } from '@dydxprotocol-indexer/postgres/build/src/lib/protocol-translations';
+import { OrderTable, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import {
-  IndexerOrder,
-  IndexerOrder_ConditionType,
-  IndexerOrder_Side,
-  RedisOrder,
-  RedisOrder_TickerType,
+  IndexerOrder, IndexerOrder_Side, RedisOrder, RedisOrder_TickerType,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 
@@ -41,26 +32,6 @@ export function convertToRedisOrder(
       perpetualMarket.atomicResolution,
     ),
   };
-}
-
-/**
- * Gets the trigger price for an order, returns undefined if the order has an unspecified condition
- * type
- * @param order
- * @param perpetualMarket
- * @returns
- */
-export function getTriggerPrice(
-  order: IndexerOrder,
-  perpetualMarket: PerpetualMarketFromDatabase,
-): string | undefined {
-  if (order.conditionType !== IndexerOrder_ConditionType.CONDITION_TYPE_UNSPECIFIED) {
-    return subticksToPrice(
-      order.conditionalOrderTriggerSubticks.toString(),
-      perpetualMarket,
-    );
-  }
-  return undefined;
 }
 
 export function orderSideToOrderbookSide(

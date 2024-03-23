@@ -16,7 +16,8 @@ TODO(CORE-512): add info/resources around dYdX Chain. [Doc](https://www.notion.s
 
 ### Installation
 
-1. Install Go `1.21` [here](https://go.dev/dl/).
+1. Install Go `1.22` [here](https://go.dev/dl/).
+  - Alternatively use Homewbrew (`brew install go@1.22`)
 2. Install Docker Desktop [here](https://www.docker.com/products/docker-desktop/)
 3. Run `make install` to install project dependencies.
 

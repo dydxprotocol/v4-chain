@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -43,6 +44,62 @@ func TestModifyMarketParam(t *testing.T) {
 		require.Equal(t, fmt.Sprintf(`{"id":"%v"}`, i), newItem.ExchangeConfigJson)
 		keepertest.AssertMarketModifyEventInIndexerBlock(t, keeper, ctx, newItem)
 	}
+}
+
+func TestModifyMarketParamUpdatesCache(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+	id := uint32(1)
+	oldParam := types.MarketParam{
+		Id:                 id,
+		Pair:               "foo-bar",
+		MinExchanges:       uint32(2),
+		Exponent:           8,
+		MinPriceChangePpm:  uint32(50),
+		ExchangeConfigJson: `{"id":"1"}`,
+	}
+	mp, err := keeper.CreateMarket(ctx, oldParam, types.MarketPrice{
+		Id:       id,
+		Exponent: 8,
+		Price:    1,
+	})
+	require.NoError(t, err)
+
+	// check that the existing entry exists
+	cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
+	require.NoError(t, err)
+
+	// check that the existing entry exists
+	cpID, found := keeper.GetIDForCurrencyPair(ctx, cp)
+	require.True(t, found)
+	require.Equal(t, uint64(id), cpID)
+
+	// modify the market param
+	newParam, err := keeper.ModifyMarketParam(
+		ctx,
+		types.MarketParam{
+			Id:                 id,
+			Pair:               "bar-foo",
+			MinExchanges:       uint32(2),
+			Exponent:           8,
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: `{"id":"1"}`,
+		},
+	)
+	require.NoError(t, err)
+
+	// check that the existing entry does not exist
+	_, found = keeper.GetIDForCurrencyPair(ctx, cp)
+	require.False(t, found)
+
+	// check that the new entry exists
+	cp, err = slinky.MarketPairToCurrencyPair(newParam.Pair)
+	require.NoError(t, err)
+	cpID, found = keeper.GetIDForCurrencyPair(ctx, cp)
+	require.True(t, found)
+	require.Equal(t, uint64(id), cpID)
 }
 
 func TestModifyMarketParam_Errors(t *testing.T) {

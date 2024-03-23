@@ -35,22 +35,14 @@ func InitGenesis(ctx sdk.Context, k keeper.Keeper, genState types.GenesisState) 
 		}
 	}
 
-	// Create all the perpetuals.
+	// Initialize all the perpetuals.
+	// Instead of calling `CreatePerpetual`, we call `SetPerpetual` directly to
+	// to allow initializing non-zero open interest/funding index at genesis.
 	for _, elem := range genState.Perpetuals {
-		_, err := k.CreatePerpetual(
+		k.SetPerpetual(
 			ctx,
-			elem.Params.Id,
-			elem.Params.Ticker,
-			elem.Params.MarketId,
-			elem.Params.AtomicResolution,
-			elem.Params.DefaultFundingPpm,
-			elem.Params.LiquidityTier,
-			elem.Params.MarketType,
+			elem,
 		)
-
-		if err != nil {
-			panic(err)
-		}
 	}
 }
 

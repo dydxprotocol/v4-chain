@@ -20,6 +20,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -298,6 +299,13 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
@@ -1139,10 +1147,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, perpetual := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
-			} {
+			}
+			for _, perpetual := range testPerps {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					perpetual.Params.Id,
@@ -1155,6 +1164,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
@@ -2047,6 +2063,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				perpetuals,
+			)
+
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
@@ -2760,6 +2783,13 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create the subaccount.
 			subaccountId := satypes.SubaccountId{
 				Owner:  "liquidations_test",
@@ -2800,7 +2830,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 							},
 						},
 					},
-					satypes.Match,
+					satypes.CollatCheck,
 				)
 
 				require.True(t, success)
@@ -4699,6 +4729,13 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {

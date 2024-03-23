@@ -31,6 +31,11 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
+func (k Keeper) IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error) {
+	insuranceFundName, err := k.GetInsuranceFundName(ctx, perpetualId)
+	return insuranceFundName == types.InsuranceFundName, err
+}
+
 // GetInsuranceFundName returns the name of the insurance fund account for a given perpetual.
 // For isolated markets, the name is "insurance-fund:<perpetualId>".
 // For cross markets, the name is "insurance-fund".
@@ -1257,8 +1262,9 @@ func (k Keeper) ModifyOpenInterest(
 	if bigOpenInterest.Sign() < 0 {
 		return errorsmod.Wrapf(
 			types.ErrOpenInterestWouldBecomeNegative,
-			"perpetualId = %d, openInterest = %s",
+			"perpetualId = %d, openInterest before = %s, after = %s",
 			perpetualId,
+			perpetual.OpenInterest.String(),
 			bigOpenInterest.String(),
 		)
 	}

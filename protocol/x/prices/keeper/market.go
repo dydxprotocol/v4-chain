@@ -9,6 +9,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -54,6 +55,15 @@ func (k Keeper) CreateMarket(
 
 	marketPriceStore := k.getMarketPriceStore(ctx)
 	marketPriceStore.Set(lib.Uint32ToKey(marketPrice.Id), priceBytes)
+
+	// add the pair to the currency-pair-id cache
+	cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
+	if err != nil {
+		k.Logger(ctx).Error("failed to add currency pair to cache", "pair", marketParam.Pair, "err", err)
+	} else {
+		// add the pair to the currency-pair-id cache
+		k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
+	}
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
