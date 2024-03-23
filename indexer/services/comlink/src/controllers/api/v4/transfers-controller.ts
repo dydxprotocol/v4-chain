@@ -21,6 +21,7 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
+import { getParentSubaccountNum } from '../../../../build/src/lib/helpers';
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
@@ -158,19 +159,27 @@ class TransfersController extends Controller {
       createdBeforeOrAtHeight,
       createdBeforeOrAt);
 
-    // Filter out transfers between parent and child subaccounts
-    // This is done by excluding entries where the sender and recipient subaccount numbers are
-    // greater than 127 (the maximum subaccount number for a parent subaccount)
-    // Undefined subaccount numbers are also included since wallet transfers can only go to/from
-    // parent subaccounts
-    transfers.transfers = transfers.transfers.filter((transfer) => {
-      return (transfer.sender.subaccountNumber === undefined ||
-              transfer.sender.subaccountNumber < MAX_PARENT_SUBACCOUNTS) &&
-          (transfer.recipient.subaccountNumber === undefined ||
-              transfer.recipient.subaccountNumber < MAX_PARENT_SUBACCOUNTS);
+    // For each transfer response, replace the sender and recipient subaccount numbers with the
+    // parent subaccount number using getParentSubaccountNum helper function.
+    // If the sender and recipient parent subaccount numbers are the same for a transfer, exclude that transfer
+    // from the response.
+    const transfersWithParentSubaccount = transfers.transfers.filter((transfer) => {
+      const senderParentSubaccountNum = transfer.sender.subaccountNumber
+        ? getParentSubaccountNum(transfer.sender.subaccountNumber) : undefined;
+      const recipientParentSubaccountNum = transfer.recipient.subaccountNumber
+        ? getParentSubaccountNum(transfer.recipient.subaccountNumber) : undefined;
+
+      if (senderParentSubaccountNum === recipientParentSubaccountNum) {
+        return false;
+      }
+
+      transfer.sender.subaccountNumber = senderParentSubaccountNum;
+      transfer.recipient.subaccountNumber = recipientParentSubaccountNum;
+
+      return true;
     });
 
-    return transfers;
+    return { transfers: transfersWithParentSubaccount };
   }
 }
 

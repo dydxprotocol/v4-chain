@@ -10,6 +10,12 @@ import {
 import { RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
+import {
+  createdDateTime, createdHeight,
+  defaultAsset,
+  defaultSubaccountId, defaultTendermintEventId, defaultTendermintEventId4,
+  defaultWalletAddress, isolatedSubaccountId,
+} from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('transfers-controller#V4', () => {
   beforeAll(async () => {
@@ -412,7 +418,7 @@ describe('transfers-controller#V4', () => {
       );
     });
 
-    it('Get /transfers/parentSubaccountNumber excludes transfers to/from child subaccounts', async () => {
+    it('Get /transfers/parentSubaccountNumber excludes transfers for parent <> child subaccounts', async () => {
       await testMocks.seedData();
       const transfer2: TransferCreateObject = {
         senderSubaccountId: testConstants.defaultSubaccountId,
@@ -473,6 +479,179 @@ describe('transfers-controller#V4', () => {
         expect.arrayContaining([
           expect.objectContaining({
             ...expectedTransferResponse,
+          }),
+        ]),
+      );
+    });
+
+    it('Get /transfers/parentSubaccountNumber includes transfers for wallets/subaccounts(non parent) <> child subaccounts', async () => {
+      await testMocks.seedData();
+      const transferFromNonParent: TransferCreateObject = {
+        senderSubaccountId: testConstants.defaultSubaccountId2,
+        recipientSubaccountId: testConstants.isolatedSubaccountId,
+        assetId: testConstants.defaultAsset.id,
+        size: '5',
+        eventId: testConstants.defaultTendermintEventId2,
+        transactionHash: '', // TODO: Add a real transaction Hash
+        createdAt: testConstants.createdDateTime.toISO(),
+        createdAtHeight: testConstants.createdHeight,
+      };
+      const transferToNonParent: TransferCreateObject = {
+        senderSubaccountId: testConstants.isolatedSubaccountId2,
+        recipientSubaccountId: testConstants.defaultSubaccountId2,
+        assetId: testConstants.defaultAsset.id,
+        size: '5',
+        eventId: testConstants.defaultTendermintEventId3,
+        transactionHash: '', // TODO: Add a real transaction Hash
+        createdAt: testConstants.createdDateTime.toISO(),
+        createdAtHeight: testConstants.createdHeight,
+      };
+      const depositToChildSA: TransferCreateObject = {
+        senderWalletAddress: defaultWalletAddress,
+        recipientSubaccountId: isolatedSubaccountId,
+        assetId: defaultAsset.id,
+        size: '10',
+        eventId: defaultTendermintEventId4,
+        transactionHash: '', // TODO: Add a real transaction Hash
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+      const withdrawFromChildSA: TransferCreateObject = {
+        senderSubaccountId: isolatedSubaccountId,
+        recipientWalletAddress: defaultWalletAddress,
+        assetId: defaultAsset.id,
+        size: '10',
+        eventId: defaultTendermintEventId4,
+        transactionHash: '', // TODO: Add a real transaction Hash
+        createdAt: createdDateTime.toISO(),
+        createdAtHeight: createdHeight,
+      };
+      await WalletTable.create({
+        address: testConstants.defaultWalletAddress,
+        totalTradingRewards: '0',
+      });
+      await Promise.all([
+        TransferTable.create(transferFromNonParent),
+        TransferTable.create(transferToNonParent),
+        TransferTable.create(depositToChildSA),
+        TransferTable.create(withdrawFromChildSA),
+      ]);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+                  `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
+      });
+
+      const expectedTransferResponse1: TransferResponseObject = {
+        id: TransferTable.uuid(
+          transferFromNonParent.eventId,
+          transferFromNonParent.assetId,
+          transferFromNonParent.senderSubaccountId,
+          transferFromNonParent.recipientSubaccountId,
+          transferFromNonParent.senderWalletAddress,
+          transferFromNonParent.recipientWalletAddress,
+        ),
+        sender: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: 0,
+        },
+        size: transferFromNonParent.size,
+        createdAt: transferFromNonParent.createdAt,
+        createdAtHeight: transferFromNonParent.createdAtHeight,
+        symbol: transferFromNonParent.assetId,
+        type: TransferType.TRANSFER_IN,
+        transactionHash: transferFromNonParent.transactionHash,
+      };
+      const expectedTransferResponse2: TransferResponseObject = {
+        id: TransferTable.uuid(
+          transferToNonParent.eventId,
+          transferToNonParent.assetId,
+          transferToNonParent.senderSubaccountId,
+          transferToNonParent.recipientSubaccountId,
+          transferToNonParent.senderWalletAddress,
+          transferToNonParent.recipientWalletAddress,
+        ),
+        sender: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: 0,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+        },
+        size: transferToNonParent.size,
+        createdAt: transferToNonParent.createdAt,
+        createdAtHeight: transferToNonParent.createdAtHeight,
+        symbol: transferToNonParent.assetId,
+        type: TransferType.TRANSFER_OUT,
+        transactionHash: transferToNonParent.transactionHash,
+      };
+      const expectedDepositResponse: TransferResponseObject = {
+        id: TransferTable.uuid(
+          depositToChildSA.eventId,
+          depositToChildSA.assetId,
+          depositToChildSA.senderSubaccountId,
+          depositToChildSA.recipientSubaccountId,
+          depositToChildSA.senderWalletAddress,
+          depositToChildSA.recipientWalletAddress,
+        ),
+        sender: {
+          address: testConstants.defaultWalletAddress,
+        },
+        recipient: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: 0,
+        },
+        size: depositToChildSA.size,
+        createdAt: depositToChildSA.createdAt,
+        createdAtHeight: depositToChildSA.createdAtHeight,
+        symbol: depositToChildSA.assetId,
+        type: TransferType.DEPOSIT,
+        transactionHash: depositToChildSA.transactionHash,
+      };
+      const expectedWithdrawalResponse: TransferResponseObject = {
+        id: TransferTable.uuid(
+          withdrawFromChildSA.eventId,
+          withdrawFromChildSA.assetId,
+          withdrawFromChildSA.senderSubaccountId,
+          withdrawFromChildSA.recipientSubaccountId,
+          withdrawFromChildSA.senderWalletAddress,
+          withdrawFromChildSA.recipientWalletAddress,
+        ),
+        sender: {
+          address: testConstants.defaultAddress,
+          subaccountNumber: 0,
+        },
+        recipient: {
+          address: testConstants.defaultWalletAddress,
+        },
+        size: withdrawFromChildSA.size,
+        createdAt: withdrawFromChildSA.createdAt,
+        createdAtHeight: withdrawFromChildSA.createdAtHeight,
+        symbol: withdrawFromChildSA.assetId,
+        type: TransferType.WITHDRAWAL,
+        transactionHash: withdrawFromChildSA.transactionHash,
+      };
+
+      expect(response.body.transfers.length).toEqual(1);
+      expect(response.body.transfers).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            ...expectedTransferResponse1,
+          }),
+          expect.objectContaining({
+            ...expectedTransferResponse2,
+          }),
+          expect.objectContaining({
+            ...expectedDepositResponse,
+          }),
+          expect.objectContaining({
+            ...expectedWithdrawalResponse,
           }),
         ]),
       );
