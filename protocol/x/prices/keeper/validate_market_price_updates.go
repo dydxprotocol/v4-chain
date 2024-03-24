@@ -87,7 +87,7 @@ func (k Keeper) PerformStatefulPriceUpdateValidation(
 
 // performNonDeterministicStatefulValidation performs stateful validations that are non-deterministic.
 //
-// Specificically, for each price update, validate the following:
+// Specifically, for each price update, validate the following:
 //   - The index price exists.
 //   - The price is "accurate". See `validatePriceAccuracy` for how "accuracy" is determined.
 //
@@ -163,7 +163,7 @@ func (k Keeper) performNonDeterministicStatefulValidation(
 
 // performDeterministicStatefulValidation performs stateful validations that are deterministic.
 //
-// Specificically, for each price update, validate the following:
+// Specifically, for each price update, validate the following:
 //   - The market exists.
 //   - The price update is greater than the min price change.
 func (k Keeper) performDeterministicStatefulValidation(
