@@ -13,8 +13,9 @@ import { sendRequest } from '../../../helpers/helpers';
 import {
   createdDateTime, createdHeight,
   defaultAsset,
-  defaultSubaccountId, defaultTendermintEventId, defaultTendermintEventId4,
-  defaultWalletAddress, isolatedSubaccountId,
+  defaultTendermintEventId4,
+  defaultWalletAddress,
+  isolatedSubaccountId,
 } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('transfers-controller#V4', () => {
@@ -537,10 +538,11 @@ describe('transfers-controller#V4', () => {
         TransferTable.create(withdrawFromChildSA),
       ]);
 
+      const parentSubaccountNumber: number = 0;
       const response: request.Response = await sendRequest({
         type: RequestMethod.GET,
         path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
-                  `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
+            `&parentSubaccountNumber=${parentSubaccountNumber}`,
       });
 
       const expectedTransferResponse1: TransferResponseObject = {
@@ -563,7 +565,7 @@ describe('transfers-controller#V4', () => {
         size: transferFromNonParent.size,
         createdAt: transferFromNonParent.createdAt,
         createdAtHeight: transferFromNonParent.createdAtHeight,
-        symbol: transferFromNonParent.assetId,
+        symbol: testConstants.defaultAsset.symbol,
         type: TransferType.TRANSFER_IN,
         transactionHash: transferFromNonParent.transactionHash,
       };
@@ -587,7 +589,7 @@ describe('transfers-controller#V4', () => {
         size: transferToNonParent.size,
         createdAt: transferToNonParent.createdAt,
         createdAtHeight: transferToNonParent.createdAtHeight,
-        symbol: transferToNonParent.assetId,
+        symbol: testConstants.defaultAsset.symbol,
         type: TransferType.TRANSFER_OUT,
         transactionHash: transferToNonParent.transactionHash,
       };
@@ -610,7 +612,7 @@ describe('transfers-controller#V4', () => {
         size: depositToChildSA.size,
         createdAt: depositToChildSA.createdAt,
         createdAtHeight: depositToChildSA.createdAtHeight,
-        symbol: depositToChildSA.assetId,
+        symbol: testConstants.defaultAsset.symbol,
         type: TransferType.DEPOSIT,
         transactionHash: depositToChildSA.transactionHash,
       };
@@ -633,12 +635,12 @@ describe('transfers-controller#V4', () => {
         size: withdrawFromChildSA.size,
         createdAt: withdrawFromChildSA.createdAt,
         createdAtHeight: withdrawFromChildSA.createdAtHeight,
-        symbol: withdrawFromChildSA.assetId,
+        symbol: testConstants.defaultAsset.symbol,
         type: TransferType.WITHDRAWAL,
         transactionHash: withdrawFromChildSA.transactionHash,
       };
 
-      expect(response.body.transfers.length).toEqual(1);
+      expect(response.body.transfers.length).toEqual(4);
       expect(response.body.transfers).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
@@ -679,7 +681,27 @@ describe('transfers-controller#V4', () => {
       expect(response.body).toEqual({
         errors: [
           {
-            msg: 'No subaccount found with address invalid_address and subaccountNumber 100',
+            msg: 'No subaccount found with address invalid_address and parentSubaccountNumber 100',
+          },
+        ],
+      });
+    });
+
+    it('Get /transfers/parentSubaccountNumber with invalid parentSubaccountNumber', async () => {
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/transfers/parentSubaccountNumber?address=${testConstants.defaultAddress}` +
+            '&parentSubaccountNumber=128',
+        expectedStatus: 400,
+      });
+
+      expect(response.body).toEqual({
+        errors: [
+          {
+            location: 'query',
+            msg: 'parentSubaccountNumber must be a non-negative integer less than 128',
+            param: 'parentSubaccountNumber',
+            value: '128',
           },
         ],
       });

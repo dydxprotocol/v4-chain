@@ -4,7 +4,7 @@ import {
   AssetFromDatabase,
   AssetTable,
   DEFAULT_POSTGRES_OPTIONS,
-  IsoString, MAX_PARENT_SUBACCOUNTS,
+  IsoString,
   Ordering,
   QueryableField,
   SubaccountColumns,
@@ -14,6 +14,9 @@ import {
   TransferFromDatabase,
   TransferTable,
 } from '@dydxprotocol-indexer/postgres';
+import {
+  getChildSubaccountNums,
+} from '@dydxprotocol-indexer/postgres/build/src/lib/api-translations';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -21,7 +24,6 @@ import {
   Controller, Get, Query, Route,
 } from 'tsoa';
 
-import { getParentSubaccountNum } from '../../../../build/src/lib/helpers';
 import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
@@ -35,98 +37,19 @@ import {
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
 import ExportResponseCodeStats from '../../../request-helpers/export-response-code-stats';
-import { transferToResponseObject } from '../../../request-helpers/request-transformer';
+import {
+  transferToParentSubaccountResponseObject,
+  transferToResponseObject,
+} from '../../../request-helpers/request-transformer';
 import {
   AssetById, ParentSubaccountTransferRequest,
   SubaccountById,
   TransferRequest,
-  TransferResponse,
+  TransferResponse, TransferResponseObject,
 } from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'transfers-controller';
-
-async function getTransfersCommon(
-  address: string,
-  subaccountNumber: number,
-  limit?: number,
-  createdBeforeOrAtHeight?: number,
-  createdBeforeOrAt?: IsoString,
-): Promise<TransferResponse> {
-  const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
-
-  // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
-  const [subaccount, transfers, assets]: [
-    SubaccountFromDatabase | undefined,
-    TransferFromDatabase[],
-    AssetFromDatabase[]
-  ] = await
-  Promise.all([
-    SubaccountTable.findById(
-      subaccountId,
-    ),
-    TransferTable.findAllToOrFromSubaccountId(
-      {
-        subaccountId: [subaccountId],
-        limit,
-        createdBeforeOrAtHeight: createdBeforeOrAtHeight
-          ? createdBeforeOrAtHeight.toString()
-          : undefined,
-        createdBeforeOrAt,
-      },
-      [QueryableField.LIMIT],
-      {
-        ...DEFAULT_POSTGRES_OPTIONS,
-        orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
-      },
-    ),
-    AssetTable.findAll(
-      {},
-      [],
-    ),
-  ]);
-  if (subaccount === undefined) {
-    throw new NotFoundError(
-      `No subaccount found with address ${address} and subaccountNumber ${subaccountNumber}`,
-    );
-  }
-  const recipientSubaccountIds: string[] = _
-    .map(transfers, TransferColumns.recipientSubaccountId)
-    .filter(
-      (recipientSubaccountId: string | undefined) => recipientSubaccountId !== undefined,
-    ) as string[];
-  const senderSubaccountIds: string[] = _
-    .map(transfers, TransferColumns.senderSubaccountId)
-    .filter(
-      (senderSubaccountId: string | undefined) => senderSubaccountId !== undefined,
-    ) as string[];
-
-  const subaccountIds: string[] = _.uniq([
-    ...recipientSubaccountIds,
-    ...senderSubaccountIds,
-  ]);
-  const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
-    {
-      id: subaccountIds,
-    },
-    [],
-  );
-  const idToSubaccount: SubaccountById = _.keyBy(
-    subaccounts,
-    SubaccountColumns.id,
-  );
-
-  const idToAsset: AssetById = _.keyBy(
-    assets,
-    AssetColumns.id,
-  );
-
-  return {
-    transfers: transfers.map((transfer: TransferFromDatabase) => {
-      return transferToResponseObject(transfer, idToAsset, idToSubaccount, subaccountId);
-    }),
-  };
-}
 
 @Route('transfers')
 class TransfersController extends Controller {
@@ -138,11 +61,79 @@ class TransfersController extends Controller {
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<TransferResponse> {
-    return getTransfersCommon(address,
-      subaccountNumber,
-      limit,
-      createdBeforeOrAtHeight,
-      createdBeforeOrAt);
+    const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
+
+    // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
+    const [subaccount, transfers, assets]: [
+      SubaccountFromDatabase | undefined,
+      TransferFromDatabase[],
+      AssetFromDatabase[]
+    ] = await
+    Promise.all([
+      SubaccountTable.findById(
+        subaccountId,
+      ),
+      TransferTable.findAllToOrFromSubaccountId(
+        {
+          subaccountId: [subaccountId],
+          limit,
+          createdBeforeOrAtHeight: createdBeforeOrAtHeight
+            ? createdBeforeOrAtHeight.toString()
+            : undefined,
+          createdBeforeOrAt,
+        },
+        [QueryableField.LIMIT],
+        {
+          ...DEFAULT_POSTGRES_OPTIONS,
+          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+        },
+      ),
+      AssetTable.findAll(
+        {},
+        [],
+      ),
+    ]);
+    if (subaccount === undefined) {
+      throw new NotFoundError(
+        `No subaccount found with address ${address} and subaccountNumber ${subaccountNumber}`,
+      );
+    }
+    const recipientSubaccountIds: string[] = _
+      .map(transfers, TransferColumns.recipientSubaccountId)
+      .filter(
+        (recipientSubaccountId: string | undefined) => recipientSubaccountId !== undefined,
+      ) as string[];
+    const senderSubaccountIds: string[] = _
+      .map(transfers, TransferColumns.senderSubaccountId)
+      .filter(
+        (senderSubaccountId: string | undefined) => senderSubaccountId !== undefined,
+      ) as string[];
+
+    const subaccountIds: string[] = _.uniq([
+      ...recipientSubaccountIds,
+      ...senderSubaccountIds,
+    ]);
+    const subaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        id: subaccountIds,
+      },
+      [],
+    );
+    const idToSubaccount: SubaccountById = _.keyBy(
+      subaccounts,
+      SubaccountColumns.id,
+    );
+
+    const idToAsset: AssetById = _.keyBy(
+      assets,
+      AssetColumns.id,
+    );
+
+    return {
+      transfers: transfers.map((transfer: TransferFromDatabase) => {
+        return transferToResponseObject(transfer, idToAsset, idToSubaccount, subaccountId);
+      }),
+    };
   }
 
   @Get('/parentSubaccountNumber')
@@ -153,33 +144,94 @@ class TransfersController extends Controller {
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
   ): Promise<TransferResponse> {
-    const transfers = await getTransfersCommon(address,
-      parentSubaccountNumber,
-      limit,
-      createdBeforeOrAtHeight,
-      createdBeforeOrAt);
 
-    // For each transfer response, replace the sender and recipient subaccount numbers with the
-    // parent subaccount number using getParentSubaccountNum helper function.
-    // If the sender and recipient parent subaccount numbers are the same for a transfer, exclude that transfer
-    // from the response.
-    const transfersWithParentSubaccount = transfers.transfers.filter((transfer) => {
-      const senderParentSubaccountNum = transfer.sender.subaccountNumber
-        ? getParentSubaccountNum(transfer.sender.subaccountNumber) : undefined;
-      const recipientParentSubaccountNum = transfer.recipient.subaccountNumber
-        ? getParentSubaccountNum(transfer.recipient.subaccountNumber) : undefined;
+    // get all child subaccountIds for the parent subaccount number
+    const subaccountIds: string[] = getChildSubaccountNums(parentSubaccountNumber).map(
+      (childSubaccountNumber: number) => SubaccountTable.uuid(address, childSubaccountNumber),
+    );
 
-      if (senderParentSubaccountNum === recipientParentSubaccountNum) {
-        return false;
-      }
+    // TODO(DEC-656): Change to a cache in Redis similar to Librarian instead of querying DB.
+    const [subaccounts, transfers, assets]: [
+      SubaccountFromDatabase[] | undefined,
+      TransferFromDatabase[],
+      AssetFromDatabase[]
+    ] = await
+    Promise.all([
+      SubaccountTable.findAll(
+        { id: subaccountIds },
+        [],
+      ),
+      TransferTable.findAllToOrFromSubaccountId(
+        {
+          subaccountId: subaccountIds,
+          limit,
+          createdBeforeOrAtHeight: createdBeforeOrAtHeight
+            ? createdBeforeOrAtHeight.toString()
+            : undefined,
+          createdBeforeOrAt,
+        },
+        [QueryableField.LIMIT],
+        {
+          ...DEFAULT_POSTGRES_OPTIONS,
+          orderBy: [[TransferColumns.createdAtHeight, Ordering.DESC]],
+        },
+      ),
+      AssetTable.findAll(
+        {},
+        [],
+      ),
+    ]);
+    if (subaccounts === undefined || subaccounts.length === 0) {
+      throw new NotFoundError(
+        `No subaccount found with address ${address} and parentSubaccountNumber ${parentSubaccountNumber}`,
+      );
+    }
+    const recipientSubaccountIds: string[] = _
+      .map(transfers, TransferColumns.recipientSubaccountId)
+      .filter(
+        (recipientSubaccountId: string | undefined) => recipientSubaccountId !== undefined,
+      ) as string[];
+    const senderSubaccountIds: string[] = _
+      .map(transfers, TransferColumns.senderSubaccountId)
+      .filter(
+        (senderSubaccountId: string | undefined) => senderSubaccountId !== undefined,
+      ) as string[];
 
-      transfer.sender.subaccountNumber = senderParentSubaccountNum;
-      transfer.recipient.subaccountNumber = recipientParentSubaccountNum;
+    const allSubaccountIds: string[] = _.uniq([
+      ...recipientSubaccountIds,
+      ...senderSubaccountIds,
+    ]);
+    const allSubaccounts: SubaccountFromDatabase[] = await SubaccountTable.findAll(
+      {
+        id: allSubaccountIds,
+      },
+      [],
+    );
+    const idToSubaccount: SubaccountById = _.keyBy(
+      allSubaccounts,
+      SubaccountColumns.id,
+    );
 
-      return true;
+    const idToAsset: AssetById = _.keyBy(
+      assets,
+      AssetColumns.id,
+    );
+
+    const transfersWithParentSubaccount: TransferResponseObject[] = transfers.map(
+      (transfer: TransferFromDatabase) => {
+        return transferToParentSubaccountResponseObject(
+          transfer,
+          idToAsset,
+          idToSubaccount,
+          parentSubaccountNumber);
+      });
+
+    // Filter out transfers where the sender and recipient parent subaccount numbers are the same
+    const transfersFiltered = transfersWithParentSubaccount.filter((transfer) => {
+      return transfer.sender.subaccountNumber !== transfer.recipient.subaccountNumber;
     });
 
-    return { transfers: transfersWithParentSubaccount };
+    return { transfers: transfersFiltered };
   }
 }
 

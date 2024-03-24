@@ -25,7 +25,9 @@ import {
   TradingRewardAggregationFromDatabase,
   TradingRewardFromDatabase,
   TransferFromDatabase,
+  TransferType,
 } from '@dydxprotocol-indexer/postgres';
+import { getParentSubaccountNum } from '@dydxprotocol-indexer/postgres/build/src/lib/api-translations';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
@@ -227,6 +229,59 @@ export function transferToResponseObject(
     createdAtHeight: transfer.createdAtHeight,
     symbol: assetMap[transfer.assetId].symbol,
     type: helpers.getTransferType(transfer, subaccountId),
+    transactionHash: transfer.transactionHash,
+  };
+}
+
+export function transferToParentSubaccountResponseObject(
+  transfer: TransferFromDatabase,
+  assetMap: AssetById,
+  subaccountMap: SubaccountById,
+  parentSubaccountNumber: number,
+): TransferResponseObject {
+
+  const senderParentSubaccountNum = transfer.senderWalletAddress
+    ? undefined
+    : getParentSubaccountNum(subaccountMap[transfer.senderSubaccountId!].subaccountNumber,
+    );
+
+  const recipientParentSubaccountNum = transfer.recipientWalletAddress
+    ? undefined
+    : getParentSubaccountNum(subaccountMap[transfer.recipientSubaccountId!].subaccountNumber);
+
+  // Determine transfer type based on parent subaccount number.
+  let transferType: TransferType = TransferType.TRANSFER_IN;
+  if (senderParentSubaccountNum === parentSubaccountNumber) {
+    if (transfer.recipientSubaccountId) {
+      transferType = TransferType.TRANSFER_OUT;
+    } else {
+      transferType = TransferType.WITHDRAWAL;
+    }
+  } else if (recipientParentSubaccountNum === parentSubaccountNumber) {
+    if (transfer.senderSubaccountId) {
+      transferType = TransferType.TRANSFER_IN;
+    } else {
+      transferType = TransferType.DEPOSIT;
+    }
+  }
+
+  return {
+    id: transfer.id,
+    sender: {
+      address: transfer.senderWalletAddress ?? subaccountMap[transfer.senderSubaccountId!].address,
+      subaccountNumber: senderParentSubaccountNum,
+    },
+    recipient: {
+      address: transfer.recipientWalletAddress ?? subaccountMap[
+        transfer.recipientSubaccountId!
+      ].address,
+      subaccountNumber: recipientParentSubaccountNum,
+    },
+    size: transfer.size,
+    createdAt: transfer.createdAt,
+    createdAtHeight: transfer.createdAtHeight,
+    symbol: assetMap[transfer.assetId].symbol,
+    type: transferType,
     transactionHash: transfer.transactionHash,
   };
 }
