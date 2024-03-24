@@ -30,6 +30,10 @@ export const configSchema = {
     default: 250,
   }),
 
+  BATCH_PROCESSING_ENABLED: parseBoolean({
+    default: true,
+  }),
+
   WS_HEARTBEAT_INTERVAL_MS: parseInteger(),
   WS_HEARTBEAT_TIMEOUT_MS: parseInteger(),
 
