@@ -73,7 +73,12 @@ func (k Keeper) MintShares(
 	totalShares, exists := k.GetTotalShares(ctx, vaultId)
 	existingTotalShares := totalShares.NumShares.BigInt()
 	sharesToMint := big.NewInt(0)
-	if exists && existingTotalShares.Cmp(big.NewInt(0)) == 1 {
+	if !exists || existingTotalShares.Cmp(big.NewInt(0)) < 1 {
+		// Mint `quoteQuantums` number of shares.
+		sharesToMint = quantumsToDeposit
+		// Initialize existingTotalShares as 0.
+		existingTotalShares = big.NewInt(0)
+	} else {
 		// Get vault equity.
 		equity, err := k.GetVaultEquity(ctx, vaultId)
 		if err != nil {
@@ -83,18 +88,23 @@ func (k Keeper) MintShares(
 		if equity.Cmp(big.NewInt(0)) <= 0 {
 			return types.ErrNonPositiveEquity
 		}
-		// Mint `deposit * existing shares / vault equity` number of shares.
+		// Mint `deposit (in quote quantums) * existing shares / vault equity (in quote quantums)`
+		// number of shares.
 		// For example:
 		// - a vault currently has 5000 shares and 4000 equity (in quote quantums)
 		// - each quote quantum is worth 5000 / 4000 = 1.25 shares
 		// - a deposit of 1000 quote quantums should thus be given 1000 * 1.25 = 1250 shares
-		sharesToMint = sharesToMint.Mul(quantumsToDeposit, existingTotalShares)
-		sharesToMint = sharesToMint.Quo(sharesToMint, equity)
-	} else {
-		// Mint `quoteQuantums` number of shares.
-		sharesToMint = quantumsToDeposit
-		// Initialize existingTotalShares as 0.
-		existingTotalShares = big.NewInt(0)
+		// For shares calculation to be accurate, scale everything by denominator and mint
+		// numerator number of shares.
+		// For example:
+		// - a vault currently has 1 share and 1000 equity (in quote quantums)
+		// - a deposit of 1 quote quantum is worth 1 * 1 / 1000 shares
+		// - to be accurate, we credit 1 share and scale existing shares by 1000
+		newShares := new(big.Rat).SetInt(quantumsToDeposit)
+		newShares = newShares.Mul(newShares, new(big.Rat).SetInt(existingTotalShares))
+		newShares = newShares.Quo(newShares, new(big.Rat).SetInt(equity))
+		existingTotalShares = existingTotalShares.Mul(existingTotalShares, newShares.Denom())
+		sharesToMint = newShares.Num()
 	}
 
 	// Increase TotalShares of the vault.

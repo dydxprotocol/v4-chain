@@ -124,24 +124,6 @@ func (_m *VaultKeeper) GetVaultEquity(ctx types.Context, vaultId vaulttypes.Vaul
 	return r0, r1
 }
 
-// HandleMsgDepositToVault provides a mock function with given fields: ctx, msg
-func (_m *VaultKeeper) HandleMsgDepositToVault(ctx types.Context, msg *vaulttypes.MsgDepositToVault) error {
-	ret := _m.Called(ctx, msg)
-
-	if len(ret) == 0 {
-		panic("no return value specified for HandleMsgDepositToVault")
-	}
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *vaulttypes.MsgDepositToVault) error); ok {
-		r0 = rf(ctx, msg)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // MintShares provides a mock function with given fields: ctx, vaultId, owner, quantumsToDeposit
 func (_m *VaultKeeper) MintShares(ctx types.Context, vaultId vaulttypes.VaultId, owner string, quantumsToDeposit *big.Int) error {
 	ret := _m.Called(ctx, vaultId, owner, quantumsToDeposit)

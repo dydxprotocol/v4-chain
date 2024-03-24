@@ -125,24 +125,26 @@ func TestMintShares(t *testing.T) {
 				NumShares: dtypes.NewInt(6_250),
 			},
 		},
+		"Equity 1_000_000, TotalShares 1, Deposit 1": {
+			vaultId:           constants.Vault_Clob_1,
+			equity:            big.NewInt(1_000_000),
+			totalShares:       big.NewInt(1),
+			quantumsToDeposit: big.NewInt(1),
+			// 1 * 1 / 1_000_000 = 1 / 1_000_000
+			// Should thus mint 1 share and scale existing shares by 1_000_000.
+			expectedTotalShares: vaulttypes.NumShares{
+				NumShares: dtypes.NewInt(1_000_001),
+			},
+		},
 		"Equity 8000, TotalShares 4000, Deposit 455": {
 			vaultId:           constants.Vault_Clob_1,
 			equity:            big.NewInt(8_000),
 			totalShares:       big.NewInt(4_000),
 			quantumsToDeposit: big.NewInt(455),
-			// Should mint 455/2 ~= 227 shares.
+			// 455 * 4_000 / 8_000 = 455 / 2
+			// Should thus mint 455 shares and scale existing shares by 2.
 			expectedTotalShares: vaulttypes.NumShares{
-				NumShares: dtypes.NewInt(4_227),
-			},
-		},
-		"Equity 333444555666777, TotalShares 333444555666777, Deposit 111222333444": {
-			vaultId:           constants.Vault_Clob_0,
-			equity:            big.NewInt(333_444_555_666_777),
-			totalShares:       big.NewInt(333_444_555_666_777),
-			quantumsToDeposit: big.NewInt(111_222_333_444),
-			// Should mint 111_222_333_444 shares.
-			expectedTotalShares: vaulttypes.NumShares{
-				NumShares: dtypes.NewInt(333_555_778_000_221),
+				NumShares: dtypes.NewInt(8_455),
 			},
 		},
 		"Equity 123456, TotalShares 654321, Deposit 123456789": {
@@ -150,9 +152,10 @@ func TestMintShares(t *testing.T) {
 			equity:            big.NewInt(123_456),
 			totalShares:       big.NewInt(654_321),
 			quantumsToDeposit: big.NewInt(123_456_789),
-			// Should mint 123456789 * 654_321 / 123_456 ~= 654325181.
+			// 123_456_789 * 654_321 / 123_456 = 26_926_789_878_423 / 41_152
+			// Should thus mint 26_926_789_878_423 shares and scale existing shares by 41_152.
 			expectedTotalShares: vaulttypes.NumShares{
-				NumShares: dtypes.NewInt(654_979_502),
+				NumShares: dtypes.NewInt(26_953_716_496_215),
 			},
 		},
 		"Equity -1, TotalShares 10, Deposit 1": {

@@ -3,10 +3,10 @@ package keeper
 import (
 	"context"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -17,19 +17,6 @@ func (k msgServer) DepositToVault(
 ) (*types.MsgDepositToVaultResponse, error) {
 	ctx := lib.UnwrapSDKContext(goCtx, types.ModuleName)
 
-	err := k.Keeper.HandleMsgDepositToVault(ctx, msg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &types.MsgDepositToVaultResponse{}, nil
-}
-
-// HandleMsgDepositToVault handles a MsgDepositToVault.
-func (k Keeper) HandleMsgDepositToVault(
-	ctx sdk.Context,
-	msg *types.MsgDepositToVault,
-) error {
 	// Mint shares for the vault.
 	err := k.MintShares(
 		ctx,
@@ -38,7 +25,7 @@ func (k Keeper) HandleMsgDepositToVault(
 		msg.QuoteQuantums.BigInt(),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Transfer from sender subaccount to vault.
@@ -48,11 +35,11 @@ func (k Keeper) HandleMsgDepositToVault(
 		ctx,
 		*msg.SubaccountId,
 		*msg.VaultId.ToSubaccountId(),
-		0, // assetId
+		assettypes.AssetUsdc.Id,
 		msg.QuoteQuantums.BigInt(),
 	)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Emit metric on vault equity.
@@ -66,5 +53,5 @@ func (k Keeper) HandleMsgDepositToVault(
 		)
 	}
 
-	return nil
+	return &types.MsgDepositToVaultResponse{}, nil
 }

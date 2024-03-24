@@ -8,12 +8,6 @@ import (
 )
 
 type VaultKeeper interface {
-	// Deposit.
-	HandleMsgDepositToVault(
-		ctx sdk.Context,
-		msg *MsgDepositToVault,
-	) error
-
 	// Orders.
 	GetVaultClobOrders(
 		ctx sdk.Context,
