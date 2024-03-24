@@ -38,10 +38,6 @@ func CmdCreateTransfer() *cobra.Command {
 				return err
 			}
 
-			if err != nil {
-				return err
-			}
-
 			clientCtx, err := client.GetClientTxContext(cmd)
 			if err != nil {
 				return err
