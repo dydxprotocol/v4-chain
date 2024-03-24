@@ -1,0 +1,108 @@
+name: e2e test Build, Test & Coverage
+on:  # yamllint disable-line rule:truthy
+  pull_request:
+    paths:
+      - '**'
+  push:
+    branches:
+      - main
+      - 'wl/**'  # e.g. wl/test
+    paths:
+      - '**'
+
+# Ensure only a single instance of this workflow is running, and cancel any that are in-progress
+# before this workflow instance starts
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./e2e-testing
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Install Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+
+    - name: Install pnpm
+      run:
+        npm install -g pnpm@6.34.0
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and install Indexer
+      run: |
+        pnpm install --loglevel warn --frozen-lockfile
+        pnpm run build:all
+      working-directory: ./indexer
+
+    - name: Build
+      run: make e2etest-build-image
+      working-directory: ./protocol
+
+  build_and_test:
+    needs: setup
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./e2e-testing
+
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: dydxserver123
+          POSTGRES_USER: dydx_dev
+          DATADOG_POSTGRES_PASSWORD: dydxserver123
+        ports:
+          - 5435:5432
+      redis:
+        image: redis:5.0.6-alpine
+        ports: 
+          - 6382:6379
+      kafka:
+        image: blacktop/kafka:2.6
+        env:
+          KAFKA_ADVERTISED_HOST_NAME: kafka
+          KAFKA_CREATE_TOPICS:
+            "to-ender:1:1,\
+            to-vulcan:1:1,\
+            to-websockets-orderbooks:1:1,\
+            to-websockets-subaccounts:1:1,\
+            to-websockets-trades:1:1,\
+            to-websockets-markets:1:1,\
+            to-websockets-candles:1:1"
+          KAFKA_LISTENERS: INTERNAL://:9092,EXTERNAL_SAME_HOST://:29092
+          KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL_SAME_HOST://localhost:29092
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL_SAME_HOST:PLAINTEXT
+          KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+        ports:
+          - 9092:9092
+
+    steps:
+    - name: Setup database
+      id: setup-database
+      env:
+        DB_PORT: 5435
+        NODE_ENV: development
+      run: cd packages/postgres && pnpm run migrate
+      working-directory: ./indexer
+
+    - name: Docker Compose
+      run: docker compose -f docker-compose-e2e-test-remote.yml up -d
+      working-directory: ./e2e-testing
+
+    - name: Build and Test
+      run: |
+        pnpm build
+        pnpm test
