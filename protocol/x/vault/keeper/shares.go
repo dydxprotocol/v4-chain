@@ -72,7 +72,7 @@ func (k Keeper) MintShares(
 	}
 	totalShares, exists := k.GetTotalShares(ctx, vaultId)
 	existingTotalShares := totalShares.NumShares.BigInt()
-	sharesToMint := big.NewInt(0)
+	var sharesToMint *big.Int
 	if !exists || existingTotalShares.Cmp(big.NewInt(0)) < 1 {
 		// Mint `quoteQuantums` number of shares.
 		sharesToMint = quantumsToDeposit
