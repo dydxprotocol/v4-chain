@@ -240,7 +240,7 @@ func (k Keeper) PruneOrdersForBlockHeight(ctx sdk.Context, blockHeight uint32) (
 func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
 	store := prefix.NewStore(
 		ctx.KVStore(k.storeKey),
-		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix),
+		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix), // nolint:staticcheck
 	)
 	it := store.Iterator(nil, nil)
 	defer it.Close()

@@ -110,6 +110,7 @@ func CreateUpgradeHandler(
 
 		// Migrate pruneable orders to new format
 		clobKeeper.MigratePruneableOrders(sdkCtx)
+		sdkCtx.Logger().Info("Successfully migrated pruneable orders")
 
 		// Set all perpetuals to cross market type
 		perpetualsUpgrade(sdkCtx, perpetualsKeeper)
