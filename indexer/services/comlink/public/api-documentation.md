@@ -2040,7 +2040,7 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?add
 
 |Status|Meaning|Description|Schema|
 |---|---|---|---|
-|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[TransferResponse](#schematransferresponse)|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ParentSubaccountTransferResponse](#schemaparentsubaccounttransferresponse)|
 
 <aside class="success">
 This operation does not require authentication
@@ -3812,6 +3812,44 @@ or
 <a id="schema_TransferResponse"></a>
 <a id="tocStransferresponse"></a>
 <a id="tocstransferresponse"></a>
+
+```json
+{
+  "transfers": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+
+## ParentSubaccountTransferResponse
+
+<a id="schemaparentsubaccounttransferresponse"></a>
+<a id="schema_ParentSubaccountTransferResponse"></a>
+<a id="tocSparentsubaccounttransferresponse"></a>
+<a id="tocsparentsubaccounttransferresponse"></a>
 
 ```json
 {

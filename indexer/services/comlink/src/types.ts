@@ -157,6 +157,28 @@ export interface TransferResponseObject {
   transactionHash: string,
 }
 
+export interface ParentSubaccountTransferResponse {
+  transfers: TransferResponseObject[],
+}
+
+export interface ParentSubaccountTransferResponseObject {
+  id: string,
+  sender: {
+    address: string,
+    parentSubaccountNumber?: number,
+  },
+  recipient: {
+    address: string,
+    parentSubaccountNumber?: number,
+  },
+  size: string,
+  createdAt: string,
+  createdAtHeight: string,
+  symbol: string,
+  type: TransferType,
+  transactionHash: string,
+}
+
 /* ------- PNL TICKS TYPES ------- */
 
 export interface HistoricalPnlResponse {

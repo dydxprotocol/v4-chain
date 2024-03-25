@@ -7,7 +7,7 @@ import {
   TransferType,
   WalletTable,
 } from '@dydxprotocol-indexer/postgres';
-import { RequestMethod, TransferResponseObject } from '../../../../src/types';
+import { ParentSubaccountTransferResponseObject, RequestMethod, TransferResponseObject } from '../../../../src/types';
 import request from 'supertest';
 import { sendRequest } from '../../../helpers/helpers';
 import {
@@ -324,15 +324,15 @@ describe('transfers-controller#V4', () => {
             `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
       });
 
-      const expectedTransferResponse: TransferResponseObject = {
+      const expectedTransferResponse: ParentSubaccountTransferResponseObject = {
         id: testConstants.defaultTransferId,
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
         },
         size: testConstants.defaultTransfer.size,
         createdAt: testConstants.defaultTransfer.createdAt,
@@ -342,7 +342,7 @@ describe('transfers-controller#V4', () => {
         transactionHash: testConstants.defaultTransfer.transactionHash,
       };
 
-      const expectedTransfer2Response: TransferResponseObject = {
+      const expectedTransfer2Response: ParentSubaccountTransferResponseObject = {
         id: TransferTable.uuid(
           transfer2.eventId,
           transfer2.assetId,
@@ -353,11 +353,11 @@ describe('transfers-controller#V4', () => {
         ),
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         },
         size: transfer2.size,
         createdAt: transfer2.createdAt,
@@ -367,14 +367,14 @@ describe('transfers-controller#V4', () => {
         transactionHash: transfer2.transactionHash,
       };
 
-      const expectedDepositResponse: TransferResponseObject = {
+      const expectedDepositResponse: ParentSubaccountTransferResponseObject = {
         id: testConstants.defaultDepositId,
         sender: {
           address: testConstants.defaultWalletAddress,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         },
         size: testConstants.defaultDeposit.size,
         createdAt: testConstants.defaultDeposit.createdAt,
@@ -384,11 +384,11 @@ describe('transfers-controller#V4', () => {
         transactionHash: testConstants.defaultDeposit.transactionHash,
       };
 
-      const expectedWithdrawalResponse: TransferResponseObject = {
+      const expectedWithdrawalResponse: ParentSubaccountTransferResponseObject = {
         id: testConstants.defaultWithdrawalId,
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         },
         recipient: {
           address: testConstants.defaultWalletAddress,
@@ -457,15 +457,15 @@ describe('transfers-controller#V4', () => {
             `&parentSubaccountNumber=${testConstants.defaultSubaccount.subaccountNumber}`,
       });
 
-      const expectedTransferResponse: TransferResponseObject = {
+      const expectedTransferResponse: ParentSubaccountTransferResponseObject = {
         id: testConstants.defaultTransferId,
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
         },
         size: testConstants.defaultTransfer.size,
         createdAt: testConstants.defaultTransfer.createdAt,
@@ -545,7 +545,7 @@ describe('transfers-controller#V4', () => {
             `&parentSubaccountNumber=${parentSubaccountNumber}`,
       });
 
-      const expectedTransferResponse1: TransferResponseObject = {
+      const expectedTransferResponse1: ParentSubaccountTransferResponseObject = {
         id: TransferTable.uuid(
           transferFromNonParent.eventId,
           transferFromNonParent.assetId,
@@ -556,11 +556,11 @@ describe('transfers-controller#V4', () => {
         ),
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: 0,
+          parentSubaccountNumber: 0,
         },
         size: transferFromNonParent.size,
         createdAt: transferFromNonParent.createdAt,
@@ -569,7 +569,7 @@ describe('transfers-controller#V4', () => {
         type: TransferType.TRANSFER_IN,
         transactionHash: transferFromNonParent.transactionHash,
       };
-      const expectedTransferResponse2: TransferResponseObject = {
+      const expectedTransferResponse2: ParentSubaccountTransferResponseObject = {
         id: TransferTable.uuid(
           transferToNonParent.eventId,
           transferToNonParent.assetId,
@@ -580,11 +580,11 @@ describe('transfers-controller#V4', () => {
         ),
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: 0,
+          parentSubaccountNumber: 0,
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
+          parentSubaccountNumber: testConstants.defaultSubaccount2.subaccountNumber,
         },
         size: transferToNonParent.size,
         createdAt: transferToNonParent.createdAt,
@@ -593,7 +593,7 @@ describe('transfers-controller#V4', () => {
         type: TransferType.TRANSFER_OUT,
         transactionHash: transferToNonParent.transactionHash,
       };
-      const expectedDepositResponse: TransferResponseObject = {
+      const expectedDepositResponse: ParentSubaccountTransferResponseObject = {
         id: TransferTable.uuid(
           depositToChildSA.eventId,
           depositToChildSA.assetId,
@@ -607,7 +607,7 @@ describe('transfers-controller#V4', () => {
         },
         recipient: {
           address: testConstants.defaultAddress,
-          subaccountNumber: 0,
+          parentSubaccountNumber: 0,
         },
         size: depositToChildSA.size,
         createdAt: depositToChildSA.createdAt,
@@ -616,7 +616,7 @@ describe('transfers-controller#V4', () => {
         type: TransferType.DEPOSIT,
         transactionHash: depositToChildSA.transactionHash,
       };
-      const expectedWithdrawalResponse: TransferResponseObject = {
+      const expectedWithdrawalResponse: ParentSubaccountTransferResponseObject = {
         id: TransferTable.uuid(
           withdrawFromChildSA.eventId,
           withdrawFromChildSA.assetId,
@@ -627,7 +627,7 @@ describe('transfers-controller#V4', () => {
         ),
         sender: {
           address: testConstants.defaultAddress,
-          subaccountNumber: 0,
+          parentSubaccountNumber: 0,
         },
         recipient: {
           address: testConstants.defaultWalletAddress,

@@ -1138,6 +1138,21 @@
         ],
         "type": "object",
         "additionalProperties": false
+      },
+      "ParentSubaccountTransferResponse": {
+        "properties": {
+          "transfers": {
+            "items": {
+              "$ref": "#/components/schemas/TransferResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "transfers"
+        ],
+        "type": "object",
+        "additionalProperties": false
       }
     },
     "securitySchemes": {}
@@ -2241,7 +2256,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TransferResponse"
+                  "$ref": "#/components/schemas/ParentSubaccountTransferResponse"
                 }
               }
             }

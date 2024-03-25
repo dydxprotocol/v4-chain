@@ -42,10 +42,13 @@ import {
   transferToResponseObject,
 } from '../../../request-helpers/request-transformer';
 import {
-  AssetById, ParentSubaccountTransferRequest,
+  AssetById,
   SubaccountById,
   TransferRequest,
-  TransferResponse, TransferResponseObject,
+  TransferResponse,
+  ParentSubaccountTransferRequest,
+  ParentSubaccountTransferResponse,
+  ParentSubaccountTransferResponseObject,
 } from '../../../types';
 
 const router: express.Router = express.Router();
@@ -143,7 +146,7 @@ class TransfersController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
-  ): Promise<TransferResponse> {
+  ): Promise<ParentSubaccountTransferResponse> {
 
     // get all child subaccountIds for the parent subaccount number
     const subaccountIds: string[] = getChildSubaccountNums(parentSubaccountNumber).map(
@@ -217,7 +220,7 @@ class TransfersController extends Controller {
       AssetColumns.id,
     );
 
-    const transfersWithParentSubaccount: TransferResponseObject[] = transfers.map(
+    const transfersWithParentSubaccount: ParentSubaccountTransferResponseObject[] = transfers.map(
       (transfer: TransferFromDatabase) => {
         return transferToParentSubaccountResponseObject(
           transfer,
@@ -228,7 +231,7 @@ class TransfersController extends Controller {
 
     // Filter out transfers where the sender and recipient parent subaccount numbers are the same
     const transfersFiltered = transfersWithParentSubaccount.filter((transfer) => {
-      return transfer.sender.subaccountNumber !== transfer.recipient.subaccountNumber;
+      return transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
     });
 
     return { transfers: transfersFiltered };

@@ -45,7 +45,7 @@ import {
   MarketAndTypeByClobPairId,
   OrderbookResponseObject,
   OrderbookResponsePriceLevel,
-  OrderResponseObject,
+  OrderResponseObject, ParentSubaccountTransferResponseObject,
   PerpetualMarketResponseObject,
   PerpetualPositionResponseObject,
   PerpetualPositionsMap,
@@ -238,7 +238,7 @@ export function transferToParentSubaccountResponseObject(
   assetMap: AssetById,
   subaccountMap: SubaccountById,
   parentSubaccountNumber: number,
-): TransferResponseObject {
+): ParentSubaccountTransferResponseObject {
 
   const senderParentSubaccountNum = transfer.senderWalletAddress
     ? undefined
@@ -269,13 +269,13 @@ export function transferToParentSubaccountResponseObject(
     id: transfer.id,
     sender: {
       address: transfer.senderWalletAddress ?? subaccountMap[transfer.senderSubaccountId!].address,
-      subaccountNumber: senderParentSubaccountNum,
+      parentSubaccountNumber: senderParentSubaccountNum,
     },
     recipient: {
       address: transfer.recipientWalletAddress ?? subaccountMap[
         transfer.recipientSubaccountId!
       ].address,
-      subaccountNumber: recipientParentSubaccountNum,
+      parentSubaccountNumber: recipientParentSubaccountNum,
     },
     size: transfer.size,
     createdAt: transfer.createdAt,
