@@ -56,7 +56,6 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
-import { convertToRedisOrder } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
@@ -118,23 +117,23 @@ describe('order-place-handler', () => {
       quantums: Long.fromValue(500_000, true),
       subticks: Long.fromValue(1_000_000, true),
     };
-    const replacedOrder: RedisOrder = convertToRedisOrder(
+    const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderGoodTilBlockTime: RedisOrder = convertToRedisOrder(
+    const replacedOrderGoodTilBlockTime: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderGoodTilBlockTime,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderConditional: RedisOrder = convertToRedisOrder(
+    const replacedOrderConditional: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderConditional,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderFok: RedisOrder = convertToRedisOrder(
+    const replacedOrderFok: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderFok,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderIoc: RedisOrder = convertToRedisOrder(
+    const replacedOrderIoc: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderIoc,
       testConstants.defaultPerpetualMarket,
     );
@@ -279,7 +278,7 @@ describe('order-place-handler', () => {
       expectedOrderUuid: string,
       expectSubaccountMessageSent: boolean,
     ) => {
-      const expectedOrder: RedisOrder = convertToRedisOrder(
+      const expectedOrder: RedisOrder = redisPackage.convertToRedisOrder(
         orderToPlace,
         testConstants.defaultPerpetualMarket,
       );

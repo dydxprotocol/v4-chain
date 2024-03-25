@@ -14,6 +14,7 @@ import {
   placeOrder,
   PlaceOrderResult,
   StatefulOrderUpdatesCache,
+  convertToRedisOrder,
 } from '@dydxprotocol-indexer/redis';
 import {
   getOrderIdHash,
@@ -36,7 +37,6 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { convertToRedisOrder } from './helpers';
 
 /**
  * Handler for OrderPlace messages.
