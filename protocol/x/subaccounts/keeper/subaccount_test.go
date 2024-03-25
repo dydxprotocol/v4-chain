@@ -103,7 +103,8 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 		)
 
 		for _, gotUpdate := range subaccountUpdates {
-			if gotUpdate.SubaccountId.Owner == expectedSubaccountUpdateEvent.SubaccountId.Owner {
+			if gotUpdate.SubaccountId.Owner == expectedSubaccountUpdateEvent.SubaccountId.Owner &&
+				gotUpdate.SubaccountId.Number == expectedSubaccountUpdateEvent.SubaccountId.Number {
 				require.Equal(t,
 					expectedSubaccountUpdateEvent,
 					gotUpdate,
