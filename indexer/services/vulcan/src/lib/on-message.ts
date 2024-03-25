@@ -62,6 +62,18 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     },
   );
 
+  const originalMessageTimestamp = message.headers?.message_received_timestamp;
+  if (originalMessageTimestamp !== undefined) {
+    stats.timing(
+      `${config.SERVICE_NAME}.message_time_since_received`,
+      start - Number(message.headers?.message_received_timestamp),
+      STATS_NO_SAMPLING,
+      {
+        topic: KafkaTopics.TO_VULCAN,
+      },
+    );
+  }
+
   const messageValue: Buffer = message.value;
   const offset: string = message.offset;
   let update: OffChainUpdateV1;
@@ -86,7 +98,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     const handler: Handler = new (getHandler(update))!(
       getTransactionHashFromHeaders(message.headers),
     );
-    await handler.handleUpdate(update);
+    await handler.handleUpdate(update, message.headers ?? {});
 
     success = true;
   } catch (error) {
