@@ -137,7 +137,7 @@ func SetUpDefaultPerpOIsForTest(
 				k.ModifyOpenInterest(
 					ctx,
 					perp.Params.Id,
-					perpOI.BaseQuantumsDelta,
+					perpOI.BaseQuantums,
 				),
 			)
 		}
