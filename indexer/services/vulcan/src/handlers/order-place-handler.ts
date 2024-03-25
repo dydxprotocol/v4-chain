@@ -283,7 +283,7 @@ export class OrderPlaceHandler extends Handler {
   ): boolean {
     if (
       isLongTermOrder(redisOrder.order!.orderId!.orderFlags) &&
-      config.DONT_SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS
+      !config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS
     ) {
       return false;
     }

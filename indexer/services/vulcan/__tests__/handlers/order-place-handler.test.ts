@@ -85,7 +85,7 @@ describe('order-place-handler', () => {
   });
 
   afterEach(() => {
-    config.DONT_SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = false;
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = true;
   });
 
   describe('handle', () => {
@@ -864,10 +864,10 @@ describe('order-place-handler', () => {
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
       placedOrder: OrderFromDatabase,
-      dontSendSubaccountWebsocketMessage: boolean,
+      sendSubaccountWebsocketMessage: boolean,
     ) => {
       // eslint-disable-next-line max-len
-      config.DONT_SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = dontSendSubaccountWebsocketMessage;
+      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = sendSubaccountWebsocketMessage;
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
@@ -910,7 +910,7 @@ describe('order-place-handler', () => {
         // Subaccount messages should be sent for stateful order with OPEN status
         !(
           isLongTermOrder(expectedRedisOrder.order!.orderId!.orderFlags) &&
-          dontSendSubaccountWebsocketMessage),
+          !sendSubaccountWebsocketMessage),
       );
 
       expect(logger.error).not.toHaveBeenCalled();
