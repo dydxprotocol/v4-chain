@@ -12,21 +12,7 @@ import (
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	upgrade "cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 )
-
-const govModuleAddress = "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
-
-var nodeAddresses = []string{
-	constants.AliceAccAddress.String(),
-	constants.BobAccAddress.String(),
-	constants.CarlAccAddress.String(),
-	constants.DaveAccAddress.String(),
-}
 
 func TestStateUpgrade(t *testing.T) {
 	testnet, err := containertest.NewTestnetWithPreupgradeGenesis()
@@ -39,7 +25,7 @@ func TestStateUpgrade(t *testing.T) {
 
 	preUpgradeChecks(node, t)
 
-	err = upgradeTestnet(nodeAddress, t, node, v_5_0_0.UpgradeName)
+	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_5_0_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
@@ -85,48 +71,4 @@ func postUpgradecheckPerpetualMarketType(node *containertest.Node, t *testing.T)
 	for _, perpetual := range perpetualsList.Perpetual {
 		assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, perpetual.Params.MarketType)
 	}
-}
-
-func upgradeTestnet(nodeAddress string, t *testing.T, node *containertest.Node, upgradeToVersion string) error {
-	proposal, err := gov.NewMsgSubmitProposal(
-		[]sdk.Msg{
-			&upgrade.MsgSoftwareUpgrade{
-				Authority: govModuleAddress,
-				Plan: upgrade.Plan{
-					Name:   upgradeToVersion,
-					Height: 10,
-				},
-			},
-		},
-		testapp.TestDeposit,
-		nodeAddress,
-		testapp.TestMetadata,
-		testapp.TestTitle,
-		testapp.TestSummary,
-		false,
-	)
-	require.NoError(t, err)
-
-	require.NoError(t, containertest.BroadcastTx(
-		node,
-		proposal,
-		nodeAddress,
-	))
-	err = node.Wait(2)
-	require.NoError(t, err)
-
-	for _, address := range nodeAddresses {
-		require.NoError(t, containertest.BroadcastTx(
-			node,
-			&gov.MsgVote{
-				ProposalId: 1,
-				Voter:      address,
-				Option:     gov.VoteOption_VOTE_OPTION_YES,
-			},
-			address,
-		))
-	}
-
-	err = node.WaitUntilBlockHeight(12)
-	return err
 }
