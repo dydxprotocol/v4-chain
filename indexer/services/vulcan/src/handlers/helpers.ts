@@ -12,6 +12,7 @@ import {
   RedisOrder,
   RedisOrder_TickerType,
 } from '@dydxprotocol-indexer/v4-protos';
+import { IndexerOrder_Side, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 
 import { redisClient } from '../helpers/redis/redis-controller';
