@@ -1,8 +1,4 @@
-import {
-  OrderTable,
-  PerpetualMarketFromDatabase,
-  protocolTranslations,
-} from '@dydxprotocol-indexer/postgres';
+import { OrderTable, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
 import { subticksToPrice } from '@dydxprotocol-indexer/postgres/build/src/lib/protocol-translations';
 import { StateFilledQuantumsCache } from '@dydxprotocol-indexer/redis';
 import {
