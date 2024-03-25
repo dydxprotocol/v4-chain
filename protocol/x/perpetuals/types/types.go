@@ -118,6 +118,7 @@ type PerpetualsKeeper interface {
 	GetAllPerpetuals(
 		ctx sdk.Context,
 	) []Perpetual
+	GetAllLiquidityTiers(ctx sdk.Context) (list []LiquidityTier)
 }
 
 type OpenInterestDelta struct {
