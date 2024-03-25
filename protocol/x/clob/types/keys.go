@@ -48,8 +48,9 @@ const (
 	// OrderAmountFilledKeyPrefix is the prefix to retrieve the fill amount for an order.
 	OrderAmountFilledKeyPrefix = "Fill:"
 
-	// LegacyBlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of potentially prunable
-	// short term orders by block height. Should not be used after migrating to key-per-order format.
+	// Deprecated: LegacyBlockHeightToPotentiallyPrunableOrdersPrefix is the prefix to retrieve a list of
+	// potentially prunable short term orders by block height. Should not be used after migrating to
+	// key-per-order format.
 	LegacyBlockHeightToPotentiallyPrunableOrdersPrefix = "ExpHt:"
 
 	// StatefulOrdersTimeSlicePrefix is the key to retrieve a unique list of the stateful orders that

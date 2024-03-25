@@ -128,6 +128,8 @@ func (k Keeper) GetOrderFillAmount(
 	return true, satypes.BaseQuantums(orderFillState.FillAmount), orderFillState.PrunableBlockHeight
 }
 
+// GetPruneableOrdersStore gets a prefix store for pruneable orders at a given height.
+// The full format for these keys is <PrunableOrdersKeyPrefix><height>:<order_id>.
 func (k Keeper) GetPruneableOrdersStore(ctx sdk.Context, height uint32) prefix.Store {
 	var buf bytes.Buffer
 	buf.Write([]byte(types.PrunableOrdersKeyPrefix))
@@ -147,8 +149,8 @@ func (k Keeper) AddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, p
 	}
 }
 
-// LegacyAddOrdersForPruning is the old key-per-height way of storing orders to prune.
-// DO NOT USE. Retained for testing purposes.
+// Deprecated: Do not use. Retained for testing purposes.
+// LegacyAddOrdersForPruning is the old key-per-height format of storing orders to prune.
 func (k Keeper) LegacyAddOrdersForPruning(ctx sdk.Context, orderIds []types.OrderId, prunableBlockHeight uint32) {
 	// Retrieve an instance of the store.
 	store := prefix.NewStore(
