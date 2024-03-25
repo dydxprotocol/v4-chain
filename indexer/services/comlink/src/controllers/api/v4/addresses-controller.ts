@@ -48,7 +48,8 @@ import {
   getTotalUnsettledFunding,
   handleControllerError,
   getPerpetualPositionsWithUpdatedFunding,
-  initializePerpetualPositionsWithFunding, getChildSubaccountNums,
+  initializePerpetualPositionsWithFunding,
+  getChildSubaccountIds,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import { CheckAddressSchema, CheckParentSubaccountSchema, CheckSubaccountSchema } from '../../../lib/validation/schemas';
@@ -248,9 +249,7 @@ class AddressesController extends Controller {
       @Path() parentSubaccountNumber: number,
   ): Promise<ParentSubaccountResponse> {
 
-    const childSubaccountIds: string[] = getChildSubaccountNums(parentSubaccountNumber).map(
-      (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
-    );
+    const childSubaccountIds: string[] = getChildSubaccountIds(address, parentSubaccountNumber);
 
     // TODO(IND-189): Use a transaction across all the DB queries
     const [subaccounts, latestBlock]: [
@@ -276,13 +275,21 @@ class AddressesController extends Controller {
         latestBlock.blockHeight,
       );
 
+    const [assets, markets]: [AssetFromDatabase[], MarketFromDatabase[]] = await Promise.all([
+      AssetTable.findAll(
+        {},
+        [],
+      ),
+      MarketTable.findAll(
+        {},
+        [],
+      ),
+    ]);
     const subaccountResponses: SubaccountResponseObject[] = await Promise.all(subaccounts.map(
       async (subaccount: SubaccountFromDatabase): Promise<SubaccountResponseObject> => {
         const [
           perpetualPositions,
           assetPositions,
-          assets,
-          markets,
           lastUpdatedFundingIndexMap,
         ] = await Promise.all([
           getOpenPerpetualPositionsForSubaccount(
@@ -290,14 +297,6 @@ class AddressesController extends Controller {
           ),
           getAssetPositionsForSubaccount(
             subaccount.id,
-          ),
-          AssetTable.findAll(
-            {},
-            [],
-          ),
-          MarketTable.findAll(
-            {},
-            [],
           ),
           FundingIndexUpdatesTable.findFundingIndexMap(
             subaccount.updatedAtHeight,
@@ -438,7 +437,7 @@ router.get(
       parentSubaccountNumber: number,
     } = matchedData(req) as ParentSubaccountRequest;
 
-    // Convert parentSubaccount to a number since
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
     const parentSubaccountNum = +parentSubaccountNumber;
 
     try {

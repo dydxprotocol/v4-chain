@@ -18,6 +18,7 @@ import {
   PerpetualPositionStatus,
   PositionSide,
   SubaccountFromDatabase,
+  SubaccountTable,
   TendermintEventFromDatabase,
   TendermintEventTable,
   USDC_SYMBOL,
@@ -511,6 +512,18 @@ export function getChildSubaccountNums(parentSubaccountNum: number): number[] {
   return Array.from({ length: CHILD_SUBACCOUNT_MULTIPLIER },
     // eslint-disable-next-line @typescript-eslint/no-shadow
     (_, i) => MAX_PARENT_SUBACCOUNTS * i + parentSubaccountNum);
+}
+
+/**
+ * Gets the subaccount uuids of all the child subaccounts given a parent subaccount number
+ * @param address
+ * @param parentSubaccountNum
+ * @returns
+ */
+export function getChildSubaccountIds(address: string, parentSubaccountNum: number): string[] {
+  return getChildSubaccountNums(parentSubaccountNum).map(
+    (subaccountNumber: number): string => SubaccountTable.uuid(address, subaccountNumber),
+  );
 }
 
 /**
