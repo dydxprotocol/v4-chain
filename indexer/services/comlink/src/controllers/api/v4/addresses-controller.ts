@@ -351,6 +351,7 @@ router.get(
   complianceAndGeoCheck,
   ExportResponseCodeStats({ controllerName }),
   async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
     const {
       address,
     }: {
@@ -371,6 +372,11 @@ router.get(
         error,
         req,
         res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_addresses.timing`,
+        Date.now() - start,
       );
     }
   },
@@ -413,7 +419,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_addresses.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_subaccount.timing`,
         Date.now() - start,
       );
     }
@@ -460,7 +466,7 @@ router.get(
       );
     } finally {
       stats.timing(
-        `${config.SERVICE_NAME}.${controllerName}.get_addresses.timing`,
+        `${config.SERVICE_NAME}.${controllerName}.get_parentSubaccount.timing`,
         Date.now() - start,
       );
     }
