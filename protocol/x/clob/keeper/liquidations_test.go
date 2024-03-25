@@ -52,6 +52,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 		// Expectations.
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
+		// Expected remaining OI after test.
+		// The test initializes each perp with default open interest of 1 full coin.
+		expectedOpenInterests map[uint32]*big.Int
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -67,6 +70,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
 			expectedMatchedOrders: []*types.ClobMatch{},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000), // unchanged
+			},
 		},
 		`Can place a liquidation that matches maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -106,6 +112,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
 			},
 		},
 		`Can place a liquidation that matches maker orders and removes undercollateralized ones`: {
@@ -149,6 +158,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates and empty fee collector`: {
 			perpetuals: []perptypes.Perpetual{
@@ -189,6 +201,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates`: {
 			perpetuals: []perptypes.Perpetual{
@@ -227,6 +242,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
 			},
 		},
 	}
@@ -341,6 +359,19 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			// Run the test.
 			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 			require.NoError(t, err)
+
+			for _, perp := range tc.perpetuals {
+				if expectedOI, exists := tc.expectedOpenInterests[perp.Params.Id]; exists {
+					gotPerp, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, perp.Params.Id)
+					require.NoError(t, err)
+					require.Zero(t,
+						expectedOI.Cmp(gotPerp.OpenInterest.BigInt()),
+						"expected open interest %s, got %s",
+						expectedOI.String(),
+						gotPerp.OpenInterest.String(),
+					)
+				}
+			}
 
 			// Verify test expectations.
 			// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
