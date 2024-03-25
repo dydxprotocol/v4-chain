@@ -1,6 +1,7 @@
 import { generateSubaccountMessageContents } from '@dydxprotocol-indexer/kafka';
 import {
-  OrderFromDatabase, OrderModel,
+  OrderFromDatabase,
+  OrderModel,
   OrderTable,
   PerpetualMarketFromDatabase,
   perpetualMarketRefresher,

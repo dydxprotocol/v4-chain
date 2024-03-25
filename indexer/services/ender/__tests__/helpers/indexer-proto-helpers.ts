@@ -29,7 +29,8 @@ import {
   PerpetualMarketFromDatabase,
   PerpetualMarketTable,
   IsoString,
-  fillTypeToTradeType, OrderSubaccountMessageContents,
+  fillTypeToTradeType,
+  OrderSubaccountMessageContents,
 } from '@dydxprotocol-indexer/postgres';
 import { getOrderIdHash, ORDER_FLAG_CONDITIONAL } from '@dydxprotocol-indexer/v4-proto-parser';
 import {
