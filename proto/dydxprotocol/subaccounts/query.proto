@@ -56,8 +56,11 @@ message QuerySubaccountAllResponse {
 }
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
-// fetching information about whether withdrawals and transfers are blocked.
-message QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+// fetching information about whether withdrawals and transfers are blocked for
+// a collateral pool associated with the passed in perpetual id.
+message QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  uint32 perpetual_id = 1;
+}
 
 // QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
 // fetching information about whether withdrawals and transfers are blocked.

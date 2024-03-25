@@ -48,16 +48,22 @@ export interface QuerySubaccountAllResponseSDKType {
 }
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a collateral pool associated with the passed in perpetual id.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  perpetualId: number;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a request type for
- * fetching information about whether withdrawals and transfers are blocked.
+ * fetching information about whether withdrawals and transfers are blocked for
+ * a collateral pool associated with the passed in perpetual id.
  */
 
-export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {}
+export interface QueryGetWithdrawalAndTransfersBlockedInfoRequestSDKType {
+  perpetual_id: number;
+}
 /**
  * QueryGetWithdrawalAndTransfersBlockedInfoRequest is a response type for
  * fetching information about whether withdrawals and transfers are blocked.
@@ -280,11 +286,17 @@ export const QuerySubaccountAllResponse = {
 };
 
 function createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest(): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
-  return {};
+  return {
+    perpetualId: 0
+  };
 }
 
 export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
-  encode(_: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+  encode(message: QueryGetWithdrawalAndTransfersBlockedInfoRequest, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.perpetualId !== 0) {
+      writer.uint32(8).uint32(message.perpetualId);
+    }
+
     return writer;
   },
 
@@ -297,6 +309,10 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
+        case 1:
+          message.perpetualId = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -306,8 +322,9 @@ export const QueryGetWithdrawalAndTransfersBlockedInfoRequest = {
     return message;
   },
 
-  fromPartial(_: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
+  fromPartial(object: DeepPartial<QueryGetWithdrawalAndTransfersBlockedInfoRequest>): QueryGetWithdrawalAndTransfersBlockedInfoRequest {
     const message = createBaseQueryGetWithdrawalAndTransfersBlockedInfoRequest();
+    message.perpetualId = object.perpetualId ?? 0;
     return message;
   }
 

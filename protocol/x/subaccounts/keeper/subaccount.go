@@ -62,8 +62,15 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	sdk.AccAddress,
 	error,
 ) {
-	// Use the default collateral pool if the subaccount has no perpetual positions.
 	subaccount := k.GetSubaccount(ctx, subaccountId)
+	return k.getCollateralPoolForSubaccount(ctx, subaccount)
+}
+
+func (k Keeper) getCollateralPoolForSubaccount(ctx sdk.Context, subaccount types.Subaccount) (
+	sdk.AccAddress,
+	error,
+) {
+	// Use the default collateral pool if the subaccount has no perpetual positions.
 	if len(subaccount.PerpetualPositions) == 0 {
 		return types.ModuleAddress, nil
 	}
@@ -573,10 +580,16 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
-	// - There was a negative TNC subaccount seen.
+	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.getLastBlockNegativeSubaccountSeen(
+			ctx,
+			settledUpdates,
+		)
+		if err != nil {
+			return false, nil, err
+		}
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
@@ -629,16 +642,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 	}
 
-	var perpOpenInterestDelta *perptypes.OpenInterestDelta
-	// If update type is `Match`, calculate the open interest delta for the updated perpetual.
-	// Note: this assumes that `Match` can only happen for perpetuals.
-	if updateType == types.Match {
-		updatedPerpId, deltaOpenInterest := GetDeltaOpenInterestFromPerpMatchUpdates(settledUpdates)
-		perpOpenInterestDelta = &perptypes.OpenInterestDelta{
-			PerpetualId:       updatedPerpId,
-			BaseQuantumsDelta: deltaOpenInterest,
-		}
-	}
+	// Get delta open interest from the updates.
+	// `perpOpenInterestDelta` is nil if the update type is not `Match` or if the updates
+	// do not result in OI changes.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
 
 	bigCurNetCollateral := make(map[string]*big.Int)
 	bigCurInitialMargin := make(map[string]*big.Int)

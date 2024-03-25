@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	btkeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
@@ -19,7 +20,7 @@ import (
 func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 	for testName, tc := range map[string]struct {
 		// Setup.
-		setup func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper)
+		setup func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error
 
 		// Parameters.
 		request *types.QueryGetWithdrawalAndTransfersBlockedInfoRequest
@@ -29,15 +30,21 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		err      error
 	}{
 		"Nil request returns an error": {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {},
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				return nil
+			},
 
 			err: status.Error(codes.InvalidArgument, "invalid request"),
 		},
 		`No negative TNC subaccount or chain outage in state returns withdrawals and transfers unblocked
             at block 0`: {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {},
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				return nil
+			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: uint32(constants.BtcUsd_NoMarginRequirement.Params.Id),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock:        0,
@@ -47,11 +54,17 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 		`Negative TNC subaccount seen in state returns withdrawals and transfers unblocked
             after the delay`: {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 7)
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				return sk.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.BtcUsd_NoMarginRequirement.Params.Id,
+					7,
+				)
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: uint32(constants.BtcUsd_NoMarginRequirement.Params.Id),
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 7,
@@ -60,8 +73,29 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
 			},
 		},
+		`Negative TNC subaccount seen in state returns withdrawals and transfers unblocked
+            after the delay (for isolated perpetual)`: {
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				return sk.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.IsoUsd_IsolatedMarket.Params.Id,
+					5,
+				)
+			},
+
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: uint32(constants.IsoUsd_IsolatedMarket.Params.Id),
+			},
+
+			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
+				NegativeTncSubaccountSeenAtBlock: 5,
+				ChainOutageSeenAtBlock:           0,
+				WithdrawalsAndTransfersUnblockedAtBlock: 5 +
+					types.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS,
+			},
+		},
 		`Chain outage seen in state returns withdrawals and transfers unblocked after the delay`: {
-			setup: func(ctx sdktypes.Context, k sakeeper.Keeper, bk btkeeper.Keeper) {
+			setup: func(ctx sdktypes.Context, k sakeeper.Keeper, bk btkeeper.Keeper) error {
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -82,9 +116,12 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 							},
 						},
 					})
+				return nil
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: constants.BtcUsd_NoMarginRequirement.Params.Id,
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 0,
@@ -95,8 +132,15 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (negative TNC subaccount block greater)`: {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 27)
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				err := sk.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.BtcUsd_NoMarginRequirement.Params.Id,
+					27,
+				)
+				if err != nil {
+					return nil
+				}
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -117,9 +161,12 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 							},
 						},
 					})
+				return nil
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: constants.BtcUsd_NoMarginRequirement.Params.Id,
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 27,
@@ -130,8 +177,15 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (chain outage block greater)`: {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 37)
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				err := sk.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.BtcUsd_NoMarginRequirement.Params.Id,
+					37,
+				)
+				if err != nil {
+					return err
+				}
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -152,9 +206,12 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 							},
 						},
 					})
+				return nil
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: constants.BtcUsd_NoMarginRequirement.Params.Id,
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 37,
@@ -165,8 +222,15 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 		`Negative TNC subaccount and chain outage seen in state returns withdrawals and transfers
 			unblocked after the max block number + delay (both blocks equal)`: {
-			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) {
-				sk.SetNegativeTncSubaccountSeenAtBlock(ctx, 3)
+			setup: func(ctx sdktypes.Context, sk sakeeper.Keeper, bk btkeeper.Keeper) error {
+				err := sk.SetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					constants.BtcUsd_NoMarginRequirement.Params.Id,
+					3,
+				)
+				if err != nil {
+					return err
+				}
 				bk.SetAllDowntimeInfo(
 					ctx,
 					&blocktimetypes.AllDowntimeInfo{
@@ -187,9 +251,12 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 							},
 						},
 					})
+				return nil
 			},
 
-			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{},
+			request: &types.QueryGetWithdrawalAndTransfersBlockedInfoRequest{
+				PerpetualId: constants.BtcUsd_NoMarginRequirement.Params.Id,
+			},
 
 			response: &types.QueryGetWithdrawalAndTransfersBlockedInfoResponse{
 				NegativeTncSubaccountSeenAtBlock: 3,
@@ -200,8 +267,12 @@ func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {
 		},
 	} {
 		t.Run(testName, func(t *testing.T) {
-			ctx, keeper, _, _, _, _, _, blocktimeKeeper, _ := keepertest.SubaccountsKeepers(t, true)
-			tc.setup(ctx, *keeper, *blocktimeKeeper)
+			ctx, keeper, pricesKeeper, perpetualsKeeper, _, _, _, blocktimeKeeper, _ := keepertest.SubaccountsKeepers(t, true)
+			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
+			keepertest.CreateTestLiquidityTiers(t, ctx, perpetualsKeeper)
+			keepertest.CreateTestPerpetuals(t, ctx, perpetualsKeeper)
+			err := tc.setup(ctx, *keeper, *blocktimeKeeper)
+			require.NoError(t, err)
 			response, err := keeper.GetWithdrawalAndTransfersBlockedInfo(ctx, tc.request)
 			if tc.err != nil {
 				require.ErrorIs(t, err, tc.err)

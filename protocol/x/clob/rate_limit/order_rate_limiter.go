@@ -115,10 +115,10 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitPlaceOrder(ctx sdk.Context, ms
 	}
 
 	if err != nil {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.RateLimit, metrics.PlaceOrder, metrics.Count},
+		metrics.IncrCounterWithLabels(
+			metrics.ClobRateLimitPlaceOrderCount,
 			1,
-			msg.Order.GetOrderLabels(),
+			msg.Order.GetOrderLabels()...,
 		)
 		r.rateLimitedAccounts[msg.Order.OrderId.SubaccountId.Owner] = true
 	}
@@ -138,10 +138,10 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitCancelOrder(
 		)
 	}
 	if err != nil {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.RateLimit, metrics.CancelOrder, metrics.Count},
+		metrics.IncrCounterWithLabels(
+			metrics.ClobRateLimitCancelOrderCount,
 			1,
-			msg.OrderId.GetOrderIdLabels(),
+			msg.OrderId.GetOrderIdLabels()...,
 		)
 		r.rateLimitedAccounts[msg.OrderId.SubaccountId.Owner] = true
 	}
@@ -162,10 +162,9 @@ func (r *placeAndCancelOrderRateLimiter) RateLimitBatchCancelOrder(
 		BATCH_CANCEL_RATE_LIMIT_WEIGHT,
 	)
 	if err != nil {
-		telemetry.IncrCounterWithLabels(
-			[]string{types.ModuleName, metrics.RateLimit, metrics.PlaceOrder, metrics.Count},
+		metrics.IncrCounterWithLabels(
+			metrics.ClobRateLimitBatchCancelCount,
 			1,
-			[]metrics.Label{},
 		)
 		r.rateLimitedAccounts[msg.SubaccountId.Owner] = true
 	}
