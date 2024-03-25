@@ -18,8 +18,8 @@ import {
 } from '@dydxprotocol-indexer/redis';
 import {
   getOrderIdHash,
-  isLongTermOrder,
   isStatefulOrder,
+  isLongTermOrder,
   ORDER_FLAG_SHORT_TERM,
   requiresImmediateExecution,
 } from '@dydxprotocol-indexer/v4-proto-parser';

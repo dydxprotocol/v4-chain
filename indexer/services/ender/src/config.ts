@@ -26,6 +26,9 @@ export const configSchema = {
   IGNORE_NONEXISTENT_PERPETUAL_MARKET: parseBoolean({
     default: false,
   }),
+  SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS: parseBoolean({
+    default: false,
+  }),
 };
 
 export default parseSchema(configSchema);
