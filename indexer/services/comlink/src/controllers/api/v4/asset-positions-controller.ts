@@ -199,20 +199,20 @@ class AssetPositionsController extends Controller {
 
     // For each subaccount, adjust the asset positions with the unsettled funding and return the
     // asset positions per subaccount
-    let assetPositionsResponse: AssetPositionResponseObject[] = [];
-    for (const subaccount of subaccounts) {
-      const adjustedAssetPositionsMapForSubaccount:
-      AssetPositionsMap = await adjustAssetPositionsWithFunding(
+    const assetPositionsPromises = subaccounts.map(async (subaccount) => {
+      const adjustedAssetPositionsMap: AssetPositionsMap = await adjustAssetPositionsWithFunding(
         assetPositionsBySubaccount[subaccount.id] || [],
         perpetualPositionsBySubaccount[subaccount.id] || [],
         idToAsset,
         subaccount,
         latestBlock,
       );
-      assetPositionsResponse = assetPositionsResponse.concat(
-        Object.values(adjustedAssetPositionsMapForSubaccount),
-      );
-    }
+      return Object.values(adjustedAssetPositionsMap);
+    });
+
+    const assetPositionsResponse: AssetPositionResponseObject[] = (
+      await Promise.all(assetPositionsPromises)
+    ).flat();
 
     return {
       positions: assetPositionsResponse,
@@ -220,8 +220,16 @@ class AssetPositionsController extends Controller {
   }
 }
 
-// Helper function to adjust the asset positions with the unsettled funding
-// per subaccount
+/**
+ * Helper function to adjust the asset positions with the unsettled funding
+ * per subaccount
+ * @param assetPositions pulled from DB
+ * @param perpetualPositions pulled from DB
+ * @param idToAsset mapping of assetId to asset
+ * @param subaccount subaccount for which the asset positions are being adjusted
+ * @param latestBlock
+ * @returns AssetPositionsMap
+ */
 async function adjustAssetPositionsWithFunding(
   assetPositions: AssetPositionFromDatabase[],
   perpetualPositions: PerpetualPositionFromDatabase[],
