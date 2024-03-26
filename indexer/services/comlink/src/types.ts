@@ -127,7 +127,7 @@ export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject 
 
 /* ------- FILL TYPES ------- */
 
-export interface FillResponse {
+export interface FillResponse extends PaginationResponse {
   fills: FillResponseObject[],
 }
 
@@ -191,7 +191,7 @@ export interface PnlTicksResponseObject {
 
 /* ------- TRADE TYPES ------- */
 
-export interface TradeResponse {
+export interface TradeResponse extends PaginationResponse {
   trades: TradeResponseObject[],
 }
 
