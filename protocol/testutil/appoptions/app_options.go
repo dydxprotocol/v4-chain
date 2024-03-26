@@ -49,6 +49,12 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 	// Disable the Price Daemon for all end-to-end and integration tests by default.
 	fao.Set(daemonflags.FlagPriceDaemonEnabled, false)
 
+	// Disable the Slinky Daemon for all end-to-end and integration tests by default.
+	fao.Set(daemonflags.FlagOracleEnabled, false)
+
+	// Disable Slinky Metrics for all end-to-end and integration tests by default.
+	fao.Set(daemonflags.FlagOracleMetricsEnabled, false)
+
 	// Disable the Bridge Daemon for all end-to-end and integration tests by default.
 	fao.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 

@@ -15,6 +15,7 @@ import { RequestMethod } from '../../../../src/types';
 import request from 'supertest';
 import { getFixedRepresentation, sendRequest } from '../../../helpers/helpers';
 import { stats } from '@dydxprotocol-indexer/base';
+import { defaultAddress } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 
 describe('addresses-controller#V4', () => {
   const latestHeight: string = '3';
@@ -293,6 +294,24 @@ describe('addresses-controller#V4', () => {
             openPerpetualPositions: {},
             assetPositions: {},
           },
+          {
+            address: testConstants.defaultAddress,
+            subaccountNumber: testConstants.isolatedSubaccount.subaccountNumber,
+            equity: getFixedRepresentation(0),
+            freeCollateral: getFixedRepresentation(0),
+            marginEnabled: true,
+            openPerpetualPositions: {},
+            assetPositions: {},
+          },
+          {
+            address: testConstants.defaultAddress,
+            subaccountNumber: testConstants.isolatedSubaccount2.subaccountNumber,
+            equity: getFixedRepresentation(0),
+            freeCollateral: getFixedRepresentation(0),
+            marginEnabled: true,
+            openPerpetualPositions: {},
+            assetPositions: {},
+          },
         ],
         totalTradingRewards: testConstants.defaultWallet.totalTradingRewards,
       });
@@ -361,4 +380,176 @@ describe('addresses-controller#V4', () => {
         });
     });
   });
+
+  describe('/addresses/:address/parentSubaccountNumber/:parentSubaccountNumber', () => {
+    afterEach(async () => {
+      await dbHelpers.clearData();
+    });
+
+    it('Get /:address/parentSubaccountNumber/ gets all subaccounts for the provided parent', async () => {
+      await PerpetualPositionTable.create(
+        testConstants.defaultPerpetualPosition,
+      );
+
+      await Promise.all([
+        AssetPositionTable.upsert(testConstants.defaultAssetPosition),
+        AssetPositionTable.upsert({
+          ...testConstants.defaultAssetPosition2,
+          subaccountId: testConstants.defaultSubaccountId,
+        }),
+        AssetPositionTable.upsert(testConstants.isolatedSubaccountAssetPosition),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          fundingIndex: initialFundingIndex,
+          effectiveAtHeight: testConstants.createdHeight,
+        }),
+        FundingIndexUpdatesTable.create({
+          ...testConstants.defaultFundingIndexUpdate,
+          eventId: testConstants.defaultTendermintEventId2,
+          effectiveAtHeight: latestHeight,
+        }),
+      ]);
+
+      const parentSubaccountNumber: number = 0;
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/addresses/${testConstants.defaultAddress}/parentSubaccountNumber/${parentSubaccountNumber}`,
+      });
+
+      expect(response.body).toEqual({
+        subaccount: {
+          address: testConstants.defaultAddress,
+          parentSubaccountNumber,
+          equity: getFixedRepresentation(164500),
+          freeCollateral: getFixedRepresentation(157000),
+          childSubaccounts: [
+            {
+              address: testConstants.defaultAddress,
+              subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+              equity: getFixedRepresentation(159500),
+              freeCollateral: getFixedRepresentation(152000),
+              marginEnabled: true,
+              openPerpetualPositions: {
+                [testConstants.defaultPerpetualMarket.ticker]: {
+                  market: testConstants.defaultPerpetualMarket.ticker,
+                  size: testConstants.defaultPerpetualPosition.size,
+                  side: testConstants.defaultPerpetualPosition.side,
+                  entryPrice: getFixedRepresentation(
+                    testConstants.defaultPerpetualPosition.entryPrice!,
+                  ),
+                  maxSize: testConstants.defaultPerpetualPosition.maxSize,
+                  // 200000 + 10*(10000-10050)=199500
+                  netFunding: getFixedRepresentation('199500'),
+                  // sumClose=0, so realized Pnl is the same as the net funding of the position.
+                  // Unsettled funding is funding payments that already "happened" but not reflected
+                  // in the subaccount's balance yet, so it's considered a part of realizedPnl.
+                  realizedPnl: getFixedRepresentation('199500'),
+                  // size * (index-entry) = 10*(15000-20000) = -50000
+                  unrealizedPnl: getFixedRepresentation(-50000),
+                  status: testConstants.defaultPerpetualPosition.status,
+                  sumOpen: testConstants.defaultPerpetualPosition.sumOpen,
+                  sumClose: testConstants.defaultPerpetualPosition.sumClose,
+                  createdAt: testConstants.defaultPerpetualPosition.createdAt,
+                  createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
+                  exitPrice: null,
+                  closedAt: null,
+                },
+              },
+              assetPositions: {
+                [testConstants.defaultAsset.symbol]: {
+                  symbol: testConstants.defaultAsset.symbol,
+                  size: '9500',
+                  side: PositionSide.LONG,
+                  assetId: testConstants.defaultAssetPosition.assetId,
+                  subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+                },
+                [testConstants.defaultAsset2.symbol]: {
+                  symbol: testConstants.defaultAsset2.symbol,
+                  size: testConstants.defaultAssetPosition2.size,
+                  side: PositionSide.SHORT,
+                  assetId: testConstants.defaultAssetPosition2.assetId,
+                  subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
+                },
+              },
+            },
+            {
+              address: testConstants.defaultAddress,
+              subaccountNumber: testConstants.isolatedSubaccount.subaccountNumber,
+              equity: getFixedRepresentation(5000),
+              freeCollateral: getFixedRepresentation(5000),
+              marginEnabled: true,
+              openPerpetualPositions: {},
+              assetPositions: {
+                [testConstants.defaultAsset.symbol]: {
+                  symbol: testConstants.defaultAsset.symbol,
+                  size: testConstants.isolatedSubaccountAssetPosition.size,
+                  side: PositionSide.LONG,
+                  assetId: testConstants.isolatedSubaccountAssetPosition.assetId,
+                  subaccountNumber: testConstants.isolatedSubaccount.subaccountNumber,
+                },
+              },
+            },
+            {
+              address: testConstants.defaultAddress,
+              subaccountNumber: testConstants.isolatedSubaccount2.subaccountNumber,
+              equity: getFixedRepresentation(0),
+              freeCollateral: getFixedRepresentation(0),
+              marginEnabled: true,
+              openPerpetualPositions: {},
+              assetPositions: {},
+            },
+          ],
+        },
+      });
+      expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.200', 1,
+        {
+          path: '/:address/parentSubaccountNumber/:parentSubaccountNumber',
+          method: 'GET',
+        });
+    });
+  });
+
+  it('Get /:address/parentSubaccountNumber/ with non-existent address returns 404', async () => {
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/addresses/${invalidAddress}/parentSubaccountNumber/` +
+          `${testConstants.defaultSubaccount.subaccountNumber}`,
+      expectedStatus: 404,
+    });
+
+    expect(response.body).toEqual({
+      errors: [
+        {
+          msg: `No subaccounts found for address ${invalidAddress} and ` +
+              `parentSubaccountNumber ${testConstants.defaultSubaccount.subaccountNumber}`,
+        },
+      ],
+    });
+    expect(stats.increment).toHaveBeenCalledWith('comlink.addresses-controller.response_status_code.404', 1,
+      {
+        path: '/:address/parentSubaccountNumber/:parentSubaccountNumber',
+        method: 'GET',
+      });
+  });
+
+  it('Get /:address/parentSubaccountNumber/ with invalid parentSubaccount number returns 400', async () => {
+    const parentSubaccountNumber: number = 128;
+    const response: request.Response = await sendRequest({
+      type: RequestMethod.GET,
+      path: `/v4/addresses/${defaultAddress}/parentSubaccountNumber/${parentSubaccountNumber}`,
+      expectedStatus: 400,
+    });
+
+    expect(response.body).toEqual({
+      errors: [
+        {
+          location: 'params',
+          msg: 'parentSubaccountNumber must be a non-negative integer less than 128',
+          param: 'parentSubaccountNumber',
+          value: '128',
+        },
+      ],
+    });
+  });
+
 });

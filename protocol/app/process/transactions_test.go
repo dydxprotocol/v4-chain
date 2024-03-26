@@ -108,7 +108,7 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
 			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, _ := keepertest.PricesKeepers(t)
 
 			// Run.
 			_, err := process.DecodeProcessProposalTxs(
@@ -188,7 +188,7 @@ func TestDecodeProcessProposalTxs_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, _ := keepertest.PricesKeepers(t)
 			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			// Run.
@@ -318,7 +318,7 @@ func TestProcessProposalTxs_Validate_Error(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)
@@ -425,7 +425,7 @@ func TestProcessProposalTxs_Validate_Valid(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup.
-			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, indexPriceCache, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			keepertest.CreateTestMarkets(t, ctx, pricesKeeper)
 			indexPriceCache.UpdatePrices(constants.AtTimeTSingleExchangePriceUpdate)

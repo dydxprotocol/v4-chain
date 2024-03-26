@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func TestModifyMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
@@ -26,7 +27,7 @@ func TestModifyMarketParam(t *testing.T) {
 			ctx,
 			types.MarketParam{
 				Id:                 item.Param.Id,
-				Pair:               fmt.Sprintf("foo_%v", i),
+				Pair:               item.Param.Pair,
 				MinExchanges:       uint32(2),
 				Exponent:           item.Param.Exponent,
 				MinPriceChangePpm:  uint32(9_999 - i),
@@ -35,14 +36,70 @@ func TestModifyMarketParam(t *testing.T) {
 		)
 		require.NoError(t, err)
 		require.Equal(t, uint32(i), newItem.Id)
-		require.Equal(t, fmt.Sprintf("foo_%v", i), newItem.Pair)
+		require.Equal(t, fmt.Sprintf("%v-%v", i, i), newItem.Pair)
 		require.Equal(t, item.Param.Exponent, newItem.Exponent)
 		require.Equal(t, uint32(2), newItem.MinExchanges)
 		require.Equal(t, uint32(9999-i), newItem.MinPriceChangePpm)
-		require.Equal(t, fmt.Sprintf("foo_%v", i), metrics.GetMarketPairForTelemetry(item.Param.Id))
+		require.Equal(t, fmt.Sprintf("%v-%v", i, i), metrics.GetMarketPairForTelemetry(item.Param.Id))
 		require.Equal(t, fmt.Sprintf(`{"id":"%v"}`, i), newItem.ExchangeConfigJson)
 		keepertest.AssertMarketModifyEventInIndexerBlock(t, keeper, ctx, newItem)
 	}
+}
+
+func TestModifyMarketParamUpdatesCache(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+	ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+	id := uint32(1)
+	oldParam := types.MarketParam{
+		Id:                 id,
+		Pair:               "foo-bar",
+		MinExchanges:       uint32(2),
+		Exponent:           8,
+		MinPriceChangePpm:  uint32(50),
+		ExchangeConfigJson: `{"id":"1"}`,
+	}
+	mp, err := keeper.CreateMarket(ctx, oldParam, types.MarketPrice{
+		Id:       id,
+		Exponent: 8,
+		Price:    1,
+	})
+	require.NoError(t, err)
+
+	// check that the existing entry exists
+	cp, err := slinky.MarketPairToCurrencyPair(mp.Pair)
+	require.NoError(t, err)
+
+	// check that the existing entry exists
+	cpID, found := keeper.GetIDForCurrencyPair(ctx, cp)
+	require.True(t, found)
+	require.Equal(t, uint64(id), cpID)
+
+	// modify the market param
+	newParam, err := keeper.ModifyMarketParam(
+		ctx,
+		types.MarketParam{
+			Id:                 id,
+			Pair:               "bar-foo",
+			MinExchanges:       uint32(2),
+			Exponent:           8,
+			MinPriceChangePpm:  uint32(50),
+			ExchangeConfigJson: `{"id":"1"}`,
+		},
+	)
+	require.NoError(t, err)
+
+	// check that the existing entry does not exist
+	_, found = keeper.GetIDForCurrencyPair(ctx, cp)
+	require.False(t, found)
+
+	// check that the new entry exists
+	cp, err = slinky.MarketPairToCurrencyPair(newParam.Pair)
+	require.NoError(t, err)
+	cpID, found = keeper.GetIDForCurrencyPair(ctx, cp)
+	require.True(t, found)
+	require.Equal(t, uint64(id), cpID)
 }
 
 func TestModifyMarketParam_Errors(t *testing.T) {
@@ -109,13 +166,24 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 				"",
 			).Error(),
 		},
+		"Updating pair fails": {
+			targetId:           0,
+			pair:               "1-1",
+			minExchanges:       uint32(1),
+			minPriceChangePpm:  uint32(50),
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrapf(
+				types.ErrMarketParamPairAlreadyExists,
+				"1-1",
+			).Error(),
+		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
 			mockTimeKeeper.On("Now").Return(constants.TimeT)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
-			keepertest.CreateNMarkets(t, ctx, keeper, 1)
+			keepertest.CreateNMarkets(t, ctx, keeper, 2)
 			_, err := keeper.ModifyMarketParam(
 				ctx,
 				types.MarketParam{
@@ -132,7 +200,7 @@ func TestModifyMarketParam_Errors(t *testing.T) {
 }
 
 func TestGetMarketParam(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	for _, item := range items {
@@ -147,13 +215,13 @@ func TestGetMarketParam(t *testing.T) {
 }
 
 func TestGetMarketParam_NotFound(t *testing.T) {
-	ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, _ := keepertest.PricesKeepers(t)
 	_, exists := keeper.GetMarketParam(ctx, uint32(0))
 	require.False(t, exists)
 }
 
 func TestGetAllMarketParams(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 	params := make([]types.MarketParam, len(items))

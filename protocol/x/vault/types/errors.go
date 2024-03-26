@@ -10,4 +10,14 @@ var (
 		1,
 		"Shares are negative",
 	)
+	ErrClobPairNotFound = errorsmod.Register(
+		ModuleName,
+		2,
+		"ClobPair not found",
+	)
+	ErrMarketParamNotFound = errorsmod.Register(
+		ModuleName,
+		3,
+		"MarketParam not found",
+	)
 )

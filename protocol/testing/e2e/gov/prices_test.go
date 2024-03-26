@@ -28,7 +28,7 @@ var (
 
 	MODIFIED_MARKET_PARAM = pricestypes.MarketParam{
 		Id:                 GENESIS_MARKET_PARAM.Id,
-		Pair:               "eth-adv4tnt",
+		Pair:               GENESIS_MARKET_PARAM.Pair,
 		Exponent:           GENESIS_MARKET_PARAM.Exponent, // exponent cannot be updated
 		MinExchanges:       3,
 		MinPriceChangePpm:  2_002,

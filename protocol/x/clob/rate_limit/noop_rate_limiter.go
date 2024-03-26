@@ -19,5 +19,9 @@ func (n noOpRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
 	return nil
 }
 
+func (n noOpRateLimiter[K]) RateLimitIncrBy(ctx sdk.Context, key K, incrBy uint32) error {
+	return nil
+}
+
 func (n noOpRateLimiter[K]) PruneRateLimits(ctx sdk.Context) {
 }

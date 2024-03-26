@@ -13,21 +13,33 @@ import (
 
 type (
 	Keeper struct {
-		cdc         codec.BinaryCodec
-		storeKey    storetypes.StoreKey
-		authorities map[string]struct{}
+		cdc               codec.BinaryCodec
+		storeKey          storetypes.StoreKey
+		clobKeeper        types.ClobKeeper
+		perpetualsKeeper  types.PerpetualsKeeper
+		pricesKeeper      types.PricesKeeper
+		subaccountsKeeper types.SubaccountsKeeper
+		authorities       map[string]struct{}
 	}
 )
 
 func NewKeeper(
 	cdc codec.BinaryCodec,
 	storeKey storetypes.StoreKey,
+	clobKeeper types.ClobKeeper,
+	perpetualsKeeper types.PerpetualsKeeper,
+	pricesKeeper types.PricesKeeper,
+	subaccountsKeeper types.SubaccountsKeeper,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
-		cdc:         cdc,
-		storeKey:    storeKey,
-		authorities: lib.UniqueSliceToSet(authorities),
+		cdc:               cdc,
+		storeKey:          storeKey,
+		clobKeeper:        clobKeeper,
+		perpetualsKeeper:  perpetualsKeeper,
+		pricesKeeper:      pricesKeeper,
+		subaccountsKeeper: subaccountsKeeper,
+		authorities:       lib.UniqueSliceToSet(authorities),
 	}
 }
 

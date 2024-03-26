@@ -15,7 +15,7 @@ import request from 'supertest';
 
 import IndexV4 from '../../src/controllers/api/index-v4';
 import Server from '../../src/request-helpers/server';
-import { RequestMethod } from '../../src/types';
+import { RequestMethod, FillResponseObject, MarketType } from '../../src/types';
 
 const app: e.Express = Server(IndexV4);
 
@@ -143,6 +143,26 @@ export async function createMakerTakerOrderAndFill(
     orderId: takerOrder.id,
   });
   return { makerFill, takerFill };
+}
+
+export function fillResponseObjectFromFillCreateObject(
+  fill: FillCreateObject,
+  subaccountNumber: number,
+): Partial<FillResponseObject> {
+  const fillResponse: Partial<FillResponseObject> = {
+    side: fill.side,
+    liquidity: fill.liquidity,
+    marketType: MarketType.PERPETUAL,
+    price: fill.price,
+    size: fill.size,
+    fee: fill.fee,
+    type: fill.type,
+    orderId: fill.orderId,
+    createdAt: fill.createdAt,
+    createdAtHeight: fill.createdAtHeight,
+    subaccountNumber,
+  };
+  return fillResponse;
 }
 
 function randomInt(range: number = 1000): number {

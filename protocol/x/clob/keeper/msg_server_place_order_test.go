@@ -176,6 +176,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 						clobPair.SubticksPerTick,
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
+						perpetual.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -320,6 +321,7 @@ func TestPlaceOrder_Success(t *testing.T) {
 						clobPair.SubticksPerTick,
 						clobPair.StepBaseQuantums,
 						perpetual.Params.LiquidityTier,
+						perpetual.Params.MarketType,
 					),
 				),
 			).Once().Return()

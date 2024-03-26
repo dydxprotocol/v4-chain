@@ -24,8 +24,8 @@ func TestUpdatePerpetualParams(t *testing.T) {
 		perptest.WithTicker("ETH-USD"),
 		perptest.WithLiquidityTier(1),
 	)
-	testMarket1 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(1))
-	testMarket4 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(4))
+	testMarket1 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(1), pricestest.WithPair("0-0"))
+	testMarket4 := *pricestest.GenerateMarketParamPrice(pricestest.WithId(4), pricestest.WithPair("1-1"))
 
 	tests := map[string]struct {
 		setup             func(*testing.T, sdk.Context, *perpkeeper.Keeper, *priceskeeper.Keeper)

@@ -49,7 +49,7 @@ func createAppModule(t *testing.T) prices.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (prices.AppModule, *prices_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, _, mockTimeProvider := keeper.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keeper.PricesKeepers(t)
 	// Mock the time provider response for market creation.
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 

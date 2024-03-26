@@ -1,8 +1,9 @@
 package rate_limit
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"fmt"
+
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -33,7 +34,11 @@ func NewSingleBlockRateLimiter[K comparable](context string, config types.MaxPer
 }
 
 func (r *singleBlockRateLimiter[K]) RateLimit(ctx sdk.Context, key K) error {
-	count := r.perKeyCounts[key] + 1
+	return r.RateLimitIncrBy(ctx, key, 1)
+}
+
+func (r *singleBlockRateLimiter[K]) RateLimitIncrBy(ctx sdk.Context, key K, incrBy uint32) error {
+	count := r.perKeyCounts[key] + incrBy
 	r.perKeyCounts[key] = count
 	if count > r.config.Limit {
 		return errorsmod.Wrapf(

@@ -30,7 +30,7 @@ func TestUpdateMarketParam(t *testing.T) {
 				Authority: lib.GovModuleAddress.String(),
 				MarketParam: pricestypes.MarketParam{
 					Id:                 testMarketParam.Id,
-					Pair:               "PIKACHU-XXX",
+					Pair:               testMarketParam.Pair,
 					Exponent:           testMarketParam.Exponent,
 					MinExchanges:       72,
 					MinPriceChangePpm:  2_023,
@@ -143,7 +143,7 @@ func TestUpdateMarketParam(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, pricesKeeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, pricesKeeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
 			msgServer := keeper.NewMsgServerImpl(pricesKeeper)
 			initialMarketParam, err := pricesKeeper.CreateMarket(ctx, testMarketParam, testMarketPrice)

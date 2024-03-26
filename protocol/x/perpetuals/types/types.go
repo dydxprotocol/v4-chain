@@ -86,6 +86,13 @@ type PerpetualsKeeper interface {
 		defaultFundingPpm int32,
 		liquidityTier uint32,
 	) (Perpetual, error)
+	ModifyOpenInterest(
+		ctx sdk.Context,
+		perpetualId uint32,
+		openInterestDeltaBaseQuantums *big.Int,
+	) (
+		err error,
+	)
 	SetLiquidityTier(
 		ctx sdk.Context,
 		id uint32,
@@ -111,4 +118,13 @@ type PerpetualsKeeper interface {
 	GetAllPerpetuals(
 		ctx sdk.Context,
 	) []Perpetual
+	GetAllLiquidityTiers(ctx sdk.Context) (list []LiquidityTier)
+}
+
+// OpenInterestDelta represents a (perpId, openInterestDelta) tuple.
+type OpenInterestDelta struct {
+	// The `Id` of the `Perpetual`.
+	PerpetualId uint32
+	// Delta of open interest (in base quantums).
+	BaseQuantums *big.Int
 }

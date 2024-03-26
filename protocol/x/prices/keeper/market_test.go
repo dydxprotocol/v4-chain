@@ -14,7 +14,7 @@ import (
 )
 
 func TestCreateMarket(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	ctx = ctx.WithTxBytes(constants.TestTxBytes)
 
@@ -88,7 +88,7 @@ func TestMarketIsRecentlyAvailable(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 
 			// Create market with TimeT creation timestamp.
 			mockTimeProvider.On("Now").Return(constants.TimeT).Once()
@@ -158,7 +158,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			exchangeConfigJson:                    validExchangeConfigJson,
 			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
-				"market param id 0 does not match market price id 1",
+				"market param id 1 does not match market price id 2",
 			).Error(),
 		},
 		"Market param and price exponents don't match": {
@@ -170,14 +170,28 @@ func TestCreateMarket_Errors(t *testing.T) {
 			exchangeConfigJson: validExchangeConfigJson,
 			expectedErr: errorsmod.Wrap(
 				types.ErrInvalidInput,
-				"market param 0 exponent -6 does not match market price 0 exponent -5",
+				"market param 1 exponent -6 does not match market price 1 exponent -5",
+			).Error(),
+		},
+		"Pair already exists": {
+			pair:               "0-0",
+			minExchanges:       uint32(2),
+			minPriceChangePpm:  uint32(50),
+			price:              constants.FiveBillion,
+			exchangeConfigJson: validExchangeConfigJson,
+			expectedErr: errorsmod.Wrap(
+				types.ErrMarketParamPairAlreadyExists,
+				"0-0",
 			).Error(),
 		},
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, keeper, _, _, _, _ := keepertest.PricesKeepers(t)
+			ctx, keeper, _, _, mockTimeKeeper := keepertest.PricesKeepers(t)
 			ctx = ctx.WithTxBytes(constants.TestTxBytes)
+
+			mockTimeKeeper.On("Now").Return(constants.TimeT)
+			keepertest.CreateNMarkets(t, ctx, keeper, 1)
 
 			marketPriceIdOffset := uint32(0)
 			if tc.marketPriceIdDoesntMatchMarketParamId {
@@ -192,7 +206,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 			_, err := keeper.CreateMarket(
 				ctx,
 				types.MarketParam{
-					Id:                 0,
+					Id:                 1,
 					Pair:               tc.pair,
 					Exponent:           int32(-6),
 					MinExchanges:       tc.minExchanges,
@@ -200,7 +214,7 @@ func TestCreateMarket_Errors(t *testing.T) {
 					ExchangeConfigJson: tc.exchangeConfigJson,
 				},
 				types.MarketPrice{
-					Id:       0 + marketPriceIdOffset,
+					Id:       1 + marketPriceIdOffset,
 					Exponent: int32(-6) + marketPriceExponentOffset,
 					Price:    tc.price,
 				},
@@ -208,21 +222,21 @@ func TestCreateMarket_Errors(t *testing.T) {
 			require.EqualError(t, err, tc.expectedErr)
 
 			// Verify no new MarketPrice created.
-			_, err = keeper.GetMarketPrice(ctx, 0)
+			_, err = keeper.GetMarketPrice(ctx, 1)
 			require.EqualError(
 				t,
 				err,
-				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.UintToString(uint32(0))).Error(),
+				errorsmod.Wrap(types.ErrMarketPriceDoesNotExist, lib.UintToString(uint32(1))).Error(),
 			)
 
 			// Verify no new market event.
-			keepertest.AssertMarketEventsNotInIndexerBlock(t, keeper, ctx)
+			keepertest.AssertNMarketEventsNotInIndexerBlock(t, keeper, ctx, 1)
 		})
 	}
 }
 
 func TestGetAllMarketParamPrices(t *testing.T) {
-	ctx, keeper, _, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
 	mockTimeProvider.On("Now").Return(constants.TimeT)
 	items := keepertest.CreateNMarkets(t, ctx, keeper, 10)
 

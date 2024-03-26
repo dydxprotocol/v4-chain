@@ -3,6 +3,7 @@ package trading_rewards_test
 import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math/big"
 	"testing"
 	"time"
@@ -705,6 +706,7 @@ func TestTradingRewards(t *testing.T) {
 			msgSender := msgsender.NewIndexerMessageSenderInMemoryCollector()
 			appOpts := map[string]interface{}{
 				indexer.MsgSenderInstanceForTest: msgSender,
+				flags.VEOracleEnabled:            false,
 			}
 			tApp := testapp.NewTestAppBuilder(t).
 				// UpdateIndexPrice only contacts the tApp.App.Server causing non-determinism in the

@@ -2,11 +2,12 @@ package prices
 
 import (
 	"fmt"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
-// PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
+// PricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
 type PricesKeeper interface {
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MsgUpdateMarketPrices
 }

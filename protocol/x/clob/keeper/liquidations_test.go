@@ -20,6 +20,7 @@ import (
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/memclob"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -51,6 +52,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 		// Expectations.
 		expectedPlacedOrders  []*types.MsgPlaceOrder
 		expectedMatchedOrders []*types.ClobMatch
+		// Expected remaining OI after test.
+		// The test initializes each perp with default open interest of 1 full coin.
+		expectedOpenInterests map[uint32]*big.Int
 	}{
 		`Can place a liquidation that doesn't match any maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -66,6 +70,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 
 			expectedPlacedOrders:  []*types.MsgPlaceOrder{},
 			expectedMatchedOrders: []*types.ClobMatch{},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: big.NewInt(100_000_000), // unchanged
+			},
 		},
 		`Can place a liquidation that matches maker orders`: {
 			perpetuals: []perptypes.Perpetual{
@@ -105,6 +112,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
 			},
 		},
 		`Can place a liquidation that matches maker orders and removes undercollateralized ones`: {
@@ -148,6 +158,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates and empty fee collector`: {
 			perpetuals: []perptypes.Perpetual{
@@ -188,6 +201,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 					},
 				),
 			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
+			},
 		},
 		`Can place a liquidation that matches maker orders with maker rebates`: {
 			perpetuals: []perptypes.Perpetual{
@@ -226,6 +242,9 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 						},
 					},
 				),
+			},
+			expectedOpenInterests: map[uint32]*big.Int{
+				constants.BtcUsd_SmallMarginRequirement.Params.Id: new(big.Int), // fully liquidated
 			},
 		},
 	}
@@ -299,6 +318,13 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, subaccount)
@@ -333,6 +359,19 @@ func TestPlacePerpetualLiquidation(t *testing.T) {
 			// Run the test.
 			_, _, err = ks.ClobKeeper.PlacePerpetualLiquidation(ctx, tc.order)
 			require.NoError(t, err)
+
+			for _, perp := range tc.perpetuals {
+				if expectedOI, exists := tc.expectedOpenInterests[perp.Params.Id]; exists {
+					gotPerp, err := ks.PerpetualsKeeper.GetPerpetual(ks.Ctx, perp.Params.Id)
+					require.NoError(t, err)
+					require.Zero(t,
+						expectedOI.Cmp(gotPerp.OpenInterest.BigInt()),
+						"expected open interest %s, got %s",
+						expectedOI.String(),
+						gotPerp.OpenInterest.String(),
+					)
+				}
+			}
 
 			// Verify test expectations.
 			// TODO(DEC-1979): Refactor these tests to support the operations queue refactor.
@@ -1139,10 +1178,11 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 			err := keepertest.CreateUsdcAsset(ctx, ks.AssetsKeeper)
 			require.NoError(t, err)
 
-			for _, perpetual := range []perptypes.Perpetual{
+			testPerps := []perptypes.Perpetual{
 				constants.BtcUsd_100PercentMarginRequirement,
 				constants.EthUsd_100PercentMarginRequirement,
-			} {
+			}
+			for _, perpetual := range testPerps {
 				_, err = ks.PerpetualsKeeper.CreatePerpetual(
 					ctx,
 					perpetual.Params.Id,
@@ -1155,6 +1195,13 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				testPerps,
+			)
 
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
@@ -1177,6 +1224,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -1206,6 +1254,7 @@ func TestPlacePerpetualLiquidation_PreexistingLiquidation(t *testing.T) {
 						constants.ClobPair_Eth.SubticksPerTick,
 						constants.ClobPair_Eth.StepBaseQuantums,
 						constants.EthUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.EthUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -2045,6 +2094,13 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				perpetuals,
+			)
+
 			for _, s := range tc.subaccounts {
 				ks.SubaccountsKeeper.SetSubaccount(ctx, s)
 			}
@@ -2088,6 +2144,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							perpetuals[i].Params.LiquidityTier,
+							perpetuals[i].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -2205,6 +2262,7 @@ func TestPlacePerpetualLiquidation_SendOffchainMessages(t *testing.T) {
 				constants.ClobPair_Btc.SubticksPerTick,
 				constants.ClobPair_Btc.StepBaseQuantums,
 				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.LiquidityTier,
+				constants.Perpetuals_DefaultGenesisState.Perpetuals[0].Params.MarketType,
 			),
 		),
 	).Once().Return()
@@ -2756,6 +2814,13 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 				require.NoError(t, err)
 			}
 
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
+
 			// Create the subaccount.
 			subaccountId := satypes.SubaccountId{
 				Owner:  "liquidations_test",
@@ -2796,7 +2861,7 @@ func TestGetBankruptcyPriceInQuoteQuantums(t *testing.T) {
 							},
 						},
 					},
-					satypes.Match,
+					satypes.CollatCheck,
 				)
 
 				require.True(t, success)
@@ -3730,6 +3795,7 @@ func TestGetLiquidationInsuranceFundDelta(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						tc.perpetuals[0].Params.LiquidityTier,
+						tc.perpetuals[0].Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -4469,6 +4535,7 @@ func TestGetPerpetualPositionToLiquidate(t *testing.T) {
 							clobPair.SubticksPerTick,
 							clobPair.StepBaseQuantums,
 							tc.perpetuals[perpetualId].Params.LiquidityTier,
+							tc.perpetuals[perpetualId].Params.MarketType,
 						),
 					),
 				).Once().Return()
@@ -4693,6 +4760,13 @@ func TestMaybeGetLiquidationOrder(t *testing.T) {
 				)
 				require.NoError(t, err)
 			}
+
+			perptest.SetUpDefaultPerpOIsForTest(
+				t,
+				ks.Ctx,
+				ks.PerpetualsKeeper,
+				tc.perpetuals,
+			)
 
 			// Create all subaccounts.
 			for _, subaccount := range tc.subaccounts {
@@ -5034,6 +5108,7 @@ func TestGetMaxAndMinPositionNotionalLiquidatable(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()
@@ -5188,6 +5263,7 @@ func TestSortLiquidationOrders(t *testing.T) {
 						constants.ClobPair_Btc.SubticksPerTick,
 						constants.ClobPair_Btc.StepBaseQuantums,
 						constants.BtcUsd_100PercentMarginRequirement.Params.LiquidityTier,
+						constants.BtcUsd_100PercentMarginRequirement.Params.MarketType,
 					),
 				),
 			).Once().Return()

@@ -125,8 +125,9 @@ func (c *Client) RunMarketPairFetcher(ctx context.Context, appFlags appflags.Fla
 			if err != nil {
 				c.logger.Error("Failed to run fetch id mappings for slinky daemon", "error", err)
 				c.ReportFailure(errors.Wrap(err, "failed to run FetchIdMappings for slinky daemon"))
+			} else {
+				c.ReportSuccess()
 			}
-			c.ReportSuccess()
 		case <-ctx.Done():
 			return
 		}

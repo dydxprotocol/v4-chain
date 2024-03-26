@@ -1,12 +1,13 @@
 package keeper_test
 
 import (
+	"testing"
+
 	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
 )
 
 func TestGetBlockRateLimitConfiguration(t *testing.T) {
@@ -19,10 +20,10 @@ func TestGetBlockRateLimitConfiguration(t *testing.T) {
 			req: &types.QueryBlockRateLimitConfigurationRequest{},
 			res: &types.QueryBlockRateLimitConfigurationResponse{
 				BlockRateLimitConfig: types.BlockRateLimitConfiguration{
-					MaxShortTermOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
+					MaxShortTermOrdersAndCancelsPerNBlocks: []types.MaxPerNBlocksRateLimit{
 						{
 							NumBlocks: 1,
-							Limit:     200,
+							Limit:     400,
 						},
 					},
 					MaxStatefulOrdersPerNBlocks: []types.MaxPerNBlocksRateLimit{
@@ -33,12 +34,6 @@ func TestGetBlockRateLimitConfiguration(t *testing.T) {
 						{
 							NumBlocks: 100,
 							Limit:     20,
-						},
-					},
-					MaxShortTermOrderCancellationsPerNBlocks: []types.MaxPerNBlocksRateLimit{
-						{
-							NumBlocks: 1,
-							Limit:     200,
 						},
 					},
 				},

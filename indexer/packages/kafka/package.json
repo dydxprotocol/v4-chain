@@ -32,6 +32,8 @@
   "homepage": "https://github.com/dydxprotocol/indexer#readme",
   "dependencies": {
     "@dydxprotocol-indexer/base": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/postgres": "workspace:^0.0.1",
+    "@dydxprotocol-indexer/v4-protos": "workspace:^0.0.1",
     "dotenv-flow": "^3.2.0",
     "kafkajs": "^2.1.0",
     "lodash": "^4.17.21",

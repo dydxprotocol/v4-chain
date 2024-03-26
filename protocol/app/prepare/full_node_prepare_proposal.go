@@ -20,6 +20,6 @@ func FullNodePrepareProposalHandler() sdk.PrepareProposalHandler {
 		recordErrorMetricsWithLabel(metrics.PrepareProposalTxs)
 
 		// Return an empty response if the node is running in full-node mode so that the proposal fails.
-		return &EmptyResponse, nil
+		return &abci.ResponsePrepareProposal{Txs: [][]byte{}}, nil
 	}
 }

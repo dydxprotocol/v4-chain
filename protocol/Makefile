@@ -35,10 +35,6 @@ ifeq ($(LEDGER_ENABLED),true)
   endif
 endif
 
-# libsecp256k1_sdk is disabled by default as both ethereum/go-ethereum and cosmos/cosmos-sdk will define duplicate symbols
-ifeq (secp,$(findstring secp,$(COSMOS_BUILD_OPTIONS)))
-  build_tags += libsecp256k1_sdk # Requires CGO_ENABLED=1
-endif
 ifeq (cleveldb,$(findstring cleveldb,$(COSMOS_BUILD_OPTIONS)))
   build_tags += gcc
 endif
@@ -238,10 +234,10 @@ benchmark:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='$(build_tags)' -bench=. ./...
 
 test-container:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./...
 
 test-container-accept:
-	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./testing/containertest -args -accept
+	@SKIP_DISABLED=true VERSION=$(VERSION) go test -mod=readonly -tags='container_test $(build_tags)' ./... -args -accept
 
 test-container-build:
 	$(MAKE) localnet-build

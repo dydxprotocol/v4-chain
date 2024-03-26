@@ -2,7 +2,8 @@ package events
 
 import (
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
 // NewPerpetualMarketCreateEvent creates a PerpetualMarketCreateEvent
@@ -12,12 +13,13 @@ func NewPerpetualMarketCreateEvent(
 	clobPairId uint32,
 	ticker string,
 	marketId uint32,
-	status types.ClobPair_Status,
+	status clobtypes.ClobPair_Status,
 	quantumConversionExponent int32,
 	atomicResolution int32,
 	subticksPerTick uint32,
 	stepBaseQuantums uint64,
 	liquidityTier uint32,
+	marketType perptypes.PerpetualMarketType,
 ) *PerpetualMarketCreateEventV1 {
 	return &PerpetualMarketCreateEventV1{
 		Id:                        id,
@@ -30,5 +32,6 @@ func NewPerpetualMarketCreateEvent(
 		SubticksPerTick:           subticksPerTick,
 		StepBaseQuantums:          stepBaseQuantums,
 		LiquidityTier:             liquidityTier,
+		MarketType:                v1.ConvertToPerpetualMarketType(marketType),
 	}
 }

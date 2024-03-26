@@ -511,3 +511,9 @@ func (f *FakeMemClobKeeper) ValidateSubaccountEquityTierLimitForStatefulOrder(
 func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger()
 }
+
+func (f *FakeMemClobKeeper) SendOrderbookUpdates(
+	offchainUpdates *types.OffchainUpdates,
+	snapshot bool,
+) {
+}

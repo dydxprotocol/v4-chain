@@ -195,6 +195,38 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ParentSubaccountResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "parentSubaccountNumber": {
+            "type": "number",
+            "format": "double"
+          },
+          "equity": {
+            "type": "string"
+          },
+          "freeCollateral": {
+            "type": "string"
+          },
+          "childSubaccounts": {
+            "items": {
+              "$ref": "#/components/schemas/SubaccountResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "address",
+          "parentSubaccountNumber",
+          "equity",
+          "freeCollateral",
+          "childSubaccounts"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AssetPositionResponse": {
         "properties": {
           "positions": {
@@ -414,6 +446,10 @@
           },
           "clientMetadata": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -427,7 +463,8 @@
           "size",
           "fee",
           "createdAt",
-          "createdAtHeight"
+          "createdAtHeight",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false
@@ -1208,6 +1245,43 @@
         ]
       }
     },
+    "/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}": {
+      "get": {
+        "operationId": "GetParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentSubaccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
     "/assetPositions": {
       "get": {
         "operationId": "GetAssetPositions",
@@ -1390,6 +1464,85 @@
           {
             "in": "query",
             "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "market",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "marketType",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/MarketType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/fills/parentSubaccount": {
+      "get": {
+        "operationId": "GetFillsForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FillResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
             "required": true,
             "schema": {
               "format": "double",

@@ -37,7 +37,19 @@ func (msg *MsgBatchCancel) ValidateBasic() (err error) {
 		)
 	}
 	totalNumberCancels := 0
+	seenClobPairIds := map[uint32]struct{}{}
 	for _, cancelBatch := range cancelBatches {
+		// Check for duplicate clob pair ids across all cancel batches
+		clobPairId := cancelBatch.GetClobPairId()
+		if _, exists := seenClobPairIds[clobPairId]; exists {
+			return errorsmod.Wrapf(
+				ErrInvalidBatchCancel,
+				"Batch cancel cannot have 2 order batches with the same clob pair id: %+v",
+				clobPairId,
+			)
+		}
+		seenClobPairIds[clobPairId] = struct{}{}
+
 		numClientIds := len(cancelBatch.GetClientIds())
 		if numClientIds == 0 {
 			return errorsmod.Wrapf(
@@ -46,12 +58,14 @@ func (msg *MsgBatchCancel) ValidateBasic() (err error) {
 			)
 		}
 		totalNumberCancels += numClientIds
+
+		// Check for duplicate clob client ids across this cancel batch
 		seenClientIds := map[uint32]struct{}{}
 		for _, clientId := range cancelBatch.GetClientIds() {
 			if _, seen := seenClientIds[clientId]; seen {
 				return errorsmod.Wrapf(
 					ErrInvalidBatchCancel,
-					"Batch cancel cannot have duplicate cancels. Duplicate clob pair id: %+v, client id: %+v",
+					"Batch Cancel Clob pair id %+v has duplicate client ids: %+v",
 					cancelBatch.GetClobPairId(),
 					clientId,
 				)

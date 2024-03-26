@@ -869,3 +869,95 @@ func TestMustConvertBigIntToInt32(t *testing.T) {
 		})
 	}
 }
+
+func TestBigRatRoundToNearestMultiple(t *testing.T) {
+	tests := map[string]struct {
+		value          *big.Rat
+		base           uint32
+		up             bool
+		expectedResult uint64
+	}{
+		"Round 5 down to a multiple of 2": {
+			value:          big.NewRat(5, 1),
+			base:           2,
+			up:             false,
+			expectedResult: 4,
+		},
+		"Round 5 up to a multiple of 2": {
+			value:          big.NewRat(5, 1),
+			base:           2,
+			up:             true,
+			expectedResult: 6,
+		},
+		"Round 7 down to a multiple of 14": {
+			value:          big.NewRat(7, 1),
+			base:           14,
+			up:             false,
+			expectedResult: 0,
+		},
+		"Round 7 up to a multiple of 14": {
+			value:          big.NewRat(7, 1),
+			base:           14,
+			up:             true,
+			expectedResult: 14,
+		},
+		"Round 123 down to a multiple of 123": {
+			value:          big.NewRat(123, 1),
+			base:           123,
+			up:             false,
+			expectedResult: 123,
+		},
+		"Round 123 up to a multiple of 123": {
+			value:          big.NewRat(123, 1),
+			base:           123,
+			up:             true,
+			expectedResult: 123,
+		},
+		"Round 100/6 down to a multiple of 3": {
+			value:          big.NewRat(100, 6),
+			base:           3,
+			up:             false,
+			expectedResult: 15,
+		},
+		"Round 100/6 up to a multiple of 3": {
+			value:          big.NewRat(100, 6),
+			base:           3,
+			up:             true,
+			expectedResult: 18,
+		},
+		"Round 7/2 down to a multiple of 1": {
+			value:          big.NewRat(7, 2),
+			base:           1,
+			up:             false,
+			expectedResult: 3,
+		},
+		"Round 7/2 up to a multiple of 1": {
+			value:          big.NewRat(7, 2),
+			base:           1,
+			up:             true,
+			expectedResult: 4,
+		},
+		"Round 10 down to a multiple of 0": {
+			value:          big.NewRat(10, 1),
+			base:           0,
+			up:             false,
+			expectedResult: 0,
+		},
+		"Round 10 up to a multiple of 0": {
+			value:          big.NewRat(10, 1),
+			base:           0,
+			up:             true,
+			expectedResult: 0,
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			result := lib.BigRatRoundToNearestMultiple(
+				tc.value,
+				tc.base,
+				tc.up,
+			)
+			require.Equal(t, tc.expectedResult, result)
+		})
+	}
+}

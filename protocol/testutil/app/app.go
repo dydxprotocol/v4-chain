@@ -1259,6 +1259,7 @@ func launchValidatorInDir(
 			appConfig.API.Enable = false
 			// We disable telemetry since multiple instances of the application fail to register causing a panic.
 			appConfig.Telemetry.Enabled = false
+			appConfig.Oracle.MetricsEnabled = false
 			return s, appConfig
 		},
 		// Capture the application instance.
@@ -1286,6 +1287,8 @@ func launchValidatorInDir(
 		"false",
 		"--bridge-daemon-eth-rpc-endpoint",
 		"https://eth-sepolia.g.alchemy.com/v2/demo",
+		"--oracle.enabled=false",
+		"--oracle.metrics_enabled=false",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)

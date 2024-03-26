@@ -5,6 +5,7 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,11 +44,30 @@ func (k Keeper) ModifyMarketParam(
 		return types.MarketParam{},
 			errorsmod.Wrapf(types.ErrMarketExponentCannotBeUpdated, lib.UintToString(updatedMarketParam.Id))
 	}
+	for _, market := range k.GetAllMarketParams(ctx) {
+		if market.Pair == updatedMarketParam.Pair && market.Id != updatedMarketParam.Id {
+			return types.MarketParam{}, errorsmod.Wrapf(types.ErrMarketParamPairAlreadyExists, updatedMarketParam.Pair)
+		}
+	}
 
 	// Store the modified market param.
 	marketParamStore := k.getMarketParamStore(ctx)
 	b := k.cdc.MustMarshal(&updatedMarketParam)
 	marketParamStore.Set(lib.Uint32ToKey(updatedMarketParam.Id), b)
+
+	// if the market pair has been changed, we need to update the in-memory market pair cache
+	if existingParam.Pair != updatedMarketParam.Pair {
+		// remove the old cache entry
+		k.currencyPairIDCache.Remove(uint64(existingParam.Id))
+
+		// add the new cache entry
+		cp, err := slinky.MarketPairToCurrencyPair(updatedMarketParam.Pair)
+		if err == nil {
+			k.currencyPairIDCache.AddCurrencyPair(uint64(updatedMarketParam.Id), cp.String())
+		} else {
+			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", updatedMarketParam.Pair)
+		}
+	}
 
 	// Generate indexer event.
 	k.GetIndexerEventManager().AddTxnEvent(
@@ -85,6 +105,26 @@ func (k Keeper) GetMarketParam(
 
 	k.cdc.MustUnmarshal(b, &market)
 	return market, true
+}
+
+// LoadCurrencyPairIDCache loads the currency pair id cache from the store.
+func (k Keeper) LoadCurrencyPairIDCache(ctx sdk.Context) {
+	marketParamStore := k.getMarketParamStore(ctx)
+
+	iterator := marketParamStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketParam := types.MarketParam{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketParam)
+
+		cp, err := slinky.MarketPairToCurrencyPair(marketParam.Pair)
+		if err == nil {
+			k.currencyPairIDCache.AddCurrencyPair(uint64(marketParam.Id), cp.String())
+		} else {
+			k.Logger(ctx).Error("failed to add currency pair to cache", "pair", marketParam.Pair)
+		}
+	}
 }
 
 // GetAllMarketParams returns all market params.

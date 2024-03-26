@@ -57,6 +57,14 @@ export interface SubaccountResponseObject {
   marginEnabled: boolean,
 }
 
+export interface ParentSubaccountResponse {
+  address: string;
+  parentSubaccountNumber: number;
+  equity: string; // aggregated over all child subaccounts
+  freeCollateral: string; // aggregated over all child subaccounts
+  childSubaccounts: SubaccountResponseObject[];
+}
+
 export type SubaccountById = {[id: string]: SubaccountFromDatabase};
 
 /* ------- TIME TYPES ------- */
@@ -130,6 +138,7 @@ export interface FillResponseObject {
   createdAtHeight: string,
   orderId?: string,
   clientMetadata?: string,
+  subaccountNumber: number,
 }
 
 /* ------- TRANSFER TYPES ------- */
@@ -309,6 +318,10 @@ export interface SubaccountRequest extends AddressRequest {
   subaccountNumber: number,
 }
 
+export interface ParentSubaccountRequest extends AddressRequest {
+  parentSubaccountNumber: number,
+}
+
 export interface LimitRequest {
   limit: number,
 }
@@ -341,6 +354,12 @@ export interface AssetPositionRequest extends SubaccountRequest {}
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  market: string,
+  marketType: MarketType,
+}
+
+export interface ParentSubaccountFillRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
   marketType: MarketType,
 }
