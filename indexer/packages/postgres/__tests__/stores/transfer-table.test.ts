@@ -180,6 +180,7 @@ describe('Transfer store', () => {
     expect(responsePageOne.results.length).toEqual(1);
     expect(responsePageOne.results[0]).toEqual(expect.objectContaining(defaultTransfer));
     expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
 
     const responsePageTwo = await TransferTable.findAllToOrFromSubaccountId(
       { subaccountId: [defaultSubaccountId], page: 2, limit: 1 },
@@ -190,6 +191,7 @@ describe('Transfer store', () => {
     expect(responsePageTwo.results.length).toEqual(1);
     expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(transfer2));
     expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
 
     const responsePageAllPages = await TransferTable.findAllToOrFromSubaccountId(
       { subaccountId: [defaultSubaccountId], page: 1, limit: 2 },
@@ -201,6 +203,7 @@ describe('Transfer store', () => {
     expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining(defaultTransfer));
     expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(transfer2));
     expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
   });
 
   it('Successfully finds Transfer with eventId', async () => {

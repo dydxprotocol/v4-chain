@@ -125,6 +125,7 @@ describe('Fill store', () => {
       eventId: defaultTendermintEventId2,
     }));
     expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
 
     const responsePageTwo = await FillTable.findAll({
       page: 2,
@@ -136,6 +137,7 @@ describe('Fill store', () => {
     expect(responsePageTwo.results.length).toEqual(1);
     expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(defaultFill));
     expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
 
     const responsePageAllPages = await FillTable.findAll({
       page: 1,
@@ -151,6 +153,7 @@ describe('Fill store', () => {
     }));
     expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(defaultFill));
     expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
   });
 
   it('Successfully finds Fill with eventId', async () => {
