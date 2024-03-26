@@ -250,10 +250,11 @@ func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
 			continue
 		}
 
-		height := binary.BigEndian.Uint32(it.Value())
+		height := binary.BigEndian.Uint32(it.Key())
 		var potentiallyPrunableOrders types.PotentiallyPrunableOrders
 		k.cdc.MustUnmarshal(it.Value(), &potentiallyPrunableOrders)
 		k.AddOrdersForPruning(ctx, potentiallyPrunableOrders.OrderIds, height)
+		store.Delete(it.Key())
 	}
 }
 
