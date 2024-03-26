@@ -56,9 +56,8 @@ FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST}
 RUN apk add --no-cache bash
 
 COPY --from=builder /dydxprotocol/build/dydxprotocold /bin/dydxprotocold
-COPY --from=builder /dydxprotocol/daemons/slinky/config/oracle.json /etc/oracle.json
-COPY --from=builder /dydxprotocol/daemons/slinky/config/market.json /etc/market.json
-COPY --from=builder /slinky/build/oracle /bin/slinky
+COPY --from=builder /dydxprotocol/daemons/slinky/config/dydx/oracle.json /etc/oracle.json
+COPY --from=builder /slinky/build/slinky /bin/slinky
 
 ENV HOME /dydxprotocol
 WORKDIR $HOME
