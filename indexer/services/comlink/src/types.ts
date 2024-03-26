@@ -40,6 +40,13 @@ export enum RequestMethod {
   PUT = 'PUT',
 }
 
+/* ------- Pagination ------- */
+export interface PaginationResponse {
+  pageSize?: number,
+  totalResults?: number,
+  offset?: number,
+}
+
 /* ------- SUBACCOUNT TYPES ------- */
 
 export interface AddressResponse {
@@ -143,7 +150,7 @@ export interface FillResponseObject {
 
 /* ------- TRANSFER TYPES ------- */
 
-export interface TransferResponse {
+export interface TransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 
