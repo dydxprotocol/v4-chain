@@ -118,11 +118,13 @@ type PerpetualsKeeper interface {
 	GetAllPerpetuals(
 		ctx sdk.Context,
 	) []Perpetual
+	GetAllLiquidityTiers(ctx sdk.Context) (list []LiquidityTier)
 }
 
+// OpenInterestDelta represents a (perpId, openInterestDelta) tuple.
 type OpenInterestDelta struct {
 	// The `Id` of the `Perpetual`.
 	PerpetualId uint32
 	// Delta of open interest (in base quantums).
-	BaseQuantumsDelta *big.Int
+	BaseQuantums *big.Int
 }

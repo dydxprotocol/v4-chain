@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -43,13 +44,20 @@ func getDeltaLongFromSettledUpdate(
 	)
 }
 
-// Returns the delta open_interest for a pair of Match updates if they were applied.
-func GetDeltaOpenInterestFromPerpMatchUpdates(
+// For `Match` updates:
+//   - returns a struct `OpenInterest` if input updates results in OI delta.
+//   - returns nil if OI delta is zero.
+//   - panics if update format is invalid.
+//
+// For other update types, returns nil.
+func GetDeltaOpenInterestFromUpdates(
 	settledUpdates []SettledUpdate,
-) (
-	updatedPerpId uint32,
-	deltaOpenInterest *big.Int,
-) {
+	updateType types.UpdateType,
+) (ret *perptypes.OpenInterestDelta) {
+	if updateType != types.Match {
+		return nil
+	}
+
 	if len(settledUpdates) != 2 {
 		panic(
 			fmt.Sprintf(
@@ -78,9 +86,9 @@ func GetDeltaOpenInterestFromPerpMatchUpdates(
 				settledUpdates,
 			),
 		)
-	} else {
-		updatedPerpId = settledUpdates[0].PerpetualUpdates[0].PerpetualId
 	}
+
+	updatedPerpId := settledUpdates[0].PerpetualUpdates[0].PerpetualId
 
 	if (perpUpdate0.BigQuantumsDelta.Sign()*perpUpdate1.BigQuantumsDelta.Sign() > 0) ||
 		perpUpdate0.BigQuantumsDelta.CmpAbs(perpUpdate1.BigQuantumsDelta) != 0 {
@@ -92,11 +100,21 @@ func GetDeltaOpenInterestFromPerpMatchUpdates(
 		)
 	}
 
-	deltaOpenInterest = big.NewInt(0)
+	baseQuantumsDelta := big.NewInt(0)
 	for _, u := range settledUpdates {
 		deltaLong := getDeltaLongFromSettledUpdate(u, updatedPerpId)
-		deltaOpenInterest.Add(deltaOpenInterest, deltaLong)
+		baseQuantumsDelta.Add(
+			baseQuantumsDelta,
+			deltaLong,
+		)
 	}
 
-	return updatedPerpId, deltaOpenInterest
+	if baseQuantumsDelta.Sign() == 0 {
+		return nil
+	}
+
+	return &perptypes.OpenInterestDelta{
+		PerpetualId:  updatedPerpId,
+		BaseQuantums: baseQuantumsDelta,
+	}
 }

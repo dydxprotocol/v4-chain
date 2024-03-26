@@ -895,8 +895,8 @@
           "initial_margin_ppm": 1000000,
           "maintenance_fraction_ppm": 200000,
           "name": "Safety",
-          "open_interest_lower_cap": 0,
-          "open_interest_upper_cap": 0
+          "open_interest_lower_cap": 500000000000,
+          "open_interest_upper_cap": 1000000000000
         }
       ],
       "params": {

@@ -104,12 +104,12 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 // Perpetual OI setup in tests
 var (
 	BtcUsd_OpenInterest1_AtomicRes8 = perptypes.OpenInterestDelta{
-		PerpetualId:       0,
-		BaseQuantumsDelta: big.NewInt(100_000_000),
+		PerpetualId:  0,
+		BaseQuantums: big.NewInt(100_000_000),
 	}
 	EthUsd_OpenInterest1_AtomicRes9 = perptypes.OpenInterestDelta{
-		PerpetualId:       1,
-		BaseQuantumsDelta: big.NewInt(1_000_000_000),
+		PerpetualId:  1,
+		BaseQuantums: big.NewInt(1_000_000_000),
 	}
 	DefaultTestPerpOIs = []perptypes.OpenInterestDelta{
 		BtcUsd_OpenInterest1_AtomicRes8,
@@ -277,6 +277,19 @@ var (
 		FundingIndex: dtypes.ZeroInt(),
 		OpenInterest: dtypes.NewInt(100_000_000),
 	}
+	BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest2 = perptypes.Perpetual{
+		Params: perptypes.PerpetualParams{
+			Id:                0,
+			Ticker:            "BTC-USD 20/10 margin requirements",
+			MarketId:          uint32(0),
+			AtomicResolution:  int32(-8),
+			DefaultFundingPpm: int32(0),
+			LiquidityTier:     uint32(3),
+			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS,
+		},
+		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.NewInt(200_000_000),
+	}
 	BtcUsd_20PercentInitial_10PercentMaintenance_25mmLowerCap_50mmUpperCap = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
 			Id:                0,
@@ -379,6 +392,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 	Iso2Usd_IsolatedMarket = perptypes.Perpetual{
 		Params: perptypes.PerpetualParams{
@@ -391,6 +405,7 @@ var (
 			MarketType:        perptypes.PerpetualMarketType_PERPETUAL_MARKET_TYPE_ISOLATED,
 		},
 		FundingIndex: dtypes.ZeroInt(),
+		OpenInterest: dtypes.ZeroInt(),
 	}
 )
 

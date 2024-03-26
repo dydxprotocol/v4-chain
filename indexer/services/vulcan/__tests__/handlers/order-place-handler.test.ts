@@ -56,13 +56,13 @@ import {
 } from '@dydxprotocol-indexer/v4-protos';
 import { KafkaMessage } from 'kafkajs';
 import Long from 'long';
-import { convertToRedisOrder } from '../../src/handlers/helpers';
 import { redisClient, redisClient as client } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace } from '../helpers/helpers';
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
-import { getOrderIdHash, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
   ...jest.requireActual('@dydxprotocol-indexer/base'),
@@ -81,6 +81,10 @@ describe('order-place-handler', () => {
 
   afterAll(() => {
     jest.useRealTimers();
+  });
+
+  afterEach(() => {
+    config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = true;
   });
 
   describe('handle', () => {
@@ -118,23 +122,23 @@ describe('order-place-handler', () => {
       quantums: Long.fromValue(500_000, true),
       subticks: Long.fromValue(1_000_000, true),
     };
-    const replacedOrder: RedisOrder = convertToRedisOrder(
+    const replacedOrder: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrder,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderGoodTilBlockTime: RedisOrder = convertToRedisOrder(
+    const replacedOrderGoodTilBlockTime: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderGoodTilBlockTime,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderConditional: RedisOrder = convertToRedisOrder(
+    const replacedOrderConditional: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderConditional,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderFok: RedisOrder = convertToRedisOrder(
+    const replacedOrderFok: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderFok,
       testConstants.defaultPerpetualMarket,
     );
-    const replacedOrderIoc: RedisOrder = convertToRedisOrder(
+    const replacedOrderIoc: RedisOrder = redisPackage.convertToRedisOrder(
       replacementOrderIoc,
       testConstants.defaultPerpetualMarket,
     );
@@ -279,7 +283,7 @@ describe('order-place-handler', () => {
       expectedOrderUuid: string,
       expectSubaccountMessageSent: boolean,
     ) => {
-      const expectedOrder: RedisOrder = convertToRedisOrder(
+      const expectedOrder: RedisOrder = redisPackage.convertToRedisOrder(
         orderToPlace,
         testConstants.defaultPerpetualMarket,
       );
@@ -831,19 +835,38 @@ describe('order-place-handler', () => {
         redisTestConstants.defaultOrderGoodTilBlockTime,
         redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         dbOrderGoodTilBlockTime,
+        false,
       ],
       [
         'conditional',
         redisTestConstants.defaultConditionalOrder,
         redisTestConstants.defaultRedisOrderConditional,
         dbConditionalOrder,
+        false,
+      ],
+      [
+        'good-til-block-time',
+        redisTestConstants.defaultOrderGoodTilBlockTime,
+        redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        dbOrderGoodTilBlockTime,
+        true,
+      ],
+      [
+        'conditional',
+        redisTestConstants.defaultConditionalOrder,
+        redisTestConstants.defaultRedisOrderConditional,
+        dbConditionalOrder,
+        true,
       ],
     ])('handles order place with OPEN placement status, exists initially (with %s)', async (
       _name: string,
       orderToPlace: IndexerOrder,
       expectedRedisOrder: RedisOrder,
       placedOrder: OrderFromDatabase,
+      sendSubaccountWebsocketMessage: boolean,
     ) => {
+      // eslint-disable-next-line max-len
+      config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS = sendSubaccountWebsocketMessage;
       synchronizeWrapBackgroundTask(wrapBackgroundTask);
       const producerSendSpy: jest.SpyInstance = jest.spyOn(producer, 'send').mockReturnThis();
       // Handle the order place event for the initial order with BEST_EFFORT_OPENED
@@ -884,7 +907,9 @@ describe('order-place-handler', () => {
         testConstants.defaultPerpetualMarket,
         APIOrderStatusEnum.OPEN,
         // Subaccount messages should be sent for stateful order with OPEN status
-        true,
+        !(
+          isLongTermOrder(expectedRedisOrder.order!.orderId!.orderFlags) &&
+          !sendSubaccountWebsocketMessage),
       );
 
       expect(logger.error).not.toHaveBeenCalled();
