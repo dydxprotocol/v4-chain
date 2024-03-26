@@ -35,4 +35,9 @@ var (
 		6,
 		"OrderExpirationSeconds must be strictly greater than 0",
 	)
+	ErrInvalidSpreadMinPpm = errorsmod.Register(
+		ModuleName,
+		7,
+		"SpreadMinPpm must be strictly greater than 0",
+	)
 )

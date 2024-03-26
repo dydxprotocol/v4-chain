@@ -16,8 +16,12 @@ func DefaultParams() Params {
 
 // Validate validates `x/vault` parameters.
 func (p Params) Validate() error {
-	// Skew factor must be between 0 and 1.
-	if p.SkewFactorPpm == 0 || p.SkewFactorPpm >= lib.OneMillion {
+	// Spread min ppm must be positive.
+	if p.SpreadMinPpm == 0 {
+		return ErrInvalidSpreadMinPpm
+	}
+	// Skew factor must be between 0 and 1 (inclusive).
+	if p.SkewFactorPpm > lib.OneMillion {
 		return ErrInvalidSkewFactorPpm
 	}
 	// Order size must be positive.

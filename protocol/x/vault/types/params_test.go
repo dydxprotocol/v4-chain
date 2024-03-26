@@ -18,23 +18,23 @@ func TestValidate(t *testing.T) {
 			params:      types.DefaultParams(),
 			expectedErr: nil,
 		},
-		"Failure - SkewFactorPpm is 0": {
+		"Failure - SpreadMinPpm is 0": {
 			params: types.Params{
 				Layers:                 2,
-				SpreadMinPpm:           3_000,
+				SpreadMinPpm:           0,
 				SpreadBufferPpm:        1_500,
-				SkewFactorPpm:          0,
+				SkewFactorPpm:          500_000,
 				OrderSizePpm:           100_000,
 				OrderExpirationSeconds: 5,
 			},
-			expectedErr: types.ErrInvalidSkewFactorPpm,
+			expectedErr: types.ErrInvalidSpreadMinPpm,
 		},
-		"Failure - SkewFactorPpm is 1": {
+		"Failure - SkewFactorPpm is greater than 1": {
 			params: types.Params{
 				Layers:                 2,
 				SpreadMinPpm:           3_000,
 				SpreadBufferPpm:        1_500,
-				SkewFactorPpm:          1_000_000,
+				SkewFactorPpm:          1_000_001,
 				OrderSizePpm:           100_000,
 				OrderExpirationSeconds: 5,
 			},
