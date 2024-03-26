@@ -346,6 +346,7 @@ export class OrderPlaceHandler extends Handler {
       ),
       headers: {
         message_received_timestamp: headers.message_received_timestamp,
+        event_type: String(headers.event_type),
       },
     };
     sendMessageWrapper(orderUpdateMessage, KafkaTopics.TO_VULCAN);
