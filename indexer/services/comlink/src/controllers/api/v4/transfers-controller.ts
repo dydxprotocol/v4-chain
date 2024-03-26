@@ -230,9 +230,11 @@ class TransfersController extends Controller {
       });
 
     // Filter out transfers where the sender and recipient parent subaccount numbers are the same
-    const transfersFiltered = transfersWithParentSubaccount.filter((transfer) => {
-      return transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
-    });
+    const transfersFiltered:
+    ParentSubaccountTransferResponseObject[] = transfersWithParentSubaccount.filter(
+      (transfer) => {
+        return transfer.sender.parentSubaccountNumber !== transfer.recipient.parentSubaccountNumber;
+      });
 
     return { transfers: transfersFiltered };
   }
