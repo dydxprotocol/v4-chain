@@ -100,7 +100,7 @@ export class MessageForwarder {
     if (originalMessageTimestamp !== undefined) {
       stats.timing(
         `${config.SERVICE_NAME}.message_time_since_received`,
-        start - Number(message.headers?.message_received_timestamp),
+        start - Number(originalMessageTimestamp),
         STATS_NO_SAMPLING,
         {
           topic,
