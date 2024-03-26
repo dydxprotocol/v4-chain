@@ -100,6 +100,18 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     );
     await handler.handleUpdate(update, message.headers ?? {});
 
+    const postProcessingTime: number = Date.now();
+    if (originalMessageTimestamp !== undefined) {
+      stats.timing(
+        `${config.SERVICE_NAME}.message_time_since_received_post_processing`,
+        postProcessingTime - Number(originalMessageTimestamp),
+        STATS_NO_SAMPLING,
+        {
+          topic: KafkaTopics.TO_VULCAN,
+        },
+      );
+    }
+
     success = true;
   } catch (error) {
     if (error instanceof ParseMessageError) {
