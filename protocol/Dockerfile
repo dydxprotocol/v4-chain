@@ -41,11 +41,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
       -o /dydxprotocol/build/ \
       ./...
 
-# Build the oracle binary
-WORKDIR /
-RUN git clone https://github.com/skip-mev/slinky.git
-WORKDIR /slinky
-RUN make build
 
 # --------------------------------------------------------
 # Runner
@@ -56,9 +51,6 @@ FROM golang@sha256:${GOLANG_1_22_ALPINE_DIGEST}
 RUN apk add --no-cache bash
 
 COPY --from=builder /dydxprotocol/build/dydxprotocold /bin/dydxprotocold
-COPY --from=builder /dydxprotocol/daemons/slinky/config/oracle.json /etc/oracle.json
-COPY --from=builder /dydxprotocol/daemons/slinky/config/market.json /etc/market.json
-COPY --from=builder /slinky/build/oracle /bin/slinky
 
 ENV HOME /dydxprotocol
 WORKDIR $HOME
