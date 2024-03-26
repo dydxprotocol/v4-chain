@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -45,7 +44,8 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
 		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Cmp(dtypes.NewInt(0)) <= 0 {
+		totalSharesRat, err := totalShares.ToBigRat()
+		if err != nil || totalSharesRat.Sign() <= 0 {
 			continue
 		}
 

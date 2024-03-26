@@ -6,7 +6,6 @@ import (
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -27,13 +26,18 @@ func (k Keeper) GetTotalShares(
 	return val, true
 }
 
-// SetTotalShares sets TotalShares for a vault. Returns error if `totalShares` is negative.
+// SetTotalShares sets TotalShares for a vault. Returns error if `totalShares` fails validation
+// or is negative.
 func (k Keeper) SetTotalShares(
 	ctx sdk.Context,
 	vaultId types.VaultId,
 	totalShares types.NumShares,
 ) error {
-	if totalShares.NumShares.Cmp(dtypes.NewInt(0)) == -1 {
+	totalSharesRat, err := totalShares.ToBigRat()
+	if err != nil {
+		return err
+	}
+	if totalSharesRat.Sign() < 0 {
 		return types.ErrNegativeShares
 	}
 
@@ -42,9 +46,10 @@ func (k Keeper) SetTotalShares(
 	totalSharesStore.Set(vaultId.ToStateKey(), b)
 
 	// Emit metric on TotalShares.
+	totalSharesFloat, _ := totalSharesRat.Float32()
 	vaultId.SetGaugeWithLabels(
 		metrics.TotalShares,
-		float32(totalShares.NumShares.BigInt().Uint64()),
+		totalSharesFloat,
 	)
 
 	return nil
@@ -70,14 +75,25 @@ func (k Keeper) MintShares(
 	if quantumsToDeposit.Cmp(big.NewInt(0)) <= 0 {
 		return types.ErrInvalidDepositAmount
 	}
+	// Get existing TotalShares of the vault.
 	totalShares, exists := k.GetTotalShares(ctx, vaultId)
-	existingTotalShares := totalShares.NumShares.BigInt()
-	var sharesToMint *big.Int
-	if !exists || existingTotalShares.Cmp(big.NewInt(0)) < 1 {
+	var existingTotalShares *big.Rat
+	var err error
+	if exists {
+		existingTotalShares, err = totalShares.ToBigRat()
+		if err != nil {
+			return err
+		}
+	} else {
+		existingTotalShares = new(big.Rat).SetInt(big.NewInt(0))
+	}
+	// Calculate shares to mint.
+	var sharesToMint *big.Rat
+	if !exists || existingTotalShares.Sign() <= 0 {
 		// Mint `quoteQuantums` number of shares.
-		sharesToMint = quantumsToDeposit
+		sharesToMint = new(big.Rat).SetInt(quantumsToDeposit)
 		// Initialize existingTotalShares as 0.
-		existingTotalShares = big.NewInt(0)
+		existingTotalShares = new(big.Rat).SetInt(big.NewInt(0))
 	} else {
 		// Get vault equity.
 		equity, err := k.GetVaultEquity(ctx, vaultId)
@@ -94,28 +110,18 @@ func (k Keeper) MintShares(
 		// - a vault currently has 5000 shares and 4000 equity (in quote quantums)
 		// - each quote quantum is worth 5000 / 4000 = 1.25 shares
 		// - a deposit of 1000 quote quantums should thus be given 1000 * 1.25 = 1250 shares
-		// For shares calculation to be accurate, scale everything by denominator and mint
-		// numerator number of shares.
-		// For example:
-		// - a vault currently has 1 share and 1000 equity (in quote quantums)
-		// - a deposit of 1 quote quantum is worth 1 * 1 / 1000 shares
-		// - to be accurate, we credit 1 share and scale existing shares by 1000
-		newShares := new(big.Rat).SetInt(quantumsToDeposit)
-		newShares = newShares.Mul(newShares, new(big.Rat).SetInt(existingTotalShares))
-		newShares = newShares.Quo(newShares, new(big.Rat).SetInt(equity))
-		existingTotalShares = existingTotalShares.Mul(existingTotalShares, newShares.Denom())
-		sharesToMint = newShares.Num()
+		sharesToMint = new(big.Rat).SetInt(quantumsToDeposit)
+		sharesToMint = sharesToMint.Mul(sharesToMint, existingTotalShares)
+		sharesToMint = sharesToMint.Quo(sharesToMint, new(big.Rat).SetInt(equity))
 	}
 
 	// Increase TotalShares of the vault.
-	err := k.SetTotalShares(
+	err = k.SetTotalShares(
 		ctx,
 		vaultId,
-		types.NumShares{
-			NumShares: dtypes.NewIntFromBigInt(
-				sharesToMint.Add(sharesToMint, existingTotalShares),
-			),
-		},
+		types.BigRatToNumShares(
+			existingTotalShares.Add(existingTotalShares, sharesToMint),
+		),
 	)
 	if err != nil {
 		return err

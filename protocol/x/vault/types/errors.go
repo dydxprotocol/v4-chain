@@ -30,4 +30,14 @@ var (
 		5,
 		"Equity is non-positive",
 	)
+	ErrZeroDenominator = errorsmod.Register(
+		ModuleName,
+		6,
+		"Denominator is zero",
+	)
+	ErrNilFraction = errorsmod.Register(
+		ModuleName,
+		7,
+		"Fraction is nil",
+	)
 )
