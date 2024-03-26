@@ -1,18 +1,21 @@
 package app
 
 import (
+	"sync"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"sync"
 
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -228,6 +231,12 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		h.globalLock.Lock()
 		defer h.globalLock.Unlock()
 	}
+
+	telemetry.IncrCounter(
+		1,
+		"roy_clob_tx",
+		metrics.Count,
+	)
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
