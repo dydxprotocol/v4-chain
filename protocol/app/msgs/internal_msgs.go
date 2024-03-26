@@ -28,6 +28,7 @@ import (
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
@@ -171,6 +172,10 @@ var (
 		// stats
 		"/dydxprotocol.stats.MsgUpdateParams":         &stats.MsgUpdateParams{},
 		"/dydxprotocol.stats.MsgUpdateParamsResponse": nil,
+
+		// vault
+		"/dydxprotocol.vault.MsgUpdateParams":         &vault.MsgUpdateParams{},
+		"/dydxprotocol.vault.MsgUpdateParamsResponse": nil,
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            &vest.MsgSetVestEntry{},
