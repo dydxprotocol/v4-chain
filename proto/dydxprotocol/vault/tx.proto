@@ -1,7 +1,10 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "cosmos_proto/cosmos.proto";
+import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/vault/params.proto";
 import "dydxprotocol/vault/vault.proto";
 import "gogoproto/gogo.proto";
 
@@ -11,6 +14,8 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 service Msg {
   // DepositToVault deposits funds into a vault.
   rpc DepositToVault(MsgDepositToVault) returns (MsgDepositToVaultResponse);
+  // UpdateParams updates the Params in state.
+  rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgDepositToVault is the Msg/DepositToVault request type.
@@ -31,3 +36,16 @@ message MsgDepositToVault {
 
 // MsgDepositToVaultResponse is the Msg/DepositToVault response type.
 message MsgDepositToVaultResponse {}
+
+// MsgUpdateParams is the Msg/UpdateParams request type.
+message MsgUpdateParams {
+  // Authority is the address that controls the module.
+  option (cosmos.msg.v1.signer) = "authority";
+  string authority = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+
+  // The parameters to update. Each field must be set.
+  Params params = 2 [ (gogoproto.nullable) = false ];
+}
+
+// MsgUpdateParamsResponse is the Msg/UpdateParams response type.
+message MsgUpdateParamsResponse {}
