@@ -52,7 +52,6 @@ RUN apk add --no-cache bash
 
 COPY --from=builder /dydxprotocol/build/dydxprotocold /bin/dydxprotocold
 
-
 ENV HOME /dydxprotocol
 WORKDIR $HOME
 
