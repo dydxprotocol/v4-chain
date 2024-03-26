@@ -134,7 +134,6 @@ func TestMintShares(t *testing.T) {
 			totalShares:       big.NewRat(1, 1),
 			quantumsToDeposit: big.NewInt(1),
 			// Should mint `1 / 1_000_000` shares.
-			// Should thus mint 1 share and scale existing shares by 1_000_000.
 			expectedTotalShares: big.NewRat(1_000_001, 1_000_000),
 		},
 		"Equity 8000, TotalShares 4000, Deposit 455": {
