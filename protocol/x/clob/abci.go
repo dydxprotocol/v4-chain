@@ -175,7 +175,7 @@ func PrepareCheckState(
 				allUpdates.Append(orderbookUpdate)
 			}
 		}
-		keeper.SendOrderbookUpdates(allUpdates, false)
+		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	// 3. Place all stateful order placements included in the last block on the memclob.

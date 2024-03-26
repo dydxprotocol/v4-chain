@@ -274,6 +274,6 @@ func (k Keeper) PruneStateFillAmountsForShortTermOrders(
 				allUpdates.Append(orderbookUpdate)
 			}
 		}
-		k.SendOrderbookUpdates(allUpdates, false)
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 }
