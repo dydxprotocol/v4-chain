@@ -31,6 +31,8 @@ type DepositInstance struct {
 	checkTxFails bool
 	// Whether DeliverTx fails.
 	deliverTxFails bool
+	// Expected owner shares for depositor above.
+	expectedOwnerShares *big.Rat
 }
 
 // DepositorSetup represents the setup of a depositor.
@@ -67,14 +69,16 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 			depositInstances: []DepositInstance{
 				{
-					depositor:     constants.Alice_Num0,
-					depositAmount: big.NewInt(123),
-					msgSigner:     constants.Alice_Num0.Owner,
+					depositor:           constants.Alice_Num0,
+					depositAmount:       big.NewInt(123),
+					msgSigner:           constants.Alice_Num0.Owner,
+					expectedOwnerShares: big.NewRat(123, 1),
 				},
 				{
-					depositor:     constants.Alice_Num0,
-					depositAmount: big.NewInt(321),
-					msgSigner:     constants.Alice_Num0.Owner,
+					depositor:           constants.Alice_Num0,
+					depositAmount:       big.NewInt(321),
+					msgSigner:           constants.Alice_Num0.Owner,
+					expectedOwnerShares: big.NewRat(444, 1),
 				},
 			},
 			totalSharesHistory: []*big.Rat{
@@ -100,14 +104,16 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 			depositInstances: []DepositInstance{
 				{
-					depositor:     constants.Alice_Num0,
-					depositAmount: big.NewInt(1_000),
-					msgSigner:     constants.Alice_Num0.Owner,
+					depositor:           constants.Alice_Num0,
+					depositAmount:       big.NewInt(1_000),
+					msgSigner:           constants.Alice_Num0.Owner,
+					expectedOwnerShares: big.NewRat(1_000, 1),
 				},
 				{
-					depositor:     constants.Bob_Num1,
-					depositAmount: big.NewInt(500),
-					msgSigner:     constants.Bob_Num1.Owner,
+					depositor:           constants.Bob_Num1,
+					depositAmount:       big.NewInt(500),
+					msgSigner:           constants.Bob_Num1.Owner,
+					expectedOwnerShares: big.NewRat(500, 1),
 				},
 			},
 			totalSharesHistory: []*big.Rat{
@@ -133,15 +139,17 @@ func TestMsgDepositToVault(t *testing.T) {
 			},
 			depositInstances: []DepositInstance{
 				{
-					depositor:     constants.Alice_Num0,
-					depositAmount: big.NewInt(1_000),
-					msgSigner:     constants.Alice_Num0.Owner,
+					depositor:           constants.Alice_Num0,
+					depositAmount:       big.NewInt(1_000),
+					msgSigner:           constants.Alice_Num0.Owner,
+					expectedOwnerShares: big.NewRat(1_000, 1),
 				},
 				{
-					depositor:      constants.Bob_Num1,
-					depositAmount:  big.NewInt(501), // Greater than balance.
-					msgSigner:      constants.Bob_Num1.Owner,
-					deliverTxFails: true,
+					depositor:           constants.Bob_Num1,
+					depositAmount:       big.NewInt(501), // Greater than balance.
+					msgSigner:           constants.Bob_Num1.Owner,
+					deliverTxFails:      true,
+					expectedOwnerShares: nil,
 				},
 			},
 			totalSharesHistory: []*big.Rat{
@@ -172,11 +180,13 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:               constants.Alice_Num0.Owner, // Incorrect signer.
 					checkTxFails:            true,
 					checkTxResponseContains: "does not match signer address",
+					expectedOwnerShares:     nil,
 				},
 				{
-					depositor:     constants.Alice_Num0,
-					depositAmount: big.NewInt(1_000),
-					msgSigner:     constants.Alice_Num0.Owner,
+					depositor:           constants.Alice_Num0,
+					depositAmount:       big.NewInt(1_000),
+					msgSigner:           constants.Alice_Num0.Owner,
+					expectedOwnerShares: big.NewRat(1_000, 1),
 				},
 			},
 			totalSharesHistory: []*big.Rat{
@@ -207,6 +217,7 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:               constants.Alice_Num0.Owner,
 					checkTxFails:            true,
 					checkTxResponseContains: "Deposit amount is invalid",
+					expectedOwnerShares:     nil,
 				},
 				{
 					depositor:               constants.Bob_Num0,
@@ -214,6 +225,7 @@ func TestMsgDepositToVault(t *testing.T) {
 					msgSigner:               constants.Bob_Num0.Owner,
 					checkTxFails:            true,
 					checkTxResponseContains: "Deposit amount is invalid",
+					expectedOwnerShares:     nil,
 				},
 			},
 			totalSharesHistory: []*big.Rat{
@@ -319,6 +331,17 @@ func TestMsgDepositToVault(t *testing.T) {
 					t,
 					vaulttypes.BigRatToNumShares(tc.totalSharesHistory[i]),
 					totalShares,
+				)
+				// Check that owner shares of the depositor is as expected.
+				ownerShares, _ := tApp.App.VaultKeeper.GetOwnerShares(
+					ctx,
+					tc.vaultId,
+					depositInstance.depositor.Owner,
+				)
+				require.Equal(
+					t,
+					vaulttypes.BigRatToNumShares(depositInstance.expectedOwnerShares),
+					ownerShares,
 				)
 				// Check that equity of the vault is as expected.
 				vaultEquity, err := tApp.App.VaultKeeper.GetVaultEquity(ctx, tc.vaultId)

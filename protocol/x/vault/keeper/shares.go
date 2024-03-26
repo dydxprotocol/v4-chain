@@ -62,6 +62,54 @@ func (k Keeper) getTotalSharesIterator(ctx sdk.Context) storetypes.Iterator {
 	return storetypes.KVStorePrefixIterator(store, []byte{})
 }
 
+// GetOwnerShares gets owner shares for an owner in a vault.
+func (k Keeper) GetOwnerShares(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	owner string,
+) (val types.NumShares, exists bool) {
+	store := k.getVaultOwnerSharesStore(ctx, vaultId)
+
+	b := store.Get([]byte(owner))
+	if b == nil {
+		return val, false
+	}
+
+	k.cdc.MustUnmarshal(b, &val)
+	return val, true
+}
+
+// SetOwnerShares sets owner shares for an owner in a vault.
+func (k Keeper) SetOwnerShares(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	owner string,
+	ownerShares types.NumShares,
+) error {
+	ownerSharesRat, err := ownerShares.ToBigRat()
+	if err != nil {
+		return err
+	}
+	if ownerSharesRat.Sign() < 0 {
+		return types.ErrNegativeShares
+	}
+
+	b := k.cdc.MustMarshal(&ownerShares)
+	store := k.getVaultOwnerSharesStore(ctx, vaultId)
+	store.Set([]byte(owner), b)
+
+	return nil
+}
+
+// getVaultOwnerSharesStore returns the store for owner shares of a given vault.
+func (k Keeper) getVaultOwnerSharesStore(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+) prefix.Store {
+	store := prefix.NewStore(ctx.KVStore(k.storeKey), []byte(types.OwnerSharesKeyPrefix))
+	return prefix.NewStore(store, vaultId.ToStateKeyPrefix())
+}
+
 // MintShares mints shares of a vault for `owner` based on `quantumsToDeposit` by:
 // 1. Increasing total shares of the vault.
 // 2. Increasing owner shares of the vault for given `owner`.
@@ -127,7 +175,37 @@ func (k Keeper) MintShares(
 		return err
 	}
 
-	// TODO (TRA-170): Increase owner shares.
+	// Increase owner shares in the vault.
+	ownerShares, exists := k.GetOwnerShares(ctx, vaultId, owner)
+	if !exists {
+		// Set owner shares to be sharesToMint.
+		err := k.SetOwnerShares(
+			ctx,
+			vaultId,
+			owner,
+			types.BigRatToNumShares(sharesToMint),
+		)
+		if err != nil {
+			return err
+		}
+	} else {
+		// Increase existing owner shares by sharesToMint.
+		existingOwnerShares, err := ownerShares.ToBigRat()
+		if err != nil {
+			return err
+		}
+		err = k.SetOwnerShares(
+			ctx,
+			vaultId,
+			owner,
+			types.BigRatToNumShares(
+				existingOwnerShares.Add(existingOwnerShares, sharesToMint),
+			),
+		)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
