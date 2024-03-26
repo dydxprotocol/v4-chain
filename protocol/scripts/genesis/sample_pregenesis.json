@@ -1809,7 +1809,7 @@
     "vault": {
       "params": {
         "layers": 2,
-        "order_expiration_seconds": 5,
+        "order_expiration_seconds": 2,
         "order_size_ppm": 100000,
         "skew_factor_ppm": 500000,
         "spread_buffer_ppm": 1500,

@@ -1,7 +1,5 @@
 package types
 
-import "github.com/dydxprotocol/v4-chain/protocol/lib"
-
 // DefaultParams returns a default set of `x/vault` parameters.
 func DefaultParams() Params {
 	return Params{
@@ -10,7 +8,7 @@ func DefaultParams() Params {
 		SpreadBufferPpm:        1_500,   // 15 bps
 		SkewFactorPpm:          500_000, // 0.5
 		OrderSizePpm:           100_000, // 10%
-		OrderExpirationSeconds: 5,       // 5 seconds
+		OrderExpirationSeconds: 2,       // 2 seconds
 	}
 }
 
@@ -19,10 +17,6 @@ func (p Params) Validate() error {
 	// Spread min ppm must be positive.
 	if p.SpreadMinPpm == 0 {
 		return ErrInvalidSpreadMinPpm
-	}
-	// Skew factor must be between 0 and 1 (inclusive).
-	if p.SkewFactorPpm > lib.OneMillion {
-		return ErrInvalidSkewFactorPpm
 	}
 	// Order size must be positive.
 	if p.OrderSizePpm == 0 {

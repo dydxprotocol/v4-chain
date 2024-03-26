@@ -35,9 +35,9 @@ func TestGetSetParams(t *testing.T) {
 		Layers:                 3,
 		SpreadMinPpm:           4_000,
 		SpreadBufferPpm:        2_000,
-		SkewFactorPpm:          1_000_000, // invalid
+		SkewFactorPpm:          1_000_000,
 		OrderSizePpm:           200_000,
-		OrderExpirationSeconds: 10,
+		OrderExpirationSeconds: 0, // invalid
 	}
 	err = k.SetParams(ctx, invalidParams)
 	require.Error(t, err)

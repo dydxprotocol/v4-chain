@@ -29,17 +29,6 @@ func TestValidate(t *testing.T) {
 			},
 			expectedErr: types.ErrInvalidSpreadMinPpm,
 		},
-		"Failure - SkewFactorPpm is greater than 1": {
-			params: types.Params{
-				Layers:                 2,
-				SpreadMinPpm:           3_000,
-				SpreadBufferPpm:        1_500,
-				SkewFactorPpm:          1_000_001,
-				OrderSizePpm:           100_000,
-				OrderExpirationSeconds: 5,
-			},
-			expectedErr: types.ErrInvalidSkewFactorPpm,
-		},
 		"Failure - OrderSizePpm is 0": {
 			params: types.Params{
 				Layers:                 2,

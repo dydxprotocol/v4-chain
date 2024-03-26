@@ -20,24 +20,19 @@ var (
 		3,
 		"MarketParam not found",
 	)
-	ErrInvalidSkewFactorPpm = errorsmod.Register(
-		ModuleName,
-		4,
-		"SkewFactorPpm must be strictly greater than 0 and less than 1",
-	)
 	ErrInvalidOrderSizePpm = errorsmod.Register(
 		ModuleName,
-		5,
+		4,
 		"OrderSizePpm must be strictly greater than 0",
 	)
 	ErrInvalidOrderExpirationSeconds = errorsmod.Register(
 		ModuleName,
-		6,
+		5,
 		"OrderExpirationSeconds must be strictly greater than 0",
 	)
 	ErrInvalidSpreadMinPpm = errorsmod.Register(
 		ModuleName,
-		7,
+		6,
 		"SpreadMinPpm must be strictly greater than 0",
 	)
 )
