@@ -40,6 +40,13 @@ export enum RequestMethod {
   PUT = 'PUT',
 }
 
+/* ------- Pagination ------- */
+export interface PaginationResponse {
+  pageSize?: number,
+  totalResults?: number,
+  offset?: number,
+}
+
 /* ------- SUBACCOUNT TYPES ------- */
 
 export interface AddressResponse {
@@ -120,7 +127,7 @@ export type AssetPositionsMap = { [symbol: string]: AssetPositionResponseObject 
 
 /* ------- FILL TYPES ------- */
 
-export interface FillResponse {
+export interface FillResponse extends PaginationResponse {
   fills: FillResponseObject[],
 }
 
@@ -143,7 +150,7 @@ export interface FillResponseObject {
 
 /* ------- TRANSFER TYPES ------- */
 
-export interface TransferResponse {
+export interface TransferResponse extends PaginationResponse {
   transfers: TransferResponseObject[],
 }
 
@@ -184,7 +191,7 @@ export interface PnlTicksResponseObject {
 
 /* ------- TRADE TYPES ------- */
 
-export interface TradeResponse {
+export interface TradeResponse extends PaginationResponse {
   trades: TradeResponseObject[],
 }
 

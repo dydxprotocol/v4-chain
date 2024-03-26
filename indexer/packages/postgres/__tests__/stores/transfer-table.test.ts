@@ -115,7 +115,7 @@ describe('Transfer store', () => {
       TransferTable.create(transfer2),
     ]);
 
-    const transfers: TransferFromDatabase[] = await TransferTable.findAllToOrFromSubaccountId(
+    const { results: transfers } = await TransferTable.findAllToOrFromSubaccountId(
       { subaccountId: [defaultSubaccountId] },
       [], {
         orderBy: [[TransferColumns.id, Ordering.ASC]],
@@ -142,7 +142,7 @@ describe('Transfer store', () => {
       TransferTable.create(transfer2),
     ]);
 
-    const transfers: TransferFromDatabase[] = await TransferTable.findAllToOrFromSubaccountId(
+    const { results: transfers } = await TransferTable.findAllToOrFromSubaccountId(
       {
         subaccountId: [defaultSubaccountId],
         eventId: [defaultTendermintEventId],
@@ -153,6 +153,57 @@ describe('Transfer store', () => {
 
     expect(transfers.length).toEqual(1);
     expect(transfers[0]).toEqual(expect.objectContaining(defaultTransfer));
+  });
+
+  it('Successfully finds all transfers to and from subaccount using pagination', async () => {
+    const transfer2: TransferCreateObject = {
+      senderSubaccountId: defaultSubaccountId2,
+      recipientSubaccountId: defaultSubaccountId,
+      assetId: defaultAsset2.id,
+      size: '5',
+      eventId: defaultTendermintEventId2,
+      transactionHash: '', // TODO: Add a real transaction Hash
+      createdAt: createdDateTime.toISO(),
+      createdAtHeight: createdHeight,
+    };
+    await Promise.all([
+      TransferTable.create(defaultTransfer),
+      TransferTable.create(transfer2),
+    ]);
+
+    const responsePageOne = await TransferTable.findAllToOrFromSubaccountId(
+      { subaccountId: [defaultSubaccountId], page: 1, limit: 1 },
+      [], {
+        orderBy: [[TransferColumns.id, Ordering.ASC]],
+      });
+
+    expect(responsePageOne.results.length).toEqual(1);
+    expect(responsePageOne.results[0]).toEqual(expect.objectContaining(defaultTransfer));
+    expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
+
+    const responsePageTwo = await TransferTable.findAllToOrFromSubaccountId(
+      { subaccountId: [defaultSubaccountId], page: 2, limit: 1 },
+      [], {
+        orderBy: [[TransferColumns.id, Ordering.ASC]],
+      });
+
+    expect(responsePageTwo.results.length).toEqual(1);
+    expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(transfer2));
+    expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
+
+    const responsePageAllPages = await TransferTable.findAllToOrFromSubaccountId(
+      { subaccountId: [defaultSubaccountId], page: 1, limit: 2 },
+      [], {
+        orderBy: [[TransferColumns.id, Ordering.ASC]],
+      });
+
+    expect(responsePageAllPages.results.length).toEqual(2);
+    expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining(defaultTransfer));
+    expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(transfer2));
+    expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
   });
 
   it('Successfully finds Transfer with eventId', async () => {
@@ -234,7 +285,7 @@ describe('Transfer store', () => {
       TransferTable.create(transfer2),
     ]);
 
-    const transfers: TransferFromDatabase[] = await TransferTable.findAllToOrFromSubaccountId(
+    const { results: transfers } = await TransferTable.findAllToOrFromSubaccountId(
       {
         subaccountId: [defaultSubaccountId],
         createdBeforeOrAt: '2000-05-25T00:00:00.000Z',

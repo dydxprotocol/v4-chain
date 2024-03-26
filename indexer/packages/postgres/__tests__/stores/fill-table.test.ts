@@ -71,7 +71,7 @@ describe('Fill store', () => {
       FillTable.create(defaultFill),
     ]);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll({}, [], {});
+    const { results: fills } = await FillTable.findAll({}, [], {});
 
     expect(fills.length).toEqual(2);
     expect(fills[0]).toEqual(expect.objectContaining(defaultFill));
@@ -91,7 +91,7 @@ describe('Fill store', () => {
       }),
     ]);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll({}, [], {
+    const { results: fills } = await FillTable.findAll({}, [], {
       orderBy: [[FillColumns.eventId, Ordering.DESC]],
     });
 
@@ -103,6 +103,59 @@ describe('Fill store', () => {
     expect(fills[1]).toEqual(expect.objectContaining(defaultFill));
   });
 
+  it('Successfully finds fills using pagination', async () => {
+    await Promise.all([
+      FillTable.create(defaultFill),
+      FillTable.create({
+        ...defaultFill,
+        eventId: defaultTendermintEventId2,
+      }),
+    ]);
+
+    const responsePageOne = await FillTable.findAll({
+      page: 1,
+      limit: 1,
+    }, [], {
+      orderBy: [[FillColumns.eventId, Ordering.DESC]],
+    });
+
+    expect(responsePageOne.results.length).toEqual(1);
+    expect(responsePageOne.results[0]).toEqual(expect.objectContaining({
+      ...defaultFill,
+      eventId: defaultTendermintEventId2,
+    }));
+    expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
+
+    const responsePageTwo = await FillTable.findAll({
+      page: 2,
+      limit: 1,
+    }, [], {
+      orderBy: [[FillColumns.eventId, Ordering.DESC]],
+    });
+
+    expect(responsePageTwo.results.length).toEqual(1);
+    expect(responsePageTwo.results[0]).toEqual(expect.objectContaining(defaultFill));
+    expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
+
+    const responsePageAllPages = await FillTable.findAll({
+      page: 1,
+      limit: 2,
+    }, [], {
+      orderBy: [[FillColumns.eventId, Ordering.DESC]],
+    });
+
+    expect(responsePageAllPages.results.length).toEqual(2);
+    expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining({
+      ...defaultFill,
+      eventId: defaultTendermintEventId2,
+    }));
+    expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining(defaultFill));
+    expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
+  });
+
   it('Successfully finds Fill with eventId', async () => {
     await Promise.all([
       FillTable.create(defaultFill),
@@ -112,7 +165,7 @@ describe('Fill store', () => {
       }),
     ]);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         eventId: defaultFill.eventId,
       },
@@ -134,7 +187,7 @@ describe('Fill store', () => {
   ) => {
     await FillTable.create(defaultFill);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         createdBeforeOrAt: createdDateTime.plus({ seconds: deltaSeconds }).toISO(),
       },
@@ -155,7 +208,7 @@ describe('Fill store', () => {
   ) => {
     await FillTable.create(defaultFill);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         createdBeforeOrAtHeight: Big(createdHeight).plus(deltaBlocks).toFixed(),
       },
@@ -177,7 +230,7 @@ describe('Fill store', () => {
   ) => {
     await FillTable.create(defaultFill);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         createdOnOrAfter: createdDateTime.minus({ seconds: deltaSeconds }).toISO(),
       },
@@ -199,7 +252,7 @@ describe('Fill store', () => {
   ) => {
     await FillTable.create(defaultFill);
 
-    const fills: FillFromDatabase[] = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         createdOnOrAfterHeight: Big(createdHeight).minus(deltaBlocks).toFixed(),
       },

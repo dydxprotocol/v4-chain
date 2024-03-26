@@ -25,6 +25,7 @@ import {
   CostOfFills,
   QueryableField,
   QueryConfig,
+  PaginationFromDatabase,
 } from '../types';
 
 export function uuid(eventId: Buffer, liquidity: Liquidity): string {
@@ -49,10 +50,11 @@ export async function findAll(
     createdOnOrAfter,
     clientMetadata,
     fee,
+    page,
   }: FillQueryConfig,
   requiredFields: QueryableField[],
   options: Options = DEFAULT_POSTGRES_OPTIONS,
-): Promise<FillFromDatabase[]> {
+): Promise<PaginationFromDatabase<FillFromDatabase>> {
   verifyAllRequiredFields(
     {
       limit,
@@ -156,11 +158,40 @@ export async function findAll(
     Ordering.DESC,
   );
 
-  if (limit !== undefined) {
+  if (limit !== undefined && page === undefined) {
     baseQuery = baseQuery.limit(limit);
   }
 
-  return baseQuery.returning('*');
+  /**
+   * If a query is made using a page number, then the limit property is used as 'page limit'
+   */
+  if (page !== undefined && limit !== undefined) {
+    /**
+     * We make sure that the page number is always >= 1
+     */
+    const currentPage = Math.max(1, page);
+    const offset = (currentPage - 1) * limit;
+
+    /**
+     * We need to remove the sorting as it is not necessary in this case.
+     * Also a casting of the ts type is required since the infer of the type
+     * obtained from the count is not performed.
+     */
+    const count = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+
+    baseQuery = baseQuery.offset(offset).limit(limit);
+
+    return {
+      results: await baseQuery.returning('*'),
+      limit,
+      offset,
+      total: parseInt(count.count ?? '0', 10),
+    };
+  }
+
+  return {
+    results: await baseQuery.returning('*'),
+  };
 }
 
 export async function create(

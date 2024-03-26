@@ -688,6 +688,7 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
 
 #### Enumerated Values
 
@@ -702,6 +703,9 @@ fetch('https://dydx-testnet.imperator.co/v4/fills?address=string&subaccountNumbe
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "fills": [
     {
       "id": "string",
@@ -800,6 +804,9 @@ fetch('https://dydx-testnet.imperator.co/v4/fills/parentSubaccount?address=strin
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "fills": [
     {
       "id": "string",
@@ -1966,6 +1973,7 @@ fetch('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}',
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
 
 > Example responses
 
@@ -1973,6 +1981,9 @@ fetch('https://dydx-testnet.imperator.co/v4/trades/perpetualMarket/{ticker}',
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "trades": [
     {
       "id": "string",
@@ -2048,6 +2059,7 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+|page|query|number(double)|false|none|
 
 > Example responses
 
@@ -2055,6 +2067,9 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "transfers": [
     {
       "id": "string",
@@ -2964,6 +2979,9 @@ This operation does not require authentication
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "fills": [
     {
       "id": "string",
@@ -2990,6 +3008,9 @@ This operation does not require authentication
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|pageSize|number(double)|false|none|none|
+|totalResults|number(double)|false|none|none|
+|offset|number(double)|false|none|none|
 |fills|[[FillResponseObject](#schemafillresponseobject)]|true|none|none|
 
 ## HeightResponse
@@ -3841,6 +3862,9 @@ or
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "trades": [
     {
       "id": "string",
@@ -3860,6 +3884,9 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|pageSize|number(double)|false|none|none|
+|totalResults|number(double)|false|none|none|
+|offset|number(double)|false|none|none|
 |trades|[[TradeResponseObject](#schematraderesponseobject)]|true|none|none|
 
 ## TransferType
@@ -3944,6 +3971,9 @@ or
 
 ```json
 {
+  "pageSize": 0,
+  "totalResults": 0,
+  "offset": 0,
   "transfers": [
     {
       "id": "string",
@@ -3971,5 +4001,8 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
+|pageSize|number(double)|false|none|none|
+|totalResults|number(double)|false|none|none|
+|offset|number(double)|false|none|none|
 |transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 
