@@ -82,6 +82,26 @@ func (_m *PerpetualsKeeper) GetAddPremiumVotes(ctx types.Context) *perpetualstyp
 	return r0
 }
 
+// GetAllLiquidityTiers provides a mock function with given fields: ctx
+func (_m *PerpetualsKeeper) GetAllLiquidityTiers(ctx types.Context) []perpetualstypes.LiquidityTier {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllLiquidityTiers")
+	}
+
+	var r0 []perpetualstypes.LiquidityTier
+	if rf, ok := ret.Get(0).(func(types.Context) []perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]perpetualstypes.LiquidityTier)
+		}
+	}
+
+	return r0
+}
+
 // GetAllPerpetuals provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstypes.Perpetual {
 	ret := _m.Called(ctx)
