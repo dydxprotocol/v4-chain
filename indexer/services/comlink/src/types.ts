@@ -351,6 +351,9 @@ export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCre
 
 export interface AssetPositionRequest extends SubaccountRequest {}
 
+export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
+}
+
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
 
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {

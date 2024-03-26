@@ -469,6 +469,83 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subacc
 This operation does not require authentication
 </aside>
 
+## GetAssetPositionsForParentSubaccount
+
+<a id="opIdGetAssetPositionsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /assetPositions/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "symbol": "string",
+      "side": "LONG",
+      "size": "string",
+      "assetId": "string",
+      "subaccountNumber": 0
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AssetPositionResponse](#schemaassetpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetCandles
 
 <a id="opIdGetCandles"></a>

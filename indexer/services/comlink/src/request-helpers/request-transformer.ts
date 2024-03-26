@@ -127,6 +127,21 @@ export function assetPositionToResponseObject(
   };
 }
 
+export function assetPositionMultipleSubaccountsToResponseObject(
+  position: AssetPositionFromDatabase,
+  assetMap: AssetById,
+  subaccountMap: SubaccountById,
+): AssetPositionResponseObject {
+
+  return {
+    symbol: assetMap[position.assetId].symbol,
+    side: position.isLong ? PositionSide.LONG : PositionSide.SHORT,
+    size: position.size,
+    assetId: position.assetId,
+    subaccountNumber: subaccountMap[position.subaccountId].subaccountNumber,
+  };
+}
+
 /**
  * @description Converts fill objects from the database into response objects.
  * @param fill Fill object from database.
