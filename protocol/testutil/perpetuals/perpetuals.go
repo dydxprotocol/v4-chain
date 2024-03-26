@@ -2,8 +2,13 @@ package perpetuals
 
 import (
 	"math/big"
+	"testing"
+
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -113,4 +118,28 @@ func abs(n int64) int64 {
 		return -n
 	}
 	return n
+}
+
+// Helper function to set up default open interest for input perpetuals.
+func SetUpDefaultPerpOIsForTest(
+	t *testing.T,
+	ctx sdk.Context,
+	k perptypes.PerpetualsKeeper,
+	perps []perptypes.Perpetual,
+) {
+	for _, perpOI := range constants.DefaultTestPerpOIs {
+		for _, perp := range perps {
+			if perp.Params.Id != perpOI.PerpetualId {
+				continue
+			}
+			// If the perpetual exists in input, set up the open interest.
+			require.NoError(t,
+				k.ModifyOpenInterest(
+					ctx,
+					perp.Params.Id,
+					perpOI.BaseQuantums,
+				),
+			)
+		}
+	}
 }

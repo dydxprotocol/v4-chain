@@ -40,4 +40,19 @@ var (
 		7,
 		"Fraction is nil",
 	)
+	ErrInvalidOrderSizePpm = errorsmod.Register(
+		ModuleName,
+		8,
+		"OrderSizePpm must be strictly greater than 0",
+	)
+	ErrInvalidOrderExpirationSeconds = errorsmod.Register(
+		ModuleName,
+		9,
+		"OrderExpirationSeconds must be strictly greater than 0",
+	)
+	ErrInvalidSpreadMinPpm = errorsmod.Register(
+		ModuleName,
+		10,
+		"SpreadMinPpm must be strictly greater than 0",
+	)
 )

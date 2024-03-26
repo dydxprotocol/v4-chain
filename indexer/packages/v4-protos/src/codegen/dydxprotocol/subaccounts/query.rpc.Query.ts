@@ -15,7 +15,7 @@ export interface Query {
    * if so which block they are re-enabled on.
    */
 
-  getWithdrawalAndTransfersBlockedInfo(request?: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse>;
+  getWithdrawalAndTransfersBlockedInfo(request: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse>;
 }
 export class QueryClientImpl implements Query {
   private readonly rpc: Rpc;
@@ -41,7 +41,7 @@ export class QueryClientImpl implements Query {
     return promise.then(data => QuerySubaccountAllResponse.decode(new _m0.Reader(data)));
   }
 
-  getWithdrawalAndTransfersBlockedInfo(request: QueryGetWithdrawalAndTransfersBlockedInfoRequest = {}): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
+  getWithdrawalAndTransfersBlockedInfo(request: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
     const data = QueryGetWithdrawalAndTransfersBlockedInfoRequest.encode(request).finish();
     const promise = this.rpc.request("dydxprotocol.subaccounts.Query", "GetWithdrawalAndTransfersBlockedInfo", data);
     return promise.then(data => QueryGetWithdrawalAndTransfersBlockedInfoResponse.decode(new _m0.Reader(data)));
@@ -60,7 +60,7 @@ export const createRpcQueryExtension = (base: QueryClient) => {
       return queryService.subaccountAll(request);
     },
 
-    getWithdrawalAndTransfersBlockedInfo(request?: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
+    getWithdrawalAndTransfersBlockedInfo(request: QueryGetWithdrawalAndTransfersBlockedInfoRequest): Promise<QueryGetWithdrawalAndTransfersBlockedInfoResponse> {
       return queryService.getWithdrawalAndTransfersBlockedInfo(request);
     }
 

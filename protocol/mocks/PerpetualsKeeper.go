@@ -82,6 +82,26 @@ func (_m *PerpetualsKeeper) GetAddPremiumVotes(ctx types.Context) *perpetualstyp
 	return r0
 }
 
+// GetAllLiquidityTiers provides a mock function with given fields: ctx
+func (_m *PerpetualsKeeper) GetAllLiquidityTiers(ctx types.Context) []perpetualstypes.LiquidityTier {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllLiquidityTiers")
+	}
+
+	var r0 []perpetualstypes.LiquidityTier
+	if rf, ok := ret.Get(0).(func(types.Context) []perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]perpetualstypes.LiquidityTier)
+		}
+	}
+
+	return r0
+}
+
 // GetAllPerpetuals provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstypes.Perpetual {
 	ret := _m.Called(ctx)
@@ -285,6 +305,24 @@ func (_m *PerpetualsKeeper) MaybeProcessNewFundingSampleEpoch(ctx types.Context)
 // MaybeProcessNewFundingTickEpoch provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) MaybeProcessNewFundingTickEpoch(ctx types.Context) {
 	_m.Called(ctx)
+}
+
+// ModifyOpenInterest provides a mock function with given fields: ctx, perpetualId, openInterestDeltaBaseQuantums
+func (_m *PerpetualsKeeper) ModifyOpenInterest(ctx types.Context, perpetualId uint32, openInterestDeltaBaseQuantums *big.Int) error {
+	ret := _m.Called(ctx, perpetualId, openInterestDeltaBaseQuantums)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ModifyOpenInterest")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) error); ok {
+		r0 = rf(ctx, perpetualId, openInterestDeltaBaseQuantums)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // ModifyPerpetual provides a mock function with given fields: ctx, id, ticker, marketId, defaultFundingPpm, liquidityTier

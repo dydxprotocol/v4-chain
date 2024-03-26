@@ -41,12 +41,12 @@ export function getTriggerPrice(
   return undefined;
 }
 
-export function createSubaccountWebsocketMessage(
+export function generateSubaccountMessageContents(
   redisOrder: RedisOrder,
   order: OrderFromDatabase | undefined,
   perpetualMarket: PerpetualMarketFromDatabase,
   placementStatus: OrderPlaceV1_OrderPlacementStatus,
-): Buffer {
+): SubaccountMessageContents {
   const orderTIF: TimeInForce = protocolTranslations.protocolOrderTIFToTIF(
     redisOrder.order!.timeInForce,
   );
@@ -90,6 +90,21 @@ export function createSubaccountWebsocketMessage(
       },
     ],
   };
+  return contents;
+}
+
+export function createSubaccountWebsocketMessage(
+  redisOrder: RedisOrder,
+  order: OrderFromDatabase | undefined,
+  perpetualMarket: PerpetualMarketFromDatabase,
+  placementStatus: OrderPlaceV1_OrderPlacementStatus,
+): Buffer {
+  const contents: SubaccountMessageContents = generateSubaccountMessageContents(
+    redisOrder,
+    order,
+    perpetualMarket,
+    placementStatus,
+  );
 
   const subaccountMessage: SubaccountMessage = SubaccountMessage.fromPartial({
     contents: JSON.stringify(contents),

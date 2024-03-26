@@ -13,4 +13,7 @@ const (
 const (
 	// TotalSharesKeyPrefix is the prefix to retrieve all TotalShares.
 	TotalSharesKeyPrefix = "TotalShares:"
+
+	// ParamsKey is the key to retrieve Params.
+	ParamsKey = "Params"
 )

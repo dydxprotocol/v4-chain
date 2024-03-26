@@ -62,8 +62,15 @@ func (k Keeper) GetCollateralPoolForSubaccount(ctx sdk.Context, subaccountId typ
 	sdk.AccAddress,
 	error,
 ) {
-	// Use the default collateral pool if the subaccount has no perpetual positions.
 	subaccount := k.GetSubaccount(ctx, subaccountId)
+	return k.getCollateralPoolForSubaccount(ctx, subaccount)
+}
+
+func (k Keeper) getCollateralPoolForSubaccount(ctx sdk.Context, subaccount types.Subaccount) (
+	sdk.AccAddress,
+	error,
+) {
+	// Use the default collateral pool if the subaccount has no perpetual positions.
 	if len(subaccount.PerpetualPositions) == 0 {
 		return types.ModuleAddress, nil
 	}
@@ -299,6 +306,25 @@ func (k Keeper) UpdateSubaccounts(
 	perpIdToFundingIndex := make(map[uint32]dtypes.SerializableInt)
 	for _, perp := range allPerps {
 		perpIdToFundingIndex[perp.Params.Id] = perp.FundingIndex
+	}
+
+	// Get OpenInterestDelta from the updates, and persist the OI change if any.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+	if perpOpenInterestDelta != nil {
+		if err := k.perpetualsKeeper.ModifyOpenInterest(
+			ctx,
+			perpOpenInterestDelta.PerpetualId,
+			perpOpenInterestDelta.BaseQuantums,
+		); err != nil {
+			return false, nil, errorsmod.Wrapf(
+				types.ErrCannotModifyPerpOpenInterestForOIMF,
+				"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+				settledUpdates,
+				err,
+			)
+		}
 	}
 
 	// Apply the updates to perpetual positions.
@@ -573,10 +599,16 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 	// Block all withdrawals and transfers if either of the following is true within the last
 	// `WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS`:
-	// - There was a negative TNC subaccount seen.
+	// - There was a negative TNC subaccount seen for any of the collateral pools of subaccounts being updated
 	// - There was a chain outage that lasted at least five minutes.
 	if updateType == types.Withdrawal || updateType == types.Transfer {
-		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists := k.GetNegativeTncSubaccountSeenAtBlock(ctx)
+		lastBlockNegativeTncSubaccountSeen, negativeTncSubaccountExists, err := k.getLastBlockNegativeSubaccountSeen(
+			ctx,
+			settledUpdates,
+		)
+		if err != nil {
+			return false, nil, err
+		}
 		currentBlock := uint32(ctx.BlockHeight())
 
 		// Panic if the current block is less than the last block a negative TNC subaccount was seen.
@@ -629,6 +661,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 		}
 	}
 
+	// Get delta open interest from the updates.
+	// `perpOpenInterestDelta` is nil if the update type is not `Match` or if the updates
+	// do not result in OI changes.
+	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
+
 	bigCurNetCollateral := make(map[string]*big.Int)
 	bigCurInitialMargin := make(map[string]*big.Int)
 	bigCurMaintenanceMargin := make(map[string]*big.Int)
@@ -651,11 +688,38 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 
+		// Branch the state to calculate the new OIMF after OI increase.
+		// The branched state is only needed for this purpose and is always discarded.
+		branchedContext, _ := ctx.CacheContext()
+
+		// Temporily apply open interest delta to perpetuals, so IMF is calculated based on open interest after the update.
+		// `perpOpenInterestDeltas` is only present for `Match` update type.
+		if perpOpenInterestDelta != nil {
+			if err := k.perpetualsKeeper.ModifyOpenInterest(
+				branchedContext,
+				perpOpenInterestDelta.PerpetualId,
+				perpOpenInterestDelta.BaseQuantums,
+			); err != nil {
+				return false, nil, errorsmod.Wrapf(
+					types.ErrCannotModifyPerpOpenInterestForOIMF,
+					"perpId = %v, delta = %v, settledUpdates = %+v, err = %v",
+					perpOpenInterestDelta.PerpetualId,
+					perpOpenInterestDelta.BaseQuantums,
+					settledUpdates,
+					err,
+				)
+			}
+		}
 		// Get the new collateralization and margin requirements with the update applied.
 		bigNewNetCollateral,
 			bigNewInitialMargin,
 			bigNewMaintenanceMargin,
-			err := k.internalGetNetCollateralAndMarginRequirements(ctx, u)
+			err := k.internalGetNetCollateralAndMarginRequirements(
+			branchedContext,
+			u,
+		)
+
+		// if `internalGetNetCollateralAndMarginRequirements`, returns error.
 		if err != nil {
 			return false, nil, err
 		}
@@ -882,7 +946,11 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 
 		bigInitialMarginRequirements,
 			bigMaintenanceMarginRequirements,
-			err := pk.GetMarginRequirements(ctx, id, bigQuantums)
+			err := pk.GetMarginRequirements(
+			ctx,
+			id,
+			bigQuantums,
+		)
 		if err != nil {
 			return err
 		}

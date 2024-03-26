@@ -195,6 +195,38 @@
         "type": "object",
         "additionalProperties": false
       },
+      "ParentSubaccountResponse": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "parentSubaccountNumber": {
+            "type": "number",
+            "format": "double"
+          },
+          "equity": {
+            "type": "string"
+          },
+          "freeCollateral": {
+            "type": "string"
+          },
+          "childSubaccounts": {
+            "items": {
+              "$ref": "#/components/schemas/SubaccountResponseObject"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "address",
+          "parentSubaccountNumber",
+          "equity",
+          "freeCollateral",
+          "childSubaccounts"
+        ],
+        "type": "object",
+        "additionalProperties": false
+      },
       "AssetPositionResponse": {
         "properties": {
           "positions": {
@@ -1204,6 +1236,43 @@
           {
             "in": "path",
             "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          }
+        ]
+      }
+    },
+    "/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}": {
+      "get": {
+        "operationId": "GetParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ParentSubaccountResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "parentSubaccountNumber",
             "required": true,
             "schema": {
               "format": "double",

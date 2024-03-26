@@ -65,7 +65,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -115,7 +115,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -163,7 +163,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -225,7 +225,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -287,7 +287,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -353,7 +353,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -425,7 +425,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -498,7 +498,7 @@ func TestLiquidationConfig(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -670,7 +670,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -712,7 +712,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -771,7 +771,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -812,7 +812,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -869,7 +869,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -901,7 +901,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -957,7 +957,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -1022,7 +1022,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 
 			liquidityTiers: constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc},
 
@@ -1056,7 +1056,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
 			liquidityTiers:            constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
 
@@ -1085,7 +1085,7 @@ func TestPlacePerpetualLiquidation_Deleveraging(t *testing.T) {
 			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
 			liquidityTiers:            constants.LiquidityTiers,
 			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
 			},
 			clobPairs: []clobtypes.ClobPair{constants.ClobPair_Btc_Final_Settlement},
 
