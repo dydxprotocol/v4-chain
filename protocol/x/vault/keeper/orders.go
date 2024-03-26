@@ -38,8 +38,11 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		var vaultId types.VaultId
-		k.cdc.MustUnmarshal(totalSharesIterator.Key(), &vaultId)
+		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
+			continue
+		}
 		var totalShares types.NumShares
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
@@ -53,12 +56,12 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		// Currently only supported vault type is CLOB.
 		switch vaultId.Type {
 		case types.VaultType_VAULT_TYPE_CLOB:
-			err := k.RefreshVaultClobOrders(ctx, vaultId)
+			err := k.RefreshVaultClobOrders(ctx, *vaultId)
 			if err != nil {
-				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", vaultId)
+				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", *vaultId)
 			}
 		default:
-			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", vaultId)
+			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", *vaultId)
 		}
 	}
 }
