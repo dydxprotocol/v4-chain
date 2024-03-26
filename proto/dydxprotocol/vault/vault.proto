@@ -23,10 +23,18 @@ message VaultId {
   uint32 number = 2;
 }
 
-// NumShares represents the number of shares in a vault.
+// NumShares represents the number of shares in a vault in the
+// format of a rational number `numerator / denominator`.
 message NumShares {
-  // Number of shares.
-  bytes num_shares = 1 [
+  // Numerator.
+  bytes numerator = 1 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+
+  // Denominator.
+  bytes denominator = 2 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false

@@ -20,6 +20,8 @@ service Msg {
 
 // MsgDepositToVault is the Msg/DepositToVault request type.
 message MsgDepositToVault {
+  option (cosmos.msg.v1.signer) = "subaccount_id";
+
   // The vault to deposit into.
   VaultId vault_id = 1;
 

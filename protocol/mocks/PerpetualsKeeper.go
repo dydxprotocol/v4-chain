@@ -251,6 +251,34 @@ func (_m *PerpetualsKeeper) GetNotionalInBaseQuantums(ctx types.Context, id uint
 	return r0, r1
 }
 
+// GetPerpetual provides a mock function with given fields: ctx, id
+func (_m *PerpetualsKeeper) GetPerpetual(ctx types.Context, id uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPerpetual")
+	}
+
+	var r0 perpetualstypes.Perpetual
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (perpetualstypes.Perpetual, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // HasAuthority provides a mock function with given fields: authority
 func (_m *PerpetualsKeeper) HasAuthority(authority string) bool {
 	ret := _m.Called(authority)

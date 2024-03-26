@@ -36,8 +36,34 @@ func (id *VaultId) ToSubaccountId() *satypes.SubaccountId {
 
 // IncrCounterWithLabels increments counter with labels with added vault ID labels.
 func (id *VaultId) IncrCounterWithLabels(metricName string, labels ...metrics.Label) {
-	// Append vault type and number to labels.
-	labels = append(
+	// Append vault labels.
+	labels = id.addLabels(labels...)
+
+	metrics.IncrCounterWithLabels(
+		metricName,
+		1,
+		labels...,
+	)
+}
+
+// IncrCounterWithLabels sets gauge with labels with added vault ID labels.
+func (id *VaultId) SetGaugeWithLabels(
+	metricName string,
+	value float32,
+	labels ...metrics.Label,
+) {
+	// Append vault labels.
+	labels = id.addLabels(labels...)
+
+	metrics.SetGaugeWithLabels(
+		metricName,
+		value,
+		labels...,
+	)
+}
+
+func (id *VaultId) addLabels(labels ...metrics.Label) []metrics.Label {
+	return append(
 		labels,
 		metrics.GetLabelForIntValue(
 			metrics.VaultType,
@@ -47,11 +73,5 @@ func (id *VaultId) IncrCounterWithLabels(metricName string, labels ...metrics.La
 			metrics.VaultId,
 			int(id.Number),
 		),
-	)
-
-	metrics.IncrCounterWithLabels(
-		metricName,
-		1,
-		labels...,
 	)
 }

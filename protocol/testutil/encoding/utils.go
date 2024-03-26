@@ -36,6 +36,8 @@ import (
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	vaultmodule "github.com/dydxprotocol/v4-chain/protocol/x/vault"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -67,7 +69,9 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 
 		// Custom modules
 		bridgemodule.AppModuleBasic{},
-		subaccountsmodule.AppModuleBasic{})
+		subaccountsmodule.AppModuleBasic{},
+		vaultmodule.AppModuleBasic{},
+	)
 
 	msgInterfacesToRegister := []sdk.Msg{
 		// Clob.
@@ -86,6 +90,9 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		&sendingtypes.MsgCreateTransfer{},
 		&sendingtypes.MsgDepositToSubaccount{},
 		&sendingtypes.MsgWithdrawFromSubaccount{},
+
+		// Vault.
+		&vaulttypes.MsgDepositToVault{},
 	}
 
 	for _, msg := range msgInterfacesToRegister {
