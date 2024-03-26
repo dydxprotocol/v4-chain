@@ -27,12 +27,12 @@ import {
   TransferFromDatabase,
   TransferType,
 } from '@dydxprotocol-indexer/postgres';
-import { getParentSubaccountNum } from '@dydxprotocol-indexer/postgres/build/src/lib/api-translations';
 import { OrderbookLevels, PriceLevel } from '@dydxprotocol-indexer/redis';
 import { RedisOrder } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import _ from 'lodash';
 
+import { getParentSubaccountNum } from '../lib/helpers';
 import {
   AssetById,
   AssetPositionResponseObject,

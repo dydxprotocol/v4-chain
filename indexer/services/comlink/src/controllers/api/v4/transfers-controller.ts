@@ -14,9 +14,6 @@ import {
   TransferFromDatabase,
   TransferTable,
 } from '@dydxprotocol-indexer/postgres';
-import {
-  getChildSubaccountNums,
-} from '@dydxprotocol-indexer/postgres/build/src/lib/api-translations';
 import express from 'express';
 import { matchedData } from 'express-validator';
 import _ from 'lodash';
@@ -28,7 +25,7 @@ import { getReqRateLimiter } from '../../../caches/rate-limiters';
 import config from '../../../config';
 import { complianceAndGeoCheck } from '../../../lib/compliance-and-geo-check';
 import { NotFoundError } from '../../../lib/errors';
-import { handleControllerError } from '../../../lib/helpers';
+import { getChildSubaccountNums, handleControllerError } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
   CheckLimitAndCreatedBeforeOrAtSchema,
