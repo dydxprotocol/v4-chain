@@ -96,18 +96,6 @@ export class MessageForwarder {
       },
     );
 
-    const originalMessageTimestamp = message.headers?.message_received_timestamp;
-    if (originalMessageTimestamp !== undefined) {
-      stats.timing(
-        `${config.SERVICE_NAME}.message_time_since_received`,
-        start - Number(originalMessageTimestamp),
-        STATS_NO_SAMPLING,
-        {
-          topic,
-        },
-      );
-    }
-
     const loggerAt: string = 'MessageForwarder#onMessage';
     const errProps: Partial<InfoObject> = {
       topic,
@@ -151,6 +139,19 @@ export class MessageForwarder {
         channel: String(channel),
       },
     );
+
+    const originalMessageTimestamp = message.headers?.message_received_timestamp;
+    if (originalMessageTimestamp !== undefined) {
+      stats.timing(
+        `${config.SERVICE_NAME}.message_time_since_received`,
+        startForwardMessage - Number(originalMessageTimestamp),
+        STATS_NO_SAMPLING,
+        {
+          topic,
+          event_type: String(message.headers?.event_type),
+        },
+      );
+    }
   }
 
   public forwardMessage(message: MessageToForward): void {
