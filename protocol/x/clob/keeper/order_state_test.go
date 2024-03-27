@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -508,12 +509,12 @@ func TestMigratePruneableOrders(t *testing.T) {
 		constants.Order_Alice_Num1_Id0_Clob0_Sell10_Price15_GTB20.OrderId,
 	}
 
-	ks.ClobKeeper.AddOrdersForPruning(
+	ks.ClobKeeper.LegacyAddOrdersForPruning(
 		ks.Ctx,
 		ordersA,
 		10,
 	)
-	ks.ClobKeeper.AddOrdersForPruning(
+	ks.ClobKeeper.LegacyAddOrdersForPruning(
 		ks.Ctx,
 		ordersB,
 		100,
@@ -523,8 +524,8 @@ func TestMigratePruneableOrders(t *testing.T) {
 
 	getPostMigrationOrdersAtHeight := func(height uint32) []types.OrderId {
 		postMigrationOrders := []types.OrderId{}
-		storeA := ks.ClobKeeper.GetPruneableOrdersStore(ks.Ctx, height)
-		it := storeA.Iterator(nil, nil)
+		store := ks.ClobKeeper.GetPruneableOrdersStore(ks.Ctx, height)
+		it := store.Iterator(nil, nil)
 		defer it.Close()
 		for ; it.Valid(); it.Next() {
 			var orderId types.OrderId
@@ -537,6 +538,14 @@ func TestMigratePruneableOrders(t *testing.T) {
 
 	require.ElementsMatch(t, ordersA, getPostMigrationOrdersAtHeight(10))
 	require.ElementsMatch(t, ordersB, getPostMigrationOrdersAtHeight(100))
+
+	oldStore := prefix.NewStore(
+		ks.Ctx.KVStore(ks.StoreKey),
+		[]byte(types.LegacyBlockHeightToPotentiallyPrunableOrdersPrefix), // nolint:staticcheck
+	)
+	it := oldStore.Iterator(nil, nil)
+	defer it.Close()
+	require.False(t, it.Valid())
 }
 
 func TestRemoveOrderFillAmount(t *testing.T) {
