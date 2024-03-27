@@ -3,6 +3,7 @@ package grpc
 import (
 	"sync"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -76,6 +77,8 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	snapshot bool,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
 ) {
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
@@ -113,8 +116,10 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		if len(updatesToSend) > 0 {
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:  updatesToSend,
-					Snapshot: snapshot,
+					Updates:     updatesToSend,
+					Snapshot:    snapshot,
+					BlockHeight: blockHeight,
+					ExecMode:    uint32(execMode),
 				},
 			); err != nil {
 				idsToRemove = append(idsToRemove, id)
