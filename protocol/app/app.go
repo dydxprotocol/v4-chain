@@ -221,6 +221,9 @@ import (
 	// Grpc Streaming
 	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
+
+	// Grpc Streaming
+	streamingclient "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 )
 
 var (
@@ -343,6 +346,9 @@ type App struct {
 	// Slinky
 	oraclePrometheusServer *promserver.PrometheusServer
 	oracleMetrics          servicemetrics.Metrics
+
+	// Grpc Streaming Test Client
+	GrpcStreamingTestClient *streamingclient.GrpcClient
 }
 
 // assertAppPreconditions assert invariants required for an application to start.
@@ -1410,6 +1416,11 @@ func New(
 	}
 	app.initializeRateLimiters()
 
+	if app.GrpcStreamingManager.Enabled() {
+		app.GrpcStreamingTestClient = streamingclient.NewGrpcClient(appFlags, app.Logger())
+		app.GrpcStreamingManager.SubscribeTestClient(app.GrpcStreamingTestClient)
+	}
+
 	// Report out app version and git commit. This will be run when validators restart.
 	version := version.NewInfo()
 	app.Logger().Info(
@@ -1670,6 +1681,20 @@ func (app *App) PrepareCheckStater(ctx sdk.Context) {
 
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
+	}
+
+	// Comparing the local orderbook with memclob's orderbook.
+	if app.GrpcStreamingTestClient != nil {
+		app.ClobKeeper.CompareMemclobOrderbookWithLocalOrderbook(
+			ctx,
+			app.GrpcStreamingTestClient.GetOrderbook(0),
+			0,
+		)
+		app.ClobKeeper.CompareMemclobOrderbookWithLocalOrderbook(
+			ctx,
+			app.GrpcStreamingTestClient.GetOrderbook(1),
+			1,
+		)
 	}
 }
 

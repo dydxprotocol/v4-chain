@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -30,6 +31,9 @@ type GrpcStreamingManager interface {
 		offchainUpdates *clobtypes.OffchainUpdates,
 		blockHeight uint32,
 		execMode sdk.ExecMode,
+	)
+	SubscribeTestClient(
+		client *client.GrpcClient,
 	)
 	SendOrderbookFillUpdates(
 		ctx sdk.Context,
