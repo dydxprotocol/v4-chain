@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/holiman/uint256"
 )
 
 // ProductKeeper represents a generic interface for a keeper
@@ -21,6 +22,14 @@ type ProductKeeper interface {
 		bigNetCollateralQuoteQuantums *big.Int,
 		err error,
 	)
+	GetNetCollateralUint256(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *uint256.Int,
+	) (
+		bigNetCollateralQuoteQuantums *uint256.Int,
+		err error,
+	)
 	GetMarginRequirements(
 		ctx sdk.Context,
 		id uint32,
@@ -28,6 +37,15 @@ type ProductKeeper interface {
 	) (
 		bigInitialMarginQuoteQuantums *big.Int,
 		bigMaintenanceMarginQuoteQuantums *big.Int,
+		err error,
+	)
+	GetMarginRequirementsUint256(
+		ctx sdk.Context,
+		id uint32,
+		bigQuantums *uint256.Int,
+	) (
+		bigInitialMarginQuoteQuantums *uint256.Int,
+		bigMaintenanceMarginQuoteQuantums *uint256.Int,
 		err error,
 	)
 	IsPositionUpdatable(

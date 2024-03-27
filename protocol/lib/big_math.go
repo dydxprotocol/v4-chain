@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+
+	"github.com/holiman/uint256"
 )
 
 // BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
@@ -99,6 +101,11 @@ func BigRatMulPpm(input *big.Rat, ppm uint32) *big.Rat {
 			int64(OneMillion),
 		),
 	)
+}
+
+func MulPpmUint256(input *uint256.Int, ppm uint32) *uint256.Int {
+	result := new(uint256.Int).Mul(input, uint256.NewInt(uint64(ppm)))
+	return result.Div(result, uint256.NewInt(1_000_000))
 }
 
 // bigGenericClamp is a helper function for BigRatClamp and BigIntClamp
