@@ -20,4 +20,39 @@ var (
 		3,
 		"MarketParam not found",
 	)
+	ErrInvalidDepositAmount = errorsmod.Register(
+		ModuleName,
+		4,
+		"Deposit amount is invalid",
+	)
+	ErrNonPositiveEquity = errorsmod.Register(
+		ModuleName,
+		5,
+		"Equity is non-positive",
+	)
+	ErrZeroDenominator = errorsmod.Register(
+		ModuleName,
+		6,
+		"Denominator is zero",
+	)
+	ErrNilFraction = errorsmod.Register(
+		ModuleName,
+		7,
+		"Fraction is nil",
+	)
+	ErrInvalidOrderSizePpm = errorsmod.Register(
+		ModuleName,
+		8,
+		"OrderSizePpm must be strictly greater than 0",
+	)
+	ErrInvalidOrderExpirationSeconds = errorsmod.Register(
+		ModuleName,
+		9,
+		"OrderExpirationSeconds must be strictly greater than 0",
+	)
+	ErrInvalidSpreadMinPpm = errorsmod.Register(
+		ModuleName,
+		10,
+		"SpreadMinPpm must be strictly greater than 0",
+	)
 )

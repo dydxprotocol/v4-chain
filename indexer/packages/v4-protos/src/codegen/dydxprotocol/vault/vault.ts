@@ -67,17 +67,29 @@ export interface VaultIdSDKType {
 
   number: number;
 }
-/** NumShares represents the number of shares in a vault. */
+/**
+ * NumShares represents the number of shares in a vault in the
+ * format of a rational number `numerator / denominator`.
+ */
 
 export interface NumShares {
-  /** Number of shares. */
-  numShares: Uint8Array;
+  /** Numerator. */
+  numerator: Uint8Array;
+  /** Denominator. */
+
+  denominator: Uint8Array;
 }
-/** NumShares represents the number of shares in a vault. */
+/**
+ * NumShares represents the number of shares in a vault in the
+ * format of a rational number `numerator / denominator`.
+ */
 
 export interface NumSharesSDKType {
-  /** Number of shares. */
-  num_shares: Uint8Array;
+  /** Numerator. */
+  numerator: Uint8Array;
+  /** Denominator. */
+
+  denominator: Uint8Array;
 }
 
 function createBaseVaultId(): VaultId {
@@ -137,14 +149,19 @@ export const VaultId = {
 
 function createBaseNumShares(): NumShares {
   return {
-    numShares: new Uint8Array()
+    numerator: new Uint8Array(),
+    denominator: new Uint8Array()
   };
 }
 
 export const NumShares = {
   encode(message: NumShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.numShares.length !== 0) {
-      writer.uint32(10).bytes(message.numShares);
+    if (message.numerator.length !== 0) {
+      writer.uint32(10).bytes(message.numerator);
+    }
+
+    if (message.denominator.length !== 0) {
+      writer.uint32(18).bytes(message.denominator);
     }
 
     return writer;
@@ -160,7 +177,11 @@ export const NumShares = {
 
       switch (tag >>> 3) {
         case 1:
-          message.numShares = reader.bytes();
+          message.numerator = reader.bytes();
+          break;
+
+        case 2:
+          message.denominator = reader.bytes();
           break;
 
         default:
@@ -174,7 +195,8 @@ export const NumShares = {
 
   fromPartial(object: DeepPartial<NumShares>): NumShares {
     const message = createBaseNumShares();
-    message.numShares = object.numShares ?? new Uint8Array();
+    message.numerator = object.numerator ?? new Uint8Array();
+    message.denominator = object.denominator ?? new Uint8Array();
     return message;
   }
 

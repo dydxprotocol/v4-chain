@@ -147,7 +147,9 @@ type ClobKeeper interface {
 	// Gprc streaming
 	InitializeNewGrpcStreams(ctx sdk.Context)
 	SendOrderbookUpdates(
+		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 		snapshot bool,
 	)
+	MigratePruneableOrders(ctx sdk.Context)
 }

@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"math"
+	"math/big"
 	"testing"
 
 	"github.com/cometbft/cometbft/types"
@@ -29,20 +30,16 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
 		// Total Shares of each vault ID above.
-		totalShares []vaulttypes.NumShares
+		totalShares []*big.Rat
 	}{
 		"Two Vaults, Both Positive Shares": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []vaulttypes.NumShares{
-				{
-					NumShares: dtypes.NewInt(1_000),
-				},
-				{
-					NumShares: dtypes.NewInt(200),
-				},
+			totalShares: []*big.Rat{
+				big.NewRat(1_000, 1),
+				big.NewRat(200, 1),
 			},
 		},
 		"Two Vaults, One Positive Shares, One Zero Shares": {
@@ -50,13 +47,9 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []vaulttypes.NumShares{
-				{
-					NumShares: dtypes.NewInt(1_000),
-				},
-				{
-					NumShares: dtypes.NewInt(0),
-				},
+			totalShares: []*big.Rat{
+				big.NewRat(1_000, 1),
+				big.NewRat(0, 1),
 			},
 		},
 		"Two Vaults, Both Zero Shares": {
@@ -64,13 +57,9 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []vaulttypes.NumShares{
-				{
-					NumShares: dtypes.NewInt(0),
-				},
-				{
-					NumShares: dtypes.NewInt(0),
-				},
+			totalShares: []*big.Rat{
+				big.NewRat(0, 1),
+				big.NewRat(0, 1),
 			},
 		},
 	}
@@ -105,7 +94,11 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 
 			// Set total shares for each vault ID.
 			for i, vaultId := range tc.vaultIds {
-				err := tApp.App.VaultKeeper.SetTotalShares(ctx, vaultId, tc.totalShares[i])
+				err := tApp.App.VaultKeeper.SetTotalShares(
+					ctx,
+					vaultId,
+					vaulttypes.BigRatToNumShares(tc.totalShares[i]),
+				)
 				require.NoError(t, err)
 			}
 
@@ -116,7 +109,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			// Simulate vault orders placed in last block.
 			numPreviousOrders := 0
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].NumShares.Cmp(dtypes.NewInt(0)) > 0 {
+				if tc.totalShares[i].Sign() > 0 {
 					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
 						ctx.WithBlockHeight(ctx.BlockHeight()-1),
 						vaultId,
@@ -142,7 +135,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			numExpectedOrders := 0
 			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].NumShares.Cmp(dtypes.NewInt(0)) > 0 {
+				if tc.totalShares[i].Sign() > 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)

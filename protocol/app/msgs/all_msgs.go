@@ -237,6 +237,8 @@ var (
 		// vault
 		"/dydxprotocol.vault.MsgDepositToVault":         {},
 		"/dydxprotocol.vault.MsgDepositToVaultResponse": {},
+		"/dydxprotocol.vault.MsgUpdateParams":           {},
+		"/dydxprotocol.vault.MsgUpdateParamsResponse":   {},
 
 		// vest
 		"/dydxprotocol.vest.MsgSetVestEntry":            {},

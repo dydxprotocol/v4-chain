@@ -8,6 +8,7 @@ import (
 
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -98,6 +99,61 @@ func blockRateLimitConfigUpdate(
 	)
 }
 
+func negativeTncSubaccountSeenAtBlockUpgrade(
+	ctx sdk.Context,
+	perpetualsKeeper perptypes.PerpetualsKeeper,
+	subaccountsKeeper satypes.SubaccountsKeeper,
+) {
+	// Get block height stored by v4.x.x.
+	blockHeight, exists := subaccountsKeeper.LegacyGetNegativeTncSubaccountSeenAtBlock(ctx)
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Retrieved block height from store for negative tnc subaccount seen at block: %d, exists: %t\n",
+			blockHeight,
+			exists,
+		),
+	)
+	// If no block height was stored in the legacy store, no migration needed.
+	if !exists {
+		return
+	}
+
+	// If there are no perpetuals, then no new state needs to be stored, as there can be no
+	// negative tnc subaccounts w/o perpetuals.
+	perpetuals := perpetualsKeeper.GetAllPerpetuals(ctx)
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Retrieved all perpetuals for negative tnc subaccount migration, # of perpetuals is %d\n",
+			len(perpetuals),
+		),
+	)
+	if len(perpetuals) == 0 {
+		return
+	}
+
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Migrating negative tnc subaccount seen store, storing block height %d for perpetual %d\n",
+			perpetuals[0].Params.Id,
+			blockHeight,
+		),
+	)
+	// Migrate the value from the legacy store to the new store.
+	if err := subaccountsKeeper.SetNegativeTncSubaccountSeenAtBlock(
+		ctx,
+		perpetuals[0].Params.Id, // must be a cross-margined perpetual due to `perpetualsUpgrade`.
+		blockHeight,
+	); err != nil {
+		panic(fmt.Sprintf("failed to set negative tnc subaccount seen at block with value %d: %s", blockHeight, err))
+	}
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Successfully migrated negative tnc subaccount seen at block with block height %d\n",
+			blockHeight,
+		),
+	)
+}
+
 // Initialize soft and upper caps for OIMF
 func initializeOIMFCaps(
 	ctx sdk.Context,
@@ -152,10 +208,15 @@ func CreateUpgradeHandler(
 	configurator module.Configurator,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
 	clobKeeper clobtypes.ClobKeeper,
+	subaccountsKeeper satypes.SubaccountsKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
 		sdkCtx.Logger().Info(fmt.Sprintf("Running %s Upgrade...", UpgradeName))
+
+		// Migrate pruneable orders to new format
+		clobKeeper.MigratePruneableOrders(sdkCtx)
+		sdkCtx.Logger().Info("Successfully migrated pruneable orders")
 
 		// Set all perpetuals to cross market type
 		perpetualsUpgrade(sdkCtx, perpetualsKeeper)
@@ -163,6 +224,10 @@ func CreateUpgradeHandler(
 		// Set block rate limit configuration
 		blockRateLimitConfigUpdate(sdkCtx, clobKeeper)
 
+		// Migrate state from legacy store for negative tnc subaccount seen to new store for
+		// negative tnc subaccount seen.
+		// Note, must be done after the upgrade to perpetuals to cross market type.
+		negativeTncSubaccountSeenAtBlockUpgrade(sdkCtx, perpetualsKeeper, subaccountsKeeper)
 		// Initialize liquidity tier with lower and upper OI caps.
 		initializeOIMFCaps(sdkCtx, perpetualsKeeper)
 

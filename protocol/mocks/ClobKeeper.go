@@ -828,6 +828,11 @@ func (_m *ClobKeeper) MaybeGetLiquidationOrder(ctx types.Context, subaccountId s
 	return r0, r1
 }
 
+// MigratePruneableOrders provides a mock function with given fields: ctx
+func (_m *ClobKeeper) MigratePruneableOrders(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // MustAddOrderToStatefulOrdersTimeSlice provides a mock function with given fields: ctx, goodTilBlockTime, orderId
 func (_m *ClobKeeper) MustAddOrderToStatefulOrdersTimeSlice(ctx types.Context, goodTilBlockTime time.Time, orderId clobtypes.OrderId) {
 	_m.Called(ctx, goodTilBlockTime, orderId)
@@ -1130,9 +1135,9 @@ func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes
 	_m.Called(ctx, orderId)
 }
 
-// SendOrderbookUpdates provides a mock function with given fields: offchainUpdates, snapshot
-func (_m *ClobKeeper) SendOrderbookUpdates(offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
-	_m.Called(offchainUpdates, snapshot)
+// SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates, snapshot
+func (_m *ClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
+	_m.Called(ctx, offchainUpdates, snapshot)
 }
 
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
