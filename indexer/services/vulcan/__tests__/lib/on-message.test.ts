@@ -1,7 +1,7 @@
 import { logger, stats } from '@dydxprotocol-indexer/base';
 import { createKafkaMessage, KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import { OffChainUpdateV1 } from '@dydxprotocol-indexer/v4-protos';
-import { IHeaders, KafkaMessage } from 'kafkajs';
+import { KafkaMessage } from 'kafkajs';
 import { onMessage } from '../../src/lib/on-message';
 import { OrderPlaceHandler } from '../../src/handlers/order-place-handler';
 import { OrderRemoveHandler } from '../../src/handlers/order-remove-handler';
