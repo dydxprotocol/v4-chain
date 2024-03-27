@@ -180,7 +180,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				).String(): 10_000_000_000,
 			},
 		},
-		"Cross subaccount (with cross position) will not have matches for cross-market orders": {
+		"Cross subaccount (with cross position) will not have matches for isolated-market orders": {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1BTC_LONG_10_000USD,
 				constants.Bob_Num0_10_000USD,
@@ -292,7 +292,6 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				Alice_Num0_MoreIsolatedAfterMatch,
 				Bob_Num0_CrossAfterMatch,
 			},
-			// No changes as no match should have happened.
 			expectedCollateralPoolBalances: map[string]int64{
 				// $10,000 USDC + $10,000 USDC + (match) 100 quote quantums - fee (1 quote quantum)
 				satypes.ModuleAddress.String(): 20_000_000_099,
