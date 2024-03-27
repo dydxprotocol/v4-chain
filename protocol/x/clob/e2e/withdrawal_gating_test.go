@@ -3,15 +3,17 @@ package clob_test
 import (
 	"testing"
 
+	sdkmath "cosmossdk.io/math"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 
 	"github.com/cometbft/cometbft/types"
 
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -26,10 +28,21 @@ import (
 )
 
 func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T) {
+	Alice_Num0_AfterWithdrawal := satypes.Subaccount{
+		Id: &constants.Alice_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  uint32(0),
+				Quantums: dtypes.NewInt(9_999_999_999),
+			},
+		},
+		PerpetualPositions: nil,
+	}
 	tests := map[string]struct {
 		// State.
 		subaccounts                   []satypes.Subaccount
 		marketIdToOraclePriceOverride map[uint32]uint64
+		collateralPoolBalances        map[string]int64
 
 		// Parameters.
 		placedMatchableOrders     []clobtypes.MatchableOrder
@@ -43,11 +56,13 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 		clobPairs                    []clobtypes.ClobPair
 		transferOrWithdrawSubaccount satypes.SubaccountId
 		isWithdrawal                 bool
+		gatedPerpetualId             uint32
 
 		// Expectations.
 		expectedSubaccounts                      []satypes.Subaccount
-		expectedWithdrawalsGated                 bool
-		expectedNegativeTncSubaccountSeenAtBlock uint32
+		expectedSubaccountsAfterWithdrawal       []satypes.Subaccount
+		expectedWithdrawalsGated                 map[uint32]bool
+		expectedNegativeTncSubaccountSeenAtBlock map[uint32]uint32
 		expectedErr                              string
 	}{
 		`Can place a liquidation order that is unfilled and cannot be deleveraged due to
@@ -59,6 +74,9 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 			},
 			marketIdToOraclePriceOverride: map[uint32]uint64{
 				constants.BtcUsd.MarketId: 5_050_000_000, // $50,500 / BTC
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 1_000_000_000_000, // $1,000,000 USDC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -78,6 +96,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
 			isWithdrawal:                 true,
+			gatedPerpetualId:             constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id,
 
 			expectedSubaccounts: []satypes.Subaccount{
 				// Deleveraging fails.
@@ -86,9 +105,122 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				constants.Carl_Num0_1BTC_Short_49999USD,
 				constants.Dave_Num0_1BTC_Long_50000USD_Short,
 			},
-			expectedWithdrawalsGated:                 true,
-			expectedNegativeTncSubaccountSeenAtBlock: 4,
-			expectedErr:                              "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates",
+			expectedWithdrawalsGated: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id: true,
+			},
+			expectedNegativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id: 4,
+			},
+			expectedErr: "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates",
+		},
+		`Can place a liquidation order that is unfilled and cannot be deleveraged due to
+		non-overlapping bankruptcy prices for isolated market, withdrawals are gated for isolated subaccount`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1ISO_Short_49USD,
+				constants.Dave_Num0_1ISO_Long_50USD_Short,
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.IsoUsd_IsolatedMarket.Params.MarketId: 5_050_000_000, // $50.5 / ISO
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String():              1_000_000_000_000, // $1,000,000 USDC
+				constants.IsoCollateralPoolAddress.String(): 1_000_000_000_000, // $1,000,000 USDC
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				// Carl's bankruptcy price to close 1 ISO short is $49, and closing at $50
+				// would require $1 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob3_Sell025ISO_Price50_GTB11,
+			},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
+			negativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_3_Iso},
+			transferOrWithdrawSubaccount: constants.Alice_Num0,
+			isWithdrawal:                 true,
+			gatedPerpetualId:             constants.IsoUsd_IsolatedMarket.Params.Id,
+
+			expectedSubaccounts: []satypes.Subaccount{
+				// Deleveraging fails.
+				// Dave's bankruptcy price to close 1 BTC long is $50, and deleveraging can not be
+				// performed due to non overlapping bankruptcy prices.
+				constants.Carl_Num0_1ISO_Short_49USD,
+				constants.Dave_Num0_1ISO_Long_50USD_Short,
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			expectedWithdrawalsGated: map[uint32]bool{
+				constants.IsoUsd_IsolatedMarket.Params.Id: true,
+			},
+			expectedNegativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 4,
+			},
+			expectedErr: "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates",
+		},
+		`Can place a liquidation order that is unfilled and cannot be deleveraged due to
+		non-overlapping bankruptcy prices for isolated market, withdrawals are not gated for non-isolated subaccount`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Carl_Num0_1ISO_Short_49USD,
+				constants.Dave_Num0_1ISO_Long_50USD_Short,
+				constants.Alice_Num0_10_000USD,
+			},
+			marketIdToOraclePriceOverride: map[uint32]uint64{
+				constants.IsoUsd_IsolatedMarket.Params.MarketId: 5_050_000_000, // $50.5 / ISO
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String():              1_000_000_000_000, // $1,000,000 USDC
+				constants.IsoCollateralPoolAddress.String(): 1_000_000_000_000, // $1,000,000 USDC
+			},
+
+			placedMatchableOrders: []clobtypes.MatchableOrder{
+				// Carl's bankruptcy price to close 1 ISO short is $49, and closing at $50
+				// would require $1 from the insurance fund. Since the insurance fund is empty,
+				// deleveraging is required to close this position.
+				&constants.Order_Dave_Num0_Id1_Clob3_Sell025ISO_Price50_GTB11,
+			},
+			liquidationConfig:         constants.LiquidationsConfig_FillablePrice_Max_Smmr,
+			liquidatableSubaccountIds: []satypes.SubaccountId{constants.Carl_Num0},
+			negativeTncSubaccountIds:  []satypes.SubaccountId{constants.Carl_Num0},
+
+			liquidityTiers: constants.LiquidityTiers,
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_3_Iso},
+			transferOrWithdrawSubaccount: constants.Alice_Num0,
+			isWithdrawal:                 true,
+			gatedPerpetualId:             constants.IsoUsd_IsolatedMarket.Params.Id,
+
+			expectedSubaccounts: []satypes.Subaccount{
+				// Deleveraging fails.
+				// Dave's bankruptcy price to close 1 BTC long is $50, and deleveraging can not be
+				// performed due to non overlapping bankruptcy prices.
+				constants.Carl_Num0_1ISO_Short_49USD,
+				constants.Dave_Num0_1ISO_Long_50USD_Short,
+				constants.Alice_Num0_10_000USD,
+			},
+			expectedSubaccountsAfterWithdrawal: []satypes.Subaccount{
+				constants.Carl_Num0_1ISO_Short_49USD,
+				constants.Dave_Num0_1ISO_Long_50USD_Short,
+				// Alice is not an isolated subaccount, and so can still withdraw.
+				Alice_Num0_AfterWithdrawal,
+			},
+			expectedWithdrawalsGated: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance.Params.Id: false,
+				constants.IsoUsd_IsolatedMarket.Params.Id:                        true,
+			},
+			expectedNegativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.IsoUsd_IsolatedMarket.Params.Id: 4,
+			},
+			expectedErr: "",
 		},
 		`Can place a liquidation order that is partially-filled filled, deleveraging is skipped but
 		its still negative TNC, withdrawals are gated`: {
@@ -96,6 +228,9 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				constants.Carl_Num0_1BTC_Short_49999USD,
 				constants.Dave_Num0_1BTC_Long_50000USD_Short,
 				constants.Dave_Num1_025BTC_Long_50000USD,
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 1_000_000_000_000, // $1,000,000 USDC
 			},
 
 			placedMatchableOrders: []clobtypes.MatchableOrder{
@@ -117,6 +252,7 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 			clobPairs:                    []clobtypes.ClobPair{constants.ClobPair_Btc},
 			transferOrWithdrawSubaccount: constants.Dave_Num1,
 			isWithdrawal:                 false,
+			gatedPerpetualId:             constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id,
 
 			expectedSubaccounts: []satypes.Subaccount{
 				// Deleveraging fails for remaining amount.
@@ -150,9 +286,13 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					},
 				},
 			},
-			expectedWithdrawalsGated:                 true,
-			expectedNegativeTncSubaccountSeenAtBlock: 4,
-			expectedErr:                              "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates",
+			expectedWithdrawalsGated: map[uint32]bool{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id: true,
+			},
+			expectedNegativeTncSubaccountSeenAtBlock: map[uint32]uint32{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1.Params.Id: 4,
+			},
+			expectedErr: "WithdrawalsAndTransfersBlocked: failed to apply subaccount updates",
 		},
 	}
 
@@ -191,6 +331,38 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 
 						pricesGenesis.MarketPrices = marketPricesCopy
 						*genesisState = pricesGenesis
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *banktypes.GenesisState) {
+						// If the collateral pool address is already in bank genesis state, update it.
+						foundPools := make(map[string]struct{})
+						for i, bal := range genesisState.Balances {
+							usdcBal, exists := tc.collateralPoolBalances[bal.Address]
+							if exists {
+								foundPools[bal.Address] = struct{}{}
+								genesisState.Balances[i] = banktypes.Balance{
+									Address: bal.Address,
+									Coins: sdktypes.Coins{
+										sdktypes.NewCoin(constants.Usdc.Denom, sdkmath.NewInt(usdcBal)),
+									},
+								}
+							}
+						}
+						// If the collateral pool address is not in the bank genesis state, add it.
+						for addr, bal := range tc.collateralPoolBalances {
+							_, exists := foundPools[addr]
+							if exists {
+								continue
+							}
+							genesisState.Balances = append(genesisState.Balances, banktypes.Balance{
+								Address: addr,
+								Coins: sdktypes.Coins{
+									sdktypes.NewCoin(constants.Usdc.Denom, sdkmath.NewInt(bal)),
+								},
+							})
+						}
 					},
 				)
 				testapp.UpdateGenesisDocWithAppStateForModule(
@@ -252,13 +424,15 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					tApp.App.SubaccountsKeeper.GetSubaccount(ctx, *expectedSubaccount.Id),
 				)
 			}
-			negativeTncSubaccountSeenAtBlock, exists, err := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
-				ctx,
-				constants.BtcUsd_NoMarginRequirement.Params.Id,
-			)
-			require.NoError(t, err)
-			require.Equal(t, tc.expectedWithdrawalsGated, exists)
-			require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock, negativeTncSubaccountSeenAtBlock)
+			for perpetualId, expectedWithdrawalsGated := range tc.expectedWithdrawalsGated {
+				negativeTncSubaccountSeenAtBlock, exists, err := tApp.App.SubaccountsKeeper.GetNegativeTncSubaccountSeenAtBlock(
+					ctx,
+					perpetualId,
+				)
+				require.NoError(t, err)
+				require.Equal(t, expectedWithdrawalsGated, exists)
+				require.Equal(t, tc.expectedNegativeTncSubaccountSeenAtBlock[perpetualId], negativeTncSubaccountSeenAtBlock)
+			}
 
 			// Verify withdrawals are blocked by trying to create a transfer message that withdraws funds.
 			var msg proto.Message
@@ -304,14 +478,27 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 					) (haltchain bool) {
 						// Note the first TX is MsgProposedOperations, the second is all other TXs.
 						execResult := response.TxResults[1]
-						require.True(t, execResult.IsErr())
-						require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
-						require.Contains(t, execResult.Log, tc.expectedErr)
+						if tc.expectedErr != "" {
+							require.True(t, execResult.IsErr())
+							require.Equal(t, satypes.ErrFailedToUpdateSubaccounts.ABCICode(), execResult.Code)
+							require.Contains(t, execResult.Log, tc.expectedErr)
+						} else {
+							require.False(t, execResult.IsErr())
+						}
 						return false
 					},
 				},
 			)
-			for _, expectedSubaccount := range tc.expectedSubaccounts {
+			var expectedSubaccountsAfterWithdrawal []satypes.Subaccount
+			// If an error was expected for withdrawal / transfer, subaccounts should be the same as
+			// the ones expected after chain initialization, otherwise the test-case should have a set
+			// of expected subaccounts after a successful withdrawal.
+			if tc.expectedErr != "" {
+				expectedSubaccountsAfterWithdrawal = tc.expectedSubaccounts
+			} else {
+				expectedSubaccountsAfterWithdrawal = tc.expectedSubaccountsAfterWithdrawal
+			}
+			for _, expectedSubaccount := range expectedSubaccountsAfterWithdrawal {
 				require.Equal(
 					t,
 					expectedSubaccount,
@@ -319,38 +506,41 @@ func TestWithdrawalGating_NegativeTncSubaccount_BlocksThenUnblocks(t *testing.T)
 				)
 			}
 
-			// Verify that transfers and withdrawals are unblocked after the withdrawal gating period passes.
-			_, err = tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
-				LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
-				NegativeTncSubaccountIds:   []satypes.SubaccountId{},
-				SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
-			})
-			require.NoError(t, err)
-			tApp.AdvanceToBlock(
-				tc.expectedNegativeTncSubaccountSeenAtBlock+
-					satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
-					1,
-				testapp.AdvanceToBlockOptions{},
-			)
-			for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
-				ctx,
-				tApp.App,
-				testapp.MustMakeCheckTxOptions{
-					AccAddressForSigning: tc.transferOrWithdrawSubaccount.Owner,
-					Gas:                  1000000,
-					FeeAmt:               constants.TestFeeCoins_5Cents,
-				},
-				msg,
-			) {
-				resp := tApp.CheckTx(checkTx)
-				require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+			// If an error was expected for the withdrawal / transfer, verify that transfers and withdrawals are
+			// unblocked after the withdrawal gating period passes.
+			if tc.expectedErr != "" {
+				_, err = tApp.App.Server.LiquidateSubaccounts(ctx, &api.LiquidateSubaccountsRequest{
+					LiquidatableSubaccountIds:  tc.liquidatableSubaccountIds,
+					NegativeTncSubaccountIds:   []satypes.SubaccountId{},
+					SubaccountOpenPositionInfo: clobtest.GetOpenPositionsFromSubaccounts(tc.subaccounts),
+				})
+				require.NoError(t, err)
+				tApp.AdvanceToBlock(
+					tc.expectedNegativeTncSubaccountSeenAtBlock[tc.gatedPerpetualId]+
+						satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
+						1,
+					testapp.AdvanceToBlockOptions{},
+				)
+				for _, checkTx := range testapp.MustMakeCheckTxsWithSdkMsg(
+					ctx,
+					tApp.App,
+					testapp.MustMakeCheckTxOptions{
+						AccAddressForSigning: tc.transferOrWithdrawSubaccount.Owner,
+						Gas:                  1000000,
+						FeeAmt:               constants.TestFeeCoins_5Cents,
+					},
+					msg,
+				) {
+					resp := tApp.CheckTx(checkTx)
+					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+				}
+				tApp.AdvanceToBlock(
+					tc.expectedNegativeTncSubaccountSeenAtBlock[tc.gatedPerpetualId]+
+						satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
+						2,
+					testapp.AdvanceToBlockOptions{},
+				)
 			}
-			tApp.AdvanceToBlock(
-				tc.expectedNegativeTncSubaccountSeenAtBlock+
-					satypes.WITHDRAWAL_AND_TRANSFERS_BLOCKED_AFTER_NEGATIVE_TNC_SUBACCOUNT_SEEN_BLOCKS+
-					2,
-				testapp.AdvanceToBlockOptions{},
-			)
 		})
 	}
 }
