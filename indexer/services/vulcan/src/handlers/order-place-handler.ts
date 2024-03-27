@@ -32,7 +32,7 @@ import {
   RedisOrder,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
-import { Message } from 'kafkajs';
+import { IHeaders, Message } from 'kafkajs';
 
 import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
@@ -52,7 +52,7 @@ import { Handler } from './handler';
  *   being greater than or equal to the expiry of the order in the OrderPlace message, return
  */
 export class OrderPlaceHandler extends Handler {
-  protected async handle(update: OffChainUpdateV1): Promise<void> {
+  protected async handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
     logger.info({
       at: 'OrderPlaceHandler#handle',
       message: 'Received OffChainUpdate with OrderPlace.',
@@ -142,7 +142,7 @@ export class OrderPlaceHandler extends Handler {
           });
           throw new Error(`Stateful order not found in database: ${orderUuid}`);
         }
-        await this.sendCachedOrderUpdate(orderUuid);
+        await this.sendCachedOrderUpdate(orderUuid, headers);
       }
       const subaccountMessage: Message = {
         value: createSubaccountWebsocketMessage(
@@ -151,6 +151,9 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           placementStatus,
         ),
+        headers: {
+          message_received_timestamp: headers.message_received_timestamp,
+        },
       };
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
@@ -164,6 +167,9 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           updatedQuantums,
         ),
+        headers: {
+          message_received_timestamp: headers.message_received_timestamp,
+        },
       };
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
@@ -334,6 +340,7 @@ export class OrderPlaceHandler extends Handler {
    */
   protected async sendCachedOrderUpdate(
     orderId: string,
+    headers: IHeaders,
   ): Promise<void> {
     const cachedOrderUpdate: OrderUpdateV1 | undefined = await StatefulOrderUpdatesCache
       .removeStatefulOrderUpdate(
@@ -351,6 +358,10 @@ export class OrderPlaceHandler extends Handler {
       value: Buffer.from(
         Uint8Array.from(OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish()),
       ),
+      headers: {
+        message_received_timestamp: headers.message_received_timestamp,
+        event_type: String(headers.event_type),
+      },
     };
     sendMessageWrapper(orderUpdateMessage, KafkaTopics.TO_VULCAN);
   }

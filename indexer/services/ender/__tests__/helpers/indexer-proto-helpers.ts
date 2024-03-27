@@ -50,6 +50,7 @@ import {
   IndexerOrderId,
   PerpetualMarketCreateEventV1,
   DeleveragingEventV1,
+  protoTimestampToDate,
 } from '@dydxprotocol-indexer/v4-protos';
 import { IHeaders, Message, ProducerRecord } from 'kafkajs';
 import _ from 'lodash';
@@ -60,7 +61,6 @@ import {
   generatePerpetualMarketMessage,
   generatePerpetualPositionsContents,
 } from '../../src/helpers/kafka-helper';
-import { protoTimestampToDate } from '../../src/lib/helper';
 import { DydxIndexerSubtypes, VulcanMessage } from '../../src/lib/types';
 
 // TX Hash is SHA256, so is of length 64 hexadecimal without the '0x'.
