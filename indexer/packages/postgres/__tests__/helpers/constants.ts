@@ -455,6 +455,28 @@ export const defaultPerpetualPositionId: string = PerpetualPositionTable.uuid(
   defaultPerpetualPosition.openEventId,
 );
 
+export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
+  subaccountId: isolatedSubaccountId,
+  perpetualId: isolatedPerpetualMarket.id,
+  side: PositionSide.LONG,
+  status: PerpetualPositionStatus.OPEN,
+  size: '10',
+  maxSize: '25',
+  entryPrice: '20000',
+  sumOpen: '10',
+  sumClose: '0',
+  createdAt: createdDateTime.toISO(),
+  createdAtHeight: createdHeight,
+  openEventId: defaultTendermintEventId,
+  lastEventId: defaultTendermintEventId2,
+  settledFunding: '200000',
+};
+
+export const isolatedPerpetualPositionId: string = PerpetualPositionTable.uuid(
+  isolatedPerpetualPosition.subaccountId,
+  isolatedPerpetualPosition.openEventId,
+);
+
 // ============== Fills ==============
 
 export const defaultFill: FillCreateObject = {
@@ -718,6 +740,22 @@ export const defaultFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid
   defaultFundingIndexUpdate.effectiveAtHeight,
   defaultFundingIndexUpdate.eventId,
   defaultFundingIndexUpdate.perpetualId,
+);
+
+export const isolatedMarketFundingIndexUpdate: FundingIndexUpdatesCreateObject = {
+  perpetualId: isolatedPerpetualMarket.id,
+  eventId: defaultTendermintEventId,
+  rate: '0.0004',
+  oraclePrice: '10000',
+  fundingIndex: '10200',
+  effectiveAt: createdDateTime.toISO(),
+  effectiveAtHeight: createdHeight,
+};
+
+export const isolatedMarketFundingIndexUpdateId: string = FundingIndexUpdatesTable.uuid(
+  isolatedMarketFundingIndexUpdate.effectiveAtHeight,
+  isolatedMarketFundingIndexUpdate.eventId,
+  isolatedMarketFundingIndexUpdate.perpetualId,
 );
 
 // ========= Compliance Data ==========

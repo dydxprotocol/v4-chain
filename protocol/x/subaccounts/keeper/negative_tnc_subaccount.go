@@ -176,3 +176,25 @@ func (k Keeper) getLastBlockNegativeSubaccountSeen(
 	}
 	return lastBlockNegativeSubaccountSeen, negativeSubaccountExists, nil
 }
+
+// LegacyGetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was
+// seen in state and a boolean for whether it exists in state.
+// Deprecated: This is the legacy implementation and meant to be used for the v5.0.0 state migration.
+// Use `GetNegativeTncSubaccountSeenAtBlock` instead.
+func (k Keeper) LegacyGetNegativeTncSubaccountSeenAtBlock(
+	ctx sdk.Context,
+) (uint32, bool) {
+	store := ctx.KVStore(k.storeKey)
+	b := store.Get(
+		// Key used in v4.0.0.
+		[]byte("NegSA:"),
+	)
+	blockHeight := gogotypes.UInt32Value{Value: 0}
+	exists := false
+	if b != nil {
+		k.cdc.MustUnmarshal(b, &blockHeight)
+		exists = true
+	}
+
+	return blockHeight.Value, exists
+}
