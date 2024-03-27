@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+
+	"github.com/holiman/uint256"
 )
 
 // BigMulPow10 returns the result of `val * 10^exponent`, in *big.Rat.
@@ -99,6 +101,11 @@ func BigRatMulPpm(input *big.Rat, ppm uint32) *big.Rat {
 			int64(OneMillion),
 		),
 	)
+}
+
+func MulPpmUint256(input *uint256.Int, ppm uint32) *uint256.Int {
+	result := new(uint256.Int).Mul(input, uint256.NewInt(uint64(ppm)))
+	return result.Div(result, uint256.NewInt(1_000_000))
 }
 
 // bigGenericClamp is a helper function for BigRatClamp and BigIntClamp
@@ -264,4 +271,39 @@ func warmCache() map[uint64]*big.Int {
 	}
 
 	return bigExponentValues
+}
+
+var Exp10Lookup = createExp10Lookup()
+var ten = uint256.NewInt(10)
+
+func createExp10Lookup() map[uint64]uint256.Int {
+	lookup := make(map[uint64]uint256.Int, 100)
+	value := uint256.NewInt(1)
+	for i := 0; i < 100; i++ {
+		lookup[uint64(i)] = *new(uint256.Int).Set(value)
+		value.Mul(value, ten)
+	}
+	return lookup
+}
+
+// MulExp10 sets result to base * 10 ^ exp.
+func MulExp10(result *uint256.Int, base *uint256.Int, exponent int64) *uint256.Int {
+	var abs uint64
+	if exponent < 0 {
+		abs = uint64(-exponent)
+	} else {
+		abs = uint64(exponent)
+	}
+	lookup, ok := Exp10Lookup[abs]
+	var exp10 *uint256.Int
+	if ok {
+		exp10 = &lookup
+	} else {
+		exp10 = new(uint256.Int).Exp(ten, uint256.NewInt(abs))
+	}
+	if exponent < 0 {
+		return result.Div(base, exp10)
+	} else {
+		return result.Mul(base, exp10)
+	}
 }

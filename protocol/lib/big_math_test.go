@@ -1,6 +1,7 @@
 package lib_test
 
 import (
+	"fmt"
 	"math"
 	"math/big"
 	"strings"
@@ -8,9 +9,23 @@ import (
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	"github.com/holiman/uint256"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestExp10Lookup(t *testing.T) {
+	lookup := lib.Exp10Lookup[4]
+	fmt.Println(lookup.Uint64())
+	require.True(t, uint256.NewInt(10000).Cmp(&lookup) == 0)
+}
+
+func TestMulExp10(t *testing.T) {
+	result := uint256.NewInt(500)
+	require.True(t, uint256.NewInt(500000).Cmp(lib.MulExp10(result, result, 3)) == 0)
+	result = uint256.NewInt(500)
+	require.True(t, uint256.NewInt(5).Cmp(lib.MulExp10(result, result, -2)) == 0)
+}
 
 func TestBigPow10(t *testing.T) {
 	tests := map[string]struct {
