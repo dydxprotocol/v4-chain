@@ -1,5 +1,7 @@
 package types
 
+import "math"
+
 // DefaultParams returns a default set of `x/vault` parameters.
 func DefaultParams() Params {
 	return Params{
@@ -14,6 +16,10 @@ func DefaultParams() Params {
 
 // Validate validates `x/vault` parameters.
 func (p Params) Validate() error {
+	// Layers must be less than or equal to MaxUint8.
+	if p.Layers > math.MaxUint8 {
+		return ErrInvalidLayers
+	}
 	// Spread min ppm must be positive.
 	if p.SpreadMinPpm == 0 {
 		return ErrInvalidSpreadMinPpm

@@ -24,3 +24,21 @@ func (k Keeper) GetVaultEquity(
 	}
 	return netCollateral, nil
 }
+
+// GetVaultInventory returns the inventory of a vault in a given perpeutal (in base quantums).
+func (k Keeper) GetVaultInventoryInPerpetual(
+	ctx sdk.Context,
+	vaultId types.VaultId,
+	perpId uint32,
+) *big.Int {
+	// Get subaccount.
+	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
+	// Calculate inventory.
+	inventory := big.NewInt(0)
+	for _, p := range subaccount.PerpetualPositions {
+		if p.GetPerpetualId() == perpId {
+			inventory.Add(inventory, p.GetBigQuantums())
+		}
+	}
+	return inventory
+}
