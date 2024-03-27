@@ -113,7 +113,7 @@ services:
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
-    image: local:dydxprotocol
+    image: ghcr.io/skip-mev/slinky-sidecar:v0.3.1
     entrypoint:
       - slinky
       - -oracle-config-path
