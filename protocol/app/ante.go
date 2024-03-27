@@ -256,12 +256,12 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	switch msg := msgs[0].(type) {
 	case *types.MsgCancelOrder:
 		orderId = msg.OrderId
-		if orderId.ClientId%23 == 0 {
+		if orderId.ClientId%97 == 0 {
 			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
 		}
 	case *types.MsgPlaceOrder:
 		orderId = msg.Order.OrderId
-		if orderId.ClientId%23 == 0 {
+		if orderId.ClientId%97 == 0 {
 			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
 		}
 	}
