@@ -2,6 +2,7 @@ package grpc
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -25,6 +26,9 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 	err error,
 ) {
 	return clobtypes.ErrGrpcStreamingManagerNotEnabled
+}
+
+func (sm *NoopGrpcStreamingManager) SubscribeTestClient(client *client.GrpcClient) {
 }
 
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
