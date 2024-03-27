@@ -1539,6 +1539,8 @@ func (k Keeper) SetLiquidityTier(
 				name,
 				initialMarginPpm,
 				maintenanceFractionPpm,
+				openInterestLowerCap,
+				openInterestUpperCap,
 			),
 		),
 	)
