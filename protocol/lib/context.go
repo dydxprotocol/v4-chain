@@ -11,6 +11,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 )
 
+// Custom exec modes
+const (
+	ExecModeBeginBlock        = 100
+	ExecModeEndBlock          = 101
+	ExecModePrepareCheckState = 102
+)
+
 type TxHash string
 
 func GetTxHash(tx []byte) TxHash {
