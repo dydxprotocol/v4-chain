@@ -1,13 +1,11 @@
 package client
 
 import (
-	"context"
 	"sync"
 
 	"cosmossdk.io/log"
 
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
 	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
 	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -42,44 +40,44 @@ func NewGrpcClient(appflags appflags.Flags, logger log.Logger) *GrpcClient {
 	}
 
 	// Subscribe to grpc orderbook updates.
-	go func() {
-		grpcClient := daemontypes.GrpcClientImpl{}
+	// go func() {
+	// 	grpcClient := daemontypes.GrpcClientImpl{}
 
-		// Make a connection to the Cosmos gRPC query services.
-		queryConn, err := grpcClient.NewTcpConnection(context.Background(), appflags.GrpcAddress)
-		if err != nil {
-			logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
-			return
-		}
-		defer func() {
-			if err := grpcClient.CloseConnection(queryConn); err != nil {
-				logger.Error("Failed to close gRPC connection", "error", err)
-			}
-		}()
+	// 	// Make a connection to the Cosmos gRPC query services.
+	// 	queryConn, err := grpcClient.NewTcpConnection(context.Background(), appflags.GrpcAddress)
+	// 	if err != nil {
+	// 		logger.Error("Failed to establish gRPC connection to Cosmos gRPC query services", "error", err)
+	// 		return
+	// 	}
+	// 	defer func() {
+	// 		if err := grpcClient.CloseConnection(queryConn); err != nil {
+	// 			logger.Error("Failed to close gRPC connection", "error", err)
+	// 		}
+	// 	}()
 
-		clobQueryClient := clobtypes.NewQueryClient(queryConn)
-		updateClient, err := clobQueryClient.StreamOrderbookUpdates(
-			context.Background(),
-			&clobtypes.StreamOrderbookUpdatesRequest{
-				ClobPairId: []uint32{0, 1},
-			},
-		)
-		if err != nil {
-			logger.Error("Failed to stream orderbook updates", "error", err)
-			return
-		}
+	// 	clobQueryClient := clobtypes.NewQueryClient(queryConn)
+	// 	updateClient, err := clobQueryClient.StreamOrderbookUpdates(
+	// 		context.Background(),
+	// 		&clobtypes.StreamOrderbookUpdatesRequest{
+	// 			ClobPairId: []uint32{0, 1},
+	// 		},
+	// 	)
+	// 	if err != nil {
+	// 		logger.Error("Failed to stream orderbook updates", "error", err)
+	// 		return
+	// 	}
 
-		for {
-			update, err := updateClient.Recv()
-			if err != nil {
-				logger.Error("Failed to receive orderbook update", "error", err)
-				return
-			}
+	// 	for {
+	// 		update, err := updateClient.Recv()
+	// 		if err != nil {
+	// 			logger.Error("Failed to receive orderbook update", "error", err)
+	// 			return
+	// 		}
 
-			logger.Info("Received orderbook update", "update", update)
-			client.Update(update)
-		}
-	}()
+	// 		logger.Info("Received orderbook update", "update", update)
+	// 		client.Update(update)
+	// 	}
+	// }()
 	return client
 }
 
