@@ -534,6 +534,22 @@ var (
 			},
 		},
 	}
+	Dave_Num0_1ISO_Long_50USD_Short = satypes.Subaccount{
+		Id: &Dave_Num0,
+		AssetPositions: []*satypes.AssetPosition{
+			{
+				AssetId:  0,
+				Quantums: dtypes.NewInt(-50_000_000), // -$50
+			},
+		},
+		PerpetualPositions: []*satypes.PerpetualPosition{
+			{
+				PerpetualId:  3,
+				Quantums:     dtypes.NewInt(1_000_000_000), // 1 ISO
+				FundingIndex: dtypes.NewInt(0),
+			},
+		},
+	}
 	Dave_Num0_1ISO2_Short_499USD = satypes.Subaccount{
 		Id: &Dave_Num0,
 		AssetPositions: []*satypes.AssetPosition{
