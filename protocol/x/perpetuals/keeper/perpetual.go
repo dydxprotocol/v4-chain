@@ -7,22 +7,18 @@ import (
 	"sort"
 	"time"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-
-	storetypes "cosmossdk.io/store/types"
-
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-
 	errorsmod "cosmossdk.io/errors"
-
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-
 	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -862,6 +858,36 @@ func (k Keeper) GetNetNotional(
 	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
 }
 
+func (k Keeper) GetNetNotionalInt256(
+	ctx sdk.Context,
+	id uint32,
+	quantums *int256.Int,
+) (
+	netNotionalQuoteQuantums *int256.Int,
+	err error,
+) {
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetNetNotional, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
+
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
+	if err != nil {
+		return new(int256.Int), err
+	}
+
+	return GetNetNotionalInQuoteQuantumsInt256(perpetual, marketPrice, quantums), nil
+}
+
 // GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be
 // represented by the following equation:
 //
@@ -884,6 +910,23 @@ func GetNetNotionalInQuoteQuantums(
 	)
 
 	return bigQuoteQuantums
+}
+
+func GetNetNotionalInQuoteQuantumsInt256(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	quantums *int256.Int,
+) (
+	netNotionalQuoteQuantums *int256.Int,
+) {
+	quoteQuantums := lib.BaseToQuoteQuantumsInt256(
+		quantums,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	return quoteQuantums
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -937,6 +980,18 @@ func (k Keeper) GetNetCollateral(
 ) {
 	// The net collateral is equal to the net open notional.
 	return k.GetNetNotional(ctx, id, bigQuantums)
+}
+
+func (k Keeper) GetNetCollateralInt256(
+	ctx sdk.Context,
+	id uint32,
+	quantums *int256.Int,
+) (
+	netCollateralQuoteQuantums *int256.Int,
+	err error,
+) {
+	// The net collateral is equal to the net open notional.
+	return k.GetNetNotionalInt256(ctx, id, quantums)
 }
 
 // GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
@@ -997,6 +1052,50 @@ func (k Keeper) GetMarginRequirements(
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
 }
 
+func (k Keeper) GetMarginRequirementsInt256(
+	ctx sdk.Context,
+	id uint32,
+	quantums *int256.Int,
+) (
+	initialMarginQuoteQuantums *int256.Int,
+	maintenanceMarginQuoteQuantums *int256.Int,
+	err error,
+) {
+	if rand.Float64() < metrics.LatencyMetricSampleRate {
+		defer metrics.ModuleMeasureSinceWithLabels(
+			types.ModuleName,
+			[]string{metrics.GetMarginRequirements, metrics.Latency},
+			time.Now(),
+			[]gometrics.Label{
+				metrics.GetLabelForStringValue(
+					metrics.SampleRate,
+					fmt.Sprintf("%f", metrics.LatencyMetricSampleRate),
+				),
+			},
+		)
+	}
+
+	// Get perpetual and market price.
+	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Get perpetual's liquidity tier.
+	liquidityTier, err := k.GetLiquidityTier(ctx, perpetual.Params.LiquidityTier)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	initialMarginQuoteQuantums,
+		maintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantumsInt256(
+		perpetual,
+		marketPrice,
+		liquidityTier,
+		quantums,
+	)
+	return initialMarginQuoteQuantums, maintenanceMarginQuoteQuantums, nil
+}
+
 // GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
 // in quote quantums, given the position size in base quantums.
 //
@@ -1047,6 +1146,55 @@ func GetMarginRequirementsInQuoteQuantums(
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
 	)
 	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
+}
+
+// GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
+// in quote quantums, given the position size in base quantums.
+//
+// Note that this is a stateless function.
+func GetMarginRequirementsInQuoteQuantumsInt256(
+	perpetual types.Perpetual,
+	marketPrice pricestypes.MarketPrice,
+	liquidityTier types.LiquidityTier,
+	quantums *int256.Int,
+) (
+	initialMarginQuoteQuantums *int256.Int,
+	maintenanceMarginQuoteQuantums *int256.Int,
+) {
+	var absQuantums int256.Int
+	absQuantums.Abs(quantums)
+
+	// Calculate the notional value of the position in quote quantums.
+	quoteQuantums := lib.BaseToQuoteQuantumsInt256(
+		&absQuantums,
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+	// Calculate the perpetual's open interest in quote quantums.
+	openInterestQuoteQuantums := lib.BaseToQuoteQuantumsInt256(
+		int256.MustFromBig(perpetual.OpenInterest.BigInt()), // OpenInterest is represented as base quantums.
+		perpetual.Params.AtomicResolution,
+		marketPrice.Price,
+		marketPrice.Exponent,
+	)
+
+	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
+	baseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantumsInt256(
+		quoteQuantums,
+		int256.NewInt(0), // pass in 0 as open interest to get base IMR.
+	)
+	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	maintenanceMarginQuoteQuantums = baseInitialMarginQuoteQuantums.MulPpm(
+		baseInitialMarginQuoteQuantums,
+		liquidityTier.MaintenanceFractionPpm,
+	)
+
+	initialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantumsInt256(
+		quoteQuantums,
+		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
+	)
+	return initialMarginQuoteQuantums, maintenanceMarginQuoteQuantums
 }
 
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
@@ -1275,6 +1423,48 @@ func (k Keeper) ModifyOpenInterest(
 	}
 
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
+	k.SetPerpetual(ctx, perpetual)
+
+	// TODO(OTE-247): add indexer update logic for open interest change.
+	return nil
+}
+
+// Modify the open interest of a perpetual in state.
+func (k Keeper) ModifyOpenInterestInt256(
+	ctx sdk.Context,
+	perpetualId uint32,
+	openInterestDeltaBaseQuantums *int256.Int,
+) (
+	err error,
+) {
+	// No-op if delta is zero.
+	if openInterestDeltaBaseQuantums.Sign() == 0 {
+		return nil
+	}
+
+	// Get perpetual.
+	perpetual, err := k.GetPerpetual(ctx, perpetualId)
+	if err != nil {
+		return err
+	}
+
+	openInterest := int256.MustFromBig(perpetual.OpenInterest.BigInt())
+	openInterest.Add(
+		openInterest, // reuse pointer for efficiency
+		openInterestDeltaBaseQuantums,
+	)
+
+	if openInterest.Sign() < 0 {
+		return errorsmod.Wrapf(
+			types.ErrOpenInterestWouldBecomeNegative,
+			"perpetualId = %d, openInterest before = %s, after = %s",
+			perpetualId,
+			perpetual.OpenInterest.String(),
+			openInterest.String(),
+		)
+	}
+
+	perpetual.OpenInterest = dtypes.NewIntFromBigInt(openInterest.ToBig())
 	k.SetPerpetual(ctx, perpetual)
 
 	// TODO(OTE-247): add indexer update logic for open interest change.

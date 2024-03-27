@@ -399,7 +399,7 @@ func (k Keeper) persistMatchedOrders(
 	}
 
 	// Apply the update.
-	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccounts(
+	success, successPerUpdate, err := k.subaccountsKeeper.UpdateSubaccountsInt256(
 		ctx,
 		updates,
 		satypes.Match,

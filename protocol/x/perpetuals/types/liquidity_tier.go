@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 // - Initial margin is less than or equal to 1.
@@ -177,4 +178,45 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 		return bigQuoteQuantums
 	}
 	return bigIMREffective
+}
+
+func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantumsInt256(
+	quoteQuantums *int256.Int,
+	openInterestQuoteQuantums *int256.Int,
+) *int256.Int {
+	openInterestUpperCap := int256.NewUnsignedInt(liquidityTier.OpenInterestUpperCap)
+
+	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero,
+	// OIMF = 1.0 so return input quote quantums as the IMR.
+	if openInterestQuoteQuantums.Cmp(
+		openInterestUpperCap,
+	) >= 0 && liquidityTier.OpenInterestUpperCap != 0 {
+		return quoteQuantums
+	}
+
+	// If `open_interest_upper_cap` is 0, OIMF is disabled。
+	// Or if `current_interest` <= `open_interest_lower_cap`, IMF is not scaled.
+	// In both cases, use base IMF as OIMF.
+	openInterestLowerCap := int256.NewUnsignedInt(liquidityTier.OpenInterestLowerCap)
+	baseImr := new(int256.Int).MulPpmRoundUp(quoteQuantums, liquidityTier.InitialMarginPpm)
+	if liquidityTier.OpenInterestUpperCap == 0 || openInterestQuoteQuantums.Cmp(
+		openInterestLowerCap,
+	) <= 0 {
+		// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
+		return baseImr
+	}
+
+	// If `open_interest_lower_cap` < `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
+	// `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
+	additionalImr := new(int256.Int)
+	additionalImr.Mul(quoteQuantums, additionalImr.Sub(openInterestQuoteQuantums, openInterestLowerCap))
+	additionalImr.DivRoundUp(additionalImr, openInterestLowerCap.Sub(openInterestUpperCap, openInterestLowerCap))
+	additionalImr.MulPpmRoundUp(additionalImr, lib.OneMillion-liquidityTier.InitialMarginPpm)
+	additionalImr = additionalImr.Add(baseImr, additionalImr)
+
+	// Return min(Effective IMR, Quote Quantums)
+	if additionalImr.Cmp(quoteQuantums) >= 0 {
+		return quoteQuantums
+	}
+	return additionalImr
 }
