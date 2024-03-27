@@ -220,6 +220,8 @@ func (k Keeper) PlaceShortTermOrder(
 		msg.Order,
 	)
 
+	fmt.Printf("!!! MemClob.PlaceOrder return values: orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err = %+v, %+v, %+v, %+v\n", orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err)
+
 	// Send off-chain updates generated from placing the order. `SendOffchainData` enqueues the
 	// the messages to be sent in a channel and should be non-blocking.
 	// Off-chain update messages should be only be returned if the `IndexerMessageSender`

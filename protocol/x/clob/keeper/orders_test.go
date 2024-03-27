@@ -712,6 +712,9 @@ func TestPlaceShortTermOrder(t *testing.T) {
 		// <end of grouped tests: pessimistic value collateralization check -- SELL>
 	}
 	for name, tc := range tests {
+		if name != "Cannot place an order on the orderbook if the account would be undercollateralized" {
+			continue
+		}
 		t.Run(name, func(t *testing.T) {
 			// Setup keeper state.
 			memClob := memclob.NewMemClobPriceTimePriority(false)
@@ -835,6 +838,7 @@ func TestPlaceShortTermOrder(t *testing.T) {
 					)
 				}
 			}
+			require.True(t, false)
 		})
 	}
 }
