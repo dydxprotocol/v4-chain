@@ -344,8 +344,9 @@ func (m *QueryGetWithdrawalAndTransfersBlockedInfoResponse) GetWithdrawalsAndTra
 	return 0
 }
 
-// QueryCollateralPoolAddressRequest is the request type for fetching the account address of the
-// collateral pool associated with the passed in perpetual id.
+// QueryCollateralPoolAddressRequest is the request type for fetching the
+// account address of the collateral pool associated with the passed in
+// perpetual id.
 type QueryCollateralPoolAddressRequest struct {
 	PerpetualId uint32 `protobuf:"varint,1,opt,name=perpetual_id,json=perpetualId,proto3" json:"perpetual_id,omitempty"`
 }
@@ -390,8 +391,9 @@ func (m *QueryCollateralPoolAddressRequest) GetPerpetualId() uint32 {
 	return 0
 }
 
-// QueryCollateralPoolAddressResponse is a response type for fetching the account address of the
-// collateral pool associated with the passed in perpetual id.
+// QueryCollateralPoolAddressResponse is a response type for fetching the
+// account address of the collateral pool associated with the passed in
+// perpetual id.
 type QueryCollateralPoolAddressResponse struct {
 	CollateralPoolAddress string `protobuf:"bytes,1,opt,name=collateral_pool_address,json=collateralPoolAddress,proto3" json:"collateral_pool_address,omitempty"`
 }
