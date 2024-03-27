@@ -304,15 +304,15 @@ export async function findAllToOrFromSubaccountId(
     /**
      * We make sure that the page number is always >= 1
      */
-    const currentPage = Math.max(1, page);
-    const offset = (currentPage - 1) * limit;
+    const currentPage: number = Math.max(1, page);
+    const offset: number = (currentPage - 1) * limit;
 
     /**
      * We need to remove the sorting as it is not necessary in this case.
      * Also a casting of the ts type is required since the infer of the type
      * obtained from the count is not performed.
      */
-    const count = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
+    const count: { count?: string } = await baseQuery.clone().clearOrder().count({ count: '*' }).first() as unknown as { count?: string };
 
     baseQuery = baseQuery.offset(offset).limit(limit);
 
