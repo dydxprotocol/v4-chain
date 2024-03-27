@@ -57,6 +57,10 @@ type SubaccountsKeeper interface {
 		bigMaintenanceMargin *big.Int,
 		err error,
 	)
+	GetSubaccount(
+		ctx sdk.Context,
+		id satypes.SubaccountId,
+	) satypes.Subaccount
 	TransferFundsFromSubaccountToSubaccount(
 		ctx sdk.Context,
 		senderSubaccountId satypes.SubaccountId,
