@@ -1,10 +1,13 @@
 package types
 
 import (
+	"math/big"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 type ClobKeeper interface {
@@ -45,4 +48,20 @@ type PricesKeeper interface {
 }
 
 type SubaccountsKeeper interface {
+	GetNetCollateralAndMarginRequirements(
+		ctx sdk.Context,
+		update satypes.Update,
+	) (
+		bigNetCollateral *big.Int,
+		bigInitialMargin *big.Int,
+		bigMaintenanceMargin *big.Int,
+		err error,
+	)
+	TransferFundsFromSubaccountToSubaccount(
+		ctx sdk.Context,
+		senderSubaccountId satypes.SubaccountId,
+		recipientSubaccountId satypes.SubaccountId,
+		assetId uint32,
+		quantums *big.Int,
+	) (err error)
 }

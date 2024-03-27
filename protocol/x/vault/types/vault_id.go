@@ -2,19 +2,50 @@ package types
 
 import (
 	fmt "fmt"
+	"strconv"
+	"strings"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
+// ToString returns the string representation of a vault ID.
+func (id *VaultId) ToString() string {
+	return fmt.Sprintf("%s-%d", id.Type, id.Number)
+}
+
 // ToStateKey returns the state key for the vault ID.
 func (id *VaultId) ToStateKey() []byte {
-	b, err := id.Marshal()
-	if err != nil {
-		panic(err)
+	return []byte(id.ToString())
+}
+
+// GetVaultIdFromStateKey returns a vault ID from a given state key.
+func GetVaultIdFromStateKey(stateKey []byte) (*VaultId, error) {
+	stateKeyStr := string(stateKey)
+
+	// Split state key string into type and number.
+	split := strings.Split(stateKeyStr, "-")
+	if len(split) != 2 {
+		return nil, fmt.Errorf("stateKey in string must follow format <type>-<number> but got %s", stateKeyStr)
 	}
-	return b
+
+	// Parse vault type.
+	vaultTypeInt, exists := VaultType_value[split[0]]
+	if !exists {
+		return nil, fmt.Errorf("unknown vault type: %s", split[0])
+	}
+
+	// Parse vault number.
+	number, err := strconv.ParseUint(split[1], 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse number: %s", err.Error())
+	}
+
+	return &VaultId{
+		Type:   VaultType(vaultTypeInt),
+		Number: uint32(number),
+	}, nil
 }
 
 // ToModuleAccountAddress returns the module account address for the vault ID
@@ -36,8 +67,34 @@ func (id *VaultId) ToSubaccountId() *satypes.SubaccountId {
 
 // IncrCounterWithLabels increments counter with labels with added vault ID labels.
 func (id *VaultId) IncrCounterWithLabels(metricName string, labels ...metrics.Label) {
-	// Append vault type and number to labels.
-	labels = append(
+	// Append vault labels.
+	labels = id.addLabels(labels...)
+
+	metrics.IncrCounterWithLabels(
+		metricName,
+		1,
+		labels...,
+	)
+}
+
+// IncrCounterWithLabels sets gauge with labels with added vault ID labels.
+func (id *VaultId) SetGaugeWithLabels(
+	metricName string,
+	value float32,
+	labels ...metrics.Label,
+) {
+	// Append vault labels.
+	labels = id.addLabels(labels...)
+
+	metrics.SetGaugeWithLabels(
+		metricName,
+		value,
+		labels...,
+	)
+}
+
+func (id *VaultId) addLabels(labels ...metrics.Label) []metrics.Label {
+	return append(
 		labels,
 		metrics.GetLabelForIntValue(
 			metrics.VaultType,
@@ -47,11 +104,5 @@ func (id *VaultId) IncrCounterWithLabels(metricName string, labels ...metrics.La
 			metrics.VaultId,
 			int(id.Number),
 		),
-	)
-
-	metrics.IncrCounterWithLabels(
-		metricName,
-		1,
-		labels...,
 	)
 }

@@ -27,6 +27,7 @@ import (
 	rewards "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
 	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	stats "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	vault "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	vest "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
 )
 
@@ -114,6 +115,9 @@ func IsInternalMsg(msg sdk.Msg) bool {
 
 		// stats
 		*stats.MsgUpdateParams,
+
+		// vault
+		*vault.MsgUpdateParams,
 
 		// vest
 		*vest.MsgDeleteVestEntry,
