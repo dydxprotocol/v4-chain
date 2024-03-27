@@ -5,6 +5,9 @@ import {
   STATS_FUNCTION_NAME,
   wrapBackgroundTask,
 } from '@dydxprotocol-indexer/base';
+import {
+  defaultTime,
+} from '../helpers/constants';
 import { synchronizeWrapBackgroundTask } from '@dydxprotocol-indexer/dev';
 import {
   ORDERBOOKS_WEBSOCKET_MESSAGE_VERSION,
@@ -52,6 +55,7 @@ import {
   OrderRemoveV1_OrderRemovalStatus,
   RedisOrder,
   SubaccountMessage,
+  protoTimestampToDate,
 } from '@dydxprotocol-indexer/v4-protos';
 import Big from 'big.js';
 import { IHeaders, ProducerRecord } from 'kafkajs';
@@ -60,8 +64,6 @@ import { DateTime } from 'luxon';
 import { OrderRemoveHandler } from '../../src/handlers/order-remove-handler';
 import { OrderbookSide } from '../../src/lib/types';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
-import { protoTimestampToDate } from '../../../ender/src/lib/helper';
-import { defaultTime } from '../../../ender/__tests__/helpers/constants';
 
 import {
   expectCanceledOrderStatus,
