@@ -140,7 +140,15 @@ type lockingAnteHandler struct {
 }
 
 func orderIdStr(id types.OrderId, tag string) string {
-	return fmt.Sprintf("%s:%s:%d:%d", tag, id.SubaccountId.Owner, id.SubaccountId.Number, id.ClientId)
+	return fmt.Sprintf(
+		"%s:%s:%d:%d:%d:%d",
+		tag,
+		id.SubaccountId.Owner,
+		id.SubaccountId.Number,
+		id.ClientId,
+		id.OrderFlags,
+		id.ClobPairId,
+	)
 }
 
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
@@ -249,9 +257,6 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	case *types.MsgCancelOrder:
 		orderId = msg.OrderId
 		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
-	case *types.MsgPlaceOrder:
-		orderId = msg.Order.OrderId
-		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
 	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
