@@ -256,10 +256,14 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	switch msg := msgs[0].(type) {
 	case *types.MsgCancelOrder:
 		orderId = msg.OrderId
-		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
+		if orderId.ClientId%23 == 0 {
+			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
+		}
 	case *types.MsgPlaceOrder:
 		orderId = msg.Order.OrderId
-		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
+		if orderId.ClientId%23 == 0 {
+			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
+		}
 	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
