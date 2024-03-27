@@ -2,7 +2,6 @@ package client_test
 
 import (
 	"context"
-	"net"
 	"testing"
 	"time"
 
