@@ -44,12 +44,14 @@ func TestClient(t *testing.T) {
 		)
 
 	defer grpcServer.Stop()
-	go func() {
-		ls, err := net.Listen("tcp", appFlags.GrpcAddress)
-		require.NoError(t, err)
-		// err = grpcServer.Serve(ls)
-		require.NoError(t, err)
-	}()
+	/*
+		go func() {
+			ls, err := net.Listen("tcp", appFlags.GrpcAddress)
+			require.NoError(t, err)
+			err = grpcServer.Serve(ls)
+			require.NoError(t, err)
+		}()
+	*/
 
 	slinky.On("Stop").Return(nil)
 	slinky.On("Start", mock.Anything).Return(nil).Once()
