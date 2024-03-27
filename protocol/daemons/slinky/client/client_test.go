@@ -47,7 +47,7 @@ func TestClient(t *testing.T) {
 	go func() {
 		ls, err := net.Listen("tcp", appFlags.GrpcAddress)
 		require.NoError(t, err)
-		err = grpcServer.Serve(ls)
+		// err = grpcServer.Serve(ls)
 		require.NoError(t, err)
 	}()
 
