@@ -2509,3 +2509,7 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 	maxMatchSize := lib.BigMin(absPositionSize, absNewMatchSize)
 	return satypes.BaseQuantums(maxMatchSize.Uint64())
 }
+
+func (m *MemClobPriceTimePriority) GetOrderbook(ctx sdk.Context, clobPairId types.ClobPairId) types.Orderbook {
+	return *m.openOrders.mustGetOrderbook(ctx, clobPairId)
+}
