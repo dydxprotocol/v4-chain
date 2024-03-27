@@ -138,6 +138,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		expectedOrdersFilled           []clobtypes.OrderId
 		expectedSubaccounts            []satypes.Subaccount
 		expectedCollateralPoolBalances map[string]int64
+		expectedErr                    string
 	}{
 		"Isolated subaccount will not have matches for cross-market orders": {
 			subaccounts: []satypes.Subaccount{
@@ -301,6 +302,87 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				).String(): 19_999_999_900,
 			},
 		},
+		`Empty subaccount will not have matches for isolated market orders if cross collateral pool does not 
+		have enough balance`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5,
+				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5,
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 1_000_000_000, // $1,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 30_000_000_000, // $30,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 1_000_000_000, // $1,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 30_000_000_000, // $30,000 USDC
+			},
+			expectedErr: "insufficient funds",
+		},
+		`Isolated subaccount will not have matches to close isolated perpetual position if isolated collateral pool does not 
+		have enough balance`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Bob_Num0_1ISO_LONG_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			// Orders should match.
+			orders: []clobtypes.MsgPlaceOrder{
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5,
+				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5,
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Bob_Num0_1ISO_LONG_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErr: "insufficient funds",
+		},
 	}
 
 	for name, tc := range tests {
@@ -365,10 +447,16 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			}).Build()
 			ctx = tApp.InitChain()
 
-			for _, order := range tc.orders {
+			for i, order := range tc.orders {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
 					resp := tApp.CheckTx(checkTx)
-					require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+					// Error should only be returned for the second order, as it results in a match.
+					if tc.expectedErr == "" || (i != len(tc.orders)-1) {
+						require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
+					} else {
+						require.False(t, resp.IsOK())
+						require.Contains(t, resp.Log, tc.expectedErr)
+					}
 				}
 			}
 
