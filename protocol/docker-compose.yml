@@ -114,16 +114,9 @@ services:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
   slinky0:
     image: ghcr.io/skip-mev/slinky-sidecar:v0.3.1
-    entrypoint:
-      - slinky
-      - -oracle-config-path
-      - /etc/oracle.json
-      - -market-config-path
-      - /etc/market.json
-      - -host
-      - "0.0.0.0"
-      - -port
-      - "8080"
+    entrypoint: >
+      sh -c "slinky-config --chain dydx --node-http-url http://dydxprotocold0:1317 --oracle-config-path /etc/oracle.json &&
+             slinky --oracle-config-path /etc/oracle.json --update-market-config-path /etc/market.json"
     ports:
       - "8080:8080"
 
