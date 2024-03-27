@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"sync"
 
 	errorsmod "cosmossdk.io/errors"
@@ -17,6 +18,7 @@ import (
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -137,6 +139,10 @@ type lockingAnteHandler struct {
 	clob                     clobante.ClobDecorator
 }
 
+func orderIdStr(id types.OrderId, tag string) string {
+	return fmt.Sprintf("%s:%s:%d:%d", tag, id.SubaccountId.Owner, id.SubaccountId.Number, id.ClientId)
+}
+
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 	isClob, err := clobante.IsSingleClobMsgTx(tx)
 	if err != nil {
@@ -237,6 +243,16 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 		"roy_clob_tx",
 		metrics.Count,
 	)
+	msgs := tx.GetMsgs()
+	var orderId types.OrderId
+	switch msg := msgs[0].(type) {
+	case *types.MsgCancelOrder:
+		orderId = msg.OrderId
+		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
+	case *types.MsgPlaceOrder:
+		orderId = msg.Order.OrderId
+		ctx.Logger().Info("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
+	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
 		return ctx, err
