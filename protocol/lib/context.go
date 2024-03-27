@@ -5,6 +5,13 @@ import (
 	"github.com/cometbft/cometbft/crypto/tmhash"
 )
 
+// Custom exec modes
+const (
+	ExecModeBeginBlock        = 100
+	ExecModeEndBlock          = 101
+	ExecModePrepareCheckState = 102
+)
+
 type TxHash string
 
 func GetTxHash(tx []byte) TxHash {

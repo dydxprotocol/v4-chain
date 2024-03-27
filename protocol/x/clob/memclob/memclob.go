@@ -1495,7 +1495,7 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
 		orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
-		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 }
 
@@ -1936,7 +1936,7 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 	if m.generateOrderbookUpdates {
 		// Send an orderbook update to grpc streams.
 		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 }
 
@@ -1958,7 +1958,7 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// Send an orderbook update for the order's new total filled amount.
 	if m.generateOrderbookUpdates {
 		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
-		m.clobKeeper.SendOrderbookUpdates(orderbookUpdate, false)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.

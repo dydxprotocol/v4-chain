@@ -76,6 +76,8 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	snapshot bool,
+	blockHeight uint32,
+	execMode uint32,
 ) {
 	// Group updates by clob pair id.
 	updates := make(map[uint32]*clobtypes.OffchainUpdates)
@@ -113,8 +115,10 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		if len(updatesToSend) > 0 {
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:  updatesToSend,
-					Snapshot: snapshot,
+					Updates:     updatesToSend,
+					Snapshot:    snapshot,
+					BlockHeight: blockHeight,
+					ExecMode:    execMode,
 				},
 			); err != nil {
 				idsToRemove = append(idsToRemove, id)

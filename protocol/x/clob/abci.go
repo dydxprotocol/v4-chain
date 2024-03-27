@@ -20,6 +20,7 @@ func BeginBlocker(
 	ctx sdk.Context,
 	keeper types.ClobKeeper,
 ) {
+	ctx = ctx.WithValue("ExecMode", lib.ExecModeBeginBlock)
 	// Initialize the set of process proposer match events for the next block effectively
 	// removing any events that occurred in the last block.
 	keeper.MustSetProcessProposerMatchesEvents(
@@ -35,6 +36,8 @@ func EndBlocker(
 	ctx sdk.Context,
 	keeper keeper.Keeper,
 ) {
+	ctx = ctx.WithValue("ExecMode", lib.ExecModeEndBlock)
+
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 
 	// Prune any fill amounts from state which are now past their `pruneableBlockHeight`.
@@ -117,6 +120,8 @@ func PrepareCheckState(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {
+	ctx = ctx.WithValue("ExecMode", lib.ExecModePrepareCheckState)
+
 	// Get the events generated from processing the matches in the latest block.
 	processProposerMatchesEvents := keeper.GetProcessProposerMatchesEvents(ctx)
 	if ctx.BlockHeight() != int64(processProposerMatchesEvents.BlockHeight) {
@@ -180,7 +185,7 @@ func PrepareCheckState(
 				allUpdates.Append(orderbookUpdate)
 			}
 		}
-		keeper.SendOrderbookUpdates(allUpdates, false)
+		keeper.SendOrderbookUpdates(ctx, allUpdates, false)
 	}
 
 	// 3. Place all stateful order placements included in the last block on the memclob.
