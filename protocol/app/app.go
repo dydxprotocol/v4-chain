@@ -1411,6 +1411,7 @@ func New(
 
 	if app.GrpcStreamingManager.Enabled() {
 		app.GrpcStreamingTestClient = streamingclient.NewGrpcClient(appFlags, app.Logger())
+		app.GrpcStreamingManager.SubscribeTestClient(app.GrpcStreamingTestClient)
 	}
 
 	// Report out app version and git commit. This will be run when validators restart.

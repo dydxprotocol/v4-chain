@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -32,6 +33,9 @@ type OrderbookSubscription struct {
 
 	// Stream
 	srv clobtypes.Query_StreamOrderbookUpdatesServer
+
+	// Testing
+	client *client.GrpcClient
 }
 
 func NewGrpcStreamingManager() *GrpcStreamingManagerImpl {
@@ -72,6 +76,19 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 	return nil
 }
 
+func (sm *GrpcStreamingManagerImpl) SubscribeTestClient(client *client.GrpcClient) {
+	subscription := &OrderbookSubscription{
+		clobPairIds: []uint32{0, 1},
+		client:      client,
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	sm.orderbookSubscriptions[sm.nextSubscriptionId] = subscription
+	sm.nextSubscriptionId++
+}
+
 // SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
@@ -105,7 +122,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
+	for _, subscription := range sm.orderbookSubscriptions {
 		updatesToSend := make([]ocutypes.OffChainUpdateV1, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if updates, ok := v1updates[clobPairId]; ok {
@@ -122,15 +139,13 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 					},
 				},
 			}
-			if err := subscription.srv.Send(
+			subscription.client.Update(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates:     []clobtypes.StreamUpdate{streamUpdates},
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-			}
+			)
 		}
 	}
 
@@ -170,7 +185,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 
 	// Send updates to subscribers.
 	idsToRemove := make([]uint32, 0)
-	for id, subscription := range sm.orderbookSubscriptions {
+	for _, subscription := range sm.orderbookSubscriptions {
 		streamUpdatesForSubscription := make([]clobtypes.StreamUpdate, 0)
 		for _, clobPairId := range subscription.clobPairIds {
 			if update, ok := updatesByClobPairId[clobPairId]; ok {
@@ -179,15 +194,13 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookFillUpdates(
 		}
 
 		if len(streamUpdatesForSubscription) > 0 {
-			if err := subscription.srv.Send(
+			subscription.client.Update(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates:     streamUpdatesForSubscription,
 					BlockHeight: lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
 					ExecMode:    uint32(ctx.ExecMode()),
 				},
-			); err != nil {
-				idsToRemove = append(idsToRemove, id)
-			}
+			)
 		}
 	}
 

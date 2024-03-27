@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/client"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -14,6 +15,9 @@ type GrpcStreamingManager interface {
 		srv clobtypes.Query_StreamOrderbookUpdatesServer,
 	) (
 		err error,
+	)
+	SubscribeTestClient(
+		client *client.GrpcClient,
 	)
 	GetUninitializedClobPairIds() []uint32
 	SendOrderbookUpdates(
