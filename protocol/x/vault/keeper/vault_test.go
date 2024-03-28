@@ -20,7 +20,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
 		// Total shares of above vaults.
-		totalShares []*big.Rat
+		totalShares []*big.Int
 		// Equities of above vaults.
 		equities []*big.Int
 
@@ -33,9 +33,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(7, 1),
-				big.NewRat(7, 1),
+			totalShares: []*big.Int{
+				big.NewInt(7),
+				big.NewInt(7),
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -51,9 +51,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(7, 1),
-				big.NewRat(7, 1),
+			totalShares: []*big.Int{
+				big.NewInt(7),
+				big.NewInt(7),
 			},
 			equities: []*big.Int{
 				big.NewInt(1),
@@ -69,9 +69,9 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(7, 1),
-				big.NewRat(7, 1),
+			totalShares: []*big.Int{
+				big.NewInt(7),
+				big.NewInt(7),
 			},
 			equities: []*big.Int{
 				big.NewInt(0),
@@ -122,14 +122,14 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				err := k.SetTotalShares(
 					ctx,
 					vaultId,
-					vaulttypes.BigRatToNumShares(tc.totalShares[i]),
+					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
 				)
 				require.NoError(t, err)
 				err = k.SetOwnerShares(
 					ctx,
 					vaultId,
 					testOwner,
-					vaulttypes.BigRatToNumShares(big.NewRat(7, 1)),
+					vaulttypes.BigIntToNumShares(big.NewInt(7)),
 				)
 				require.NoError(t, err)
 			}
@@ -186,8 +186,8 @@ func TestDecommissionVault(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			shares := vaulttypes.BigRatToNumShares(
-				big.NewRat(7, 1),
+			shares := vaulttypes.BigIntToNumShares(
+				big.NewInt(7),
 			)
 
 			if tc.totalSharesExists {

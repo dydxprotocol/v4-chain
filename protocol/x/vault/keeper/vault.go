@@ -40,8 +40,7 @@ func (k Keeper) DecommissionNonPositiveEquityVaults(
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
 		// Skip if TotalShares is non-positive.
-		totalSharesRat, err := totalShares.ToBigRat()
-		if err != nil || totalSharesRat.Sign() <= 0 {
+		if totalShares.NumShares.BigInt().Sign() <= 0 {
 			continue
 		}
 
