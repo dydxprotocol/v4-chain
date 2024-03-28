@@ -210,6 +210,9 @@ edit_config() {
 
 	# Disable pex
 	dasel put -t bool -f "$CONFIG_FOLDER"/config.toml '.p2p.pex' -v 'false'
+
+	# Enable swagger
+	dasel put -t bool -f "$CONFIG_FOLDER"/app.toml '.api.swagger' -v 'true'
 }
 
 install_prerequisites
