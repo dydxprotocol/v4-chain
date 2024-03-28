@@ -231,9 +231,9 @@ func TestGetVaultClobOrders(t *testing.T) {
 		// Vault ID.
 		vaultId vaulttypes.VaultId
 		// Vault asset.
-		vaultAssetQuantums *big.Int
+		vaultAssetQuoteQuantums *big.Int
 		// Vault inventory.
-		vaultInventory *big.Int
+		vaultInventoryBaseQuantums *big.Int
 		// Clob pair.
 		clobPair clobtypes.ClobPair
 		// Market param.
@@ -257,13 +257,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 				OrderSizePpm:           100_000, // 10%
 				OrderExpirationSeconds: 2,       // 2 seconds
 			},
-			vaultId:            constants.Vault_Clob_0,
-			vaultAssetQuantums: big.NewInt(1_000_000_000), // 1,000 USDC
-			vaultInventory:     big.NewInt(0),
-			clobPair:           constants.ClobPair_Btc,
-			marketParam:        constants.TestMarketParams[0],
-			marketPrice:        constants.TestMarketPrices[0],
-			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			vaultId:                    constants.Vault_Clob_0,
+			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(0),
+			clobPair:                   constants.ClobPair_Btc,
+			marketParam:                constants.TestMarketParams[0],
+			marketPrice:                constants.TestMarketPrices[0],
+			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -310,18 +310,18 @@ func TestGetVaultClobOrders(t *testing.T) {
 			vaultParams: vaulttypes.Params{
 				Layers:                 3,       // 3 layers
 				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        4_500,   // 15 bps
-				SkewFactorPpm:          700_000, // 0.7
-				OrderSizePpm:           50_000,  // 5%
+				SpreadBufferPpm:        8_500,   // 85 bps
+				SkewFactorPpm:          900_000, // 0.9
+				OrderSizePpm:           200_000, // 20%
 				OrderExpirationSeconds: 4,       // 4 seconds
 			},
-			vaultId:            constants.Vault_Clob_1,
-			vaultAssetQuantums: big.NewInt(2_000_000_000), // 2,000 USDC
-			vaultInventory:     big.NewInt(-1_000),
-			clobPair:           constants.ClobPair_Eth,
-			marketParam:        constants.TestMarketParams[1],
-			marketPrice:        constants.TestMarketPrices[1],
-			perpetual:          constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			vaultId:                    constants.Vault_Clob_1,
+			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-500_000_000),  // -0.5 ETH
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
 			// To calculate order subticks:
 			// 1. spread = max(spread_min, spread_buffer + min_price_change)
 			// 2. leverage = open_notional / equity
@@ -333,50 +333,50 @@ func TestGetVaultClobOrders(t *testing.T) {
 			// To calculate size of each order
 			// 1. `order_size_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
-				// spreadPpm = max(3_000, 4_500 + 50) = 4_550
-				// spread = 0.00455
-				// open_notional = -1_000 * 10^-9 * 3_000 * 10^6 = -3_000
-				// leverage = -3_000 / (2_000_000_000 - 3_000) = -3/1_999_997
+				// spreadPpm = max(3_000, 8_500 + 50) = 8_550
+				// spread = 0.00855
+				// open_notional = -500_000_000 * 10^-9 * 3_000 * 10^6 = -1_500_000_000
+				// leverage = -1_500_000_000 / (2_000_000_000 - 1_500_000_000) = -3
 				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
-				// leverage_0 = leverage - 0 * 0.05 = -3/1_999_997
-				// skew_0 = 3 / 1_999_997 * 0.00455 * 0.7
-				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00455)^1 = 3_013_650_014.4
+				// leverage_0 = leverage - 0 * 0.2 = -3
+				// skew_0 = 3 * 0.00855 * 0.9
+				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00855)^1 = 3_095_497_130.25
 				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_013_651_000,
-				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00455)^1 = 2_986_411_840.46
+				3_095_498_000,
+				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00855)^1 ~= 3_043_235_337.86
 				// round down to nearest multiple of subticks_per_tick=1_000.
-				2_986_411_000,
-				// leverage_1 = leverage - 1 * 0.05
-				// skew_1 = -leverage_1 * 0.00455 * 0.7
-				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00455)^2 ~= 3_027_844_229.378
+				3_043_235_000,
+				// leverage_1 = leverage - 1 * 0.2
+				// skew_1 = -leverage_1 * 0.00855 * 0.9
+				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00855)^2 ~= 3_126_659_918.93
 				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_027_845_000,
-				// leverage_1 = leverage + 1 * 0.05
-				// skew_1 = -leverage_1 * 0.00455 * 0.7
-				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00455)^2 ~= 2_972_411_780.773
+				3_126_660_000,
+				// leverage_1 = leverage + 1 * 0.2
+				// skew_1 = -leverage_1 * 0.00855 * 0.9
+				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00855)^2 ~= 3_012_897_207.43
 				// round down to nearest multiple of subticks_per_tick=5.
-				2_972_411_000,
-				// leverage_2 = leverage - 2 * 0.05
-				// skew_2 = -leverage_2 * 0.00455 * 0.7
-				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00455)^3 ~= 3_042_105_221.627
+				3_012_897_000,
+				// leverage_2 = leverage - 2 * 0.2
+				// skew_2 = -leverage_2 * 0.00855 * 0.9
+				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00855)^3 ~= 3_158_129_302.71
 				// round up to nearest multiple of subticks_per_tick=1_000.
-				3_042_106_000,
-				// leverage_2 = leverage + 2 * 0.05
-				// skew_2 = -leverage_2 * 0.00455 * 0.7
-				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00455)^3 ~= 2958477277.194
+				3_158_130_000,
+				// leverage_2 = leverage + 2 * 0.2
+				// skew_2 = -leverage_2 * 0.00855 * 0.9
+				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00855)^3 ~= 2_982_854_748.91
 				// round down to nearest multiple of subticks_per_tick=1_000.
-				2_958_477_000,
+				2_982_854_000,
 			},
-			// order_size = 5% * 1999.997 / 3000 ~= 0.03333328333333334
-			// order_size_base_quantums = 0.03333328333333334 * 10^9 = 333_33_283
+			// order_size = 20% * 500 / 3000 ~= 0.0333333333
+			// order_size_base_quantums = 0.0333333333 * 10^9 ~= 33_333_333.33
 			// round down to nearest multiple of step_base_quantums=1_000.
 			expectedOrderQuantums: []uint64{
-				333_33_000,
-				333_33_000,
-				333_33_000,
-				333_33_000,
-				333_33_000,
-				333_33_000,
+				33_333_000,
+				33_333_000,
+				33_333_000,
+				33_333_000,
+				33_333_000,
+				33_333_000,
 			},
 		},
 		"Error - Clob Pair doesn't exist": {
@@ -389,26 +389,26 @@ func TestGetVaultClobOrders(t *testing.T) {
 			expectedErr: vaulttypes.ErrClobPairNotFound,
 		},
 		"Error - Vault equity is zero": {
-			vaultParams:        vaulttypes.DefaultParams(),
-			vaultId:            constants.Vault_Clob_0,
-			vaultAssetQuantums: big.NewInt(0),
-			vaultInventory:     big.NewInt(0),
-			clobPair:           constants.ClobPair_Btc,
-			marketParam:        constants.TestMarketParams[0],
-			marketPrice:        constants.TestMarketPrices[0],
-			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
-			expectedErr:        vaulttypes.ErrNonPositiveEquity,
+			vaultParams:                vaulttypes.DefaultParams(),
+			vaultId:                    constants.Vault_Clob_0,
+			vaultAssetQuoteQuantums:    big.NewInt(0),
+			vaultInventoryBaseQuantums: big.NewInt(0),
+			clobPair:                   constants.ClobPair_Btc,
+			marketParam:                constants.TestMarketParams[0],
+			marketPrice:                constants.TestMarketPrices[0],
+			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedErr:                vaulttypes.ErrNonPositiveEquity,
 		},
 		"Error - Vault equity is negative": {
-			vaultParams:        vaulttypes.DefaultParams(),
-			vaultId:            constants.Vault_Clob_0,
-			vaultAssetQuantums: big.NewInt(5_000_000), // 5 USDC
-			vaultInventory:     big.NewInt(-10_000_000),
-			clobPair:           constants.ClobPair_Btc,
-			marketParam:        constants.TestMarketParams[0],
-			marketPrice:        constants.TestMarketPrices[0],
-			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
-			expectedErr:        vaulttypes.ErrNonPositiveEquity,
+			vaultParams:                vaulttypes.DefaultParams(),
+			vaultId:                    constants.Vault_Clob_0,
+			vaultAssetQuoteQuantums:    big.NewInt(5_000_000), // 5 USDC
+			vaultInventoryBaseQuantums: big.NewInt(-10_000_000),
+			clobPair:                   constants.ClobPair_Btc,
+			marketParam:                constants.TestMarketParams[0],
+			marketPrice:                constants.TestMarketPrices[0],
+			perpetual:                  constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedErr:                vaulttypes.ErrNonPositiveEquity,
 		},
 	}
 
@@ -452,22 +452,22 @@ func TestGetVaultClobOrders(t *testing.T) {
 					&genesis,
 					func(genesisState *satypes.GenesisState) {
 						assetPositions := []*satypes.AssetPosition{}
-						if tc.vaultAssetQuantums != nil && tc.vaultAssetQuantums.Sign() != 0 {
+						if tc.vaultAssetQuoteQuantums != nil && tc.vaultAssetQuoteQuantums.Sign() != 0 {
 							assetPositions = append(
 								assetPositions,
 								&satypes.AssetPosition{
 									AssetId:  assettypes.AssetUsdc.Id,
-									Quantums: dtypes.NewIntFromBigInt(tc.vaultAssetQuantums),
+									Quantums: dtypes.NewIntFromBigInt(tc.vaultAssetQuoteQuantums),
 								},
 							)
 						}
 						perpPositions := []*satypes.PerpetualPosition{}
-						if tc.vaultInventory != nil && tc.vaultInventory.Sign() != 0 {
+						if tc.vaultInventoryBaseQuantums != nil && tc.vaultInventoryBaseQuantums.Sign() != 0 {
 							perpPositions = append(
 								perpPositions,
 								&satypes.PerpetualPosition{
 									PerpetualId: tc.perpetual.Params.Id,
-									Quantums:    dtypes.NewIntFromBigInt(tc.vaultInventory),
+									Quantums:    dtypes.NewIntFromBigInt(tc.vaultInventoryBaseQuantums),
 								},
 							)
 						}
