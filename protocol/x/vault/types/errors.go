@@ -55,4 +55,9 @@ var (
 		10,
 		"SpreadMinPpm must be strictly greater than 0",
 	)
+	ErrInvalidLayers = errorsmod.Register(
+		ModuleName,
+		11,
+		"Layers must be less than or equal to MaxUint8",
+	)
 )

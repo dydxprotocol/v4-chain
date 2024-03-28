@@ -18,6 +18,17 @@ func TestValidate(t *testing.T) {
 			params:      types.DefaultParams(),
 			expectedErr: nil,
 		},
+		"Failure - Layer is greater than MaxUint8": {
+			params: types.Params{
+				Layers:                 256,
+				SpreadMinPpm:           3_000,
+				SpreadBufferPpm:        1_500,
+				SkewFactorPpm:          500_000,
+				OrderSizePpm:           100_000,
+				OrderExpirationSeconds: 5,
+			},
+			expectedErr: types.ErrInvalidLayers,
+		},
 		"Failure - SpreadMinPpm is 0": {
 			params: types.Params{
 				Layers:                 2,
