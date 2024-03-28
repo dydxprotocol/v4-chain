@@ -106,6 +106,7 @@ describe('addresses-controller#V4', () => {
               createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
               exitPrice: null,
               closedAt: null,
+              subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
             },
           },
           assetPositions: {
@@ -266,6 +267,7 @@ describe('addresses-controller#V4', () => {
                 createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
                 exitPrice: null,
                 closedAt: null,
+                subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
               },
             },
             assetPositions: {
@@ -453,6 +455,7 @@ describe('addresses-controller#V4', () => {
                   createdAtHeight: testConstants.defaultPerpetualPosition.createdAtHeight,
                   exitPrice: null,
                   closedAt: null,
+                  subaccountNumber: testConstants.defaultSubaccount.subaccountNumber,
                 },
               },
               assetPositions: {

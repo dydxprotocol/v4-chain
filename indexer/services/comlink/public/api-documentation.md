@@ -85,7 +85,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "market": "string",
@@ -102,7 +103,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}',
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         }
       },
       "assetPositions": {
@@ -211,7 +213,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     },
     "property2": {
       "market": "string",
@@ -228,7 +231,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     }
   },
   "assetPositions": {
@@ -340,7 +344,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "market": "string",
@@ -357,7 +362,8 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccount
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         }
       },
       "assetPositions": {
@@ -1838,7 +1844,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     }
   ]
 }
@@ -2348,7 +2355,8 @@ This operation does not require authentication
   "netFunding": "string",
   "unrealizedPnl": "string",
   "closedAt": "string",
-  "exitPrice": "string"
+  "exitPrice": "string",
+  "subaccountNumber": 0
 }
 
 ```
@@ -2372,6 +2380,7 @@ This operation does not require authentication
 |unrealizedPnl|string|true|none|none|
 |closedAt|[IsoString](#schemaisostring)¦null|false|none|none|
 |exitPrice|string¦null|false|none|none|
+|subaccountNumber|number(double)|true|none|none|
 
 ## PerpetualPositionsMap
 
@@ -2397,7 +2406,8 @@ This operation does not require authentication
     "netFunding": "string",
     "unrealizedPnl": "string",
     "closedAt": "string",
-    "exitPrice": "string"
+    "exitPrice": "string",
+    "subaccountNumber": 0
   },
   "property2": {
     "market": "string",
@@ -2414,7 +2424,8 @@ This operation does not require authentication
     "netFunding": "string",
     "unrealizedPnl": "string",
     "closedAt": "string",
-    "exitPrice": "string"
+    "exitPrice": "string",
+    "subaccountNumber": 0
   }
 }
 
@@ -2516,7 +2527,8 @@ This operation does not require authentication
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     },
     "property2": {
       "market": "string",
@@ -2533,7 +2545,8 @@ This operation does not require authentication
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     }
   },
   "assetPositions": {
@@ -2600,7 +2613,8 @@ This operation does not require authentication
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "market": "string",
@@ -2617,7 +2631,8 @@ This operation does not require authentication
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         }
       },
       "assetPositions": {
@@ -2686,7 +2701,8 @@ This operation does not require authentication
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         },
         "property2": {
           "market": "string",
@@ -2703,7 +2719,8 @@ This operation does not require authentication
           "netFunding": "string",
           "unrealizedPnl": "string",
           "closedAt": null,
-          "exitPrice": "string"
+          "exitPrice": "string",
+          "subaccountNumber": 0
         }
       },
       "assetPositions": {
@@ -3856,7 +3873,8 @@ or
       "netFunding": "string",
       "unrealizedPnl": "string",
       "closedAt": "string",
-      "exitPrice": "string"
+      "exitPrice": "string",
+      "subaccountNumber": 0
     }
   ]
 }

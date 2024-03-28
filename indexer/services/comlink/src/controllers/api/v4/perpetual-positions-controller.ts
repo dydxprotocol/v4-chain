@@ -141,7 +141,12 @@ class PerpetualPositionsController extends Controller {
 
     return {
       positions: updatedPerpetualPositions.map((position: PerpetualPositionWithFunding) => {
-        return perpetualPositionToResponseObject(position, perpetualMarketsMap, marketIdToMarket);
+        return perpetualPositionToResponseObject(
+          position,
+          perpetualMarketsMap,
+          marketIdToMarket,
+          subaccountNumber,
+        );
       }),
     };
   }
@@ -179,11 +184,14 @@ router.get(
       createdBeforeOrAt,
     }: PerpetualPositionRequest = matchedData(req) as PerpetualPositionRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const subaccountNum: number = +subaccountNumber;
+
     try {
       const controller: PerpetualPositionsController = new PerpetualPositionsController();
       const response: PerpetualPositionResponse = await controller.listPositions(
         address,
-        subaccountNumber,
+        subaccountNum,
         status,
         limit,
         createdBeforeOrAtHeight,

@@ -100,6 +100,7 @@ export interface PerpetualPositionResponseObject {
   unrealizedPnl: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
+  subaccountNumber: number;
 }
 
 export type PerpetualPositionsMap = { [market: string]: PerpetualPositionResponseObject };
