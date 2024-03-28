@@ -1095,7 +1095,7 @@ func (k Keeper) AddOrderToOrderbookCollatCheck(
 		metrics.Latency,
 	)
 
-	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccounts(
+	success, successPerSubaccountUpdate, err := k.subaccountsKeeper.CanUpdateSubaccountsUint256(
 		ctx,
 		updates,
 		satypes.CollatCheck,

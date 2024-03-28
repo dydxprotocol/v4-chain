@@ -23,6 +23,15 @@ type SubaccountsKeeper interface {
 		successPerUpdate []satypes.UpdateResult,
 		err error,
 	)
+	CanUpdateSubaccountsUint256(
+		ctx sdk.Context,
+		updates []satypes.Update,
+		updateType satypes.UpdateType,
+	) (
+		success bool,
+		successPerUpdate []satypes.UpdateResult,
+		err error,
+	)
 	GetNetCollateralAndMarginRequirements(
 		ctx sdk.Context,
 		update satypes.Update,

@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/holiman/uint256"
 )
 
 // - Initial margin is less than or equal to 1.
@@ -177,4 +178,85 @@ func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
 		return bigQuoteQuantums
 	}
 	return bigIMREffective
+}
+
+func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantumsUint256(
+	quoteQuantums *uint256.Int,
+	openInterestQuoteQuantums *uint256.Int,
+) *uint256.Int {
+	openInterestUpperCap := uint256.NewInt(liquidityTier.OpenInterestUpperCap)
+
+	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero,
+	// OIMF = 1.0 so return input quote quantums as the IMR.
+	if openInterestQuoteQuantums.Cmp(
+		openInterestUpperCap,
+	) >= 0 && liquidityTier.OpenInterestUpperCap != 0 {
+		return quoteQuantums
+	}
+
+	// If `open_interest_upper_cap` is 0, OIMF is disabled。
+	// Or if `current_interest` <= `open_interest_lower_cap`, IMF is not scaled.
+	// In both cases, use base IMF as OIMF.
+	openInterestLowerCap := uint256.NewInt(liquidityTier.OpenInterestLowerCap)
+	if liquidityTier.OpenInterestUpperCap == 0 || openInterestQuoteQuantums.Cmp(
+		openInterestLowerCap,
+	) <= 0 {
+		// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
+		return lib.MulPpmUint256(quoteQuantums, liquidityTier.InitialMarginPpm)
+	}
+
+	// If `open_interest_lower_cap` < `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
+	// `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
+	scalingFactor := new(uint256.Int).Div(
+		new(uint256.Int).Sub(
+			openInterestQuoteQuantums, // reuse pointer for memory efficiency
+			openInterestLowerCap,
+		),
+		openInterestLowerCap.Sub(
+			openInterestUpperCap, // reuse pointer for memory efficiency
+			openInterestLowerCap,
+		),
+	)
+
+	// `IMF Increase = Scaling Factor * (1 - Base IMF)`
+	imfIncrease := lib.MulPpmUint256(
+		scalingFactor,
+		lib.OneMillion-liquidityTier.InitialMarginPpm, // >= 0, since we check in `liquidityTier.Validate()`
+	)
+
+	// Calculate `Max(IMF Increase, 0)`.
+	if imfIncrease.Sign() < 0 {
+		panic(
+			fmt.Sprintf(
+				"GetInitialMarginQuoteQuantums: IMF Increase is negative (%s), liquidityTier: %+v, openInterestQuoteQuantums: %s",
+				imfIncrease.String(),
+				liquidityTier,
+				openInterestQuoteQuantums.String(),
+			),
+		)
+	}
+
+	// First, calculate base IMF in big.Rat
+	baseImf := new(uint256.Int).Div(
+		uint256.NewInt(uint64(liquidityTier.InitialMarginPpm)), // safe, since `InitialMargin` is uint32
+		uint256.NewInt(uint64(lib.OneMillion)),
+	)
+
+	// `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
+	effectiveImf := baseImf.Add(
+		baseImf, // reuse pointer for memory efficiency
+		imfIncrease,
+	)
+
+	// `Effective IMR = Effective IMF * Quote Quantums`
+	effectiveImf.Mul(
+		effectiveImf, // reuse pointer for memory efficiency
+		quoteQuantums,
+	)
+
+	// Return min(Effective IMR, Quote Quantums)
+	if effectiveImf.Cmp(quoteQuantums) >= 0 {
+		return quoteQuantums
+	}
+	return effectiveImf
 }
