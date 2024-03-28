@@ -51,4 +51,5 @@ type PricesKeeper interface {
 	GetCurrencyPairFromID(ctx sdk.Context, id uint64) (cp slinkytypes.CurrencyPair, found bool)
 	GetIDForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (uint64, bool)
 	GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.CurrencyPair) (oracletypes.QuotePrice, error)
+	GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error)
 }
