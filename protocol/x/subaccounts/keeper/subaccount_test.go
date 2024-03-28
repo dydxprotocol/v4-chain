@@ -95,13 +95,22 @@ func assertSubaccountUpdateEventsInIndexerBlock(
 
 	// For each update, verify that the expected SubaccountUpdateEvent is emitted.
 	for _, update := range updates {
-		expecetedSubaccountUpdateEvent := indexerevents.NewSubaccountUpdateEvent(
+		expectedSubaccountUpdateEvent := indexerevents.NewSubaccountUpdateEvent(
 			&update.SubaccountId,
 			expectedUpdatedPerpetualPositions[update.SubaccountId],
 			expectedUpdatedAssetPositions[update.SubaccountId],
 			expectedSubaccoundIdToFundingPayments[update.SubaccountId],
 		)
-		require.Contains(t, subaccountUpdates, expecetedSubaccountUpdateEvent)
+
+		for _, gotUpdate := range subaccountUpdates {
+			if gotUpdate.SubaccountId.Owner == expectedSubaccountUpdateEvent.SubaccountId.Owner &&
+				gotUpdate.SubaccountId.Number == expectedSubaccountUpdateEvent.SubaccountId.Number {
+				require.Equal(t,
+					expectedSubaccountUpdateEvent,
+					gotUpdate,
+				)
+			}
+		}
 	}
 }
 
@@ -297,6 +306,9 @@ func TestUpdateSubaccounts(t *testing.T) {
 		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
 		assets            []*asstypes.Asset
 		marketParamPrices []pricestypes.MarketParamPrice
+		// If not specified, default to `CollatCheck`
+		updateType                types.UpdateType
+		additionalTestSubaccounts []types.Subaccount
 
 		// subaccount state
 		perpetualPositions []*types.PerpetualPosition
@@ -316,6 +328,9 @@ func TestUpdateSubaccounts(t *testing.T) {
 		expectedSuccess                    bool
 		expectedSuccessPerUpdate           []types.UpdateResult
 		expectedErr                        error
+		// List of expected open interest.
+		// If not specified, this means OI is default value.
+		expectedOpenInterest map[uint32]*big.Int
 
 		// Only contains the updated perpetual positions, to assert against the events included.
 		expectedUpdatedPerpetualPositions     map[types.SubaccountId][]*types.PerpetualPosition
@@ -2461,6 +2476,313 @@ func TestUpdateSubaccounts(t *testing.T) {
 			expectedErr:      sdkerrors.ErrInsufficientFunds,
 			msgSenderEnabled: true,
 		},
+		"Match updates increase OI: 0 -> 0.9, 0 -> -0.9": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
+			},
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(9_000_000_000), // 90 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-4_500_000_000_000), // -4,500,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-9_000_000_000), // 9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(4_500_000_000_000), // 4,500,000 USDC
+						},
+					},
+				},
+			},
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(900_000_000_000)), // 900_000 USDC
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(
+						900_000_000_000,
+					)), // 900_000 USDC
+				},
+			},
+			updateType: types.Match,
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(5_400_000_000_000),
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				defaultSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(5_400_000_000_000),
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-3_600_000_000_000),
+					},
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(-9_000_000_000),
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(-9_000_000_000),
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(9_000_000_000),
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			expectedOpenInterest: map[uint32]*big.Int{
+				0: big.NewInt(9_100_000_000), // 1 + 90 = 91 BTC
+			},
+			msgSenderEnabled: true,
+		},
+		"Match updates decreases OI: 1 -> 0.1, -2 -> -1.1": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest2,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(0),
+					Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				},
+			},
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-40_000_000_000)), // -40_000 USDC
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(90_000_000), // 0.9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-45_000_000_000), // -45,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-90_000_000), // -0.9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(45_000_000_000), // 45,000 USDC
+						},
+					},
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id: &constants.Bob_Num0,
+					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(
+						120_000_000_000,
+					)), // 120_000 USDC
+					PerpetualPositions: []*types.PerpetualPosition{
+						{
+							PerpetualId: uint32(0),
+							Quantums:    dtypes.NewInt(-200_000_000), // -2 BTC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(5_000_000_000), // 5_000 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				defaultSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(5_000_000_000), // 5_000 USDC
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(75_000_000_000), // 75_000 USDC
+					},
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(-110_000_000), // -1.1 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			expectedOpenInterest: map[uint32]*big.Int{
+				0: big.NewInt(110_000_000), // 2 - 0.9 = 1.1 BTC
+			},
+			msgSenderEnabled: true,
+		},
+		"Match updates does not change OI: 1 -> 0.1, 0.1 -> 1": {
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance_OpenInterest1,
+			},
+			perpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId: uint32(0),
+					Quantums:    dtypes.NewInt(100_000_000), // 1 BTC
+				},
+			},
+			assetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(-40_000_000_000)), // -40_000 USDC
+			updates: []types.Update{
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(90_000_000), // 0.9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(-45_000_000_000), // -45,000 USDC
+						},
+					},
+					SubaccountId: constants.Bob_Num0,
+				},
+				{
+					PerpetualUpdates: []types.PerpetualUpdate{
+						{
+							PerpetualId:      uint32(0),
+							BigQuantumsDelta: big.NewInt(-90_000_000), // -0.9 BTC
+						},
+					},
+					AssetUpdates: []types.AssetUpdate{
+						{
+							AssetId:          uint32(0),
+							BigQuantumsDelta: big.NewInt(45_000_000_000), // 45,000 USDC
+						},
+					},
+				},
+			},
+			additionalTestSubaccounts: []types.Subaccount{
+				{
+					Id:             &constants.Bob_Num0,
+					AssetPositions: testutil.CreateUsdcAssetPosition(big.NewInt(5_000_000_000)), // 5000 USDC
+					PerpetualPositions: []*types.PerpetualPosition{
+						{
+							PerpetualId: uint32(0),
+							Quantums:    dtypes.NewInt(10_000_000), // 0.1 BTC
+						},
+					},
+				},
+			},
+			updateType: types.Match,
+			expectedAssetPositions: []*types.AssetPosition{
+				{
+					AssetId:  uint32(0),
+					Quantums: dtypes.NewInt(5_000_000_000), // 5_000 USDC
+				},
+			},
+			expectedUpdatedAssetPositions: map[types.SubaccountId][]*types.AssetPosition{
+				defaultSubaccountId: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(5_000_000_000), // 5_000 USDC
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						AssetId:  uint32(0),
+						Quantums: dtypes.NewInt(-40_000_000_000), // -40_000 USDC
+					},
+				},
+			},
+			expectedPerpetualPositions: []*types.PerpetualPosition{
+				{
+					PerpetualId:  uint32(0),
+					Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+					FundingIndex: dtypes.NewInt(0),
+				},
+			},
+			expectedUpdatedPerpetualPositions: map[types.SubaccountId][]*types.PerpetualPosition{
+				defaultSubaccountId: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(10_000_000), // 0.1 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+				constants.Bob_Num0: {
+					{
+						PerpetualId:  uint32(0),
+						Quantums:     dtypes.NewInt(100_000_000), // 1 BTC
+						FundingIndex: dtypes.NewInt(0),
+					},
+				},
+			},
+			expectedSuccess:          true,
+			expectedSuccessPerUpdate: []types.UpdateResult{types.Success, types.Success},
+			expectedOpenInterest: map[uint32]*big.Int{
+				0: big.NewInt(100_000_000), // 1 BTC
+			},
+			msgSenderEnabled: true,
+		},
 	}
 
 	for name, tc := range tests {
@@ -2499,23 +2821,16 @@ func TestUpdateSubaccounts(t *testing.T) {
 			}
 
 			for i, p := range tc.perpetuals {
-				perp, err := perpetualsKeeper.CreatePerpetual(
+				perpetualsKeeper.SetPerpetual(
 					ctx,
-					p.Params.Id,
-					p.Params.Ticker,
-					p.Params.MarketId,
-					p.Params.AtomicResolution,
-					p.Params.DefaultFundingPpm,
-					p.Params.LiquidityTier,
-					p.Params.MarketType,
+					p,
 				)
-				require.NoError(t, err)
 
 				// Update FundingIndex for testing settlements.
 				if i < len(tc.newFundingIndices) {
-					err = perpetualsKeeper.ModifyFundingIndex(
+					err := perpetualsKeeper.ModifyFundingIndex(
 						ctx,
-						perp.Params.Id,
+						p.Params.Id,
 						tc.newFundingIndices[i],
 					)
 					require.NoError(t, err)
@@ -2540,6 +2855,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 			keeper.SetSubaccount(ctx, subaccount)
 			subaccountId := *subaccount.Id
 
+			for _, sa := range tc.additionalTestSubaccounts {
+				keeper.SetSubaccount(ctx, sa)
+			}
+
 			for i, u := range tc.updates {
 				if u.SubaccountId == (types.SubaccountId{}) {
 					u.SubaccountId = subaccountId
@@ -2547,7 +2866,11 @@ func TestUpdateSubaccounts(t *testing.T) {
 				tc.updates[i] = u
 			}
 
-			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, types.CollatCheck)
+			updateType := types.CollatCheck
+			if tc.updateType != types.UpdateTypeUnspecified {
+				updateType = tc.updateType
+			}
+			success, successPerUpdate, err := keeper.UpdateSubaccounts(ctx, tc.updates, updateType)
 			if tc.expectedErr != nil {
 				require.ErrorIs(t, tc.expectedErr, err)
 			} else {
@@ -2597,6 +2920,20 @@ func TestUpdateSubaccounts(t *testing.T) {
 					sdk.NewCoin(asstypes.AssetUsdc.Denom, sdkmath.NewInt(expectedUsdcBal)),
 					usdcBal,
 				)
+			}
+
+			for _, perp := range tc.perpetuals {
+				gotPerp, err := perpetualsKeeper.GetPerpetual(ctx, perp.GetId())
+				require.NoError(t, err)
+
+				if expectedOI, exists := tc.expectedOpenInterest[perp.GetId()]; exists {
+					require.Equal(t, expectedOI, gotPerp.OpenInterest.BigInt())
+				} else {
+					// If no specified expected OI, then check OI is unchanged.
+					require.Zero(t, perp.OpenInterest.BigInt().Cmp(
+						gotPerp.OpenInterest.BigInt(),
+					))
+				}
 			}
 		})
 	}
@@ -4150,7 +4487,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				{
 					PerpetualId: uint32(0),
 					// 500 BTC. At $50,000, this is $25,000,000 of OI.
-					BaseQuantumsDelta: big.NewInt(50_000_000_000),
+					BaseQuantums: big.NewInt(50_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -4220,7 +4557,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					// (Only difference from prevoius test case)
 					// 410 BTC. At $50,000, this is $20,500,000 of OI.
 					// OI would be $25,000,000 after the Match updates, so OIMF is still at base IMF.
-					BaseQuantumsDelta: big.NewInt(41_000_000_000),
+					BaseQuantums: big.NewInt(41_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -4290,7 +4627,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					// (Only difference from prevoius test case)
 					// 410 BTC + 1 base quantum. At $50,000, this is > $20,500,000 of OI.
 					// OI would be just past $25,000,000 after the Match updates, so OIMF > IMF = 20%
-					BaseQuantumsDelta: big.NewInt(41_000_000_001),
+					BaseQuantums: big.NewInt(41_000_000_001),
 				},
 			},
 			updates: []types.Update{
@@ -4357,7 +4694,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				{
 					PerpetualId: uint32(0),
 					// 10_000 BTC. At $50,000, this is $500mm of OI which way past upper cap
-					BaseQuantumsDelta: big.NewInt(1_000_000_000_000),
+					BaseQuantums: big.NewInt(1_000_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -5052,7 +5389,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				require.NoError(t, perpetualsKeeper.ModifyOpenInterest(
 					ctx,
 					openInterest.PerpetualId,
-					openInterest.BaseQuantumsDelta,
+					openInterest.BaseQuantums,
 				))
 			}
 
@@ -5095,9 +5432,9 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				perp, err := perpetualsKeeper.GetPerpetual(ctx, openInterest.PerpetualId)
 				require.NoError(t, err)
 				require.Zerof(t,
-					openInterest.BaseQuantumsDelta.Cmp(perp.OpenInterest.BigInt()),
+					openInterest.BaseQuantums.Cmp(perp.OpenInterest.BigInt()),
 					"expected: %s, got: %s",
-					openInterest.BaseQuantumsDelta.String(),
+					openInterest.BaseQuantums.String(),
 					perp.OpenInterest.String(),
 				)
 			}

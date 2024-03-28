@@ -48,6 +48,9 @@ export const createLCDClient = async ({
       subaccounts: new (await import("./subaccounts/query.lcd")).LCDQueryClient({
         requestClient
       }),
+      vault: new (await import("./vault/query.lcd")).LCDQueryClient({
+        requestClient
+      }),
       vest: new (await import("./vest/query.lcd")).LCDQueryClient({
         requestClient
       })

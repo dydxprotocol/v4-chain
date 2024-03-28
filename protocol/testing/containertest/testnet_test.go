@@ -12,14 +12,11 @@ import (
 	"time"
 
 	sdkmath "cosmossdk.io/math"
-	upgrade "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	"github.com/cosmos/gogoproto/jsonpb"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -31,15 +28,8 @@ import (
 )
 
 const expectDirName = "expect"
-const govModuleAddress = "dydx10d07y265gmmuvt4z0w9aw880jnsr700jnmapky"
 
 var acceptFlag = flag.Bool("accept", false, "Accept new values for expect files")
-var nodeAddresses = []string{
-	constants.AliceAccAddress.String(),
-	constants.BobAccAddress.String(),
-	constants.CarlAccAddress.String(),
-	constants.DaveAccAddress.String(),
-}
 
 // Compare a message against an expected output. Use flag `-accept` to write or modify expected output.
 // Expected output will read/written from `expect/{testName}_{tag}.expect`.
@@ -292,45 +282,6 @@ func TestUpgrade(t *testing.T) {
 	defer testnet.MustCleanUp()
 	node := testnet.Nodes["alice"]
 
-	proposal, err := gov.NewMsgSubmitProposal(
-		[]sdk.Msg{
-			&upgrade.MsgSoftwareUpgrade{
-				Authority: govModuleAddress,
-				Plan: upgrade.Plan{
-					Name:   UpgradeToVersion,
-					Height: 10,
-				},
-			},
-		},
-		testapp.TestDeposit,
-		constants.AliceAccAddress.String(),
-		testapp.TestMetadata,
-		testapp.TestTitle,
-		testapp.TestSummary,
-		false,
-	)
-	require.NoError(t, err)
-
-	require.NoError(t, BroadcastTx(
-		node,
-		proposal,
-		constants.AliceAccAddress.String(),
-	))
-	err = node.Wait(2)
-	require.NoError(t, err)
-
-	for _, address := range nodeAddresses {
-		require.NoError(t, BroadcastTx(
-			node,
-			&gov.MsgVote{
-				ProposalId: 1,
-				Voter:      address,
-				Option:     gov.VoteOption_VOTE_OPTION_YES,
-			},
-			address,
-		))
-	}
-
-	err = node.WaitUntilBlockHeight(12)
+	err = UpgradeTestnet(constants.AliceAccAddress.String(), t, node, UpgradeToVersion)
 	require.NoError(t, err)
 }

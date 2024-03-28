@@ -82,6 +82,26 @@ func (_m *PerpetualsKeeper) GetAddPremiumVotes(ctx types.Context) *perpetualstyp
 	return r0
 }
 
+// GetAllLiquidityTiers provides a mock function with given fields: ctx
+func (_m *PerpetualsKeeper) GetAllLiquidityTiers(ctx types.Context) []perpetualstypes.LiquidityTier {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAllLiquidityTiers")
+	}
+
+	var r0 []perpetualstypes.LiquidityTier
+	if rf, ok := ret.Get(0).(func(types.Context) []perpetualstypes.LiquidityTier); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]perpetualstypes.LiquidityTier)
+		}
+	}
+
+	return r0
+}
+
 // GetAllPerpetuals provides a mock function with given fields: ctx
 func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstypes.Perpetual {
 	ret := _m.Called(ctx)
@@ -224,6 +244,34 @@ func (_m *PerpetualsKeeper) GetNotionalInBaseQuantums(ctx types.Context, id uint
 
 	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) error); ok {
 		r1 = rf(ctx, id, bigQuoteQuantums)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPerpetual provides a mock function with given fields: ctx, id
+func (_m *PerpetualsKeeper) GetPerpetual(ctx types.Context, id uint32) (perpetualstypes.Perpetual, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPerpetual")
+	}
+
+	var r0 perpetualstypes.Perpetual
+	var r1 error
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) (perpetualstypes.Perpetual, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(types.Context, uint32) perpetualstypes.Perpetual); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(perpetualstypes.Perpetual)
+	}
+
+	if rf, ok := ret.Get(1).(func(types.Context, uint32) error); ok {
+		r1 = rf(ctx, id)
 	} else {
 		r1 = ret.Error(1)
 	}

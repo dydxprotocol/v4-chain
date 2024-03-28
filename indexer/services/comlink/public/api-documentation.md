@@ -261,6 +261,137 @@ fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/subaccountNumber
 This operation does not require authentication
 </aside>
 
+## GetParentSubaccount
+
+<a id="opIdGetParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}', headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /addresses/{address}/parentSubaccountNumber/{parentSubaccountNumber}`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|path|string|true|none|
+|parentSubaccountNumber|path|number(double)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "address": "string",
+  "parentSubaccountNumber": 0,
+  "equity": "string",
+  "freeCollateral": "string",
+  "childSubaccounts": [
+    {
+      "address": "string",
+      "subaccountNumber": 0,
+      "equity": "string",
+      "freeCollateral": "string",
+      "openPerpetualPositions": {
+        "property1": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        },
+        "property2": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        }
+      },
+      "assetPositions": {
+        "property1": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string",
+          "subaccountNumber": 0
+        },
+        "property2": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string",
+          "subaccountNumber": 0
+        }
+      },
+      "marginEnabled": true
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ParentSubaccountResponse](#schemaparentsubaccountresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## GetAssetPositions
 
 <a id="opIdGetAssetPositions"></a>
@@ -309,6 +440,83 @@ fetch('https://dydx-testnet.imperator.co/v4/assetPositions?address=string&subacc
 |---|---|---|---|---|
 |address|query|string|true|none|
 |subaccountNumber|query|number(double)|true|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "symbol": "string",
+      "side": "LONG",
+      "size": "string",
+      "assetId": "string",
+      "subaccountNumber": 0
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[AssetPositionResponse](#schemaassetpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## GetAssetPositionsForParentSubaccount
+
+<a id="opIdGetAssetPositionsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/assetPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /assetPositions/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
 
 > Example responses
 
@@ -1956,6 +2164,96 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 This operation does not require authentication
 </aside>
 
+## GetTransfersForParentSubaccount
+
+<a id="opIdGetTransfersForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/transfers/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /transfers/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "transfers": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[ParentSubaccountTransferResponse](#schemaparentsubaccounttransferresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 # Schemas
 
 ## PerpetualPositionStatus
@@ -2352,6 +2650,94 @@ This operation does not require authentication
 |---|---|---|---|---|
 |subaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
 |totalTradingRewards|string|true|none|none|
+
+## ParentSubaccountResponse
+
+<a id="schemaparentsubaccountresponse"></a>
+<a id="schema_ParentSubaccountResponse"></a>
+<a id="tocSparentsubaccountresponse"></a>
+<a id="tocsparentsubaccountresponse"></a>
+
+```json
+{
+  "address": "string",
+  "parentSubaccountNumber": 0,
+  "equity": "string",
+  "freeCollateral": "string",
+  "childSubaccounts": [
+    {
+      "address": "string",
+      "subaccountNumber": 0,
+      "equity": "string",
+      "freeCollateral": "string",
+      "openPerpetualPositions": {
+        "property1": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        },
+        "property2": {
+          "market": "string",
+          "status": "OPEN",
+          "side": "LONG",
+          "size": "string",
+          "maxSize": "string",
+          "entryPrice": "string",
+          "realizedPnl": "string",
+          "createdAt": "string",
+          "createdAtHeight": "string",
+          "sumOpen": "string",
+          "sumClose": "string",
+          "netFunding": "string",
+          "unrealizedPnl": "string",
+          "closedAt": null,
+          "exitPrice": "string"
+        }
+      },
+      "assetPositions": {
+        "property1": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string",
+          "subaccountNumber": 0
+        },
+        "property2": {
+          "symbol": "string",
+          "side": "LONG",
+          "size": "string",
+          "assetId": "string",
+          "subaccountNumber": 0
+        }
+      },
+      "marginEnabled": true
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|address|string|true|none|none|
+|parentSubaccountNumber|number(double)|true|none|none|
+|equity|string|true|none|none|
+|freeCollateral|string|true|none|none|
+|childSubaccounts|[[SubaccountResponseObject](#schemasubaccountresponseobject)]|true|none|none|
 
 ## AssetPositionResponse
 
@@ -3722,6 +4108,44 @@ or
 <a id="schema_TransferResponse"></a>
 <a id="tocStransferresponse"></a>
 <a id="tocstransferresponse"></a>
+
+```json
+{
+  "transfers": [
+    {
+      "id": "string",
+      "sender": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "recipient": {
+        "subaccountNumber": 0,
+        "address": "string"
+      },
+      "size": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "symbol": "string",
+      "type": "TRANSFER_IN",
+      "transactionHash": "string"
+    }
+  ]
+}
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
+
+## ParentSubaccountTransferResponse
+
+<a id="schemaparentsubaccounttransferresponse"></a>
+<a id="schema_ParentSubaccountTransferResponse"></a>
+<a id="tocSparentsubaccounttransferresponse"></a>
+<a id="tocsparentsubaccounttransferresponse"></a>
 
 ```json
 {

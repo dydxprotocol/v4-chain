@@ -14,9 +14,11 @@ import {
   placeOrder,
   PlaceOrderResult,
   StatefulOrderUpdatesCache,
+  convertToRedisOrder,
 } from '@dydxprotocol-indexer/redis';
 import {
   getOrderIdHash,
+  isLongTermOrder,
   isStatefulOrder,
   ORDER_FLAG_SHORT_TERM,
   requiresImmediateExecution,
@@ -36,7 +38,6 @@ import config from '../config';
 import { redisClient } from '../helpers/redis/redis-controller';
 import { sendMessageWrapper } from '../lib/send-message-helper';
 import { Handler } from './handler';
-import { convertToRedisOrder } from './helpers';
 
 /**
  * Handler for OrderPlace messages.
@@ -120,7 +121,12 @@ export class OrderPlaceHandler extends Handler {
 
     // TODO(CLOB-597): Remove this logic and log erorrs once best-effort-open is not sent for
     // stateful orders in the protocol
-    if (this.shouldSendSubaccountMessage(orderPlace, placeOrderResult, placementStatus)) {
+    if (this.shouldSendSubaccountMessage(
+      orderPlace,
+      placeOrderResult,
+      placementStatus,
+      redisOrder,
+    )) {
       // TODO(IND-171): Determine whether we should always be sending a message, even when the cache
       // isn't updated.
       // For stateful and conditional orders, look the order up in the db for the createdAtHeight
@@ -279,7 +285,15 @@ export class OrderPlaceHandler extends Handler {
     orderPlace: OrderPlaceV1,
     placeOrderResult: PlaceOrderResult,
     placementStatus: OrderPlaceV1_OrderPlacementStatus,
+    redisOrder: RedisOrder,
   ): boolean {
+    if (
+      isLongTermOrder(redisOrder.order!.orderId!.orderFlags) &&
+      !config.SEND_SUBACCOUNT_WEBSOCKET_MESSAGE_FOR_STATEFUL_ORDERS
+    ) {
+      return false;
+    }
+
     const orderFlags: number = orderPlace.order!.orderId!.orderFlags;
     const status: OrderPlaceV1_OrderPlacementStatus = orderPlace.placementStatus;
     // Best-effort-opened status should only be sent for short-term orders

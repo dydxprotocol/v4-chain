@@ -26,7 +26,7 @@ message VaultId {
 // NumShares represents the number of shares in a vault.
 message NumShares {
   // Number of shares.
-  bytes num_shares = 1 [
+  bytes num_shares = 2 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
