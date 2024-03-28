@@ -127,4 +127,11 @@ type ClobKeeper interface {
 		clobPair ClobPair,
 	) error
 	UpdateLiquidationsConfig(ctx sdk.Context, config LiquidationsConfig) error
+	// Gprc streaming
+	InitializeNewGrpcStreams(ctx sdk.Context)
+	SendOrderbookUpdates(
+		ctx sdk.Context,
+		offchainUpdates *OffchainUpdates,
+		snapshot bool,
+	)
 }

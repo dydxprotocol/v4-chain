@@ -19,6 +19,9 @@ type Flags struct {
 	// Existing flags
 	GrpcAddress string
 	GrpcEnable  bool
+
+	// Grpc Streaming
+	GrpcStreamingEnabled bool
 }
 
 // List of CLI flags.
@@ -31,6 +34,9 @@ const (
 	// Cosmos flags below. These config values can be set as flags or in config.toml.
 	GrpcAddress = "grpc.address"
 	GrpcEnable  = "grpc.enable"
+
+	// Grpc Streaming
+	GrpcStreamingEnabled = "grpc-streaming-enabled"
 )
 
 // Default values.
@@ -39,6 +45,8 @@ const (
 	DefaultDdTraceAgentPort      = 8126
 	DefaultNonValidatingFullNode = false
 	DefaultDdErrorTrackingFormat = false
+
+	DefaultGrpcStreamingEnabled = false
 )
 
 // AddFlagsToCmd adds flags to app initialization.
@@ -67,6 +75,11 @@ func AddFlagsToCmd(cmd *cobra.Command) {
 		DefaultDdErrorTrackingFormat,
 		"Enable formatting of log error tags to datadog error tracking format",
 	)
+	cmd.Flags().Bool(
+		GrpcStreamingEnabled,
+		DefaultGrpcStreamingEnabled,
+		"Whether to enable grpc streaming for full nodes",
+	)
 }
 
 // Validate checks that the flags are valid.
@@ -74,6 +87,17 @@ func (f *Flags) Validate() error {
 	// Validtors must have cosmos grpc services enabled.
 	if !f.NonValidatingFullNode && !f.GrpcEnable {
 		return fmt.Errorf("grpc.enable must be set to true - validating requires gRPC server")
+	}
+
+	// Grpc streaming
+	if f.GrpcStreamingEnabled {
+		if !f.GrpcEnable {
+			return fmt.Errorf("grpc.enable must be set to true - grpc streaming requires gRPC server")
+		}
+
+		if !f.NonValidatingFullNode {
+			return fmt.Errorf("grpc-streaming-enabled can only be set to true for non-validating full nodes")
+		}
 	}
 	return nil
 }
@@ -93,6 +117,8 @@ func GetFlagValuesFromOptions(
 		// These are the default values from the Cosmos flags.
 		GrpcAddress: config.DefaultGRPCAddress,
 		GrpcEnable:  true,
+
+		GrpcStreamingEnabled: DefaultGrpcStreamingEnabled,
 	}
 
 	// Populate the flags if they exist.
@@ -129,6 +155,12 @@ func GetFlagValuesFromOptions(
 	if option := appOpts.Get(GrpcEnable); option != nil {
 		if v, err := cast.ToBoolE(option); err == nil {
 			result.GrpcEnable = v
+		}
+	}
+
+	if option := appOpts.Get(GrpcStreamingEnabled); option != nil {
+		if v, err := cast.ToBoolE(option); err == nil {
+			result.GrpcStreamingEnabled = v
 		}
 	}
 
