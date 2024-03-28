@@ -14,6 +14,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	asskeeper "github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
@@ -214,6 +215,7 @@ func createClobKeeper(
 		statsKeeper,
 		rewardsKeeper,
 		indexerEventManager,
+		streaming.NewNoopGrpcStreamingManager(),
 		constants.TestEncodingCfg.TxConfig.TxDecoder(),
 		flags.GetDefaultClobFlags(),
 		rate_limit.NewNoOpRateLimiter[*types.MsgPlaceOrder](),
