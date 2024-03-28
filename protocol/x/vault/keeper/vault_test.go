@@ -28,7 +28,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 		// Whether the vaults are decommissioned.
 		decommissioned []bool
 	}{
-		"Decomission no vault": {
+		"Decommission no vault": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -46,7 +46,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				false,
 			},
 		},
-		"Decomission one vault": {
+		"Decommission one vault": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -64,7 +64,7 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				true, // this vault should be decommissioned.
 			},
 		},
-		"Decomission two vaults": {
+		"Decommission two vaults": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -134,23 +134,23 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Decomission all vaults.
+			// Decommission all vaults.
 			k.DecommissionNonPositiveEquityVaults(ctx)
 
-			// Check that total shares and owner shares are deleted for decomissioned
-			// vaults and not deleted for non-decomissioned vaults.
-			for i, decomissioned := range tc.decommissioned {
+			// Check that total shares and owner shares are deleted for decommissioned
+			// vaults and not deleted for non-decommissioned vaults.
+			for i, decommissioned := range tc.decommissioned {
 				_, exists := k.GetTotalShares(ctx, tc.vaultIds[i])
-				require.Equal(t, !decomissioned, exists)
+				require.Equal(t, !decommissioned, exists)
 				_, exists = k.GetOwnerShares(ctx, tc.vaultIds[i], testOwner)
-				require.Equal(t, !decomissioned, exists)
+				require.Equal(t, !decommissioned, exists)
 			}
 		})
 	}
 
 }
 
-func TestDecomissionVault(t *testing.T) {
+func TestDecommissionVault(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
 		// Vault ID.
@@ -209,7 +209,7 @@ func TestDecomissionVault(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			// Decomission vault.
+			// Decommission vault.
 			k.DecommissionVault(ctx, tc.vaultId)
 
 			// Check that total shares and owner shares are deleted.
