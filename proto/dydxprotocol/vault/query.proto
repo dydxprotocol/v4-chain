@@ -17,7 +17,8 @@ service Query {
   }
   // Queries a Vault by type and number.
   rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
-    option (google.api.http).get = "/dydxprotocol/v4/vault/vaults/{type}/{number}";
+    option (google.api.http).get =
+        "/dydxprotocol/v4/vault/vaults/{type}/{number}";
   }
 }
 
@@ -43,11 +44,4 @@ message QueryVaultResponse {
   uint64 equity = 3;
   uint64 inventory = 4;
   uint64 total_shares = 5;
-  repeated OwnerShares all_owner_shares = 6 [ (gogoproto.nullable) = false ];
-}
-
-// OwnerShares is a message type for an owner and their shares.
-message OwnerShares {
-  string owner = 1;
-  uint64 shares = 2;
 }

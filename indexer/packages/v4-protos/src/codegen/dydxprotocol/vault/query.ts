@@ -39,7 +39,6 @@ export interface QueryVaultResponse {
   equity: Long;
   inventory: Long;
   totalShares: Long;
-  allOwnerShares: OwnerShares[];
 }
 /** QueryVaultResponse is a response type for the Vault RPC method. */
 
@@ -49,19 +48,6 @@ export interface QueryVaultResponseSDKType {
   equity: Long;
   inventory: Long;
   total_shares: Long;
-  all_owner_shares: OwnerSharesSDKType[];
-}
-/** OwnerShares is a message type for an owner and their shares. */
-
-export interface OwnerShares {
-  owner: string;
-  shares: Long;
-}
-/** OwnerShares is a message type for an owner and their shares. */
-
-export interface OwnerSharesSDKType {
-  owner: string;
-  shares: Long;
 }
 
 function createBaseQueryParamsRequest(): QueryParamsRequest {
@@ -204,8 +190,7 @@ function createBaseQueryVaultResponse(): QueryVaultResponse {
     subaccountId: undefined,
     equity: Long.UZERO,
     inventory: Long.UZERO,
-    totalShares: Long.UZERO,
-    allOwnerShares: []
+    totalShares: Long.UZERO
   };
 }
 
@@ -229,10 +214,6 @@ export const QueryVaultResponse = {
 
     if (!message.totalShares.isZero()) {
       writer.uint32(40).uint64(message.totalShares);
-    }
-
-    for (const v of message.allOwnerShares) {
-      OwnerShares.encode(v!, writer.uint32(50).fork()).ldelim();
     }
 
     return writer;
@@ -267,10 +248,6 @@ export const QueryVaultResponse = {
           message.totalShares = (reader.uint64() as Long);
           break;
 
-        case 6:
-          message.allOwnerShares.push(OwnerShares.decode(reader, reader.uint32()));
-          break;
-
         default:
           reader.skipType(tag & 7);
           break;
@@ -287,62 +264,6 @@ export const QueryVaultResponse = {
     message.equity = object.equity !== undefined && object.equity !== null ? Long.fromValue(object.equity) : Long.UZERO;
     message.inventory = object.inventory !== undefined && object.inventory !== null ? Long.fromValue(object.inventory) : Long.UZERO;
     message.totalShares = object.totalShares !== undefined && object.totalShares !== null ? Long.fromValue(object.totalShares) : Long.UZERO;
-    message.allOwnerShares = object.allOwnerShares?.map(e => OwnerShares.fromPartial(e)) || [];
-    return message;
-  }
-
-};
-
-function createBaseOwnerShares(): OwnerShares {
-  return {
-    owner: "",
-    shares: Long.UZERO
-  };
-}
-
-export const OwnerShares = {
-  encode(message: OwnerShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.owner !== "") {
-      writer.uint32(10).string(message.owner);
-    }
-
-    if (!message.shares.isZero()) {
-      writer.uint32(16).uint64(message.shares);
-    }
-
-    return writer;
-  },
-
-  decode(input: _m0.Reader | Uint8Array, length?: number): OwnerShares {
-    const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
-    let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseOwnerShares();
-
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-
-      switch (tag >>> 3) {
-        case 1:
-          message.owner = reader.string();
-          break;
-
-        case 2:
-          message.shares = (reader.uint64() as Long);
-          break;
-
-        default:
-          reader.skipType(tag & 7);
-          break;
-      }
-    }
-
-    return message;
-  },
-
-  fromPartial(object: DeepPartial<OwnerShares>): OwnerShares {
-    const message = createBaseOwnerShares();
-    message.owner = object.owner ?? "";
-    message.shares = object.shares !== undefined && object.shares !== null ? Long.fromValue(object.shares) : Long.UZERO;
     return message;
   }
 

@@ -27,8 +27,6 @@ func TestVault(t *testing.T) {
 		inventory *big.Int
 		// Total shares.
 		totalShares *big.Int
-		// All owner shares (in descending number of shares).
-		allOwnerShares []vaulttypes.OwnerShares
 		// Query request.
 		req *vaulttypes.QueryVaultRequest
 
@@ -41,21 +39,11 @@ func TestVault(t *testing.T) {
 				Type:   vaulttypes.VaultType_VAULT_TYPE_CLOB,
 				Number: 0,
 			},
-			vaultId:     constants.Vault_Clob_0,
-			asset:       big.NewInt(100),
-			perpId:      0,
-			inventory:   big.NewInt(200),
-			totalShares: big.NewInt(300),
-			allOwnerShares: []vaulttypes.OwnerShares{
-				{
-					Owner:  constants.Alice_Num0.Owner,
-					Shares: 244,
-				},
-				{
-					Owner:  constants.Bob_Num0.Owner,
-					Shares: 56,
-				},
-			},
+			vaultId:        constants.Vault_Clob_0,
+			asset:          big.NewInt(100),
+			perpId:         0,
+			inventory:      big.NewInt(200),
+			totalShares:    big.NewInt(300),
 			expectedEquity: 500,
 		},
 		"Error: query non-existent vault": {
@@ -68,16 +56,6 @@ func TestVault(t *testing.T) {
 			perpId:      0,
 			inventory:   big.NewInt(200),
 			totalShares: big.NewInt(300),
-			allOwnerShares: []vaulttypes.OwnerShares{
-				{
-					Owner:  constants.Alice_Num0.Owner,
-					Shares: 244,
-				},
-				{
-					Owner:  constants.Bob_Num0.Owner,
-					Shares: 56,
-				},
-			},
 			expectedErr: "vault not found",
 		},
 		"Error: nil request": {
@@ -122,18 +100,9 @@ func TestVault(t *testing.T) {
 			ctx := tApp.InitChain()
 			k := tApp.App.VaultKeeper
 
-			// Set total shares and owner shares.
+			// Set total shares.
 			err := k.SetTotalShares(ctx, tc.vaultId, vaulttypes.BigIntToNumShares(tc.totalShares))
 			require.NoError(t, err)
-			for _, ownerShares := range tc.allOwnerShares {
-				err := k.SetOwnerShares(
-					ctx,
-					tc.vaultId,
-					ownerShares.Owner,
-					vaulttypes.BigIntToNumShares(big.NewInt(int64(ownerShares.Shares))),
-				)
-				require.NoError(t, err)
-			}
 
 			// Check Vault query response is as expected.
 			response, err := k.Vault(ctx, tc.req)
@@ -142,12 +111,11 @@ func TestVault(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 				expectedResponse := vaulttypes.QueryVaultResponse{
-					VaultId:        tc.vaultId,
-					SubaccountId:   *tc.vaultId.ToSubaccountId(),
-					Equity:         tc.expectedEquity,
-					Inventory:      tc.inventory.Uint64(),
-					TotalShares:    tc.totalShares.Uint64(),
-					AllOwnerShares: tc.allOwnerShares,
+					VaultId:      tc.vaultId,
+					SubaccountId: *tc.vaultId.ToSubaccountId(),
+					Equity:       tc.expectedEquity,
+					Inventory:    tc.inventory.Uint64(),
+					TotalShares:  tc.totalShares.Uint64(),
 				}
 				require.Equal(t, expectedResponse, *response)
 			}
