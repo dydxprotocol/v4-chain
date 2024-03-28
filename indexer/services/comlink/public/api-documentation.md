@@ -1720,7 +1720,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "marketType": "CROSS"
     },
     "property2": {
       "clobPairId": "string",
@@ -1739,7 +1740,8 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "marketType": "CROSS"
     }
   }
 }
@@ -3719,6 +3721,31 @@ or
 |*anonymous*|INITIALIZING|
 |*anonymous*|FINAL_SETTLEMENT|
 
+## PerpetualMarketType
+
+<a id="schemaperpetualmarkettype"></a>
+<a id="schema_PerpetualMarketType"></a>
+<a id="tocSperpetualmarkettype"></a>
+<a id="tocsperpetualmarkettype"></a>
+
+```json
+"CROSS"
+
+```
+
+### Properties
+
+|Name|Type|Required|Restrictions|Description|
+|---|---|---|---|---|
+|*anonymous*|string|false|none|none|
+
+#### Enumerated Values
+
+|Property|Value|
+|---|---|
+|*anonymous*|CROSS|
+|*anonymous*|ISOLATED|
+
 ## PerpetualMarketResponseObject
 
 <a id="schemaperpetualmarketresponseobject"></a>
@@ -3744,7 +3771,8 @@ or
   "tickSize": "string",
   "stepSize": "string",
   "stepBaseQuantums": 0,
-  "subticksPerTick": 0
+  "subticksPerTick": 0,
+  "marketType": "CROSS"
 }
 
 ```
@@ -3770,6 +3798,7 @@ or
 |stepSize|string|true|none|none|
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
+|marketType|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
 
 ## PerpetualMarketResponse
 
@@ -3798,7 +3827,8 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "marketType": "CROSS"
     },
     "property2": {
       "clobPairId": "string",
@@ -3817,7 +3847,8 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "marketType": "CROSS"
     }
   }
 }

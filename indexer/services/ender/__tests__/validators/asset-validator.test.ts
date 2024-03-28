@@ -11,8 +11,14 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { expectDidntLogError } from '../helpers/validator-helpers';
 import { AssetValidator } from '../../src/validators/asset-validator';
+import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-functions';
 
 describe('asset-validator', () => {
+  beforeAll(async () => {
+    await dbHelpers.migrate();
+    await createPostgresFunctions();
+  });
+
   beforeEach(async () => {
     await testMocks.seedData();
     jest.spyOn(logger, 'error');
@@ -21,6 +27,11 @@ describe('asset-validator', () => {
   afterEach(async () => {
     await dbHelpers.clearData();
     jest.clearAllMocks();
+  });
+
+  afterAll(async () => {
+    await dbHelpers.teardown();
+    jest.resetAllMocks();
   });
 
   describe('validate', () => {
