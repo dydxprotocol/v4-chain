@@ -23,7 +23,7 @@ export interface Params {
   skewFactorPpm: number;
   /** The percentage of vault equity that each order is sized at. */
 
-  orderSizePpm: number;
+  orderSizePctPpm: number;
   /** The duration that a vault's orders are valid for. */
 
   orderExpirationSeconds: number;
@@ -51,7 +51,7 @@ export interface ParamsSDKType {
   skew_factor_ppm: number;
   /** The percentage of vault equity that each order is sized at. */
 
-  order_size_ppm: number;
+  order_size_pct_ppm: number;
   /** The duration that a vault's orders are valid for. */
 
   order_expiration_seconds: number;
@@ -63,7 +63,7 @@ function createBaseParams(): Params {
     spreadMinPpm: 0,
     spreadBufferPpm: 0,
     skewFactorPpm: 0,
-    orderSizePpm: 0,
+    orderSizePctPpm: 0,
     orderExpirationSeconds: 0
   };
 }
@@ -86,8 +86,8 @@ export const Params = {
       writer.uint32(32).uint32(message.skewFactorPpm);
     }
 
-    if (message.orderSizePpm !== 0) {
-      writer.uint32(40).uint32(message.orderSizePpm);
+    if (message.orderSizePctPpm !== 0) {
+      writer.uint32(40).uint32(message.orderSizePctPpm);
     }
 
     if (message.orderExpirationSeconds !== 0) {
@@ -123,7 +123,7 @@ export const Params = {
           break;
 
         case 5:
-          message.orderSizePpm = reader.uint32();
+          message.orderSizePctPpm = reader.uint32();
           break;
 
         case 6:
@@ -145,7 +145,7 @@ export const Params = {
     message.spreadMinPpm = object.spreadMinPpm ?? 0;
     message.spreadBufferPpm = object.spreadBufferPpm ?? 0;
     message.skewFactorPpm = object.skewFactorPpm ?? 0;
-    message.orderSizePpm = object.orderSizePpm ?? 0;
+    message.orderSizePctPpm = object.orderSizePctPpm ?? 0;
     message.orderExpirationSeconds = object.orderExpirationSeconds ?? 0;
     return message;
   }

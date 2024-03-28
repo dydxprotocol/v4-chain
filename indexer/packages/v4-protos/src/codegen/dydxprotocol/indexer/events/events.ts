@@ -957,6 +957,12 @@ export interface LiquidityTierUpsertEventV1 {
   /** @deprecated */
 
   basePositionNotional: Long;
+  /** Lower cap of open interest in quote quantums. */
+
+  openInterestLowerCap: Long;
+  /** Upper cap of open interest in quote quantums. */
+
+  openInterestUpperCap: Long;
 }
 /**
  * LiquidityTierUpsertEventV1 message contains all the information to
@@ -992,6 +998,12 @@ export interface LiquidityTierUpsertEventV1SDKType {
   /** @deprecated */
 
   base_position_notional: Long;
+  /** Lower cap of open interest in quote quantums. */
+
+  open_interest_lower_cap: Long;
+  /** Upper cap of open interest in quote quantums. */
+
+  open_interest_upper_cap: Long;
 }
 /**
  * UpdateClobPairEventV1 message contains all the information about an update to
@@ -2675,7 +2687,9 @@ function createBaseLiquidityTierUpsertEventV1(): LiquidityTierUpsertEventV1 {
     name: "",
     initialMarginPpm: 0,
     maintenanceFractionPpm: 0,
-    basePositionNotional: Long.UZERO
+    basePositionNotional: Long.UZERO,
+    openInterestLowerCap: Long.UZERO,
+    openInterestUpperCap: Long.UZERO
   };
 }
 
@@ -2699,6 +2713,14 @@ export const LiquidityTierUpsertEventV1 = {
 
     if (!message.basePositionNotional.isZero()) {
       writer.uint32(40).uint64(message.basePositionNotional);
+    }
+
+    if (!message.openInterestLowerCap.isZero()) {
+      writer.uint32(48).uint64(message.openInterestLowerCap);
+    }
+
+    if (!message.openInterestUpperCap.isZero()) {
+      writer.uint32(56).uint64(message.openInterestUpperCap);
     }
 
     return writer;
@@ -2733,6 +2755,14 @@ export const LiquidityTierUpsertEventV1 = {
           message.basePositionNotional = (reader.uint64() as Long);
           break;
 
+        case 6:
+          message.openInterestLowerCap = (reader.uint64() as Long);
+          break;
+
+        case 7:
+          message.openInterestUpperCap = (reader.uint64() as Long);
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -2749,6 +2779,8 @@ export const LiquidityTierUpsertEventV1 = {
     message.initialMarginPpm = object.initialMarginPpm ?? 0;
     message.maintenanceFractionPpm = object.maintenanceFractionPpm ?? 0;
     message.basePositionNotional = object.basePositionNotional !== undefined && object.basePositionNotional !== null ? Long.fromValue(object.basePositionNotional) : Long.UZERO;
+    message.openInterestLowerCap = object.openInterestLowerCap !== undefined && object.openInterestLowerCap !== null ? Long.fromValue(object.openInterestLowerCap) : Long.UZERO;
+    message.openInterestUpperCap = object.openInterestUpperCap !== undefined && object.openInterestUpperCap !== null ? Long.fromValue(object.openInterestUpperCap) : Long.UZERO;
     return message;
   }
 

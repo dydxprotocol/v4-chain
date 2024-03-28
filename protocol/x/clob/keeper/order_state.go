@@ -6,6 +6,7 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -250,10 +251,11 @@ func (k Keeper) MigratePruneableOrders(ctx sdk.Context) {
 			continue
 		}
 
-		height := binary.BigEndian.Uint32(it.Value())
+		height := binary.BigEndian.Uint32(it.Key())
 		var potentiallyPrunableOrders types.PotentiallyPrunableOrders
 		k.cdc.MustUnmarshal(it.Value(), &potentiallyPrunableOrders)
 		k.AddOrdersForPruning(ctx, potentiallyPrunableOrders.OrderIds, height)
+		store.Delete(it.Key())
 	}
 }
 
@@ -296,8 +298,13 @@ func (k Keeper) PruneStateFillAmountsForShortTermOrders(
 		allUpdates := types.NewOffchainUpdates()
 		for _, orderId := range prunedOrderIds {
 			if _, exists := k.MemClob.GetOrder(ctx, orderId); exists {
-				orderbookUpdate := k.MemClob.GetOrderbookUpdatesForOrderUpdate(ctx, orderId)
-				allUpdates.Append(orderbookUpdate)
+				if message, success := off_chain_updates.CreateOrderUpdateMessage(
+					ctx,
+					orderId,
+					0, // Total filled quantums is zero because it's been pruned from state.
+				); success {
+					allUpdates.AddUpdateMessage(orderId, message)
+				}
 			}
 		}
 		k.SendOrderbookUpdates(ctx, allUpdates, false)

@@ -3,6 +3,7 @@ package cli
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/spf13/cobra"
 
@@ -23,6 +24,7 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 	}
 
 	cmd.AddCommand(CmdQueryParams())
+	cmd.AddCommand(CmdQueryVault())
 
 	return cmd
 }
@@ -37,6 +39,51 @@ func CmdQueryParams() *cobra.Command {
 			res, err := queryClient.Params(
 				context.Background(),
 				&types.QueryParamsRequest{},
+			)
+			if err != nil {
+				return err
+			}
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryVault() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "get-vault [type] [number]",
+		Short: "get a vault by its type and number",
+		Long:  "get a vault by its type and number. Current support types are: clob.",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) (err error) {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Parse vault type.
+			rawType := args[0]
+			var vaultType types.VaultType
+			switch rawType {
+			case "clob":
+				vaultType = types.VaultType_VAULT_TYPE_CLOB
+			default:
+				return fmt.Errorf("invalid vault type %s", rawType)
+			}
+
+			// Parse vault number.
+			vaultNumber, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.Vault(
+				context.Background(),
+				&types.QueryVaultRequest{
+					Type:   vaultType,
+					Number: uint32(vaultNumber),
+				},
 			)
 			if err != nil {
 				return err

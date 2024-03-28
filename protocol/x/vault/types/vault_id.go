@@ -20,6 +20,11 @@ func (id *VaultId) ToStateKey() []byte {
 	return []byte(id.ToString())
 }
 
+// ToStateKeyPrefix returns the state key prefix for the vault ID.
+func (id *VaultId) ToStateKeyPrefix() []byte {
+	return []byte(fmt.Sprintf("%s:", id.ToString()))
+}
+
 // GetVaultIdFromStateKey returns a vault ID from a given state key.
 func GetVaultIdFromStateKey(stateKey []byte) (*VaultId, error) {
 	stateKeyStr := string(stateKey)

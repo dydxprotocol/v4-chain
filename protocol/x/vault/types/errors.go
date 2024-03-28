@@ -40,10 +40,10 @@ var (
 		7,
 		"Fraction is nil",
 	)
-	ErrInvalidOrderSizePpm = errorsmod.Register(
+	ErrInvalidOrderSizePctPpm = errorsmod.Register(
 		ModuleName,
 		8,
-		"OrderSizePpm must be strictly greater than 0",
+		"OrderSizePctPpm must be strictly greater than 0",
 	)
 	ErrInvalidOrderExpirationSeconds = errorsmod.Register(
 		ModuleName,
@@ -54,5 +54,10 @@ var (
 		ModuleName,
 		10,
 		"SpreadMinPpm must be strictly greater than 0",
+	)
+	ErrInvalidLayers = errorsmod.Register(
+		ModuleName,
+		11,
+		"Layers must be less than or equal to MaxUint8",
 	)
 )

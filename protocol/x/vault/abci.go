@@ -5,6 +5,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/keeper"
 )
 
+func BeginBlocker(
+	ctx sdk.Context,
+	keeper *keeper.Keeper,
+) {
+	keeper.DecommissionNonPositiveEquityVaults(ctx)
+}
+
 func EndBlocker(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,

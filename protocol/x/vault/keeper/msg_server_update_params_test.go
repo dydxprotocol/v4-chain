@@ -41,11 +41,11 @@ func TestMsgUpdateParams(t *testing.T) {
 					SpreadMinPpm:           4_000,
 					SpreadBufferPpm:        2_000,
 					SkewFactorPpm:          500_000,
-					OrderSizePpm:           0, // invalid
+					OrderSizePctPpm:        0, // invalid
 					OrderExpirationSeconds: 5,
 				},
 			},
-			expectedErr: types.ErrInvalidOrderSizePpm.Error(),
+			expectedErr: types.ErrInvalidOrderSizePctPpm.Error(),
 		},
 	}
 
