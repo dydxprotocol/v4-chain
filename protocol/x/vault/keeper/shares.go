@@ -33,11 +33,7 @@ func (k Keeper) SetTotalShares(
 	vaultId types.VaultId,
 	totalShares types.NumShares,
 ) error {
-	totalSharesRat, err := totalShares.ToBigRat()
-	if err != nil {
-		return err
-	}
-	if totalSharesRat.Sign() < 0 {
+	if totalShares.NumShares.BigInt().Sign() < 0 {
 		return types.ErrNegativeShares
 	}
 
@@ -46,10 +42,9 @@ func (k Keeper) SetTotalShares(
 	totalSharesStore.Set(vaultId.ToStateKey(), b)
 
 	// Emit metric on TotalShares.
-	totalSharesFloat, _ := totalSharesRat.Float32()
 	vaultId.SetGaugeWithLabels(
 		metrics.TotalShares,
-		totalSharesFloat,
+		float32(totalShares.NumShares.BigInt().Uint64()),
 	)
 
 	return nil
@@ -86,11 +81,7 @@ func (k Keeper) SetOwnerShares(
 	owner string,
 	ownerShares types.NumShares,
 ) error {
-	ownerSharesRat, err := ownerShares.ToBigRat()
-	if err != nil {
-		return err
-	}
-	if ownerSharesRat.Sign() < 0 {
+	if ownerShares.NumShares.BigInt().Sign() < 0 {
 		return types.ErrNegativeShares
 	}
 
@@ -120,28 +111,19 @@ func (k Keeper) MintShares(
 	quantumsToDeposit *big.Int,
 ) error {
 	// Quantums to deposit should be positive.
-	if quantumsToDeposit.Cmp(big.NewInt(0)) <= 0 {
+	if quantumsToDeposit.Sign() <= 0 {
 		return types.ErrInvalidDepositAmount
 	}
 	// Get existing TotalShares of the vault.
 	totalShares, exists := k.GetTotalShares(ctx, vaultId)
-	var existingTotalShares *big.Rat
-	var err error
-	if exists {
-		existingTotalShares, err = totalShares.ToBigRat()
-		if err != nil {
-			return err
-		}
-	} else {
-		existingTotalShares = new(big.Rat).SetInt(big.NewInt(0))
-	}
+	existingTotalShares := totalShares.NumShares.BigInt()
 	// Calculate shares to mint.
-	var sharesToMint *big.Rat
+	var sharesToMint *big.Int
 	if !exists || existingTotalShares.Sign() <= 0 {
 		// Mint `quoteQuantums` number of shares.
-		sharesToMint = new(big.Rat).SetInt(quantumsToDeposit)
+		sharesToMint = new(big.Int).Set(quantumsToDeposit)
 		// Initialize existingTotalShares as 0.
-		existingTotalShares = new(big.Rat).SetInt(big.NewInt(0))
+		existingTotalShares = big.NewInt(0)
 	} else {
 		// Get vault equity.
 		equity, err := k.GetVaultEquity(ctx, vaultId)
@@ -149,7 +131,7 @@ func (k Keeper) MintShares(
 			return err
 		}
 		// Don't mint shares if equity is non-positive.
-		if equity.Cmp(big.NewInt(0)) <= 0 {
+		if equity.Sign() <= 0 {
 			return types.ErrNonPositiveEquity
 		}
 		// Mint `deposit (in quote quantums) * existing shares / vault equity (in quote quantums)`
@@ -158,16 +140,16 @@ func (k Keeper) MintShares(
 		// - a vault currently has 5000 shares and 4000 equity (in quote quantums)
 		// - each quote quantum is worth 5000 / 4000 = 1.25 shares
 		// - a deposit of 1000 quote quantums should thus be given 1000 * 1.25 = 1250 shares
-		sharesToMint = new(big.Rat).SetInt(quantumsToDeposit)
+		sharesToMint = new(big.Int).Set(quantumsToDeposit)
 		sharesToMint = sharesToMint.Mul(sharesToMint, existingTotalShares)
-		sharesToMint = sharesToMint.Quo(sharesToMint, new(big.Rat).SetInt(equity))
+		sharesToMint = sharesToMint.Quo(sharesToMint, equity)
 	}
 
 	// Increase TotalShares of the vault.
-	err = k.SetTotalShares(
+	err := k.SetTotalShares(
 		ctx,
 		vaultId,
-		types.BigRatToNumShares(
+		types.BigIntToNumShares(
 			existingTotalShares.Add(existingTotalShares, sharesToMint),
 		),
 	)
@@ -183,22 +165,19 @@ func (k Keeper) MintShares(
 			ctx,
 			vaultId,
 			owner,
-			types.BigRatToNumShares(sharesToMint),
+			types.BigIntToNumShares(sharesToMint),
 		)
 		if err != nil {
 			return err
 		}
 	} else {
 		// Increase existing owner shares by sharesToMint.
-		existingOwnerShares, err := ownerShares.ToBigRat()
-		if err != nil {
-			return err
-		}
+		existingOwnerShares := ownerShares.NumShares.BigInt()
 		err = k.SetOwnerShares(
 			ctx,
 			vaultId,
 			owner,
-			types.BigRatToNumShares(
+			types.BigIntToNumShares(
 				existingOwnerShares.Add(existingOwnerShares, sharesToMint),
 			),
 		)

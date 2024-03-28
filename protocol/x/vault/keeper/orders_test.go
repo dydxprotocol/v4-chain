@@ -30,16 +30,16 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		// Vault IDs.
 		vaultIds []vaulttypes.VaultId
 		// Total Shares of each vault ID above.
-		totalShares []*big.Rat
+		totalShares []*big.Int
 	}{
 		"Two Vaults, Both Positive Shares": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(1_000, 1),
-				big.NewRat(200, 1),
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(200),
 			},
 		},
 		"Two Vaults, One Positive Shares, One Zero Shares": {
@@ -47,9 +47,9 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(1_000, 1),
-				big.NewRat(0, 1),
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(0),
 			},
 		},
 		"Two Vaults, Both Zero Shares": {
@@ -57,9 +57,9 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
 			},
-			totalShares: []*big.Rat{
-				big.NewRat(0, 1),
-				big.NewRat(0, 1),
+			totalShares: []*big.Int{
+				big.NewInt(0),
+				big.NewInt(0),
 			},
 		},
 	}
@@ -97,7 +97,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				err := tApp.App.VaultKeeper.SetTotalShares(
 					ctx,
 					vaultId,
-					vaulttypes.BigRatToNumShares(tc.totalShares[i]),
+					vaulttypes.BigIntToNumShares(tc.totalShares[i]),
 				)
 				require.NoError(t, err)
 			}
