@@ -23,7 +23,7 @@ func TestGetSetParams(t *testing.T) {
 		SpreadMinPpm:           4_000,
 		SpreadBufferPpm:        2_000,
 		SkewFactorPpm:          999_999,
-		OrderSizePpm:           200_000,
+		OrderSizePctPpm:        200_000,
 		OrderExpirationSeconds: 10,
 	}
 	err := k.SetParams(ctx, newParams)
@@ -36,7 +36,7 @@ func TestGetSetParams(t *testing.T) {
 		SpreadMinPpm:           4_000,
 		SpreadBufferPpm:        2_000,
 		SkewFactorPpm:          1_000_000,
-		OrderSizePpm:           200_000,
+		OrderSizePctPpm:        200_000,
 		OrderExpirationSeconds: 0, // invalid
 	}
 	err = k.SetParams(ctx, invalidParams)

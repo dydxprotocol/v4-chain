@@ -254,7 +254,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				SpreadMinPpm:           3_000,   // 30 bps
 				SpreadBufferPpm:        1_500,   // 15 bps
 				SkewFactorPpm:          500_000, // 0.5
-				OrderSizePpm:           100_000, // 10%
+				OrderSizePctPpm:        100_000, // 10%
 				OrderExpirationSeconds: 2,       // 2 seconds
 			},
 			vaultId:                    constants.Vault_Clob_0,
@@ -273,7 +273,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
-			// 1. `order_size_ppm * equity / oracle_price`.
+			// 1. `order_size_pct_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
 				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
 				// spread = 0.003
@@ -312,7 +312,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				SpreadMinPpm:           3_000,   // 30 bps
 				SpreadBufferPpm:        8_500,   // 85 bps
 				SkewFactorPpm:          900_000, // 0.9
-				OrderSizePpm:           200_000, // 20%
+				OrderSizePctPpm:        200_000, // 20%
 				OrderExpirationSeconds: 4,       // 4 seconds
 			},
 			vaultId:                    constants.Vault_Clob_1,
@@ -331,7 +331,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
 			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
 			// To calculate size of each order
-			// 1. `order_size_ppm * equity / oracle_price`.
+			// 1. `order_size_pct_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
 				// spreadPpm = max(3_000, 8_500 + 50) = 8_550
 				// spread = 0.00855

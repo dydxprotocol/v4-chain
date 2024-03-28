@@ -1810,7 +1810,7 @@
       "params": {
         "layers": 2,
         "order_expiration_seconds": 2,
-        "order_size_ppm": 100000,
+        "order_size_pct_ppm": 100000,
         "skew_factor_ppm": 500000,
         "spread_buffer_ppm": 1500,
         "spread_min_ppm": 3000
