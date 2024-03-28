@@ -9,7 +9,7 @@ func BeginBlocker(
 	ctx sdk.Context,
 	keeper *keeper.Keeper,
 ) {
-	keeper.DecommissionVaults(ctx)
+	keeper.DecommissionNonPositiveEquityVaults(ctx)
 }
 
 func EndBlocker(

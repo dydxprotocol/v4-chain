@@ -29,7 +29,7 @@ func (k Keeper) GetVaultEquity(
 }
 
 // DecommissionVaults decommissions all vaults with positive shares and non-positive equity.
-func (k Keeper) DecommissionVaults(
+func (k Keeper) DecommissionNonPositiveEquityVaults(
 	ctx sdk.Context,
 ) {
 	// Iterate through all vaults.
@@ -64,7 +64,7 @@ func (k Keeper) DecommissionVaults(
 	}
 }
 
-// DecommissionVault decommissions a vault by deleting its tota shares and owner shares.
+// DecommissionVault decommissions a vault by deleting its total shares and owner shares.
 func (k Keeper) DecommissionVault(
 	ctx sdk.Context,
 	vaultId types.VaultId,
