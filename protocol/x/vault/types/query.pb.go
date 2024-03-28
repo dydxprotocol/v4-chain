@@ -9,6 +9,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
+	types "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
@@ -111,33 +112,244 @@ func (m *QueryParamsResponse) GetParams() Params {
 	return Params{}
 }
 
+// QueryVaultRequest is a request type for the Vault RPC method.
+type QueryVaultRequest struct {
+	Type   VaultType `protobuf:"varint,1,opt,name=type,proto3,enum=dydxprotocol.vault.VaultType" json:"type,omitempty"`
+	Number uint32    `protobuf:"varint,2,opt,name=number,proto3" json:"number,omitempty"`
+}
+
+func (m *QueryVaultRequest) Reset()         { *m = QueryVaultRequest{} }
+func (m *QueryVaultRequest) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultRequest) ProtoMessage()    {}
+func (*QueryVaultRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{2}
+}
+func (m *QueryVaultRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultRequest.Merge(m, src)
+}
+func (m *QueryVaultRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultRequest proto.InternalMessageInfo
+
+func (m *QueryVaultRequest) GetType() VaultType {
+	if m != nil {
+		return m.Type
+	}
+	return VaultType_VAULT_TYPE_UNSPECIFIED
+}
+
+func (m *QueryVaultRequest) GetNumber() uint32 {
+	if m != nil {
+		return m.Number
+	}
+	return 0
+}
+
+// QueryVaultResponse is a response type for the Vault RPC method.
+type QueryVaultResponse struct {
+	VaultId        VaultId            `protobuf:"bytes,1,opt,name=vault_id,json=vaultId,proto3" json:"vault_id"`
+	SubaccountId   types.SubaccountId `protobuf:"bytes,2,opt,name=subaccount_id,json=subaccountId,proto3" json:"subaccount_id"`
+	Equity         uint64             `protobuf:"varint,3,opt,name=equity,proto3" json:"equity,omitempty"`
+	Inventory      uint64             `protobuf:"varint,4,opt,name=inventory,proto3" json:"inventory,omitempty"`
+	TotalShares    uint64             `protobuf:"varint,5,opt,name=total_shares,json=totalShares,proto3" json:"total_shares,omitempty"`
+	AllOwnerShares []OwnerShares      `protobuf:"bytes,6,rep,name=all_owner_shares,json=allOwnerShares,proto3" json:"all_owner_shares"`
+}
+
+func (m *QueryVaultResponse) Reset()         { *m = QueryVaultResponse{} }
+func (m *QueryVaultResponse) String() string { return proto.CompactTextString(m) }
+func (*QueryVaultResponse) ProtoMessage()    {}
+func (*QueryVaultResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{3}
+}
+func (m *QueryVaultResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *QueryVaultResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_QueryVaultResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *QueryVaultResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_QueryVaultResponse.Merge(m, src)
+}
+func (m *QueryVaultResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *QueryVaultResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_QueryVaultResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_QueryVaultResponse proto.InternalMessageInfo
+
+func (m *QueryVaultResponse) GetVaultId() VaultId {
+	if m != nil {
+		return m.VaultId
+	}
+	return VaultId{}
+}
+
+func (m *QueryVaultResponse) GetSubaccountId() types.SubaccountId {
+	if m != nil {
+		return m.SubaccountId
+	}
+	return types.SubaccountId{}
+}
+
+func (m *QueryVaultResponse) GetEquity() uint64 {
+	if m != nil {
+		return m.Equity
+	}
+	return 0
+}
+
+func (m *QueryVaultResponse) GetInventory() uint64 {
+	if m != nil {
+		return m.Inventory
+	}
+	return 0
+}
+
+func (m *QueryVaultResponse) GetTotalShares() uint64 {
+	if m != nil {
+		return m.TotalShares
+	}
+	return 0
+}
+
+func (m *QueryVaultResponse) GetAllOwnerShares() []OwnerShares {
+	if m != nil {
+		return m.AllOwnerShares
+	}
+	return nil
+}
+
+// OwnerShares is a message type for an owner and their shares.
+type OwnerShares struct {
+	Owner  string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
+	Shares uint64 `protobuf:"varint,2,opt,name=shares,proto3" json:"shares,omitempty"`
+}
+
+func (m *OwnerShares) Reset()         { *m = OwnerShares{} }
+func (m *OwnerShares) String() string { return proto.CompactTextString(m) }
+func (*OwnerShares) ProtoMessage()    {}
+func (*OwnerShares) Descriptor() ([]byte, []int) {
+	return fileDescriptor_478fb8dc0ff21ea6, []int{4}
+}
+func (m *OwnerShares) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *OwnerShares) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_OwnerShares.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *OwnerShares) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_OwnerShares.Merge(m, src)
+}
+func (m *OwnerShares) XXX_Size() int {
+	return m.Size()
+}
+func (m *OwnerShares) XXX_DiscardUnknown() {
+	xxx_messageInfo_OwnerShares.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_OwnerShares proto.InternalMessageInfo
+
+func (m *OwnerShares) GetOwner() string {
+	if m != nil {
+		return m.Owner
+	}
+	return ""
+}
+
+func (m *OwnerShares) GetShares() uint64 {
+	if m != nil {
+		return m.Shares
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*QueryParamsRequest)(nil), "dydxprotocol.vault.QueryParamsRequest")
 	proto.RegisterType((*QueryParamsResponse)(nil), "dydxprotocol.vault.QueryParamsResponse")
+	proto.RegisterType((*QueryVaultRequest)(nil), "dydxprotocol.vault.QueryVaultRequest")
+	proto.RegisterType((*QueryVaultResponse)(nil), "dydxprotocol.vault.QueryVaultResponse")
+	proto.RegisterType((*OwnerShares)(nil), "dydxprotocol.vault.OwnerShares")
 }
 
 func init() { proto.RegisterFile("dydxprotocol/vault/query.proto", fileDescriptor_478fb8dc0ff21ea6) }
 
 var fileDescriptor_478fb8dc0ff21ea6 = []byte{
-	// 275 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x92, 0x4b, 0xa9, 0x4c, 0xa9,
-	0x28, 0x28, 0xca, 0x2f, 0xc9, 0x4f, 0xce, 0xcf, 0xd1, 0x2f, 0x4b, 0x2c, 0xcd, 0x29, 0xd1, 0x2f,
-	0x2c, 0x4d, 0x2d, 0xaa, 0xd4, 0x03, 0x0b, 0x0a, 0x09, 0x21, 0xcb, 0xeb, 0x81, 0xe5, 0xa5, 0x44,
-	0xd2, 0xf3, 0xd3, 0xf3, 0xc1, 0x62, 0xfa, 0x20, 0x16, 0x44, 0xa5, 0x94, 0x4c, 0x7a, 0x7e, 0x7e,
-	0x7a, 0x4e, 0xaa, 0x7e, 0x62, 0x41, 0xa6, 0x7e, 0x62, 0x5e, 0x5e, 0x7e, 0x49, 0x62, 0x49, 0x66,
-	0x7e, 0x5e, 0x31, 0x54, 0x56, 0x1e, 0x8b, 0x3d, 0x05, 0x89, 0x45, 0x89, 0xb9, 0x50, 0x05, 0x4a,
-	0x22, 0x5c, 0x42, 0x81, 0x20, 0x7b, 0x03, 0xc0, 0x82, 0x41, 0xa9, 0x85, 0xa5, 0xa9, 0xc5, 0x25,
-	0x4a, 0xfe, 0x5c, 0xc2, 0x28, 0xa2, 0xc5, 0x05, 0xf9, 0x79, 0xc5, 0xa9, 0x42, 0x16, 0x5c, 0x6c,
-	0x10, 0xcd, 0x12, 0x8c, 0x0a, 0x8c, 0x1a, 0xdc, 0x46, 0x52, 0x7a, 0x98, 0xce, 0xd4, 0x83, 0xe8,
-	0x71, 0x62, 0x39, 0x71, 0x4f, 0x9e, 0x21, 0x08, 0xaa, 0xde, 0xa8, 0x8b, 0x91, 0x8b, 0x15, 0x6c,
-	0xa2, 0x50, 0x03, 0x23, 0x17, 0x1b, 0x44, 0x89, 0x90, 0x1a, 0x36, 0xed, 0x98, 0xae, 0x91, 0x52,
-	0x27, 0xa8, 0x0e, 0xe2, 0x3e, 0x25, 0xd5, 0xa6, 0xcb, 0x4f, 0x26, 0x33, 0xc9, 0x0b, 0xc9, 0xea,
-	0xa3, 0x7a, 0xdb, 0x04, 0xc5, 0xe7, 0x4e, 0x81, 0x27, 0x1e, 0xc9, 0x31, 0x5e, 0x78, 0x24, 0xc7,
-	0xf8, 0xe0, 0x91, 0x1c, 0xe3, 0x84, 0xc7, 0x72, 0x0c, 0x17, 0x1e, 0xcb, 0x31, 0xdc, 0x78, 0x2c,
-	0xc7, 0x10, 0x65, 0x9e, 0x9e, 0x59, 0x92, 0x51, 0x9a, 0xa4, 0x97, 0x9c, 0x9f, 0x8b, 0x6e, 0x84,
-	0x6e, 0x72, 0x46, 0x62, 0x66, 0x9e, 0x3e, 0x5c, 0xa4, 0x02, 0x6a, 0x66, 0x49, 0x65, 0x41, 0x6a,
-	0x71, 0x12, 0x1b, 0x58, 0xdc, 0x18, 0x10, 0x00, 0x00, 0xff, 0xff, 0x2c, 0xa1, 0x80, 0x8e, 0xd8,
-	0x01, 0x00, 0x00,
+	// 559 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x53, 0x41, 0x6b, 0x13, 0x41,
+	0x14, 0xce, 0x6e, 0x93, 0x68, 0x27, 0x6d, 0xd1, 0x31, 0x48, 0x88, 0xed, 0x26, 0x2e, 0x34, 0xc6,
+	0x43, 0x77, 0x31, 0x2a, 0x0a, 0x7a, 0xea, 0xcd, 0x53, 0xcc, 0x56, 0x3c, 0x78, 0x30, 0x4c, 0x92,
+	0x21, 0x59, 0xd8, 0xcc, 0x6c, 0x76, 0x66, 0x63, 0x97, 0x52, 0x10, 0xef, 0x82, 0xe0, 0xcd, 0x5f,
+	0xd4, 0x9b, 0x05, 0x2f, 0x9e, 0x44, 0x12, 0x7f, 0x88, 0xec, 0x9b, 0x69, 0xba, 0x69, 0x13, 0x7a,
+	0x59, 0xe6, 0x7d, 0xef, 0x9b, 0xef, 0x7b, 0x6f, 0xde, 0x5b, 0x64, 0x0d, 0x92, 0xc1, 0x71, 0x18,
+	0x71, 0xc9, 0xfb, 0x3c, 0x70, 0xa7, 0x24, 0x0e, 0xa4, 0x3b, 0x89, 0x69, 0x94, 0x38, 0x00, 0x62,
+	0x9c, 0xcd, 0x3b, 0x90, 0xaf, 0x96, 0x87, 0x7c, 0xc8, 0x01, 0x73, 0xd3, 0x93, 0x62, 0x56, 0x77,
+	0x87, 0x9c, 0x0f, 0x03, 0xea, 0x92, 0xd0, 0x77, 0x09, 0x63, 0x5c, 0x12, 0xe9, 0x73, 0x26, 0x74,
+	0xf6, 0xf1, 0x92, 0x8f, 0x88, 0x7b, 0xa4, 0xdf, 0xe7, 0x31, 0x93, 0x22, 0x73, 0xd6, 0xd4, 0xda,
+	0x8a, 0x92, 0x42, 0x12, 0x91, 0xf1, 0x85, 0xd6, 0xaa, 0x9a, 0xe1, 0xab, 0xf2, 0x76, 0x19, 0xe1,
+	0x4e, 0xda, 0xc2, 0x5b, 0xb8, 0xe4, 0xd1, 0x49, 0x4c, 0x85, 0xb4, 0xdb, 0xe8, 0xde, 0x12, 0x2a,
+	0x42, 0xce, 0x04, 0xc5, 0x2f, 0x51, 0x51, 0x89, 0x57, 0x8c, 0xba, 0xd1, 0x2c, 0xb5, 0xaa, 0xce,
+	0xf5, 0x8e, 0x1d, 0x75, 0xe7, 0x30, 0x7f, 0xf6, 0xa7, 0x96, 0xf3, 0x34, 0xdf, 0xfe, 0x88, 0xee,
+	0x82, 0xe0, 0xfb, 0x94, 0xa2, 0x5d, 0xf0, 0x13, 0x94, 0x97, 0x49, 0x48, 0x41, 0x6c, 0xa7, 0xb5,
+	0xb7, 0x4a, 0x0c, 0xf8, 0xef, 0x92, 0x90, 0x7a, 0x40, 0xc5, 0xf7, 0x51, 0x91, 0xc5, 0xe3, 0x1e,
+	0x8d, 0x2a, 0x66, 0xdd, 0x68, 0x6e, 0x7b, 0x3a, 0xb2, 0x7f, 0x9a, 0xba, 0x0f, 0x6d, 0xa0, 0x0b,
+	0x7e, 0x8d, 0x6e, 0x83, 0x4e, 0xd7, 0x1f, 0xe8, 0x92, 0x1f, 0xac, 0x75, 0x79, 0x33, 0xd0, 0x35,
+	0xdf, 0x9a, 0xaa, 0x10, 0x77, 0xd0, 0xf6, 0xe5, 0x83, 0xa7, 0x12, 0x26, 0x48, 0x34, 0x96, 0x25,
+	0x32, 0xf3, 0x71, 0x8e, 0x16, 0xe7, 0x85, 0xda, 0x96, 0xc8, 0x60, 0x69, 0xfd, 0x74, 0x12, 0xfb,
+	0x32, 0xa9, 0x6c, 0xd4, 0x8d, 0x66, 0xde, 0xd3, 0x11, 0xde, 0x45, 0x9b, 0x3e, 0x9b, 0x52, 0x26,
+	0x79, 0x94, 0x54, 0xf2, 0x90, 0xba, 0x04, 0xf0, 0x43, 0xb4, 0x25, 0xb9, 0x24, 0x41, 0x57, 0x8c,
+	0x48, 0x44, 0x45, 0xa5, 0x00, 0x84, 0x12, 0x60, 0x47, 0x00, 0xe1, 0x36, 0xba, 0x43, 0x82, 0xa0,
+	0xcb, 0x3f, 0x31, 0x1a, 0x5d, 0xd0, 0x8a, 0xf5, 0x8d, 0x66, 0xa9, 0x55, 0x5b, 0xd5, 0x71, 0x3b,
+	0xe5, 0xa9, 0xab, 0xba, 0xce, 0x1d, 0x12, 0x04, 0x19, 0xd4, 0x7e, 0x85, 0x4a, 0x99, 0x10, 0x97,
+	0x51, 0x01, 0xb4, 0xe1, 0x19, 0x37, 0x3d, 0x15, 0xa4, 0xed, 0x68, 0x2f, 0x53, 0xb5, 0xa3, 0xa2,
+	0xd6, 0x0f, 0x13, 0x15, 0x60, 0x1c, 0xf8, 0xb3, 0x81, 0x8a, 0x6a, 0x23, 0x70, 0x63, 0x55, 0x21,
+	0xd7, 0x97, 0xaf, 0xfa, 0xe8, 0x46, 0x9e, 0x9a, 0xae, 0xbd, 0xff, 0xe5, 0xd7, 0xbf, 0xef, 0x66,
+	0x0d, 0xef, 0xb9, 0xcb, 0x4b, 0xfe, 0x6c, 0xe9, 0x47, 0xc0, 0x5f, 0x0d, 0x54, 0x80, 0x09, 0xe3,
+	0xfd, 0xb5, 0xca, 0xd9, 0xbd, 0xac, 0x36, 0x6e, 0xa2, 0x69, 0xff, 0xe7, 0xe0, 0xef, 0xe2, 0x83,
+	0x35, 0xfe, 0xf0, 0x15, 0xee, 0x49, 0xba, 0xb9, 0xa7, 0xee, 0x89, 0x5a, 0xd5, 0xd3, 0xc3, 0xce,
+	0xd9, 0xcc, 0x32, 0xce, 0x67, 0x96, 0xf1, 0x77, 0x66, 0x19, 0xdf, 0xe6, 0x56, 0xee, 0x7c, 0x6e,
+	0xe5, 0x7e, 0xcf, 0xad, 0xdc, 0x87, 0x17, 0x43, 0x5f, 0x8e, 0xe2, 0x9e, 0xd3, 0xe7, 0xe3, 0xab,
+	0x92, 0x07, 0xfd, 0x11, 0xf1, 0x99, 0xbb, 0x40, 0x8e, 0xb5, 0x47, 0xaa, 0x2d, 0x7a, 0x45, 0xc0,
+	0x9f, 0xfe, 0x0f, 0x00, 0x00, 0xff, 0xff, 0x6a, 0xd1, 0x53, 0xbe, 0xa2, 0x04, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -154,6 +366,8 @@ const _ = grpc.SupportPackageIsVersion4
 type QueryClient interface {
 	// Queries the Params.
 	Params(ctx context.Context, in *QueryParamsRequest, opts ...grpc.CallOption) (*QueryParamsResponse, error)
+	// Queries a Vault by type and number.
+	Vault(ctx context.Context, in *QueryVaultRequest, opts ...grpc.CallOption) (*QueryVaultResponse, error)
 }
 
 type queryClient struct {
@@ -173,10 +387,21 @@ func (c *queryClient) Params(ctx context.Context, in *QueryParamsRequest, opts .
 	return out, nil
 }
 
+func (c *queryClient) Vault(ctx context.Context, in *QueryVaultRequest, opts ...grpc.CallOption) (*QueryVaultResponse, error) {
+	out := new(QueryVaultResponse)
+	err := c.cc.Invoke(ctx, "/dydxprotocol.vault.Query/Vault", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // QueryServer is the server API for Query service.
 type QueryServer interface {
 	// Queries the Params.
 	Params(context.Context, *QueryParamsRequest) (*QueryParamsResponse, error)
+	// Queries a Vault by type and number.
+	Vault(context.Context, *QueryVaultRequest) (*QueryVaultResponse, error)
 }
 
 // UnimplementedQueryServer can be embedded to have forward compatible implementations.
@@ -185,6 +410,9 @@ type UnimplementedQueryServer struct {
 
 func (*UnimplementedQueryServer) Params(ctx context.Context, req *QueryParamsRequest) (*QueryParamsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Params not implemented")
+}
+func (*UnimplementedQueryServer) Vault(ctx context.Context, req *QueryVaultRequest) (*QueryVaultResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Vault not implemented")
 }
 
 func RegisterQueryServer(s grpc1.Server, srv QueryServer) {
@@ -209,6 +437,24 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Query_Vault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QueryVaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(QueryServer).Vault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/dydxprotocol.vault.Query/Vault",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(QueryServer).Vault(ctx, req.(*QueryVaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _Query_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "dydxprotocol.vault.Query",
 	HandlerType: (*QueryServer)(nil),
@@ -216,6 +462,10 @@ var _Query_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Params",
 			Handler:    _Query_Params_Handler,
+		},
+		{
+			MethodName: "Vault",
+			Handler:    _Query_Vault_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -278,6 +528,146 @@ func (m *QueryParamsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *QueryVaultRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Number != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Number))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Type != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Type))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *QueryVaultResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *QueryVaultResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *QueryVaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if len(m.AllOwnerShares) > 0 {
+		for iNdEx := len(m.AllOwnerShares) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.AllOwnerShares[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintQuery(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x32
+		}
+	}
+	if m.TotalShares != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.TotalShares))
+		i--
+		dAtA[i] = 0x28
+	}
+	if m.Inventory != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Inventory))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Equity != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Equity))
+		i--
+		dAtA[i] = 0x18
+	}
+	{
+		size, err := m.SubaccountId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0x12
+	{
+		size, err := m.VaultId.MarshalToSizedBuffer(dAtA[:i])
+		if err != nil {
+			return 0, err
+		}
+		i -= size
+		i = encodeVarintQuery(dAtA, i, uint64(size))
+	}
+	i--
+	dAtA[i] = 0xa
+	return len(dAtA) - i, nil
+}
+
+func (m *OwnerShares) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *OwnerShares) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *OwnerShares) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.Shares != 0 {
+		i = encodeVarintQuery(dAtA, i, uint64(m.Shares))
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Owner) > 0 {
+		i -= len(m.Owner)
+		copy(dAtA[i:], m.Owner)
+		i = encodeVarintQuery(dAtA, i, uint64(len(m.Owner)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintQuery(dAtA []byte, offset int, v uint64) int {
 	offset -= sovQuery(v)
 	base := offset
@@ -306,6 +696,65 @@ func (m *QueryParamsResponse) Size() (n int) {
 	_ = l
 	l = m.Params.Size()
 	n += 1 + l + sovQuery(uint64(l))
+	return n
+}
+
+func (m *QueryVaultRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Type != 0 {
+		n += 1 + sovQuery(uint64(m.Type))
+	}
+	if m.Number != 0 {
+		n += 1 + sovQuery(uint64(m.Number))
+	}
+	return n
+}
+
+func (m *QueryVaultResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = m.VaultId.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	l = m.SubaccountId.Size()
+	n += 1 + l + sovQuery(uint64(l))
+	if m.Equity != 0 {
+		n += 1 + sovQuery(uint64(m.Equity))
+	}
+	if m.Inventory != 0 {
+		n += 1 + sovQuery(uint64(m.Inventory))
+	}
+	if m.TotalShares != 0 {
+		n += 1 + sovQuery(uint64(m.TotalShares))
+	}
+	if len(m.AllOwnerShares) > 0 {
+		for _, e := range m.AllOwnerShares {
+			l = e.Size()
+			n += 1 + l + sovQuery(uint64(l))
+		}
+	}
+	return n
+}
+
+func (m *OwnerShares) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Owner)
+	if l > 0 {
+		n += 1 + l + sovQuery(uint64(l))
+	}
+	if m.Shares != 0 {
+		n += 1 + sovQuery(uint64(m.Shares))
+	}
 	return n
 }
 
@@ -427,6 +876,402 @@ func (m *QueryParamsResponse) Unmarshal(dAtA []byte) error {
 				return err
 			}
 			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVaultRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Type", wireType)
+			}
+			m.Type = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Type |= VaultType(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Number", wireType)
+			}
+			m.Number = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Number |= uint32(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *QueryVaultResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: QueryVaultResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: QueryVaultResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field VaultId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.VaultId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field SubaccountId", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if err := m.SubaccountId.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Equity", wireType)
+			}
+			m.Equity = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Equity |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Inventory", wireType)
+			}
+			m.Inventory = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Inventory |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 5:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field TotalShares", wireType)
+			}
+			m.TotalShares = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.TotalShares |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 6:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AllOwnerShares", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AllOwnerShares = append(m.AllOwnerShares, OwnerShares{})
+			if err := m.AllOwnerShares[len(m.AllOwnerShares)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipQuery(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if (skippy < 0) || (iNdEx+skippy) < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *OwnerShares) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowQuery
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: OwnerShares: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: OwnerShares: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Owner", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthQuery
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthQuery
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Owner = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Shares", wireType)
+			}
+			m.Shares = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowQuery
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Shares |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipQuery(dAtA[iNdEx:])

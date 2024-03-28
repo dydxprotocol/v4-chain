@@ -3,7 +3,9 @@ package dydxprotocol.vault;
 
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
 import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/vault.proto";
 
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
@@ -13,6 +15,10 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/dydxprotocol/v4/vault/params";
   }
+  // Queries a Vault by type and number.
+  rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
+    option (google.api.http).get = "/dydxprotocol/v4/vault/vaults/{type}/{number}";
+  }
 }
 
 // QueryParamsRequest is a request type for the Params RPC method.
@@ -21,4 +27,27 @@ message QueryParamsRequest {}
 // QueryParamsResponse is a response type for the Params RPC method.
 message QueryParamsResponse {
   Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryVaultRequest is a request type for the Vault RPC method.
+message QueryVaultRequest {
+  VaultType type = 1;
+  uint32 number = 2;
+}
+
+// QueryVaultResponse is a response type for the Vault RPC method.
+message QueryVaultResponse {
+  VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2
+      [ (gogoproto.nullable) = false ];
+  uint64 equity = 3;
+  uint64 inventory = 4;
+  uint64 total_shares = 5;
+  repeated OwnerShares all_owner_shares = 6 [ (gogoproto.nullable) = false ];
+}
+
+// OwnerShares is a message type for an owner and their shares.
+message OwnerShares {
+  string owner = 1;
+  uint64 shares = 2;
 }
