@@ -18,5 +18,7 @@ type GrpcStreamingManager interface {
 	SendOrderbookUpdates(
 		offchainUpdates *clobtypes.OffchainUpdates,
 		snapshot bool,
+		blockHeight uint32,
+		execMode uint32,
 	)
 }

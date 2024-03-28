@@ -233,6 +233,15 @@ export interface StreamOrderbookUpdatesResponse {
    */
 
   snapshot: boolean;
+  /**
+   * ---Additional fields used to debug issues---
+   * Block height of the updates.
+   */
+
+  blockHeight: number;
+  /** Exec mode of the updates. */
+
+  execMode: number;
 }
 /**
  * StreamOrderbookUpdatesResponse is a response message for the
@@ -250,6 +259,15 @@ export interface StreamOrderbookUpdatesResponseSDKType {
    */
 
   snapshot: boolean;
+  /**
+   * ---Additional fields used to debug issues---
+   * Block height of the updates.
+   */
+
+  block_height: number;
+  /** Exec mode of the updates. */
+
+  exec_mode: number;
 }
 
 function createBaseQueryGetClobPairRequest(): QueryGetClobPairRequest {
@@ -904,7 +922,9 @@ export const StreamOrderbookUpdatesRequest = {
 function createBaseStreamOrderbookUpdatesResponse(): StreamOrderbookUpdatesResponse {
   return {
     updates: [],
-    snapshot: false
+    snapshot: false,
+    blockHeight: 0,
+    execMode: 0
   };
 }
 
@@ -916,6 +936,14 @@ export const StreamOrderbookUpdatesResponse = {
 
     if (message.snapshot === true) {
       writer.uint32(16).bool(message.snapshot);
+    }
+
+    if (message.blockHeight !== 0) {
+      writer.uint32(24).uint32(message.blockHeight);
+    }
+
+    if (message.execMode !== 0) {
+      writer.uint32(32).uint32(message.execMode);
     }
 
     return writer;
@@ -938,6 +966,14 @@ export const StreamOrderbookUpdatesResponse = {
           message.snapshot = reader.bool();
           break;
 
+        case 3:
+          message.blockHeight = reader.uint32();
+          break;
+
+        case 4:
+          message.execMode = reader.uint32();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -951,6 +987,8 @@ export const StreamOrderbookUpdatesResponse = {
     const message = createBaseStreamOrderbookUpdatesResponse();
     message.updates = object.updates?.map(e => OffChainUpdateV1.fromPartial(e)) || [];
     message.snapshot = object.snapshot ?? false;
+    message.blockHeight = object.blockHeight ?? 0;
+    message.execMode = object.execMode ?? 0;
     return message;
   }
 

@@ -29,6 +29,8 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
 	snapshot bool,
+	blockHeight uint32,
+	execMode uint32,
 ) {
 }
 

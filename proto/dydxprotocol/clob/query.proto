@@ -153,4 +153,11 @@ message StreamOrderbookUpdatesResponse {
   // Note that if the snapshot is true, then all previous entries should be
   // discarded and the orderbook should be resynced.
   bool snapshot = 2;
+
+  // ---Additional fields used to debug issues---
+  // Block height of the updates.
+  uint32 block_height = 3;
+
+  // Exec mode of the updates.
+  uint32 exec_mode = 4;
 }

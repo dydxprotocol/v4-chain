@@ -355,6 +355,11 @@ func (_m *MemClobKeeper) ReplayPlaceOrder(ctx types.Context, msg *clobtypes.MsgP
 	return r0, r1, r2, r3
 }
 
+// SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates, snapshot
+func (_m *MemClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
+	_m.Called(ctx, offchainUpdates, snapshot)
+}
+
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight
 func (_m *MemClobKeeper) SetLongTermOrderPlacement(ctx types.Context, order clobtypes.Order, blockHeight uint32) {
 	_m.Called(ctx, order, blockHeight)
