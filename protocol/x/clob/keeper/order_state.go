@@ -273,7 +273,7 @@ func (k Keeper) PruneStateFillAmountsForShortTermOrders(
 		for _, orderId := range prunedOrderIds {
 			if _, exists := k.MemClob.GetOrder(ctx, orderId); exists {
 				if message, success := off_chain_updates.CreateOrderUpdateMessage(
-					ctx,
+					k.Logger(ctx),
 					orderId,
 					0, // Total filled quantums is zero because it's been pruned from state.
 				); success {
