@@ -2,8 +2,8 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 
+	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -42,19 +42,19 @@ func CmdDepositToVault() *cobra.Command {
 			}
 
 			// Parse vault number.
-			vaultNumber, err := strconv.ParseUint(args[1], 10, 32)
+			vaultNumber, err := cast.ToUint32E(args[1])
 			if err != nil {
 				return err
 			}
 
 			// Parse depositor number.
-			depositorNumber, err := strconv.ParseUint(args[3], 10, 32)
+			depositorNumber, err := cast.ToUint32E(args[3])
 			if err != nil {
 				return err
 			}
 
 			// Parse quantums.
-			quantums, err := strconv.ParseUint(args[4], 10, 64)
+			quantums, err := cast.ToUint64E(args[4])
 			if err != nil {
 				return err
 			}
@@ -64,21 +64,22 @@ func CmdDepositToVault() *cobra.Command {
 				return err
 			}
 
+			// Create MsgDepositToVault.
 			msg := &types.MsgDepositToVault{
 				VaultId: &types.VaultId{
 					Type:   vaultType,
-					Number: uint32(vaultNumber),
+					Number: vaultNumber,
 				},
 				SubaccountId: &satypes.SubaccountId{
 					Owner:  args[2],
-					Number: uint32(depositorNumber),
+					Number: depositorNumber,
 				},
 				QuoteQuantums: dtypes.NewIntFromUint64(quantums),
 			}
-
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}
+
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
