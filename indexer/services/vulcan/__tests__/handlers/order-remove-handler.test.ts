@@ -2113,7 +2113,11 @@ describe('OrderRemoveHandler', () => {
 
     if (expectedSubaccountMessage !== undefined) {
       const subaccountProducerRecord: ProducerRecord = producerSendSpy.mock.calls[0][0];
-      expectWebsocketSubaccountMessage(subaccountProducerRecord, expectedSubaccountMessage);
+      expectWebsocketSubaccountMessage(
+        subaccountProducerRecord,
+        expectedSubaccountMessage,
+        defaultKafkaHeaders,
+      );
     }
 
     if (expectedOrderbookMessage !== undefined) {
