@@ -76,6 +76,10 @@
           "exitPrice": {
             "type": "string",
             "nullable": true
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -91,7 +95,8 @@
           "sumOpen",
           "sumClose",
           "netFunding",
-          "unrealizedPnl"
+          "unrealizedPnl",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false

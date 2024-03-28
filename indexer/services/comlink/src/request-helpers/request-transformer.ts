@@ -73,6 +73,7 @@ export function perpetualPositionToResponseObject(
   position: PerpetualPositionWithFunding,
   perpetualMarketsMap: PerpetualMarketsMap,
   marketsMap: MarketsMap,
+  subaccountNumber: number,
 ): PerpetualPositionResponseObject {
   // Realized pnl is calculated from the difference in price between the average entry/exit price
   // (order depending on side of the position) multiplied by amount of the position that was closed
@@ -104,6 +105,7 @@ export function perpetualPositionToResponseObject(
     sumOpen: position.sumOpen,
     sumClose: position.sumClose,
     netFunding: netFunding.toFixed(),
+    subaccountNumber,
   };
 }
 
