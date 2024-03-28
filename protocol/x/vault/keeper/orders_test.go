@@ -9,20 +9,13 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/require"
-)
-
-// TODO (TRA-118): store vault strategy constants in x/vault state.
-const (
-	numLayers                          = uint8(2)
-	minBaseSpreadPpm                   = uint32(3_000) // 30 bps
-	baseSpreadMinPriceChangePremiumPpm = uint32(1_500) // 15 bps
-	orderExpirationSeconds             = uint32(5)     // 5 seconds
 )
 
 func TestRefreshAllVaultOrders(t *testing.T) {
@@ -79,7 +72,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 								Id: vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
 									{
-										AssetId:  0,
+										AssetId:  assettypes.AssetUsdc.Id,
 										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
 									},
 								},
@@ -188,7 +181,7 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 								Id: tc.vaultId.ToSubaccountId(),
 								AssetPositions: []*satypes.AssetPosition{
 									{
-										AssetId:  0,
+										AssetId:  assettypes.AssetUsdc.Id,
 										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
 									},
 								},
@@ -217,11 +210,12 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 				// Check that there's no error.
 				require.NoError(t, err)
 				// Check that the number of orders is as expected.
-				require.Len(t, allStatefulOrders, int(numLayers)*2)
+				params := tApp.App.VaultKeeper.GetParams(ctx)
+				require.Len(t, allStatefulOrders, int(params.Layers*2))
 				// Check that the orders are as expected.
 				expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, tc.vaultId)
 				require.NoError(t, err)
-				for i := uint8(0); i < numLayers*2; i++ {
+				for i := uint32(0); i < params.Layers*2; i++ {
 					require.Equal(t, *expectedOrders[i], allStatefulOrders[i])
 				}
 			}
@@ -232,8 +226,14 @@ func TestRefreshVaultClobOrders(t *testing.T) {
 func TestGetVaultClobOrders(t *testing.T) {
 	tests := map[string]struct {
 		/* --- Setup --- */
+		// Vault params.
+		vaultParams vaulttypes.Params
 		// Vault ID.
 		vaultId vaulttypes.VaultId
+		// Vault asset.
+		vaultAssetQuantums *big.Int
+		// Vault inventory.
+		vaultInventory *big.Int
 		// Clob pair.
 		clobPair clobtypes.ClobPair
 		// Market param.
@@ -249,78 +249,166 @@ func TestGetVaultClobOrders(t *testing.T) {
 		expectedErr           error
 	}{
 		"Success - Get orders from Vault for Clob Pair 0": {
-			vaultId:     constants.Vault_Clob_0,
-			clobPair:    constants.ClobPair_Btc,
-			marketParam: constants.TestMarketParams[0],
-			marketPrice: constants.TestMarketPrices[0],
-			perpetual:   constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			vaultParams: vaulttypes.Params{
+				Layers:                 2,       // 2 layers
+				SpreadMinPpm:           3_000,   // 30 bps
+				SpreadBufferPpm:        1_500,   // 15 bps
+				SkewFactorPpm:          500_000, // 0.5
+				OrderSizePpm:           100_000, // 10%
+				OrderExpirationSeconds: 2,       // 2 seconds
+			},
+			vaultId:            constants.Vault_Clob_0,
+			vaultAssetQuantums: big.NewInt(1_000_000_000), // 1,000 USDC
+			vaultInventory:     big.NewInt(0),
+			clobPair:           constants.ClobPair_Btc,
+			marketParam:        constants.TestMarketParams[0],
+			marketPrice:        constants.TestMarketPrices[0],
+			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
 			// To calculate order subticks:
-			// 1. spreadPpm = max(minBaseSpreadPpm, baseSpreadMinPriceChangePremiumPpm + minPriceChangePpm)
-			// 2. priceSubticks = marketPrice.Price * 10^(marketPrice.Exponent - quantumConversionExponent +
-			//                    baseAtomicResolution - quoteAtomicResolution)
-			// 3. askSubticks at layer i = priceSubticks * (1 + spread)^i
-			//    bidSubticks at layer i = priceSubticks * (1 - spread)^i
-			// 4. subticks needs to be a multiple of subtickPerTick (round up for asks, round down for bids)
+			// 1. spread = max(spread_min, spread_buffer + min_price_change)
+			// 2. leverage = open_notional / equity
+			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
+			// 4. skew_i = -leverage_i * spread * skew_factor
+			// 5. a_i = oracle_price * (1 + skew_i) * (1 + spread)^{i+1}
+			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
+			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
+			// To calculate size of each order
+			// 1. `order_size_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
 				// spreadPpm = max(3_000, 1_500 + 50) = 3_000
-				// priceSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5 * 10^8
-				// a_1 = 5 * 10^8 * (1 + 0.003)^1 = 501_500_000
+				// spread = 0.003
+				// leverage = 0 / 1_000 = 0
+				// oracleSubticks = 5_000_000_000 * 10^(-5 - (-8) + (-10) - (-6)) = 5 * 10^8
+				// leverage_0 = leverage = 0
+				// skew_0 = -0 * 3_000 * 0.5 = 0
+				// a_0 = 5 * 10^8 * (1 + 0) * (1 + 0.003)^1 = 501_500_000
 				501_500_000,
-				// b_1 = 5 * 10^8 * (1 - 0.003)^1 = 498_500_000
-				498_500_000,
-				// a_2 = 5 * 10^8 * (1 + 0.003)^2 = 503_004_500
-				503_004_500,
-				// b_2 = 5 * 10^8 * (1 - 0.003)^2 = 497_004_500
-				497_004_500,
+				// b_0 = 5 * 10^8 * (1 + 0) / (1 + 0.003)^1 = 498_504_486
+				// round down to nearest multiple of subticks_per_tick=5.
+				498_504_485,
+				// leverage_1 = leverage - 0.1 = -0.1
+				// skew_1 = 0.1 * 0.003 * 0.5 = 0.00015
+				// a_1 = 5 * 10^8 * (1 + 0.00015) * (1 + 0.003)^2 = 503_079_950.675
+				// round up to nearest multiple of subticks_per_tick=5.
+				503_079_955,
+				// leverage_1 = leverage + 0.1 = 0.1
+				// skew_1 = -0.1 * 0.003 * 0.5 = -0.00015
+				// b_2 = 5 * 10^8 * (1 - 0.00015) / (1 + 0.003)^2 ~= 496_938_894.184
+				// round down to nearest multiple of subticks_per_tick=5.
+				496_938_890,
 			},
-			expectedOrderQuantums: []uint64{ // TODO (TRA-144): Implement order size
-				5,
-				5,
-				5,
-				5,
+			// order_size = 10% * 1_000 / 50_000 = 0.002
+			// order_size_base_quantums = 0.002 * 10^10 = 20_000_000
+			expectedOrderQuantums: []uint64{
+				20_000_000,
+				20_000_000,
+				20_000_000,
+				20_000_000,
 			},
 		},
 		"Success - Get orders from Vault for Clob Pair 1": {
-			vaultId:  constants.Vault_Clob_1,
-			clobPair: constants.ClobPair_Eth,
-			marketParam: pricestypes.MarketParam{
-				Id:                 constants.TestMarketParams[1].Id,
-				Pair:               constants.TestMarketParams[1].Pair,
-				Exponent:           constants.TestMarketParams[1].Exponent,
-				MinExchanges:       constants.TestMarketParams[1].MinExchanges,
-				MinPriceChangePpm:  4_200, // Set a high min price change to test spread calculation.
-				ExchangeConfigJson: constants.TestMarketParams[1].ExchangeConfigJson,
+			vaultParams: vaulttypes.Params{
+				Layers:                 3,       // 3 layers
+				SpreadMinPpm:           3_000,   // 30 bps
+				SpreadBufferPpm:        4_500,   // 15 bps
+				SkewFactorPpm:          700_000, // 0.7
+				OrderSizePpm:           50_000,  // 5%
+				OrderExpirationSeconds: 4,       // 4 seconds
 			},
-			marketPrice: constants.TestMarketPrices[1],
-			perpetual:   constants.EthUsd_20PercentInitial_10PercentMaintenance,
+			vaultId:            constants.Vault_Clob_1,
+			vaultAssetQuantums: big.NewInt(2_000_000_000), // 2,000 USDC
+			vaultInventory:     big.NewInt(-1_000),
+			clobPair:           constants.ClobPair_Eth,
+			marketParam:        constants.TestMarketParams[1],
+			marketPrice:        constants.TestMarketPrices[1],
+			perpetual:          constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			// To calculate order subticks:
+			// 1. spread = max(spread_min, spread_buffer + min_price_change)
+			// 2. leverage = open_notional / equity
+			// 3. leverage_i = leverage +/- i * order_size_pct (- for ask and + for bid)
+			// 4. skew_i = -leverage_i * spread * skew_factor
+			// 5. a_i = oracle_price * (1 + skew_i) * (1 + spread)^{i+1}
+			//    b_i = oracle_price * (1 + skew_i) / (1 + spread)^{i+1}
+			// 6. subticks needs to be a multiple of subticks_per_tick (round up for asks, round down for bids)
+			// To calculate size of each order
+			// 1. `order_size_ppm * equity / oracle_price`.
 			expectedOrderSubticks: []uint64{
-				// spreadPpm = max(3_000, 1_500 + 4_200) = 5_700
-				// priceSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
-				// a_1 = 3 * 10^9 * (1 + 0.0057)^1 = 3_017_100_000
-				3_017_100_000,
-				// b_1 = 3 * 10^9 * (1 - 0.0057)^1 = 2_982_900_000
-				2_982_900_000,
-				// a_2 = 3 * 10^9 * (1 + 0.0057)^2 = 3_034_297_470
-				// round up to nearest multiple of subticksPerTick=1000.
-				3_034_298_000,
-				// b_2 = 3 * 10^9 * (1 - 0.0057)^2 = 2_965_897_470
-				// round down to nearest multiple of subticksPerTick=1000.
-				2_965_897_000,
+				// spreadPpm = max(3_000, 4_500 + 50) = 4_550
+				// spread = 0.00455
+				// open_notional = -1_000 * 10^-9 * 3_000 * 10^6 = -3_000
+				// leverage = -3_000 / (2_000_000_000 - 3_000) = -3/1_999_997
+				// oracleSubticks = 3_000_000_000 * 10^(-6 - (-9) + (-9) - (-6)) = 3 * 10^9
+				// leverage_0 = leverage - 0 * 0.05 = -3/1_999_997
+				// skew_0 = 3 / 1_999_997 * 0.00455 * 0.7
+				// a_0 = 3 * 10^9 * (1 + skew_0) * (1 + 0.00455)^1 = 3_013_650_014.4
+				// round up to nearest multiple of subticks_per_tick=1_000.
+				3_013_651_000,
+				// b_0 = 3 * 10^9 * (1 + skew_0) / (1 + 0.00455)^1 = 2_986_411_840.46
+				// round down to nearest multiple of subticks_per_tick=1_000.
+				2_986_411_000,
+				// leverage_1 = leverage - 1 * 0.05
+				// skew_1 = -leverage_1 * 0.00455 * 0.7
+				// a_1 = 3 * 10^9 * (1 + skew_1) * (1 + 0.00455)^2 ~= 3_027_844_229.378
+				// round up to nearest multiple of subticks_per_tick=1_000.
+				3_027_845_000,
+				// leverage_1 = leverage + 1 * 0.05
+				// skew_1 = -leverage_1 * 0.00455 * 0.7
+				// b_1 = 3 * 10^9 * (1 + skew_1) / (1 + 0.00455)^2 ~= 2_972_411_780.773
+				// round down to nearest multiple of subticks_per_tick=5.
+				2_972_411_000,
+				// leverage_2 = leverage - 2 * 0.05
+				// skew_2 = -leverage_2 * 0.00455 * 0.7
+				// a_2 = 3 * 10^9 * (1 + skew_2) * (1 + 0.00455)^3 ~= 3_042_105_221.627
+				// round up to nearest multiple of subticks_per_tick=1_000.
+				3_042_106_000,
+				// leverage_2 = leverage + 2 * 0.05
+				// skew_2 = -leverage_2 * 0.00455 * 0.7
+				// b_2 = 3 * 10^9 * (1 + skew_2) / (1 + 0.00455)^3 ~= 2958477277.194
+				// round down to nearest multiple of subticks_per_tick=1_000.
+				2_958_477_000,
 			},
-			expectedOrderQuantums: []uint64{ // TODO (TRA-144): Implement order size
-				1000,
-				1000,
-				1000,
-				1000,
+			// order_size = 5% * 1999.997 / 3000 ~= 0.03333328333333334
+			// order_size_base_quantums = 0.03333328333333334 * 10^9 = 333_33_283
+			// round down to nearest multiple of step_base_quantums=1_000.
+			expectedOrderQuantums: []uint64{
+				333_33_000,
+				333_33_000,
+				333_33_000,
+				333_33_000,
+				333_33_000,
+				333_33_000,
 			},
 		},
 		"Error - Clob Pair doesn't exist": {
+			vaultParams: vaulttypes.DefaultParams(),
 			vaultId:     constants.Vault_Clob_0,
 			clobPair:    constants.ClobPair_Eth,
 			marketParam: constants.TestMarketParams[1],
 			marketPrice: constants.TestMarketPrices[1],
 			perpetual:   constants.EthUsd_NoMarginRequirement,
 			expectedErr: vaulttypes.ErrClobPairNotFound,
+		},
+		"Error - Vault equity is zero": {
+			vaultParams:        vaulttypes.DefaultParams(),
+			vaultId:            constants.Vault_Clob_0,
+			vaultAssetQuantums: big.NewInt(0),
+			vaultInventory:     big.NewInt(0),
+			clobPair:           constants.ClobPair_Btc,
+			marketParam:        constants.TestMarketParams[0],
+			marketPrice:        constants.TestMarketPrices[0],
+			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedErr:        vaulttypes.ErrNonPositiveEquity,
+		},
+		"Error - Vault equity is negative": {
+			vaultParams:        vaulttypes.DefaultParams(),
+			vaultId:            constants.Vault_Clob_0,
+			vaultAssetQuantums: big.NewInt(5_000_000), // 5 USDC
+			vaultInventory:     big.NewInt(-10_000_000),
+			clobPair:           constants.ClobPair_Btc,
+			marketParam:        constants.TestMarketParams[0],
+			marketPrice:        constants.TestMarketPrices[0],
+			perpetual:          constants.BtcUsd_0DefaultFunding_10AtomicResolution,
+			expectedErr:        vaulttypes.ErrNonPositiveEquity,
 		},
 	}
 
@@ -352,6 +440,46 @@ func TestGetVaultClobOrders(t *testing.T) {
 						genesisState.ClobPairs = []clobtypes.ClobPair{tc.clobPair}
 					},
 				)
+				// Initialize vault module with test params.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						genesisState.Params = tc.vaultParams
+					},
+				)
+				// Initialize subaccounts module with vault's equity and inventory.
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						assetPositions := []*satypes.AssetPosition{}
+						if tc.vaultAssetQuantums != nil && tc.vaultAssetQuantums.Sign() != 0 {
+							assetPositions = append(
+								assetPositions,
+								&satypes.AssetPosition{
+									AssetId:  assettypes.AssetUsdc.Id,
+									Quantums: dtypes.NewIntFromBigInt(tc.vaultAssetQuantums),
+								},
+							)
+						}
+						perpPositions := []*satypes.PerpetualPosition{}
+						if tc.vaultInventory != nil && tc.vaultInventory.Sign() != 0 {
+							perpPositions = append(
+								perpPositions,
+								&satypes.PerpetualPosition{
+									PerpetualId: tc.perpetual.Params.Id,
+									Quantums:    dtypes.NewIntFromBigInt(tc.vaultInventory),
+								},
+							)
+						}
+						genesisState.Subaccounts = []satypes.Subaccount{
+							{
+								Id:                 tc.vaultId.ToSubaccountId(),
+								AssetPositions:     assetPositions,
+								PerpetualPositions: perpPositions,
+							},
+						}
+					},
+				)
 				return genesis
 			}).Build()
 			ctx := tApp.InitChain()
@@ -365,6 +493,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 			require.NoError(t, err)
 
 			// Get expected orders.
+			params := tApp.App.VaultKeeper.GetParams(ctx)
 			buildVaultClobOrder := func(
 				layer uint8,
 				side clobtypes.Order_Side,
@@ -382,24 +511,24 @@ func TestGetVaultClobOrders(t *testing.T) {
 					Quantums: quantums,
 					Subticks: subticks,
 					GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{
-						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + orderExpirationSeconds,
+						GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + params.OrderExpirationSeconds,
 					},
 				}
 			}
 			expectedOrders := make([]*clobtypes.Order, 0)
-			for i := uint8(0); i < numLayers; i++ {
+			for i := uint32(0); i < params.Layers; i++ {
 				expectedOrders = append(
 					expectedOrders,
 					// ask.
 					buildVaultClobOrder(
-						i+1,
+						uint8(i),
 						clobtypes.Order_SIDE_SELL,
 						tc.expectedOrderQuantums[2*i],
 						tc.expectedOrderSubticks[2*i],
 					),
 					// bid.
 					buildVaultClobOrder(
-						i+1,
+						uint8(i),
 						clobtypes.Order_SIDE_BUY,
 						tc.expectedOrderQuantums[2*i+1],
 						tc.expectedOrderSubticks[2*i+1],
