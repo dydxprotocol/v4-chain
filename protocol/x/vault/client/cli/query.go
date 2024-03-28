@@ -63,13 +63,9 @@ func CmdQueryVault() *cobra.Command {
 			queryClient := types.NewQueryClient(clientCtx)
 
 			// Parse vault type.
-			rawType := args[0]
-			var vaultType types.VaultType
-			switch rawType {
-			case "clob":
-				vaultType = types.VaultType_VAULT_TYPE_CLOB
-			default:
-				return fmt.Errorf("invalid vault type %s", rawType)
+			vaultType, err := GetVaultTypeFromString(args[0])
+			if err != nil {
+				return err
 			}
 
 			// Parse vault number.
