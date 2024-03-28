@@ -15,6 +15,5 @@ export function expectPerpetualMarketMatchesEvent(
     subticksPerTick: perpetual.subticksPerTick,
     stepBaseQuantums: Number(perpetual.stepBaseQuantums),
     liquidityTierId: perpetual.liquidityTier,
-    // marketType: perpetual.marketType,
   }));
 }
