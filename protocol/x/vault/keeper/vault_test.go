@@ -147,7 +147,6 @@ func TestDecommissionNonPositiveEquityVaults(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestDecommissionVault(t *testing.T) {
