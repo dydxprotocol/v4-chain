@@ -15,6 +15,7 @@ import {
   OrderStatus,
   OrderType,
   PerpetualMarketStatus,
+  PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PositionSide,
@@ -267,6 +268,7 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
+  marketType: PerpetualMarketType;
 }
 
 /* ------- ORDERBOOK TYPES ------- */
