@@ -764,7 +764,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			// Assert that the indexer events for Expired Stateful Orders were emitted.
 			for _, orderId := range tc.expectedProcessProposerMatchesEvents.ExpiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddTxnEvent",
-					ctx,
+					mock.Anything,
 					indexerevents.SubtypeStatefulOrder,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
@@ -779,7 +779,7 @@ func TestEndBlocker_Success(t *testing.T) {
 			// Assert that the indexer events for triggered conditional orders were emitted.
 			for _, orderId := range tc.expectedTriggeredConditionalOrderIds {
 				mockIndexerEventManager.On("AddTxnEvent",
-					ctx,
+					mock.Anything,
 					indexerevents.SubtypeStatefulOrder,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
