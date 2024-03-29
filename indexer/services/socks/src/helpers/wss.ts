@@ -112,6 +112,14 @@ export function sendMessageString(
         `${config.SERVICE_NAME}.ws_send.error`,
         { code: (error as WssError)?.code },
       );
+      const errorLog = { // type is InfoObject in node-service-base
+        at: 'wss#sendMessage',
+        message: `Failed to send message: ${error.message}`,
+        error,
+        connectionId,
+        code: (error as WssError)?.code,
+      };
+      logger.error(errorLog);
       try {
         ws.close(
           WS_CLOSE_CODE_ABNORMAL_CLOSURE,
