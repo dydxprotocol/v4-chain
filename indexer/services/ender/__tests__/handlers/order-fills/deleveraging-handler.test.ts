@@ -53,7 +53,6 @@ import { onMessage } from '../../../src/lib/on-message';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import Big from 'big.js';
-import { getWeightedAverage } from '../../../src/lib/helper';
 
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
