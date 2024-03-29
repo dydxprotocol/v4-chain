@@ -165,10 +165,18 @@ func PrepareCheckState(
 		// Send an update for reverted local operations.
 		for _, operation := range localValidatorOperationsQueue {
 			if match := operation.GetMatch(); match != nil {
-				orderIdsToSend[match.GetMatchOrders().TakerOrderId] = true
-
-				for _, fill := range match.GetMatchOrders().Fills {
-					orderIdsToSend[fill.MakerOrderId] = true
+				// For normal order matches, we send an update for the taker and maker orders.
+				if matchedOrders := match.GetMatchOrders(); matchedOrders != nil {
+					orderIdsToSend[matchedOrders.TakerOrderId] = true
+					for _, fill := range matchedOrders.Fills {
+						orderIdsToSend[fill.MakerOrderId] = true
+					}
+				}
+				// For liquidation matches, we send an update for the maker orders.
+				if matchedLiquidation := match.GetMatchPerpetualLiquidation(); matchedLiquidation != nil {
+					for _, fill := range matchedLiquidation.Fills {
+						orderIdsToSend[fill.MakerOrderId] = true
+					}
 				}
 			}
 		}
