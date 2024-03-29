@@ -143,7 +143,7 @@ func TestEndBlocker_Failure(t *testing.T) {
 
 			for _, orderId := range tc.expiredStatefulOrderIds {
 				mockIndexerEventManager.On("AddTxnEvent",
-					ctx,
+					mock.Anything,
 					indexerevents.SubtypeStatefulOrder,
 					indexerevents.StatefulOrderEventVersion,
 					indexer_manager.GetBytes(
