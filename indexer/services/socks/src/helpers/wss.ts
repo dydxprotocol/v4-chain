@@ -119,31 +119,6 @@ export function sendMessageString(
         stats.increment(
           `${config.SERVICE_NAME}.ws_send.write_econn_reset_errors`,
         );
-        try {
-          ws.close(
-            WS_CLOSE_CODE_ABNORMAL_CLOSURE,
-            'client returned ECONNRESET error',
-          );
-        } catch (closeError) {
-          const closeErrorLog = {
-            at: 'wss#sendMessage',
-            message: `Failed to close connection: ${closeError.message}`,
-            connectionId,
-            closeError,
-          };
-          if (closeError?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
-            // This error means the underlying Socket was destroyed
-            // Don't log an error as this can be expected when clients disconnect abruptly and
-            // can happen to multiple closes while the close handshake is going on
-            stats.increment(
-              `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
-              1,
-              { action: 'close' },
-            );
-          } else {
-            logger.error(closeErrorLog);
-          }
-        }
       } else if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
         // This error means the underlying Socket was destroyed
         // / Don't log an error as this can be expected when clients disconnect abruptly and can
@@ -155,6 +130,31 @@ export function sendMessageString(
         );
       } else {
         logger.error(errorLog);
+      }
+      try {
+        ws.close(
+          WS_CLOSE_CODE_ABNORMAL_CLOSURE,
+          'client returned ECONNRESET error',
+        );
+      } catch (closeError) {
+        const closeErrorLog = {
+          at: 'wss#sendMessage',
+          message: `Failed to close connection: ${closeError.message}`,
+          connectionId,
+          closeError,
+        };
+        if (closeError?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
+          // This error means the underlying Socket was destroyed
+          // Don't log an error as this can be expected when clients disconnect abruptly and
+          // can happen to multiple closes while the close handshake is going on
+          stats.increment(
+            `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
+            1,
+            { action: 'close' },
+          );
+        } else {
+          logger.error(closeErrorLog);
+        }
       }
     }
   });
