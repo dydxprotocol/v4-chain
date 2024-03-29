@@ -396,7 +396,6 @@ export class Index {
 
       // Delete subscription data.
       this.subscriptions.remove(connectionId);
-      this.pingHandler.handleDisconnect(connectionId);
       this.invalidMessageHandler.handleDisconnect(connectionId);
       delete this.connections[connectionId];
     } catch (error) {
