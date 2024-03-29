@@ -62,6 +62,7 @@ import { expectCanceledOrderStatus, expectOpenOrderIds, handleInitialOrderPlace 
 import { expectOffchainUpdateMessage, expectWebsocketOrderbookMessage, expectWebsocketSubaccountMessage } from '../helpers/websocket-helpers';
 import { OrderbookSide } from '../../src/lib/types';
 import { getOrderIdHash, isLongTermOrder, isStatefulOrder } from '@dydxprotocol-indexer/v4-proto-parser';
+import { defaultKafkaHeaders } from '../helpers/constants';
 import config from '../../src/config';
 
 jest.mock('@dydxprotocol-indexer/base', () => ({
@@ -196,6 +197,12 @@ describe('order-place-handler', () => {
     const replacementMessageIoc: KafkaMessage = createKafkaMessage(
       Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(replacementUpdateIoc).finish())),
     );
+    [replacementMessage, replacementMessageGoodTilBlockTime, replacementMessageConditional,
+      replacementMessageFok, replacementMessageIoc].forEach((message) => {
+      // eslint-disable-next-line no-param-reassign
+      message.headers = defaultKafkaHeaders;
+    });
+
     const dbDefaultOrder: OrderFromDatabase = {
       ...testConstants.defaultOrder,
       id: testConstants.defaultOrderId,
@@ -1225,7 +1232,11 @@ function expectWebsocketMessagesSent(
       version: SUBACCOUNTS_WEBSOCKET_MESSAGE_VERSION,
     });
 
-    expectWebsocketSubaccountMessage(producerSendSpy.mock.calls[callIndex][0], subaccountMessage);
+    expectWebsocketSubaccountMessage(
+      producerSendSpy.mock.calls[callIndex][0],
+      subaccountMessage,
+      defaultKafkaHeaders,
+    );
     callIndex += 1;
   }
 

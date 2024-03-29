@@ -1498,7 +1498,7 @@ const GenesisState = `{
         "spread_min_ppm": 3000,
         "spread_buffer_ppm": 1500,
         "skew_factor_ppm": 500000,
-        "order_size_ppm": 100000,
+        "order_size_pct_ppm": 100000,
         "order_expiration_seconds": 2
       }
     },

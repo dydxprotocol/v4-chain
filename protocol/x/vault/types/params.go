@@ -9,7 +9,7 @@ func DefaultParams() Params {
 		SpreadMinPpm:           3_000,   // 30 bps
 		SpreadBufferPpm:        1_500,   // 15 bps
 		SkewFactorPpm:          500_000, // 0.5
-		OrderSizePpm:           100_000, // 10%
+		OrderSizePctPpm:        100_000, // 10%
 		OrderExpirationSeconds: 2,       // 2 seconds
 	}
 }
@@ -25,8 +25,8 @@ func (p Params) Validate() error {
 		return ErrInvalidSpreadMinPpm
 	}
 	// Order size must be positive.
-	if p.OrderSizePpm == 0 {
-		return ErrInvalidOrderSizePpm
+	if p.OrderSizePctPpm == 0 {
+		return ErrInvalidOrderSizePctPpm
 	}
 	// Order expiration seconds must be positive.
 	if p.OrderExpirationSeconds == 0 {

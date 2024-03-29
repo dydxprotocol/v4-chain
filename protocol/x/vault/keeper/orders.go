@@ -189,7 +189,7 @@ func (k Keeper) GetVaultClobOrders(
 	// = order_size_pct * equity / (price * 10^(exponent - quote_atomic_resolution + base_atomic_resolution))
 	orderSizeBaseQuantums := lib.BigRatMulPpm(
 		new(big.Rat).SetInt(equity),
-		params.OrderSizePpm,
+		params.OrderSizePctPpm,
 	)
 	orderSizeBaseQuantums = orderSizeBaseQuantums.Quo(
 		orderSizeBaseQuantums,
@@ -228,7 +228,7 @@ func (k Keeper) GetVaultClobOrders(
 	) *clobtypes.Order {
 		// Calculate size that will have been filled before this layer is matched.
 		sizeFilledByThisLayer := new(big.Rat).SetFrac(
-			new(big.Int).SetUint64(uint64(params.OrderSizePpm*layer)),
+			new(big.Int).SetUint64(uint64(params.OrderSizePctPpm*layer)),
 			lib.BigIntOneMillion(),
 		)
 
