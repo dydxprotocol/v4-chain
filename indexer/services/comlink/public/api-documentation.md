@@ -1861,6 +1861,106 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
 This operation does not require authentication
 </aside>
 
+## ListPositionsForParentSubaccount
+
+<a id="opIdListPositionsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualPositions/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /perpetualPositions/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
+|status|query|array[string]|false|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|OPEN|
+|status|CLOSED|
+|status|LIQUIDATED|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "market": "string",
+      "status": "OPEN",
+      "side": "LONG",
+      "size": "string",
+      "maxSize": "string",
+      "entryPrice": "string",
+      "realizedPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "sumOpen": "string",
+      "sumClose": "string",
+      "netFunding": "string",
+      "unrealizedPnl": "string",
+      "closedAt": "string",
+      "exitPrice": "string",
+      "subaccountNumber": 0
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PerpetualPositionResponse](#schemaperpetualpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
 ## Get
 
 <a id="opIdGet"></a>

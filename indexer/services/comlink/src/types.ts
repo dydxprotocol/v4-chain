@@ -372,6 +372,11 @@ export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCre
   status: PerpetualPositionStatus[],
 }
 
+export interface ParentSubaccountPerpetualPositionRequest extends ParentSubaccountRequest,
+  LimitAndCreatedBeforeRequest {
+  status: PerpetualPositionStatus[],
+}
+
 export interface AssetPositionRequest extends SubaccountRequest {}
 
 export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
