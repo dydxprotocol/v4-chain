@@ -1,13 +1,16 @@
 package keeper
 
 import (
-	"cosmossdk.io/math"
 	"fmt"
+	"strings"
+
+	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
 	slinkytypes "github.com/skip-mev/slinky/pkg/types"
 	oracletypes "github.com/skip-mev/slinky/x/oracle/types"
-	"strings"
+
+	"github.com/dydxprotocol/v4-chain/protocol/lib/slinky"
+	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
 /*
@@ -82,4 +85,23 @@ func (k Keeper) GetPriceForCurrencyPair(ctx sdk.Context, cp slinkytypes.Currency
 	return oracletypes.QuotePrice{
 		Price: math.NewIntFromUint64(mp.Price),
 	}, nil
+}
+
+// GetPrevBlockCPCounter returns the number of currency pairs (markets) in the previous block
+// Currently we use the existing market number as an upper bound size markets cannot be deleted.
+func (k Keeper) GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error) {
+	marketPriceStore := k.getMarketPriceStore(ctx)
+
+	var numMarketPrices uint64
+
+	iterator := marketPriceStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		marketPrice := types.MarketPrice{}
+		k.cdc.MustUnmarshal(iterator.Value(), &marketPrice)
+		numMarketPrices++
+	}
+
+	return numMarketPrices, nil
 }
