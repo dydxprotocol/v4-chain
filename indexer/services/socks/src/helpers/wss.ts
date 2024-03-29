@@ -67,6 +67,15 @@ export class Wss {
   }
 }
 
+export class WssError extends Error {
+  public code: string;
+
+  constructor(message: string, code: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export function sendMessage(
   ws: WebSocket,
   connectionId: string,
@@ -99,42 +108,14 @@ export function sendMessageString(
 
   ws.send(message, (error) => {
     if (error) {
-      const errorLog = { // type is InfoObject in node-service-base
-        at: 'wss#sendMessage',
-        message: `Failed to send message: ${error.message}`,
-        error,
-        connectionId,
-      };
-      if (error?.message.includes?.('write EPIPE')) {
-        // This error means that the remote side of the stream has closed.
-        // ws should automatically call `close()`, so we shouldn't have to do it explicitly.
-        // Don't log an error as this can be expected if the client disconnects.
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
-        );
-      } else if (error?.message.includes?.('write ECONNRESET')) {
-        // This error means that the client abruptly disconnected without sending a proper "close"
-        // message (or the message is delayed). In this case, we should terminate the connection
-        // immediately.
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.write_econn_reset_errors`,
-        );
-      } else if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
-        // This error means the underlying Socket was destroyed
-        // / Don't log an error as this can be expected when clients disconnect abruptly and can
-        // happen to multiple messages while the close handshake is going on
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
-          1,
-          { action: 'send' },
-        );
-      } else {
-        logger.error(errorLog);
-      }
+      stats.increment(
+        `${config.SERVICE_NAME}.ws_send.error`,
+        { code: (error as WssError)?.code },
+      );
       try {
         ws.close(
           WS_CLOSE_CODE_ABNORMAL_CLOSURE,
-          'client returned ECONNRESET error',
+          `client returned ${error?.message} error`,
         );
       } catch (closeError) {
         const closeErrorLog = {
