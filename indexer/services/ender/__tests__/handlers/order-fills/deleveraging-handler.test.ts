@@ -125,6 +125,7 @@ describe('DeleveragingHandler', () => {
   const deleveragedPerpetualPosition: PerpetualPositionCreateObject = {
     ...offsettingPerpetualPosition,
     subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
+    side: PositionSide.SHORT,
   };
 
   it('getParallelizationIds', () => {
@@ -282,13 +283,8 @@ describe('DeleveragingHandler', () => {
           offsettingPerpetualPosition.openEventId,
         ),
         {
-          sumOpen: Big(offsettingPerpetualPosition.size).plus(totalFilled).toFixed(),
-          entryPrice: getWeightedAverage(
-            offsettingPerpetualPosition.entryPrice!,
-            offsettingPerpetualPosition.size,
-            price,
-            totalFilled,
-          ),
+          sumClose: Big(totalFilled).toFixed(),
+          exitPrice: price,
         },
       ),
       expectPerpetualPosition(
