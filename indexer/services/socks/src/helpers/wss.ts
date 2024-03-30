@@ -111,6 +111,8 @@ export function sendMessageString(
         // Don't log an error as this can be expected if the client disconnects.
         stats.increment(
           `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
+          1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         );
       } else if (error?.message.includes?.('write ECONNRESET')) {
         // This error means that the client abruptly disconnected without sending a proper "close"
@@ -118,6 +120,8 @@ export function sendMessageString(
         // immediately.
         stats.increment(
           `${config.SERVICE_NAME}.ws_send.write_econn_reset_errors`,
+          1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         );
         try {
           ws.close(
@@ -138,6 +142,7 @@ export function sendMessageString(
             stats.increment(
               `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
               1,
+              config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
               { action: 'close' },
             );
           } else {
@@ -151,6 +156,7 @@ export function sendMessageString(
         stats.increment(
           `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
           1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           { action: 'send' },
         );
       } else {
