@@ -1,19 +1,24 @@
 package app
 
 import (
+	"fmt"
+	"sync"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"sync"
 
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
 
@@ -134,6 +139,18 @@ type lockingAnteHandler struct {
 	clob                     clobante.ClobDecorator
 }
 
+func orderIdStr(id types.OrderId, tag string) string {
+	return fmt.Sprintf(
+		"%s:%s:%d:%d:%d:%d",
+		tag,
+		id.SubaccountId.Owner,
+		id.SubaccountId.Number,
+		id.ClientId,
+		id.OrderFlags,
+		id.ClobPairId,
+	)
+}
+
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
 	isClob, err := clobante.IsSingleClobMsgTx(tx)
 	if err != nil {
@@ -227,6 +244,26 @@ func (h *lockingAnteHandler) clobAnteHandle(ctx sdk.Context, tx sdk.Tx, simulate
 	if !simulate && (ctx.IsCheckTx() || ctx.IsReCheckTx()) {
 		h.globalLock.Lock()
 		defer h.globalLock.Unlock()
+	}
+
+	telemetry.IncrCounter(
+		1,
+		"roy_clob_tx",
+		metrics.Count,
+	)
+	msgs := tx.GetMsgs()
+	var orderId types.OrderId
+	switch msg := msgs[0].(type) {
+	case *types.MsgCancelOrder:
+		orderId = msg.OrderId
+		if orderId.ClientId%97 == 0 {
+			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "cancel"), "block_height", ctx.BlockHeight())
+		}
+	case *types.MsgPlaceOrder:
+		orderId = msg.Order.OrderId
+		if orderId.ClientId%97 == 0 {
+			ctx.Logger().Error("roycloblog", "order_id", orderIdStr(orderId, "place"), "block_height", ctx.BlockHeight())
+		}
 	}
 
 	if ctx, err = h.clobRateLimit.AnteHandle(ctx, tx, simulate, noOpAnteHandle); err != nil {
