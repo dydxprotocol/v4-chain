@@ -155,7 +155,7 @@ export class Index {
       HEARTBEAT_INTERVAL_MS,
     );
 
-    // Attach handler for pongs (response to heartbeat pings) from connection.
+    // Attach handler for pongs (response to heartbeat [ping]s) from connection.
     this.connections[connectionId].ws.on(WebsocketEvents.PONG, () => {
       // Clear the delayed disconnect set by the heartbeat handler when a pong is received.
       if (this.connections[connectionId].disconnect) {
@@ -378,6 +378,7 @@ export class Index {
       if (this.connections[connectionId].heartbeat) {
         clearInterval(this.connections[connectionId].heartbeat);
       }
+      this.connections[connectionId].ws.removeAllListeners();
       this.connections[connectionId].ws.terminate();
 
       // Delete subscription data.

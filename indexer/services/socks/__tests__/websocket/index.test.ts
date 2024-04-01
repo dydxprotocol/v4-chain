@@ -234,12 +234,14 @@ describe('Index', () => {
 
     describe('close', () => {
       it('disconnects connection on close', () => {
+        jest.spyOn(websocket, 'removeAllListeners').mockImplementation(jest.fn());
         jest.spyOn(websocket, 'terminate').mockImplementation(jest.fn());
         websocket.emit(WebsocketEvents.CLOSE);
         // Run timers for heartbeat.
         jest.runAllTimers();
 
         expect(wsPingSpy).not.toHaveBeenCalled();
+        expect(websocket.removeAllListeners).toHaveBeenCalledTimes(1);
         expect(websocket.terminate).toHaveBeenCalledTimes(1);
         expect(mockSub.remove).toHaveBeenCalledWith(connectionId);
         expect(index.connections[connectionId]).toBeUndefined();
