@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"math/big"
 
-	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
