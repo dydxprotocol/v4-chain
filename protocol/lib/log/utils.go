@@ -22,7 +22,7 @@ func DebugLog(ctx sdk.Context, msg string, keyvals ...interface{}) {
 // as well as attaching the error object to the log for datadog error tracking.
 // `keyvals` should be even number in length and be of alternating types (string, interface{}).
 func ErrorLogWithError(ctx sdk.Context, msg string, err error, keyvals ...interface{}) {
-	ctx.Logger().Error(msg, append(keyvals, Error, err))
+	ctx.Logger().Error(msg, append(keyvals, Error, err)...)
 }
 
 // ErrorLog reports msg as a error log. It constructs an error object on the fly with
