@@ -25,6 +25,7 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Buy(t *testing.T) {
 		"Logger",
 		mock.Anything,
 	).Return(ctx.Logger())
+	clobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return()
 
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(clobKeeper)
@@ -48,9 +49,9 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Buy(t *testing.T) {
 
 	expected := types.NewOffchainUpdates()
 	// Buy orders are in descending order.
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[2]))
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[0]))
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[1]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[2]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[0]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[1]))
 
 	require.Equal(t, expected, offchainUpdates)
 }
@@ -68,6 +69,7 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Sell(t *testing.T) {
 		"Logger",
 		mock.Anything,
 	).Return(ctx.Logger())
+	clobKeeper.On("SendOrderbookUpdates", mock.Anything, mock.Anything).Return()
 
 	memclob := NewMemClobPriceTimePriority(false)
 	memclob.SetClobKeeper(clobKeeper)
@@ -91,9 +93,9 @@ func TestGetOffchainUpdatesForOrderbookSnapshot_Sell(t *testing.T) {
 
 	expected := types.NewOffchainUpdates()
 	// Sell orders are in ascending order.
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[1]))
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[2]))
-	expected.Append(memclob.GetOffchainUpdatesForOrder(ctx, orders[0]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[1]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[2]))
+	expected.Append(memclob.GetOrderbookUpdatesForOrderPlacement(ctx, orders[0]))
 
 	require.Equal(t, expected, offchainUpdates)
 }

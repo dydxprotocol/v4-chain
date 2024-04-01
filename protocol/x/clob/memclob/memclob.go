@@ -45,6 +45,9 @@ type MemClobPriceTimePriority struct {
 
 	// ---- Fields for determining if off-chain update messages should be generated ----
 	generateOffchainUpdates bool
+
+	// ---- Fields for determining if orderbook updates should be generated ----
+	generateOrderbookUpdates bool
 }
 
 type OrderWithRemovalReason struct {
@@ -56,10 +59,11 @@ func NewMemClobPriceTimePriority(
 	generateOffchainUpdates bool,
 ) *MemClobPriceTimePriority {
 	return &MemClobPriceTimePriority{
-		openOrders:              newMemclobOpenOrders(),
-		cancels:                 newMemclobCancels(),
-		operationsToPropose:     *types.NewOperationsToPropose(),
-		generateOffchainUpdates: generateOffchainUpdates,
+		openOrders:               newMemclobOpenOrders(),
+		cancels:                  newMemclobCancels(),
+		operationsToPropose:      *types.NewOperationsToPropose(),
+		generateOffchainUpdates:  generateOffchainUpdates,
+		generateOrderbookUpdates: false,
 	}
 }
 
@@ -69,6 +73,11 @@ func NewMemClobPriceTimePriority(
 // due to the bidirectional dependency between the Keeper and the MemClob.
 func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper) {
 	m.clobKeeper = clobKeeper
+}
+
+// SetGenerateOffchainUpdates sets the `generateOffchainUpdates` field of the MemClob.
+func (m *MemClobPriceTimePriority) SetGenerateOrderbookUpdates(generateOrderbookUpdates bool) {
+	m.generateOrderbookUpdates = generateOrderbookUpdates
 }
 
 // CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
@@ -1482,6 +1491,12 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	}
 
 	m.openOrders.mustAddOrderToOrderbook(ctx, newOrder, forceToFrontOfLevel)
+
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+	}
 }
 
 // mustPerformTakerOrderMatching performs matching using the provided taker order while the order
@@ -1917,6 +1932,12 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
 		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 	}
+
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+	}
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
@@ -1932,6 +1953,12 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
 		panic("Total filled size of maker order greater than the order size")
+	}
+
+	// Send an orderbook update for the order's new total filled amount.
+	if m.generateOrderbookUpdates {
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.

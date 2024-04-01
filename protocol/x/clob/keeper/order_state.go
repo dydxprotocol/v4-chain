@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
@@ -259,5 +260,27 @@ func (k Keeper) PruneStateFillAmountsForShortTermOrders(
 	blockHeight := lib.MustConvertIntegerToUint32(ctx.BlockHeight())
 
 	// Prune all fill amounts from state which have a pruneable block height of the current `blockHeight`.
-	k.PruneOrdersForBlockHeight(ctx, blockHeight)
+	prunedOrderIds := k.PruneOrdersForBlockHeight(ctx, blockHeight)
+
+	// Send an orderbook update for each pruned order for grpc streams.
+	// This is needed because short term orders are pruned in PrepareCheckState using
+	// keeper.MemClob.openOrders.blockExpirationsForOrders, which can fall out of sync with state fill amount
+	// pruning when there's replacement.
+	// Long-term fix would be to add logic to keep them in sync.
+	// TODO(CT-722): add logic to keep state fill amount pruning and order pruning in sync.
+	if k.GetGrpcStreamingManager().Enabled() {
+		allUpdates := types.NewOffchainUpdates()
+		for _, orderId := range prunedOrderIds {
+			if _, exists := k.MemClob.GetOrder(ctx, orderId); exists {
+				if message, success := off_chain_updates.CreateOrderUpdateMessage(
+					k.Logger(ctx),
+					orderId,
+					0, // Total filled quantums is zero because it's been pruned from state.
+				); success {
+					allUpdates.AddUpdateMessage(orderId, message)
+				}
+			}
+		}
+		k.SendOrderbookUpdates(ctx, allUpdates, false)
+	}
 }
