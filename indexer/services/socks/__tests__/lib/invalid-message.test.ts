@@ -9,9 +9,6 @@ jest.mock('../../src/lib/rate-limit');
 jest.mock('../../src/helpers/wss', () => ({
   sendMessage: jest.fn(),
 }));
-jest.mock('../../src/helpers/message', () => ({
-  createErrorMessage: jest.fn().mockImplementation((msg: string) => msg),
-}));
 
 describe('InvalidMessageHandler', () => {
   let invalidMessageHandler: InvalidMessageHandler;
