@@ -204,7 +204,7 @@ func initializeOIMFCaps(
 	}
 }
 
-// Initialize soft and upper caps for OIMF
+// Initialize open interest for perpetuals
 func initializePerpOpenInterest(
 	ctx sdk.Context,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
@@ -215,6 +215,7 @@ func initializePerpOpenInterest(
 	subaccounts := subaccountsKeeper.GetAllSubaccount(ctx)
 
 	// Iterate through all subaccounts and perp positions for each subaccount.
+	// Aggregate open interest for each perpetual market.
 	for _, sa := range subaccounts {
 		for _, perpPosition := range sa.PerpetualPositions {
 			if perpPosition.Quantums.BigInt().Sign() <= 0 {
@@ -243,12 +244,23 @@ func initializePerpOpenInterest(
 			panic(fmt.Sprintf("perpetual %d has non-zero OI (%v) before upgrade", perp.GetId(), perp.OpenInterest))
 		}
 		if openInterest, exists := perpOIMap[perp.GetId()]; exists {
-			perpetualsKeeper.ModifyOpenInterest(
+			err := perpetualsKeeper.ModifyOpenInterest(
 				ctx,
 				perp.GetId(),
 				openInterest, // by default perpetual.OI = 0, so use the total open interest as delta
 			)
-			ctx.Logger().Info(fmt.Sprintf("Successfully initialized open interest for perpetual %d = %v", perp.GetId(), openInterest))
+			if err != nil {
+				panic(fmt.Sprintf(
+					"failed to modify open interest for perpetual, openInterest = %v, perpetual = %+v",
+					openInterest,
+					perp,
+				))
+			}
+			ctx.Logger().Info(fmt.Sprintf(
+				"Successfully initialized open interest for perpetual %d = %v",
+				perp.GetId(),
+				openInterest,
+			))
 		} else {
 			ctx.Logger().Info(fmt.Sprintf("Perpetual %d has zero open interest at the time of upgrade", perp.GetId()))
 		}
