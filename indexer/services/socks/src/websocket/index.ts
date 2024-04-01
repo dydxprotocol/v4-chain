@@ -1,28 +1,24 @@
 import {
-  stats, logger, safeJsonStringify, InfoObject,
+  InfoObject, logger, safeJsonStringify, stats,
 } from '@dydxprotocol-indexer/base';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import config from '../config';
 import { getCountry } from '../helpers/header-utils';
-import {
-  createErrorMessage,
-  createConnectedMessage,
-  createUnsubscribedMessage,
-} from '../helpers/message';
-import { Wss, sendMessage } from '../helpers/wss';
+import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
+import { sendMessage, Wss } from '../helpers/wss';
 import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART } from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
 import { Subscriptions } from '../lib/subscription';
 import {
-  IncomingMessageType,
+  ALL_CHANNELS,
   Channel,
+  Connection,
   IncomingMessage,
+  IncomingMessageType,
   SubscribeMessage,
   UnsubscribeMessage,
-  Connection,
-  ALL_CHANNELS,
   WebsocketEvents,
 } from '../types';
 
@@ -307,6 +303,10 @@ export class Index {
             unsubscribeMessage.id,
           ),
         );
+        break;
+      }
+      // TODO: Consider custom ping messages as invalid after publishing updated documentation.
+      case IncomingMessageType.PING: {
         break;
       }
       default: {
