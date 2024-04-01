@@ -4,7 +4,6 @@ import {
 } from '@dydxprotocol-indexer/kafka';
 import { OrderbookMessageContents, PerpetualMarketFromDatabase, protocolTranslations } from '@dydxprotocol-indexer/postgres';
 import { OffChainUpdateV1, OrderbookMessage, RedisOrder } from '@dydxprotocol-indexer/v4-protos';
-import { IHeaders } from 'kafkajs';
 import { OrderbookSide } from 'src/lib/types';
 
 import { orderSideToOrderbookSide } from './helpers';
@@ -16,11 +15,11 @@ export abstract class Handler {
     this.txHash = txHash;
   }
 
-  protected abstract handle(update: OffChainUpdateV1, headers: IHeaders): Promise<void>;
+  protected abstract handle(update: OffChainUpdateV1): Promise<void>;
 
   // TODO(DEC-1251): Add stats for message handling.
-  public async handleUpdate(update: OffChainUpdateV1, headers: IHeaders): Promise<void> {
-    return this.handle(update, headers);
+  public async handleUpdate(update: OffChainUpdateV1): Promise<void> {
+    return this.handle(update);
   }
 
   protected logAndThrowParseMessageError(
