@@ -1720,7 +1720,9 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -1739,7 +1741,9 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     }
   }
 }
@@ -3744,7 +3748,9 @@ or
   "tickSize": "string",
   "stepSize": "string",
   "stepBaseQuantums": 0,
-  "subticksPerTick": 0
+  "subticksPerTick": 0,
+  "openInterestLowerCap": "string",
+  "openInterestUpperCap": "string"
 }
 
 ```
@@ -3770,6 +3776,8 @@ or
 |stepSize|string|true|none|none|
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
+|openInterestLowerCap|string|false|none|none|
+|openInterestUpperCap|string|false|none|none|
 
 ## PerpetualMarketResponse
 
@@ -3798,7 +3806,9 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -3817,7 +3827,9 @@ or
       "tickSize": "string",
       "stepSize": "string",
       "stepBaseQuantums": 0,
-      "subticksPerTick": 0
+      "subticksPerTick": 0,
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     }
   }
 }

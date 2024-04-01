@@ -139,7 +139,7 @@ function expectResponseWithMarkets(
   expect(_.size(response.body.markets)).toEqual(perpetualMarkets.length);
   expect(_.size(response.body.markets)).toEqual(markets.length);
   expect(_.size(response.body.markets)).toEqual(liquidityTiers.length);
-
+  
   _.each(_.zip(perpetualMarkets, liquidityTiers, markets), (
     [perpetualMarket, liquidityTier, market]:
     [PerpetualMarketFromDatabase | undefined,

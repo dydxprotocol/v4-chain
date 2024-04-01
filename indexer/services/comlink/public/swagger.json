@@ -931,6 +931,12 @@
           "subticksPerTick": {
             "type": "number",
             "format": "double"
+          },
+          "openInterestLowerCap": {
+            "type": "string"
+          },
+          "openInterestUpperCap": {
+            "type": "string"
           }
         },
         "required": [

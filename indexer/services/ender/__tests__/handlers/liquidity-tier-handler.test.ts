@@ -169,12 +169,12 @@ export function expectLiquidityTier(
   liquidityTierFromDb: LiquidityTiersFromDatabase,
   event: LiquidityTierUpsertEventV1,
 ): void {
-  expect(liquidityTierFromDb).toEqual(expect.objectContaining({
-    id: event.id,
-    name: event.name,
-    initialMarginPpm: event.initialMarginPpm.toString(),
-    maintenanceFractionPpm: event.maintenanceFractionPpm.toString(),
-  }));
+  expect(liquidityTierFromDb.id).toEqual(event.id);
+  expect(liquidityTierFromDb.name).toEqual(event.name);
+  expect(liquidityTierFromDb.initialMarginPpm).toEqual(event.initialMarginPpm.toString());
+  expect(liquidityTierFromDb.maintenanceFractionPpm).toEqual(event.maintenanceFractionPpm.toString());
+  expect(Number(liquidityTierFromDb.openInterestLowerCap)).toEqual(event.openInterestLowerCap.toNumber());
+  expect(Number(liquidityTierFromDb.openInterestUpperCap)).toEqual(event.openInterestUpperCap.toNumber());
 }
 
 function createKafkaMessageFromLiquidityTiersEvent({
@@ -230,12 +230,12 @@ function validateLiquidityTierRefresher(
     liquidityTierEvent.id,
   );
 
-  expect(liquidityTier).toEqual({
-    id: liquidityTierEvent.id,
-    name: liquidityTierEvent.name,
-    initialMarginPpm: liquidityTierEvent.initialMarginPpm.toString(),
-    maintenanceFractionPpm: liquidityTierEvent.maintenanceFractionPpm.toString(),
-  });
+  expect(liquidityTier.id).toEqual(liquidityTierEvent.id);
+  expect(liquidityTier.name).toEqual(liquidityTierEvent.name);
+  expect(liquidityTier.initialMarginPpm).toEqual(liquidityTierEvent.initialMarginPpm.toString());
+  expect(liquidityTier.maintenanceFractionPpm).toEqual(liquidityTierEvent.maintenanceFractionPpm.toString());
+  expect(Number(liquidityTier.openInterestLowerCap)).toEqual(liquidityTierEvent.openInterestLowerCap.toNumber());
+  expect(Number(liquidityTier.openInterestUpperCap)).toEqual(liquidityTierEvent.openInterestUpperCap.toNumber());
 }
 
 function expectKafkaMessages(

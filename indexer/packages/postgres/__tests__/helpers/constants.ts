@@ -662,6 +662,8 @@ export const defaultLiquidityTier2: LiquidityTiersCreateObject = {
   name: 'Mid-Cap',
   initialMarginPpm: '100000',  // 10%
   maintenanceFractionPpm: '500000',  // 50%
+  openInterestLowerCap: '0',
+  openInterestUpperCap: '5000000',
 };
 
 // ============== OraclePrices ==============

@@ -23,7 +23,9 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
   // eslint-disable-next-line @typescript-eslint/require-await
   public async internalHandle(resultRow: pg.QueryResultRow): Promise<ConsolidatedKafkaEvent[]> {
     const liquidityTier: LiquidityTiersFromDatabase = LiquidityTiersModel.fromJson(
-      resultRow.liquidity_tier) as LiquidityTiersFromDatabase;
+      resultRow.liquidity_tier
+    ) as LiquidityTiersFromDatabase;
+
     liquidityTierRefresher.upsertLiquidityTier(liquidityTier);
     return this.generateWebsocketEventsForLiquidityTier(liquidityTier);
   }

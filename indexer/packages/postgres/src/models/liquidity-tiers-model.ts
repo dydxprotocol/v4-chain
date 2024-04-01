@@ -1,4 +1,4 @@
-import { IntegerPattern } from '../lib/validators';
+import { IntegerPattern, NumericPattern } from '../lib/validators';
 import UpsertQueryBuilder from '../query-builders/upsert';
 import BaseModel from './base-model';
 
@@ -27,6 +27,9 @@ export default class LiquidityTiersModel extends BaseModel {
         name: { type: 'string' },
         initialMarginPpm: { type: 'string', pattern: IntegerPattern },
         maintenanceFractionPpm: { type: 'string', pattern: IntegerPattern },
+        // optional fields which are nullable
+        openInterestLowerCap: {type: ['string', 'null'], pattern: NumericPattern},
+        openInterestUpperCap: {type: ['string', 'null'], pattern: NumericPattern},
       },
     };
   }
@@ -43,6 +46,8 @@ export default class LiquidityTiersModel extends BaseModel {
       name: 'string',
       initialMarginPpm: 'string',
       maintenanceFractionPpm: 'string',
+      openInterestLowerCap: 'string',
+      openInterestUpperCap: 'string',
     };
   }
 
@@ -55,4 +60,8 @@ export default class LiquidityTiersModel extends BaseModel {
   initialMarginPpm!: string;
 
   maintenanceFractionPpm!: string;
+
+  openInterestLowerCap?: string;
+
+  openInterestUpperCap?: string;
 }

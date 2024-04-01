@@ -267,6 +267,8 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */

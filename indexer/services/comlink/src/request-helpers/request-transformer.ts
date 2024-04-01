@@ -354,6 +354,8 @@ export function perpetualMarketToResponseObject(
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
     stepBaseQuantums: perpetualMarket.stepBaseQuantums,
     subticksPerTick: perpetualMarket.subticksPerTick,
+    openInterestLowerCap: liquidityTier.openInterestLowerCap,
+    openInterestUpperCap: liquidityTier.openInterestUpperCap,
   };
 }
 

@@ -149,7 +149,7 @@ export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
   maintenanceFractionPpm: 600000,  // 60% of IM = 3%
   basePositionNotional: Long.fromValue(1_000_000_000_000, true),  // 1_000_000 USDC
   openInterestLowerCap: Long.fromValue(0, true),
-  openInterestUpperCap: Long.fromValue(1_000_000_000, true),
+  openInterestUpperCap: Long.fromValue(1_000_000_000_000, true),
 };
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
