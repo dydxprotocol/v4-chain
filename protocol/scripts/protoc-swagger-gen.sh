@@ -21,6 +21,7 @@ cd "$SWAGGER_DIR"
 # create swagger files on an individual basis  w/ `buf build` and `buf generate` (needed for `swagger-combine`)
 proto_dirs=$(find ./proto ./third_party -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
 for dir in $proto_dirs; do
+  printf "GENERATING FOR: $dir\n"
   # generate swagger files (filter query files)
   query_file=$(find "${dir}" -maxdepth 1 \( -name 'query.proto' -o -name 'service.proto' \))
   if [[ -n "$query_file" ]]; then
