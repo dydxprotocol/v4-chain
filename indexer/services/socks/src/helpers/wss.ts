@@ -85,7 +85,6 @@ export function sendMessageString(
       at: 'wss#sendMessage',
       message: 'Not sending message because websocket is not open',
       connectionId,
-      messageContents: message,
       readyState: ws.readyState,
     });
     stats.increment(
@@ -105,17 +104,25 @@ export function sendMessageString(
         message: `Failed to send message: ${error.message}`,
         error,
         connectionId,
-        messageContents: message,
       };
       if (error?.message.includes?.('write EPIPE')) {
         // This error means that the remote side of the stream has closed.
         // ws should automatically call `close()`, so we shouldn't have to do it explicitly.
         // Don't log an error as this can be expected if the client disconnects.
-        logger.info(errorLog);
+        stats.increment(
+          `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
+          1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        );
       } else if (error?.message.includes?.('write ECONNRESET')) {
         // This error means that the client abruptly disconnected without sending a proper "close"
         // message (or the message is delayed). In this case, we should terminate the connection
         // immediately.
+        stats.increment(
+          `${config.SERVICE_NAME}.ws_send.write_econn_reset_errors`,
+          1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        );
         try {
           ws.close(
             WS_CLOSE_CODE_ABNORMAL_CLOSURE,
@@ -135,14 +142,13 @@ export function sendMessageString(
             stats.increment(
               `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
               1,
+              config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
               { action: 'close' },
             );
-            logger.info(closeErrorLog);
           } else {
             logger.error(closeErrorLog);
           }
         }
-        logger.info(errorLog);
       } else if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
         // This error means the underlying Socket was destroyed
         // / Don't log an error as this can be expected when clients disconnect abruptly and can
@@ -150,9 +156,9 @@ export function sendMessageString(
         stats.increment(
           `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
           1,
+          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
           { action: 'send' },
         );
-        logger.info(errorLog);
       } else {
         logger.error(errorLog);
       }

@@ -73,6 +73,7 @@ export function perpetualPositionToResponseObject(
   position: PerpetualPositionWithFunding,
   perpetualMarketsMap: PerpetualMarketsMap,
   marketsMap: MarketsMap,
+  subaccountNumber: number,
 ): PerpetualPositionResponseObject {
   // Realized pnl is calculated from the difference in price between the average entry/exit price
   // (order depending on side of the position) multiplied by amount of the position that was closed
@@ -104,6 +105,7 @@ export function perpetualPositionToResponseObject(
     sumOpen: position.sumOpen,
     sumClose: position.sumClose,
     netFunding: netFunding.toFixed(),
+    subaccountNumber,
   };
 }
 
@@ -354,6 +356,7 @@ export function perpetualMarketToResponseObject(
     stepSize: protocolTranslations.getStepSize(perpetualMarket),
     stepBaseQuantums: perpetualMarket.stepBaseQuantums,
     subticksPerTick: perpetualMarket.subticksPerTick,
+    marketType: perpetualMarket.marketType,
     openInterestLowerCap: liquidityTier.openInterestLowerCap,
     openInterestUpperCap: liquidityTier.openInterestUpperCap,
   };
@@ -387,6 +390,7 @@ function OrderbookPriceLevelsToResponsePriceLevels(
 export function mergePostgresAndRedisOrdersToResponseObjects(
   postgresOrderMap: PostgresOrderMap,
   redisOrderMap: RedisOrderMap,
+  subaccountNumber: number,
 ): OrderResponseObject[] {
   const orderIds: string[] = _.uniq(
     Object.keys(redisOrderMap).concat(Object.keys(postgresOrderMap)),
@@ -395,6 +399,7 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
   return _.map(orderIds, (orderId: string) => {
     return postgresAndRedisOrderToResponseObject(
       postgresOrderMap[orderId],
+      subaccountNumber,
       redisOrderMap[orderId],
     ) as OrderResponseObject;
   });
@@ -412,6 +417,7 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
  */
 export function postgresAndRedisOrderToResponseObject(
   postgresOrder: OrderFromDatabase | undefined,
+  subaccountNumber: number,
   redisOrder?: RedisOrder | null,
 ): OrderResponseObject | undefined {
   if (postgresOrder === undefined) {
@@ -422,7 +428,10 @@ export function postgresAndRedisOrderToResponseObject(
     return redisOrderToResponseObject(redisOrder);
   }
 
-  const orderResponse: OrderResponseObject = postgresOrderToResponseObject(postgresOrder);
+  const orderResponse: OrderResponseObject = postgresOrderToResponseObject(
+    postgresOrder,
+    subaccountNumber,
+  );
   if (redisOrder === null || redisOrder === undefined) {
     return orderResponse;
   }
@@ -444,6 +453,7 @@ export function postgresAndRedisOrderToResponseObject(
 
 export function postgresOrderToResponseObject(
   order: OrderFromDatabase,
+  subaccountNumber: number,
 ): OrderResponseObject {
   return {
     ...order,
@@ -454,6 +464,7 @@ export function postgresOrderToResponseObject(
     createdAtHeight: order.createdAtHeight ?? undefined,
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(order.clobPairId)!,
     triggerPrice: order.triggerPrice ?? undefined,
+    subaccountNumber,
   };
 }
 
@@ -484,6 +495,7 @@ export function redisOrderToResponseObject(
     ticker: perpetualMarketRefresher.getPerpetualMarketTicker(clobPairId)!,
     orderFlags: redisOrder.order!.orderId!.orderFlags.toString(),
     clientMetadata: redisOrder.order!.clientMetadata.toString(),
+    subaccountNumber: redisOrder.order!.orderId!.subaccountId!.number,
   };
 }
 

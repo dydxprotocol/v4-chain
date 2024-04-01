@@ -15,6 +15,7 @@ import {
   OrderStatus,
   OrderType,
   PerpetualMarketStatus,
+  PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PositionSide,
@@ -100,6 +101,7 @@ export interface PerpetualPositionResponseObject {
   unrealizedPnl: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
+  subaccountNumber: number;
 }
 
 export type PerpetualPositionsMap = { [market: string]: PerpetualPositionResponseObject };
@@ -267,6 +269,7 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
+  marketType: PerpetualMarketType;
   openInterestLowerCap?: string;
   openInterestUpperCap?: string;
 }
@@ -293,6 +296,7 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  subaccountNumber: number;
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -370,6 +374,11 @@ export interface LimitAndCreatedBeforeAndAfterRequest extends LimitAndCreatedBef
 }
 
 export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  status: PerpetualPositionStatus[],
+}
+
+export interface ParentSubaccountPerpetualPositionRequest extends ParentSubaccountRequest,
+  LimitAndCreatedBeforeRequest {
   status: PerpetualPositionStatus[],
 }
 

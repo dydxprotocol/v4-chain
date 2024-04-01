@@ -76,6 +76,10 @@
           "exitPrice": {
             "type": "string",
             "nullable": true
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -91,7 +95,8 @@
           "sumOpen",
           "sumClose",
           "netFunding",
-          "unrealizedPnl"
+          "unrealizedPnl",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false
@@ -840,6 +845,10 @@
           },
           "updatedAtHeight": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -858,7 +867,8 @@
           "timeInForce",
           "status",
           "postOnly",
-          "ticker"
+          "ticker",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false
@@ -871,6 +881,13 @@
           "POST_ONLY",
           "INITIALIZING",
           "FINAL_SETTLEMENT"
+        ],
+        "type": "string"
+      },
+      "PerpetualMarketType": {
+        "enum": [
+          "CROSS",
+          "ISOLATED"
         ],
         "type": "string"
       },
@@ -932,6 +949,9 @@
             "type": "number",
             "format": "double"
           },
+          "marketType": {
+            "$ref": "#/components/schemas/PerpetualMarketType"
+          },
           "openInterestLowerCap": {
             "type": "string"
           },
@@ -956,7 +976,8 @@
           "tickSize",
           "stepSize",
           "stepBaseQuantums",
-          "subticksPerTick"
+          "subticksPerTick",
+          "marketType"
         ],
         "type": "object",
         "additionalProperties": false
@@ -2149,6 +2170,80 @@
           {
             "in": "query",
             "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PerpetualPositionStatus"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/perpetualPositions/parentSubaccountNumber": {
+      "get": {
+        "operationId": "ListPositionsForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerpetualPositionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
             "required": true,
             "schema": {
               "format": "double",

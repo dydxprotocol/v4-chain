@@ -1526,7 +1526,7 @@ func (app *App) createProposalHandlers(
 			app.Logger(),
 			dydxPrepareProposalHandler,
 			dydxProcessProposalHandler,
-			ve.NewDefaultValidateVoteExtensionsFn(app.ChainID(), app.StakingKeeper),
+			ve.NewDefaultValidateVoteExtensionsFn(app.StakingKeeper),
 			veCodec,
 			extCommitCodec,
 			strategy,
