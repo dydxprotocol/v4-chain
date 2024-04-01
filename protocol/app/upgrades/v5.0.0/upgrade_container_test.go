@@ -5,6 +5,7 @@ package v_5_0_0_test
 import (
 	"testing"
 
+	consensus "github.com/cosmos/cosmos-sdk/x/consensus/types"
 	"github.com/cosmos/gogoproto/proto"
 	v_5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
 	containertest "github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
@@ -33,13 +34,29 @@ func TestStateUpgrade(t *testing.T) {
 
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 	preUpgradeCheckPerpetualMarketType(node, t)
+	preUpgradeCheckVoteExtensions(node, t)
 	// Add test for your upgrade handler logic below
 }
 
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	postUpgradecheckPerpetualMarketType(node, t)
 	postUpgradeCheckLiquidityTiers(node, t)
+	postUpgradeCheckVoteExtensions(node, t)
 	// Add test for your upgrade handler logic below
+}
+
+func preUpgradeCheckVoteExtensions(node *containertest.Node, t *testing.T) {
+	consensusParams := &consensus.QueryParamsResponse{}
+	resp, err := containertest.Query(
+		node,
+		consensus.NewQueryClient,
+		consensus.QueryClient.Params,
+		&consensus.QueryParamsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), consensusParams)
+	require.NoError(t, err)
+	assert.Equal(t, int64(0), consensusParams.Params.Abci.VoteExtensionsEnableHeight)
 }
 
 func preUpgradeCheckPerpetualMarketType(node *containertest.Node, t *testing.T) {
@@ -56,6 +73,20 @@ func preUpgradeCheckPerpetualMarketType(node *containertest.Node, t *testing.T) 
 	for _, perpetual := range perpetualsList.Perpetual {
 		assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_UNSPECIFIED, perpetual.Params.MarketType)
 	}
+}
+
+func postUpgradeCheckVoteExtensions(node *containertest.Node, t *testing.T) {
+	consensusParams := &consensus.QueryParamsResponse{}
+	resp, err := containertest.Query(
+		node,
+		consensus.NewQueryClient,
+		consensus.QueryClient.Params,
+		&consensus.QueryParamsRequest{},
+	)
+	require.NoError(t, err)
+	err = proto.UnmarshalText(resp.String(), consensusParams)
+	require.NoError(t, err)
+	assert.True(t, consensusParams.Params.Abci.VoteExtensionsEnableHeight > int64(0))
 }
 
 func postUpgradecheckPerpetualMarketType(node *containertest.Node, t *testing.T) {

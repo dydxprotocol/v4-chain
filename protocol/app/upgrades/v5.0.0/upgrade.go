@@ -3,6 +3,7 @@ package v_5_0_0
 import (
 	"context"
 	"fmt"
+	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -12,6 +13,7 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
+	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 )
 
@@ -203,12 +205,46 @@ func initializeOIMFCaps(
 	}
 }
 
+func voteExtensionsUpgrade(
+	ctx sdk.Context,
+	keeper consensusparamkeeper.Keeper,
+) {
+	currentParams, err := keeper.Params(ctx, &consensustypes.QueryParamsRequest{})
+	if err != nil {
+		panic(fmt.Sprintf("failed to retrieve existing consensus params in VE upgrade handler: %s", err))
+	}
+	if currentParams.Params.Abci.VoteExtensionsEnableHeight != 0 {
+		panic(fmt.Sprintf(
+			"unable to update VE Enable Height since its current value of %d is already non-zero",
+			currentParams.Params.Abci.VoteExtensionsEnableHeight))
+	}
+	veEnableHeight := ctx.BlockHeight() + 1
+	currentParams.Params.Abci.VoteExtensionsEnableHeight = veEnableHeight
+	_, err = keeper.UpdateParams(ctx, &consensustypes.MsgUpdateParams{
+		Authority: keeper.GetAuthority(),
+		Block:     currentParams.Params.Block,
+		Evidence:  currentParams.Params.Evidence,
+		Validator: currentParams.Params.Validator,
+		Abci:      currentParams.Params.Abci,
+	})
+	if err != nil {
+		panic(fmt.Sprintf("failed to update consensus params with VE Enable Height %d: %s", veEnableHeight, err))
+	}
+	ctx.Logger().Info(
+		fmt.Sprintf(
+			"Successfully set VoteExtensionsEnableHeight to %d\n",
+			veEnableHeight,
+		),
+	)
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
 	perpetualsKeeper perptypes.PerpetualsKeeper,
 	clobKeeper clobtypes.ClobKeeper,
 	subaccountsKeeper satypes.SubaccountsKeeper,
+	consensusParamKeeper consensusparamkeeper.Keeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -230,6 +266,9 @@ func CreateUpgradeHandler(
 		negativeTncSubaccountSeenAtBlockUpgrade(sdkCtx, perpetualsKeeper, subaccountsKeeper)
 		// Initialize liquidity tier with lower and upper OI caps.
 		initializeOIMFCaps(sdkCtx, perpetualsKeeper)
+
+		// Set vote extension enable height
+		voteExtensionsUpgrade(sdkCtx, consensusParamKeeper)
 
 		// TODO(TRA-93): Initialize `x/vault` module.
 
