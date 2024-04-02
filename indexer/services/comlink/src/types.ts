@@ -294,6 +294,7 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  subaccountNumber: number;
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -371,6 +372,11 @@ export interface LimitAndCreatedBeforeAndAfterRequest extends LimitAndCreatedBef
 }
 
 export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
+  status: PerpetualPositionStatus[],
+}
+
+export interface ParentSubaccountPerpetualPositionRequest extends ParentSubaccountRequest,
+  LimitAndCreatedBeforeRequest {
   status: PerpetualPositionStatus[],
 }
 

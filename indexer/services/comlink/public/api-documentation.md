@@ -1480,7 +1480,8 @@ fetch('https://dydx-testnet.imperator.co/v4/orders?address=string&subaccountNumb
     "postOnly": true,
     "ticker": "string",
     "updatedAt": "string",
-    "updatedAtHeight": "string"
+    "updatedAtHeight": "string",
+    "subaccountNumber": 0
   }
 ]
 ```
@@ -1537,6 +1538,7 @@ Status Code **200**
 |» ticker|string|true|none|none|
 |» updatedAt|[IsoString](#schemaisostring)|false|none|none|
 |» updatedAtHeight|string|false|none|none|
+|» subaccountNumber|number(double)|true|none|none|
 
 #### Enumerated Values
 
@@ -1641,7 +1643,8 @@ fetch('https://dydx-testnet.imperator.co/v4/orders/{orderId}',
   "postOnly": true,
   "ticker": "string",
   "updatedAt": "string",
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "subaccountNumber": 0
 }
 ```
 
@@ -1811,6 +1814,106 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions?address=string&su
 |---|---|---|---|---|
 |address|query|string|true|none|
 |subaccountNumber|query|number(double)|true|none|
+|status|query|array[string]|false|none|
+|limit|query|number(double)|false|none|
+|createdBeforeOrAtHeight|query|number(double)|false|none|
+|createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
+
+#### Enumerated Values
+
+|Parameter|Value|
+|---|---|
+|status|OPEN|
+|status|CLOSED|
+|status|LIQUIDATED|
+
+> Example responses
+
+> 200 Response
+
+```json
+{
+  "positions": [
+    {
+      "market": "string",
+      "status": "OPEN",
+      "side": "LONG",
+      "size": "string",
+      "maxSize": "string",
+      "entryPrice": "string",
+      "realizedPnl": "string",
+      "createdAt": "string",
+      "createdAtHeight": "string",
+      "sumOpen": "string",
+      "sumClose": "string",
+      "netFunding": "string",
+      "unrealizedPnl": "string",
+      "closedAt": "string",
+      "exitPrice": "string",
+      "subaccountNumber": 0
+    }
+  ]
+}
+```
+
+### Responses
+
+|Status|Meaning|Description|Schema|
+|---|---|---|---|
+|200|[OK](https://tools.ietf.org/html/rfc7231#section-6.3.1)|Ok|[PerpetualPositionResponse](#schemaperpetualpositionresponse)|
+
+<aside class="success">
+This operation does not require authentication
+</aside>
+
+## ListPositionsForParentSubaccount
+
+<a id="opIdListPositionsForParentSubaccount"></a>
+
+> Code samples
+
+```python
+import requests
+headers = {
+  'Accept': 'application/json'
+}
+
+r = requests.get('https://dydx-testnet.imperator.co/v4/perpetualPositions/parentSubaccountNumber', params={
+  'address': 'string',  'parentSubaccountNumber': '0'
+}, headers = headers)
+
+print(r.json())
+
+```
+
+```javascript
+
+const headers = {
+  'Accept':'application/json'
+};
+
+fetch('https://dydx-testnet.imperator.co/v4/perpetualPositions/parentSubaccountNumber?address=string&parentSubaccountNumber=0',
+{
+  method: 'GET',
+
+  headers: headers
+})
+.then(function(res) {
+    return res.json();
+}).then(function(body) {
+    console.log(body);
+});
+
+```
+
+`GET /perpetualPositions/parentSubaccountNumber`
+
+### Parameters
+
+|Name|In|Type|Required|Description|
+|---|---|---|---|---|
+|address|query|string|true|none|
+|parentSubaccountNumber|query|number(double)|true|none|
 |status|query|array[string]|false|none|
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
@@ -3677,7 +3780,8 @@ or
   "postOnly": true,
   "ticker": "string",
   "updatedAt": "string",
-  "updatedAtHeight": "string"
+  "updatedAtHeight": "string",
+  "subaccountNumber": 0
 }
 
 ```
@@ -3708,6 +3812,7 @@ or
 |ticker|string|true|none|none|
 |updatedAt|[IsoString](#schemaisostring)|false|none|none|
 |updatedAtHeight|string|false|none|none|
+|subaccountNumber|number(double)|true|none|none|
 
 ## PerpetualMarketStatus
 

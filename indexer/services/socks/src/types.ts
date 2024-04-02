@@ -149,4 +149,5 @@ export enum WebsocketEvents {
   LISTENING = 'listening',
   MESSAGE = 'message',
   PONG = 'pong',
+  PING = 'ping',
 }
