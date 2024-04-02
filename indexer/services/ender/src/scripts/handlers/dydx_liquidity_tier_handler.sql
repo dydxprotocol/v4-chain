@@ -10,13 +10,16 @@ CREATE OR REPLACE FUNCTION dydx_liquidity_tier_handler(event_data jsonb) RETURNS
 */
 DECLARE
     liquidity_tier_record liquidity_tiers%ROWTYPE;
+    QUOTE_CURRENCY_ATOMIC_RESOLUTION constant numeric = -6;
 BEGIN
     liquidity_tier_record."id" = (event_data->'id')::integer;
     liquidity_tier_record."name" = event_data->>'name';
     liquidity_tier_record."initialMarginPpm" = (event_data->'initialMarginPpm')::bigint;
     liquidity_tier_record."maintenanceFractionPpm" = (event_data->'maintenanceFractionPpm')::bigint;
-    liquidity_tier_record."openInterestLowerCap" =  dydx_from_jsonlib_long(event_data->'openInterestLowerCap');
-    liquidity_tier_record."openInterestUpperCap" =  dydx_from_jsonlib_long(event_data->'openInterestUpperCap');
+    liquidity_tier_record."openInterestLowerCap" =  dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestLowerCap') *
+                                  power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
+    liquidity_tier_record."openInterestUpperCap" =  dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestUpperCap') *
+                                  power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
 
     INSERT INTO liquidity_tiers
     VALUES (liquidity_tier_record.*)
