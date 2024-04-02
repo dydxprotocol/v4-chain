@@ -148,7 +148,7 @@ func postUpgradeCheckVoteExtensions(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 	err = proto.UnmarshalText(resp.String(), consensusParams)
 	require.NoError(t, err)
-	assert.True(t, consensusParams.Params.Abci.VoteExtensionsEnableHeight > int64(0))
+	assert.Equal(t, int64(14), consensusParams.Params.Abci.VoteExtensionsEnableHeight)
 }
 
 func postUpgradecheckPerpetualMarketType(node *containertest.Node, t *testing.T) {

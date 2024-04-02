@@ -219,7 +219,7 @@ func voteExtensionsUpgrade(
 			"unable to update VE Enable Height since its current value of %d is already non-zero",
 			currentParams.Params.Abci.VoteExtensionsEnableHeight))
 	}
-	veEnableHeight := ctx.BlockHeight() + 1
+	veEnableHeight := ctx.BlockHeight() + 4
 	currentParams.Params.Abci.VoteExtensionsEnableHeight = veEnableHeight
 	_, err = keeper.UpdateParams(ctx, &consensustypes.MsgUpdateParams{
 		Authority: keeper.GetAuthority(),
