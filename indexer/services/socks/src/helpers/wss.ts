@@ -98,6 +98,8 @@ export function sendMessageString(
     });
     stats.increment(
       `${config.SERVICE_NAME}.ws_message_not_sent`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         reason: WEBSOCKET_NOT_OPEN,
         readyState: ws.readyState.toString(),
@@ -110,6 +112,8 @@ export function sendMessageString(
     if (error) {
       stats.increment(
         `${config.SERVICE_NAME}.ws_send.error`,
+        1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
         { code: (error as WssError)?.code },
       );
       const errorLog = { // type is InfoObject in node-service-base
@@ -121,6 +125,7 @@ export function sendMessageString(
       };
       logger.error(errorLog);
       try {
+        ws.removeAllListeners();
         ws.close(
           WS_CLOSE_CODE_ABNORMAL_CLOSURE,
           `client returned ${error?.message} error`,
