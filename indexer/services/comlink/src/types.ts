@@ -427,6 +427,16 @@ export interface ListOrderRequest extends SubaccountRequest, LimitRequest, Ticke
   returnLatestOrders?: boolean,
 }
 
+export interface ParentSubaccountListOrderRequest
+  extends ParentSubaccountRequest, LimitRequest, TickerRequest {
+  side?: OrderSide,
+  type?: OrderType,
+  status?: OrderStatus[],
+  goodTilBlockBeforeOrAt?: number,
+  goodTilBlockTimeBeforeOrAt?: IsoString,
+  returnLatestOrders?: boolean,
+}
+
 export interface CandleRequest extends LimitRequest {
   ticker: string,
   resolution: CandleResolution,

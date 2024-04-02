@@ -388,7 +388,7 @@ function OrderbookPriceLevelsToResponsePriceLevels(
 export function mergePostgresAndRedisOrdersToResponseObjects(
   postgresOrderMap: PostgresOrderMap,
   redisOrderMap: RedisOrderMap,
-  subaccountNumber: number,
+  subaccountIdToNumber: Record<string, number>,
 ): OrderResponseObject[] {
   const orderIds: string[] = _.uniq(
     Object.keys(redisOrderMap).concat(Object.keys(postgresOrderMap)),
@@ -397,7 +397,7 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
   return _.map(orderIds, (orderId: string) => {
     return postgresAndRedisOrderToResponseObject(
       postgresOrderMap[orderId],
-      subaccountNumber,
+      subaccountIdToNumber,
       redisOrderMap[orderId],
     ) as OrderResponseObject;
   });
@@ -410,12 +410,13 @@ export function mergePostgresAndRedisOrdersToResponseObjects(
  * If both postgres and redis are defined, then generate the response object from postgresOrder
  * and override the size, price, and goodTilBlock fields with the redisOrder.
  * @param postgresOrder
+ * @param subaccountIdToNumber
  * @param redisOrder
  * @returns
  */
 export function postgresAndRedisOrderToResponseObject(
   postgresOrder: OrderFromDatabase | undefined,
-  subaccountNumber: number,
+  subaccountIdToNumber: Record<string, number>,
   redisOrder?: RedisOrder | null,
 ): OrderResponseObject | undefined {
   if (postgresOrder === undefined) {
@@ -428,7 +429,7 @@ export function postgresAndRedisOrderToResponseObject(
 
   const orderResponse: OrderResponseObject = postgresOrderToResponseObject(
     postgresOrder,
-    subaccountNumber,
+    subaccountIdToNumber[postgresOrder.subaccountId],
   );
   if (redisOrder === null || redisOrder === undefined) {
     return orderResponse;
