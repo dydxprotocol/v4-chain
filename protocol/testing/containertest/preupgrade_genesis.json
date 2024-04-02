@@ -2149,6 +2149,20 @@
             {
               "asset_id": 0,
               "index": 0,
+              "quantums": "100000000000000000"
+            }
+          ],
+          "id": {
+            "number": 0,
+            "owner": "dydx10fx7sy6ywd5senxae9dwytf8jxek3t2gcen2vs"
+          },
+          "margin_enabled": true
+        },
+        {
+          "asset_positions": [
+            {
+              "asset_id": 0,
+              "index": 0,
               "quantums": "900000000000000000"
             }
           ],

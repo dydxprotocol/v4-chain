@@ -8,6 +8,7 @@ import {
 import {
   IndexerTendermintEvent,
   IndexerTendermintEvent_BlockEvent,
+  Timestamp,
   OrderFillEventV1,
   MarketEventV1,
   SubaccountUpdateEventV1,
@@ -28,6 +29,10 @@ import Big from 'big.js';
 import _ from 'lodash';
 import { DateTime } from 'luxon';
 
+import {
+  MILLIS_IN_NANOS,
+  SECONDS_IN_MILLIS,
+} from '../constants';
 import {
   AnnotatedSubaccountMessage,
   DydxIndexerSubtypes,
@@ -63,6 +68,15 @@ export function convertToSubaccountMessage(
     ['orderId', 'isFill', 'subaccountMessageContents'],
   );
   return subaccountMessage;
+}
+
+export function protoTimestampToDate(
+  protoTime: Timestamp,
+): Date {
+  const timeInMillis: number = Number(protoTime.seconds) * SECONDS_IN_MILLIS +
+    Math.floor(protoTime.nanos / MILLIS_IN_NANOS);
+
+  return new Date(timeInMillis);
 }
 
 export function dateToDateTime(

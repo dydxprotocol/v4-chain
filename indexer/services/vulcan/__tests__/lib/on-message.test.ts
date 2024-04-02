@@ -64,7 +64,7 @@ describe('onMessage', () => {
     await onMessage(message);
 
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(handleUpdateMock).toHaveBeenCalledWith(update, message.headers ?? {});
+    expect(handleUpdateMock).toHaveBeenCalledWith(update);
     expect(handleUpdateMock).toHaveBeenCalledTimes(1);
 
     expect(stats.increment).toHaveBeenCalledWith('vulcan.received_kafka_message', 1);
