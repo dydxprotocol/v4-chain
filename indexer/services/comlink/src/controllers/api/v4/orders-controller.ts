@@ -581,7 +581,7 @@ async function getRedisOrderMapForSubaccountIds(
   }
 
   const subaccountOrderIds: string[] = (await Promise.all(
-    subaccountIds.map(async (subaccountId) => {
+    subaccountIds.map((subaccountId) => {
       return SubaccountOrderIdsCache.getOrderIdsForSubaccount(
         subaccountId,
         redisClient,
