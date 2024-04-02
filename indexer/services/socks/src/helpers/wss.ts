@@ -67,6 +67,15 @@ export class Wss {
   }
 }
 
+export class WssError extends Error {
+  public code: string;
+
+  constructor(message: string, code: string) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export function sendMessage(
   ws: WebSocket,
   connectionId: string,
@@ -89,6 +98,8 @@ export function sendMessageString(
     });
     stats.increment(
       `${config.SERVICE_NAME}.ws_message_not_sent`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         reason: WEBSOCKET_NOT_OPEN,
         readyState: ws.readyState.toString(),
@@ -99,68 +110,45 @@ export function sendMessageString(
 
   ws.send(message, (error) => {
     if (error) {
+      stats.increment(
+        `${config.SERVICE_NAME}.ws_send.error`,
+        1,
+        config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+        { code: (error as WssError)?.code },
+      );
       const errorLog = { // type is InfoObject in node-service-base
         at: 'wss#sendMessage',
         message: `Failed to send message: ${error.message}`,
         error,
         connectionId,
+        code: (error as WssError)?.code,
       };
-      if (error?.message.includes?.('write EPIPE')) {
-        // This error means that the remote side of the stream has closed.
-        // ws should automatically call `close()`, so we shouldn't have to do it explicitly.
-        // Don't log an error as this can be expected if the client disconnects.
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.write_epipe_errors`,
-          1,
-          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      logger.error(errorLog);
+      try {
+        ws.removeAllListeners();
+        ws.close(
+          WS_CLOSE_CODE_ABNORMAL_CLOSURE,
+          `client returned ${error?.message} error`,
         );
-      } else if (error?.message.includes?.('write ECONNRESET')) {
-        // This error means that the client abruptly disconnected without sending a proper "close"
-        // message (or the message is delayed). In this case, we should terminate the connection
-        // immediately.
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.write_econn_reset_errors`,
-          1,
-          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-        );
-        try {
-          ws.close(
-            WS_CLOSE_CODE_ABNORMAL_CLOSURE,
-            'client returned ECONNRESET error',
+      } catch (closeError) {
+        const closeErrorLog = {
+          at: 'wss#sendMessage',
+          message: `Failed to close connection: ${closeError.message}`,
+          connectionId,
+          closeError,
+        };
+        if (closeError?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
+          // This error means the underlying Socket was destroyed
+          // Don't log an error as this can be expected when clients disconnect abruptly and
+          // can happen to multiple closes while the close handshake is going on
+          stats.increment(
+            `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
+            1,
+            { action: 'close' },
           );
-        } catch (closeError) {
-          const closeErrorLog = {
-            at: 'wss#sendMessage',
-            message: `Failed to close connection: ${closeError.message}`,
-            connectionId,
-            closeError,
-          };
-          if (closeError?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
-            // This error means the underlying Socket was destroyed
-            // Don't log an error as this can be expected when clients disconnect abruptly and
-            // can happen to multiple closes while the close handshake is going on
-            stats.increment(
-              `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
-              1,
-              config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-              { action: 'close' },
-            );
-          } else {
-            logger.error(closeErrorLog);
-          }
+        } else {
+          logger.error(closeErrorLog);
         }
-      } else if (error?.message.includes?.(ERR_WRITE_STREAM_DESTROYED)) {
-        // This error means the underlying Socket was destroyed
-        // / Don't log an error as this can be expected when clients disconnect abruptly and can
-        // happen to multiple messages while the close handshake is going on
-        stats.increment(
-          `${config.SERVICE_NAME}.ws_send.stream_destroyed_errors`,
-          1,
-          config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
-          { action: 'send' },
-        );
-      } else {
-        logger.error(errorLog);
       }
     }
   });
