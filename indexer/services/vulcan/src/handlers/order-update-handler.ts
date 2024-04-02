@@ -171,9 +171,7 @@ export class OrderUpdateHandler extends Handler {
           perpetualMarket,
           updatedQuantums,
         ),
-        headers: {
-          message_received_timestamp: headers.message_received_timestamp,
-        },
+        headers,
       };
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }

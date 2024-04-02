@@ -151,9 +151,7 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           placementStatus,
         ),
-        headers: {
-          message_received_timestamp: headers.message_received_timestamp,
-        },
+        headers,
       };
       sendMessageWrapper(subaccountMessage, KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
     }
@@ -167,9 +165,7 @@ export class OrderPlaceHandler extends Handler {
           perpetualMarket,
           updatedQuantums,
         ),
-        headers: {
-          message_received_timestamp: headers.message_received_timestamp,
-        },
+        headers,
       };
       sendMessageWrapper(orderbookMessage, KafkaTopics.TO_WEBSOCKETS_ORDERBOOKS);
     }
@@ -358,10 +354,7 @@ export class OrderPlaceHandler extends Handler {
       value: Buffer.from(
         Uint8Array.from(OffChainUpdateV1.encode({ orderUpdate: cachedOrderUpdate }).finish()),
       ),
-      headers: {
-        message_received_timestamp: headers.message_received_timestamp,
-        event_type: String(headers.event_type),
-      },
+      headers,
     };
     sendMessageWrapper(orderUpdateMessage, KafkaTopics.TO_VULCAN);
   }
