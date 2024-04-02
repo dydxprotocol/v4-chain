@@ -208,12 +208,6 @@ func (k Keeper) PlaceShortTermOrder(
 		return 0, 0, err
 	}
 
-	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
-	err = k.ValidateSubaccountEquityTierLimitForShortTermOrder(ctx, order)
-	if err != nil {
-		return 0, 0, err
-	}
-
 	// Place the order on the memclob and return the result.
 	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
 		ctx,
