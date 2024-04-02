@@ -582,6 +582,7 @@ func New(
 	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
 		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.ParamsKeeper))
 	govConfig := govtypes.DefaultConfig()
+	govConfig.MaxMetadataLen = 1000
 	/*
 		Example of setting gov params:
 		govConfig.MaxMetadataLen = 10000
