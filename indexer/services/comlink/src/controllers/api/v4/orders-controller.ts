@@ -580,14 +580,14 @@ async function getRedisOrderMapForSubaccountIds(
     return {};
   }
 
-  const subaccountOrderIds: string[] = [];
-  for (const subaccountId of subaccountIds) {
-    const orderIdsPerSubccount: string[] = await SubaccountOrderIdsCache.getOrderIdsForSubaccount(
-      subaccountId,
-      redisClient,
-    );
-    subaccountOrderIds.push(...orderIdsPerSubccount);
-  }
+  const subaccountOrderIds: string[] = (await Promise.all(
+    subaccountIds.map(async (subaccountId) => {
+      return SubaccountOrderIdsCache.getOrderIdsForSubaccount(
+        subaccountId,
+        redisClient,
+      );
+    }),
+  )).flat();
 
   const nullableRedisOrders: (RedisOrder | null)[] = await Promise.all(
     _.map(subaccountOrderIds, (orderId: string) => OrdersCache.getOrder(orderId, redisClient)),
