@@ -62,6 +62,8 @@ import {
 const router: express.Router = express.Router();
 const controllerName: string = 'orders-controller';
 
+// Helper function to list orders for a list of subaccounts based on
+// the provided filters
 async function listOrdersCommon(
   subaccountIdToNumber: Record<string, number>,
   limit?: number,
