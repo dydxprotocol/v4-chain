@@ -62,8 +62,19 @@ import {
 const router: express.Router = express.Router();
 const controllerName: string = 'orders-controller';
 
-// Helper function to list orders for a list of subaccounts based on
-// the provided filters
+/**
+ * Lists orders for a set of subaccounts based on various filters.
+ * @param subaccountIdToNumber A mapping of subaccount IDs to their corresponding numbers.
+ * @param limit The maximum number of orders to return.
+ * @param ticker Optional ticker to filter orders by.
+ * @param side Optional order side to filter orders by.
+ * @param type Optional order type to filter orders by.
+ * @param status Optional array of order statuses to filter orders by.
+ * @param goodTilBlockBeforeOrAt Optional filter for orders good until a specific block.
+ * @param goodTilBlockTimeBeforeOrAt Optional filter for orders good until a specific time.
+ * @param returnLatestOrders Flag indicating whether to return the latest orders.
+ * @returns An array of order response objects.
+ */
 async function listOrdersCommon(
   subaccountIdToNumber: Record<string, number>,
   limit?: number,
