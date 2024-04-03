@@ -98,7 +98,6 @@ func (k Keeper) CancelShortTermOrder(
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
-//   - The subaccount's equity tier limit is exceeded.
 //   - Placing the short term order on the memclob returns an error.
 //
 // This method will panic if the provided order is not a Short-Term order.
@@ -139,12 +138,15 @@ func (k Keeper) PlaceShortTermOrder(
 		return 0, 0, err
 	}
 
+<<<<<<< HEAD
 	// Validate that adding the order wouldn't exceed subaccount equity tier limits.
 	err = k.ValidateSubaccountEquityTierLimitForNewOrder(ctx, order)
 	if err != nil {
 		return 0, 0, err
 	}
 
+=======
+>>>>>>> 24790ff5 (Skip equity tier limit check in PlaceShortTermOrder (#1318))
 	// Place the order on the memclob and return the result.
 	orderSizeOptimisticallyFilledFromMatchingQuantums, orderStatus, offchainUpdates, err := k.MemClob.PlaceOrder(
 		ctx,
