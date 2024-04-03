@@ -182,6 +182,15 @@ func (k Keeper) GetVaultClobOrders(
 			marketPrice.Exponent-lib.QuoteCurrencyAtomicResolution+perpetual.Params.AtomicResolution,
 		),
 	)
+	orderSizeBaseQuantumsRounded := lib.BigRatRoundToNearestMultiple(
+		orderSizeBaseQuantums,
+		uint32(clobPair.StepBaseQuantums),
+		false,
+	)
+	// If order size is non-positive, return empty orders.
+	if orderSizeBaseQuantumsRounded <= 0 {
+		return []*clobtypes.Order{}, nil
+	}
 	// Calculate spread.
 	spreadPpm := lib.Max(
 		params.SpreadMinPpm,
@@ -259,12 +268,8 @@ func (k Keeper) GetVaultClobOrders(
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
-			Side: side,
-			Quantums: lib.BigRatRoundToNearestMultiple(
-				orderSizeBaseQuantums,
-				uint32(clobPair.StepBaseQuantums),
-				false,
-			),
+			Side:     side,
+			Quantums: orderSizeBaseQuantumsRounded,
 			Subticks: lib.BigRatRoundToNearestMultiple(
 				orderSubticks,
 				clobPair.SubticksPerTick,
