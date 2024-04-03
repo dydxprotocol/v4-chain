@@ -19,17 +19,11 @@ import config from './config';
  */
 function getOffChainUpdate(
   message: KafkaMessage,
-): OffChainUpdateV1 | undefined {
-  if (!message || !message.value || !message.timestamp) {
-    throw Error('Empty message');
-  }
-  const messageValueBinary: Uint8Array = new Uint8Array(message.value);
+): OffChainUpdateV1 {
 
-  const update: OffChainUpdateV1 = OffChainUpdateV1.decode(
-    messageValueBinary,
-  );
-
-  return update;
+  const messageValue: Buffer = message.value!;
+  const messageValueBinary: Uint8Array = new Uint8Array(messageValue);
+  return OffChainUpdateV1.decode(messageValueBinary);
 }
 
 export async function connect(): Promise<void> {
