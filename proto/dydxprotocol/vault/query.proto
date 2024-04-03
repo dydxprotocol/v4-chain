@@ -13,12 +13,11 @@ option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 service Query {
   // Queries the Params.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
-    option (google.api.http).get = "/dydxprotocol/v4/vault/params";
+    option (google.api.http).get = "/dydxprotocol/vault/params";
   }
   // Queries a Vault by type and number.
   rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
-    option (google.api.http).get =
-        "/dydxprotocol/v4/vault/vaults/{type}/{number}";
+    option (google.api.http).get = "/dydxprotocol/vault/vault/{type}/{number}";
   }
 }
 
