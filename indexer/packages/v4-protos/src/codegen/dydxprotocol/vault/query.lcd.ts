@@ -16,14 +16,14 @@ export class LCDQueryClient {
 
 
   async params(_params: QueryParamsRequest = {}): Promise<QueryParamsResponseSDKType> {
-    const endpoint = `dydxprotocol/v4/vault/params`;
+    const endpoint = `dydxprotocol/vault/params`;
     return await this.req.get<QueryParamsResponseSDKType>(endpoint);
   }
   /* Queries a Vault by type and number. */
 
 
   async vault(params: QueryVaultRequest): Promise<QueryVaultResponseSDKType> {
-    const endpoint = `dydxprotocol/v4/vault/vaults/${params.type}/${params.number}`;
+    const endpoint = `dydxprotocol/vault/vault/${params.type}/${params.number}`;
     return await this.req.get<QueryVaultResponseSDKType>(endpoint);
   }
 
