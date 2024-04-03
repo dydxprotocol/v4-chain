@@ -148,7 +148,8 @@ func postUpgradeCheckVoteExtensions(node *containertest.Node, t *testing.T) {
 	require.NoError(t, err)
 	err = proto.UnmarshalText(resp.String(), consensusParams)
 	require.NoError(t, err)
-	assert.Equal(t, int64(14), consensusParams.Params.Abci.VoteExtensionsEnableHeight)
+	// testnet_utils.go::UpgradeTesnet has a Plan for upgrading on height 10
+	assert.Equal(t, int64(10)+v_5_0_0.VEEnableHeightDelta, consensusParams.Params.Abci.VoteExtensionsEnableHeight)
 }
 
 func postUpgradecheckPerpetualMarketType(node *containertest.Node, t *testing.T) {

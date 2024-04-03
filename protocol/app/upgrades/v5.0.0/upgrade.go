@@ -219,8 +219,7 @@ func voteExtensionsUpgrade(
 			"unable to update VE Enable Height since its current value of %d is already non-zero",
 			currentParams.Params.Abci.VoteExtensionsEnableHeight))
 	}
-	veEnableHeight := ctx.BlockHeight() + 4
-	currentParams.Params.Abci.VoteExtensionsEnableHeight = veEnableHeight
+	currentParams.Params.Abci.VoteExtensionsEnableHeight = ctx.BlockHeight() + VEEnableHeightDelta
 	_, err = keeper.UpdateParams(ctx, &consensustypes.MsgUpdateParams{
 		Authority: keeper.GetAuthority(),
 		Block:     currentParams.Params.Block,
@@ -229,13 +228,12 @@ func voteExtensionsUpgrade(
 		Abci:      currentParams.Params.Abci,
 	})
 	if err != nil {
-		panic(fmt.Sprintf("failed to update consensus params with VE Enable Height %d: %s", veEnableHeight, err))
+		panic(fmt.Sprintf("failed to update consensus params : %s", err))
 	}
 	ctx.Logger().Info(
-		fmt.Sprintf(
-			"Successfully set VoteExtensionsEnableHeight to %d\n",
-			veEnableHeight,
-		),
+		"Successfully set VoteExtensionsEnableHeight",
+		"consensus_params",
+		currentParams.Params.String(),
 	)
 }
 
