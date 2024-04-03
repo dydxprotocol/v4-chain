@@ -62,6 +62,9 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     },
   );
 
+  // Short term orders are directly sent to vulcan from the short term orders.
+  // For these orders, set the message_received_timestamp field.
+  
   const originalMessageTimestamp = message.headers?.message_received_timestamp;
   if (originalMessageTimestamp !== undefined) {
     stats.timing(
@@ -99,7 +102,21 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
     const handler: Handler = new (getHandler(update))!(
       getTransactionHashFromHeaders(message.headers),
     );
-    await handler.handleUpdate(update, message.headers ?? {});
+
+    console.log("order update: ", update);
+    console.log("headers: ", message.headers);
+
+    // If headers don't exist, create them.
+    const headers = message.headers ?? {};
+    // If the message received timestamp doesn't exist
+    // (i.e when a short term order is directly sent to vulcan via full node)
+    // set the message_received_timestamp to the message timestamp.
+    if (!headers.message_received_timestamp) {
+      headers.message_received_timestamp = message.timestamp;
+      console.log("set the message received timststamp to ", message.timestamp, update);
+    }
+
+    await handler.handleUpdate(update, headers);
 
     const postProcessingTime: number = Date.now();
     if (originalMessageTimestamp !== undefined) {
