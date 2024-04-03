@@ -174,7 +174,7 @@ edit_config() {
 	# block time longer for easier troubleshooting.
 	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '5s'
 
-  # Enable Sidecar Prometheus
+  # Enable Slinky Prometheus metrics
 	dasel put -t bool -f "$CONFIG_FOLDER"/app.toml '.oracle.metrics_enabled' -v 'true'
 	dasel put -t string -f "$CONFIG_FOLDER"/app.toml '.oracle.prometheus_server_address' -v 'localhost:8001'
 }
