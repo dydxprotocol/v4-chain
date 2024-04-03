@@ -468,7 +468,7 @@ export const isolatedPerpetualPosition: PerpetualPositionCreateObject = {
   status: PerpetualPositionStatus.OPEN,
   size: '10',
   maxSize: '25',
-  entryPrice: '20000',
+  entryPrice: '1.5',
   sumOpen: '10',
   sumClose: '0',
   createdAt: createdDateTime.toISO(),
@@ -643,7 +643,7 @@ export const isolatedMarket: MarketCreateObject = {
   pair: 'ISO-USD',
   exponent: -12,
   minPriceChangePpm: 50,
-  oraclePrice: '0.000000075',
+  oraclePrice: '1.00',
 };
 
 export const isolatedMarket2: MarketCreateObject = {

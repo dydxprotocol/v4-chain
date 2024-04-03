@@ -578,32 +578,6 @@ func TestPlaceShortTermOrder(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance.Params.Id: big.NewInt(2_000_000_000),
 			},
 		},
-		`Subaccount cannot place maker buy order for 1 BTC at 5 subticks with 0 collateral`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{constants.Carl_Num0_0USD},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders: []types.Order{},
-			feeParams:      constants.PerpetualFeeParamsNoFee,
-			order:          constants.Order_Carl_Num0_Id0_Clob0_Buy1BTC_Price5subticks_GTB10,
-			expectedErr:    types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-		},
-		`Subaccount cannot place maker sell order for 1 BTC at 500,000 with 0 collateral`: {
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_50PercentInitial_40PercentMaintenance,
-			},
-			subaccounts: []satypes.Subaccount{constants.Carl_Num0_0USD},
-			clobs: []types.ClobPair{
-				constants.ClobPair_Btc,
-			},
-			existingOrders: []types.Order{},
-			feeParams:      constants.PerpetualFeeParamsNoFee,
-			order:          constants.Order_Carl_Num0_Id0_Clob0_Sell1BTC_Price500000_GTB10,
-			expectedErr:    types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
-		},
 		// <grouped tests: deprecating pessimistic value collateralization check -- BUY>
 		// The following 3 tests are a group to test the deprecation of pessimistic collateralization check.
 		// 1. The first should have a buy price well below the oracle price of 50,000. (success)

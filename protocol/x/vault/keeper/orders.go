@@ -13,23 +13,6 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// TODO (TRA-118): store vault strategy constants in x/vault state.
-const (
-	// Determines how many layers of orders a vault places.
-	// E.g. if num_levels=2, a vault places 2 asks and 2 bids.
-	NUM_LAYERS = uint8(2)
-	// Determines minimum base spread when a vault quotes around reservation price.
-	MIN_BASE_SPREAD_PPM = uint32(3_000) // 30bps
-	// Determines the amount to add to min_price_change_ppm to arrive at base spread.
-	BASE_SPREAD_MIN_PRICE_CHANGE_PREMIUM_PPM = uint32(1_500) // 15bps
-	// Determines how aggressive a vault skews its orders.
-	SKEW_FACTOR_PPM = uint32(500_000) // 0.5
-	// Determines the percentage of vault equity that each order is sized at.
-	ORDER_SIZE_PCT_PPM = uint32(100_000) // 10%
-	// Determines how long a vault's orders are valid for.
-	ORDER_EXPIRATION_SECONDS = uint32(5) // 5 seconds
-)
-
 // RefreshAllVaultOrders refreshes all orders for all vaults by
 // 1. Cancelling all existing orders.
 // 2. Placing new orders.
@@ -76,11 +59,12 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to cancel", err, "vaultId", vaultId)
 		return err
 	}
+	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
 	for _, order := range ordersToCancel {
 		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
-				uint32(ctx.BlockTime().Unix())+ORDER_EXPIRATION_SECONDS,
+				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
 			))
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)

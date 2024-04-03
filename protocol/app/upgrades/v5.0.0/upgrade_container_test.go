@@ -7,11 +7,18 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	v_5_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v5.0.0"
-	containertest "github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/testing/containertest"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	AliceBobBTCQuantums = 1_000_000
 )
 
 func TestStateUpgrade(t *testing.T) {
@@ -23,12 +30,17 @@ func TestStateUpgrade(t *testing.T) {
 	node := testnet.Nodes["alice"]
 	nodeAddress := constants.AliceAccAddress.String()
 
+	preUpgradeSetups(node, t)
 	preUpgradeChecks(node, t)
 
 	err = containertest.UpgradeTestnet(nodeAddress, t, node, v_5_0_0.UpgradeName)
 	require.NoError(t, err)
 
 	postUpgradeChecks(node, t)
+}
+
+func preUpgradeSetups(node *containertest.Node, t *testing.T) {
+	placeOrders(node, t)
 }
 
 func preUpgradeChecks(node *containertest.Node, t *testing.T) {
@@ -39,7 +51,57 @@ func preUpgradeChecks(node *containertest.Node, t *testing.T) {
 func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	postUpgradecheckPerpetualMarketType(node, t)
 	postUpgradeCheckLiquidityTiers(node, t)
+	postUpgradePerpetualOIs(node, t)
 	// Add test for your upgrade handler logic below
+}
+
+func placeOrders(node *containertest.Node, t *testing.T) {
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.AliceAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+				},
+				Side:     clobtypes.Order_SIDE_BUY,
+				Quantums: AliceBobBTCQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.AliceAccAddress.String(),
+	))
+	require.NoError(t, containertest.BroadcastTx(
+		node,
+		&clobtypes.MsgPlaceOrder{
+			Order: clobtypes.Order{
+				OrderId: clobtypes.OrderId{
+					ClientId: 0,
+					SubaccountId: satypes.SubaccountId{
+						Owner:  constants.BobAccAddress.String(),
+						Number: 0,
+					},
+					ClobPairId: 0,
+				},
+				Side:     clobtypes.Order_SIDE_SELL,
+				Quantums: AliceBobBTCQuantums,
+				Subticks: 5_000_000,
+				GoodTilOneof: &clobtypes.Order_GoodTilBlock{
+					GoodTilBlock: 20,
+				},
+			},
+		},
+		constants.BobAccAddress.String(),
+	))
+	err := node.Wait(2)
+	require.NoError(t, err)
 }
 
 func preUpgradeCheckPerpetualMarketType(node *containertest.Node, t *testing.T) {
@@ -71,6 +133,34 @@ func postUpgradecheckPerpetualMarketType(node *containertest.Node, t *testing.T)
 	require.NoError(t, err)
 	for _, perpetual := range perpetualsList.Perpetual {
 		assert.Equal(t, perpetuals.PerpetualMarketType_PERPETUAL_MARKET_TYPE_CROSS, perpetual.Params.MarketType)
+	}
+}
+
+func postUpgradePerpetualOIs(node *containertest.Node, t *testing.T) {
+	resp, err := containertest.Query(
+		node,
+		perpetuals.NewQueryClient,
+		perpetuals.QueryClient.AllPerpetuals,
+		&perpetuals.QueryAllPerpetualsRequest{},
+	)
+	require.NoError(t, err)
+
+	allPerpsResp := &perpetuals.QueryAllPerpetualsResponse{}
+	err = proto.UnmarshalText(resp.String(), allPerpsResp)
+	require.NoError(t, err)
+
+	for _, perp := range allPerpsResp.Perpetual {
+		expectedOI := 0
+		if perp.Params.Id == 0 {
+			expectedOI = AliceBobBTCQuantums
+		}
+		assert.Equalf(t,
+			dtypes.NewInt(int64(expectedOI)),
+			perp.OpenInterest,
+			"expected: %v, got: %v",
+			dtypes.NewInt(int64(expectedOI)),
+			perp.OpenInterest,
+		)
 	}
 }
 

@@ -76,6 +76,10 @@
           "exitPrice": {
             "type": "string",
             "nullable": true
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -91,7 +95,8 @@
           "sumOpen",
           "sumClose",
           "netFunding",
-          "unrealizedPnl"
+          "unrealizedPnl",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false
@@ -840,6 +845,10 @@
           },
           "updatedAtHeight": {
             "type": "string"
+          },
+          "subaccountNumber": {
+            "type": "number",
+            "format": "double"
           }
         },
         "required": [
@@ -858,7 +867,8 @@
           "timeInForce",
           "status",
           "postOnly",
-          "ticker"
+          "ticker",
+          "subaccountNumber"
         ],
         "type": "object",
         "additionalProperties": false
@@ -2061,6 +2071,115 @@
         ]
       }
     },
+    "/orders/parentSubaccountNumber": {
+      "get": {
+        "operationId": "ListOrdersForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/OrderResponseObject"
+                  },
+                  "type": "array"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ticker",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "side",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderSide"
+            }
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/OrderType"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/APIOrderStatus"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockBeforeOrAt",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "goodTilBlockTimeBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          },
+          {
+            "in": "query",
+            "name": "returnLatestOrders",
+            "required": false,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ]
+      }
+    },
     "/orders/{orderId}": {
       "get": {
         "operationId": "GetOrder",
@@ -2154,6 +2273,80 @@
           {
             "in": "query",
             "name": "subaccountNumber",
+            "required": true,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/PerpetualPositionStatus"
+              }
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAtHeight",
+            "required": false,
+            "schema": {
+              "format": "double",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "createdBeforeOrAt",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/IsoString"
+            }
+          }
+        ]
+      }
+    },
+    "/perpetualPositions/parentSubaccountNumber": {
+      "get": {
+        "operationId": "ListPositionsForParentSubaccount",
+        "responses": {
+          "200": {
+            "description": "Ok",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PerpetualPositionResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentSubaccountNumber",
             "required": true,
             "schema": {
               "format": "double",

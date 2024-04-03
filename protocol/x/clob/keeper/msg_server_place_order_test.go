@@ -108,6 +108,7 @@ func TestPlaceOrder_Error(t *testing.T) {
 				mockLogger.On("Error",
 					"Error placing order",
 					mock.Anything,
+					mock.Anything,
 				).Return()
 			}
 			ks.Ctx = ks.Ctx.WithLogger(mockLogger)

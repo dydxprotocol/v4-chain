@@ -1,30 +1,24 @@
 import {
-  stats, logger, safeJsonStringify, InfoObject,
+  InfoObject, logger, safeJsonStringify, stats,
 } from '@dydxprotocol-indexer/base';
 import { v4 as uuidv4 } from 'uuid';
 import WebSocket from 'ws';
 
 import config from '../config';
 import { getCountry } from '../helpers/header-utils';
-import {
-  createErrorMessage,
-  createConnectedMessage,
-  createUnsubscribedMessage,
-} from '../helpers/message';
-import { Wss, sendMessage } from '../helpers/wss';
+import { createConnectedMessage, createErrorMessage, createUnsubscribedMessage } from '../helpers/message';
+import { sendMessage, Wss } from '../helpers/wss';
 import { ERR_INVALID_WEBSOCKET_FRAME, WS_CLOSE_CODE_SERVICE_RESTART } from '../lib/constants';
 import { InvalidMessageHandler } from '../lib/invalid-message';
-import { PingHandler } from '../lib/ping';
 import { Subscriptions } from '../lib/subscription';
 import {
-  IncomingMessageType,
+  ALL_CHANNELS,
   Channel,
+  Connection,
   IncomingMessage,
+  IncomingMessageType,
   SubscribeMessage,
   UnsubscribeMessage,
-  Connection,
-  PingMessage,
-  ALL_CHANNELS,
   WebsocketEvents,
 } from '../types';
 
@@ -40,14 +34,12 @@ export class Index {
   // Subscriptions tracking object (see lib/subscriptions.ts).
   private subscriptions: Subscriptions;
   // Handlers for pings and invalid messages.
-  private pingHandler: PingHandler;
   private invalidMessageHandler: InvalidMessageHandler;
 
   constructor(wss: Wss, subscriptions: Subscriptions) {
     this.wss = wss;
     this.connections = {};
     this.subscriptions = subscriptions;
-    this.pingHandler = new PingHandler();
     this.invalidMessageHandler = new InvalidMessageHandler();
 
     // Attach the new connection handler to the websocket server.
@@ -163,19 +155,17 @@ export class Index {
       HEARTBEAT_INTERVAL_MS,
     );
 
-    // Attach handler for pongs (response to heartbeat pings) from connection.
+    // Attach handler for pongs (response to heartbeat [ping]s) from connection.
     this.connections[connectionId].ws.on(WebsocketEvents.PONG, () => {
-      logger.info({
-        at: 'index#onPong',
-        message: 'Received pong',
-        connectionId,
-      });
-
       // Clear the delayed disconnect set by the heartbeat handler when a pong is received.
       if (this.connections[connectionId].disconnect) {
         clearTimeout(this.connections[connectionId].disconnect);
         delete this.connections[connectionId].disconnect;
       }
+    });
+
+    this.connections[connectionId].ws.on(WebsocketEvents.PING, (data: Buffer) => {
+      ws.pong(data);
     });
 
     // Attach handler for close events from the connection.
@@ -224,7 +214,11 @@ export class Index {
    * @returns
    */
   private onMessage(connectionId: string, message: WebSocket.Data): void {
-    stats.increment(`${config.SERVICE_NAME}.on_message`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.on_message`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+    );
     if (!this.connections[connectionId]) {
       logger.info({
         at: 'index#onMessage',
@@ -315,12 +309,8 @@ export class Index {
         );
         break;
       }
+      // TODO: Consider custom ping messages as invalid after publishing updated documentation.
       case IncomingMessageType.PING: {
-        this.pingHandler.handlePing(
-          parsed as PingMessage,
-          this.connections[connectionId],
-          connectionId,
-        );
         break;
       }
       default: {
@@ -332,7 +322,11 @@ export class Index {
         return;
       }
     }
-    stats.increment(`${config.SERVICE_NAME}.message_received_${parsed.type}`, 1);
+    stats.increment(
+      `${config.SERVICE_NAME}.message_received_${parsed.type}`,
+      1,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+    );
   }
 
   /**
@@ -392,11 +386,11 @@ export class Index {
       if (this.connections[connectionId].heartbeat) {
         clearInterval(this.connections[connectionId].heartbeat);
       }
+      this.connections[connectionId].ws.removeAllListeners();
       this.connections[connectionId].ws.terminate();
 
       // Delete subscription data.
       this.subscriptions.remove(connectionId);
-      this.pingHandler.handleDisconnect(connectionId);
       this.invalidMessageHandler.handleDisconnect(connectionId);
       delete this.connections[connectionId];
     } catch (error) {

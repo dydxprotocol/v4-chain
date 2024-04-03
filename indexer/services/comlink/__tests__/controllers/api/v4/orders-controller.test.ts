@@ -76,6 +76,24 @@ describe('orders-controller#V4', () => {
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
         },
+        testConstants.defaultSubaccount.subaccountNumber,
+      ));
+    });
+
+    it('Get /:orderId gets isolated position order in postgres', async () => {
+      await OrderTable.create(testConstants.isolatedMarketOrder);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/${testConstants.isolatedMarketOrderId}`,
+      });
+
+      expect(response.body).toEqual(postgresOrderToResponseObject(
+        {
+          ...testConstants.isolatedMarketOrder,
+          id: testConstants.isolatedMarketOrderId,
+        },
+        testConstants.isolatedSubaccount.subaccountNumber,
       ));
     });
 
@@ -93,6 +111,24 @@ describe('orders-controller#V4', () => {
       expect(response.body).toEqual(
         redisOrderToResponseObject(
           redisTestConstants.defaultRedisOrder,
+        ),
+      );
+    });
+
+    it('Get /:orderId gets isolated position order in redis', async () => {
+      await placeOrder({
+        redisOrder: redisTestConstants.isolatedMarketRedisOrder,
+        client: redisClient,
+      });
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/${testConstants.isolatedMarketOrderId}`,
+      });
+
+      expect(response.body).toEqual(
+        redisOrderToResponseObject(
+          redisTestConstants.isolatedMarketRedisOrder,
         ),
       );
     });
@@ -117,7 +153,40 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          {
+            [testConstants.defaultSubaccountId]:
+              testConstants.defaultSubaccount.subaccountNumber,
+          },
           redisTestConstants.defaultRedisOrder,
+        ),
+      );
+    });
+
+    it('Get /:orderId gets isolated market order in postgres and redis', async () => {
+      await Promise.all([
+        OrderTable.create(testConstants.isolatedMarketOrder),
+        placeOrder({
+          redisOrder: redisTestConstants.isolatedMarketRedisOrder,
+          client: redisClient,
+        }),
+      ]);
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/${testConstants.isolatedMarketOrderId}`,
+      });
+
+      expect(response.body).toEqual(
+        postgresAndRedisOrderToResponseObject(
+          {
+            ...testConstants.isolatedMarketOrder,
+            id: testConstants.isolatedMarketOrderId,
+          },
+          {
+            [testConstants.isolatedSubaccountId]:
+                testConstants.isolatedSubaccount.subaccountNumber,
+          },
+          redisTestConstants.isolatedMarketRedisOrder,
         ),
       );
     });
@@ -147,6 +216,15 @@ describe('orders-controller#V4', () => {
     const orderWithDifferentClobPairId: IndexerOrder = {
       ...redisTestConstants.defaultOrder,
       orderId: orderIdWithDifferentClobPairId,
+      goodTilBlock: 1200,
+    };
+    const isolatedOrderIdWithDiffClientId: IndexerOrderId = {
+      ...redisTestConstants.isolatedMarketOrderId,
+      clientId: 2,
+    };
+    const isolatedOrderWithDiffClientId: IndexerOrder = {
+      ...redisTestConstants.isolatedMarketOrder,
+      orderId: isolatedOrderIdWithDiffClientId,
       goodTilBlock: 1200,
     };
     const newerOrderGoodTilBlockTime: IndexerOrder = {
@@ -195,6 +273,19 @@ describe('orders-controller#V4', () => {
       untriggeredOrder.clobPairId,
       untriggeredOrder.orderFlags,
     );
+    const isolatedRedisOrder: RedisOrder = {
+      ...redisTestConstants.isolatedMarketRedisOrder,
+      order: {
+        ...redisTestConstants.isolatedMarketOrder,
+        goodTilBlock: 1200,
+      },
+    };
+    const isolatedRedisOrderWithDiffClientId: RedisOrder = {
+      ...redisTestConstants.isolatedMarketRedisOrder,
+      order: isolatedOrderWithDiffClientId,
+      id: OrderTable.orderIdToUuid(isolatedOrderIdWithDiffClientId),
+      ticker: testConstants.isolatedPerpetualMarket.ticker,
+    };
 
     it('Successfully gets multiple redis orders', async () => {
       await Promise.all([
@@ -252,10 +343,65 @@ describe('orders-controller#V4', () => {
       ]);
     });
 
+    it('Successfully gets multiple redis orders for parent subaccount', async () => {
+      await Promise.all([
+        placeOrder({
+          redisOrder: redisTestConstants.defaultRedisOrder,
+          client: redisClient,
+        }),
+        placeOrder({
+          redisOrder: isolatedRedisOrder,
+          client: redisClient,
+        }),
+      ]);
+
+      const parentSubaccountNumber: number = 0;
+      const queryParams = {
+        address: testConstants.defaultSubaccount.address,
+        parentSubaccountNumber,
+      };
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/parentSubaccountNumber?${getQueryString(queryParams)}`,
+      });
+
+      expect(response.body).toEqual([ // by default sort by desc goodTilBlock
+        redisOrderToResponseObject(isolatedRedisOrder),
+        redisOrderToResponseObject(
+          redisTestConstants.defaultRedisOrder,
+        ),
+      ]);
+
+      const response2: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/parentSubaccountNumber?${getQueryString({
+          ...queryParams,
+          returnLatestOrders: 'false',
+        })}`,
+      });
+
+      expect(response2.body).toEqual([ // by default sort by desc goodTilBlock
+        redisOrderToResponseObject(
+          redisTestConstants.defaultRedisOrder,
+        ),
+        redisOrderToResponseObject(isolatedRedisOrder),
+      ]);
+    });
+
     it.each([
       [
         'ticker',
         [redisTestConstants.defaultRedisOrder, redisOrderWithDifferentMarket],
+        {
+          ...defaultQueryParams,
+          ticker: testConstants.defaultPerpetualMarket.ticker,
+        },
+        redisTestConstants.defaultRedisOrder,
+      ],
+      [
+        'tickers across parent subaccount',
+        [redisTestConstants.defaultRedisOrder, redisTestConstants.isolatedMarketRedisOrder],
         {
           ...defaultQueryParams,
           ticker: testConstants.defaultPerpetualMarket.ticker,
@@ -268,6 +414,26 @@ describe('orders-controller#V4', () => {
           redisTestConstants.defaultRedisOrder,
           redisOrderWithDifferentMarket,
           redisTestConstants.defaultRedisOrderGoodTilBlockTime,
+        ],
+        {
+          ...defaultQueryParams,
+          goodTilBlockBeforeOrAt: protocolTranslations.getGoodTilBlock(
+            redisTestConstants.defaultRedisOrder.order!,
+          ),
+        },
+        redisTestConstants.defaultRedisOrder,
+      ],
+      [
+        'goodTilBlock',
+        [
+          redisTestConstants.defaultRedisOrder,
+          {
+            ...redisTestConstants.isolatedMarketRedisOrder,
+            order: {
+              ...redisTestConstants.isolatedMarketOrder,
+              goodTilBlock: 1200,
+            },
+          },
         ],
         {
           ...defaultQueryParams,
@@ -391,19 +557,20 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrderGoodTilBlockTime,
           id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        },
+        testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       const response2: request.Response = await sendRequest({
@@ -418,19 +585,71 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...testConstants.defaultOrderGoodTilBlockTime,
           id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
+        }, testConstants.defaultSubaccount.subaccountNumber),
+      ]);
+    });
+
+    it('Successfully gets multiple postgres orders for parent subaccount', async () => {
+      await Promise.all([
+        OrderTable.create(testConstants.defaultOrder),
+        OrderTable.create({
+          ...testConstants.isolatedMarketOrder,
+          goodTilBlock: '1000',
         }),
+      ]);
+      const parentSubaccountNumber: number = 0;
+      const queryParams = {
+        address: testConstants.defaultSubaccount.address,
+        parentSubaccountNumber,
+      };
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/parentSubaccountNumber?${getQueryString(queryParams)}`,
+      });
+
+      expect(response.body).toEqual([
+        postgresOrderToResponseObject({
+          ...testConstants.isolatedMarketOrder,
+          id: testConstants.isolatedMarketOrderId,
+          goodTilBlock: '1000',
+        }, testConstants.isolatedSubaccount.subaccountNumber),
+        postgresOrderToResponseObject({
+          ...testConstants.defaultOrder,
+          id: testConstants.defaultOrderId,
+        }, testConstants.defaultSubaccount.subaccountNumber),
+      ]);
+
+      const response2: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/parentSubaccountNumber?${getQueryString({
+          ...queryParams,
+          returnLatestOrders: 'false',
+        })}`,
+      });
+
+      expect(response2.body).toEqual([
+        postgresOrderToResponseObject({
+          ...testConstants.defaultOrder,
+          id: testConstants.defaultOrderId,
+        }, testConstants.defaultSubaccount.subaccountNumber),
+        postgresOrderToResponseObject({
+          ...testConstants.isolatedMarketOrder,
+          id: testConstants.isolatedMarketOrderId,
+          goodTilBlock: '1000',
+        }, testConstants.isolatedSubaccount.subaccountNumber),
       ]);
     });
 
@@ -449,11 +668,11 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...testConstants.defaultOrder,
           id: testConstants.defaultOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       const response2 = await sendRequest({
@@ -469,7 +688,7 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
     });
 
@@ -503,6 +722,10 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          {
+            [testConstants.defaultSubaccountId]:
+              testConstants.defaultSubaccount.subaccountNumber,
+          },
           redisTestConstants.defaultRedisOrder,
         ),
       ]);
@@ -525,7 +748,7 @@ describe('orders-controller#V4', () => {
             filledOrder.clobPairId,
             filledOrder.orderFlags,
           ),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       response = await sendRequest({
@@ -554,7 +777,7 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
 
       response = await sendRequest({
@@ -572,12 +795,16 @@ describe('orders-controller#V4', () => {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          {
+            [testConstants.defaultSubaccountId]:
+              testConstants.defaultSubaccount.subaccountNumber,
+          },
           redisTestConstants.defaultRedisOrder,
         ),
         postgresOrderToResponseObject({
           ...untriggeredOrder,
           id: untriggeredOrderId,
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
       ]);
     });
 
@@ -614,28 +841,99 @@ describe('orders-controller#V4', () => {
         postgresOrderToResponseObject({
           ...secondOrderGoodTilBlockTime,
           id: getUuidForTest(secondOrderGoodTilBlockTime),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         redisOrderToResponseObject(newerRedisOrderGoodTilBlockTime),
         postgresAndRedisOrderToResponseObject(
           {
             ...testConstants.defaultOrderGoodTilBlockTime,
             id: getUuidForTest(testConstants.defaultOrderGoodTilBlockTime),
           },
+          {
+            [testConstants.defaultSubaccountId]:
+              testConstants.defaultSubaccount.subaccountNumber,
+          },
           redisTestConstants.defaultRedisOrderGoodTilBlockTime,
         ),
         postgresOrderToResponseObject({
           ...secondOrder,
           id: getUuidForTest(secondOrder),
-        }),
+        }, testConstants.defaultSubaccount.subaccountNumber),
         redisOrderToResponseObject(redisOrderWithDifferentMarket),
         postgresAndRedisOrderToResponseObject(
           {
             ...testConstants.defaultOrder,
             id: testConstants.defaultOrderId,
           },
+          {
+            [testConstants.defaultSubaccountId]:
+              testConstants.defaultSubaccount.subaccountNumber,
+          },
           redisTestConstants.defaultRedisOrder,
         ),
       ]);
+    });
+
+    it('Successfully pulls both redis and postgres orders for parent subaccount', async () => {
+      await Promise.all([
+        OrderTable.create(testConstants.defaultOrder),
+        OrderTable.create(secondOrder),
+        OrderTable.create(testConstants.isolatedMarketOrder),
+        placeOrder({
+          redisOrder: redisTestConstants.defaultRedisOrder,
+          client: redisClient,
+        }),
+        placeOrder({
+          redisOrder: redisTestConstants.isolatedMarketRedisOrder,
+          client: redisClient,
+        }),
+        placeOrder({
+          redisOrder: isolatedRedisOrderWithDiffClientId,
+          client: redisClient,
+        }),
+      ]);
+
+      const parentSubaccountNumber: number = 0;
+      const queryParams = {
+        address: testConstants.defaultSubaccount.address,
+        parentSubaccountNumber,
+      };
+
+      const response: request.Response = await sendRequest({
+        type: RequestMethod.GET,
+        path: `/v4/orders/parentSubaccountNumber?${getQueryString(queryParams)}`,
+      });
+
+      expect(response.body).toEqual(
+        expect.arrayContaining([
+          postgresOrderToResponseObject({
+            ...secondOrder,
+            id: getUuidForTest(secondOrder),
+          }, testConstants.defaultSubaccount.subaccountNumber),
+          redisOrderToResponseObject(isolatedRedisOrderWithDiffClientId),
+          postgresAndRedisOrderToResponseObject(
+            {
+              ...testConstants.isolatedMarketOrder,
+              id: testConstants.isolatedMarketOrderId,
+            },
+            {
+              [testConstants.isolatedSubaccountId]:
+                  testConstants.isolatedSubaccount.subaccountNumber,
+            },
+            redisTestConstants.isolatedMarketRedisOrder,
+          ),
+          postgresAndRedisOrderToResponseObject(
+            {
+              ...testConstants.defaultOrder,
+              id: testConstants.defaultOrderId,
+            },
+            {
+              [testConstants.defaultSubaccountId]:
+                  testConstants.defaultSubaccount.subaccountNumber,
+            },
+            redisTestConstants.defaultRedisOrder,
+          ),
+        ]),
+      );
     });
 
     it.each([

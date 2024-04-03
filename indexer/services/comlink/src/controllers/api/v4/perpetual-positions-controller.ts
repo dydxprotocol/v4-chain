@@ -36,10 +36,11 @@ import {
   handleControllerError,
   getPerpetualPositionsWithUpdatedFunding,
   initializePerpetualPositionsWithFunding,
+  getChildSubaccountNums,
 } from '../../../lib/helpers';
 import { rateLimiterMiddleware } from '../../../lib/rate-limit';
 import {
-  CheckLimitAndCreatedBeforeOrAtSchema,
+  CheckLimitAndCreatedBeforeOrAtSchema, CheckParentSubaccountSchema,
   CheckSubaccountSchema,
 } from '../../../lib/validation/schemas';
 import { handleValidationErrors } from '../../../request-helpers/error-handler';
@@ -47,7 +48,12 @@ import ExportResponseCodeStats from '../../../request-helpers/export-response-co
 import { perpetualPositionToResponseObject } from '../../../request-helpers/request-transformer';
 import { sanitizeArray } from '../../../request-helpers/sanitizers';
 import { validateArray } from '../../../request-helpers/validators';
-import { PerpetualPositionRequest, PerpetualPositionResponse, PerpetualPositionWithFunding } from '../../../types';
+import {
+  ParentSubaccountPerpetualPositionRequest,
+  PerpetualPositionRequest,
+  PerpetualPositionResponse,
+  PerpetualPositionWithFunding,
+} from '../../../types';
 
 const router: express.Router = express.Router();
 const controllerName: string = 'perpetual-positions-controller';
@@ -141,10 +147,152 @@ class PerpetualPositionsController extends Controller {
 
     return {
       positions: updatedPerpetualPositions.map((position: PerpetualPositionWithFunding) => {
-        return perpetualPositionToResponseObject(position, perpetualMarketsMap, marketIdToMarket);
+        return perpetualPositionToResponseObject(
+          position,
+          perpetualMarketsMap,
+          marketIdToMarket,
+          subaccountNumber,
+        );
       }),
     };
   }
+
+  @Get('/parentSubaccountNumber')
+  async listPositionsForParentSubaccount(
+    @Query() address: string,
+      @Query() parentSubaccountNumber: number,
+      @Query() status?: PerpetualPositionStatus[],
+      @Query() limit?: number,
+      @Query() createdBeforeOrAtHeight?: number,
+      @Query() createdBeforeOrAt?: IsoString,
+  ): Promise<PerpetualPositionResponse> {
+    // Get subaccountIds for all child subaccounts of the parent subaccount
+    // Create a record of subaccountId to subaccount number
+    const childIdtoSubaccountNumber: Record<string, number> = {};
+    getChildSubaccountNums(parentSubaccountNumber).forEach(
+      (subaccountNum: number) => {
+        childIdtoSubaccountNumber[SubaccountTable.uuid(address, subaccountNum)] = subaccountNum;
+      },
+    );
+    const childSubaccountIds: string[] = Object.keys(childIdtoSubaccountNumber);
+
+    const [
+      positions,
+      markets,
+    ]: [
+      PerpetualPositionFromDatabase[],
+      MarketFromDatabase[],
+    ] = await Promise.all([
+      PerpetualPositionTable.findAll(
+        {
+          subaccountId: childSubaccountIds,
+          status,
+          limit,
+          createdBeforeOrAtHeight: createdBeforeOrAtHeight
+            ? createdBeforeOrAtHeight.toString()
+            : undefined,
+          createdBeforeOrAt,
+        },
+        [QueryableField.LIMIT],
+      ),
+      MarketTable.findAll(
+        {},
+        [],
+      ),
+    ]);
+
+    const openPositionsExist: boolean = positions.some(
+      (position: PerpetualPositionFromDatabase) => position.status === PerpetualPositionStatus.OPEN,
+    );
+
+    let updatedPerpetualPositions:
+    PerpetualPositionWithFunding[] = initializePerpetualPositionsWithFunding(positions);
+
+    // Only update the funding for open positions
+    if (openPositionsExist) {
+      const subaccountIds: string[] = updatedPerpetualPositions.map(
+        (position: PerpetualPositionFromDatabase) => position.subaccountId,
+      );
+      const [
+        subaccounts,
+        latestBlock,
+      ]: [
+        SubaccountFromDatabase[],
+        BlockFromDatabase | undefined,
+      ] = await Promise.all([
+        SubaccountTable.findAll(
+          {
+            id: subaccountIds,
+          },
+          [],
+        ),
+        BlockTable.getLatest(),
+      ]);
+
+      if (subaccounts.length === 0 || latestBlock === undefined) {
+        throw new NotFoundError(
+          `Found OPEN perpetual positions but no subaccounts with address ${address} ` +
+            `and parent Subaccount number ${parentSubaccountNumber}`,
+        );
+      }
+
+      const perpetualPositionsBySubaccount:
+      { [subaccountId: string]: PerpetualPositionWithFunding[] } = _.groupBy(
+        updatedPerpetualPositions,
+        'subaccountId',
+      );
+
+      // For each subaccount, update all perpetual positions with the latest funding and
+      // store the updated positions in updatedPerpetualPositions.
+      const updatedPerpetualPositionsPromises:
+      Promise<PerpetualPositionWithFunding[]>[] = subaccounts.map(
+        (subaccount: SubaccountFromDatabase) => adjustPerpetualPositionsWithUpdatedFunding(
+          perpetualPositionsBySubaccount[subaccount.id],
+          subaccount,
+          latestBlock,
+        ),
+      );
+      updatedPerpetualPositions = _.flatten(await Promise.all(updatedPerpetualPositionsPromises));
+    }
+
+    const perpetualMarketsMap: PerpetualMarketsMap = perpetualMarketRefresher
+      .getPerpetualMarketsMap();
+
+    const marketIdToMarket: MarketsMap = _.keyBy(
+      markets,
+      MarketColumns.id,
+    );
+
+    return {
+      positions: updatedPerpetualPositions.map((position: PerpetualPositionWithFunding) => {
+        return perpetualPositionToResponseObject(
+          position,
+          perpetualMarketsMap,
+          marketIdToMarket,
+          childIdtoSubaccountNumber[position.subaccountId],
+        );
+      }),
+    };
+  }
+}
+
+async function adjustPerpetualPositionsWithUpdatedFunding(
+  perpetualPositions: PerpetualPositionWithFunding[],
+  subaccount: SubaccountFromDatabase,
+  latestBlock: BlockFromDatabase,
+): Promise<PerpetualPositionWithFunding[]> {
+  const {
+    lastUpdatedFundingIndexMap,
+    latestFundingIndexMap,
+  }: {
+    lastUpdatedFundingIndexMap: FundingIndexMap,
+    latestFundingIndexMap: FundingIndexMap,
+  } = await getFundingIndexMaps(subaccount, latestBlock);
+  return getPerpetualPositionsWithUpdatedFunding(
+    perpetualPositions,
+    latestFundingIndexMap,
+    lastUpdatedFundingIndexMap,
+  );
 }
 
 router.get(
@@ -179,11 +327,14 @@ router.get(
       createdBeforeOrAt,
     }: PerpetualPositionRequest = matchedData(req) as PerpetualPositionRequest;
 
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const subaccountNum: number = +subaccountNumber;
+
     try {
       const controller: PerpetualPositionsController = new PerpetualPositionsController();
       const response: PerpetualPositionResponse = await controller.listPositions(
         address,
-        subaccountNumber,
+        subaccountNum,
         status,
         limit,
         createdBeforeOrAtHeight,
@@ -202,6 +353,72 @@ router.get(
     } finally {
       stats.timing(
         `${config.SERVICE_NAME}.${controllerName}.get_perpetual_positions.timing`,
+        Date.now() - start,
+      );
+    }
+  },
+);
+
+router.get(
+  '/parentSubaccountNumber',
+  rateLimiterMiddleware(getReqRateLimiter),
+  ...CheckParentSubaccountSchema,
+  ...CheckLimitAndCreatedBeforeOrAtSchema,
+  ...checkSchema({
+    status: {
+      in: ['query'],
+      optional: true,
+      customSanitizer: {
+        options: sanitizeArray,
+      },
+      custom: {
+        options: (inputArray) => validateArray(inputArray, Object.values(PerpetualPositionStatus)),
+        errorMessage: 'status must be a valid Position Status (OPEN, etc)',
+      },
+    },
+  }),
+  handleValidationErrors,
+  complianceAndGeoCheck,
+  ExportResponseCodeStats({ controllerName }),
+  async (req: express.Request, res: express.Response) => {
+    const start: number = Date.now();
+    const {
+      address,
+      parentSubaccountNumber,
+      status,
+      limit,
+      createdBeforeOrAtHeight,
+      createdBeforeOrAt,
+    }: ParentSubaccountPerpetualPositionRequest = matchedData(
+      req,
+    ) as ParentSubaccountPerpetualPositionRequest;
+
+    // The schema checks allow subaccountNumber to be a string, but we know it's a number here.
+    const parentSubaccountNum: number = +parentSubaccountNumber;
+
+    try {
+      const controller: PerpetualPositionsController = new PerpetualPositionsController();
+      const response: PerpetualPositionResponse = await controller.listPositionsForParentSubaccount(
+        address,
+        parentSubaccountNum,
+        status,
+        limit,
+        createdBeforeOrAtHeight,
+        createdBeforeOrAt,
+      );
+
+      return res.send(response);
+    } catch (error) {
+      return handleControllerError(
+        'PerpetualPositionsController GET /parentSubaccountNumber',
+        'Perpetual positions error',
+        error,
+        req,
+        res,
+      );
+    } finally {
+      stats.timing(
+        `${config.SERVICE_NAME}.${controllerName}.get_perpetual_positions_parent_subaccount.timing`,
         Date.now() - start,
       );
     }

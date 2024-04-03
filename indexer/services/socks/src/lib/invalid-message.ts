@@ -3,7 +3,7 @@ import { logger } from '@dydxprotocol-indexer/base';
 import config from '../config';
 import { createErrorMessage } from '../helpers/message';
 import { sendMessage } from '../helpers/wss';
-import { Connection } from '../types';
+import { Connection, WebsocketEvents } from '../types';
 import { WS_CLOSE_CODE_POLICY_VIOLATION } from './constants';
 import { RateLimiter } from './rate-limit';
 
@@ -42,6 +42,7 @@ export class InvalidMessageHandler {
         WS_CLOSE_CODE_POLICY_VIOLATION,
         JSON.stringify({ message: 'Rate limited' }),
       );
+      connection.ws.removeAllListeners(WebsocketEvents.MESSAGE);
 
       logger.info({
         at: 'invalid-message#handleInvalidMessage',

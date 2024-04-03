@@ -15,4 +15,5 @@ type PricesKeeper interface {
 		ctx sdk.Context,
 		updates []*pricestypes.MsgUpdateMarketPrices_MarketPrice,
 	) (err error)
+	GetPrevBlockCPCounter(ctx sdk.Context) (uint64, error)
 }

@@ -55,7 +55,8 @@ BEGIN
                          ORDER BY "effectiveAtHeight"
                          DESC LIMIT 1;
                 IF NOT FOUND THEN
-                    RAISE EXCEPTION 'price not found for marketId %', perpetual_market_record."marketId";
+                    errors_response = array_append(errors_response, '"oracle_price not found for marketId."'::jsonb);
+                    CONTINUE;
                 END IF;
 
                 event_id = dydx_event_id_from_parts(block_height, transaction_index, event_index);

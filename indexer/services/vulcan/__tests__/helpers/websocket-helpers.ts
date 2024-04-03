@@ -1,21 +1,18 @@
 import { KafkaTopics } from '@dydxprotocol-indexer/kafka';
 import { OffChainUpdateV1, OrderbookMessage, SubaccountMessage } from '@dydxprotocol-indexer/v4-protos';
-import { IHeaders, ProducerRecord } from 'kafkajs';
+import { ProducerRecord } from 'kafkajs';
 
 export function expectWebsocketSubaccountMessage(
   subaccountProducerRecord: ProducerRecord,
   expectedSubaccountMessage: SubaccountMessage,
-  expectedHeaders: IHeaders,
 ): void {
   expect(subaccountProducerRecord.topic).toEqual(KafkaTopics.TO_WEBSOCKETS_SUBACCOUNTS);
   const subaccountMessageValueBinary: Uint8Array = new Uint8Array(
     subaccountProducerRecord.messages[0].value as Buffer,
   );
-  const headers: IHeaders | undefined = subaccountProducerRecord.messages[0].headers;
   const subaccountMessage: SubaccountMessage = SubaccountMessage.decode(
     subaccountMessageValueBinary,
   );
-  expect(headers).toEqual(expectedHeaders);
   expect(subaccountMessage).toEqual(expectedSubaccountMessage);
 }
 
