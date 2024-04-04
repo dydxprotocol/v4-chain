@@ -24,7 +24,6 @@ services:
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
-      - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.alice
     volumes:
       - ./localnet/dydxprotocol0:/dydxprotocol/chain/.alice/data
@@ -54,7 +53,6 @@ services:
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
-      - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.bob
     volumes:
       - ./localnet/dydxprotocol1:/dydxprotocol/chain/.bob/data
@@ -82,7 +80,6 @@ services:
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
-      - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.carl
     volumes:
       - ./localnet/dydxprotocol2:/dydxprotocol/chain/.carl/data
@@ -108,20 +105,6 @@ services:
     environment:
       # See https://docs.datadoghq.com/profiler/enabling/go/ for DD_ specific environment variables
       - DD_ENV=localnet_${USER}
-      - DD_AGENT_HOST=datadog-agent
       - DAEMON_HOME=/dydxprotocol/chain/.dave
     volumes:
       - ./localnet/dydxprotocol3:/dydxprotocol/chain/.dave/data
-
-  datadog-agent:
-    image: public.ecr.aws/datadog/agent:7
-    environment:
-      # See https://docs.datadoghq.com/containers/docker/?tab=standard#environment-variables for agent configuration
-      - DD_API_KEY=${DD_API_KEY}
-      - DD_APM_ENABLED=true
-      - DD_APM_NON_LOCAL_TRAFFIC=true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    ports:
-      - "8125:8215"
-      - "8126:8126"
