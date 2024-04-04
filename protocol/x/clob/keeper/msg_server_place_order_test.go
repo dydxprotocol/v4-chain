@@ -6,14 +6,17 @@ import (
 	"testing"
 	"time"
 
+	comettypes "github.com/cometbft/cometbft/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
+	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -393,6 +396,171 @@ func TestPlaceOrder_Success(t *testing.T) {
 
 			// Run mock assertions.
 			indexerEventManager.AssertExpectations(t)
+		})
+	}
+}
+
+func TestHandleMsgPlaceOrder(t *testing.T) {
+	testOrder := &types.Order{
+		OrderId: types.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   types.OrderIdFlags_LongTerm,
+			ClobPairId:   0,
+		},
+		Side:         types.Order_SIDE_BUY,
+		Quantums:     100,
+		Subticks:     10_000,
+		GoodTilOneof: &types.Order_GoodTilBlockTime{GoodTilBlockTime: 15},
+	}
+	tests := map[string]struct {
+		// Whether order is internal.
+		isInternalOrder bool
+		// Quantums of USDC that subaccount has.
+		assetQuantums int64
+		// Whether a cancellation exists for the order.
+		cancellationExists bool
+		// Whether a removal exists for the order.
+		removalExists bool
+		// Whether equity tier limit exists.
+		equityTierLimitExists bool
+
+		// Expected error.
+		expectedError error
+	}{
+		"Success - Place an Internal Order, Validations are Skipped": {
+			isInternalOrder:       true,
+			assetQuantums:         -1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         false,
+			equityTierLimitExists: true,
+		},
+		"Error - Place an Internal Order, Order Already Cancelled": {
+			isInternalOrder:       true,
+			assetQuantums:         -1_000_000_000,
+			cancellationExists:    true,
+			removalExists:         false,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyCancelled,
+		},
+		"Error - Place an Internal Order, Order Already Removed": {
+			isInternalOrder:       true,
+			assetQuantums:         -1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         true,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyRemoved,
+		},
+		"Success - Place an External Order, All Validations Pass": {
+			isInternalOrder:       false,
+			assetQuantums:         1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         false,
+			equityTierLimitExists: true,
+		},
+		"Error - Place an External Order, Order Already Cancelled": {
+			isInternalOrder:       false,
+			assetQuantums:         1_000_000_000,
+			cancellationExists:    true,
+			removalExists:         false,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyCancelled,
+		},
+		"Error - Place an External Order, Order Already Removed": {
+			isInternalOrder:       false,
+			assetQuantums:         1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         true,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyRemoved,
+		},
+		"Error - Place an External Order, Equity Tier Limit Reached": {
+			isInternalOrder:       false,
+			assetQuantums:         1,
+			cancellationExists:    false,
+			removalExists:         false,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrOrderWouldExceedMaxOpenOrdersEquityTierLimit,
+		},
+		"Error - Place an External Order, Collateralization Check Failed": {
+			isInternalOrder:       false,
+			assetQuantums:         -1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         false,
+			equityTierLimitExists: false,
+			expectedError:         types.ErrStatefulOrderCollateralizationCheckFailed,
+		},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			// Initialize tApp and ctx.
+			tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis comettypes.GenesisDoc) {
+				genesis = testapp.DefaultGenesis()
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *satypes.GenesisState) {
+						genesisState.Subaccounts = []satypes.Subaccount{
+							{
+								Id: &testOrder.OrderId.SubaccountId,
+								AssetPositions: []*satypes.AssetPosition{
+									{
+										AssetId:  assettypes.AssetUsdc.Id,
+										Quantums: dtypes.NewInt(tc.assetQuantums),
+									},
+								},
+							},
+						}
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *types.GenesisState) {
+						if !tc.equityTierLimitExists {
+							genesisState.EquityTierLimitConfig = types.EquityTierLimitConfiguration{
+								ShortTermOrderEquityTiers: genesisState.EquityTierLimitConfig.ShortTermOrderEquityTiers,
+								StatefulOrderEquityTiers:  nil,
+							}
+						}
+					},
+				)
+				return genesis
+			}).Build()
+			ctx := tApp.InitChain().WithIsCheckTx(false)
+			k := tApp.App.ClobKeeper
+
+			// Add order to placed cancellations / removals if specified.
+			ppme := k.GetProcessProposerMatchesEvents(ctx)
+			if tc.cancellationExists {
+				ppme.PlacedStatefulCancellationOrderIds = []types.OrderId{testOrder.OrderId}
+			}
+			if tc.removalExists {
+				ppme.RemovedStatefulOrderIds = []types.OrderId{testOrder.OrderId}
+			}
+			k.MustSetProcessProposerMatchesEvents(ctx, ppme)
+
+			// Place order.
+			err := k.HandleMsgPlaceOrder(
+				ctx,
+				&types.MsgPlaceOrder{
+					Order: *testOrder,
+				},
+				tc.isInternalOrder,
+			)
+			if tc.expectedError == nil {
+				require.NoError(t, err)
+
+				// Ensure order placement exists in state.
+				placement, found := k.GetLongTermOrderPlacement(ctx, testOrder.OrderId)
+				require.True(t, found)
+				require.Equal(t, *testOrder, placement.Order)
+			} else {
+				require.ErrorContains(t, err, tc.expectedError.Error())
+
+				// Ensure order placement does not exist in state.
+				_, found := k.GetLongTermOrderPlacement(ctx, testOrder.OrderId)
+				require.False(t, found)
+			}
 		})
 	}
 }
