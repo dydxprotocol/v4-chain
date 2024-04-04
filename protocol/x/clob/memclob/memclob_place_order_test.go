@@ -2822,7 +2822,7 @@ func TestAddOrderToOrderbook_ErrorPlaceNewFullyFilledOrder(t *testing.T) {
 	memclob.SetClobKeeper(&memClobKeeper)
 	memclob.CreateOrderbook(ctx, constants.ClobPair_Btc)
 
-	memClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
+	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
 		Return(big.NewInt(0))
@@ -2856,7 +2856,7 @@ func TestAddOrderToOrderbook_PanicsIfFullyFilled(t *testing.T) {
 	orderId := order.OrderId
 	quantums := order.GetBaseQuantums()
 
-	memClobKeeper.On("AddOrderToOrderbookCollatCheck", mock.Anything, mock.Anything, mock.Anything).
+	memClobKeeper.On("AddOrderToOrderbookSubaccountUpdatesCheck", mock.Anything, mock.Anything, mock.Anything).
 		Return(true, make(map[satypes.SubaccountId]satypes.UpdateResult))
 
 	memClobKeeper.On("GetStatePosition", mock.Anything, mock.Anything, mock.Anything).
