@@ -20,7 +20,9 @@ import config from './config';
 function getOffChainUpdate(
   message: KafkaMessage,
 ): OffChainUpdateV1 {
-
+  if (!message || !message.value || !message.timestamp) {
+    throw Error('Empty message');
+  }
   const messageValue: Buffer = message.value!;
   const messageValueBinary: Uint8Array = new Uint8Array(messageValue);
   return OffChainUpdateV1.decode(messageValueBinary);
@@ -47,6 +49,13 @@ export async function connect(): Promise<void> {
   });
 }
 
+function replacer(key: string, value: any): any {
+  if (value instanceof Buffer) {
+    return value.toString('base64'); // Convert Buffer to base64 string
+  }
+  return value;
+}
+
 export async function printMessageWithTimestampHeader(
   currentMessage: KafkaMessage,
 ): Promise<void> {
@@ -56,6 +65,11 @@ export async function printMessageWithTimestampHeader(
   if (update === undefined) {
     return;
   }
+  logger.info({
+    at: 'printMessageWithTimestampHeader',
+    message: 'Printing update',
+    update,
+  });
 
   if (update.orderPlace === undefined) {
     return;
@@ -63,8 +77,13 @@ export async function printMessageWithTimestampHeader(
   if (isStatefulOrder(update.orderPlace!.order!.orderId!.orderFlags)) {
     logger.info({
       at: 'printMessageWithTimestampHeader',
+      message: 'Printing stateful order',
+      update,
+    });
+    logger.info({
+      at: 'printMessageWithTimestampHeader',
       message: 'Printing message & headers',
-      headers: currentMessage.headers,
+      headers: JSON.stringify(currentMessage.headers, replacer),
       // update,
     });
     await stopConsumer();
