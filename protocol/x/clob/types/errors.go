@@ -356,7 +356,7 @@ var (
 		2004,
 		"IOC/FOK order is already filled, remaining size is cancelled.",
 	)
-	ErrWouldViolateIsolatedSubaccountContraints = errorsmod.Register(
+	ErrWouldViolateIsolatedSubaccountConstraints = errorsmod.Register(
 		ModuleName,
 		2005,
 		"Order would violate isolated subaccount constraints.",

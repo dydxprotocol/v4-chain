@@ -834,7 +834,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
 		if takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
-			matchingErr = types.ErrWouldViolateIsolatedSubaccountContraints
+			matchingErr = types.ErrWouldViolateIsolatedSubaccountConstraints
 		} else {
 			matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
 		}
@@ -2021,15 +2021,14 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 		return types.Success
 	}
 
-	if updateResult == satypes.UpdateCausedError {
+	switch updateResult {
+	case satypes.UpdateCausedError:
 		return types.InternalError
-	}
-
-	if updateResult == satypes.ViolatesIsolatedSubaccountConstraints {
+	case satypes.ViolatesIsolatedSubaccountConstraints:
 		return types.ViolatesIsolatedSubaccountConstraints
+	default:
+		return types.Undercollateralized
 	}
-
-	return types.Undercollateralized
 }
 
 // GetOrderRemainingAmount returns the remaining amount of an order (its size minus its filled amount).

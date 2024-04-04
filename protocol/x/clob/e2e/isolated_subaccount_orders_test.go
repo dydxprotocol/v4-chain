@@ -407,43 +407,6 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			expectedErrCode: sdkerrors.ErrPanic.ABCICode(),
 			expectedErrMsg:  "insufficient funds",
 		},
-		`Isolated subaccount fails to place stateful order for non-isolated perpetual`: {
-			subaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_1ISO_LONG_10_000USD,
-			},
-			perpetuals: []perptypes.Perpetual{
-				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
-				constants.EthUsd_20PercentInitial_10PercentMaintenance,
-				constants.IsoUsd_IsolatedMarket,
-			},
-			clobPairs: []clobtypes.ClobPair{
-				constants.ClobPair_Btc,
-				constants.ClobPair_Eth,
-				constants.ClobPair_3_Iso,
-			},
-			orders: []clobtypes.MsgPlaceOrder{
-				*clobtypes.NewMsgPlaceOrder(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15),
-			},
-			collateralPoolBalances: map[string]int64{
-				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
-				authtypes.NewModuleAddress(
-					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
-				).String(): 1_000_000_000, // $1,000 USDC
-			},
-			expectedOrdersFilled: []clobtypes.OrderId{},
-			expectedSubaccounts: []satypes.Subaccount{
-				constants.Alice_Num0_1ISO_LONG_10_000USD,
-			},
-			// No changes
-			expectedCollateralPoolBalances: map[string]int64{
-				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
-				authtypes.NewModuleAddress(
-					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
-				).String(): 1_000_000_000, // $1,000 USDC
-			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
-			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
-		},
 		`Subaccount with isolated perpetual position fails to place stateful order for cross perpetual`: {
 			subaccounts: []satypes.Subaccount{
 				constants.Alice_Num0_1ISO_LONG_10_000USD,
@@ -478,7 +441,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
 		`Subaccount with cross perpetual position fails to place stateful order for isolated perpetual`: {
@@ -515,7 +478,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
 		`Subaccount with isolated perpetual position fails to place FOK order for cross perpetual`: {
@@ -556,7 +519,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
 		`Subaccount with cross perpetual position fails to place FOK order for isolated perpetual`: {
@@ -597,7 +560,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountConstraints.ABCICode(),
 			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
 	}
