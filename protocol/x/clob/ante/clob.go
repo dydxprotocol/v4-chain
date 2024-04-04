@@ -100,7 +100,7 @@ func (cd ClobDecorator) AnteHandle(
 			log.Handler, log.PlaceOrder,
 		)
 		if msg.Order.OrderId.IsStatefulOrder() {
-			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
+			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg, false)
 
 			log.DebugLog(ctx, "Received new stateful order",
 				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
