@@ -26,6 +26,7 @@ type ClobKeeper interface {
 	HandleMsgPlaceOrder(
 		ctx sdk.Context,
 		msg *clobtypes.MsgPlaceOrder,
+		isInternalOrder bool,
 	) (err error)
 }
 

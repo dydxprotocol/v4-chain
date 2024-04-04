@@ -109,10 +109,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 					)
 					require.NoError(t, err)
 					for _, order := range orders {
-						err := tApp.App.ClobKeeper.HandleMsgPlaceOrder(
-							ctx,
-							clobtypes.NewMsgPlaceOrder(*order),
-						)
+						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
 						require.NoError(t, err)
 					}
 					numPreviousOrders += len(orders)
