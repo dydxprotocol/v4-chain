@@ -9,6 +9,8 @@ import (
 
 const (
 	UpgradeName = "v5.0.0"
+	// VEEnableHeightDelta is the number of blocks after the v5.0.0 upgrade to turn Vote Extensions on.
+	VEEnableHeightDelta = int64(4)
 )
 
 var Upgrade = upgrades.Upgrade{

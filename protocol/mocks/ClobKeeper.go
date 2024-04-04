@@ -643,17 +643,17 @@ func (_m *ClobKeeper) HandleMsgCancelOrder(ctx types.Context, msg *clobtypes.Msg
 	return r0
 }
 
-// HandleMsgPlaceOrder provides a mock function with given fields: ctx, msg
-func (_m *ClobKeeper) HandleMsgPlaceOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder) error {
-	ret := _m.Called(ctx, msg)
+// HandleMsgPlaceOrder provides a mock function with given fields: ctx, msg, isInternalOrder
+func (_m *ClobKeeper) HandleMsgPlaceOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder, isInternalOrder bool) error {
+	ret := _m.Called(ctx, msg, isInternalOrder)
 
 	if len(ret) == 0 {
 		panic("no return value specified for HandleMsgPlaceOrder")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) error); ok {
-		r0 = rf(ctx, msg)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder, bool) error); ok {
+		r0 = rf(ctx, msg, isInternalOrder)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -959,17 +959,17 @@ func (_m *ClobKeeper) PlaceShortTermOrder(ctx types.Context, msg *clobtypes.MsgP
 	return r0, r1, r2
 }
 
-// PlaceStatefulOrder provides a mock function with given fields: ctx, msg
-func (_m *ClobKeeper) PlaceStatefulOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder) error {
-	ret := _m.Called(ctx, msg)
+// PlaceStatefulOrder provides a mock function with given fields: ctx, msg, isInternalOrder
+func (_m *ClobKeeper) PlaceStatefulOrder(ctx types.Context, msg *clobtypes.MsgPlaceOrder, isInternalOrder bool) error {
+	ret := _m.Called(ctx, msg, isInternalOrder)
 
 	if len(ret) == 0 {
 		panic("no return value specified for PlaceStatefulOrder")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder) error); ok {
-		r0 = rf(ctx, msg)
+	if rf, ok := ret.Get(0).(func(types.Context, *clobtypes.MsgPlaceOrder, bool) error); ok {
+		r0 = rf(ctx, msg, isInternalOrder)
 	} else {
 		r0 = ret.Error(0)
 	}

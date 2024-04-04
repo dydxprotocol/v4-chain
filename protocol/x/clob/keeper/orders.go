@@ -304,6 +304,7 @@ func (k Keeper) CancelStatefulOrder(
 
 // PlaceStatefulOrder performs order validation, equity tier limit check, a collateralization check and writes the
 // order to state and the memstore. The order will not be placed on the orderbook.
+// Metrics, equity tier limit, and collateralization check are skipped for orders internal to the protocol.
 //
 // An error will be returned if any of the following conditions are true:
 //   - Standard stateful validation fails.
@@ -318,26 +319,29 @@ func (k Keeper) CancelStatefulOrder(
 func (k Keeper) PlaceStatefulOrder(
 	ctx sdk.Context,
 	msg *types.MsgPlaceOrder,
+	isInternalOrder bool,
 ) (err error) {
-	defer func() {
-		if err != nil {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		} else {
-			telemetry.IncrCounterWithLabels(
-				[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
-				1,
-				[]gometrics.Label{
-					metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
-				},
-			)
-		}
-	}()
+	if !isInternalOrder {
+		defer func() {
+			if err != nil {
+				telemetry.IncrCounterWithLabels(
+					[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Error, metrics.Count},
+					1,
+					[]gometrics.Label{
+						metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+					},
+				)
+			} else {
+				telemetry.IncrCounterWithLabels(
+					[]string{types.ModuleName, metrics.PlaceStatefulOrder, metrics.Success, metrics.Count},
+					1,
+					[]gometrics.Label{
+						metrics.GetLabelForStringValue(metrics.Callback, metrics.GetCallbackMetricFromCtx(ctx)),
+					},
+				)
+			}
+		}()
+	}
 
 	// 1. Ensure the order is not a Short-Term order.
 	order := msg.Order
@@ -354,39 +358,41 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
-	// 3. Check that adding the order would not exceed the equity tier for the account.
-	if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
-		return err
-	}
+	if !isInternalOrder {
+		// 3. Check that adding the order would not exceed the equity tier for the account.
+		if err := k.ValidateSubaccountEquityTierLimitForStatefulOrder(ctx, order); err != nil {
+			return err
+		}
 
-	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
-	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
-	_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
-		ctx,
-		order.GetClobPairId(),
-		map[satypes.SubaccountId][]types.PendingOpenOrder{
-			order.OrderId.SubaccountId: {
-				{
-					RemainingQuantums: order.GetBaseQuantums(),
-					IsBuy:             order.IsBuy(),
-					Subticks:          order.GetOrderSubticks(),
-					ClobPairId:        order.GetClobPairId(),
+		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+		// TODO(CLOB-725): Consider using a pessimistic collateralization check.
+		_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+			ctx,
+			order.GetClobPairId(),
+			map[satypes.SubaccountId][]types.PendingOpenOrder{
+				order.OrderId.SubaccountId: {
+					{
+						RemainingQuantums: order.GetBaseQuantums(),
+						IsBuy:             order.IsBuy(),
+						Subticks:          order.GetOrderSubticks(),
+						ClobPairId:        order.GetClobPairId(),
+					},
 				},
 			},
-		},
-	)
-
-	if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
-		err := types.ErrStatefulOrderCollateralizationCheckFailed
-		if updateResult.IsIsolatedSubaccountError() {
-			err = types.ErrWouldViolateIsolatedSubaccountConstraints
-		}
-		return errorsmod.Wrapf(
-			err,
-			"PlaceStatefulOrder: order (%+v), result (%s)",
-			order,
-			successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
 		)
+
+		if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+			err := types.ErrStatefulOrderCollateralizationCheckFailed
+			if updateResult.IsIsolatedSubaccountError() {
+				err = types.ErrWouldViolateIsolatedSubaccountConstraints
+			}
+			return errorsmod.Wrapf(
+				err,
+				"PlaceStatefulOrder: order (%+v), result (%s)",
+				order,
+				successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
+			)
+		}
 	}
 
 	// 5. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
