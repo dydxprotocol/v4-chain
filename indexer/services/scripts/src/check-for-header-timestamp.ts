@@ -65,7 +65,7 @@ export async function printMessageWithTimestampHeader(
       at: 'printMessageWithTimestampHeader',
       message: 'Printing message & headers',
       headers: currentMessage.headers,
-      update,
+      // update,
     });
     await stopConsumer();
   }
