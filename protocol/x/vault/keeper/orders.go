@@ -83,7 +83,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return err
 	}
 	for _, order := range ordersToPlace {
-		err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order))
+		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
 		}
@@ -319,4 +319,14 @@ func (k Keeper) GetVaultClobOrderClientId(
 	layerBits := uint32(layer) << 22
 
 	return sideBit | blockHeightBit | layerBits
+}
+
+// PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
+// skipping various logs, metrics, and validations.
+func (k Keeper) PlaceVaultClobOrder(
+	ctx sdk.Context,
+	order *clobtypes.Order,
+) error {
+	// Place an internal clob order.
+	return k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
 }
