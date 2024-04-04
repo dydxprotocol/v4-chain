@@ -614,13 +614,13 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// The taker order has unfilled size which will be added to the orderbook as a maker order.
 	// Verify the maker order can be added to the orderbook by performing the add-to-orderbook
-	// collateralization check.
-	addOrderOrderStatus := m.addOrderToOrderbookCollateralizationCheck(
+	// subaccount updates check.
+	addOrderOrderStatus := m.addOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
 		order,
 	)
 
-	// If the add order to orderbook collateralization check failed, we cannot add the order to the orderbook.
+	// If the add order to orderbook subaccount updates check failed, we cannot add the order to the orderbook.
 	if !addOrderOrderStatus.IsSuccess() {
 		if m.generateOffchainUpdates {
 			// Send an off-chain update message indicating the order should be removed from the orderbook
@@ -1446,16 +1446,16 @@ func (m *MemClobPriceTimePriority) validateNewOrder(
 	return nil
 }
 
-// addOrderToOrderbookCollateralizationCheck will perform a collateralization check to verify that the subaccount would
-// remain collateralized if the new maker order were to be fully filled.
-// It returns the result of this collateralization check. If the collateralization check returns an
-// error, it will return the collateralization check error so that it can be surfaced to the client.
+// addOrderToOrderbookSubaccountUpdatesCheck will perform a check to verify that the subaccount updates
+// if the new maker order were to be fully filled are valid.
+// It returns the result of this subaccount updates check. If the check returns an error, it will return
+// the  error so that it can be surfaced to the client.
 //
 // This function will assume that all prior order validation has passed, including the pre-requisite validation of
 // `validateNewOrder` and the actual validation performed within `validateNewOrder`.
 // Note that this is a loose check, mainly for the purposes of spam mitigation. We perform an additional
-// collateralization check on orders when we attempt to match them.
-func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
+// check on the subaccount updates for orders when we attempt to match them.
+func (m *MemClobPriceTimePriority) addOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	order types.Order,
 ) types.OrderStatus {
@@ -1474,7 +1474,7 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	// For the collateralization check, use the remaining amount of the order that is resting on the book.
 	remainingAmount, hasRemainingAmount := m.GetOrderRemainingAmount(ctx, order)
 	if !hasRemainingAmount {
-		panic(fmt.Sprintf("addOrderToOrderbookCollateralizationCheck: order has no remaining amount %v", order))
+		panic(fmt.Sprintf("addOrderToOrderbookSubaccountUpdatesCheck: order has no remaining amount %v", order))
 	}
 
 	pendingOpenOrder := types.PendingOpenOrder{
