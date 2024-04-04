@@ -672,7 +672,7 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 						require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					} else {
 						require.False(t, resp.IsOK())
-						//require.Equal(t, resp.Code, tc.expectedErrCode)
+						require.Equal(t, resp.Code, tc.expectedErrCode)
 						require.Contains(t, resp.Log, tc.expectedErrMsg)
 					}
 				}
