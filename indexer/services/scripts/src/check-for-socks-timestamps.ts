@@ -63,7 +63,7 @@ async function onMessage(topic: string, message: KafkaMessage): Promise<void> {
     logger.info({
       at: 'printTimestamp',
       message: 'Printing timestamp',
-      timestamp: Number(message.timestamp),
+      timestamp: Number(message.headers!.message_received_timestamp),
     });
   } catch (error) {}
 }
