@@ -490,8 +490,6 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// Attempt to match the order against the orderbook.
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
-	fmt.Printf("TAKER ORDER STATUS!!!!!!!!!!!\n")
-	fmt.Printf("Taker order status: %+v\n", takerOrderStatus)
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
