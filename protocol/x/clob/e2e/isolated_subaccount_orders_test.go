@@ -11,6 +11,7 @@ import (
 
 	sdkmath "cosmossdk.io/math"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
@@ -34,6 +35,15 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
 		})
+	PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK := *clobtypes.NewMsgPlaceOrder(
+		clobtypes.Order{
+			OrderId:      clobtypes.OrderId{SubaccountId: constants.Alice_Num0, ClientId: 0, ClobPairId: 3},
+			Side:         clobtypes.Order_SIDE_BUY,
+			Quantums:     uint64(orderQuantums),
+			Subticks:     10,
+			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
+			TimeInForce:  clobtypes.Order_TIME_IN_FORCE_FILL_OR_KILL,
+		})
 	PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5 := *clobtypes.NewMsgPlaceOrder(
 		clobtypes.Order{
 			OrderId:      clobtypes.OrderId{SubaccountId: constants.Bob_Num0, ClientId: 0, ClobPairId: 3},
@@ -42,6 +52,18 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 			Subticks:     10,
 			GoodTilOneof: &clobtypes.Order_GoodTilBlock{GoodTilBlock: 5},
 		})
+	LongTermOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price5_GTBT5 := clobtypes.Order{
+		OrderId: clobtypes.OrderId{
+			SubaccountId: constants.Alice_Num0,
+			ClientId:     0,
+			OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
+			ClobPairId:   3,
+		},
+		Side:         clobtypes.Order_SIDE_BUY,
+		Quantums:     uint64(orderQuantums),
+		Subticks:     10,
+		GoodTilOneof: &clobtypes.Order_GoodTilBlockTime{GoodTilBlockTime: 5},
+	}
 
 	// Alice holds a long position after the match.
 	Alice_Num0_IsolatedAfterMatch := satypes.Subaccount{
@@ -138,7 +160,8 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 		expectedOrdersFilled           []clobtypes.OrderId
 		expectedSubaccounts            []satypes.Subaccount
 		expectedCollateralPoolBalances map[string]int64
-		expectedErr                    string
+		expectedErrMsg                 string
+		expectedErrCode                uint32
 	}{
 		"Isolated subaccount will not have matches for cross-market orders": {
 			subaccounts: []satypes.Subaccount{
@@ -339,7 +362,8 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 30_000_000_000, // $30,000 USDC
 			},
-			expectedErr: "insufficient funds",
+			expectedErrCode: sdkerrors.ErrPanic.ABCICode(),
+			expectedErrMsg:  "insufficient funds",
 		},
 		`Isolated subaccount will not have matches to close isolated perpetual position if isolated collateral pool does not 
 		have enough balance`: {
@@ -380,7 +404,201 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
 				).String(): 1_000_000_000, // $1,000 USDC
 			},
-			expectedErr: "insufficient funds",
+			expectedErrCode: sdkerrors.ErrPanic.ABCICode(),
+			expectedErrMsg:  "insufficient funds",
+		},
+		`Isolated subaccount fails to place stateful order for non-isolated perpetual`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				*clobtypes.NewMsgPlaceOrder(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15),
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+		},
+		`Subaccount with isolated perpetual position fails to place stateful order for cross perpetual`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				*clobtypes.NewMsgPlaceOrder(constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy100_Price10_GTBT15),
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+		},
+		`Subaccount with cross perpetual position fails to place stateful order for isolated perpetual`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1BTC_LONG_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				*clobtypes.NewMsgPlaceOrder(LongTermOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price5_GTBT5),
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1BTC_LONG_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+		},
+		`Subaccount with isolated perpetual position fails to place FOK order for cross perpetual`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				// Liquidity to match the FOK order
+				*clobtypes.NewMsgPlaceOrder(constants.Order_Bob_Num0_Id0_Clob0_Sell1BTC_Price50000_GTB10),
+				*clobtypes.NewMsgPlaceOrder(constants.Order_Alice_Num0_Id0_Clob0_Buy1BTC_Price50000_GTB10_FOK),
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1ISO_LONG_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
+		},
+		`Subaccount with cross perpetual position fails to place FOK order for isolated perpetual`: {
+			subaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1BTC_LONG_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			perpetuals: []perptypes.Perpetual{
+				constants.BtcUsd_20PercentInitial_10PercentMaintenance,
+				constants.EthUsd_20PercentInitial_10PercentMaintenance,
+				constants.IsoUsd_IsolatedMarket,
+			},
+			clobPairs: []clobtypes.ClobPair{
+				constants.ClobPair_Btc,
+				constants.ClobPair_Eth,
+				constants.ClobPair_3_Iso,
+			},
+			orders: []clobtypes.MsgPlaceOrder{
+				// Liquidity to match the FOK order
+				PlaceOrder_Bob_Num0_Id0_Clob3_Sell_1ISO_Price10_GTB5,
+				PlaceOrder_Alice_Num0_Id0_Clob3_Buy_1ISO_Price10_GTB5_FOK,
+			},
+			collateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedOrdersFilled: []clobtypes.OrderId{},
+			expectedSubaccounts: []satypes.Subaccount{
+				constants.Alice_Num0_1BTC_LONG_10_000USD,
+				constants.Bob_Num0_10_000USD,
+			},
+			// No changes
+			expectedCollateralPoolBalances: map[string]int64{
+				satypes.ModuleAddress.String(): 30_000_000_000, // $30,000 USDC
+				authtypes.NewModuleAddress(
+					satypes.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.Params.Id),
+				).String(): 1_000_000_000, // $1,000 USDC
+			},
+			expectedErrCode: clobtypes.ErrWouldViolateIsolatedSubaccountContraints.ABCICode(),
+			expectedErrMsg:  "Order would violate isolated subaccount constraints.",
 		},
 	}
 
@@ -450,11 +668,12 @@ func TestIsolatedSubaccountOrders(t *testing.T) {
 				for _, checkTx := range testapp.MustMakeCheckTxsWithClobMsg(ctx, tApp.App, order) {
 					resp := tApp.CheckTx(checkTx)
 					// Error should only be returned for the second order, as it results in a match.
-					if tc.expectedErr == "" || (i != len(tc.orders)-1) {
+					if tc.expectedErrMsg == "" || (i != len(tc.orders)-1) {
 						require.Conditionf(t, resp.IsOK, "Expected CheckTx to succeed. Response: %+v", resp)
 					} else {
 						require.False(t, resp.IsOK())
-						require.Contains(t, resp.Log, tc.expectedErr)
+						//require.Equal(t, resp.Code, tc.expectedErrCode)
+						require.Contains(t, resp.Log, tc.expectedErrMsg)
 					}
 				}
 			}

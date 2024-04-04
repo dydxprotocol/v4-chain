@@ -490,6 +490,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 
 	// Attempt to match the order against the orderbook.
 	takerOrderStatus, takerOffchainUpdates, _, err := m.matchOrder(ctx, &order)
+	fmt.Printf("TAKER ORDER STATUS!!!!!!!!!!!\n")
+	fmt.Printf("Taker order status: %+v\n", takerOrderStatus)
 	offchainUpdates.Append(takerOffchainUpdates)
 
 	if err != nil {
@@ -833,7 +835,11 @@ func (m *MemClobPriceTimePriority) matchOrder(
 		// filled or not filled at all.
 		// TODO(CLOB-267): Create more granular error types here that indicate why the order was not
 		// fully filled (i.e. undercollateralized, reduce only resized, etc).
-		matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
+		if takerOrderStatus.OrderStatus == types.ViolatesIsolatedSubaccountConstraints {
+			matchingErr = types.ErrWouldViolateIsolatedSubaccountContraints
+		} else {
+			matchingErr = types.ErrFokOrderCouldNotBeFullyFilled
+		}
 	}
 
 	// If the order is post only and it's not the rewind step, then it cannot be filled.
@@ -2019,6 +2025,10 @@ func updateResultToOrderStatus(updateResult satypes.UpdateResult) types.OrderSta
 
 	if updateResult == satypes.UpdateCausedError {
 		return types.InternalError
+	}
+
+	if updateResult == satypes.ViolatesIsolatedSubaccountConstraints {
+		return types.ViolatesIsolatedSubaccountConstraints
 	}
 
 	return types.Undercollateralized

@@ -376,9 +376,13 @@ func (k Keeper) PlaceStatefulOrder(
 		},
 	)
 
-	if !successPerSubaccountUpdate[order.OrderId.SubaccountId].IsSuccess() {
+	if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+		err := types.ErrStatefulOrderCollateralizationCheckFailed
+		if updateResult.IsIsolatedSubaccountError() {
+			err = types.ErrWouldViolateIsolatedSubaccountContraints
+		}
 		return errorsmod.Wrapf(
-			types.ErrStatefulOrderCollateralizationCheckFailed,
+			err,
 			"PlaceStatefulOrder: order (%+v), result (%s)",
 			order,
 			successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
