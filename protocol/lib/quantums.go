@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"math/big"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 // BaseToQuoteQuantums converts an amount denoted in base quantums, to an equivalent amount denoted in quote
@@ -24,13 +24,13 @@ import (
 //
 // The result is rounded down.
 func BaseToQuoteQuantums(
-	bigBaseQuantums *big.Int,
+	baseQuantums *int256.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
-) (bigNotional *big.Int) {
+) (notional *int256.Int) {
 	return multiplyByPrice(
-		new(big.Rat).SetInt(bigBaseQuantums),
+		baseQuantums,
 		baseCurrencyAtomicResolution,
 		priceValue,
 		priceExponent,
@@ -53,35 +53,16 @@ func BaseToQuoteQuantums(
 //
 // The result is rounded down.
 func QuoteToBaseQuantums(
-	bigQuoteQuantums *big.Int,
+	quoteQuantums *int256.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
-) (bigNotional *big.Int) {
-	// Determine the non-exponent part of the equation.
-	// We perform all calculations using positive rationals for consistent rounding.
-	isLong := bigQuoteQuantums.Sign() >= 0
-	ratAbsQuoteQuantums := new(big.Rat).Abs(
-		new(big.Rat).SetInt(bigQuoteQuantums),
-	)
-	ratPrice := new(big.Rat).SetUint64(priceValue)
-	ratQuoteQuantumsDivPrice := new(big.Rat).Quo(ratAbsQuoteQuantums, ratPrice)
-
-	// Determine the absolute value of the return value.
-	exponent := priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution
-	ratBaseQuantums := new(big.Rat).Quo(
-		ratQuoteQuantumsDivPrice,
-		RatPow10(exponent),
-	)
-
-	// Round down.
-	bigBaseQuantums := BigRatRound(ratBaseQuantums, false)
-
-	// Flip the sign of the return value if necessary.
-	if !isLong {
-		bigBaseQuantums.Neg(bigBaseQuantums)
-	}
-	return bigBaseQuantums
+) (notional *int256.Int) {
+	notional = new(int256.Int).Set(quoteQuantums)
+	exponent := int64(-(priceExponent + baseCurrencyAtomicResolution - QuoteCurrencyAtomicResolution))
+	notional.MulExp10(notional, exponent)
+	notional.Div(notional, int256.NewUnsignedInt(priceValue))
+	return notional
 }
 
 // multiplyByPrice multiples a value by price, factoring in exponents of base
@@ -94,27 +75,14 @@ func QuoteToBaseQuantums(
 // - For `BaseToQuoteQuantums`, substituing `value` with `baseQuantums` in expression 2 yields expression 1.
 // - For `FundingRateToIndex`, substituing `value` with `fundingRatePpm * time` in expression 2 yields expression 3.
 func multiplyByPrice(
-	value *big.Rat,
+	value *int256.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
-) (result *big.Int) {
-	ratResult := new(big.Rat).SetUint64(priceValue)
-
-	ratResult.Mul(
-		ratResult,
-		value,
-	)
-
-	ratResult.Mul(
-		ratResult,
-		RatPow10(priceExponent+baseCurrencyAtomicResolution-QuoteCurrencyAtomicResolution),
-	)
-
-	return new(big.Int).Quo(
-		ratResult.Num(),
-		ratResult.Denom(),
-	)
+) (result *int256.Int) {
+	result = int256.NewUnsignedInt(priceValue)
+	result.Mul(result, value)
+	return result.MulExp10(result, int64(priceExponent+baseCurrencyAtomicResolution-QuoteCurrencyAtomicResolution))
 }
 
 // FundingRateToIndex converts funding rate (in ppm) to FundingIndex given the oracle price.
@@ -143,11 +111,11 @@ func multiplyByPrice(
 //	priceValue: index price of the perpetual market according to the pricesKeeper
 //	priceExponent: priceExponent of the market according to the pricesKeeper
 func FundingRateToIndex(
-	proratedFundingRate *big.Rat,
+	proratedFundingRate *int256.Int,
 	baseCurrencyAtomicResolution int32,
 	priceValue uint64,
 	priceExponent int32,
-) (fundingIndex *big.Int) {
+) (fundingIndex *int256.Int) {
 	return multiplyByPrice(
 		proratedFundingRate,
 		baseCurrencyAtomicResolution,

@@ -23,12 +23,17 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
+)
+
+var (
+	eightHoursInSeconds = new(int256.Int).SetUint64(3600 * 8)
 )
 
 func (k Keeper) IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error) {
@@ -462,27 +467,27 @@ func (k Keeper) getFundingIndexDelta(
 		return nil, fmt.Errorf("failed to get market price for perpetual %v, err = %w", perp.Params.Id, err)
 	}
 
+	// TODO Figure out overflow
 	// Get pro-rated funding rate adjusted by time delta.
-	proratedFundingRate := new(big.Rat).SetInt(big8hrFundingRatePpm)
+	proratedFundingRate := int256.MustFromBig(big8hrFundingRatePpm)
 	proratedFundingRate.Mul(
 		proratedFundingRate,
-		new(big.Rat).SetUint64(uint64(timeSinceLastFunding)),
+		int256.NewUnsignedInt(uint64(timeSinceLastFunding)),
 	)
 
-	proratedFundingRate.Quo(
-		proratedFundingRate,
-		// TODO(DEC-1536): Make the 8-hour funding rate period configurable.
-		new(big.Rat).SetUint64(3600*8),
-	)
-
-	bigFundingIndexDelta := lib.FundingRateToIndex(
+	fundingIndexDeltaInt256 := lib.FundingRateToIndex(
 		proratedFundingRate,
 		perp.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
 
-	return bigFundingIndexDelta, nil
+	fundingIndexDeltaInt256.Div(
+		fundingIndexDeltaInt256,
+		eightHoursInSeconds,
+	)
+
+	return fundingIndexDeltaInt256.ToBig(), nil
 }
 
 // GetAddPremiumVotes returns the newest premiums for all perpetuals,
@@ -877,11 +882,11 @@ func GetNetNotionalInQuoteQuantums(
 	bigNetNotionalQuoteQuantums *big.Int,
 ) {
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigQuantums,
+		int256.MustFromBig(bigQuantums),
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
-	)
+	).ToBig()
 
 	return bigQuoteQuantums
 }
@@ -913,11 +918,11 @@ func (k Keeper) GetNotionalInBaseQuantums(
 	}
 
 	bigBaseQuantums = lib.QuoteToBaseQuantums(
-		bigQuoteQuantums,
+		int256.MustFromBig(bigQuoteQuantums),
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
-	)
+	).ToBig()
 	return bigBaseQuantums, nil
 }
 
@@ -1015,18 +1020,18 @@ func GetMarginRequirementsInQuoteQuantums(
 
 	// Calculate the notional value of the position in quote quantums.
 	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigAbsQuantums,
+		int256.MustFromBig(bigAbsQuantums),
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
-	)
+	).ToBig()
 	// Calculate the perpetual's open interest in quote quantums.
 	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
-		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
+		int256.MustFromBig(perpetual.OpenInterest.BigInt()), // OpenInterest is represented as base quantums.
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
-	)
+	).ToBig()
 
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
 	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
