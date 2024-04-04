@@ -1,6 +1,7 @@
 package int256
 
 import (
+	"math"
 	"math/big"
 
 	"github.com/holiman/uint256"
@@ -14,9 +15,14 @@ import (
 type Int uint256.Int
 
 var (
-	OneInt256        = NewInt(1)
-	TenInt256        = NewInt(10)
-	OneMillionInt256 = NewInt(1_000_000)
+	One        = NewInt(1)
+	Ten        = NewInt(10)
+	OneMillion = NewInt(1_000_000)
+
+	MaxInt32  = NewInt(math.MaxInt32)
+	MaxUint32 = NewInt(math.MaxUint32)
+	MaxInt64  = NewInt(math.MaxInt64)
+	MaxUint64 = NewInt(math.MaxUint32)
 
 	exp10Lookup = createExp10Lookup()
 )
@@ -159,7 +165,7 @@ func createExp10Lookup() map[uint64]uint256.Int {
 	value := uint256.NewInt(1)
 	for i := 0; i < 100; i++ {
 		lookup[uint64(i)] = *new(uint256.Int).Set(value)
-		value.Mul(value, (*uint256.Int)(TenInt256))
+		value.Mul(value, (*uint256.Int)(Ten))
 	}
 	return lookup
 }
@@ -176,7 +182,7 @@ func mulExp10(z *uint256.Int, x *uint256.Int, y int64) *uint256.Int {
 	if ok {
 		exp10 = &lookup
 	} else {
-		exp10.Exp((*uint256.Int)(TenInt256), uint256.NewInt(abs))
+		exp10.Exp((*uint256.Int)(Ten), uint256.NewInt(abs))
 	}
 	if y < 0 {
 		return z.Div(x, exp10)
@@ -191,4 +197,53 @@ func (z *Int) MulExp10(x *Int, y int64) *Int {
 		return (*Int)(mulExp10((*uint256.Int)(z), (*uint256.Int)(x), y))
 	}
 	return z.Neg((*Int)(mulExp10((*uint256.Int)(z), (*uint256.Int)(z.Neg(x)), y)))
+}
+
+// --------------
+
+func (z *Int) DivRoundUp(x *Int, y *Int) *Int {
+	_, m := (*uint256.Int)(z).DivMod(
+		(*uint256.Int)(x),
+		(*uint256.Int)(y),
+		new(uint256.Int),
+	)
+	if !m.IsZero() {
+		z.Add(z, One)
+	}
+	return z
+}
+
+func (z *Int) MulPpm(x *Int, ppm uint32) *Int {
+	result := z.Mul(x, NewUnsignedInt(uint64(ppm)))
+	return result.Div(result, OneMillion)
+}
+
+func (z *Int) MulPpmRoundUp(x *Int, ppm uint32) *Int {
+	z.Mul(x, NewUnsignedInt(uint64(ppm)))
+	return z.DivRoundUp(z, OneMillion)
+}
+
+func (z *Int) Uint64() uint64 {
+	return (*uint256.Int)(z).Uint64()
+}
+
+func (z *Int) Int64() int64 {
+	if z.Sign() > 0 {
+		return (int64)(z.Uint64())
+	}
+	return -(int64)(new(Int).Neg(z).Uint64())
+}
+
+func (z *Int) Clamp(x, y *Int) *Int {
+	if z.Cmp(x) < 0 {
+		return z.Set(x)
+	}
+	if z.Cmp(y) > 0 {
+		return z.Set(y)
+	}
+	return z
+}
+
+func (z *Int) CmpAbs(x *Int) int {
+	return new(Int).Abs(z).Cmp(new(Int).Abs(x))
 }
