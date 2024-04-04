@@ -78,6 +78,12 @@ export enum OrderRemovalReason {
 
   /** ORDER_REMOVAL_REASON_FINAL_SETTLEMENT - The order has been removed since its ClobPair has entered final settlement. */
   ORDER_REMOVAL_REASON_FINAL_SETTLEMENT = 14,
+
+  /**
+   * ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS - The order has been removed since filling it would lead to the subaccount violating
+   * isolated subaccount constraints.
+   */
+  ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 15,
   UNRECOGNIZED = -1,
 }
 /** OrderRemovalReason is an enum of all the reasons an order was removed. */
@@ -161,6 +167,12 @@ export enum OrderRemovalReasonSDKType {
 
   /** ORDER_REMOVAL_REASON_FINAL_SETTLEMENT - The order has been removed since its ClobPair has entered final settlement. */
   ORDER_REMOVAL_REASON_FINAL_SETTLEMENT = 14,
+
+  /**
+   * ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS - The order has been removed since filling it would lead to the subaccount violating
+   * isolated subaccount constraints.
+   */
+  ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 15,
   UNRECOGNIZED = -1,
 }
 export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
@@ -225,6 +237,10 @@ export function orderRemovalReasonFromJSON(object: any): OrderRemovalReason {
     case "ORDER_REMOVAL_REASON_FINAL_SETTLEMENT":
       return OrderRemovalReason.ORDER_REMOVAL_REASON_FINAL_SETTLEMENT;
 
+    case 15:
+    case "ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS":
+      return OrderRemovalReason.ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS;
+
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -277,6 +293,9 @@ export function orderRemovalReasonToJSON(object: OrderRemovalReason): string {
 
     case OrderRemovalReason.ORDER_REMOVAL_REASON_FINAL_SETTLEMENT:
       return "ORDER_REMOVAL_REASON_FINAL_SETTLEMENT";
+
+    case OrderRemovalReason.ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
+      return "ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS";
 
     case OrderRemovalReason.UNRECOGNIZED:
     default:
