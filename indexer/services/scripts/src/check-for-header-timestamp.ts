@@ -86,6 +86,11 @@ export async function printMessageWithTimestampHeader(
       headers: JSON.stringify(currentMessage.headers, replacer),
       // update,
     });
+    logger.info({
+      at: 'printTimestamp',
+      message: 'Printing timestamp',
+      timestamp: Number(currentMessage.timestamp),
+    });
     await stopConsumer();
   }
 }
