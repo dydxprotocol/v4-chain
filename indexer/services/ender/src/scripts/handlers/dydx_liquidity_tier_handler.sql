@@ -16,10 +16,19 @@ BEGIN
     liquidity_tier_record."name" = event_data->>'name';
     liquidity_tier_record."initialMarginPpm" = (event_data->'initialMarginPpm')::bigint;
     liquidity_tier_record."maintenanceFractionPpm" = (event_data->'maintenanceFractionPpm')::bigint;
-    liquidity_tier_record."openInterestLowerCap" =  dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestLowerCap') *
+    /** only add the openInterestLowerCap and openInterestUpperCap if they are present in the event_data */
+    IF event_data->'openInterestLowerCap' IS NULL THEN
+        liquidity_tier_record."openInterestLowerCap" = NULL;
+    ELSE
+        liquidity_tier_record."openInterestLowerCap" = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestLowerCap') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
-    liquidity_tier_record."openInterestUpperCap" =  dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestUpperCap') *
+    END IF;
+    IF event_data->'openInterestUpperCap' IS NULL THEN
+        liquidity_tier_record."openInterestUpperCap" = NULL;
+    ELSE
+        liquidity_tier_record."openInterestUpperCap" = dydx_trim_scale(dydx_from_jsonlib_long(event_data->'openInterestUpperCap') *
                                   power(10, QUOTE_CURRENCY_ATOMIC_RESOLUTION)::numeric);
+    END IF;
 
     INSERT INTO liquidity_tiers
     VALUES (liquidity_tier_record.*)

@@ -27,9 +27,10 @@ export default class LiquidityTiersModel extends BaseModel {
         name: { type: 'string' },
         initialMarginPpm: { type: 'string', pattern: IntegerPattern },
         maintenanceFractionPpm: { type: 'string', pattern: IntegerPattern },
-        // optional fields which are nullable
-        openInterestLowerCap: {type: ['string', 'null'], pattern: NumericPattern},
-        openInterestUpperCap: {type: ['string', 'null'], pattern: NumericPattern},
+        // Uppper cap for open interest in human readable format(USDC)
+        openInterestLowerCap: { type: ['string', 'null'], pattern: NumericPattern },
+        // Lower cap for open interest in human readable format(USDC)
+        openInterestUpperCap: { type: ['string', 'null'], pattern: NumericPattern },
       },
     };
   }

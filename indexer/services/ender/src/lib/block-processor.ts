@@ -235,7 +235,7 @@ export class BlockProcessor {
         };
       }
     });
-    
+
     const start: number = Date.now();
     let success = false;
     let resultRow: pg.QueryResultRow;

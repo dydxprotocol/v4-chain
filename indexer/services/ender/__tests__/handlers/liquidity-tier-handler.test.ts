@@ -18,6 +18,7 @@ import {
   perpetualMarketRefresher,
   PerpetualMarketTable,
   MarketTable,
+  protocolTranslations,
   QUOTE_CURRENCY_ATOMIC_RESOLUTION,
 } from '@dydxprotocol-indexer/postgres';
 import { KafkaMessage } from 'kafkajs';
@@ -173,10 +174,14 @@ export function expectLiquidityTier(
   expect(liquidityTierFromDb.id).toEqual(event.id);
   expect(liquidityTierFromDb.name).toEqual(event.name);
   expect(liquidityTierFromDb.initialMarginPpm).toEqual(event.initialMarginPpm.toString());
-  expect(liquidityTierFromDb.maintenanceFractionPpm).toEqual(event.maintenanceFractionPpm.toString());
-  // multioly by 10^-6
-  expect(Number(liquidityTierFromDb.openInterestLowerCap)).toEqual(event.openInterestLowerCap.toNumber() * 10 ** QUOTE_CURRENCY_ATOMIC_RESOLUTION);
-  expect(Number(liquidityTierFromDb.openInterestUpperCap)).toEqual(event.openInterestUpperCap.toNumber() * 10 ** QUOTE_CURRENCY_ATOMIC_RESOLUTION);
+  expect(liquidityTierFromDb.maintenanceFractionPpm).toEqual(
+    event.maintenanceFractionPpm.toString());
+  expect(Number(liquidityTierFromDb.openInterestLowerCap)).toEqual(
+    protocolTranslations.quantumsToHumanFixedString(
+      event.openInterestLowerCap.toString(), QUOTE_CURRENCY_ATOMIC_RESOLUTION));
+  expect(Number(liquidityTierFromDb.openInterestUpperCap)).toEqual(
+    protocolTranslations.quantumsToHumanFixedString(
+      event.openInterestUpperCap.toString(), QUOTE_CURRENCY_ATOMIC_RESOLUTION));
 }
 
 function createKafkaMessageFromLiquidityTiersEvent({
@@ -234,10 +239,16 @@ function validateLiquidityTierRefresher(
 
   expect(liquidityTier.id).toEqual(liquidityTierEvent.id);
   expect(liquidityTier.name).toEqual(liquidityTierEvent.name);
-  expect(liquidityTier.initialMarginPpm).toEqual(liquidityTierEvent.initialMarginPpm.toString());
-  expect(liquidityTier.maintenanceFractionPpm).toEqual(liquidityTierEvent.maintenanceFractionPpm.toString());
-  expect(Number(liquidityTier.openInterestLowerCap)).toEqual(liquidityTierEvent.openInterestLowerCap.toNumber() * 10 ** QUOTE_CURRENCY_ATOMIC_RESOLUTION);
-  expect(Number(liquidityTier.openInterestUpperCap)).toEqual(liquidityTierEvent.openInterestUpperCap.toNumber() * 10 ** QUOTE_CURRENCY_ATOMIC_RESOLUTION);
+  expect(liquidityTier.initialMarginPpm).toEqual(
+    liquidityTierEvent.initialMarginPpm.toString());
+  expect(liquidityTier.maintenanceFractionPpm).toEqual(
+    liquidityTierEvent.maintenanceFractionPpm.toString());
+  expect(liquidityTier.openInterestLowerCap).toEqual(
+    protocolTranslations.quantumsToHumanFixedString(
+      liquidityTierEvent.openInterestLowerCap.toString(), QUOTE_CURRENCY_ATOMIC_RESOLUTION));
+  expect(liquidityTier.openInterestUpperCap).toEqual(
+    protocolTranslations.quantumsToHumanFixedString(
+      liquidityTierEvent.openInterestUpperCap.toString(), QUOTE_CURRENCY_ATOMIC_RESOLUTION));
 }
 
 function expectKafkaMessages(
