@@ -284,9 +284,9 @@ func (k Keeper) PersistOrderRemovalToState(
 		// 	},
 		// }
 
-		// // TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+		// // TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
 		// // parameter rather than the subaccountOpenOrders map.
-		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+		// _, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 		// 	ctx,
 		// 	orderToRemove.GetClobPairId(),
 		// 	subaccountOpenOrders,

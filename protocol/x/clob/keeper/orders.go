@@ -359,9 +359,9 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
-	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
+	// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
-	_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
+	_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
 		order.GetClobPairId(),
 		map[satypes.SubaccountId][]types.PendingOpenOrder{
@@ -994,9 +994,9 @@ func (k Keeper) MustValidateReduceOnlyOrder(
 	return nil
 }
 
-// AddOrderToOrderbookCollatCheck performs collateralization checks for orders to determine whether or not they may
-// be added to the orderbook.
-func (k Keeper) AddOrderToOrderbookCollatCheck(
+// AddOrderToOrderbookSubaccountUpdatesCheck performs checks on the subaccount updates that will occur
+// for orders to determine whether or not they may be added to the orderbook.
+func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	// TODO(DEC-1713): Convert this to 2 parameters: SubaccountId and a slice of PendingOpenOrders.

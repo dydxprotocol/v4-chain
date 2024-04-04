@@ -1488,9 +1488,9 @@ func (m *MemClobPriceTimePriority) addOrderToOrderbookCollateralizationCheck(
 	subaccountOpenOrders := make(map[satypes.SubaccountId][]types.PendingOpenOrder)
 	subaccountOpenOrders[subaccountId] = []types.PendingOpenOrder{pendingOpenOrder}
 
-	// TODO(DEC-1896): AddOrderToOrderbookCollatCheck should accept a single PendingOpenOrder as a
+	// TODO(DEC-1896): AddOrderToOrderbookSubaccountUpdatesCheck should accept a single PendingOpenOrder as a
 	// parameter rather than the subaccountOpenOrders map.
-	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookCollatCheck(
+	_, successPerSubaccountUpdate := m.clobKeeper.AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx,
 		order.GetClobPairId(),
 		subaccountOpenOrders,
