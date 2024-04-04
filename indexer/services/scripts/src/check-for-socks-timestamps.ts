@@ -35,6 +35,13 @@ export async function connect(): Promise<void> {
   });
 }
 
+function replacer(key: string, value: any): any {
+  if (value instanceof Buffer) {
+    return value.toString('base64'); // Convert Buffer to base64 string
+  }
+  return value;
+}
+
 async function onMessage(topic: string, message: KafkaMessage): Promise<void> {
   const channel: Channel | undefined = getChannel(topic);
   if (channel !== Channel.V4_ACCOUNTS) {
@@ -46,6 +53,17 @@ async function onMessage(topic: string, message: KafkaMessage): Promise<void> {
       at: 'onMessage',
       message: 'Forwarded message',
       kafkaMessage: safeJsonStringify(message),
+    });
+    logger.info({
+      at: 'printMessageWithTimestampHeader',
+      message: 'Printing message & headers',
+      headers: JSON.stringify(message.headers, replacer),
+      // update,
+    });
+    logger.info({
+      at: 'printTimestamp',
+      message: 'Printing timestamp',
+      timestamp: Number(message.timestamp),
     });
   } catch (error) {}
 }
