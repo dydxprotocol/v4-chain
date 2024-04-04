@@ -5,13 +5,14 @@ import {
   producer,
   startConsumer,
   stopConsumer,
-  TO_VULCAN_TOPIC,
   updateOnMessageFunction,
 } from '@dydxprotocol-indexer/kafka';
 import { KafkaMessage } from 'kafkajs';
 
 import config from './config';
-import { Channel, getChannel, getMessageToForward } from './helpers/kafka-helpers';
+import {
+  Channel, getChannel, getMessageToForward, WebsocketTopics,
+} from './helpers/kafka-helpers';
 
 export async function connect(): Promise<void> {
   await Promise.all([
@@ -20,7 +21,7 @@ export async function connect(): Promise<void> {
   ]);
 
   await consumer.subscribe({
-    topic: TO_VULCAN_TOPIC,
+    topic: WebsocketTopics.TO_WEBSOCKETS_SUBACCOUNTS,
     fromBeginning: true,
   });
 
