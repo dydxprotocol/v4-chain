@@ -143,6 +143,11 @@ func (k Keeper) MintShares(
 		sharesToMint = new(big.Int).Set(quantumsToDeposit)
 		sharesToMint = sharesToMint.Mul(sharesToMint, existingTotalShares)
 		sharesToMint = sharesToMint.Quo(sharesToMint, equity)
+
+		// Return error if `sharesToMint` is rounded down to 0.
+		if sharesToMint.Sign() == 0 {
+			return types.ErrZeroSharesToMint
+		}
 	}
 
 	// Increase TotalShares of the vault.
