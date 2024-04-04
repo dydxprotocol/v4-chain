@@ -24,12 +24,12 @@ type ClobKeeper struct {
 	mock.Mock
 }
 
-// AddOrderToOrderbookCollatCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
-func (_m *ClobKeeper) AddOrderToOrderbookCollatCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
+// AddOrderToOrderbookSubaccountUpdatesCheck provides a mock function with given fields: ctx, clobPairId, subaccountOpenOrders
+func (_m *ClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(ctx types.Context, clobPairId clobtypes.ClobPairId, subaccountOpenOrders map[subaccountstypes.SubaccountId][]clobtypes.PendingOpenOrder) (bool, map[subaccountstypes.SubaccountId]subaccountstypes.UpdateResult) {
 	ret := _m.Called(ctx, clobPairId, subaccountOpenOrders)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AddOrderToOrderbookCollatCheck")
+		panic("no return value specified for AddOrderToOrderbookSubaccountUpdatesCheck")
 	}
 
 	var r0 bool
