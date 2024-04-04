@@ -333,9 +333,5 @@ func (k Keeper) PlaceVaultClobOrder(
 	order *clobtypes.Order,
 ) error {
 	// Place an internal clob order.
-	err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
 }

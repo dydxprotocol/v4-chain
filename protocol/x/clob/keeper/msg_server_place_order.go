@@ -44,17 +44,17 @@ func (k Keeper) HandleMsgPlaceOrder(
 ) (err error) {
 	lib.AssertDeliverTxMode(ctx)
 
-	if !isInternalOrder {
-		// Attach various logging tags relative to this request. These should be static with no changes.
-		ctx = log.AddPersistentTagsToLogger(ctx,
-			log.Module, log.Clob,
-			log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
-			log.Callback, lib.TxMode(ctx),
-			log.BlockHeight, ctx.BlockHeight(),
-			log.Handler, log.PlaceOrder,
-			log.Msg, msg,
-		)
+	// Attach various logging tags relative to this request. These should be static with no changes.
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.ProposerConsAddress, sdk.ConsAddress(ctx.BlockHeader().ProposerAddress),
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight(),
+		log.Handler, log.PlaceOrder,
+		log.Msg, msg,
+	)
 
+	if !isInternalOrder {
 		defer func() {
 			metrics.IncrSuccessOrErrorCounter(
 				err,
@@ -88,23 +88,21 @@ func (k Keeper) HandleMsgPlaceOrder(
 
 	// 2. Return an error if an associated cancellation or removal already exists in the current block.
 	processProposerMatchesEvents := k.GetProcessProposerMatchesEvents(ctx)
-	if !isInternalOrder {
-		cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
-		if _, found := cancelledOrderIds[order.GetOrderId()]; found {
-			return errorsmod.Wrapf(
-				types.ErrStatefulOrderPreviouslyCancelled,
-				"PlaceOrder: order (%+v)",
-				order,
-			)
-		}
-		removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
-		if _, found := removedOrderIds[order.GetOrderId()]; found {
-			return errorsmod.Wrapf(
-				types.ErrStatefulOrderPreviouslyRemoved,
-				"PlaceOrder: order (%+v)",
-				order,
-			)
-		}
+	cancelledOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.PlacedStatefulCancellationOrderIds)
+	if _, found := cancelledOrderIds[order.GetOrderId()]; found {
+		return errorsmod.Wrapf(
+			types.ErrStatefulOrderPreviouslyCancelled,
+			"PlaceOrder: order (%+v)",
+			order,
+		)
+	}
+	removedOrderIds := lib.UniqueSliceToSet(processProposerMatchesEvents.RemovedStatefulOrderIds)
+	if _, found := removedOrderIds[order.GetOrderId()]; found {
+		return errorsmod.Wrapf(
+			types.ErrStatefulOrderPreviouslyRemoved,
+			"PlaceOrder: order (%+v)",
+			order,
+		)
 	}
 
 	// 3. Place the order on the ClobKeeper which is responsible for:

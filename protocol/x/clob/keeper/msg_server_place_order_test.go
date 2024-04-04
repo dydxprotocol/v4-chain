@@ -431,9 +431,25 @@ func TestHandleMsgPlaceOrder(t *testing.T) {
 		"Success - Place an Internal Order, Validations are Skipped": {
 			isInternalOrder:       true,
 			assetQuantums:         -1_000_000_000,
+			cancellationExists:    false,
+			removalExists:         false,
+			equityTierLimitExists: true,
+		},
+		"Error - Place an Internal Order, Order Already Cancelled": {
+			isInternalOrder:       true,
+			assetQuantums:         -1_000_000_000,
 			cancellationExists:    true,
+			removalExists:         false,
+			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyCancelled,
+		},
+		"Error - Place an Internal Order, Order Already Removed": {
+			isInternalOrder:       true,
+			assetQuantums:         -1_000_000_000,
+			cancellationExists:    false,
 			removalExists:         true,
 			equityTierLimitExists: true,
+			expectedError:         types.ErrStatefulOrderPreviouslyRemoved,
 		},
 		"Success - Place an External Order, All Validations Pass": {
 			isInternalOrder:       false,
