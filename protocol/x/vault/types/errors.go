@@ -60,4 +60,9 @@ var (
 		11,
 		"Layers must be less than or equal to MaxUint8",
 	)
+	ErrZeroSharesToMint = errorsmod.Register(
+		ModuleName,
+		12,
+		"Cannot mint zero shares",
+	)
 )
