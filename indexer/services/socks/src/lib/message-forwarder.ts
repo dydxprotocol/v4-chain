@@ -87,9 +87,10 @@ export class MessageForwarder {
   }
 
   public onMessage(topic: string, message: KafkaMessage): void {
+    const start: number = Date.now();
     stats.timing(
       `${config.SERVICE_NAME}.message_time_in_queue`,
-      Date.now() - Number(message.timestamp),
+      start - Number(message.timestamp),
       config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
       {
         topic,
@@ -154,6 +155,35 @@ export class MessageForwarder {
         );
       }
     }
+<<<<<<< HEAD
+=======
+
+    const startForwardMessage: number = Date.now();
+    this.forwardMessage(messageToForward);
+    const end: number = Date.now();
+    stats.timing(
+      `${config.SERVICE_NAME}.forward_message`,
+      end - startForwardMessage,
+      config.MESSAGE_FORWARDER_STATSD_SAMPLE_RATE,
+      {
+        topic,
+        channel: String(channel),
+      },
+    );
+
+    const originalMessageTimestamp = message.headers?.message_received_timestamp;
+    if (originalMessageTimestamp !== undefined) {
+      stats.timing(
+        `${config.SERVICE_NAME}.message_time_since_received`,
+        startForwardMessage - Number(originalMessageTimestamp),
+        STATS_NO_SAMPLING,
+        {
+          topic,
+          event_type: String(message.headers?.event_type),
+        },
+      );
+    }
+>>>>>>> 4daa11de (Indexer e2e latency round 2 (#1314))
   }
 
   public forwardMessage(message: MessageToForward): void {
