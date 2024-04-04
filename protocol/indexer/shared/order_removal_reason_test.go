@@ -37,7 +37,7 @@ func TestGetOrderRemovalReason_Success(t *testing.T) {
 		},
 		"Gets order removal reason for order status ViolatesIsolatedSubaccountConstraints": {
 			orderStatus:    clobtypes.ViolatesIsolatedSubaccountConstraints,
-			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS,
+			expectedReason: sharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS,
 			expectedErr:    nil,
 		},
 		"Gets order removal reason for order error ErrFokOrderCouldNotBeFullyFilled": {
