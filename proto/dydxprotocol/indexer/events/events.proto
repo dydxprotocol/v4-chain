@@ -381,6 +381,13 @@ message LiquidityTierUpsertEventV1 {
   //
   // Deprecated since v3.x.
   uint64 base_position_notional = 5 [ deprecated = true ];
+
+  // Previously existed in v1 for open interest caps. Removed and
+  // now in v2.
+  reserved 6, 7;
+
+  // reserved fields for open interest caps. Removed and now in v2.
+  reserved "open_interest_lower_cap", "open_interest_upper_cap";
 }
 
 // UpdateClobPairEventV1 message contains all the information about an update to
