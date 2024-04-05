@@ -1182,18 +1182,6 @@
       },
       "TransferResponse": {
         "properties": {
-          "pageSize": {
-            "type": "number",
-            "format": "double"
-          },
-          "totalResults": {
-            "type": "number",
-            "format": "double"
-          },
-          "offset": {
-            "type": "number",
-            "format": "double"
-          },
           "transfers": {
             "items": {
               "$ref": "#/components/schemas/TransferResponseObject"
@@ -2350,15 +2338,6 @@
             "required": false,
             "schema": {
               "$ref": "#/components/schemas/IsoString"
-            }
-          },
-          {
-            "in": "query",
-            "name": "page",
-            "required": false,
-            "schema": {
-              "format": "double",
-              "type": "number"
             }
           }
         ]

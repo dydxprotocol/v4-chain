@@ -2059,7 +2059,6 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 |limit|query|number(double)|false|none|
 |createdBeforeOrAtHeight|query|number(double)|false|none|
 |createdBeforeOrAt|query|[IsoString](#schemaisostring)|false|none|
-|page|query|number(double)|false|none|
 
 > Example responses
 
@@ -2067,9 +2066,6 @@ fetch('https://dydx-testnet.imperator.co/v4/transfers?address=string&subaccountN
 
 ```json
 {
-  "pageSize": 0,
-  "totalResults": 0,
-  "offset": 0,
   "transfers": [
     {
       "id": "string",
@@ -3971,9 +3967,6 @@ or
 
 ```json
 {
-  "pageSize": 0,
-  "totalResults": 0,
-  "offset": 0,
   "transfers": [
     {
       "id": "string",
@@ -4001,8 +3994,5 @@ or
 
 |Name|Type|Required|Restrictions|Description|
 |---|---|---|---|---|
-|pageSize|number(double)|false|none|none|
-|totalResults|number(double)|false|none|none|
-|offset|number(double)|false|none|none|
 |transfers|[[TransferResponseObject](#schematransferresponseobject)]|true|none|none|
 
