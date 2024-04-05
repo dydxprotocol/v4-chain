@@ -55,7 +55,6 @@ class FillsController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
-      @Query() page?: number,
   ): Promise<FillResponse> {
     // TODO(DEC-656): Change to using a cache of markets in Redis similar to Librarian instead of
     // querying the DB.
@@ -69,12 +68,7 @@ class FillsController extends Controller {
     }
 
     const subaccountId: string = SubaccountTable.uuid(address, subaccountNumber);
-    const {
-      results: fills,
-      limit: pageSize,
-      offset,
-      total,
-    } = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         subaccountId: [subaccountId],
         clobPairId,
@@ -83,7 +77,6 @@ class FillsController extends Controller {
           ? createdBeforeOrAtHeight.toString()
           : undefined,
         createdBeforeOrAt,
-        page,
       },
       [QueryableField.LIMIT],
     );
@@ -105,9 +98,6 @@ class FillsController extends Controller {
       fills: fills.map((fill: FillFromDatabase): FillResponseObject => {
         return fillToResponseObject(fill, clobPairIdToMarket, subaccountNumber);
       }),
-      pageSize,
-      totalResults: total,
-      offset,
     };
   }
 

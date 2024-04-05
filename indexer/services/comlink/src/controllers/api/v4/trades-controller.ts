@@ -45,7 +45,6 @@ class TradesController extends Controller {
       @Query() limit?: number,
       @Query() createdBeforeOrAtHeight?: number,
       @Query() createdBeforeOrAt?: IsoString,
-      @Query() page?: number,
   ): Promise<TradeResponse> {
     const clobPairId: string | undefined = perpetualMarketRefresher
       .getClobPairIdFromTicker(ticker);
@@ -54,12 +53,7 @@ class TradesController extends Controller {
       throw new NotFoundError(`${ticker} not found in tickers of type ${MarketType.PERPETUAL}`);
     }
 
-    const {
-      results: fills,
-      limit: pageSize,
-      offset,
-      total,
-    } = await FillTable.findAll(
+    const { results: fills } = await FillTable.findAll(
       {
         clobPairId,
         liquidity: Liquidity.TAKER,
@@ -68,7 +62,6 @@ class TradesController extends Controller {
           ? createdBeforeOrAtHeight.toString()
           : undefined,
         createdBeforeOrAt,
-        page,
       },
       [QueryableField.LIQUIDITY, QueryableField.CLOB_PAIR_ID, QueryableField.LIMIT],
     );
@@ -77,9 +70,6 @@ class TradesController extends Controller {
       trades: fills.map((fill: FillFromDatabase): TradeResponseObject => {
         return fillToTradeResponseObject(fill);
       }),
-      pageSize,
-      totalResults: total,
-      offset,
     };
   }
 }
