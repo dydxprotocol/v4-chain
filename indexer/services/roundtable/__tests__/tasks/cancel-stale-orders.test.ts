@@ -83,7 +83,7 @@ describe('cancel-stale-orders', () => {
 
     await cancelStaleOrdersTask();
 
-    const ordersAfterTask: OrderFromDatabase[] = await OrderTable.findAll(
+    const { results: ordersAfterTask } = await OrderTable.findAll(
       {
         id: createdOrderIds,
       },
@@ -145,7 +145,7 @@ describe('cancel-stale-orders', () => {
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders.count', 1);
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders_canceled.count', 1);
 
-    const ordersAfterTask: OrderFromDatabase[] = await OrderTable.findAll(
+    const { results: ordersAfterTask } = await OrderTable.findAll(
       {
         id: createdOrderIds,
       },

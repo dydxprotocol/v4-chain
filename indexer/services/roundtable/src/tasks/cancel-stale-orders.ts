@@ -22,7 +22,7 @@ export default async function runTask(): Promise<void> {
 
   const latestBlockHeight: number = parseInt(latestBlock.blockHeight, 10);
 
-  const staleOpenOrders: OrderFromDatabase[] = await OrderTable.findAll(
+  const { results: staleOpenOrders } = await OrderTable.findAll(
     {
       statuses: [OrderStatus.OPEN],
       orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
