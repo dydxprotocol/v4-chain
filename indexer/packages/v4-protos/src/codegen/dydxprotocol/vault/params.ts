@@ -27,6 +27,13 @@ export interface Params {
   /** The duration that a vault's orders are valid for. */
 
   orderExpirationSeconds: number;
+  /**
+   * The number of quote quantums in quote asset that a vault with no perpetual
+   * positions must have to activate, i.e. if a vault has no perpetual positions
+   * and has strictly less than this amount of quote asset, it will not activate.
+   */
+
+  activationThresholdQuoteQuantums: Uint8Array;
 }
 /** Params stores `x/vault` parameters. */
 
@@ -55,6 +62,13 @@ export interface ParamsSDKType {
   /** The duration that a vault's orders are valid for. */
 
   order_expiration_seconds: number;
+  /**
+   * The number of quote quantums in quote asset that a vault with no perpetual
+   * positions must have to activate, i.e. if a vault has no perpetual positions
+   * and has strictly less than this amount of quote asset, it will not activate.
+   */
+
+  activation_threshold_quote_quantums: Uint8Array;
 }
 
 function createBaseParams(): Params {
@@ -64,7 +78,8 @@ function createBaseParams(): Params {
     spreadBufferPpm: 0,
     skewFactorPpm: 0,
     orderSizePctPpm: 0,
-    orderExpirationSeconds: 0
+    orderExpirationSeconds: 0,
+    activationThresholdQuoteQuantums: new Uint8Array()
   };
 }
 
@@ -92,6 +107,10 @@ export const Params = {
 
     if (message.orderExpirationSeconds !== 0) {
       writer.uint32(48).uint32(message.orderExpirationSeconds);
+    }
+
+    if (message.activationThresholdQuoteQuantums.length !== 0) {
+      writer.uint32(58).bytes(message.activationThresholdQuoteQuantums);
     }
 
     return writer;
@@ -130,6 +149,10 @@ export const Params = {
           message.orderExpirationSeconds = reader.uint32();
           break;
 
+        case 7:
+          message.activationThresholdQuoteQuantums = reader.bytes();
+          break;
+
         default:
           reader.skipType(tag & 7);
           break;
@@ -147,6 +170,7 @@ export const Params = {
     message.skewFactorPpm = object.skewFactorPpm ?? 0;
     message.orderSizePctPpm = object.orderSizePctPpm ?? 0;
     message.orderExpirationSeconds = object.orderExpirationSeconds ?? 0;
+    message.activationThresholdQuoteQuantums = object.activationThresholdQuoteQuantums ?? new Uint8Array();
     return message;
   }
 
