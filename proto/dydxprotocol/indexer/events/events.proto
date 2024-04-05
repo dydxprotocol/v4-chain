@@ -459,6 +459,9 @@ message AddressTradingReward {
   ];
 }
 
+// LiquidationEventV2 message contains all the information needed to update
+// the liquidity tiers. It contains all the fields from V1 along with the
+// open interest caps.
 message LiquidityTierUpsertEventV2 {
   // Unique id.
   uint32 id = 1;
