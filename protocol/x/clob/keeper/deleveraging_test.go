@@ -9,6 +9,7 @@ import (
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	sdkmath "cosmossdk.io/math"
 
@@ -1491,11 +1492,12 @@ func TestProcessDeleveragingAtOraclePrice(t *testing.T) {
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.liquidatedSubaccount)
 			ks.SubaccountsKeeper.SetSubaccount(ks.Ctx, tc.offsettingSubaccount)
 
-			fillPriceQuoteQuantums, err := ks.PerpetualsKeeper.GetNetNotional(
+			fillPriceQuoteQuantumsInt256, err := ks.PerpetualsKeeper.GetNetNotional(
 				ks.Ctx,
 				uint32(0),
-				tc.deltaQuantums,
+				int256.MustFromBig(tc.deltaQuantums),
 			)
+			fillPriceQuoteQuantums := fillPriceQuoteQuantumsInt256.ToBig()
 			fillPriceQuoteQuantums.Neg(fillPriceQuoteQuantums)
 			require.NoError(t, err)
 

@@ -2,12 +2,12 @@ package memclob
 
 import (
 	"math"
-	"math/big"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -27,8 +27,8 @@ func TestGetPremiumPrice(t *testing.T) {
 		clobPair                    types.ClobPair
 		indexPrice                  pricestypes.MarketPrice
 		baseAtomicResolution        int32
-		maxAbsPremiumVotePpm        *big.Int
-		impactNotionalQuoteQuantums *big.Int
+		maxAbsPremiumVotePpm        *int256.Int
+		impactNotionalQuoteQuantums *int256.Int
 
 		// Expectations.
 		expectedErr        error
@@ -61,14 +61,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000.
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          0,
 		},
 		`Index < Impact Bid < Best Bid < Best Ask, positive premium`: {
@@ -108,15 +108,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    900_000_000, // $9_000.
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          110911,                                // 9_998.2 / 9_000 - 1 = 0.110911
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          110911,                                   // 9_998.2 / 9_000 - 1 = 0.110911
 		},
 		`Impact Bid < Best Bid < Best Ask < Impact Ask < Index, negative premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -166,15 +166,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_300_000, // $10_003
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          -129,                                  // 10_001.7 / 10_003 - 1 = -0.000129
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          -129,                                     // 10_001.7 / 10_003 - 1 = -0.000129
 		},
 		`Impact Bid < Best Bid < Best Ask = Impact Ask < Index, negative premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -202,15 +202,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_190_000, // $10_001.9
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          -89,                                   // 10_001 / 10_001.9 - 1 = -0.000089
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          -89,                                      // 10_001 / 10_001.9 - 1 = -0.000089
 		},
 		`Index < Impact Bid = Best Bid < Best Ask, positive premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -238,15 +238,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          240,                                   // 9_999.9 / 9_997.5 - 1 = 0.000240
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          240,                                      // 9_999.9 / 9_997.5 - 1 = 0.000240
 		},
 		`Impact Bid < Index < Best Bid < Best Ask, 0 premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -296,14 +296,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    999_982_000, // $9_999.5
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          0,
 		},
 		`BestAsk < Index; Impact Ask = Infinity (low liquidity); 0 premium`: {
@@ -332,14 +332,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(2_000_000_000), // $2000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(2_000_000_000), // $2000
 			expectedPremiumPpm:          0,
 		},
 		`Impact Bid = 0 (low liquidity); Index < Best Bid; 0 premium`: {
@@ -368,14 +368,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    999_950_000, // $9_999.5
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(2_000_000_000), // $2000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(2_000_000_000), // $2000
 			expectedPremiumPpm:          0,
 		},
 		`Not enough liquidity on both sides, return 0`: {
@@ -404,28 +404,28 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(2_000_000_000), // $2000
-			expectedPremiumPpm:          0,                                     // 0%
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(2_000_000_000), // $2000
+			expectedPremiumPpm:          0,                                        // 0%
 		},
 		`Orderbook is empty, return 0`: {
 			placedMatchableOrders: []types.MatchableOrder{},
 			clobPair:              constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm:  big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm:  int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_000_000, // $10_000
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(2_000_000_000), // $2000
-			expectedPremiumPpm:          0,                                     // 0%
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(2_000_000_000), // $2000
+			expectedPremiumPpm:          0,                                        // 0%
 		},
 		`Index << Impact Bid, maximum premium (clamped)`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -453,14 +453,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    600_000_000, // $6_000
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          100_000,
 		},
 		`Impact Ask << Index, minimum premium (clamped)`: {
@@ -489,14 +489,14 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_500_000_000, // $6_000
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
 			expectedPremiumPpm:          -100_000,
 		},
 		`Index < Impact Bid < Impact Ask = Infinity (low liquidity); positive premium`: {
@@ -525,15 +525,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    999_900_000, // $9_999
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          80,                                    // 0.008%
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          80,                                       // 0.008%
 		},
 		`0 = Impact Bid (low liquidity) < Impact Ask; negative premium`: {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -561,15 +561,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(100_000), // 10%
+			maxAbsPremiumVotePpm: int256.NewInt(100_000), // 10%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    1_000_100_000, // $10_001
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(5_000_000_000), // $5000
-			expectedPremiumPpm:          -89,                                   // -0.0089%
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(5_000_000_000), // $5000
+			expectedPremiumPpm:          -89,                                      // -0.0089%
 		},
 		"error: maxAbsPremiumVotePpm overflow int32": {
 			placedMatchableOrders: []types.MatchableOrder{
@@ -585,13 +585,13 @@ func TestGetPremiumPrice(t *testing.T) {
 					GoodTilOneof: &types.Order_GoodTilBlock{GoodTilBlock: 1},
 				},
 			},
-			maxAbsPremiumVotePpm: big.NewInt(math.MaxInt32 + 1),
+			maxAbsPremiumVotePpm: int256.NewInt(math.MaxInt32 + 1),
 			shouldPanic:          true,
 		},
 		"error: clob pair is not a perpetual": {
 			clobPair:                    constants.ClobPair_Spot_Btc,
-			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
-			impactNotionalQuoteQuantums: big.NewInt(1000),
+			maxAbsPremiumVotePpm:        int256.NewInt(100_000), // 10%
+			impactNotionalQuoteQuantums: int256.NewInt(1000),
 			expectedErr: errorsmod.Wrapf(
 				types.ErrPremiumWithNonPerpetualClobPair,
 				"ClobPair ID: %d",
@@ -600,8 +600,8 @@ func TestGetPremiumPrice(t *testing.T) {
 		},
 		"error: index price is zero": {
 			clobPair:                    constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm:        big.NewInt(100_000), // 10%
-			impactNotionalQuoteQuantums: big.NewInt(1000),
+			maxAbsPremiumVotePpm:        int256.NewInt(100_000), // 10%
+			impactNotionalQuoteQuantums: int256.NewInt(1000),
 
 			indexPrice: pricestypes.MarketPrice{
 				Price: 0,
@@ -634,15 +634,15 @@ func TestGetPremiumPrice(t *testing.T) {
 				},
 			},
 			clobPair:             constants.ClobPair_Btc,
-			maxAbsPremiumVotePpm: big.NewInt(1_000_000), // 100%
+			maxAbsPremiumVotePpm: int256.NewInt(1_000_000), // 100%
 			indexPrice: pricestypes.MarketPrice{
 				Price:    999_750_000, // $9_997.5
 				Exponent: -5,
 			},
 			// 1 baseQuantum = 10^(-10) BTC.
 			baseAtomicResolution:        -10,
-			impactNotionalQuoteQuantums: new(big.Int).SetUint64(0), //
-			expectedPremiumPpm:          240,                       // 9_999.9 / 9_997.5 - 1 = 0.000240
+			impactNotionalQuoteQuantums: new(int256.Int).SetUint64(0), //
+			expectedPremiumPpm:          240,                          // 9_999.9 / 9_997.5 - 1 = 0.000240
 		},
 	}
 

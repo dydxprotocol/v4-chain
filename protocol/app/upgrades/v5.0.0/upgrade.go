@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	consensustypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -280,7 +281,7 @@ func initializePerpOpenInterest(
 			err := perpetualsKeeper.ModifyOpenInterest(
 				ctx,
 				perp.GetId(),
-				openInterest, // by default perpetual.OI = 0, so use the total open interest as delta
+				int256.MustFromBig(openInterest), // by default perpetual.OI = 0, so use the total open interest as delta
 			)
 			if err != nil {
 				panic(fmt.Sprintf(

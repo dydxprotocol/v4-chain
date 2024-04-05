@@ -9,6 +9,7 @@ import (
 	sdkmath "cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -303,7 +304,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 	tests := map[string]struct {
 		// state
 		perpetuals        []perptypes.Perpetual
-		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
+		newFundingIndices []*int256.Int // 1:1 mapped to perpetuals list
 		assets            []*asstypes.Asset
 		marketParamPrices []pricestypes.MarketParamPrice
 		// If not specified, default to `CollatCheck`
@@ -404,7 +405,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(-10)},
+			newFundingIndices: []*int256.Int{int256.NewInt(-10)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -461,7 +462,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(-17)},
+			newFundingIndices: []*int256.Int{int256.NewInt(-17)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId: uint32(0),
@@ -949,7 +950,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_NoMarginRequirement,
 			},
-			newFundingIndices:  []*big.Int{big.NewInt(-15)},
+			newFundingIndices:  []*int256.Int{int256.NewInt(-15)},
 			perpetualPositions: []*types.PerpetualPosition{},
 			expectedPerpetualPositions: []*types.PerpetualPosition{
 				{
@@ -1276,10 +1277,10 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.EthUsd_20PercentInitial_10PercentMaintenance,
 				constants.SolUsd_20PercentInitial_10PercentMaintenance,
 			},
-			newFundingIndices: []*big.Int{
-				big.NewInt(1234),  // btc
-				big.NewInt(-5000), // eth
-				big.NewInt(2000),  // sol
+			newFundingIndices: []*int256.Int{
+				int256.NewInt(1234),  // btc
+				int256.NewInt(-5000), // eth
+				int256.NewInt(2000),  // sol
 			},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
@@ -1580,7 +1581,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 			perpetuals: []perptypes.Perpetual{
 				constants.BtcUsd_SmallMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(-10)},
+			newFundingIndices: []*int256.Int{int256.NewInt(-10)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId:  uint32(0),
@@ -1765,7 +1766,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.BtcUsd_NoMarginRequirement,
 				constants.EthUsd_NoMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(-10), big.NewInt(-8)},
+			newFundingIndices: []*int256.Int{int256.NewInt(-10), int256.NewInt(-8)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId: uint32(0),
@@ -1843,7 +1844,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.BtcUsd_NoMarginRequirement,
 				constants.EthUsd_NoMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(0), big.NewInt(-8)},
+			newFundingIndices: []*int256.Int{int256.NewInt(0), int256.NewInt(-8)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId: uint32(0),
@@ -1915,7 +1916,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.BtcUsd_NoMarginRequirement,
 				constants.EthUsd_NoMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(-10), big.NewInt(-8)},
+			newFundingIndices: []*int256.Int{int256.NewInt(-10), int256.NewInt(-8)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId: uint32(0),
@@ -1989,7 +1990,7 @@ func TestUpdateSubaccounts(t *testing.T) {
 				constants.BtcUsd_NoMarginRequirement,
 				constants.EthUsd_NoMarginRequirement,
 			},
-			newFundingIndices: []*big.Int{big.NewInt(0)},
+			newFundingIndices: []*int256.Int{int256.NewInt(0)},
 			perpetualPositions: []*types.PerpetualPosition{
 				{
 					PerpetualId: uint32(1),
@@ -2953,7 +2954,7 @@ func TestUpdateSubaccounts_WithdrawalsBlocked(t *testing.T) {
 	tests := map[string]struct {
 		// state
 		perpetuals        []perptypes.Perpetual
-		newFundingIndices []*big.Int // 1:1 mapped to perpetuals list
+		newFundingIndices []*int256.Int // 1:1 mapped to perpetuals list
 		assets            []*asstypes.Asset
 		marketParamPrices []pricestypes.MarketParamPrice
 
@@ -4487,7 +4488,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				{
 					PerpetualId: uint32(0),
 					// 500 BTC. At $50,000, this is $25,000,000 of OI.
-					BaseQuantums: big.NewInt(50_000_000_000),
+					BaseQuantums: int256.NewInt(50_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -4557,7 +4558,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					// (Only difference from prevoius test case)
 					// 410 BTC. At $50,000, this is $20,500,000 of OI.
 					// OI would be $25,000,000 after the Match updates, so OIMF is still at base IMF.
-					BaseQuantums: big.NewInt(41_000_000_000),
+					BaseQuantums: int256.NewInt(41_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -4627,7 +4628,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 					// (Only difference from prevoius test case)
 					// 410 BTC + 1 base quantum. At $50,000, this is > $20,500,000 of OI.
 					// OI would be just past $25,000,000 after the Match updates, so OIMF > IMF = 20%
-					BaseQuantums: big.NewInt(41_000_000_001),
+					BaseQuantums: int256.NewInt(41_000_000_001),
 				},
 			},
 			updates: []types.Update{
@@ -4694,7 +4695,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				{
 					PerpetualId: uint32(0),
 					// 10_000 BTC. At $50,000, this is $500mm of OI which way past upper cap
-					BaseQuantums: big.NewInt(1_000_000_000_000),
+					BaseQuantums: int256.NewInt(1_000_000_000_000),
 				},
 			},
 			updates: []types.Update{
@@ -5432,7 +5433,7 @@ func TestCanUpdateSubaccounts(t *testing.T) {
 				perp, err := perpetualsKeeper.GetPerpetual(ctx, openInterest.PerpetualId)
 				require.NoError(t, err)
 				require.Zerof(t,
-					openInterest.BaseQuantums.Cmp(perp.OpenInterest.BigInt()),
+					openInterest.BaseQuantums.Cmp(int256.MustFromBig(perp.OpenInterest.BigInt())),
 					"expected: %s, got: %s",
 					openInterest.BaseQuantums.String(),
 					perp.OpenInterest.String(),

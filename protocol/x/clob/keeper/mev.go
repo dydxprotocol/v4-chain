@@ -9,6 +9,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/app/process"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/mev_telemetry"
@@ -786,16 +787,17 @@ func (k Keeper) AddSettlementForPositionDelta(
 			}
 
 			// Get the funding payment for this position delta.
-			bigNetSettlementPpm, _, err := perpetualKeeper.GetSettlementPpm(
+			netSettlementPpm, _, err := perpetualKeeper.GetSettlementPpm(
 				ctx,
 				perpetualId,
-				deltaQuantums,
+				int256.MustFromBig(deltaQuantums),
 				// Use the position's old funding index to calculate the funding payment.
-				fundingIndex,
+				int256.MustFromBig(fundingIndex),
 			)
 			if err != nil {
 				return err
 			}
+			bigNetSettlementPpm := netSettlementPpm.ToBig()
 
 			// Add the settlement to the subaccount.
 			// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent

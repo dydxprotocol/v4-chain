@@ -2293,7 +2293,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 	err error,
 ) {
 	// Convert premium vote clamp to int32 (panics if underflows or overflows).
-	maxPremiumPpm := lib.MustConvertBigIntToInt32(params.MaxAbsPremiumVotePpm)
+	maxPremiumPpm := lib.MustConvertBigIntToInt32(params.MaxAbsPremiumVotePpm.ToBig())
 	minPremiumPpm := -maxPremiumPpm
 
 	// Check the `ClobPair` is a perpetual.
@@ -2358,7 +2358,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 			clobPair,
 			orderbook,
 			true, // isBid
-			params.ImpactNotionalQuoteQuantums,
+			params.ImpactNotionalQuoteQuantums.ToBig(),
 			indexPriceSubticks,
 			minPremiumPpm,
 			maxPremiumPpm,
@@ -2372,7 +2372,7 @@ func (m *MemClobPriceTimePriority) GetPricePremium(
 			clobPair,
 			orderbook,
 			false, // isBid
-			params.ImpactNotionalQuoteQuantums,
+			params.ImpactNotionalQuoteQuantums.ToBig(),
 			indexPriceSubticks,
 			minPremiumPpm,
 			maxPremiumPpm,

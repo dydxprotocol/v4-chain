@@ -21,6 +21,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -488,11 +489,14 @@ func GetSettledSubaccountWithPerpetuals(
 		}
 
 		// Call the stateless utility function to get the net settlement and new funding index.
-		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+		netSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
 			perpetual,
-			p.GetBigQuantums(),
-			p.FundingIndex.BigInt(),
+			int256.MustFromBig(p.GetBigQuantums()),
+			int256.MustFromBig(p.FundingIndex.BigInt()),
 		)
+		bigNetSettlementPpm := netSettlementPpm.ToBig()
+		bigNewFundingIndex := newFundingIndex.ToBig()
+
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
@@ -512,7 +516,7 @@ func GetSettledSubaccountWithPerpetuals(
 			newPerpetualPositions, &types.PerpetualPosition{
 				PerpetualId:  p.PerpetualId,
 				Quantums:     p.Quantums,
-				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+				FundingIndex: dtypes.NewIntFromBigInt(bigNewFundingIndex),
 			},
 		)
 	}
@@ -937,23 +941,26 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		id := size.GetId()
 		bigQuantums := size.GetBigQuantums()
 
-		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
+		netCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, int256.MustFromBig(bigQuantums))
 		if err != nil {
 			return err
 		}
+		bigNetCollateralQuoteQuantums := netCollateralQuoteQuantums.ToBig()
 
 		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
 
-		bigInitialMarginRequirements,
-			bigMaintenanceMarginRequirements,
+		initialMarginRequirements,
+			maintenanceMarginRequirements,
 			err := pk.GetMarginRequirements(
 			ctx,
 			id,
-			bigQuantums,
+			int256.MustFromBig(bigQuantums),
 		)
 		if err != nil {
 			return err
 		}
+		bigInitialMarginRequirements := initialMarginRequirements.ToBig()
+		bigMaintenanceMarginRequirements := maintenanceMarginRequirements.ToBig()
 
 		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
 		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)

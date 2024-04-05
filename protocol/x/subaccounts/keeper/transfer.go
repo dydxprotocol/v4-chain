@@ -8,6 +8,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -105,18 +106,19 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantums,
+		int256.MustFromBig(quantums),
 	)
 	if err != nil {
 		return err
 	}
+	bigConvertedQuantums := convertedQuantums.ToBig()
 
 	// Generate subaccount updates and check whether updates can be applied.
 	updates, err := k.getValidSubaccountUpdatesForTransfer(
 		ctx,
 		toSubaccountId,
 		assetId,
-		convertedQuantums,
+		bigConvertedQuantums,
 		true, // isToSubaccount
 	)
 	if err != nil {
@@ -168,18 +170,19 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantums,
+		int256.MustFromBig(quantums),
 	)
 	if err != nil {
 		return err
 	}
+	bigConvertedQuantums := convertedQuantums.ToBig()
 
 	// Generate subaccount updates and check whether updates can be applied.
 	updates, err := k.getValidSubaccountUpdatesForTransfer(
 		ctx,
 		fromSubaccountId,
 		assetId,
-		convertedQuantums,
+		bigConvertedQuantums,
 		false, // isToSubaccount
 	)
 	if err != nil {
@@ -227,10 +230,11 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 		return nil
 	}
 
+	quantumsInt256 := int256.MustFromBig(quantums)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		new(big.Int).Abs(quantums),
+		quantumsInt256.Abs(quantumsInt256),
 	)
 	if err != nil {
 		return err
@@ -280,10 +284,11 @@ func (k Keeper) TransferInsuranceFundPayments(
 		return nil
 	}
 
+	insuranceFundDeltaInt256 := int256.MustFromBig(insuranceFundDelta)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		new(big.Int).Abs(insuranceFundDelta),
+		insuranceFundDeltaInt256.Abs(insuranceFundDeltaInt256),
 	)
 	if err != nil {
 		// Panic if USDC does not exist.
@@ -363,10 +368,11 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 		return err
 	}
 
+	quantumsInt256 := int256.MustFromBig(quantums)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantums,
+		quantumsInt256,
 	)
 	if err != nil {
 		return err

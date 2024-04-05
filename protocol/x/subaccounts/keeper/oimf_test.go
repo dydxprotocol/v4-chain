@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -177,7 +178,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1,
-				BaseQuantums: big.NewInt(500),
+				BaseQuantums: int256.NewInt(500),
 			},
 		},
 		"Valid: 500 -> 0, 0 -> 500, delta = 0": {
@@ -308,7 +309,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1000,
-				BaseQuantums: big.NewInt(-50),
+				BaseQuantums: int256.NewInt(-50),
 			},
 		},
 		"Valid: -3100 -> -5000, 1000 -> 2900, delta = 1900": {
@@ -351,7 +352,7 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1000,
-				BaseQuantums: big.NewInt(1900),
+				BaseQuantums: int256.NewInt(1900),
 			},
 		},
 	}

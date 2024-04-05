@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -232,14 +233,15 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
-		notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		notionalLiquidatedQuoteQuantumsInt256, err := k.perpetualsKeeper.GetNetNotional(
 			ctx,
 			perpetualId,
-			fillAmount.ToBigInt(),
+			int256.NewUnsignedInt((uint64)(fillAmount)),
 		)
 		if err != nil {
 			return false, takerUpdateResult, makerUpdateResult, nil, err
 		}
+		notionalLiquidatedQuoteQuantums := notionalLiquidatedQuoteQuantumsInt256.ToBig()
 
 		k.UpdateSubaccountLiquidationInfo(
 			ctx,

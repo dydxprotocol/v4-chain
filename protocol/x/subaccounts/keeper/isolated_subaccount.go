@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -299,7 +300,7 @@ func (k *Keeper) transferCollateralForIsolatedPerpetual(
 		ctx,
 		// TODO(DEC-715): Support non-USDC assets.
 		assettypes.AssetUsdc.Id,
-		stateTransition.QuoteQuantums,
+		int256.MustFromBig(stateTransition.QuoteQuantums),
 	)
 	if err != nil {
 		return err

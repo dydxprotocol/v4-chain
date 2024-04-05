@@ -2,13 +2,13 @@ package keeper_test
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
@@ -326,22 +326,22 @@ func TestGetNetCollateral(t *testing.T) {
 	netCollateral, err := keeper.GetNetCollateral(
 		ctx,
 		types.AssetUsdc.Id,
-		new(big.Int).SetInt64(100),
+		int256.NewInt(100),
 	)
 	require.NoError(t, err)
-	require.Equal(t, new(big.Int).SetInt64(100), netCollateral)
+	require.Equal(t, int256.NewInt(100), netCollateral)
 
 	_, err = keeper.GetNetCollateral(
 		ctx,
 		uint32(1),
-		new(big.Int).SetInt64(100),
+		int256.NewInt(100),
 	)
 	require.EqualError(t, types.ErrNotImplementedMulticollateral, err.Error())
 
 	_, err = keeper.GetNetCollateral(
 		ctx,
 		uint32(1),
-		new(big.Int).SetInt64(-100),
+		int256.NewInt(-100),
 	)
 	require.EqualError(t, types.ErrNotImplementedMargin, err.Error())
 }
@@ -354,25 +354,25 @@ func TestGetMarginRequirements(t *testing.T) {
 	initial, maintenance, err := keeper.GetMarginRequirements(
 		ctx,
 		types.AssetUsdc.Id,
-		new(big.Int).SetInt64(100),
+		int256.NewInt(100),
 	)
 	require.NoError(t, err)
-	require.Equal(t, new(big.Int), initial)
-	require.Equal(t, new(big.Int), maintenance)
+	require.Equal(t, new(int256.Int), initial)
+	require.Equal(t, new(int256.Int), maintenance)
 
 	initial, maintenance, err = keeper.GetMarginRequirements(
 		ctx,
 		uint32(1),
-		new(big.Int).SetInt64(100),
+		int256.NewInt(100),
 	)
 	require.NoError(t, err)
-	require.Equal(t, new(big.Int), initial)
-	require.Equal(t, new(big.Int), maintenance)
+	require.Equal(t, new(int256.Int), initial)
+	require.Equal(t, new(int256.Int), maintenance)
 
 	_, _, err = keeper.GetMarginRequirements(
 		ctx,
 		uint32(1),
-		new(big.Int).SetInt64(-100),
+		int256.NewInt(-100),
 	)
 	require.EqualError(t, types.ErrNotImplementedMargin, err.Error())
 }
@@ -384,72 +384,72 @@ func TestConvertAssetToCoin_Success(t *testing.T) {
 	tests := map[string]struct {
 		denomExponent             int32
 		atomicResolution          int32
-		quantumsToConvert         *big.Int
+		quantumsToConvert         *int256.Int
 		expectedCoin              sdk.Coin
-		expectedConvertedQuantums *big.Int
+		expectedConvertedQuantums *int256.Int
 	}{
 		"atomicResolution < denomExponent, divisble, DenomExponent=-6, AtomicResolution=-8": {
 			denomExponent:             -6,
 			atomicResolution:          -8,
-			quantumsToConvert:         big.NewInt(1100),
+			quantumsToConvert:         int256.NewInt(1100),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(11)),
-			expectedConvertedQuantums: big.NewInt(1100),
+			expectedConvertedQuantums: int256.NewInt(1100),
 		},
 		"atomicResolution < denomExponent, divisble, DenomExponent=-6, AtomicResolution=-7": {
 			denomExponent:             -6,
 			atomicResolution:          -7,
-			quantumsToConvert:         big.NewInt(1120),
+			quantumsToConvert:         int256.NewInt(1120),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(112)),
-			expectedConvertedQuantums: big.NewInt(1120),
+			expectedConvertedQuantums: int256.NewInt(1120),
 		},
 		"atomicResolution < denomExponent, not divisble, DenomExponent=-6,AtomicResolution=-8": {
 			denomExponent:             -6,
 			atomicResolution:          -8,
-			quantumsToConvert:         big.NewInt(1125),
+			quantumsToConvert:         int256.NewInt(1125),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(11)), // 11.25 rounded down
-			expectedConvertedQuantums: big.NewInt(1100),                           // 11 * 100
+			expectedConvertedQuantums: int256.NewInt(1100),                        // 11 * 100
 		},
 		"atomicResolution < denomExponent, not, divisble, DenomExponent=-6, AtomicResolution=-7": {
 			denomExponent:             -6,
 			atomicResolution:          -7,
-			quantumsToConvert:         big.NewInt(1125),
+			quantumsToConvert:         int256.NewInt(1125),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(112)), // 112.5 rounded down
-			expectedConvertedQuantums: big.NewInt(1120),                            // 112 * 10
+			expectedConvertedQuantums: int256.NewInt(1120),                         // 112 * 10
 		},
 		"atomicResolution < denomExponent, not, divisble, DenomExponent=1, AtomicResolution=-3": {
 			denomExponent:             1,
 			atomicResolution:          -3,
-			quantumsToConvert:         big.NewInt(123456),
+			quantumsToConvert:         int256.NewInt(123456),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(12)), // 12.3456 rounded down
-			expectedConvertedQuantums: big.NewInt(120000),                         // 12*10000
+			expectedConvertedQuantums: int256.NewInt(120000),                      // 12*10000
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6": {
 			denomExponent:             -6,
 			atomicResolution:          -6,
-			quantumsToConvert:         big.NewInt(1500),
+			quantumsToConvert:         int256.NewInt(1500),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(1500)),
-			expectedConvertedQuantums: big.NewInt(1500),
+			expectedConvertedQuantums: int256.NewInt(1500),
 		},
 		"atomicResolution = denomExponent, DenomExponent=-6, AtomicResolution=-6, large input": {
 			denomExponent:             -6,
 			atomicResolution:          -6,
-			quantumsToConvert:         big.NewInt(12345678),
+			quantumsToConvert:         int256.NewInt(12345678),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(12345678)),
-			expectedConvertedQuantums: big.NewInt(12345678),
+			expectedConvertedQuantums: int256.NewInt(12345678),
 		},
 		"atomicResolution > denomExponent": {
 			denomExponent:             -6,
 			atomicResolution:          -4,
-			quantumsToConvert:         big.NewInt(275),
+			quantumsToConvert:         int256.NewInt(275),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(27500)),
-			expectedConvertedQuantums: big.NewInt(275),
+			expectedConvertedQuantums: int256.NewInt(275),
 		},
 		"atomicResolution > denomExponent, positive AtomicResoluton": {
 			denomExponent:             -2,
 			atomicResolution:          1,
-			quantumsToConvert:         big.NewInt(275),
+			quantumsToConvert:         int256.NewInt(275),
 			expectedCoin:              sdk.NewCoin(testDenom, sdkmath.NewInt(275000)),
-			expectedConvertedQuantums: big.NewInt(275),
+			expectedConvertedQuantums: int256.NewInt(275),
 		},
 	}
 
@@ -503,7 +503,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 	_, _, err := keeper.ConvertAssetToCoin(
 		ctx,
 		firstValidAssetId, /* invalid asset ID */
-		big.NewInt(100),
+		int256.NewInt(100),
 	)
 
 	require.ErrorIs(
@@ -525,7 +525,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 	)
 	require.NoError(t, err)
 
-	_, _, err = keeper.ConvertAssetToCoin(ctx, 1, big.NewInt(100))
+	_, _, err = keeper.ConvertAssetToCoin(ctx, 1, int256.NewInt(100))
 	require.ErrorIs(
 		t,
 		err,
@@ -544,7 +544,7 @@ func TestConvertAssetToCoin_Failure(t *testing.T) {
 		-50, /* invalid asset atomic resolution */
 	)
 	require.NoError(t, err)
-	_, _, err = keeper.ConvertAssetToCoin(ctx, 2, big.NewInt(100))
+	_, _, err = keeper.ConvertAssetToCoin(ctx, 2, int256.NewInt(100))
 	require.ErrorIs(
 		t,
 		err,

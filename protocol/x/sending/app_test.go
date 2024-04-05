@@ -15,6 +15,7 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
 	"github.com/stretchr/testify/require"
@@ -408,7 +409,7 @@ func TestMsgDepositToSubaccount(t *testing.T) {
 			accountBalanceBeforeDeposit := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
 			subaccountQuantumsBeforeDeposit :=
 				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.subaccountId, tc.asset)
-			_, transferredCoin, _ := tApp.App.AssetsKeeper.ConvertAssetToCoin(ctx, tc.asset.Id, tc.quantums)
+			_, transferredCoin, _ := tApp.App.AssetsKeeper.ConvertAssetToCoin(ctx, tc.asset.Id, int256.MustFromBig(tc.quantums))
 
 			// Construct message.
 			msgDepositToSubaccount := sendingtypes.MsgDepositToSubaccount{
@@ -602,7 +603,7 @@ func TestMsgWithdrawFromSubaccount(t *testing.T) {
 			accountBalanceBeforeWithdraw := tApp.App.BankKeeper.GetBalance(ctx, tc.accountAccAddress, tc.asset.Denom)
 			subaccountQuantumsBeforeWithdraw :=
 				getSubaccountAssetQuantums(tApp.App.SubaccountsKeeper, ctx, tc.subaccountId, tc.asset)
-			_, transferredCoin, _ := tApp.App.AssetsKeeper.ConvertAssetToCoin(ctx, tc.asset.Id, tc.quantums)
+			_, transferredCoin, _ := tApp.App.AssetsKeeper.ConvertAssetToCoin(ctx, tc.asset.Id, int256.MustFromBig(tc.quantums))
 
 			// Construct message.
 			msgWithdrawFromSubaccount := sendingtypes.MsgWithdrawFromSubaccount{

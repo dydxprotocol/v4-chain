@@ -1,9 +1,8 @@
 package types
 
 import (
-	"math/big"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 )
 
@@ -14,8 +13,8 @@ type GetPricePremiumParams struct {
 	IndexPrice                  pricestypes.MarketPrice
 	BaseAtomicResolution        int32
 	QuoteAtomicResolution       int32
-	ImpactNotionalQuoteQuantums *big.Int
-	MaxAbsPremiumVotePpm        *big.Int
+	ImpactNotionalQuoteQuantums *int256.Int
+	MaxAbsPremiumVotePpm        *int256.Int
 }
 
 // Interface used by ABCI calls to access the perpetuals keeper.
@@ -26,34 +25,34 @@ type PerpetualsKeeper interface {
 	GetNetNotional(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		quantums *int256.Int,
 	) (
-		bigNetNotionalQuoteQuantums *big.Int,
+		netNotionalQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetNotionalInBaseQuantums(
 		ctx sdk.Context,
 		id uint32,
-		bigQuoteQuantums *big.Int,
+		quoteQuantums *int256.Int,
 	) (
-		bigBaseQuantums *big.Int,
+		baseQuantums *int256.Int,
 		err error,
 	)
 	GetNetCollateral(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		quantums *int256.Int,
 	) (
-		bigNetCollateralQuoteQuantums *big.Int,
+		netCollateralQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetMarginRequirements(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		quantums *int256.Int,
 	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
+		initialMarginQuoteQuantums *int256.Int,
+		maintenanceMarginQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetAddPremiumVotes(
@@ -89,7 +88,7 @@ type PerpetualsKeeper interface {
 	ModifyOpenInterest(
 		ctx sdk.Context,
 		perpetualId uint32,
-		openInterestDeltaBaseQuantums *big.Int,
+		openInterestDeltaBaseQuantums *int256.Int,
 	) (
 		err error,
 	)
@@ -130,5 +129,5 @@ type OpenInterestDelta struct {
 	// The `Id` of the `Perpetual`.
 	PerpetualId uint32
 	// Delta of open interest (in base quantums).
-	BaseQuantums *big.Int
+	BaseQuantums *int256.Int
 }

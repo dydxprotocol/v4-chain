@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -115,6 +116,6 @@ func GetDeltaOpenInterestFromUpdates(
 
 	return &perptypes.OpenInterestDelta{
 		PerpetualId:  updatedPerpId,
-		BaseQuantums: baseQuantumsDelta,
+		BaseQuantums: int256.MustFromBig(baseQuantumsDelta),
 	}
 }
