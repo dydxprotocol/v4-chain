@@ -5,7 +5,7 @@ import {
   liquidityTierRefresher,
   perpetualMarketRefresher,
 } from '@dydxprotocol-indexer/postgres';
-import { LiquidityTierUpsertEventV1 } from '@dydxprotocol-indexer/v4-protos';
+import { LiquidityTierUpsertEventV1, LiquidityTierUpsertEventV2 } from '@dydxprotocol-indexer/v4-protos';
 import _ from 'lodash';
 import * as pg from 'pg';
 
@@ -13,9 +13,8 @@ import { generatePerpetualMarketMessage } from '../helpers/kafka-helper';
 import { ConsolidatedKafkaEvent } from '../lib/types';
 import { Handler } from './handler';
 
-export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
+export class LiquidityTierHandlerBase<T> extends Handler<T> {
   eventType: string = 'LiquidityTierUpsertEvent';
-
   public getParallelizationIds(): string[] {
     return [];
   }
@@ -49,4 +48,10 @@ export class LiquidityTierHandler extends Handler<LiquidityTierUpsertEventV1> {
       ),
     ];
   }
+}
+
+export class LiquidityTierHandler extends LiquidityTierHandlerBase<LiquidityTierUpsertEventV1> {
+}
+
+export class LiquidityTierHandlerV2 extends LiquidityTierHandlerBase<LiquidityTierUpsertEventV2> {
 }

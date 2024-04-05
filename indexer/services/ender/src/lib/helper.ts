@@ -19,6 +19,7 @@ import {
   AssetCreateEventV1,
   PerpetualMarketCreateEventV1,
   LiquidityTierUpsertEventV1,
+  LiquidityTierUpsertEventV2,
   UpdatePerpetualEventV1,
   UpdateClobPairEventV1,
   SubaccountMessage,
@@ -173,13 +174,22 @@ export function indexerTendermintEventToEventProtoWithType(
       };
     }
     case (DydxIndexerSubtypes.LIQUIDITY_TIER.toString()): {
-      return {
-        type: DydxIndexerSubtypes.LIQUIDITY_TIER,
-        eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
-        indexerTendermintEvent: event,
-        version,
-        blockEventIndex,
-      };
+      if (version === 1) {
+        return {
+          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+          eventProto: LiquidityTierUpsertEventV1.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
+      }
+        return {
+          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+          eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
+          indexerTendermintEvent: event,
+          version,
+          blockEventIndex,
+        };
     }
     case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
       return {

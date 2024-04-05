@@ -9,8 +9,8 @@ func NewLiquidityTierUpsertEvent(
 	maintenanceFractionPpm uint32,
 	openIntersetLowerCap uint64,
 	openInterestUpperCap uint64,
-) *LiquidityTierUpsertEventV1 {
-	return &LiquidityTierUpsertEventV1{
+) *LiquidityTierUpsertEventV2 {
+	return &LiquidityTierUpsertEventV2{
 		Id:                     id,
 		Name:                   name,
 		InitialMarginPpm:       initialMarginPpm,
