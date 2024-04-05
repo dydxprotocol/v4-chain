@@ -14,6 +14,7 @@ import (
 
 type (
 	Keeper struct {
+<<<<<<< HEAD
 		cdc                 codec.BinaryCodec
 		storeKey            storetypes.StoreKey
 		clobKeeper          types.ClobKeeper
@@ -22,6 +23,16 @@ type (
 		subaccountsKeeper   types.SubaccountsKeeper
 		indexerEventManager indexer_manager.IndexerEventManager
 		authorities         map[string]struct{}
+=======
+		cdc               codec.BinaryCodec
+		storeKey          storetypes.StoreKey
+		clobKeeper        types.ClobKeeper
+		perpetualsKeeper  types.PerpetualsKeeper
+		pricesKeeper      types.PricesKeeper
+		sendingKeeper     types.SendingKeeper
+		subaccountsKeeper types.SubaccountsKeeper
+		authorities       map[string]struct{}
+>>>>>>> c9957874 (emit transfer indexer event on vault deposit (#1343))
 	}
 )
 
@@ -31,11 +42,13 @@ func NewKeeper(
 	clobKeeper types.ClobKeeper,
 	perpetualsKeeper types.PerpetualsKeeper,
 	pricesKeeper types.PricesKeeper,
+	sendingKeeper types.SendingKeeper,
 	subaccountsKeeper types.SubaccountsKeeper,
 	indexerEventManager indexer_manager.IndexerEventManager,
 	authorities []string,
 ) *Keeper {
 	return &Keeper{
+<<<<<<< HEAD
 		cdc:                 cdc,
 		storeKey:            storeKey,
 		clobKeeper:          clobKeeper,
@@ -44,6 +57,16 @@ func NewKeeper(
 		subaccountsKeeper:   subaccountsKeeper,
 		indexerEventManager: indexerEventManager,
 		authorities:         lib.UniqueSliceToSet(authorities),
+=======
+		cdc:               cdc,
+		storeKey:          storeKey,
+		clobKeeper:        clobKeeper,
+		perpetualsKeeper:  perpetualsKeeper,
+		pricesKeeper:      pricesKeeper,
+		sendingKeeper:     sendingKeeper,
+		subaccountsKeeper: subaccountsKeeper,
+		authorities:       lib.UniqueSliceToSet(authorities),
+>>>>>>> c9957874 (emit transfer indexer event on vault deposit (#1343))
 	}
 }
 

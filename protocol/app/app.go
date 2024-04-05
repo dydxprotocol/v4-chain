@@ -1088,6 +1088,7 @@ func New(
 		app.ClobKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
+		app.SendingKeeper,
 		app.SubaccountsKeeper,
 		app.IndexerEventManager,
 		[]string{
