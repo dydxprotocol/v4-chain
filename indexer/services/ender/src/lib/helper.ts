@@ -183,13 +183,13 @@ export function indexerTendermintEventToEventProtoWithType(
           blockEventIndex,
         };
       }
-        return {
-          type: DydxIndexerSubtypes.LIQUIDITY_TIER,
-          eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
-          indexerTendermintEvent: event,
-          version,
-          blockEventIndex,
-        };
+      return {
+        type: DydxIndexerSubtypes.LIQUIDITY_TIER,
+        eventProto: LiquidityTierUpsertEventV2.decode(eventDataBinary),
+        indexerTendermintEvent: event,
+        version,
+        blockEventIndex,
+      };
     }
     case (DydxIndexerSubtypes.UPDATE_PERPETUAL.toString()): {
       return {

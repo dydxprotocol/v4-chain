@@ -34,7 +34,7 @@ import {
 import { LiquidityTierHandler } from '../../src/handlers/liquidity-tier-handler';
 import {
   defaultHeight, defaultLiquidityTierUpsertEvent, defaultPreviousHeight, defaultTime, defaultTxHash,
-  defaultLiquidityTierUpsertEventV1
+  defaultLiquidityTierUpsertEventV1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
 import { defaultLiquidityTier } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
@@ -113,7 +113,7 @@ describe('liquidityTierHandler', () => {
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
-      version: 2
+      version: 2,
     });
       // Confirm there is no existing liquidity tier
     await expectNoExistingLiquidityTiers();
@@ -144,7 +144,7 @@ describe('liquidityTierHandler', () => {
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
-      version: 1
+      version: 1,
     });
       // Confirm there is no existing liquidity tier
     await expectNoExistingLiquidityTiers();
@@ -175,7 +175,7 @@ describe('liquidityTierHandler', () => {
       height: defaultHeight,
       time: defaultTime,
       txHash: defaultTxHash,
-      version: 2
+      version: 2,
     });
       // Create existing liquidity tier
     await LiquidityTiersTable.upsert(defaultLiquidityTier);
@@ -232,7 +232,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
   height,
   time,
   txHash,
-  version
+  version,
 }: {
   liquidityTierEvent: Uint8Array,
   transactionIndex: number,
@@ -248,7 +248,7 @@ function createKafkaMessageFromLiquidityTiersEvent({
       liquidityTierEvent,
       transactionIndex,
       0,
-      version
+      version,
     ),
   );
 
@@ -282,7 +282,6 @@ function validateLiquidityTierRefresherForV2(
     liquidityTierEvent.id,
   );
 
-
   validateCommonLiquidityTierFields(liquidityTier, liquidityTierEvent);
   expect(liquidityTier.openInterestLowerCap).toEqual(
     protocolTranslations.quantumsToHumanFixedString(
@@ -305,7 +304,8 @@ function validateLiquidityTierRefresherForV1(
   expect(liquidityTier.openInterestUpperCap).toEqual(null);
 }
 
-function validateCommonLiquidityTierFields(liquidityTier: LiquidityTiersFromDatabase, liquidityTierEvent: any) {
+function validateCommonLiquidityTierFields(liquidityTier: LiquidityTiersFromDatabase,
+  liquidityTierEvent: any) {
   expect(liquidityTier.id).toEqual(liquidityTierEvent.id);
   expect(liquidityTier.name).toEqual(liquidityTierEvent.name);
   expect(liquidityTier.initialMarginPpm).toEqual(
