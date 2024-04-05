@@ -1193,6 +1193,12 @@ export interface AddressTradingRewardSDKType {
 
   denom_amount: Uint8Array;
 }
+/**
+ * LiquidationEventV2 message contains all the information needed to update
+ * the liquidity tiers. It contains all the fields from V1 along with the
+ * open interest caps.
+ */
+
 export interface LiquidityTierUpsertEventV2 {
   /** Unique id. */
   id: number;
@@ -1229,6 +1235,12 @@ export interface LiquidityTierUpsertEventV2 {
 
   openInterestUpperCap: Long;
 }
+/**
+ * LiquidationEventV2 message contains all the information needed to update
+ * the liquidity tiers. It contains all the fields from V1 along with the
+ * open interest caps.
+ */
+
 export interface LiquidityTierUpsertEventV2SDKType {
   /** Unique id. */
   id: number;
