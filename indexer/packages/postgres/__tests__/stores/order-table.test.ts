@@ -49,7 +49,7 @@ describe('Order store', () => {
   it('Successfully creates an Order with goodTilBlockTime', async () => {
     await OrderTable.create(defaultOrderGoodTilBlockTime);
 
-    const orders: OrderFromDatabase[] = await OrderTable.findAll({}, [], {});
+    const { results: orders } = await OrderTable.findAll({}, [], {});
 
     expect(orders).toHaveLength(1);
     expect(orders[0]).toEqual(expect.objectContaining({
@@ -67,7 +67,7 @@ describe('Order store', () => {
       }),
     ]);
 
-    const orders: OrderFromDatabase[] = await OrderTable.findAll({}, [], {
+    const { results: orders } = await OrderTable.findAll({}, [], {
       orderBy: [[OrderColumns.clientId, Ordering.ASC]],
     });
 
@@ -77,6 +77,50 @@ describe('Order store', () => {
       ...defaultOrder,
       clientId: '2',
     }));
+  });
+
+  it('Successfully finds all Orders using pagination', async () => {
+    await Promise.all([
+      OrderTable.create(defaultOrder),
+      OrderTable.create({
+        ...defaultOrder,
+        clientId: '2',
+      }),
+    ]);
+
+    const responsePageOne = await OrderTable.findAll({ page: 1, limit: 1 }, [], {
+      orderBy: [[OrderColumns.clientId, Ordering.ASC]],
+    });
+
+    expect(responsePageOne.results.length).toEqual(1);
+    expect(responsePageOne.results[0]).toEqual(expect.objectContaining(defaultOrder));
+    expect(responsePageOne.offset).toEqual(0);
+    expect(responsePageOne.total).toEqual(2);
+
+    const responsePageTwo = await OrderTable.findAll({ page: 2, limit: 1 }, [], {
+      orderBy: [[OrderColumns.clientId, Ordering.ASC]],
+    });
+
+    expect(responsePageTwo.results.length).toEqual(1);
+    expect(responsePageTwo.results[0]).toEqual(expect.objectContaining({
+      ...defaultOrder,
+      clientId: '2',
+    }));
+    expect(responsePageTwo.offset).toEqual(1);
+    expect(responsePageTwo.total).toEqual(2);
+
+    const responsePageAllPages = await OrderTable.findAll({ page: 1, limit: 2 }, [], {
+      orderBy: [[OrderColumns.clientId, Ordering.ASC]],
+    });
+
+    expect(responsePageAllPages.results.length).toEqual(2);
+    expect(responsePageAllPages.results[0]).toEqual(expect.objectContaining(defaultOrder));
+    expect(responsePageAllPages.results[1]).toEqual(expect.objectContaining({
+      ...defaultOrder,
+      clientId: '2',
+    }));
+    expect(responsePageAllPages.offset).toEqual(0);
+    expect(responsePageAllPages.total).toEqual(2);
   });
 
   it('findOpenLongTermOrConditionalOrders', async () => {
@@ -106,7 +150,7 @@ describe('Order store', () => {
       }),
     ]);
 
-    const orders: OrderFromDatabase[] = await OrderTable.findAll(
+    const { results: orders } = await OrderTable.findAll(
       {
         clientId: '1',
       },
@@ -202,7 +246,7 @@ describe('Order store', () => {
         OrderTable.create(defaultOrderGoodTilBlockTime),
       ]);
 
-      const orders: OrderFromDatabase[] = await OrderTable.findAll(
+      const { results: orders } = await OrderTable.findAll(
         filter,
         [],
         { readReplica: true },
