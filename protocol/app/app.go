@@ -1086,6 +1086,7 @@ func New(
 		app.ClobKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
+		app.SendingKeeper,
 		app.SubaccountsKeeper,
 		[]string{
 			lib.GovModuleAddress.String(),

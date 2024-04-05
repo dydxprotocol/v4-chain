@@ -7,6 +7,7 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
@@ -32,12 +33,21 @@ func (k msgServer) DepositToVault(
 	// Transfer from sender subaccount to vault.
 	// Note: Transfer should take place after minting shares for
 	// shares calculation to be correct.
-	err = k.subaccountsKeeper.TransferFundsFromSubaccountToSubaccount(
+	err = k.sendingKeeper.ProcessTransfer(
 		ctx,
+<<<<<<< HEAD
 		*msg.SubaccountId,
 		*msg.VaultId.ToSubaccountId(),
 		assettypes.AssetUsdc.Id,
 		quoteQuantums,
+=======
+		&sendingtypes.Transfer{
+			Sender:    *msg.SubaccountId,
+			Recipient: *msg.VaultId.ToSubaccountId(),
+			AssetId:   assettypes.AssetUsdc.Id,
+			Amount:    msg.QuoteQuantums.BigInt().Uint64(),
+		},
+>>>>>>> c9957874 (emit transfer indexer event on vault deposit (#1343))
 	)
 	if err != nil {
 		return nil, err
