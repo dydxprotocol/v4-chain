@@ -119,15 +119,15 @@ func UpdatePerpetualPositions(
 			// If so – we update the size of the existing position, otherwise
 			// we create a new position.
 			if pp, exists := perpetualPositionsMap[pu.PerpetualId]; exists {
-				curQuantums := pp.GetBigQuantums()
-				updateQuantums := pu.GetBigQuantums()
+				curQuantums := pp.GetQuantums()
+				updateQuantums := pu.GetQuantums()
 				newQuantums := curQuantums.Add(curQuantums, updateQuantums)
 
 				// Handle the case where the position is now closed.
 				if newQuantums.Sign() == 0 {
 					delete(perpetualPositionsMap, pu.PerpetualId)
 				}
-				pp.Quantums = dtypes.NewIntFromBigInt(newQuantums)
+				pp.Quantums = dtypes.NewIntFromBigInt(newQuantums.ToBig())
 			} else {
 				// This subaccount does not have a matching position for this update.
 				// Create the new position.
@@ -139,7 +139,7 @@ func UpdatePerpetualPositions(
 				}
 				perpetualPosition := &types.PerpetualPosition{
 					PerpetualId:  pu.PerpetualId,
-					Quantums:     dtypes.NewIntFromBigInt(pu.GetBigQuantums()),
+					Quantums:     dtypes.NewIntFromBigInt(pu.GetQuantums().ToBig()),
 					FundingIndex: fundingIndex,
 				}
 
@@ -182,11 +182,11 @@ func UpdateAssetPositions(
 			// If so - we update the size of the existing position, otherwise
 			// we create a new position.
 			if ap, exists := assetPositionsMap[au.AssetId]; exists {
-				curQuantums := ap.GetBigQuantums()
-				updateQuantums := au.GetBigQuantums()
+				curQuantums := ap.GetQuantums()
+				updateQuantums := au.GetQuantums()
 				newQuantums := curQuantums.Add(curQuantums, updateQuantums)
 
-				ap.Quantums = dtypes.NewIntFromBigInt(newQuantums)
+				ap.Quantums = dtypes.NewIntFromBigInt(newQuantums.ToBig())
 
 				// Handle the case where the position is now closed.
 				if ap.Quantums.BigInt().Sign() == 0 {
@@ -198,7 +198,7 @@ func UpdateAssetPositions(
 				// Create the new asset position.
 				assetPosition := &types.AssetPosition{
 					AssetId:  au.AssetId,
-					Quantums: dtypes.NewIntFromBigInt(au.GetBigQuantums()),
+					Quantums: dtypes.NewIntFromBigInt(au.GetQuantums().ToBig()),
 				}
 
 				// Add the new asset position to the map.

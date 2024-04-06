@@ -313,9 +313,9 @@ func (f *FakeMemClobKeeper) addFakePositionSize(
 	}
 
 	if isBuy {
-		curPositionSize = curPositionSize.Add(curPositionSize, fillAmount.ToBigInt())
+		curPositionSize = curPositionSize.Add(curPositionSize, fillAmount.ToInt256().ToBig())
 	} else {
-		curPositionSize = curPositionSize.Sub(curPositionSize, fillAmount.ToBigInt())
+		curPositionSize = curPositionSize.Sub(curPositionSize, fillAmount.ToInt256().ToBig())
 	}
 
 	clobPairPositionSizes[clobPairId] = curPositionSize

@@ -4,10 +4,11 @@ package cli_test
 
 import (
 	"fmt"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	"math"
-	"math/big"
 	"testing"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -130,12 +131,12 @@ func (s *PlaceOrderIntegrationTestSuite) SetupSuite() {
 		sastate.Subaccounts,
 		satypes.Subaccount{
 			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberZero},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPosition(int256.NewInt(initialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 		satypes.Subaccount{
 			Id:                 &satypes.SubaccountId{Owner: s.validatorAddress.String(), Number: subaccountNumberOne},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(initialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPosition(int256.NewInt(initialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 	)
@@ -252,25 +253,25 @@ func (s *PlaceOrderIntegrationTestSuite) TestCLIPlaceOrder() {
 		int64(constants.PerpetualFeeParamsMakerRebate.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
 
 	s.Require().Contains(
-		[]*big.Int{
-			new(big.Int).SetInt64(initialQuoteBalance - fillSizeQuoteQuantums - takerFee),
-			new(big.Int).SetInt64(initialQuoteBalance - fillSizeQuoteQuantums - makerFee),
+		[]*int256.Int{
+			int256.NewInt(initialQuoteBalance - fillSizeQuoteQuantums - takerFee),
+			int256.NewInt(initialQuoteBalance - fillSizeQuoteQuantums - makerFee),
 		},
 		subaccountZero.GetUsdcPosition(),
 	)
 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
-	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Equal(quantums.ToInt256(), subaccountZero.PerpetualPositions[0].GetQuantums())
 
 	s.Require().Contains(
-		[]*big.Int{
-			new(big.Int).SetInt64(initialQuoteBalance + fillSizeQuoteQuantums - takerFee),
-			new(big.Int).SetInt64(initialQuoteBalance + fillSizeQuoteQuantums - makerFee),
+		[]*int256.Int{
+			int256.NewInt(initialQuoteBalance + fillSizeQuoteQuantums - takerFee),
+			int256.NewInt(initialQuoteBalance + fillSizeQuoteQuantums - makerFee),
 		},
 		subaccountOne.GetUsdcPosition(),
 	)
 	s.Require().Len(subaccountOne.PerpetualPositions, 1)
 	// Check that position is short and has the right size.
-	s.Require().Equal(new(big.Int).Neg(quantums.ToBigInt()), subaccountOne.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Equal(new(int256.Int).Neg(quantums.ToInt256()), subaccountOne.PerpetualPositions[0].GetQuantums())
 
 	// Check that the `subaccounts` module account has expected remaining USDC balance.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(

@@ -2,9 +2,9 @@ package types
 
 import (
 	fmt "fmt"
-	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 // Subaccounts module event types.
@@ -23,7 +23,7 @@ const (
 func NewCreateSettledFundingEvent(
 	subaccount SubaccountId,
 	perpetualId uint32,
-	fundingPaid *big.Int,
+	fundingPaid *int256.Int,
 ) sdk.Event {
 	return sdk.NewEvent(
 		EventTypeSettledFunding,

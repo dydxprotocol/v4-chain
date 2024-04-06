@@ -3,10 +3,11 @@ package simulation
 // DONTCOVER
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"math/rand"
+
+	"github.com/dydxprotocol/v4-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -82,7 +83,7 @@ func SimulateMsgCreateTransfer(
 			), nil, nil
 		}
 
-		bigNetCollateral, bigInitialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
+		netCollateral, initialMargin, _, err := sk.GetNetCollateralAndMarginRequirements(
 			ctx,
 			satypes.Update{
 				SubaccountId: *senderAccount.GetId(),
@@ -91,6 +92,8 @@ func SimulateMsgCreateTransfer(
 		if err != nil {
 			panic(err)
 		}
+		bigNetCollateral := netCollateral.ToBig()
+		bigInitialMargin := initialMargin.ToBig()
 
 		// Select a different subaccount as the recipient.
 		recipientAccount, err := sk.GetRandomSubaccount(ctx, r)
@@ -107,7 +110,7 @@ func SimulateMsgCreateTransfer(
 		// Calculate the maximum amount that the receiver can receive without any integer overflow.
 		bigAmountReceivable := new(big.Int).Sub(
 			new(big.Int).SetUint64(math.MaxUint64),
-			recipientAccount.GetUsdcPosition(),
+			recipientAccount.GetUsdcPosition().ToBig(),
 		)
 
 		// Calculate the maximum amount that can be sent without making the subaccount under-collateralized.

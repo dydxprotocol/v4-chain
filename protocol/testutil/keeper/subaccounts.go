@@ -1,12 +1,13 @@
 package keeper
 
 import (
-	"github.com/cosmos/gogoproto/proto"
-	"math/big"
 	"testing"
+
+	"github.com/cosmos/gogoproto/proto"
 
 	dbm "github.com/cosmos/cosmos-db"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -115,23 +116,23 @@ func createSubaccountsKeeper(
 }
 
 func CreateUsdcAssetPosition(
-	quoteBalance *big.Int,
+	quoteBalance *int256.Int,
 ) []*types.AssetPosition {
 	return []*types.AssetPosition{
 		{
 			AssetId:  assettypes.AssetUsdc.Id,
-			Quantums: dtypes.NewIntFromBigInt(quoteBalance),
+			Quantums: dtypes.NewIntFromBigInt(quoteBalance.ToBig()),
 		},
 	}
 }
 
 func CreateUsdcAssetUpdate(
-	deltaQuoteBalance *big.Int,
+	deltaQuoteBalance *int256.Int,
 ) []types.AssetUpdate {
 	return []types.AssetUpdate{
 		{
-			AssetId:          assettypes.AssetUsdc.Id,
-			BigQuantumsDelta: deltaQuoteBalance,
+			AssetId:       assettypes.AssetUsdc.Id,
+			QuantumsDelta: deltaQuoteBalance,
 		},
 	}
 }

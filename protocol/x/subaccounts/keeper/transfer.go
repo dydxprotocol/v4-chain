@@ -1,8 +1,6 @@
 package keeper
 
 import (
-	"math/big"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,15 +18,15 @@ func (k Keeper) getValidSubaccountUpdatesForTransfer(
 	ctx sdk.Context,
 	subaccountId types.SubaccountId,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 	isToSubaccount bool,
 ) (
 	updates []types.Update,
 	err error,
 ) {
-	bigBalanceDelta := new(big.Int).Set(quantums)
+	balanceDelta := new(int256.Int).Set(quantums)
 	if !isToSubaccount {
-		bigBalanceDelta.Neg(bigBalanceDelta)
+		balanceDelta.Neg(balanceDelta)
 	}
 
 	if assetId == 0 {
@@ -37,8 +35,8 @@ func (k Keeper) getValidSubaccountUpdatesForTransfer(
 				SubaccountId: subaccountId,
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: bigBalanceDelta,
+						AssetId:       assettypes.AssetUsdc.Id,
+						QuantumsDelta: balanceDelta,
 					},
 				},
 			},
@@ -92,7 +90,7 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 	fromAccount sdk.AccAddress,
 	toSubaccountId types.SubaccountId,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
 	if assetId != assettypes.AssetUsdc.Id {
@@ -106,19 +104,18 @@ func (k Keeper) DepositFundsFromAccountToSubaccount(
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		int256.MustFromBig(quantums),
+		quantums,
 	)
 	if err != nil {
 		return err
 	}
-	bigConvertedQuantums := convertedQuantums.ToBig()
 
 	// Generate subaccount updates and check whether updates can be applied.
 	updates, err := k.getValidSubaccountUpdatesForTransfer(
 		ctx,
 		toSubaccountId,
 		assetId,
-		bigConvertedQuantums,
+		convertedQuantums,
 		true, // isToSubaccount
 	)
 	if err != nil {
@@ -156,7 +153,7 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	fromSubaccountId types.SubaccountId,
 	toAccount sdk.AccAddress,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
 	if assetId != assettypes.AssetUsdc.Id {
@@ -170,19 +167,18 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 	convertedQuantums, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		int256.MustFromBig(quantums),
+		quantums,
 	)
 	if err != nil {
 		return err
 	}
-	bigConvertedQuantums := convertedQuantums.ToBig()
 
 	// Generate subaccount updates and check whether updates can be applied.
 	updates, err := k.getValidSubaccountUpdatesForTransfer(
 		ctx,
 		fromSubaccountId,
 		assetId,
-		bigConvertedQuantums,
+		convertedQuantums,
 		false, // isToSubaccount
 	)
 	if err != nil {
@@ -218,7 +214,7 @@ func (k Keeper) WithdrawFundsFromSubaccountToAccount(
 func (k Keeper) TransferFeesToFeeCollectorModule(
 	ctx sdk.Context,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 	perpetualId uint32,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
@@ -230,11 +226,10 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 		return nil
 	}
 
-	quantumsInt256 := int256.MustFromBig(quantums)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantumsInt256.Abs(quantumsInt256),
+		new(int256.Int).Abs(quantums),
 	)
 	if err != nil {
 		return err
@@ -277,18 +272,17 @@ func (k Keeper) TransferFeesToFeeCollectorModule(
 // Note this function does not change any individual subaccount state.
 func (k Keeper) TransferInsuranceFundPayments(
 	ctx sdk.Context,
-	insuranceFundDelta *big.Int,
+	insuranceFundDelta *int256.Int,
 	perpetualId uint32,
 ) error {
 	if insuranceFundDelta.Sign() == 0 {
 		return nil
 	}
 
-	insuranceFundDeltaInt256 := int256.MustFromBig(insuranceFundDelta)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		insuranceFundDeltaInt256.Abs(insuranceFundDeltaInt256),
+		new(int256.Int).Abs(insuranceFundDelta),
 	)
 	if err != nil {
 		// Panic if USDC does not exist.
@@ -333,7 +327,7 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 	senderSubaccountId types.SubaccountId,
 	recipientSubaccountId types.SubaccountId,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 ) error {
 	// TODO(DEC-715): Support non-USDC assets.
 	if assetId != assettypes.AssetUsdc.Id {
@@ -345,8 +339,8 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 			SubaccountId: senderSubaccountId,
 			AssetUpdates: []types.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: new(big.Int).Neg(quantums),
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: new(int256.Int).Neg(quantums),
 				},
 			},
 		},
@@ -354,8 +348,8 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 			SubaccountId: recipientSubaccountId,
 			AssetUpdates: []types.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: new(big.Int).Set(quantums),
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: new(int256.Int).Set(quantums),
 				},
 			},
 		},
@@ -368,11 +362,10 @@ func (k Keeper) TransferFundsFromSubaccountToSubaccount(
 		return err
 	}
 
-	quantumsInt256 := int256.MustFromBig(quantums)
 	_, coinToTransfer, err := k.assetsKeeper.ConvertAssetToCoin(
 		ctx,
 		assetId,
-		quantumsInt256,
+		quantums,
 	)
 	if err != nil {
 		return err

@@ -610,7 +610,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000, // taker fee of .5%
 									),
@@ -635,7 +635,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000, // maker rebate of .110%
 									),
@@ -739,7 +739,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -773,7 +773,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
@@ -927,7 +927,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000+ // taker fee of .5%
 											50_000_000_000-5_500_000, // maker rebate of .110%
@@ -955,7 +955,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000+ // maker rebate of .110% from first order
 											50_000_000_000-25_000_000, // taker fee of .5% from second order
@@ -1070,7 +1070,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -1104,7 +1104,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),
@@ -1223,7 +1223,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000+ // maker rebate of .110% from first order
 																	50_000_000_000-25_000_000, // taker fee of .5% from second order
@@ -1259,7 +1259,7 @@ func TestPlaceLongTermOrder(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000+ // taker fee of .5% from first match
 																	50_000_000_000-5_500_000, // maker rebate of .110% from second match
@@ -1498,7 +1498,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Sub(
-									aliceSubaccount.GetUsdcPosition(),
+									aliceSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+25_000_000, // taker fee of .5%
 									),
@@ -1523,7 +1523,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 							AssetId: 0,
 							Quantums: dtypes.NewIntFromBigInt(
 								new(big.Int).Add(
-									bobSubaccount.GetUsdcPosition(),
+									bobSubaccount.GetUsdcPosition().ToBig(),
 									new(big.Int).SetInt64(
 										50_000_000_000+5_500_000, // maker rebate of .110%
 									),
@@ -1610,7 +1610,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Sub(
-															aliceSubaccount.GetUsdcPosition(),
+															aliceSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+25_000_000, // taker fee of .5%
 															),
@@ -1644,7 +1644,7 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 													AssetId: 0,
 													Quantums: dtypes.NewIntFromBigInt(
 														new(big.Int).Add(
-															bobSubaccount.GetUsdcPosition(),
+															bobSubaccount.GetUsdcPosition().ToBig(),
 															new(big.Int).SetInt64(
 																50_000_000_000+5_500_000, // maker rebate of .110%
 															),

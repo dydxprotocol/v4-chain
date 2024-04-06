@@ -163,7 +163,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments
@@ -190,7 +190,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments
@@ -322,7 +322,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments
@@ -349,7 +349,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments
@@ -481,7 +481,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(aliceSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments
@@ -508,7 +508,7 @@ func TestPlaceOrder(t *testing.T) {
 									[]*satypes.AssetPosition{
 										{
 											AssetId:  assettypes.AssetUsdc.Id,
-											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition()),
+											Quantums: dtypes.NewIntFromBigInt(bobSubaccount.GetUsdcPosition().ToBig()),
 										},
 									},
 									nil, // no funding payments

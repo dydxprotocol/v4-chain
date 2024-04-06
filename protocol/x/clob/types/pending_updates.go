@@ -5,6 +5,7 @@ import (
 	"sort"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -48,13 +49,6 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 		)
 
 		pendingAssetUpdates := p.subaccountAssetUpdates[subaccountId]
-		for assetId, bigQuantumsDelta := range pendingAssetUpdates {
-			assetUpdate := satypes.AssetUpdate{
-				AssetId:          assetId,
-				BigQuantumsDelta: bigQuantumsDelta,
-			}
-			assetUpdates = append(assetUpdates, assetUpdate)
-		}
 
 		if _, exists := pendingAssetUpdates[assettypes.AssetUsdc.Id]; !exists {
 			pendingAssetUpdates[assettypes.AssetUsdc.Id] = new(big.Int)
@@ -65,6 +59,14 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 			pendingAssetUpdates[assettypes.AssetUsdc.Id],
 			p.subaccountFee[subaccountId],
 		)
+
+		for assetId, bigQuantumsDelta := range pendingAssetUpdates {
+			assetUpdate := satypes.AssetUpdate{
+				AssetId:       assetId,
+				QuantumsDelta: int256.MustFromBig(bigQuantumsDelta),
+			}
+			assetUpdates = append(assetUpdates, assetUpdate)
+		}
 
 		// Panic if there is more than one asset updates since we only support
 		// USDC asset at the moment.
@@ -81,8 +83,8 @@ func (p *PendingUpdates) ConvertToUpdates() []satypes.Update {
 
 		for perpetualId, bigQuantumsDelta := range p.subaccountPerpetualUpdates[subaccountId] {
 			perpetualUpdate := satypes.PerpetualUpdate{
-				PerpetualId:      perpetualId,
-				BigQuantumsDelta: bigQuantumsDelta,
+				PerpetualId:   perpetualId,
+				QuantumsDelta: int256.MustFromBig(bigQuantumsDelta),
 			}
 			perpetualUpdates = append(perpetualUpdates, perpetualUpdate)
 		}

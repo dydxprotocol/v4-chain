@@ -2,7 +2,6 @@ package keeper_test
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
@@ -36,8 +35,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -53,8 +52,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -75,8 +74,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -86,8 +85,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -103,8 +102,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -114,8 +113,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -131,8 +130,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -142,8 +141,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(-499),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(-499),
 						},
 					},
 				},
@@ -159,8 +158,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -170,8 +169,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(-500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(-500),
 						},
 					},
 				},
@@ -191,8 +190,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -208,8 +207,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-500),
 						},
 					},
 				},
@@ -226,8 +225,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -249,8 +248,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-150),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-150),
 						},
 					},
 				},
@@ -261,8 +260,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(150),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(150),
 						},
 					},
 				},
@@ -284,8 +283,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(300),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(300),
 						},
 					},
 				},
@@ -301,8 +300,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-300),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-300),
 						},
 					},
 				},
@@ -327,8 +326,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-1900),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-1900),
 						},
 					},
 				},
@@ -344,8 +343,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(+1900),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(+1900),
 						},
 					},
 				},

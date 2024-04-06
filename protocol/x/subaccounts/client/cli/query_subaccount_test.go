@@ -4,7 +4,6 @@ package cli_test
 
 import (
 	"fmt"
-	"math/big"
 	"strconv"
 	"testing"
 
@@ -15,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
@@ -37,7 +37,7 @@ func networkWithSubaccountObjects(t *testing.T, n int) (*network.Network, []type
 				Owner:  strconv.Itoa(i),
 				Number: uint32(n),
 			},
-			AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+			AssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(1_000)),
 		}
 		nullify.Fill(&subaccount) //nolint:staticcheck
 		state.Subaccounts = append(state.Subaccounts, subaccount)

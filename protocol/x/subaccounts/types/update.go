@@ -1,10 +1,10 @@
 package types
 
 import (
-	"math/big"
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 type UpdateResult uint
@@ -89,7 +89,7 @@ type AssetUpdate struct {
 	// The `Id` of the `Asset` for which the `AssetPosition` is for.
 	AssetId uint32
 	// The signed change in the Size of the `AssetPosition`.
-	BigQuantumsDelta *big.Int
+	QuantumsDelta *int256.Int
 }
 
 type PerpetualUpdate struct {
@@ -97,7 +97,7 @@ type PerpetualUpdate struct {
 	PerpetualId uint32
 	// The signed change in the `Quantums` of the `PerpetualPosition`
 	// represented in base quantums.
-	BigQuantumsDelta *big.Int
+	QuantumsDelta *int256.Int
 }
 
 type UpdateType uint

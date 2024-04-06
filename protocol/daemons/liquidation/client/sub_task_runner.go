@@ -319,7 +319,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		}
 		// Net collateral for USDC is the quantums of the position.
 		// Margin requirements for USDC are zero.
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
+		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetQuantums().ToBig())
 	}
 
 	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
@@ -342,7 +342,7 @@ func (c *Client) CheckSubaccountCollateralization(
 			)
 		}
 
-		bigQuantums := perpetualPosition.GetBigQuantums()
+		bigQuantums := perpetualPosition.GetQuantums().ToBig()
 
 		// Get the net collateral for the position.
 		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(

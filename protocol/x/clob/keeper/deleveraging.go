@@ -71,7 +71,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
-	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
+	deltaQuantums := new(big.Int).Neg(position.GetQuantums().ToBig())
 	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(
 		ctx,
 		subaccountId,
@@ -353,7 +353,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		numSubaccountsIterated++
 		offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 		offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-		bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+		bigOffsettingPositionQuantums := offsettingPosition.GetQuantums().ToBig()
 
 		// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
 		if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
@@ -520,12 +520,12 @@ func (k Keeper) ProcessDeleveraging(
 	// Get the liquidated subaccount.
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	liquidatedPosition, _ := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
-	liquidatedPositionQuantums := liquidatedPosition.GetBigQuantums()
+	liquidatedPositionQuantums := liquidatedPosition.GetQuantums().ToBig()
 
 	// Get the offsetting subaccount.
 	offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, offsettingSubaccountId)
 	offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-	offsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+	offsettingPositionQuantums := offsettingPosition.GetQuantums().ToBig()
 
 	// Make sure that `deltaQuantums` is valid with respect to the liquidated and offsetting subaccounts
 	// by checking that `deltaQuantums` is on the opposite side of the liquidated position side,
@@ -555,14 +555,14 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(deleveragedSubaccountQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: deleveragedSubaccountPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(deleveragedSubaccountPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: liquidatedSubaccountId,
@@ -571,14 +571,14 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(offsettingSubaccountQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: offsettingSubaccountPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(offsettingSubaccountPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: offsettingSubaccountId,

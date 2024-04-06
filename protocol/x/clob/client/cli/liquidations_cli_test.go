@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"math"
 
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	"math/big"
 	"testing"
+
+	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -256,23 +257,23 @@ func (s *LiquidationsIntegrationTestSuite) TestCLILiquidations() {
 	// Assert that both Subaccounts have the appropriate state.
 	takerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].TakerFeePpm) / int64(lib.OneMillion)
 	makerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
-	subaccountZeroInitialQuoteBalance := constants.Usdc_Asset_100_000.GetBigQuantums().Int64()
+	subaccountZeroInitialQuoteBalance := constants.Usdc_Asset_100_000.GetQuantums().Int64()
 	s.Require().Contains(
-		[]*big.Int{
-			new(big.Int).SetInt64(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - takerFee),
-			new(big.Int).SetInt64(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - makerFee),
+		[]*int256.Int{
+			int256.NewInt(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - takerFee),
+			int256.NewInt(subaccountZeroInitialQuoteBalance - fillSizeQuoteQuantums - makerFee),
 		},
 		subaccountZero.GetUsdcPosition(),
 	)
 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
-	s.Require().Equal(liqTestMakerOrderQuantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Equal(liqTestMakerOrderQuantums.ToInt256(), subaccountZero.PerpetualPositions[0].GetQuantums())
 
 	subaccountOneInitialQuoteBalance := int64(-45_001_000_000)
 	liquidationFee := fillSizeQuoteQuantums *
 		int64(types.LiquidationsConfig_Default.MaxLiquidationFeePpm) /
 		int64(lib.OneMillion)
 	s.Require().Equal(
-		new(big.Int).SetInt64(subaccountOneInitialQuoteBalance+fillSizeQuoteQuantums-liquidationFee),
+		int256.NewInt(subaccountOneInitialQuoteBalance+fillSizeQuoteQuantums-liquidationFee),
 		subaccountOne.GetUsdcPosition(),
 	)
 	s.Require().Empty(subaccountOne.PerpetualPositions)

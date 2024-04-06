@@ -3,10 +3,10 @@
 package mocks
 
 import (
-	big "math/big"
-	rand "math/rand"
-
+	int256 "github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	mock "github.com/stretchr/testify/mock"
+
+	rand "math/rand"
 
 	subaccountstypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
@@ -56,7 +56,7 @@ func (_m *SubaccountsKeeper) CanUpdateSubaccounts(ctx types.Context, updates []s
 }
 
 // DepositFundsFromAccountToSubaccount provides a mock function with given fields: ctx, fromAccount, toSubaccountId, assetId, amount
-func (_m *SubaccountsKeeper) DepositFundsFromAccountToSubaccount(ctx types.Context, fromAccount types.AccAddress, toSubaccountId subaccountstypes.SubaccountId, assetId uint32, amount *big.Int) error {
+func (_m *SubaccountsKeeper) DepositFundsFromAccountToSubaccount(ctx types.Context, fromAccount types.AccAddress, toSubaccountId subaccountstypes.SubaccountId, assetId uint32, amount *int256.Int) error {
 	ret := _m.Called(ctx, fromAccount, toSubaccountId, assetId, amount)
 
 	if len(ret) == 0 {
@@ -64,7 +64,7 @@ func (_m *SubaccountsKeeper) DepositFundsFromAccountToSubaccount(ctx types.Conte
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, types.AccAddress, subaccountstypes.SubaccountId, uint32, *int256.Int) error); ok {
 		r0 = rf(ctx, fromAccount, toSubaccountId, assetId, amount)
 	} else {
 		r0 = ret.Error(0)
@@ -129,41 +129,41 @@ func (_m *SubaccountsKeeper) GetNegativeTncSubaccountSeenAtBlock(ctx types.Conte
 }
 
 // GetNetCollateralAndMarginRequirements provides a mock function with given fields: ctx, update
-func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (*big.Int, *big.Int, *big.Int, error) {
+func (_m *SubaccountsKeeper) GetNetCollateralAndMarginRequirements(ctx types.Context, update subaccountstypes.Update) (*int256.Int, *int256.Int, *int256.Int, error) {
 	ret := _m.Called(ctx, update)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNetCollateralAndMarginRequirements")
 	}
 
-	var r0 *big.Int
-	var r1 *big.Int
-	var r2 *big.Int
+	var r0 *int256.Int
+	var r1 *int256.Int
+	var r2 *int256.Int
 	var r3 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) (*big.Int, *big.Int, *big.Int, error)); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) (*int256.Int, *int256.Int, *int256.Int, error)); ok {
 		return rf(ctx, update)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.Update) *int256.Int); ok {
 		r0 = rf(ctx, update)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
+	if rf, ok := ret.Get(1).(func(types.Context, subaccountstypes.Update) *int256.Int); ok {
 		r1 = rf(ctx, update)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
+			r1 = ret.Get(1).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.Update) *big.Int); ok {
+	if rf, ok := ret.Get(2).(func(types.Context, subaccountstypes.Update) *int256.Int); ok {
 		r2 = rf(ctx, update)
 	} else {
 		if ret.Get(2) != nil {
-			r2 = ret.Get(2).(*big.Int)
+			r2 = ret.Get(2).(*int256.Int)
 		}
 	}
 
@@ -274,7 +274,7 @@ func (_m *SubaccountsKeeper) SetSubaccount(ctx types.Context, subaccount subacco
 }
 
 // TransferFundsFromSubaccountToSubaccount provides a mock function with given fields: ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums
-func (_m *SubaccountsKeeper) TransferFundsFromSubaccountToSubaccount(ctx types.Context, senderSubaccountId subaccountstypes.SubaccountId, recipientSubaccountId subaccountstypes.SubaccountId, assetId uint32, quantums *big.Int) error {
+func (_m *SubaccountsKeeper) TransferFundsFromSubaccountToSubaccount(ctx types.Context, senderSubaccountId subaccountstypes.SubaccountId, recipientSubaccountId subaccountstypes.SubaccountId, assetId uint32, quantums *int256.Int) error {
 	ret := _m.Called(ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums)
 
 	if len(ret) == 0 {
@@ -282,7 +282,7 @@ func (_m *SubaccountsKeeper) TransferFundsFromSubaccountToSubaccount(ctx types.C
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, subaccountstypes.SubaccountId, uint32, *big.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, subaccountstypes.SubaccountId, uint32, *int256.Int) error); ok {
 		r0 = rf(ctx, senderSubaccountId, recipientSubaccountId, assetId, quantums)
 	} else {
 		r0 = ret.Error(0)
@@ -329,7 +329,7 @@ func (_m *SubaccountsKeeper) UpdateSubaccounts(ctx types.Context, updates []suba
 }
 
 // WithdrawFundsFromSubaccountToAccount provides a mock function with given fields: ctx, fromSubaccountId, toAccount, assetId, amount
-func (_m *SubaccountsKeeper) WithdrawFundsFromSubaccountToAccount(ctx types.Context, fromSubaccountId subaccountstypes.SubaccountId, toAccount types.AccAddress, assetId uint32, amount *big.Int) error {
+func (_m *SubaccountsKeeper) WithdrawFundsFromSubaccountToAccount(ctx types.Context, fromSubaccountId subaccountstypes.SubaccountId, toAccount types.AccAddress, assetId uint32, amount *int256.Int) error {
 	ret := _m.Called(ctx, fromSubaccountId, toAccount, assetId, amount)
 
 	if len(ret) == 0 {
@@ -337,7 +337,7 @@ func (_m *SubaccountsKeeper) WithdrawFundsFromSubaccountToAccount(ctx types.Cont
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, types.AccAddress, uint32, *big.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, subaccountstypes.SubaccountId, types.AccAddress, uint32, *int256.Int) error); ok {
 		r0 = rf(ctx, fromSubaccountId, toAccount, assetId, amount)
 	} else {
 		r0 = ret.Error(0)

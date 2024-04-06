@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -13,11 +14,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestBaseQuantumsToBigInt(t *testing.T) {
+func TestBaseQuantumsToInt256(t *testing.T) {
 	num := uint64(5)
 	bq := types.BaseQuantums(5)
 
-	require.Zero(t, new(big.Int).SetUint64(num).Cmp(bq.ToBigInt()))
+	require.Zero(t, new(int256.Int).SetUint64(num).Cmp(bq.ToInt256()))
 }
 
 func TestBaseQuantumsToUInt64(t *testing.T) {
@@ -146,12 +147,12 @@ func TestSubaccountGetPerpetualPositionForId(t *testing.T) {
 func TestGetSubaccountQuoteBalance(t *testing.T) {
 	tests := map[string]struct {
 		subaccount           *types.Subaccount
-		expectedQuoteBalance *big.Int
+		expectedQuoteBalance *int256.Int
 		panics               bool
 	}{
 		"can get positive quote balance": {
 			subaccount:           &constants.Carl_Num0_599USD,
-			expectedQuoteBalance: big.NewInt(599_000_000),
+			expectedQuoteBalance: int256.NewInt(599_000_000),
 		},
 		"can get negative quote balance": {
 			subaccount: &types.Subaccount{
@@ -163,17 +164,17 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 					},
 				},
 			},
-			expectedQuoteBalance: big.NewInt(-599_000_000),
+			expectedQuoteBalance: int256.NewInt(-599_000_000),
 		},
 		"can get from nil subaccount": {
 			subaccount:           nil,
-			expectedQuoteBalance: big.NewInt(0),
+			expectedQuoteBalance: int256.NewInt(0),
 		},
 		"can get from subaccount with no asset positions": {
 			subaccount: &types.Subaccount{
 				Id: &constants.Carl_Num0,
 			},
-			expectedQuoteBalance: big.NewInt(0),
+			expectedQuoteBalance: int256.NewInt(0),
 		},
 	}
 
@@ -203,23 +204,23 @@ func TestGetSubaccountQuoteBalance(t *testing.T) {
 func TestSetSubaccountQuoteBalance(t *testing.T) {
 	tests := map[string]struct {
 		subaccount             *types.Subaccount
-		newQuoteBalance        *big.Int
+		newQuoteBalance        *int256.Int
 		expectedAssetPositions []*types.AssetPosition
 	}{
 		"can set nil subaccount": {
 			subaccount:      nil,
-			newQuoteBalance: big.NewInt(0),
+			newQuoteBalance: int256.NewInt(0),
 		},
 		"can set positive quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
-			newQuoteBalance: big.NewInt(10_000_000_000),
+			newQuoteBalance: int256.NewInt(10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
 				&constants.Usdc_Asset_10_000,
 			},
 		},
 		"can set negative quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
-			newQuoteBalance: big.NewInt(-10_000_000_000),
+			newQuoteBalance: int256.NewInt(-10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  assettypes.AssetUsdc.Id,
@@ -229,7 +230,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 		},
 		"can set max quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
-			newQuoteBalance: new(big.Int).SetUint64(math.MaxUint64),
+			newQuoteBalance: new(int256.Int).SetUint64(math.MaxUint64),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  assettypes.AssetUsdc.Id,
@@ -239,7 +240,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 		},
 		"can set min quote balance": {
 			subaccount:      &constants.Carl_Num0_599USD,
-			newQuoteBalance: constants.BigNegMaxUint64(),
+			newQuoteBalance: new(int256.Int).Neg(int256.NewUnsignedInt(math.MaxUint64)),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
 					AssetId:  assettypes.AssetUsdc.Id,
@@ -249,7 +250,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 		},
 		"can set zero quote balance and removes existing position from slice": {
 			subaccount:             &constants.Carl_Num0_599USD,
-			newQuoteBalance:        big.NewInt(0),
+			newQuoteBalance:        int256.NewInt(0),
 			expectedAssetPositions: []*types.AssetPosition{},
 		},
 		"can add usdc position to slice if non existent": {
@@ -259,7 +260,7 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 					&constants.Long_Asset_1BTC,
 				},
 			},
-			newQuoteBalance: big.NewInt(10_000_000_000),
+			newQuoteBalance: int256.NewInt(10_000_000_000),
 			expectedAssetPositions: []*types.AssetPosition{
 				&constants.Usdc_Asset_10_000,
 				&constants.Long_Asset_1BTC,
@@ -270,9 +271,9 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 				Id:             &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{},
 			},
-			newQuoteBalance: new(big.Int).Add(
-				new(big.Int).SetUint64(math.MaxUint64),
-				big.NewInt(1),
+			newQuoteBalance: new(int256.Int).Add(
+				new(int256.Int).SetUint64(math.MaxUint64),
+				int256.One,
 			),
 			expectedAssetPositions: []*types.AssetPosition{
 				{
@@ -290,9 +291,9 @@ func TestSetSubaccountQuoteBalance(t *testing.T) {
 				Id:             &constants.Carl_Num0,
 				AssetPositions: []*types.AssetPosition{},
 			},
-			newQuoteBalance: new(big.Int).Add(
-				constants.BigNegMaxUint64(),
-				big.NewInt(-1),
+			newQuoteBalance: new(int256.Int).Add(
+				new(int256.Int).Neg(int256.NewUnsignedInt(math.MaxUint64)),
+				int256.NewInt(-1),
 			),
 			expectedAssetPositions: []*types.AssetPosition{
 				{

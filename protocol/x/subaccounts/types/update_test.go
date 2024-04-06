@@ -1,9 +1,9 @@
 package types_test
 
 import (
-	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
@@ -28,7 +28,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateUsdcAssetUpdate(int256.NewInt(1)),
 			}},
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
@@ -39,7 +39,7 @@ func TestGetErrorFromUpdateResults(t *testing.T) {
 				SubaccountId: types.SubaccountId{
 					Owner: "owner",
 				},
-				AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(1)),
+				AssetUpdates: testutil.CreateUsdcAssetUpdate(int256.NewInt(1)),
 			}},
 			expectPanic: true,
 		},

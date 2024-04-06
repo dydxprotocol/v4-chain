@@ -2,9 +2,10 @@ package simulation_test
 
 import (
 	"encoding/json"
+	"testing"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
-	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -63,7 +64,7 @@ func TestRandomizedGenState(t *testing.T) {
 				onlyAssetPosition := sa.GetAssetPositions()[0]
 				require.True(t, onlyAssetPosition.AssetId == asstypes.AssetUsdc.Id)
 
-				bigQuantums := sdkmath.NewIntFromBigInt(onlyAssetPosition.GetBigQuantums())
+				bigQuantums := sdkmath.NewIntFromBigInt(onlyAssetPosition.GetQuantums().ToBig())
 				totalUsdcSupply = totalUsdcSupply.Add(bigQuantums)
 			}
 

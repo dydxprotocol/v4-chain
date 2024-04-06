@@ -1,11 +1,11 @@
 package subaccounts_test
 
 import (
-	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
@@ -22,14 +22,14 @@ func TestGenesis(t *testing.T) {
 					Owner:  "foo",
 					Number: uint32(0),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(1_000)),
 			},
 			{
 				Id: &types.SubaccountId{
 					Owner:  "bar",
 					Number: uint32(99),
 				},
-				AssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(1_000)),
+				AssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(1_000)),
 			},
 		},
 	}

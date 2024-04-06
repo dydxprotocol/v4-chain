@@ -2,10 +2,10 @@ package types
 
 import (
 	"context"
-	"math/big"
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
@@ -16,9 +16,9 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update satypes.Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		netCollateral *int256.Int,
+		initialMargin *int256.Int,
+		maintenanceMargin *int256.Int,
 		err error,
 	)
 	CanUpdateSubaccounts(
@@ -44,21 +44,21 @@ type SubaccountsKeeper interface {
 		fromAccount sdk.AccAddress,
 		toSubaccountId satypes.SubaccountId,
 		assetId uint32,
-		amount *big.Int,
+		amount *int256.Int,
 	) (err error)
 	WithdrawFundsFromSubaccountToAccount(
 		ctx sdk.Context,
 		fromSubaccountId satypes.SubaccountId,
 		toAccount sdk.AccAddress,
 		assetId uint32,
-		amount *big.Int,
+		amount *int256.Int,
 	) (err error)
 	TransferFundsFromSubaccountToSubaccount(
 		ctx sdk.Context,
 		senderSubaccountId satypes.SubaccountId,
 		recipientSubaccountId satypes.SubaccountId,
 		assetId uint32,
-		quantums *big.Int,
+		quantums *int256.Int,
 	) (err error)
 	SetSubaccount(ctx sdk.Context, subaccount satypes.Subaccount)
 	GetSubaccount(

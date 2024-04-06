@@ -1,31 +1,32 @@
 package types_test
 
 import (
-	errorsmod "cosmossdk.io/errors"
-	"math/big"
 	"testing"
 
+	errorsmod "cosmossdk.io/errors"
+
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestGetBigQuantums(t *testing.T) {
+func TestGetQuantums(t *testing.T) {
 	p := types.PerpetualPosition{
 		Quantums: dtypes.NewInt(42),
 	}
 
-	require.Equal(t, big.NewInt(42), p.GetBigQuantums())
+	require.Equal(t, int256.NewInt(42), p.GetQuantums())
 
 	p = types.PerpetualPosition{
 		Quantums: dtypes.NewInt(-42),
 	}
 
-	require.Equal(t, big.NewInt(-42), p.GetBigQuantums())
+	require.Equal(t, int256.NewInt(-42), p.GetQuantums())
 
 	nilPosition := (*types.PerpetualPosition)(nil)
-	require.Equal(t, big.NewInt(0), nilPosition.GetBigQuantums())
+	require.Equal(t, int256.NewInt(0), nilPosition.GetQuantums())
 }
 
 func TestPerpetualPosition_GetIsLong(t *testing.T) {
@@ -94,13 +95,13 @@ func TestAssetPosition_GetIsLong(t *testing.T) {
 
 func TestAssetUpdate_GetIsLong(t *testing.T) {
 	longUpdate := types.AssetUpdate{
-		BigQuantumsDelta: big.NewInt(1000),
+		QuantumsDelta: int256.NewInt(1000),
 	}
 	zeroUpdate := types.AssetUpdate{
-		BigQuantumsDelta: big.NewInt(0),
+		QuantumsDelta: int256.NewInt(0),
 	}
 	shortUpdate := types.AssetUpdate{
-		BigQuantumsDelta: big.NewInt(-10000000),
+		QuantumsDelta: int256.NewInt(-10000000),
 	}
 
 	require.True(t,
@@ -116,13 +117,13 @@ func TestAssetUpdate_GetIsLong(t *testing.T) {
 
 func TestPerpetualUpdate_GetIsLong(t *testing.T) {
 	longUpdate := types.PerpetualUpdate{
-		BigQuantumsDelta: big.NewInt(1000),
+		QuantumsDelta: int256.NewInt(1000),
 	}
 	zeroUpdate := types.PerpetualUpdate{
-		BigQuantumsDelta: big.NewInt(0),
+		QuantumsDelta: int256.NewInt(0),
 	}
 	shortUpdate := types.PerpetualUpdate{
-		BigQuantumsDelta: big.NewInt(-10000000),
+		QuantumsDelta: int256.NewInt(-10000000),
 	}
 
 	require.True(t,

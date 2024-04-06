@@ -1,12 +1,11 @@
 package types
 
 import (
-	"math/big"
-
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -17,9 +16,9 @@ const (
 // BaseQuantums is used to represent an amount in base quantums.
 type BaseQuantums uint64
 
-// Get the BaseQuantum value in *big.Int.
-func (bq BaseQuantums) ToBigInt() *big.Int {
-	return new(big.Int).SetUint64(bq.ToUint64())
+// Get the BaseQuantum value in *int256.Int.
+func (bq BaseQuantums) ToInt256() *int256.Int {
+	return int256.NewUnsignedInt(uint64(bq))
 }
 
 // Get the BaseQuantum value in uint64.
@@ -64,16 +63,16 @@ func (m *Subaccount) GetPerpetualPositionForId(
 }
 
 // GetUsdcPosition returns the balance of the USDC asset position.
-func (m *Subaccount) GetUsdcPosition() *big.Int {
+func (m *Subaccount) GetUsdcPosition() *int256.Int {
 	usdcAssetPosition := m.getUsdcAssetPosition()
 	if usdcAssetPosition == nil {
-		return new(big.Int)
+		return new(int256.Int)
 	}
-	return usdcAssetPosition.GetBigQuantums()
+	return usdcAssetPosition.GetQuantums()
 }
 
 // SetUsdcAssetPosition sets the balance of the USDC asset position to `newUsdcPosition`.
-func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *big.Int) {
+func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *int256.Int) {
 	if m == nil {
 		return
 	}
@@ -90,7 +89,7 @@ func (m *Subaccount) SetUsdcAssetPosition(newUsdcPosition *big.Int) {
 			}
 			m.AssetPositions = append([]*AssetPosition{usdcAssetPosition}, m.AssetPositions...)
 		}
-		usdcAssetPosition.Quantums = dtypes.NewIntFromBigInt(newUsdcPosition)
+		usdcAssetPosition.Quantums = dtypes.NewIntFromBigInt(newUsdcPosition.ToBig())
 	}
 }
 

@@ -28,9 +28,9 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update satypes.Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		netCollateral *int256.Int,
+		initialMargin *int256.Int,
+		maintenanceMargin *int256.Int,
 		err error,
 	)
 	GetSubaccount(
@@ -65,10 +65,15 @@ type SubaccountsKeeper interface {
 		perpetualId uint32,
 		blockHeight uint32,
 	) error
-	TransferFeesToFeeCollectorModule(ctx sdk.Context, assetId uint32, amount *big.Int, perpetualId uint32) error
+	TransferFeesToFeeCollectorModule(
+		ctx sdk.Context,
+		assetId uint32,
+		amount *int256.Int,
+		perpetualId uint32,
+	) error
 	TransferInsuranceFundPayments(
 		ctx sdk.Context,
-		amount *big.Int,
+		amount *int256.Int,
 		perpetualId uint32,
 	) error
 	GetCollateralPoolFromPerpetualId(

@@ -4,11 +4,11 @@ package cli_test
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
@@ -111,8 +111,8 @@ func (s *SendingIntegrationTestSuite) TestCLISending_Success() {
 		subaccountNumberZero,
 		subaccountNumberOne,
 		uint64(1_000_000),
-		new(big.Int).SetUint64(499_000_000),
-		new(big.Int).SetUint64(501_000_000),
+		new(int256.Int).SetUint64(499_000_000),
+		new(int256.Int).SetUint64(501_000_000),
 	)
 }
 
@@ -125,8 +125,8 @@ func (s *SendingIntegrationTestSuite) TestCLISending_InsufficientBalance() {
 		subaccountNumberZero,
 		subaccountNumberOne,
 		uint64(501_000_000), // Sender only has $500
-		new(big.Int).SetUint64(500_000_000),
-		new(big.Int).SetUint64(500_000_000),
+		new(int256.Int).SetUint64(500_000_000),
+		new(int256.Int).SetUint64(500_000_000),
 	)
 }
 
@@ -139,8 +139,8 @@ func (s *SendingIntegrationTestSuite) TestCLISending_Nonexistent() {
 		subaccountNumberZero,
 		subaccountNonExistent,
 		uint64(1_000_000),
-		new(big.Int).SetUint64(499_000_000),
-		new(big.Int).SetUint64(1_000_000),
+		new(int256.Int).SetUint64(499_000_000),
+		new(int256.Int).SetUint64(1_000_000),
 	)
 }
 
@@ -148,8 +148,8 @@ func (s *SendingIntegrationTestSuite) sendTransferAndVerifyBalance(
 	senderSubaccountNumber uint32,
 	recipientSubaccountNumber uint32,
 	amount uint64,
-	expectedSenderQuoteBalance *big.Int,
-	expectedRecipientQuoteBalance *big.Int,
+	expectedSenderQuoteBalance *int256.Int,
+	expectedRecipientQuoteBalance *int256.Int,
 ) {
 	val := s.network.Validators[0]
 	ctx := val.ClientCtx

@@ -343,7 +343,7 @@ func (m *MemClobPriceTimePriority) mustUpdateMemclobStateWithMatches(
 				bigTotalMatchedQuantums = big.NewInt(0)
 			}
 
-			bigMatchedQuantums := matchedQuantums.ToBigInt()
+			bigMatchedQuantums := matchedQuantums.ToInt256().ToBig()
 			if order.IsBuy() {
 				bigTotalMatchedQuantums = bigTotalMatchedQuantums.Add(bigTotalMatchedQuantums, bigMatchedQuantums)
 			} else {
@@ -1814,9 +1814,9 @@ func (m *MemClobPriceTimePriority) mustPerformTakerOrderMatching(
 		takerRemainingSize -= matchedAmount
 
 		if newTakerOrder.IsBuy() {
-			bigTotalMatchedAmount.Add(bigTotalMatchedAmount, matchedAmount.ToBigInt())
+			bigTotalMatchedAmount.Add(bigTotalMatchedAmount, matchedAmount.ToInt256().ToBig())
 		} else {
-			bigTotalMatchedAmount.Sub(bigTotalMatchedAmount, matchedAmount.ToBigInt())
+			bigTotalMatchedAmount.Sub(bigTotalMatchedAmount, matchedAmount.ToInt256().ToBig())
 		}
 
 		// 2.
@@ -2234,7 +2234,7 @@ func (m *MemClobPriceTimePriority) getImpactPriceSubticks(
 
 			fractionalBaseQuantums := lastFillFraction.Mul(
 				lastFillFraction,
-				new(big.Rat).SetInt(makerRemainingSize.ToBigInt()),
+				new(big.Rat).SetInt(makerRemainingSize.ToInt256().ToBig()),
 			)
 
 			accumulatedBaseQuantums.Add(
@@ -2474,7 +2474,7 @@ func (m *MemClobPriceTimePriority) resizeReduceOnlyMatchIfNecessary(
 	isBuy bool,
 ) satypes.BaseQuantums {
 	// Get the signed size of the new match.
-	newMatchSize := newlyMatchedAmount.ToBigInt()
+	newMatchSize := newlyMatchedAmount.ToInt256().ToBig()
 	if !isBuy {
 		newMatchSize.Neg(newMatchSize)
 	}

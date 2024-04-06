@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -75,7 +76,7 @@ func (k Keeper) getEquityTierLimitForSubaccount(
 
 	var equityTierLimit types.EquityTierLimit
 	for _, limit := range equityTierLimits {
-		if netCollateral.Cmp(limit.UsdTncRequired.BigInt()) < 0 {
+		if netCollateral.Cmp(int256.MustFromBig(limit.UsdTncRequired.BigInt())) < 0 {
 			break
 		}
 		equityTierLimit = limit

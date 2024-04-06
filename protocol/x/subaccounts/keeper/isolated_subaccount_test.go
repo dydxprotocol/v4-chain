@@ -1,10 +1,10 @@
 package keeper_test
 
 import (
-	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -45,8 +45,8 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(0),
-						BigQuantumsDelta: big.NewInt(-100),
+						PerpetualId:   uint32(0),
+						QuantumsDelta: int256.NewInt(-100),
 					},
 				},
 				AssetUpdates: nil,
@@ -65,12 +65,12 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(0),
-						BigQuantumsDelta: big.NewInt(-100),
+						PerpetualId:   uint32(0),
+						QuantumsDelta: int256.NewInt(-100),
 					},
 					{
-						PerpetualId:      uint32(1),
-						BigQuantumsDelta: big.NewInt(-200),
+						PerpetualId:   uint32(1),
+						QuantumsDelta: int256.NewInt(-200),
 					},
 				},
 				AssetUpdates: nil,
@@ -93,8 +93,8 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(0),
-						BigQuantumsDelta: big.NewInt(-100),
+						PerpetualId:   uint32(0),
+						QuantumsDelta: int256.NewInt(-100),
 					},
 				},
 				AssetUpdates: nil,
@@ -116,14 +116,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(-1_000_000_000),
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(-1_000_000_000),
 					},
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: big.NewInt(100_000_000),
+						AssetId:       assettypes.AssetUsdc.Id,
+						QuantumsDelta: int256.NewInt(100_000_000),
 					},
 				},
 			},
@@ -133,7 +133,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: &types.IsolatedPerpetualPositionStateTransition{
 				SubaccountId:  &constants.Alice_Num0,
 				PerpetualId:   uint32(3),
-				QuoteQuantums: constants.Usdc_Asset_10_000.GetBigQuantums(),
+				QuoteQuantums: constants.Usdc_Asset_10_000.GetQuantums(),
 				Transition:    types.Closed,
 			},
 		},
@@ -154,14 +154,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(1_000_000_000), // 1 ISO
 					},
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: big.NewInt(-50_000_000), // -$50
+						AssetId:       assettypes.AssetUsdc.Id,
+						QuantumsDelta: int256.NewInt(-50_000_000), // -$50
 					},
 				},
 			},
@@ -171,7 +171,7 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 			expectedStateTransition: &types.IsolatedPerpetualPositionStateTransition{
 				SubaccountId:  &constants.Alice_Num0,
 				PerpetualId:   uint32(3),
-				QuoteQuantums: big.NewInt(10_000_000), // $-40 - (-$50)
+				QuoteQuantums: int256.NewInt(10_000_000), // $-40 - (-$50)
 				Transition:    types.Opened,
 			},
 		},
@@ -192,14 +192,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(500_000_000), // 0.5 ISO
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(500_000_000), // 0.5 ISO
 					},
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: big.NewInt(-25_000_000), // -$25
+						AssetId:       assettypes.AssetUsdc.Id,
+						QuantumsDelta: int256.NewInt(-25_000_000), // -$25
 					},
 				},
 			},
@@ -224,8 +224,8 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(1_000_000_000), // 1 ISO
 					},
 				},
 				AssetUpdates: nil,
@@ -256,18 +256,18 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(1_000_000_000), // 1 ISO
 					},
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          assettypes.AssetUsdc.Id,
-						BigQuantumsDelta: big.NewInt(-50_000_000), // -$50
+						AssetId:       assettypes.AssetUsdc.Id,
+						QuantumsDelta: int256.NewInt(-50_000_000), // -$50
 					},
 					{
-						AssetId:          constants.BtcUsd.Id,
-						BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						AssetId:       constants.BtcUsd.Id,
+						QuantumsDelta: int256.NewInt(100_000_000), // 1 BTC
 					},
 				},
 			},
@@ -297,14 +297,14 @@ func TestGetIsolatedPerpetualStateTransition(t *testing.T) {
 				},
 				PerpetualUpdates: []types.PerpetualUpdate{
 					{
-						PerpetualId:      uint32(3),
-						BigQuantumsDelta: big.NewInt(1_000_000_000), // 1 ISO
+						PerpetualId:   uint32(3),
+						QuantumsDelta: int256.NewInt(1_000_000_000), // 1 ISO
 					},
 				},
 				AssetUpdates: []types.AssetUpdate{
 					{
-						AssetId:          constants.BtcUsd.Id,
-						BigQuantumsDelta: big.NewInt(100_000_000), // 1 BTC
+						AssetId:       constants.BtcUsd.Id,
+						QuantumsDelta: int256.NewInt(100_000_000), // 1 BTC
 					},
 				},
 			},
