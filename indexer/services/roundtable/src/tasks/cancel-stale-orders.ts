@@ -7,6 +7,7 @@ import {
   OrderFromDatabase,
   OrderStatus,
   OrderTable,
+  PaginationFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import { ORDER_FLAG_SHORT_TERM } from '@dydxprotocol-indexer/v4-proto-parser';
 
@@ -22,19 +23,20 @@ export default async function runTask(): Promise<void> {
 
   const latestBlockHeight: number = parseInt(latestBlock.blockHeight, 10);
 
-  const { results: staleOpenOrders } = await OrderTable.findAll(
-    {
-      statuses: [OrderStatus.OPEN],
-      orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
-      // goodTilBlock needs to be < latest block height to be guaranteed to be CANCELED
-      goodTilBlockBeforeOrAt: (latestBlockHeight - 1).toString(),
-      limit: config.CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE,
-    },
-    [],
-    {
-      readReplica: true,
-    },
-  );
+  const { results: staleOpenOrders }: PaginationFromDatabase<OrderFromDatabase> = await OrderTable
+    .findAll(
+      {
+        statuses: [OrderStatus.OPEN],
+        orderFlags: ORDER_FLAG_SHORT_TERM.toString(),
+        // goodTilBlock needs to be < latest block height to be guaranteed to be CANCELED
+        goodTilBlockBeforeOrAt: (latestBlockHeight - 1).toString(),
+        limit: config.CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE,
+      },
+      [],
+      {
+        readReplica: true,
+      },
+    );
   stats.timing(`${config.SERVICE_NAME}.cancel_stale_orders.query.timing`, Date.now() - queryStart);
 
   const updateStart: number = Date.now();

@@ -141,7 +141,7 @@ class OrdersController extends Controller {
     // then we do not want to return this order to the user as 'BEST_EFFORT_OPENED'.
     let additionalPostgresOrders: OrderFromDatabase[] = [];
     if (!_.isEmpty(postgresOrderIdsToFetch)) {
-      const { results } = await OrderTable.findAll({
+      const { results }: PaginationFromDatabase<OrderFromDatabase> = await OrderTable.findAll({
         id: redisOrderIds,
       }, [], {
         ...DEFAULT_POSTGRES_OPTIONS,

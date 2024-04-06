@@ -1,5 +1,12 @@
 import {
-  BlockTable, OrderFromDatabase, OrderTable, OrderStatus, dbHelpers, testConstants, testMocks,
+  BlockTable,
+  OrderFromDatabase,
+  OrderTable,
+  OrderStatus,
+  dbHelpers,
+  testConstants,
+  testMocks,
+  PaginationFromDatabase,
 } from '@dydxprotocol-indexer/postgres';
 import cancelStaleOrdersTask from '../../src/tasks/cancel-stale-orders';
 import { defaultOrderGoodTilBlockTime } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
@@ -83,13 +90,14 @@ describe('cancel-stale-orders', () => {
 
     await cancelStaleOrdersTask();
 
-    const { results: ordersAfterTask } = await OrderTable.findAll(
-      {
-        id: createdOrderIds,
-      },
-      [],
-      {},
-    );
+    const { results: ordersAfterTask }: PaginationFromDatabase<OrderFromDatabase> = await OrderTable
+      .findAll(
+        {
+          id: createdOrderIds,
+        },
+        [],
+        {},
+      );
     expect(_.sortBy(ordersAfterTask, ['id'])).toEqual(_.sortBy(expectedOrders, ['id']));
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders.count', 2);
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders_canceled.count', 2);
@@ -145,13 +153,14 @@ describe('cancel-stale-orders', () => {
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders.count', 1);
     expect(stats.gauge).toHaveBeenCalledWith('roundtable.num_stale_orders_canceled.count', 1);
 
-    const { results: ordersAfterTask } = await OrderTable.findAll(
-      {
-        id: createdOrderIds,
-      },
-      [],
-      {},
-    );
+    const { results: ordersAfterTask }: PaginationFromDatabase<OrderFromDatabase> = await OrderTable
+      .findAll(
+        {
+          id: createdOrderIds,
+        },
+        [],
+        {},
+      );
     expect(_.sortBy(ordersAfterTask, ['id'])).toEqual(_.sortBy(expectedOrders, ['id']));
 
     config.CANCEL_STALE_ORDERS_QUERY_BATCH_SIZE = oldLimit;
