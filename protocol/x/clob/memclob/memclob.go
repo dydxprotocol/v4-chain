@@ -14,7 +14,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
 	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	indexersharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -45,6 +47,9 @@ type MemClobPriceTimePriority struct {
 
 	// ---- Fields for determining if off-chain update messages should be generated ----
 	generateOffchainUpdates bool
+
+	// ---- Fields for determining if orderbook updates should be generated ----
+	generateOrderbookUpdates bool
 }
 
 type OrderWithRemovalReason struct {
@@ -56,10 +61,11 @@ func NewMemClobPriceTimePriority(
 	generateOffchainUpdates bool,
 ) *MemClobPriceTimePriority {
 	return &MemClobPriceTimePriority{
-		openOrders:              newMemclobOpenOrders(),
-		cancels:                 newMemclobCancels(),
-		operationsToPropose:     *types.NewOperationsToPropose(),
-		generateOffchainUpdates: generateOffchainUpdates,
+		openOrders:               newMemclobOpenOrders(),
+		cancels:                  newMemclobCancels(),
+		operationsToPropose:      *types.NewOperationsToPropose(),
+		generateOffchainUpdates:  generateOffchainUpdates,
+		generateOrderbookUpdates: false,
 	}
 }
 
@@ -69,6 +75,11 @@ func NewMemClobPriceTimePriority(
 // due to the bidirectional dependency between the Keeper and the MemClob.
 func (m *MemClobPriceTimePriority) SetClobKeeper(clobKeeper types.MemClobKeeper) {
 	m.clobKeeper = clobKeeper
+}
+
+// SetGenerateOffchainUpdates sets the `generateOffchainUpdates` field of the MemClob.
+func (m *MemClobPriceTimePriority) SetGenerateOrderbookUpdates(generateOrderbookUpdates bool) {
+	m.generateOrderbookUpdates = generateOrderbookUpdates
 }
 
 // CancelOrder removes a Short-Term order by `OrderId` (if it exists) from all order-related data structures
@@ -127,8 +138,8 @@ func (m *MemClobPriceTimePriority) CancelOrder(
 		if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 			ctx,
 			orderIdToCancel,
-			indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-			off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+			indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
+			ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 		); success {
 			offchainUpdates.AddRemoveMessage(orderIdToCancel, message)
 		}
@@ -463,8 +474,8 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 			if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 				ctx,
 				orderId,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REPLACED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(orderId, message)
 			}
@@ -515,7 +526,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				err,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
@@ -537,7 +548,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				takerOrderStatus.OrderStatus,
 				nil,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
@@ -584,7 +595,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				orderStatus,
 				nil,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
@@ -619,7 +630,7 @@ func (m *MemClobPriceTimePriority) PlaceOrder(
 				order.OrderId,
 				addOrderOrderStatus,
 				nil,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(order.OrderId, message)
 			}
@@ -791,7 +802,7 @@ func (m *MemClobPriceTimePriority) matchOrder(
 				branchedContext,
 				makerOrderId,
 				reason,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 			); success {
 				offchainUpdates.AddRemoveMessage(makerOrderId, message)
 			}
@@ -1116,8 +1127,8 @@ func (m *MemClobPriceTimePriority) GenerateOffchainUpdatesForReplayPlaceOrder(
 				orderId,
 				orderStatus,
 				err,
-				off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
-				indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
+				ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+				indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_INTERNAL_ERROR,
 			); success {
 				existingOffchainUpdates.AddRemoveMessage(orderId, message)
 			}
@@ -1266,8 +1277,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx,
 					statefulOrderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(statefulOrderId, message)
 				}
@@ -1285,8 +1296,8 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 				if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 					ctx,
 					shortTermOrderId,
-					indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
-					off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
+					indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_EXPIRED,
+					ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_CANCELED,
 				); success {
 					existingOffchainUpdates.AddRemoveMessage(shortTermOrderId, message)
 				}
@@ -1508,6 +1519,12 @@ func (m *MemClobPriceTimePriority) mustAddOrderToOrderbook(
 	}
 
 	m.openOrders.mustAddOrderToOrderbook(ctx, newOrder, forceToFrontOfLevel)
+
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderPlacement(ctx, newOrder)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+	}
 }
 
 // mustPerformTakerOrderMatching performs matching using the provided taker order while the order
@@ -1942,6 +1959,12 @@ func (m *MemClobPriceTimePriority) mustRemoveOrder(
 		!m.operationsToPropose.IsOrderPlacementInOperationsQueue(order) {
 		m.operationsToPropose.RemoveShortTermOrderTxBytes(order)
 	}
+
+	if m.generateOrderbookUpdates {
+		// Send an orderbook update to grpc streams.
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderRemoval(ctx, order.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
+	}
 }
 
 // mustUpdateOrderbookStateWithMatchedMakerOrder updates the orderbook with a matched maker order.
@@ -1957,6 +1980,12 @@ func (m *MemClobPriceTimePriority) mustUpdateOrderbookStateWithMatchedMakerOrder
 	// If the filled amount of the maker order is greater than the order size, panic to avoid silent failure.
 	if newTotalFilledAmount > makerOrderBaseQuantums {
 		panic("Total filled size of maker order greater than the order size")
+	}
+
+	// Send an orderbook update for the order's new total filled amount.
+	if m.generateOrderbookUpdates {
+		orderbookUpdate := m.GetOrderbookUpdatesForOrderUpdate(ctx, makerOrder.OrderId)
+		m.clobKeeper.SendOrderbookUpdates(ctx, orderbookUpdate, false)
 	}
 
 	// If the order is fully filled, remove it from the orderbook.
@@ -2099,8 +2128,8 @@ func (m *MemClobPriceTimePriority) maybeCancelReduceOnlyOrders(
 					if message, success := off_chain_updates.CreateOrderRemoveMessageWithReason(
 						ctx,
 						orderId,
-						indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
-						off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+						indexersharedtypes.OrderRemovalReason_ORDER_REMOVAL_REASON_REDUCE_ONLY_RESIZE,
+						ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 					); success {
 						offchainUpdates.AddRemoveMessage(orderId, message)
 					}

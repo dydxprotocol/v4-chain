@@ -198,6 +198,10 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/indexer"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+
+	// Grpc Streaming
+	streaming "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc"
+	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 )
 
 var (
@@ -298,8 +302,9 @@ type App struct {
 	// module configurator
 	configurator module.Configurator
 
-	IndexerEventManager indexer_manager.IndexerEventManager
-	Server              *daemonserver.Server
+	IndexerEventManager  indexer_manager.IndexerEventManager
+	GrpcStreamingManager streamingtypes.GrpcStreamingManager
+	Server               *daemonserver.Server
 
 	// startDaemons encapsulates the logic that starts all daemons and daemon services. This function contains a
 	// closure of all relevant data structures that are shared with various keepers. Daemon services startup is
@@ -678,6 +683,9 @@ func New(
 		tkeys[indexer_manager.TransientStoreKey],
 		indexerFlags.SendOffchainData,
 	)
+
+	app.GrpcStreamingManager = getGrpcStreamingManagerFromOptions(appFlags, logger)
+
 	timeProvider := &timelib.TimeProviderImpl{}
 
 	app.EpochsKeeper = *epochsmodulekeeper.NewKeeper(
@@ -953,6 +961,7 @@ func New(
 	logger.Info("Parsed CLOB flags", "Flags", clobFlags)
 
 	memClob := clobmodulememclob.NewMemClobPriceTimePriority(app.IndexerEventManager.Enabled())
+	memClob.SetGenerateOrderbookUpdates(app.GrpcStreamingManager.Enabled())
 
 	app.ClobKeeper = clobmodulekeeper.NewKeeper(
 		appCodec,
@@ -975,6 +984,7 @@ func New(
 		app.StatsKeeper,
 		app.RewardsKeeper,
 		app.IndexerEventManager,
+		app.GrpcStreamingManager,
 		txConfig.TxDecoder(),
 		clobFlags,
 		rate_limit.NewPanicRateLimiter[*clobmoduletypes.MsgPlaceOrder](),
@@ -1471,6 +1481,8 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	ctx = ctx.WithExecMode(lib.ExecModeBeginBlock)
+
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
@@ -1481,6 +1493,8 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	ctx = ctx.WithExecMode(lib.ExecModeEndBlock)
+
 	// Reset the logger for middleware.
 	// Note that the middleware is only used by `CheckTx` and `DeliverTx`, and not `EndBlocker`.
 	// Panics from `EndBlocker` will not be logged by the middleware and will lead to consensus failures.
@@ -1504,6 +1518,8 @@ func (app *App) Precommitter(ctx sdk.Context) {
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
 func (app *App) PrepareCheckStater(ctx sdk.Context) {
+	ctx = ctx.WithExecMode(lib.ExecModePrepareCheckState)
+
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}
@@ -1736,4 +1752,17 @@ func getIndexerFromOptions(
 		}
 	}
 	return indexerMessageSender, indexerFlags
+}
+
+// getGrpcStreamingManagerFromOptions returns an instance of a streamingtypes.GrpcStreamingManager from the specified
+// options. This function will default to returning a no-op instance.
+func getGrpcStreamingManagerFromOptions(
+	appFlags flags.Flags,
+	logger log.Logger,
+) (manager streamingtypes.GrpcStreamingManager) {
+	if appFlags.GrpcStreamingEnabled {
+		logger.Info("GRPC streaming is enabled")
+		return streaming.NewGrpcStreamingManager()
+	}
+	return streaming.NewNoopGrpcStreamingManager()
 }

@@ -522,6 +522,11 @@ func (_m *ClobKeeper) InitializeEquityTierLimit(ctx types.Context, config clobty
 	return r0
 }
 
+// InitializeNewGrpcStreams provides a mock function with given fields: ctx
+func (_m *ClobKeeper) InitializeNewGrpcStreams(ctx types.Context) {
+	_m.Called(ctx)
+}
+
 // IsLiquidatable provides a mock function with given fields: ctx, subaccountId
 func (_m *ClobKeeper) IsLiquidatable(ctx types.Context, subaccountId subaccountstypes.SubaccountId) (bool, error) {
 	ret := _m.Called(ctx, subaccountId)
@@ -856,6 +861,11 @@ func (_m *ClobKeeper) RemoveExpiredStatefulOrdersTimeSlices(ctx types.Context, b
 // RemoveOrderFillAmount provides a mock function with given fields: ctx, orderId
 func (_m *ClobKeeper) RemoveOrderFillAmount(ctx types.Context, orderId clobtypes.OrderId) {
 	_m.Called(ctx, orderId)
+}
+
+// SendOrderbookUpdates provides a mock function with given fields: ctx, offchainUpdates, snapshot
+func (_m *ClobKeeper) SendOrderbookUpdates(ctx types.Context, offchainUpdates *clobtypes.OffchainUpdates, snapshot bool) {
+	_m.Called(ctx, offchainUpdates, snapshot)
 }
 
 // SetLongTermOrderPlacement provides a mock function with given fields: ctx, order, blockHeight

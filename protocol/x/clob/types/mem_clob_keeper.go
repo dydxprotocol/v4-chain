@@ -111,4 +111,9 @@ type MemClobKeeper interface {
 	Logger(
 		ctx sdk.Context,
 	) log.Logger
+	SendOrderbookUpdates(
+		ctx sdk.Context,
+		offchainUpdates *OffchainUpdates,
+		snapshot bool,
+	)
 }

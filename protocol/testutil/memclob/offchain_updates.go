@@ -6,7 +6,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
+	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
+	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/typ.v4/slices"
@@ -28,7 +29,7 @@ func RequireCancelOrderMessage(t *testing.T, ctx sdk.Context, message *msgsender
 		ctx,
 		orderId,
 		indexershared.OrderRemovalReason_ORDER_REMOVAL_REASON_USER_CANCELED,
-		off_chain_updates.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
+		ocutypes.OrderRemoveV1_ORDER_REMOVAL_STATUS_BEST_EFFORT_CANCELED,
 	)
 	require.Equal(t, *message, expectedMessage)
 }
