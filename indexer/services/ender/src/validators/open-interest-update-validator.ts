@@ -1,4 +1,3 @@
-import { logger } from '@dydxprotocol-indexer/base';
 import { IndexerTendermintEvent, OpenInterestUpdateEventV1 } from '@dydxprotocol-indexer/v4-protos';
 
 import { Handler } from '../handlers/handler';

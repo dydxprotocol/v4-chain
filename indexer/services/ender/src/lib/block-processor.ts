@@ -18,6 +18,7 @@ import { DeleveragingValidator } from '../validators/deleveraging-validator';
 import { FundingValidator } from '../validators/funding-validator';
 import { LiquidityTierValidator } from '../validators/liquidity-tier-validator';
 import { MarketValidator } from '../validators/market-validator';
+import { OpenInterestUpdateValidator } from '../validators/open-interest-update-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
 import { PerpetualMarketValidator } from '../validators/perpetual-market-validator';
 import { StatefulOrderValidator } from '../validators/stateful-order-validator';
@@ -26,7 +27,6 @@ import { TradingRewardsValidator } from '../validators/trading-rewards-validator
 import { TransferValidator } from '../validators/transfer-validator';
 import { UpdateClobPairValidator } from '../validators/update-clob-pair-validator';
 import { UpdatePerpetualValidator } from '../validators/update-perpetual-validator';
-import { OpenInterestUpdateValidator } from '../validators/open-interest-update-validator';
 import { Validator, ValidatorInitializer } from '../validators/validator';
 import { BatchedHandlers } from './batched-handlers';
 import { indexerTendermintEventToEventProtoWithType, indexerTendermintEventToTransactionIndex } from './helper';
@@ -189,7 +189,7 @@ export class BlockProcessor {
         eventProto.version,
       )
     ];
-    
+
     if (Initializer === undefined) {
       const message: string = `cannot process subtype ${eventProto.type} and version ${eventProto.version}`;
       logger.error({

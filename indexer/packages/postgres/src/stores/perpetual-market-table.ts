@@ -263,7 +263,6 @@ export async function updateMarketCheckerFields(
   }
 }
 
-
 export async function getOpenInterest(perpetualMarketIds: string[]): Promise<
   _.Dictionary<MarketOpenInterest>
 > {

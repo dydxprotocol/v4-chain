@@ -34,6 +34,7 @@ import {
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
   OpenInterestUpdateEventV1,
+  OpenInterestUpdate,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -48,7 +49,6 @@ import {
   SingleTradeMessage,
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
-import { OpenInterestUpdate } from '@dydxprotocol-indexer/v4-protos';
 
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
@@ -167,7 +167,6 @@ const defaultOpenInterestUpdate2: OpenInterestUpdate = {
 export const defaultOpenInterestUpdateEvent: OpenInterestUpdateEventV1 = {
   openInterestUpdates: [defaultOpenInterestUpdate1, defaultOpenInterestUpdate2],
 };
-
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   id: 0,

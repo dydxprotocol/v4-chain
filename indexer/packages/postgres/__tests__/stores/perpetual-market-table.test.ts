@@ -1,4 +1,6 @@
-import { MarketCreateObject, MarketOpenInterest, PerpetualMarketFromDatabase, PerpetualMarketStatus } from '../../src/types';
+import {
+  MarketCreateObject, MarketOpenInterest, PerpetualMarketFromDatabase, PerpetualMarketStatus,
+} from '../../src/types';
 import * as PerpetualMarketTable from '../../src/stores/perpetual-market-table';
 import * as LiquidityTiersTable from '../../src/stores/liquidity-tiers-table';
 import { clearData, migrate, teardown } from '../../src/helpers/db-helpers';
@@ -194,7 +196,7 @@ describe('PerpetualMarket store', () => {
     }));
   });
   it('Gets default data when there are no matching positions', async () => {
-    await 
+    await
     await Promise.all([
       PerpetualMarketTable.create(defaultPerpetualMarket),
       PerpetualMarketTable.create(defaultPerpetualMarket2),
@@ -207,8 +209,16 @@ describe('PerpetualMarket store', () => {
     ]);
 
     expect(marketOpenInterest).toEqual({
-      [defaultPerpetualMarket.id]: { perpetualMarketId: defaultPerpetualMarket.id, openInterest: defaultPerpetualMarket.openInterest },
-      [defaultPerpetualMarket2.id]: { perpetualMarketId: defaultPerpetualMarket2.id, openInterest: defaultPerpetualMarket2.openInterest },
+      [defaultPerpetualMarket.id]:
+      {
+        perpetualMarketId: defaultPerpetualMarket.id,
+        openInterest: defaultPerpetualMarket.openInterest,
+      },
+      [defaultPerpetualMarket2.id]:
+      {
+        perpetualMarketId: defaultPerpetualMarket2.id,
+        openInterest: defaultPerpetualMarket2.openInterest,
+      },
     });
   });
 });
