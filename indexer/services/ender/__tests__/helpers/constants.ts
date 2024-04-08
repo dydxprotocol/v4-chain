@@ -33,6 +33,7 @@ import {
   TransferEventV1,
   UpdateClobPairEventV1,
   UpdatePerpetualEventV1,
+  OpenInterestUpdateEventV1,
 } from '@dydxprotocol-indexer/v4-protos';
 import Long from 'long';
 import { DateTime } from 'luxon';
@@ -47,6 +48,7 @@ import {
   SingleTradeMessage,
 } from '../../src/lib/types';
 import { contentToSingleTradeMessage, createConsolidatedKafkaEventFromTrade } from './kafka-publisher-helpers';
+import { OpenInterestUpdate } from '@dydxprotocol-indexer/v4-protos';
 
 export const defaultMarketPriceUpdate: MarketEventV1 = {
   marketId: 0,
@@ -151,6 +153,21 @@ export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV1 = {
   openInterestLowerCap: Long.fromValue(0, true),
   openInterestUpperCap: Long.fromValue(1_000_000_000, true),
 };
+
+const defaultOpenInterestUpdate1: OpenInterestUpdate = {
+  perpetualId: 0,
+  openInterest: bigIntToBytes(BigInt(1000)),
+};
+
+const defaultOpenInterestUpdate2: OpenInterestUpdate = {
+  perpetualId: 1,
+  openInterest: bigIntToBytes(BigInt(2000)),
+};
+
+export const defaultOpenInterestUpdateEvent: OpenInterestUpdateEventV1 = {
+  openInterestUpdates: [defaultOpenInterestUpdate1, defaultOpenInterestUpdate2],
+};
+
 
 export const defaultUpdatePerpetualEvent: UpdatePerpetualEventV1 = {
   id: 0,

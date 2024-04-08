@@ -7,6 +7,8 @@ const (
 
 	// StoreKey defines the primary module store key
 	StoreKey = ModuleName
+
+	TransientStoreKey = "tmp_" + ModuleName
 )
 
 // State
@@ -29,6 +31,9 @@ const (
 
 	// ParamsKey is the key to retrieve all params for the module.
 	ParamsKey = "Params"
+
+	// UpdatedOIKey is the key to retrieve the updated OI for the module.
+	UpdatedOIKey = "UpdatedOI"
 )
 
 // Module Accounts

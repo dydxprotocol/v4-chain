@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"encoding/binary"
 	"fmt"
 	"math/big"
 	"math/rand"
@@ -1277,7 +1278,8 @@ func (k Keeper) ModifyOpenInterest(
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
 	k.SetPerpetual(ctx, perpetual)
 
-	// TODO(OTE-247): add indexer update logic for open interest change.
+	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKey))
+	updatedOIStore.Set(lib.Uint32ToKey(perpetualId), bigOpenInterest.Bytes())
 	return nil
 }
 
@@ -1659,4 +1661,49 @@ func (k Keeper) IsPositionUpdatable(
 		return false, nil
 	}
 	return true, nil
+}
+
+// Get All keys stored in the transient store key
+func (k Keeper) getUpdatedOIKeys(ctx sdk.Context) (keys [][]byte) {
+
+	updatedOIStore := ctx.TransientStore(k.transientStoreKey)
+	iterator := updatedOIStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	for ; iterator.Valid(); iterator.Next() {
+		keys = append(keys, iterator.Key())
+	}
+
+	return keys
+}
+
+func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) (err error) {
+
+	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKey))
+	iterator := updatedOIStore.Iterator(nil, nil)
+	defer iterator.Close()
+
+	OIMessageArray := make([]*indexerevents.OpenInterestUpdate, 0)
+
+	for ; iterator.Valid(); iterator.Next() {
+		OIMessage := indexerevents.OpenInterestUpdate{
+			PerpetualId:  binary.BigEndian.Uint32(iterator.Key()),
+			OpenInterest: dtypes.NewIntFromBigInt(new(big.Int).SetBytes(iterator.Value())),
+		}
+		OIMessageArray = append(OIMessageArray, &OIMessage)
+	}
+
+	k.GetIndexerEventManager().AddBlockEvent(
+		ctx,
+		indexerevents.SubtypeOpenInterestUpdate,
+		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
+		indexerevents.OpenInterestUpdateVersion,
+		indexer_manager.GetBytes(
+			&indexerevents.OpenInterestUpdateEventV1{
+				OpenInterestUpdates: OIMessageArray,
+			},
+		),
+	)
+
+	return nil
 }

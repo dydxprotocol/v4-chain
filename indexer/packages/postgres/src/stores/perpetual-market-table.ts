@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { QueryBuilder } from 'objection';
 
 import { DEFAULT_POSTGRES_OPTIONS } from '../constants';
-import { knexPrimary } from '../helpers/knex';
+import { knexPrimary, knexReadReplica } from '../helpers/knex';
 import {
   generateBulkUpdateString,
   setBulkRowsForUpdate,
@@ -18,6 +18,7 @@ import {
   Options,
   Ordering,
   PerpetualMarketColumns,
+  MarketOpenInterest,
   PerpetualMarketCreateObject,
   PerpetualMarketFromDatabase,
   PerpetualMarketQueryConfig,
@@ -260,4 +261,41 @@ export async function updateMarketCheckerFields(
   } else {
     await knexPrimary.raw(query);
   }
+}
+
+
+export async function getOpenInterest(perpetualMarketIds: string[]): Promise<
+  _.Dictionary<MarketOpenInterest>
+> {
+  if (perpetualMarketIds.length === 0) {
+    return {};
+  }
+  const perpetualMarketIdsSqlArray = `(${perpetualMarketIds.join(',')})`;
+  const result: {
+    rows: MarketOpenInterest[],
+  } = await knexReadReplica.getConnection().raw(
+    `SELECT
+      "id" AS "perpetualMarketId",
+      "openInterest" AS "openInterest"
+    FROM perpetual_markets
+    WHERE "id" IN ${perpetualMarketIdsSqlArray}
+    `,
+  ) as unknown as {
+    rows: MarketOpenInterest[],
+  };
+
+  const openInterestStats: {
+    [perpetualMarketId: string]: MarketOpenInterest,
+  } = _.keyBy(result.rows, 'perpetualMarketId');
+  Object.values(perpetualMarketIds).forEach((perpetualMarketId) => {
+    if (!openInterestStats[perpetualMarketId]) {
+      // no positions exist for this market, set to 0
+      openInterestStats[perpetualMarketId] = {
+        perpetualMarketId,
+        openInterest: '0',
+      };
+    }
+  });
+
+  return openInterestStats;
 }

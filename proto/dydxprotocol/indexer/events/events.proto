@@ -464,3 +464,21 @@ message AddressTradingReward {
     (gogoproto.nullable) = false
   ];
 }
+
+message OpenInterestUpdateEventV1 {
+  // The list of all open interest updates in the block.
+  repeated OpenInterestUpdate open_interest_updates = 1;
+}
+
+message OpenInterestUpdate {
+
+  // The ID of the perpetual market.
+  uint32 perpetual_id = 1;
+
+  // The new open interest value for the perpetual market.
+  bytes open_interest = 2 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
+}
