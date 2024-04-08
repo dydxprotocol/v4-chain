@@ -528,10 +528,6 @@ describe('PerpetualPosition store', () => {
       expect(marketOpenInterest).toEqual({
         [fakePerpetualId]: { perpetualMarketId: fakePerpetualId, openInterest: '0' },
       });
-
-      const allMarketOpenInterest:
-      _.Dictionary<MarketOpenInterest> = await PerpetualPositionTable.getOpenInterestLong([
-      ]);
     });
 
     it('Successfully gets open interest long with no positions', async () => {
