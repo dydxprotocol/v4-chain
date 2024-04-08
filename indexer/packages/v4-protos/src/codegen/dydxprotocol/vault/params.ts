@@ -30,7 +30,8 @@ export interface Params {
   /**
    * The number of quote quantums in quote asset that a vault with no perpetual
    * positions must have to activate, i.e. if a vault has no perpetual positions
-   * and has strictly less than this amount of quote asset, it will not activate.
+   * and has strictly less than this amount of quote asset, it will not
+   * activate.
    */
 
   activationThresholdQuoteQuantums: Uint8Array;
@@ -65,7 +66,8 @@ export interface ParamsSDKType {
   /**
    * The number of quote quantums in quote asset that a vault with no perpetual
    * positions must have to activate, i.e. if a vault has no perpetual positions
-   * and has strictly less than this amount of quote asset, it will not activate.
+   * and has strictly less than this amount of quote asset, it will not
+   * activate.
    */
 
   activation_threshold_quote_quantums: Uint8Array;

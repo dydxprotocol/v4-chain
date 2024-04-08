@@ -30,7 +30,8 @@ message Params {
 
   // The number of quote quantums in quote asset that a vault with no perpetual
   // positions must have to activate, i.e. if a vault has no perpetual positions
-  // and has strictly less than this amount of quote asset, it will not activate.
+  // and has strictly less than this amount of quote asset, it will not
+  // activate.
   bytes activation_threshold_quote_quantums = 7 [
     (gogoproto.customtype) =
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",

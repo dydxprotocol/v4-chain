@@ -43,7 +43,8 @@ type Params struct {
 	OrderExpirationSeconds uint32 `protobuf:"varint,6,opt,name=order_expiration_seconds,json=orderExpirationSeconds,proto3" json:"order_expiration_seconds,omitempty"`
 	// The number of quote quantums in quote asset that a vault with no perpetual
 	// positions must have to activate, i.e. if a vault has no perpetual positions
-	// and has strictly less than this amount of quote asset, it will not activate.
+	// and has strictly less than this amount of quote asset, it will not
+	// activate.
 	ActivationThresholdQuoteQuantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,7,opt,name=activation_threshold_quote_quantums,json=activationThresholdQuoteQuantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"activation_threshold_quote_quantums"`
 }
 
