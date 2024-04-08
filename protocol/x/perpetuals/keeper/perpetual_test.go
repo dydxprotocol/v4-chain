@@ -3522,7 +3522,6 @@ func TestModifyOpenInterest_store(t *testing.T) {
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
 
 	for _, perp := range perps {
-
 		openInterestDeltaBaseQuantums := big.NewInt(2_000_000 * (int64(perp.Params.Id)))
 
 		// Add `openInterestDeltaBaseQuantums` to open interest which is initially 0.

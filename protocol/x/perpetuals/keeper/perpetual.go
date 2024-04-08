@@ -1663,21 +1663,7 @@ func (k Keeper) IsPositionUpdatable(
 	return true, nil
 }
 
-// Get All keys stored in the transient store key
-func (k Keeper) getUpdatedOIKeys(ctx sdk.Context) (keys [][]byte) {
-
-	updatedOIStore := ctx.TransientStore(k.transientStoreKey)
-	iterator := updatedOIStore.Iterator(nil, nil)
-	defer iterator.Close()
-
-	for ; iterator.Valid(); iterator.Next() {
-		keys = append(keys, iterator.Key())
-	}
-
-	return keys
-}
-
-func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) (err error) {
+func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
 
 	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKey))
 	iterator := updatedOIStore.Iterator(nil, nil)
@@ -1704,6 +1690,4 @@ func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) (err error) {
 			},
 		),
 	)
-
-	return nil
 }
