@@ -170,16 +170,16 @@ func initializeOIMFCaps(
 			tier.OpenInterestUpperCap = 0
 		} else if tier.Id == 1 {
 			// Mid cap
-			tier.OpenInterestLowerCap = 25_000_000_000_000 // 25 million USDC
+			tier.OpenInterestLowerCap = 20_000_000_000_000 // 20 million USDC
 			tier.OpenInterestUpperCap = 50_000_000_000_000 // 50 million USDC
 		} else if tier.Id == 2 {
 			// Long tail
-			tier.OpenInterestLowerCap = 10_000_000_000_000 // 10 million USDC
-			tier.OpenInterestUpperCap = 20_000_000_000_000 // 20 million USDC
+			tier.OpenInterestLowerCap = 5_000_000_000_000  // 5 million USDC
+			tier.OpenInterestUpperCap = 10_000_000_000_000 // 10 million USDC
 		} else {
 			// Safety
-			tier.OpenInterestLowerCap = 500_000_000_000   // 0.5 million USDC
-			tier.OpenInterestUpperCap = 1_000_000_000_000 // 1 million USDC
+			tier.OpenInterestLowerCap = 2_000_000_000_000 // 2 million USDC
+			tier.OpenInterestUpperCap = 5_000_000_000_000 // 5 million USDC
 		}
 
 		lt, err := perpetualsKeeper.SetLiquidityTier(
