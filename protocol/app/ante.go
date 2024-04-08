@@ -1,6 +1,8 @@
 package app
 
 import (
+	"sync"
+
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/cachemulti"
 	storetypes "cosmossdk.io/store/types"
@@ -9,10 +11,11 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"sync"
 
 	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -135,6 +138,11 @@ type lockingAnteHandler struct {
 }
 
 func (h *lockingAnteHandler) AnteHandle(ctx sdk.Context, tx sdk.Tx, simulate bool) (sdk.Context, error) {
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight()+1,
+	)
+
 	isClob, err := clobante.IsSingleClobMsgTx(tx)
 	if err != nil {
 		return ctx, err

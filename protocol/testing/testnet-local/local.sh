@@ -101,7 +101,7 @@ create_validators() {
 		# Using "@" as a subscript results in separate args: "dydx1..." "dydx1..." "dydx1..."
 		# Note: `edit_genesis` must be called before `add-genesis-account`.
 		edit_genesis "$VAL_CONFIG_DIR" "${TEST_ACCOUNTS[*]}" "${FAUCET_ACCOUNTS[*]}" "" "" "" ""
-		# update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
+		update_genesis_use_test_volatile_market "$VAL_CONFIG_DIR"
 		update_genesis_complete_bridge_delay "$VAL_CONFIG_DIR" "30"
 
 		echo "${MNEMONICS[$i]}" | dydxprotocold keys add "${MONIKERS[$i]}" --recover --keyring-backend=test --home "$VAL_HOME_DIR"
@@ -156,12 +156,9 @@ setup_cosmovisor() {
 
 use_slinky() {
   CONFIG_FOLDER=$1
-  # Disable pricefeed-daemon
-  dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'price-daemon-enabled' -v false
   # Enable slinky daemon
   dasel put -t bool -f "$CONFIG_FOLDER"/app.toml 'oracle.enabled' -v true
 	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'oracle.oracle_address' -v 'slinky0:8080'
-	dasel put -t string -f "$VAL_CONFIG_DIR"/app.toml 'slinky-vote-extension-oracle-enabled' -v 'true'
 }
 
 # TODO(DEC-1894): remove this function once we migrate off of persistent peers.
@@ -176,6 +173,10 @@ edit_config() {
 	# Default `timeout_commit` is 999ms. For local testnet, use a larger value to make 
 	# block time longer for easier troubleshooting.
 	dasel put -t string -f "$CONFIG_FOLDER"/config.toml '.consensus.timeout_commit' -v '5s'
+
+  # Enable Slinky Prometheus metrics
+	dasel put -t bool -f "$CONFIG_FOLDER"/app.toml '.oracle.metrics_enabled' -v 'true'
+	dasel put -t string -f "$CONFIG_FOLDER"/app.toml '.oracle.prometheus_server_address' -v 'localhost:8001'
 }
 
 install_prerequisites

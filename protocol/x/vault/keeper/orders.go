@@ -83,7 +83,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return err
 	}
 	for _, order := range ordersToPlace {
-		err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order))
+		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
 		}
@@ -182,6 +182,15 @@ func (k Keeper) GetVaultClobOrders(
 			marketPrice.Exponent-lib.QuoteCurrencyAtomicResolution+perpetual.Params.AtomicResolution,
 		),
 	)
+	orderSizeBaseQuantumsRounded := lib.BigRatRoundToNearestMultiple(
+		orderSizeBaseQuantums,
+		uint32(clobPair.StepBaseQuantums),
+		false,
+	)
+	// If order size is non-positive, return empty orders.
+	if orderSizeBaseQuantumsRounded <= 0 {
+		return []*clobtypes.Order{}, nil
+	}
 	// Calculate spread.
 	spreadPpm := lib.Max(
 		params.SpreadMinPpm,
@@ -259,12 +268,8 @@ func (k Keeper) GetVaultClobOrders(
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
-			Side: side,
-			Quantums: lib.BigRatRoundToNearestMultiple(
-				orderSizeBaseQuantums,
-				uint32(clobPair.StepBaseQuantums),
-				false,
-			),
+			Side:     side,
+			Quantums: orderSizeBaseQuantumsRounded,
 			Subticks: lib.BigRatRoundToNearestMultiple(
 				orderSubticks,
 				clobPair.SubticksPerTick,
@@ -319,4 +324,14 @@ func (k Keeper) GetVaultClobOrderClientId(
 	layerBits := uint32(layer) << 22
 
 	return sideBit | blockHeightBit | layerBits
+}
+
+// PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
+// skipping various logs, metrics, and validations.
+func (k Keeper) PlaceVaultClobOrder(
+	ctx sdk.Context,
+	order *clobtypes.Order,
+) error {
+	// Place an internal clob order.
+	return k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
 }

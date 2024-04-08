@@ -100,6 +100,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
+					false,
 				).Return(
 					nil,
 				)
@@ -113,6 +114,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_Conditional,
+					false,
 				).Return(
 					nil,
 				)
@@ -155,6 +157,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
+					false,
 				).Return(
 					nil,
 				)
@@ -183,6 +186,7 @@ func TestClobDecorator_MsgPlaceOrder(t *testing.T) {
 				mck.On("PlaceStatefulOrder",
 					ctx,
 					constants.Msg_PlaceOrder_LongTerm,
+					false,
 				).Return(
 					clobtypes.ErrGoodTilBlockTimeExceedsStatefulOrderTimeWindow,
 				)

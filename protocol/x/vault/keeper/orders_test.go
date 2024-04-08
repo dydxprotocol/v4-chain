@@ -109,10 +109,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 					)
 					require.NoError(t, err)
 					for _, order := range orders {
-						err := tApp.App.ClobKeeper.HandleMsgPlaceOrder(
-							ctx,
-							clobtypes.NewMsgPlaceOrder(*order),
-						)
+						err := tApp.App.VaultKeeper.PlaceVaultClobOrder(ctx, order)
 						require.NoError(t, err)
 					}
 					numPreviousOrders += len(orders)
@@ -379,6 +376,29 @@ func TestGetVaultClobOrders(t *testing.T) {
 				33_333_000,
 			},
 		},
+		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
+			vaultParams: vaulttypes.Params{
+				Layers:                 2,       // 2 layers
+				SpreadMinPpm:           3_000,   // 30 bps
+				SpreadBufferPpm:        1_500,   // 15 bps
+				SkewFactorPpm:          500_000, // 0.5
+				OrderSizePctPpm:        1_000,   // 0.1%
+				OrderExpirationSeconds: 2,       // 2 seconds
+			},
+			vaultId:                    constants.Vault_Clob_1,
+			vaultAssetQuoteQuantums:    big.NewInt(1_000_000), // 1 USDC
+			vaultInventoryBaseQuantums: big.NewInt(0),
+			clobPair:                   constants.ClobPair_Eth,
+			marketParam:                constants.TestMarketParams[1],
+			marketPrice:                constants.TestMarketPrices[1],
+			perpetual:                  constants.EthUsd_0DefaultFunding_9AtomicResolution,
+			expectedOrderSubticks:      []uint64{},
+			// order_size = 0.1% * 1 / 3_000 ~= 0.00000033333
+			// order_size_base_quantums = 0.000033333 * 10^9 = 333
+			// round down to nearest multiple of step_base_quantums=1_000.
+			// order size is 0.
+			expectedOrderQuantums: []uint64{},
+		},
 		"Error - Clob Pair doesn't exist": {
 			vaultParams: vaulttypes.DefaultParams(),
 			vaultId:     constants.Vault_Clob_0,
@@ -516,22 +536,22 @@ func TestGetVaultClobOrders(t *testing.T) {
 				}
 			}
 			expectedOrders := make([]*clobtypes.Order, 0)
-			for i := uint32(0); i < params.Layers; i++ {
+			for i := 0; i < len(tc.expectedOrderQuantums); i += 2 {
 				expectedOrders = append(
 					expectedOrders,
 					// ask.
 					buildVaultClobOrder(
-						uint8(i),
+						uint8(i/2),
 						clobtypes.Order_SIDE_SELL,
-						tc.expectedOrderQuantums[2*i],
-						tc.expectedOrderSubticks[2*i],
+						tc.expectedOrderQuantums[i],
+						tc.expectedOrderSubticks[i],
 					),
 					// bid.
 					buildVaultClobOrder(
-						uint8(i),
+						uint8(i/2),
 						clobtypes.Order_SIDE_BUY,
-						tc.expectedOrderQuantums[2*i+1],
-						tc.expectedOrderSubticks[2*i+1],
+						tc.expectedOrderQuantums[i+1],
+						tc.expectedOrderSubticks[i+1],
 					),
 				)
 			}

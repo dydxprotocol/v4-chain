@@ -228,15 +228,15 @@ func TestMintShares(t *testing.T) {
 			expectedTotalShares: big.NewInt(654_979_502),
 			expectedOwnerShares: big.NewInt(654_325_181),
 		},
-		"Equity 1000000, TotalShares 1000, OwnerShares 0, Deposit 99": {
+		"Equity 1000000, TotalShares 1000, OwnerShares 0, Deposit 9_900": {
 			vaultId:           constants.Vault_Clob_1,
 			equity:            big.NewInt(1_000_000),
 			totalShares:       big.NewInt(1_000),
 			owner:             constants.DaveAccAddress.String(),
-			quantumsToDeposit: big.NewInt(99),
-			// Should mint `99 * 1_000 / 1_000_000` shares, round down to 0.
-			expectedTotalShares: big.NewInt(1_000),
-			expectedOwnerShares: big.NewInt(0),
+			quantumsToDeposit: big.NewInt(9_900),
+			// Should mint `9_900 * 1_000 / 1_000_000` shares, round down to 9.
+			expectedTotalShares: big.NewInt(1_009),
+			expectedOwnerShares: big.NewInt(9),
 		},
 		"Equity -1, TotalShares 10, Deposit 1": {
 			vaultId:           constants.Vault_Clob_1,
@@ -260,6 +260,14 @@ func TestMintShares(t *testing.T) {
 			owner:             constants.AliceAccAddress.String(),
 			quantumsToDeposit: big.NewInt(-1),
 			expectedErr:       vaulttypes.ErrInvalidDepositAmount,
+		},
+		"Equity 1000, TotalShares 1, Deposit 100": {
+			vaultId:           constants.Vault_Clob_1,
+			equity:            big.NewInt(1_000),
+			totalShares:       big.NewInt(1),
+			owner:             constants.AliceAccAddress.String(),
+			quantumsToDeposit: big.NewInt(100),
+			expectedErr:       vaulttypes.ErrZeroSharesToMint,
 		},
 	}
 
