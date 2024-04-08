@@ -226,7 +226,7 @@ func postUpgradeCheckLiquidityTiers(node *containertest.Node, t *testing.T) {
 		InitialMarginPpm:       100_000,
 		MaintenanceFractionPpm: 500_000,
 		ImpactNotional:         5_000_000_000,
-		OpenInterestLowerCap:   uint64(25_000_000_000_000),
+		OpenInterestLowerCap:   uint64(20_000_000_000_000),
 		OpenInterestUpperCap:   uint64(50_000_000_000_000),
 	}, liquidityTiersResponse.LiquidityTiers[1])
 
@@ -236,8 +236,8 @@ func postUpgradeCheckLiquidityTiers(node *containertest.Node, t *testing.T) {
 		InitialMarginPpm:       200_000,
 		MaintenanceFractionPpm: 500_000,
 		ImpactNotional:         2_500_000_000,
-		OpenInterestLowerCap:   uint64(10_000_000_000_000),
-		OpenInterestUpperCap:   uint64(20_000_000_000_000),
+		OpenInterestLowerCap:   uint64(5_000_000_000_000),
+		OpenInterestUpperCap:   uint64(10_000_000_000_000),
 	}, liquidityTiersResponse.LiquidityTiers[2])
 
 	assert.Equal(t, perpetuals.LiquidityTier{
@@ -246,7 +246,7 @@ func postUpgradeCheckLiquidityTiers(node *containertest.Node, t *testing.T) {
 		InitialMarginPpm:       1_000_000,
 		MaintenanceFractionPpm: 200_000,
 		ImpactNotional:         2_500_000_000,
-		OpenInterestLowerCap:   uint64(500_000_000_000),
-		OpenInterestUpperCap:   uint64(1_000_000_000_000),
+		OpenInterestLowerCap:   uint64(2_000_000_000_000),
+		OpenInterestUpperCap:   uint64(5_000_000_000_000),
 	}, liquidityTiersResponse.LiquidityTiers[3])
 }
