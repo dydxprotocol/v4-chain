@@ -465,13 +465,14 @@ message AddressTradingReward {
   ];
 }
 
+// OpenInterestUpdateEventV1 is used for open interest update events
 message OpenInterestUpdateEventV1 {
   // The list of all open interest updates in the block.
   repeated OpenInterestUpdate open_interest_updates = 1;
 }
 
+// OpenInterestUpdate contains a single open interest update for a perpetual
 message OpenInterestUpdate {
-
   // The ID of the perpetual market.
   uint32 perpetual_id = 1;
 

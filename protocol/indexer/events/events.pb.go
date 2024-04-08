@@ -2131,6 +2131,7 @@ func (m *AddressTradingReward) GetOwner() string {
 	return ""
 }
 
+// OpenInterestUpdateEventV1 is used for open interest update events
 type OpenInterestUpdateEventV1 struct {
 	// The list of all open interest updates in the block.
 	OpenInterestUpdates []*OpenInterestUpdate `protobuf:"bytes,1,rep,name=open_interest_updates,json=openInterestUpdates,proto3" json:"open_interest_updates,omitempty"`
@@ -2176,6 +2177,7 @@ func (m *OpenInterestUpdateEventV1) GetOpenInterestUpdates() []*OpenInterestUpda
 	return nil
 }
 
+// OpenInterestUpdate contains a single open interest update for a perpetual
 type OpenInterestUpdate struct {
 	// The ID of the perpetual market.
 	PerpetualId uint32 `protobuf:"varint,1,opt,name=perpetual_id,json=perpetualId,proto3" json:"perpetual_id,omitempty"`
