@@ -1664,7 +1664,6 @@ func (k Keeper) IsPositionUpdatable(
 }
 
 func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
-
 	updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKey))
 	iterator := updatedOIStore.Iterator(nil, nil)
 	defer iterator.Close()
@@ -1679,10 +1678,13 @@ func (k Keeper) SendOIUpdatesToIndexer(ctx sdk.Context) {
 		OIMessageArray = append(OIMessageArray, &OIMessage)
 	}
 
-	k.GetIndexerEventManager().AddBlockEvent(
+	if len(OIMessageArray) == 0 {
+		return
+	}
+
+	k.GetIndexerEventManager().AddTxnEvent(
 		ctx,
 		indexerevents.SubtypeOpenInterestUpdate,
-		indexer_manager.IndexerTendermintEvent_BLOCK_EVENT_END_BLOCK,
 		indexerevents.OpenInterestUpdateVersion,
 		indexer_manager.GetBytes(
 			&indexerevents.OpenInterestUpdateEventV1{

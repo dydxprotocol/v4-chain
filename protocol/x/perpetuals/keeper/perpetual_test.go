@@ -3533,8 +3533,7 @@ func TestModifyOpenInterest_store(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	transientStore := pc.Ctx.TransientStore(pc.TransientStoreKey)
-
+	transientStore := prefix.NewStore(pc.Ctx.TransientStore(pc.TransientStoreKey), []byte(types.UpdatedOIKey))
 	for _, perp := range perps {
 		perpetualObject, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
 		expectedOpenInterest := new(big.Int).SetBytes(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
