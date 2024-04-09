@@ -214,6 +214,22 @@ func TestPlaceOrder(t *testing.T) {
 								),
 							),
 						},
+						// {
+						// 	Subtype:             indexerevents.SubtypeOpenInterestUpdate,
+						// 	OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+						// 	EventIndex:          3,
+						// 	Version:             indexerevents.OpenInterestUpdateVersion,
+						// 	DataBytes: indexer_manager.GetBytes(
+						// 		&indexerevents.OpenInterestUpdateEventV1{
+						// 			OpenInterestUpdates: []*indexerevents.OpenInterestUpdate{
+						// 				{
+						// 					PerpetualId:  Clob_0.MustGetPerpetualId(),
+						// 					OpenInterest: dtypes.NewInt(int64(0)),
+						// 				},
+						// 			},
+						// 		},
+						// 	),
+						// },
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
 						OperationsQueue: []clobtypes.OperationRaw{
@@ -373,6 +389,12 @@ func TestPlaceOrder(t *testing.T) {
 								),
 							),
 						},
+						{
+							Subtype:             indexerevents.SubtypeOpenInterestUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          3,
+							Version:             indexerevents.OpenInterestUpdateVersion,
+						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{
 						OperationsQueue: []clobtypes.OperationRaw{
@@ -531,6 +553,12 @@ func TestPlaceOrder(t *testing.T) {
 									PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBaseQuantums(),
 								),
 							),
+						},
+						{
+							Subtype:             indexerevents.SubtypeOpenInterestUpdate,
+							OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+							EventIndex:          3,
+							Version:             indexerevents.OpenInterestUpdateVersion,
 						},
 					},
 					TxHashes: []string{string(lib.GetTxHash(testtx.MustGetTxBytes(&clobtypes.MsgProposedOperations{

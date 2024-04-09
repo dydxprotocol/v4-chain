@@ -1,6 +1,7 @@
 package clob_test
 
 import (
+	"fmt"
 	"math/big"
 	"testing"
 	"time"
@@ -1025,6 +1026,12 @@ func TestPlaceLongTermOrder(t *testing.T) {
 										),
 									),
 								},
+								{
+									Subtype:             indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          1,
+									Version:             indexerevents.OpenInterestUpdateVersion,
+								},
 							},
 							TxHashes: []string{
 								string(lib.GetTxHash(
@@ -1357,6 +1364,8 @@ func TestPlaceLongTermOrder(t *testing.T) {
 				)
 				msgSender.Clear()
 
+				messages := msgSender.GetOnchainMessages()
+				fmt.Println("Onchain messages", messages)
 				// Block Processing
 				ctx = tApp.AdvanceToBlock(ordersAndExpectations.blockHeight, testapp.AdvanceToBlockOptions{})
 				require.ElementsMatch(
@@ -1574,6 +1583,12 @@ func TestRegression_InvalidTimeInForce(t *testing.T) {
 											Invalid_TIF_LongTermPlaceOrder_Alice_Num0_Id0_Clob0_Buy1_Price50000_GTBT5.Order,
 										),
 									),
+								},
+								{
+									Subtype:             indexerevents.SubtypeOpenInterestUpdate,
+									OrderingWithinBlock: &indexer_manager.IndexerTendermintEvent_TransactionIndex{},
+									EventIndex:          1,
+									Version:             indexerevents.OpenInterestUpdateVersion,
 								},
 							},
 							TxHashes: []string{
