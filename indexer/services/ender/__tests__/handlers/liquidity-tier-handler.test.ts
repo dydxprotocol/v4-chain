@@ -33,7 +33,7 @@ import {
 } from '../helpers/indexer-proto-helpers';
 import { LiquidityTierHandler } from '../../src/handlers/liquidity-tier-handler';
 import {
-  defaultHeight, defaultLiquidityTierUpsertEvent, defaultPreviousHeight, defaultTime, defaultTxHash,
+  defaultHeight, defaultLiquidityTierUpsertEvent as defaultLiquidityTierUpsertEventV2, defaultPreviousHeight, defaultTime, defaultTxHash,
   defaultLiquidityTierUpsertEventV1,
 } from '../helpers/constants';
 import { updateBlockCache } from '../../src/caches/block-cache';
@@ -72,139 +72,217 @@ describe('liquidityTierHandler', () => {
     jest.resetAllMocks();
   });
 
-  describe('getParallelizationIds', () => {
-    it('returns the correct parallelization ids', () => {
+  describe('liquidityTierHandlerV1', () => {
+    describe('getParallelizationIds', () => {
+      it('returns the correct parallelization ids', () => {
+        const transactionIndex: number = 0;
+        const eventIndex: number = 0;
+  
+        const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
+          DydxIndexerSubtypes.LIQUIDITY_TIER,
+          LiquidityTierUpsertEventV1.encode(defaultLiquidityTierUpsertEventV1).finish(),
+          transactionIndex,
+          eventIndex,
+        );
+        const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+          0,
+          defaultTime,
+          [indexerTendermintEvent],
+          [defaultTxHash],
+        );
+  
+        const handler: LiquidityTierHandler = new LiquidityTierHandler(
+          block,
+          0,
+          indexerTendermintEvent,
+          0,
+          defaultLiquidityTierUpsertEventV1,
+        );
+  
+        expect(handler.getParallelizationIds()).toEqual([]);
+      });
+    });
+  
+    it('creates new liquidity tier', async () => {
       const transactionIndex: number = 0;
-      const eventIndex: number = 0;
-
-      const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
-        DydxIndexerSubtypes.LIQUIDITY_TIER,
-        LiquidityTierUpsertEventV2.encode(defaultLiquidityTierUpsertEvent).finish(),
+      const liquidityTierEvent: LiquidityTierUpsertEventV1 = defaultLiquidityTierUpsertEventV1;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
+        liquidityTierEvent: LiquidityTierUpsertEventV1.encode(
+          liquidityTierEvent,
+        ).finish(),
         transactionIndex,
-        eventIndex,
-      );
-      const block: IndexerTendermintBlock = createIndexerTendermintBlock(
-        0,
-        defaultTime,
-        [indexerTendermintEvent],
-        [defaultTxHash],
-      );
-
-      const handler: LiquidityTierHandler = new LiquidityTierHandler(
-        block,
-        0,
-        indexerTendermintEvent,
-        0,
-        defaultLiquidityTierUpsertEvent,
-      );
-
-      expect(handler.getParallelizationIds()).toEqual([]);
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+        version: 1,
+      });
+        // Confirm there is no existing liquidity tier
+      await expectNoExistingLiquidityTiers();
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+  
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+  
+      const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
+        {},
+        [], {
+          orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+        });
+      expect(newLiquidityTiers.length).toEqual(1);
+      expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent, false);
+      validateLiquidityTierRefresherForV1(defaultLiquidityTierUpsertEventV1);
+      expectKafkaMessages(producerSendMock, liquidityTierEvent, 0);
     });
+  
+    it('updates existing liquidity tier', async () => {
+      const transactionIndex: number = 0;
+      const liquidityTierEvent: LiquidityTierUpsertEventV1 = defaultLiquidityTierUpsertEventV1;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
+        liquidityTierEvent: LiquidityTierUpsertEventV1.encode(
+          liquidityTierEvent,
+        ).finish(),
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+        version: 1,
+      });
+        // Create existing liquidity tier
+      await LiquidityTiersTable.upsert(defaultLiquidityTier);
+  
+      // create perpetual market with existing liquidity tier to test websockets
+      await Promise.all([
+        MarketTable.create(testConstants.defaultMarket),
+        MarketTable.create(testConstants.defaultMarket2),
+      ]);
+      await Promise.all([
+        PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+        PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+      ]);
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+  
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+  
+      const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
+        {},
+        [], {
+          orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+        });
+      expect(newLiquidityTiers.length).toEqual(1);
+      expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent, false);
+      validateLiquidityTierRefresherForV1(defaultLiquidityTierUpsertEventV1);
+      expectKafkaMessages(producerSendMock, liquidityTierEvent, 2);
+    });
+
   });
 
-  it('creates new liquidity tier', async () => {
-    const transactionIndex: number = 0;
-    const liquidityTierEvent: LiquidityTierUpsertEventV2 = defaultLiquidityTierUpsertEvent;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
-      liquidityTierEvent: LiquidityTierUpsertEventV2.encode(
-        liquidityTierEvent,
-      ).finish(),
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-      version: 2,
-    });
-      // Confirm there is no existing liquidity tier
-    await expectNoExistingLiquidityTiers();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
-
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
-      {},
-      [], {
-        orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+  describe('liquidityTierHandlerV2', () => {
+    describe('getParallelizationIds', () => {
+      it('returns the correct parallelization ids', () => {
+        const transactionIndex: number = 0;
+        const eventIndex: number = 0;
+  
+        const indexerTendermintEvent: IndexerTendermintEvent = createIndexerTendermintEvent(
+          DydxIndexerSubtypes.LIQUIDITY_TIER,
+          LiquidityTierUpsertEventV2.encode(defaultLiquidityTierUpsertEventV2).finish(),
+          transactionIndex,
+          eventIndex,
+        );
+        const block: IndexerTendermintBlock = createIndexerTendermintBlock(
+          0,
+          defaultTime,
+          [indexerTendermintEvent],
+          [defaultTxHash],
+        );
+  
+        const handler: LiquidityTierHandler = new LiquidityTierHandler(
+          block,
+          0,
+          indexerTendermintEvent,
+          0,
+          defaultLiquidityTierUpsertEventV2,
+        );
+  
+        expect(handler.getParallelizationIds()).toEqual([]);
       });
-    expect(newLiquidityTiers.length).toEqual(1);
-    expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
-    validateLiquidityTierRefresherForV2(defaultLiquidityTierUpsertEvent);
-    expectKafkaMessages(producerSendMock, liquidityTierEvent, 0);
-  });
-
-  it('handles liquidity tier upsert event v1', async () => {
-    const transactionIndex: number = 0;
-    const liquidityTierEvent: LiquidityTierUpsertEventV1 = defaultLiquidityTierUpsertEventV1;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
-      liquidityTierEvent: LiquidityTierUpsertEventV1.encode(
-        liquidityTierEvent,
-      ).finish(),
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-      version: 1,
     });
-      // Confirm there is no existing liquidity tier
-    await expectNoExistingLiquidityTiers();
-    await perpetualMarketRefresher.updatePerpetualMarkets();
-
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
-      {},
-      [], {
-        orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+  
+    it('creates new liquidity tier', async () => {
+      const transactionIndex: number = 0;
+      const liquidityTierEvent: LiquidityTierUpsertEventV2 = defaultLiquidityTierUpsertEventV2;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
+        liquidityTierEvent: LiquidityTierUpsertEventV2.encode(
+          liquidityTierEvent,
+        ).finish(),
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+        version: 2,
       });
-    expect(newLiquidityTiers.length).toEqual(1);
-    expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent, false);
-    validateLiquidityTierRefresherForV1(defaultLiquidityTierUpsertEventV1);
-    expectKafkaMessages(producerSendMock, liquidityTierEvent, 0);
-  });
-
-  it('updates existing liquidity tier', async () => {
-    const transactionIndex: number = 0;
-    const liquidityTierEvent: LiquidityTierUpsertEventV2 = defaultLiquidityTierUpsertEvent;
-    const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
-      liquidityTierEvent: LiquidityTierUpsertEventV2.encode(
-        liquidityTierEvent,
-      ).finish(),
-      transactionIndex,
-      height: defaultHeight,
-      time: defaultTime,
-      txHash: defaultTxHash,
-      version: 2,
+        // Confirm there is no existing liquidity tier
+      await expectNoExistingLiquidityTiers();
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+  
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+  
+      const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
+        {},
+        [], {
+          orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+        });
+      expect(newLiquidityTiers.length).toEqual(1);
+      expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
+      validateLiquidityTierRefresherForV2(defaultLiquidityTierUpsertEventV2);
+      expectKafkaMessages(producerSendMock, liquidityTierEvent, 0);
     });
-      // Create existing liquidity tier
-    await LiquidityTiersTable.upsert(defaultLiquidityTier);
-
-    // create perpetual market with existing liquidity tier to test websockets
-    await Promise.all([
-      MarketTable.create(testConstants.defaultMarket),
-      MarketTable.create(testConstants.defaultMarket2),
-    ]);
-    await Promise.all([
-      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
-      PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
-    ]);
-    await perpetualMarketRefresher.updatePerpetualMarkets();
-
-    const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
-    await onMessage(kafkaMessage);
-
-    const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
-      {},
-      [], {
-        orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+  
+    it('updates existing liquidity tier', async () => {
+      const transactionIndex: number = 0;
+      const liquidityTierEvent: LiquidityTierUpsertEventV2 = defaultLiquidityTierUpsertEventV2;
+      const kafkaMessage: KafkaMessage = createKafkaMessageFromLiquidityTiersEvent({
+        liquidityTierEvent: LiquidityTierUpsertEventV2.encode(
+          liquidityTierEvent,
+        ).finish(),
+        transactionIndex,
+        height: defaultHeight,
+        time: defaultTime,
+        txHash: defaultTxHash,
+        version: 2,
       });
-    expect(newLiquidityTiers.length).toEqual(1);
-    expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
-    validateLiquidityTierRefresherForV2(defaultLiquidityTierUpsertEvent);
-    expectKafkaMessages(producerSendMock, liquidityTierEvent, 2);
+        // Create existing liquidity tier
+      await LiquidityTiersTable.upsert(defaultLiquidityTier);
+  
+      // create perpetual market with existing liquidity tier to test websockets
+      await Promise.all([
+        MarketTable.create(testConstants.defaultMarket),
+        MarketTable.create(testConstants.defaultMarket2),
+      ]);
+      await Promise.all([
+        PerpetualMarketTable.create(testConstants.defaultPerpetualMarket),
+        PerpetualMarketTable.create(testConstants.defaultPerpetualMarket2),
+      ]);
+      await perpetualMarketRefresher.updatePerpetualMarkets();
+  
+      const producerSendMock: jest.SpyInstance = jest.spyOn(producer, 'send');
+      await onMessage(kafkaMessage);
+  
+      const newLiquidityTiers: LiquidityTiersFromDatabase[] = await LiquidityTiersTable.findAll(
+        {},
+        [], {
+          orderBy: [[LiquidityTiersColumns.id, Ordering.ASC]],
+        });
+      expect(newLiquidityTiers.length).toEqual(1);
+      expectLiquidityTier(newLiquidityTiers[0], liquidityTierEvent);
+      validateLiquidityTierRefresherForV2(defaultLiquidityTierUpsertEventV2);
+      expectKafkaMessages(producerSendMock, liquidityTierEvent, 2);
+    });
   });
 });
+
+
 
 export function expectLiquidityTier(
   liquidityTierFromDb: LiquidityTiersFromDatabase,
