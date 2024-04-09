@@ -7,15 +7,15 @@ func NewLiquidityTierUpsertEvent(
 	name string,
 	initialMarginPpm uint32,
 	maintenanceFractionPpm uint32,
-	openIntersetLowerCap uint64,
+	openInterestLowerCap uint64,
 	openInterestUpperCap uint64,
-) *LiquidityTierUpsertEventV1 {
-	return &LiquidityTierUpsertEventV1{
+) *LiquidityTierUpsertEventV2 {
+	return &LiquidityTierUpsertEventV2{
 		Id:                     id,
 		Name:                   name,
 		InitialMarginPpm:       initialMarginPpm,
 		MaintenanceFractionPpm: maintenanceFractionPpm,
-		OpenInterestLowerCap:   openIntersetLowerCap,
+		OpenInterestLowerCap:   openInterestLowerCap,
 		OpenInterestUpperCap:   openInterestUpperCap,
 	}
 }
