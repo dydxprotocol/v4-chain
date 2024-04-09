@@ -7,7 +7,7 @@ import {
 import { dbHelpers, testMocks } from '@dydxprotocol-indexer/postgres';
 import { DydxIndexerSubtypes } from '../../src/lib/types';
 import {
-  defaultHeight, defaultLiquidityTierUpsertEvent, defaultTime, defaultTxHash,
+  defaultHeight, defaultLiquidityTierUpsertEventV2, defaultTime, defaultTxHash,
 } from '../helpers/constants';
 import {
   createIndexerTendermintBlock,
@@ -30,8 +30,8 @@ describe('liquidity-tier-validator', () => {
   describe('validate', () => {
     it('does not throw error on valid liquidity tier upsert event', () => {
       const validator: LiquidityTierValidatorV2 = new LiquidityTierValidatorV2(
-        defaultLiquidityTierUpsertEvent,
-        createBlock(defaultLiquidityTierUpsertEvent),
+        defaultLiquidityTierUpsertEventV2,
+        createBlock(defaultLiquidityTierUpsertEventV2),
         0,
       );
 
@@ -43,7 +43,7 @@ describe('liquidity-tier-validator', () => {
       [
         'throws error on liquidity tier upsert event missing initialMarginPpm',
         {
-          ...defaultLiquidityTierUpsertEvent,
+          ...defaultLiquidityTierUpsertEventV2,
           initialMarginPpm: 0,
         } as LiquidityTierUpsertEventV2,
         'LiquidityTierUpsertEventV2 initialMarginPpm is not populated',
@@ -51,7 +51,7 @@ describe('liquidity-tier-validator', () => {
       [
         'throws error on perpetual market create event missing maintenanceFractionPpm',
         {
-          ...defaultLiquidityTierUpsertEvent,
+          ...defaultLiquidityTierUpsertEventV2,
           maintenanceFractionPpm: 0,
         } as LiquidityTierUpsertEventV2,
         'LiquidityTierUpsertEventV2 maintenanceFractionPpm is not populated',
@@ -69,7 +69,7 @@ describe('liquidity-tier-validator', () => {
       [
         'logs error on liquidity tier upsert event with empty name',
         {
-          ...defaultLiquidityTierUpsertEvent,
+          ...defaultLiquidityTierUpsertEventV2,
           name: '',
         } as LiquidityTierUpsertEventV2,
         'LiquidityTierUpsertEventV2 name is not populated',

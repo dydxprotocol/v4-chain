@@ -143,7 +143,7 @@ export const defaultPerpetualMarketCreateEvent: PerpetualMarketCreateEventV1 = {
   marketType: PerpetualMarketType.PERPETUAL_MARKET_TYPE_CROSS,
 };
 
-export const defaultLiquidityTierUpsertEvent: LiquidityTierUpsertEventV2 = {
+export const defaultLiquidityTierUpsertEventV2: LiquidityTierUpsertEventV2 = {
   id: 0,
   name: 'Large-Cap',
   initialMarginPpm: 50000,  // 5%
