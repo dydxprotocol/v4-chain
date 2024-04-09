@@ -1922,7 +1922,9 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -1942,7 +1944,9 @@ fetch('https://dydx-testnet.imperator.co/v4/perpetualMarkets',
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     }
   }
 }
@@ -4086,7 +4090,9 @@ or
   "stepSize": "string",
   "stepBaseQuantums": 0,
   "subticksPerTick": 0,
-  "marketType": "CROSS"
+  "marketType": "CROSS",
+  "openInterestLowerCap": "string",
+  "openInterestUpperCap": "string"
 }
 
 ```
@@ -4113,6 +4119,8 @@ or
 |stepBaseQuantums|number(double)|true|none|none|
 |subticksPerTick|number(double)|true|none|none|
 |marketType|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
+|openInterestLowerCap|string|false|none|none|
+|openInterestUpperCap|string|false|none|none|
 
 ## PerpetualMarketResponse
 
@@ -4142,7 +4150,9 @@ or
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     },
     "property2": {
       "clobPairId": "string",
@@ -4162,7 +4172,9 @@ or
       "stepSize": "string",
       "stepBaseQuantums": 0,
       "subticksPerTick": 0,
-      "marketType": "CROSS"
+      "marketType": "CROSS",
+      "openInterestLowerCap": "string",
+      "openInterestUpperCap": "string"
     }
   }
 }
