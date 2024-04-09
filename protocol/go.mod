@@ -412,11 +412,7 @@ replace (
 	// should use v0.11.0. The Cosmos build fails with types/context.go:65:29: undefined: comet.BlockInfo otherwise.
 	cosmossdk.io/core => cosmossdk.io/core v0.11.0
 	// Use dYdX fork of CometBFT
-<<<<<<< HEAD
-	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240220185844-e704122c8540
-=======
-	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-c50784d39a5f
->>>>>>> 25dc930c (Fix metrics initialization in cometbft fork (#1363))
+	github.com/cometbft/cometbft => github.com/dydxprotocol/cometbft v0.38.6-0.20240409171441-6d0767b72c06
 	// Use dYdX fork of Cosmos SDK
 	github.com/cosmos/cosmos-sdk => github.com/dydxprotocol/cosmos-sdk v0.50.5-0.20240220212824-35f31482370c
 	github.com/cosmos/iavl => github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4
