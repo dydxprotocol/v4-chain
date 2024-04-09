@@ -481,6 +481,7 @@ export enum BlockedCode {
 export interface ComplianceV2Response {
   status: ComplianceStatus;
   reason?: ComplianceReason;
+  updatedAt?: string;
 }
 
 /* ------- HISTORICAL TRADING REWARD TYPES ------- */
