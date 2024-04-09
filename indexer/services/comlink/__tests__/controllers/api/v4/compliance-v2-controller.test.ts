@@ -117,6 +117,7 @@ describe('ComplianceV2Controller', () => {
         });
         expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
         expect(response.body.reason).toEqual(ComplianceReason.COMPLIANCE_PROVIDER);
+        expect(response.body.updatedAt).toBeDefined();
         data = await ComplianceStatusTable.findAll({}, [], {});
         expect(data).toHaveLength(1);
         expect(data[0]).toEqual(expect.objectContaining({
@@ -147,6 +148,7 @@ describe('ComplianceV2Controller', () => {
         });
         expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
         expect(response.body.reason).toEqual(ComplianceReason.COMPLIANCE_PROVIDER);
+        expect(response.body.updatedAt).toBeDefined();
         data = await ComplianceStatusTable.findAll({}, [], {});
         expect(data).toHaveLength(1);
         expect(data[0]).toEqual(expect.objectContaining({
@@ -360,6 +362,7 @@ describe('ComplianceV2Controller', () => {
 
       expect(response.body.status).toEqual(ComplianceStatus.BLOCKED);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
     });
 
     it('should set status to FIRST_STRIKE for CONNECT action from a restricted country with no existing compliance status', async () => {
@@ -387,6 +390,7 @@ describe('ComplianceV2Controller', () => {
 
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
     });
 
     it('should set status to COMPLIANT for any action from a non-restricted country with no existing compliance status', async () => {
@@ -439,6 +443,7 @@ describe('ComplianceV2Controller', () => {
 
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
     });
 
     it('should be a no-op for ONBOARD action with existing COMPLIANT status', async () => {
@@ -502,6 +507,7 @@ describe('ComplianceV2Controller', () => {
       }));
       expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
     });
 
     it('should update status to CLOSE_ONLY for CONNECT action from a restricted country with existing FIRST_STRIKE status', async () => {
@@ -534,6 +540,7 @@ describe('ComplianceV2Controller', () => {
 
       expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
     });
   });
 });
