@@ -11,6 +11,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -300,6 +301,19 @@ func initializePerpOpenInterest(
 	}
 }
 
+// Initialize vault module parameters.
+func initializeVaultModuleParams(
+	ctx sdk.Context,
+	vaultKeeper vaulttypes.VaultKeeper,
+) {
+	// Set vault module parameters to default values.
+	vaultParams := vaulttypes.DefaultParams()
+	if err := vaultKeeper.SetParams(ctx, vaultParams); err != nil {
+		panic(fmt.Sprintf("failed to set vault module parameters: %s", err))
+	}
+	ctx.Logger().Info("Successfully set vault module parameters")
+}
+
 func CreateUpgradeHandler(
 	mm *module.Manager,
 	configurator module.Configurator,
@@ -307,6 +321,7 @@ func CreateUpgradeHandler(
 	clobKeeper clobtypes.ClobKeeper,
 	subaccountsKeeper satypes.SubaccountsKeeper,
 	consensusParamKeeper consensusparamkeeper.Keeper,
+	vaultKeeper vaulttypes.VaultKeeper,
 ) upgradetypes.UpgradeHandler {
 	return func(ctx context.Context, plan upgradetypes.Plan, vm module.VersionMap) (module.VersionMap, error) {
 		sdkCtx := lib.UnwrapSDKContext(ctx, "app/upgrades")
@@ -335,7 +350,8 @@ func CreateUpgradeHandler(
 		// Set vote extension enable height
 		voteExtensionsUpgrade(sdkCtx, consensusParamKeeper)
 
-		// TODO(TRA-93): Initialize `x/vault` module.
+		// Initialize `x/vault` module params.
+		initializeVaultModuleParams(sdkCtx, vaultKeeper)
 
 		return mm.RunMigrations(ctx, configurator, vm)
 	}
