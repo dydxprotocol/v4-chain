@@ -24,6 +24,15 @@ type VaultKeeper interface {
 		vaultId VaultId,
 	) (err error)
 
+	// Params.
+	GetParams(
+		ctx sdk.Context,
+	) Params
+	SetParams(
+		ctx sdk.Context,
+		params Params,
+	) error
+
 	// Shares.
 	GetTotalShares(
 		ctx sdk.Context,
