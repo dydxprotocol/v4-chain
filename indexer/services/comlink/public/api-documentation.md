@@ -704,7 +704,8 @@ fetch('https://dydx-testnet.imperator.co/v4/compliance/screen/{address}',
 ```json
 {
   "status": "COMPLIANT",
-  "reason": "MANUAL"
+  "reason": "MANUAL",
+  "updatedAt": "string"
 }
 ```
 
@@ -3275,7 +3276,8 @@ This operation does not require authentication
 ```json
 {
   "status": "COMPLIANT",
-  "reason": "MANUAL"
+  "reason": "MANUAL",
+  "updatedAt": "string"
 }
 
 ```
@@ -3286,6 +3288,7 @@ This operation does not require authentication
 |---|---|---|---|---|
 |status|[ComplianceStatus](#schemacompliancestatus)|true|none|none|
 |reason|[ComplianceReason](#schemacompliancereason)|false|none|none|
+|updatedAt|string|false|none|none|
 
 ## OrderSide
 
