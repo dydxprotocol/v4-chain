@@ -10,11 +10,9 @@ CREATE OR REPLACE FUNCTION dydx_open_interest_update_handler(event_data jsonb) R
 */
 DECLARE
     perpetual_market_record perpetual_markets%ROWTYPE;
-    /** array of open interest updates */
     updates_array jsonb[];
     open_interest_update jsonb;
 BEGIN
-/** for loop to iterate over openInterestUpdates and update the open interest in the database and bulk insert */
     FOR open_interest_update IN SELECT * FROM jsonb_array_elements(event_data->'openInterestUpdates') LOOP
       perpetual_market_record."id" = (open_interest_update->'perpetualId')::bigint;
       perpetual_market_record."openInterest" = dydx_from_serializable_int(open_interest_update->'openInterest');
@@ -28,7 +26,6 @@ BEGIN
               "id" = perpetual_market_record."id"
           RETURNING * INTO perpetual_market_record;
 
-      /** append id and open interest to updates array */
       updates_array = array_append(updates_array, dydx_to_jsonb(perpetual_market_record));
 
     END LOOP;
