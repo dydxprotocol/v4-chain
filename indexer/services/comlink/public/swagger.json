@@ -954,6 +954,12 @@
           },
           "marketType": {
             "$ref": "#/components/schemas/PerpetualMarketType"
+          },
+          "openInterestLowerCap": {
+            "type": "string"
+          },
+          "openInterestUpperCap": {
+            "type": "string"
           }
         },
         "required": [
