@@ -24,7 +24,6 @@ const (
 	GateWithdrawalsIfNegativeTncSubaccountSeen         = "gate_withdrawals_if_negative_tnc_subaccount_seen"
 	ChainOutageSeen                                    = "chain_outage_seen"
 	SubaccountCreatedCount                             = "subaccount_created_count"
-	RateLimitWithdrawalAmount                          = "rate_limit_withdrawal_amount"
 
 	// Gauges
 	InsuranceFundBalance                      = "insurance_fund_balance"
@@ -33,6 +32,7 @@ const (
 	ClobConditionalOrderTriggered             = "clob_conditional_order_triggered"
 	ClobSubaccountsRequiringDeleveragingCount = "clob_subaccounts_requiring_deleveraging_count"
 	SendingProcessDepositToSubaccount         = "sending_process_deposit_to_subaccount"
+	RateLimitInsufficientWithdrawalAmount     = "rate_limit_insufficient_withdrawal_amount"
 
 	// Samples
 	ClobDeleverageSubaccountTotalQuoteQuantumsDistribution         = "clob_deleverage_subaccount_total_quote_quantums_distribution"
@@ -45,6 +45,7 @@ const (
 	LiquidationsLiquidatableSubaccountIdsCount                     = "liquidations_liquidatable_subaccount_ids_count"
 	LiquidationsPercentFilledDistribution                          = "liquidations_percent_filled_distribution"
 	LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution = "liquidations_place_perpetual_liquidation_quote_quantums_distribution"
+	RateLimitWithdrawalAmount                                      = "rate_limit_withdrawal_amount"
 
 	// Measure Since
 	ClobOffsettingSubaccountPerpetualPosition         = "clob_offsetting_subaccount_perpetual_position"
