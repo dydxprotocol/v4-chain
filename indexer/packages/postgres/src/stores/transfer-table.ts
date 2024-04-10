@@ -299,6 +299,7 @@ export async function findAllToOrFromSubaccountId(
 
   /**
    * If a query is made using a page number, then the limit property is used as 'page limit'
+   * TODO: Improve pagination by adding a required eventId for orderBy clause
    */
   if (page !== undefined && limit !== undefined) {
     /**
