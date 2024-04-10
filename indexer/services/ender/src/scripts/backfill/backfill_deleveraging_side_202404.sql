@@ -17,6 +17,8 @@ BEGIN
             size numeric;
             neg_size numeric;
             price numeric;
+            reverted_perpetual_position_record perpetual_positions%ROWTYPE;
+            updated_perpetual_position_record perpetual_positions%ROWTYPE;
         BEGIN
             subaccount_uuid = fill_record."subaccountId";
             price = fill_record."price";
@@ -36,7 +38,7 @@ BEGIN
             correct_side = CASE WHEN incorrect_side = 'BUY' THEN 'SELL' ELSE 'BUY' END;
 
             -- revert the perpetual position update for incorrect side.
-            dydx_update_perpetual_position_aggregate_fields(
+            reverted_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
                 subaccount_uuid,
                 perpetual_id,
                 -- use incorrect side to revert the perpetual position update
@@ -46,7 +48,7 @@ BEGIN
                 price);
 
             -- apply the perpetual position update for correct side
-            dydx_update_perpetual_position_aggregate_fields(
+            updated_perpetual_position_record = dydx_update_perpetual_position_aggregate_fields(
                 subaccount_uuid,
                 perpetual_id,
                 -- use correct side to apply the perpetual position update
