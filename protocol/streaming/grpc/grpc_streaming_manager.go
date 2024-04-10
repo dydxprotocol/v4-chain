@@ -114,10 +114,19 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 		}
 
 		if len(updatesToSend) > 0 {
+			orderbookUpdate := clobtypes.StreamOrderbookUpdate{
+				UpdateMessage: &clobtypes.StreamOrderbookUpdate_OrderPlace{
+					OrderPlace: &clobtypes.StreamOrderbookUpdatesOrderPlacement{
+						Updates:  updatesToSend,
+						Snapshot: snapshot,
+					},
+				},
+			}
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
-					Updates:     updatesToSend,
-					Snapshot:    snapshot,
+					Updates: []clobtypes.StreamOrderbookUpdate{
+						orderbookUpdate,
+					},
 					BlockHeight: blockHeight,
 					ExecMode:    uint32(execMode),
 				},
