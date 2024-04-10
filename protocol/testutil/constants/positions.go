@@ -92,6 +92,10 @@ var (
 		AssetId:  0,
 		Quantums: dtypes.NewInt(-9_900_000_000), // $-9,900
 	}
+	Usdc_Asset_1 = satypes.AssetPosition{
+		AssetId:  0,
+		Quantums: dtypes.NewInt(1_000_000), // $1
+	}
 	Usdc_Asset_10_000 = satypes.AssetPosition{
 		AssetId:  0,
 		Quantums: dtypes.NewInt(10_000_000_000), // $10,000
