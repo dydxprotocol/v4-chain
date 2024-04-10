@@ -37,10 +37,12 @@ const controllerName: string = 'compliance-v2-controller';
 export enum ComplianceAction {
   ONBOARD = 'ONBOARD',
   CONNECT = 'CONNECT',
+  VALID_SURVEY = 'VALID_SURVEY',
+  INVALID_SURVEY = 'INVALID_SURVEY',
 }
 
 const COMPLIANCE_PROGRESSION: Partial<Record<ComplianceStatus, ComplianceStatus>> = {
-  [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE,
+  [ComplianceStatus.COMPLIANT]: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
   [ComplianceStatus.FIRST_STRIKE]: ComplianceStatus.CLOSE_ONLY,
 };
 
@@ -235,17 +237,25 @@ router.post(
        * If the address doesn't exist in the compliance table:
        * - if the request is from a restricted country:
        *  - if the action is ONBOARD, set the status to BLOCKED
-       *  - if the action is CONNECT, set the status to FIRST_STRIKE
+       *  - if the action is CONNECT, set the status to FIRST_STRIKE_CLOSE_ONLY
        * - else if the request is from a non-restricted country:
        *  - set the status to COMPLIANT
        *
        * if the address is COMPLIANT:
-       * - the ONLY action should be CONNECT. ONBOARD is a no-op.
+       * - the ONLY action should be CONNECT. ONBOARD/VALID_SURVEY/INVALID_SURVEY are no-ops.
        * - if the request is from a restricted country:
-       *  - set the status to FIRST_STRIKE
+       *  - set the status to FIRST_STRIKE_CLOSE_ONLY
+       *
+       * if the address is FIRST_STRIKE_CLOSE_ONLY:
+       * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. ONBOARD/CONNECT
+       * are no-ops.
+       * - if the action is VALID_SURVEY:
+       *   - set the status to FIRST_STRIKE
+       * - if the action is INVALID_SURVEY:
+       *   - set the status to CLOSE_ONLY
        *
        * if the address is FIRST_STRIKE:
-       * - the ONLY action should be CONNECT. ONBOARD is a no-op.
+       * - the ONLY action should be CONNECT. ONBOARD/VALID_SURVEY/INVALID_SURVEY are no-ops.
        * - if the request is from a restricted country:
        *  - set the status to CLOSE_ONLY
        */
@@ -267,7 +277,7 @@ router.post(
           } else if (action === ComplianceAction.CONNECT) {
             complianceStatusFromDatabase = await ComplianceStatusTable.upsert({
               address,
-              status: ComplianceStatus.FIRST_STRIKE,
+              status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
               updatedAt: DateTime.utc().toISO(),
             });
@@ -302,6 +312,30 @@ router.post(
               status: COMPLIANCE_PROGRESSION[complianceStatus[0].status],
               reason: getGeoComplianceReason(req.headers as CountryHeaders)!,
               updatedAt: DateTime.utc().toISO(),
+            });
+          }
+        } else if (
+          complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY
+        ) {
+          if (action === ComplianceAction.ONBOARD) {
+            logger.error({
+              at: 'ComplianceV2Controller POST /geoblock',
+              message: 'Invalid action for current compliance status',
+              address,
+              action,
+              complianceStatus: complianceStatus[0],
+            });
+          } else if (action === ComplianceAction.VALID_SURVEY) {
+            complianceStatusFromDatabase = await ComplianceStatusTable.update({
+              address,
+              status: ComplianceStatus.FIRST_STRIKE,
+              updatedAt,
+            });
+          } else if (action === ComplianceAction.INVALID_SURVEY) {
+            complianceStatusFromDatabase = await ComplianceStatusTable.update({
+              address,
+              status: ComplianceStatus.CLOSE_ONLY,
+              updatedAt,
             });
           }
         }

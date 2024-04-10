@@ -3239,6 +3239,7 @@ This operation does not require authentication
 |Property|Value|
 |---|---|
 |*anonymous*|COMPLIANT|
+|*anonymous*|FIRST_STRIKE_CLOSE_ONLY|
 |*anonymous*|FIRST_STRIKE|
 |*anonymous*|CLOSE_ONLY|
 |*anonymous*|BLOCKED|
