@@ -310,52 +310,52 @@ export interface StreamOrderbookUpdatesOrderPlacementSDKType {
 /** StreamOrderbookUpdatesOrderFills contains updates for orderbook fills. */
 
 export interface StreamOrderbookUpdatesOrderFills {
-  /** List of clob matches with prices. */
-  matches: ClobMatchWithPrices[];
+  /** List of orderbook matches with prices. */
+  fills: OrderBookMatchFill[];
 }
 /** StreamOrderbookUpdatesOrderFills contains updates for orderbook fills. */
 
 export interface StreamOrderbookUpdatesOrderFillsSDKType {
-  /** List of clob matches with prices. */
-  matches: ClobMatchWithPricesSDKType[];
+  /** List of orderbook matches with prices. */
+  fills: OrderBookMatchFillSDKType[];
 }
 /**
- * ClobMatchWithPrices is a wrapper around the ClobMatch proto
+ * OrderBookMatchFill is a wrapper around the ClobMatch proto
  * that provides full `Order`s for all Order Ids involved in a ClobMatch.
  * The Orders are used for price lookups.
  */
 
-export interface ClobMatchWithPrices {
+export interface OrderBookMatchFill {
   /**
    * Clob match. Note that the fill amounts here are delta
    * fill amounts. The starting point for fill amounts have to be
    * obtained from a `StreamOrderbookUpdatesOrderPlacement` OrderUpdate
    * message exposing absolute fill amount.
    */
-  clobMatches?: ClobMatch;
+  clobMatch?: ClobMatch;
   /**
-   * All orders involved in clob_matches. Used to look up
+   * All orders involved in the specified clob match. Used to look up
    * price of a match through a given maker order id.
    */
 
   orders: Order[];
 }
 /**
- * ClobMatchWithPrices is a wrapper around the ClobMatch proto
+ * OrderBookMatchFill is a wrapper around the ClobMatch proto
  * that provides full `Order`s for all Order Ids involved in a ClobMatch.
  * The Orders are used for price lookups.
  */
 
-export interface ClobMatchWithPricesSDKType {
+export interface OrderBookMatchFillSDKType {
   /**
    * Clob match. Note that the fill amounts here are delta
    * fill amounts. The starting point for fill amounts have to be
    * obtained from a `StreamOrderbookUpdatesOrderPlacement` OrderUpdate
    * message exposing absolute fill amount.
    */
-  clob_matches?: ClobMatchSDKType;
+  clob_match?: ClobMatchSDKType;
   /**
-   * All orders involved in clob_matches. Used to look up
+   * All orders involved in the specified clob match. Used to look up
    * price of a match through a given maker order id.
    */
 
@@ -1188,14 +1188,14 @@ export const StreamOrderbookUpdatesOrderPlacement = {
 
 function createBaseStreamOrderbookUpdatesOrderFills(): StreamOrderbookUpdatesOrderFills {
   return {
-    matches: []
+    fills: []
   };
 }
 
 export const StreamOrderbookUpdatesOrderFills = {
   encode(message: StreamOrderbookUpdatesOrderFills, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    for (const v of message.matches) {
-      ClobMatchWithPrices.encode(v!, writer.uint32(10).fork()).ldelim();
+    for (const v of message.fills) {
+      OrderBookMatchFill.encode(v!, writer.uint32(10).fork()).ldelim();
     }
 
     return writer;
@@ -1211,7 +1211,7 @@ export const StreamOrderbookUpdatesOrderFills = {
 
       switch (tag >>> 3) {
         case 1:
-          message.matches.push(ClobMatchWithPrices.decode(reader, reader.uint32()));
+          message.fills.push(OrderBookMatchFill.decode(reader, reader.uint32()));
           break;
 
         default:
@@ -1225,23 +1225,23 @@ export const StreamOrderbookUpdatesOrderFills = {
 
   fromPartial(object: DeepPartial<StreamOrderbookUpdatesOrderFills>): StreamOrderbookUpdatesOrderFills {
     const message = createBaseStreamOrderbookUpdatesOrderFills();
-    message.matches = object.matches?.map(e => ClobMatchWithPrices.fromPartial(e)) || [];
+    message.fills = object.fills?.map(e => OrderBookMatchFill.fromPartial(e)) || [];
     return message;
   }
 
 };
 
-function createBaseClobMatchWithPrices(): ClobMatchWithPrices {
+function createBaseOrderBookMatchFill(): OrderBookMatchFill {
   return {
-    clobMatches: undefined,
+    clobMatch: undefined,
     orders: []
   };
 }
 
-export const ClobMatchWithPrices = {
-  encode(message: ClobMatchWithPrices, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
-    if (message.clobMatches !== undefined) {
-      ClobMatch.encode(message.clobMatches, writer.uint32(10).fork()).ldelim();
+export const OrderBookMatchFill = {
+  encode(message: OrderBookMatchFill, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
+    if (message.clobMatch !== undefined) {
+      ClobMatch.encode(message.clobMatch, writer.uint32(10).fork()).ldelim();
     }
 
     for (const v of message.orders) {
@@ -1251,17 +1251,17 @@ export const ClobMatchWithPrices = {
     return writer;
   },
 
-  decode(input: _m0.Reader | Uint8Array, length?: number): ClobMatchWithPrices {
+  decode(input: _m0.Reader | Uint8Array, length?: number): OrderBookMatchFill {
     const reader = input instanceof _m0.Reader ? input : new _m0.Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseClobMatchWithPrices();
+    const message = createBaseOrderBookMatchFill();
 
     while (reader.pos < end) {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
         case 1:
-          message.clobMatches = ClobMatch.decode(reader, reader.uint32());
+          message.clobMatch = ClobMatch.decode(reader, reader.uint32());
           break;
 
         case 2:
@@ -1277,9 +1277,9 @@ export const ClobMatchWithPrices = {
     return message;
   },
 
-  fromPartial(object: DeepPartial<ClobMatchWithPrices>): ClobMatchWithPrices {
-    const message = createBaseClobMatchWithPrices();
-    message.clobMatches = object.clobMatches !== undefined && object.clobMatches !== null ? ClobMatch.fromPartial(object.clobMatches) : undefined;
+  fromPartial(object: DeepPartial<OrderBookMatchFill>): OrderBookMatchFill {
+    const message = createBaseOrderBookMatchFill();
+    message.clobMatch = object.clobMatch !== undefined && object.clobMatch !== null ? ClobMatch.fromPartial(object.clobMatch) : undefined;
     message.orders = object.orders?.map(e => Order.fromPartial(e)) || [];
     return message;
   }

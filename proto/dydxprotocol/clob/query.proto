@@ -185,21 +185,21 @@ message StreamOrderbookUpdatesOrderPlacement {
 
 // StreamOrderbookUpdatesOrderFills contains updates for orderbook fills.
 message StreamOrderbookUpdatesOrderFills {
-  // List of clob matches with prices.
-  repeated ClobMatchWithPrices matches = 1 [ (gogoproto.nullable) = false ];
+  // List of orderbook matches with prices.
+  repeated OrderBookMatchFill fills = 1 [ (gogoproto.nullable) = false ];
 }
 
-// ClobMatchWithPrices is a wrapper around the ClobMatch proto
+// OrderBookMatchFill is a wrapper around the ClobMatch proto
 // that provides full `Order`s for all Order Ids involved in a ClobMatch.
 // The Orders are used for price lookups.
-message ClobMatchWithPrices {
+message OrderBookMatchFill {
   // Clob match. Note that the fill amounts here are delta
   // fill amounts. The starting point for fill amounts have to be
   // obtained from a `StreamOrderbookUpdatesOrderPlacement` OrderUpdate
   // message exposing absolute fill amount.
-  ClobMatch clob_matches = 1;
+  ClobMatch clob_match = 1;
 
-  // All orders involved in clob_matches. Used to look up
+  // All orders involved in the specified clob match. Used to look up
   // price of a match through a given maker order id.
   repeated Order orders = 2 [ (gogoproto.nullable) = false ];
 }
