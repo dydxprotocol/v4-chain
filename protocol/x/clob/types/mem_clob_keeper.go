@@ -120,4 +120,8 @@ type MemClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		snapshot bool,
 	)
+	SendOrderbookMatchFillUpdates(
+		ctx sdk.Context,
+		matches []OrderBookMatchFill,
+	)
 }

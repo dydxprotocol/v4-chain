@@ -74,6 +74,68 @@ func (sm *GrpcStreamingManagerImpl) Subscribe(
 
 // SendOrderbookUpdates groups updates by their clob pair ids and
 // sends messages to the subscribers.
+func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
+	matches []clobtypes.OrderBookMatchFill,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+	// Group fills by clob pair id.
+	matchFillsByClobPairId := make(map[uint32][]clobtypes.OrderBookMatchFill)
+	for _, match := range matches {
+		// Fetch the clob pair id from the first order in `OrderBookMatchFill`.
+		// We can assume there must be an order, and that all orders share the same
+		// clob pair id.
+		clobPairId := match.Orders[0].OrderId.ClobPairId
+		if _, ok := matchFillsByClobPairId[clobPairId]; !ok {
+			matchFillsByClobPairId[clobPairId] = []clobtypes.OrderBookMatchFill{}
+		}
+		matchFillsByClobPairId[clobPairId] = append(matchFillsByClobPairId[clobPairId], match)
+	}
+
+	sm.Lock()
+	defer sm.Unlock()
+
+	// Send updates to subscribers.
+	idsToRemove := make([]uint32, 0)
+	for id, subscription := range sm.orderbookSubscriptions {
+		matchFillsToSend := make([]clobtypes.OrderBookMatchFill, 0)
+		for _, clobPairId := range subscription.clobPairIds {
+			if matchFills, ok := matchFillsByClobPairId[clobPairId]; ok {
+				matchFillsToSend = append(matchFillsToSend, matchFills...)
+			}
+		}
+
+		if len(matchFillsToSend) > 0 {
+			orderbookUpdate := clobtypes.StreamOrderbookUpdate{
+				UpdateMessage: &clobtypes.StreamOrderbookUpdate_OrderFill{
+					OrderFill: &clobtypes.StreamOrderbookUpdatesOrderFills{
+						Fills: matchFillsToSend,
+					},
+				},
+			}
+			if err := subscription.srv.Send(
+				&clobtypes.StreamOrderbookUpdatesResponse{
+					Updates: []clobtypes.StreamOrderbookUpdate{
+						orderbookUpdate,
+					},
+					BlockHeight: blockHeight,
+					ExecMode:    uint32(execMode),
+				},
+			); err != nil {
+				idsToRemove = append(idsToRemove, id)
+			}
+		}
+	}
+
+	// Clean up subscriptions that have been closed.
+	// If a Send update has failed for any clob pair id, the whole subscription will be removed.
+	for _, id := range idsToRemove {
+		delete(sm.orderbookSubscriptions, id)
+	}
+}
+
+// SendOrderbookUpdates groups updates by their clob pair ids and
+// sends messages to the subscribers.
 func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 	offchainUpdates *clobtypes.OffchainUpdates,
 	snapshot bool,

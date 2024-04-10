@@ -183,7 +183,7 @@ func (o *OperationsToPropose) MustAddStatefulOrderPlacementToOperationsQueue(
 func (o *OperationsToPropose) MustAddMatchToOperationsQueue(
 	takerMatchableOrder MatchableOrder,
 	makerFillsWithOrders []MakerFillWithOrder,
-) {
+) InternalOperation {
 	makerFills := lib.MapSlice(
 		makerFillsWithOrders,
 		func(mfwo MakerFillWithOrder) MakerFill {
@@ -234,6 +234,8 @@ func (o *OperationsToPropose) MustAddMatchToOperationsQueue(
 		o.OperationsQueue,
 		matchOperation,
 	)
+
+	return matchOperation
 }
 
 // AddZeroFillDeleveragingToOperationsQueue adds a zero-fill deleveraging match operation to the
