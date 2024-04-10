@@ -212,7 +212,7 @@ describe('ComplianceV2Controller', () => {
       }));
     });
 
-    it('should update exisitng db row for dydx address', async () => {
+    it('should update existing db row for dydx address', async () => {
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.FIRST_STRIKE,
@@ -347,7 +347,7 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.updatedAt).toBeDefined();
     });
 
-    it('should set status to FIRST_STRIKE for CONNECT action from a restricted country with no existing compliance status', async () => {
+    it('should set status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with no existing compliance status', async () => {
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
       getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
       isRestrictedCountryHeadersSpy.mockReturnValue(true);
@@ -366,11 +366,11 @@ describe('ComplianceV2Controller', () => {
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
     });
@@ -396,7 +396,7 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
-    it('should update status to FIRST_STRIKE for CONNECT action from a restricted country with existing COMPLIANT status', async () => {
+    it('should update status to FIRST_STRIKE_CLOSE_ONLY for CONNECT action from a restricted country with existing COMPLIANT status', async () => {
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
         status: ComplianceStatus.COMPLIANT,
@@ -419,11 +419,11 @@ describe('ComplianceV2Controller', () => {
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
 
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
     });
@@ -458,11 +458,11 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.status).toEqual(ComplianceStatus.COMPLIANT);
     });
 
-    it('should be a no-op for ONBOARD action with existing FIRST_STRIKE status', async () => {
+    it('should be a no-op for ONBOARD action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
       const loggerError = jest.spyOn(logger, 'error');
       await ComplianceStatusTable.create({
         address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       });
       (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
@@ -479,7 +479,7 @@ describe('ComplianceV2Controller', () => {
       expect(data).toHaveLength(1);
       expect(data[0]).toEqual(expect.objectContaining({
         address: testConstants.defaultAddress,
-        status: ComplianceStatus.FIRST_STRIKE,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
         reason: ComplianceReason.US_GEO,
       }));
 
@@ -487,7 +487,7 @@ describe('ComplianceV2Controller', () => {
         at: 'ComplianceV2Controller POST /geoblock',
         message: 'Invalid action for current compliance status',
       }));
-      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY);
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
     });
