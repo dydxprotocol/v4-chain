@@ -53,7 +53,6 @@ import { onMessage } from '../../../src/lib/on-message';
 import { producer } from '@dydxprotocol-indexer/kafka';
 import { createdDateTime, createdHeight } from '@dydxprotocol-indexer/postgres/build/__tests__/helpers/constants';
 import Big from 'big.js';
-import { getWeightedAverage } from '../../../src/lib/helper';
 
 describe('DeleveragingHandler', () => {
   const offsettingSubaccount: SubaccountCreateObject = {
@@ -125,6 +124,7 @@ describe('DeleveragingHandler', () => {
   const deleveragedPerpetualPosition: PerpetualPositionCreateObject = {
     ...offsettingPerpetualPosition,
     subaccountId: SubaccountTable.subaccountIdToUuid(defaultDeleveragingEvent.liquidated!),
+    side: PositionSide.SHORT,
   };
 
   it('getParallelizationIds', () => {
@@ -251,7 +251,7 @@ describe('DeleveragingHandler', () => {
         createdAtHeight: defaultHeight,
         type: FillType.OFFSETTING,
         clobPairId: perpetualMarket!.clobPairId,
-        side: OrderSide.BUY,
+        side: OrderSide.SELL,
         orderFlags: '0',
         clientMetadata: null,
         hasOrderId: false,
@@ -270,7 +270,7 @@ describe('DeleveragingHandler', () => {
         createdAtHeight: defaultHeight,
         type: FillType.DELEVERAGED,
         clobPairId: perpetualMarket!.clobPairId,
-        side: OrderSide.SELL,
+        side: OrderSide.BUY,
         orderFlags: '0',
         clientMetadata: null,
         hasOrderId: false,
@@ -282,13 +282,8 @@ describe('DeleveragingHandler', () => {
           offsettingPerpetualPosition.openEventId,
         ),
         {
-          sumOpen: Big(offsettingPerpetualPosition.size).plus(totalFilled).toFixed(),
-          entryPrice: getWeightedAverage(
-            offsettingPerpetualPosition.entryPrice!,
-            offsettingPerpetualPosition.size,
-            price,
-            totalFilled,
-          ),
+          sumClose: Big(totalFilled).toFixed(),
+          exitPrice: price,
         },
       ),
       expectPerpetualPosition(
