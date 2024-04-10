@@ -93,15 +93,10 @@ const MAIN_SCRIPTS: string[] = [
   'dydx_block_processor.sql',
 ];
 
-const BACKFILL_SCRIPTS: string[] = [
-  'backfill_deleveraging_side_202404.sql',
-];
-
 const SCRIPTS: string[] = [
   ...HANDLER_SCRIPTS.map((script: string) => `handlers/${script}`),
   ...HELPER_SCRIPTS.map((script: string) => `helpers/${script}`),
   ...DB_SETUP_SCRIPTS.map((script: string) => `setup/${script}`),
-  ...BACKFILL_SCRIPTS.map((script: string) => `backfill/${script}`),
   ...MAIN_SCRIPTS,
 ];
 
