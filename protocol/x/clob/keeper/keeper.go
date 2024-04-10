@@ -253,3 +253,15 @@ func (k Keeper) SendOrderbookUpdates(
 		ctx.ExecMode(),
 	)
 }
+
+// SendOrderbookUpdates sends the offchain updates to the gRPC streaming manager.
+func (k Keeper) SendOrderbookMatchFillUpdates(
+	ctx sdk.Context,
+	matches []types.OrderBookMatchFill,
+) {
+	k.GetGrpcStreamingManager().SendOrderbookMatchFillUpdates(
+		matches,
+		lib.MustConvertIntegerToUint32(ctx.BlockHeight()),
+		ctx.ExecMode(),
+	)
+}
