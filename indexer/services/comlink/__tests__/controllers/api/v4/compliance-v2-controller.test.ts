@@ -524,5 +524,71 @@ describe('ComplianceV2Controller', () => {
       expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
       expect(response.body.updatedAt).toBeDefined();
     });
+
+    it('should update status to CLOSE_ONLY for INVALID_SURVEY action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          ...body,
+          action: ComplianceAction.INVALID_SURVEY,
+        },
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+      }));
+
+      expect(response.body.status).toEqual(ComplianceStatus.CLOSE_ONLY);
+      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
+    });
+
+    it('should update status to FIRST_STRIKE for VALID_SURVEY action with existing FIRST_STRIKE_CLOSE_ONLY status', async () => {
+      await ComplianceStatusTable.create({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY,
+        reason: ComplianceReason.US_GEO,
+      });
+      (Secp256k1.verifySignature as jest.Mock).mockResolvedValueOnce(true);
+      getGeoComplianceReasonSpy.mockReturnValueOnce(ComplianceReason.US_GEO);
+      isRestrictedCountryHeadersSpy.mockReturnValue(true);
+
+      const response: any = await sendRequest({
+        type: RequestMethod.POST,
+        path: '/v4/compliance/geoblock',
+        body: {
+          ...body,
+          action: ComplianceAction.VALID_SURVEY,
+        },
+        expectedStatus: 200,
+      });
+
+      const data: ComplianceStatusFromDatabase[] = await ComplianceStatusTable.findAll({}, [], {});
+      expect(data).toHaveLength(1);
+      expect(data[0]).toEqual(expect.objectContaining({
+        address: testConstants.defaultAddress,
+        status: ComplianceStatus.FIRST_STRIKE,
+        reason: ComplianceReason.US_GEO,
+      }));
+
+      expect(response.body.status).toEqual(ComplianceStatus.FIRST_STRIKE);
+      expect(response.body.reason).toEqual(ComplianceReason.US_GEO);
+      expect(response.body.updatedAt).toBeDefined();
+    });
   });
 });
