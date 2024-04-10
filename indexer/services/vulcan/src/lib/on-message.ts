@@ -129,7 +129,7 @@ export async function onMessage(message: KafkaMessage): Promise<void> {
         STATS_NO_SAMPLING,
         {
           topic: KafkaTopics.TO_VULCAN,
-          event_type: String(message.headers?.event_type),
+          event_type: String(headers?.event_type),
         },
       );
     }
