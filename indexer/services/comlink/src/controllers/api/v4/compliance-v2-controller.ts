@@ -234,7 +234,8 @@ router.post(
        *  - set the status to FIRST_STRIKE_CLOSE_ONLY
        *
        * if the address is FIRST_STRIKE_CLOSE_ONLY:
-       * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY. ONBOARD/CONNECT are no-ops.
+       * - the ONLY actions should be VALID_SURVEY/INVALID_SURVEY/CONNECT. ONBOARD/CONNECT
+       * are no-ops.
        * - if the action is VALID_SURVEY:
        *   - set the status to FIRST_STRIKE
        * - if the action is INVALID_SURVEY:
@@ -304,7 +305,7 @@ router.post(
         } else if (
           complianceStatus[0].status === ComplianceStatus.FIRST_STRIKE_CLOSE_ONLY
         ) {
-          if (action === ComplianceAction.ONBOARD || action === ComplianceAction.CONNECT) {
+          if (action === ComplianceAction.ONBOARD) {
             logger.error({
               at: 'ComplianceV2Controller POST /geoblock',
               message: 'Invalid action for current compliance status',
