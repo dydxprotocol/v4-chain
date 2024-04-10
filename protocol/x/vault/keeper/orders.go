@@ -6,11 +6,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
@@ -20,6 +18,7 @@ import (
 // 2. Placing new orders.
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
+	params := k.GetParams(ctx)
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
@@ -37,17 +36,9 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		}
 
 		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
-		params := k.GetParams(ctx)
 		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
 		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
-			usdcQuoteQuantums := dtypes.NewInt(0)
-			for _, assetPosition := range vault.AssetPositions {
-				if assetPosition.AssetId == assettypes.AssetUsdc.Id {
-					usdcQuoteQuantums = assetPosition.Quantums
-					break
-				}
-			}
-			if usdcQuoteQuantums.Cmp(params.ActivationThresholdQuoteQuantums) == -1 {
+			if vault.GetUsdcPosition().Cmp(params.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
 				continue
 			}
 		}
