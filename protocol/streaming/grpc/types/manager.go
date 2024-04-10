@@ -22,4 +22,9 @@ type GrpcStreamingManager interface {
 		blockHeight uint32,
 		execMode sdk.ExecMode,
 	)
+	SendOrderbookMatchFillUpdates(
+		matches []clobtypes.OrderBookMatchFill,
+		blockHeight uint32,
+		execMode sdk.ExecMode,
+	)
 }

@@ -518,3 +518,9 @@ func (f *FakeMemClobKeeper) SendOrderbookUpdates(
 	snapshot bool,
 ) {
 }
+
+func (f *FakeMemClobKeeper) SendOrderbookMatchFillUpdates(
+	ctx sdk.Context,
+	matches []types.OrderBookMatchFill,
+) {
+}

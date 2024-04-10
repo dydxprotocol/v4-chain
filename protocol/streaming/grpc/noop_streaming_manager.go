@@ -35,6 +35,13 @@ func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 ) {
 }
 
+func (sm *NoopGrpcStreamingManager) SendOrderbookMatchFillUpdates(
+	matches []clobtypes.OrderBookMatchFill,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
+) {
+}
+
 func (sm *NoopGrpcStreamingManager) GetUninitializedClobPairIds() []uint32 {
 	return []uint32{}
 }
