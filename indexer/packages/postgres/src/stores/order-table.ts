@@ -203,7 +203,7 @@ export async function findAll(
     const offset: number = (currentPage - 1) * limit;
 
     /**
-     * We need to remove the sorting as it is not necessary in this case.
+     * Ensure sorting is applied to maintain consistent pagination results.
      * Also a casting of the ts type is required since the infer of the type
      * obtained from the count is not performed.
      */
