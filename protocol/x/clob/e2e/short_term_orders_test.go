@@ -226,8 +226,7 @@ func TestPlaceOrder(t *testing.T) {
 										{
 											PerpetualId: Clob_0.MustGetPerpetualId(),
 											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBigQuantums().Uint64() *
-													PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetSubticks(),
+												PlaceOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
 											),
 										},
 									},
@@ -404,8 +403,7 @@ func TestPlaceOrder(t *testing.T) {
 										{
 											PerpetualId: Clob_0.MustGetPerpetualId(),
 											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64() *
-													PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetSubticks(),
+												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
 											),
 										},
 									},
@@ -582,8 +580,7 @@ func TestPlaceOrder(t *testing.T) {
 										{
 											PerpetualId: Clob_0.MustGetPerpetualId(),
 											OpenInterest: dtypes.NewIntFromUint64(
-												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64() *
-													PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetSubticks(),
+												PlaceOrder_Bob_Num0_Id0_Clob0_Sell5_Price10_GTB20.Order.GetBigQuantums().Uint64(),
 											),
 										},
 									},
