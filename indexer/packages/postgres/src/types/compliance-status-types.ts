@@ -12,6 +12,7 @@ export enum ComplianceReason {
 
 export enum ComplianceStatus {
   COMPLIANT = 'COMPLIANT',
+  FIRST_STRIKE_CLOSE_ONLY = 'FIRST_STRIKE_CLOSE_ONLY',
   FIRST_STRIKE = 'FIRST_STRIKE',
   CLOSE_ONLY = 'CLOSE_ONLY',
   BLOCKED = 'BLOCKED',

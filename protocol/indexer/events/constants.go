@@ -31,7 +31,7 @@ const (
 	StatefulOrderEventVersion    uint32 = 1
 	AssetEventVersion            uint32 = 1
 	PerpetualMarketEventVersion  uint32 = 1
-	LiquidityTierEventVersion    uint32 = 1
+	LiquidityTierEventVersion    uint32 = 2
 	UpdatePerpetualEventVersion  uint32 = 1
 	UpdateClobPairEventVersion   uint32 = 1
 	DeleveragingEventVersion     uint32 = 1

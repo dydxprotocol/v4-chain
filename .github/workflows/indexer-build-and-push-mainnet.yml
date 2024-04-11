@@ -4,7 +4,7 @@ on: # yamllint disable-line rule:truthy
   push:
     branches:
       - main
-      - 'release/[a-z]+/0.[0-9]+.x'  # e.g. release/indexer/v0.1.x
+      - 'release/[a-z]+/v[0-9]+.[0-9]+.x'  # e.g. release/indexer/v0.1.x
       - 'release/[a-z]+/v[0-9]+.x'  # e.g. release/indexer/v1.x
     # TODO(DEC-837): Customize github build and push to ECR by service with paths
 

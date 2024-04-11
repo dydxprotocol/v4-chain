@@ -25,6 +25,8 @@ func GetQueryCmd(queryRoute string) *cobra.Command {
 
 	cmd.AddCommand(CmdQueryParams())
 	cmd.AddCommand(CmdQueryVault())
+	cmd.AddCommand(CmdQueryListVault())
+	cmd.AddCommand(CmdQueryListOwnerShares())
 
 	return cmd
 }
@@ -88,6 +90,88 @@ func CmdQueryVault() *cobra.Command {
 		},
 	}
 
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryListVault() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-vault",
+		Short: "list all vaults",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			request := &types.QueryAllVaultsRequest{
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.AllVaults(context.Background(), request)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func CmdQueryListOwnerShares() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-owner-shares [type] [number]",
+		Short: "list owner shares of a vault by its type and number",
+		Long:  "list owner shares of a vault by its type and number. Current support types are: clob.",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx := client.GetClientContextFromCmd(cmd)
+
+			pageReq, err := client.ReadPageRequest(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			queryClient := types.NewQueryClient(clientCtx)
+
+			// Parse vault type.
+			vaultType, err := GetVaultTypeFromString(args[0])
+			if err != nil {
+				return err
+			}
+
+			// Parse vault number.
+			vaultNumber, err := strconv.ParseUint(args[1], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			request := &types.QueryOwnerSharesRequest{
+				Type:       vaultType,
+				Number:     uint32(vaultNumber),
+				Pagination: pageReq,
+			}
+
+			res, err := queryClient.OwnerShares(context.Background(), request)
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddPaginationFlagsToCmd(cmd, cmd.Use)
 	flags.AddQueryFlagsToCmd(cmd)
 
 	return cmd

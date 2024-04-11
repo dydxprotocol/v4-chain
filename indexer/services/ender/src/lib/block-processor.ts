@@ -16,7 +16,7 @@ import { Handler } from '../handlers/handler';
 import { AssetValidator } from '../validators/asset-validator';
 import { DeleveragingValidator } from '../validators/deleveraging-validator';
 import { FundingValidator } from '../validators/funding-validator';
-import { LiquidityTierValidator } from '../validators/liquidity-tier-validator';
+import { LiquidityTierValidatorV2, LiquidityTierValidator } from '../validators/liquidity-tier-validator';
 import { MarketValidator } from '../validators/market-validator';
 import { OpenInterestUpdateValidator } from '../validators/open-interest-update-validator';
 import { OrderFillValidator } from '../validators/order-fill-validator';
@@ -49,6 +49,7 @@ const TXN_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorIn
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.UPDATE_CLOB_PAIR.toString(), 1)]: UpdateClobPairValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.DELEVERAGING.toString(), 1)]: DeleveragingValidator,
   [serializeSubtypeAndVersion(DydxIndexerSubtypes.OPEN_INTEREST_UPDATE.toString(), 1)]: OpenInterestUpdateValidator,
+  [serializeSubtypeAndVersion(DydxIndexerSubtypes.LIQUIDITY_TIER.toString(), 2)]: LiquidityTierValidatorV2,
 };
 
 const BLOCK_EVENT_SUBTYPE_VERSION_TO_VALIDATOR_MAPPING: Record<string, ValidatorInitializer> = {

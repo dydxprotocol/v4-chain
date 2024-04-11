@@ -14,6 +14,7 @@ import (
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perpetuals "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	vaulttypes "github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -55,6 +56,7 @@ func postUpgradeChecks(node *containertest.Node, t *testing.T) {
 	postUpgradeCheckLiquidityTiers(node, t)
 	postUpgradePerpetualOIs(node, t)
 	postUpgradeCheckVoteExtensions(node, t)
+	postUpgradeCheckVaultParams(node, t)
 	// Add test for your upgrade handler logic below
 }
 
@@ -249,4 +251,20 @@ func postUpgradeCheckLiquidityTiers(node *containertest.Node, t *testing.T) {
 		OpenInterestLowerCap:   uint64(2_000_000_000_000),
 		OpenInterestUpperCap:   uint64(5_000_000_000_000),
 	}, liquidityTiersResponse.LiquidityTiers[3])
+}
+
+func postUpgradeCheckVaultParams(node *containertest.Node, t *testing.T) {
+	resp, err := containertest.Query(
+		node,
+		vaulttypes.NewQueryClient,
+		vaulttypes.QueryClient.Params,
+		&vaulttypes.QueryParamsRequest{},
+	)
+	require.NoError(t, err)
+
+	paramsResponse := &vaulttypes.QueryParamsResponse{}
+	err = proto.UnmarshalText(resp.String(), paramsResponse)
+	require.NoError(t, err)
+
+	assert.Equal(t, vaulttypes.DefaultParams(), paramsResponse.Params)
 }

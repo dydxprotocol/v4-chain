@@ -47582,6 +47582,8 @@ definitions:
                     - ORDER_REMOVAL_REASON_FULLY_FILLED
                     - ORDER_REMOVAL_REASON_EQUITY_TIER
                     - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT
+                    - >-
+                      ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
                   default: ORDER_REMOVAL_REASON_UNSPECIFIED
                   description: >-
                     OrderRemovalReason is an enum of all the reasons an order
@@ -47626,6 +47628,8 @@ definitions:
                      - ORDER_REMOVAL_REASON_EQUITY_TIER: The order has been removed since the subaccount does not satisfy the
                     equity tier requirements.
                      - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT: The order has been removed since its ClobPair has entered final settlement.
+                     - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS: The order has been removed since filling it would lead to the subaccount
+                    violating isolated subaccount constraints.
                 removal_status:
                   type: string
                   enum:
@@ -48310,6 +48314,7 @@ definitions:
               - ORDER_REMOVAL_REASON_FULLY_FILLED
               - ORDER_REMOVAL_REASON_EQUITY_TIER
               - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT
+              - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
             default: ORDER_REMOVAL_REASON_UNSPECIFIED
             description: >-
               OrderRemovalReason is an enum of all the reasons an order was
@@ -48354,6 +48359,8 @@ definitions:
                - ORDER_REMOVAL_REASON_EQUITY_TIER: The order has been removed since the subaccount does not satisfy the
               equity tier requirements.
                - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT: The order has been removed since its ClobPair has entered final settlement.
+               - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS: The order has been removed since filling it would lead to the subaccount
+              violating isolated subaccount constraints.
           removal_status:
             type: string
             enum:
@@ -48884,6 +48891,7 @@ definitions:
           - ORDER_REMOVAL_REASON_FULLY_FILLED
           - ORDER_REMOVAL_REASON_EQUITY_TIER
           - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT
+          - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
         default: ORDER_REMOVAL_REASON_UNSPECIFIED
         description: >-
           OrderRemovalReason is an enum of all the reasons an order was removed.
@@ -48925,6 +48933,8 @@ definitions:
            - ORDER_REMOVAL_REASON_EQUITY_TIER: The order has been removed since the subaccount does not satisfy the
           equity tier requirements.
            - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT: The order has been removed since its ClobPair has entered final settlement.
+           - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS: The order has been removed since filling it would lead to the subaccount
+          violating isolated subaccount constraints.
       removal_status:
         type: string
         enum:
@@ -49450,6 +49460,7 @@ definitions:
       - ORDER_REMOVAL_REASON_FULLY_FILLED
       - ORDER_REMOVAL_REASON_EQUITY_TIER
       - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT
+      - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS
     default: ORDER_REMOVAL_REASON_UNSPECIFIED
     description: |-
       OrderRemovalReason is an enum of all the reasons an order was removed.
@@ -49485,6 +49496,8 @@ definitions:
        - ORDER_REMOVAL_REASON_EQUITY_TIER: The order has been removed since the subaccount does not satisfy the
       equity tier requirements.
        - ORDER_REMOVAL_REASON_FINAL_SETTLEMENT: The order has been removed since its ClobPair has entered final settlement.
+       - ORDER_REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS: The order has been removed since filling it would lead to the subaccount
+      violating isolated subaccount constraints.
   dydxprotocol.subaccounts.SubaccountId:
     type: object
     properties:

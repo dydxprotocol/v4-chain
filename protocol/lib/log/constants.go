@@ -15,6 +15,7 @@ const (
 	Operation           = "operation"
 	OperationsQueue     = "operations_queue"
 	Callback            = "callback"
+	ClobPairId          = "clob_pair_id"
 	BlockHeight         = "block_height"
 	Msg                 = "msg"
 	ProposerConsAddress = "proposer_cons_address"
