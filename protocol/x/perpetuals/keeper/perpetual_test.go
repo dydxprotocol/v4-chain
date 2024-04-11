@@ -3520,7 +3520,7 @@ func TestIsPositionUpdatable(t *testing.T) {
 func TestModifyOpenInterest_store(t *testing.T) {
 	pc := keepertest.PerpetualsKeepers(t)
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
-
+	pc.Ctx = pc.Ctx.WithExecMode(sdk.ExecModeFinalize)
 	for _, perp := range perps {
 		openInterestDeltaBaseQuantums := big.NewInt(2_000_000 * (int64(perp.Params.Id)))
 

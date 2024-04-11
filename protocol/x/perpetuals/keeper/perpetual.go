@@ -1278,7 +1278,7 @@ func (k Keeper) ModifyOpenInterest(
 	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
 	k.SetPerpetual(ctx, perpetual)
 
-	if ctx.ExecMode() != sdk.ExecModeFinalize {
+	if ctx.ExecMode() == sdk.ExecModeFinalize {
 		updatedOIStore := prefix.NewStore(ctx.TransientStore(k.transientStoreKey), []byte(types.UpdatedOIKeyPrefix))
 		openInterestInBytes, err := perpetual.OpenInterest.Marshal()
 		if err != nil {
