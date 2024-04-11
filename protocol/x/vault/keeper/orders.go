@@ -18,6 +18,7 @@ import (
 // 2. Placing new orders.
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
+	params := k.GetParams(ctx)
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
@@ -32,6 +33,14 @@ func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 		// Skip if TotalShares is non-positive.
 		if totalShares.NumShares.BigInt().Sign() <= 0 {
 			continue
+		}
+
+		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
+		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
+		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
+			if vault.GetUsdcPosition().Cmp(params.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
+				continue
+			}
 		}
 
 		// Refresh orders depending on vault type.
