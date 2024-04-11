@@ -1,7 +1,13 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "gogoproto/gogo.proto";
+import "dydxprotocol/vault/params.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // GenesisState defines `x/vault`'s genesis state.
-message GenesisState {}
+message GenesisState {
+  // The parameters of the module.
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}

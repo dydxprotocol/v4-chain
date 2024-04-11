@@ -13,6 +13,7 @@ import { KafkaMessage } from 'kafkajs';
 import { redisClient } from '../../src/helpers/redis/redis-controller';
 import { onMessage } from '../../src/lib/on-message';
 import { DydxRecordHeaderKeys } from '../../src/lib/types';
+import { defaultKafkaHeaders } from './constants';
 
 export async function handleInitialOrderPlace(
   orderPlace: redisTestConstants.OffChainUpdateOrderPlaceUpdateMessage,
@@ -23,6 +24,7 @@ export async function handleInitialOrderPlace(
   const message: KafkaMessage = createKafkaMessage(
     Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(update).finish())),
   );
+  message.headers = defaultKafkaHeaders;
 
   await onMessage(message);
 }
@@ -36,6 +38,7 @@ export async function handleOrderUpdate(
   const message: KafkaMessage = createKafkaMessage(
     Buffer.from(Uint8Array.from(OffChainUpdateV1.encode(update).finish())),
   );
+  message.headers = defaultKafkaHeaders;
 
   await onMessage(message);
 }

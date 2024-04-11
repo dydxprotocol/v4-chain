@@ -32,6 +32,9 @@ func (app *App) setupUpgradeHandlers() {
 			app.configurator,
 			app.PerpetualsKeeper,
 			app.ClobKeeper,
+			app.SubaccountsKeeper,
+			app.ConsensusParamsKeeper,
+			app.VaultKeeper,
 		),
 	)
 }

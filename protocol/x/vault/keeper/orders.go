@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
@@ -14,51 +13,46 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/x/vault/types"
 )
 
-// TODO (TRA-118): store vault strategy constants in x/vault state.
-const (
-	// Determines how many layers of orders a vault places.
-	// E.g. if num_levels=2, a vault places 2 asks and 2 bids.
-	NUM_LAYERS = uint8(2)
-	// Determines minimum base spread when a vault quotes around reservation price.
-	MIN_BASE_SPREAD_PPM = uint32(3_000) // 30bps
-	// Determines the amount to add to min_price_change_ppm to arrive at base spread.
-	BASE_SPREAD_MIN_PRICE_CHANGE_PREMIUM_PPM = uint32(1_500) // 15bps
-	// Determines how aggressive a vault skews its orders.
-	SKEW_FACTOR_PPM = uint32(500_000) // 0.5
-	// Determines the percentage of vault equity that each order is sized at.
-	ORDER_SIZE_PCT_PPM = uint32(100_000) // 10%
-	// Determines how long a vault's orders are valid for.
-	ORDER_EXPIRATION_SECONDS = uint32(5) // 5 seconds
-)
-
 // RefreshAllVaultOrders refreshes all orders for all vaults by
 // 1. Cancelling all existing orders.
 // 2. Placing new orders.
 func (k Keeper) RefreshAllVaultOrders(ctx sdk.Context) {
 	// Iterate through all vaults.
+	params := k.GetParams(ctx)
 	totalSharesIterator := k.getTotalSharesIterator(ctx)
 	defer totalSharesIterator.Close()
 	for ; totalSharesIterator.Valid(); totalSharesIterator.Next() {
-		var vaultId types.VaultId
-		k.cdc.MustUnmarshal(totalSharesIterator.Key(), &vaultId)
+		vaultId, err := types.GetVaultIdFromStateKey(totalSharesIterator.Key())
+		if err != nil {
+			log.ErrorLogWithError(ctx, "Failed to get vault ID from state key", err)
+			continue
+		}
 		var totalShares types.NumShares
 		k.cdc.MustUnmarshal(totalSharesIterator.Value(), &totalShares)
 
 		// Skip if TotalShares is non-positive.
-		if totalShares.NumShares.Cmp(dtypes.NewInt(0)) <= 0 {
+		if totalShares.NumShares.BigInt().Sign() <= 0 {
 			continue
+		}
+
+		// Skip if vault has no perpetual positions and strictly less than `activation_threshold_quote_quantums` USDC.
+		vault := k.subaccountsKeeper.GetSubaccount(ctx, *vaultId.ToSubaccountId())
+		if vault.PerpetualPositions == nil || len(vault.PerpetualPositions) == 0 {
+			if vault.GetUsdcPosition().Cmp(params.ActivationThresholdQuoteQuantums.BigInt()) == -1 {
+				continue
+			}
 		}
 
 		// Refresh orders depending on vault type.
 		// Currently only supported vault type is CLOB.
 		switch vaultId.Type {
 		case types.VaultType_VAULT_TYPE_CLOB:
-			err := k.RefreshVaultClobOrders(ctx, vaultId)
+			err := k.RefreshVaultClobOrders(ctx, *vaultId)
 			if err != nil {
-				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", vaultId)
+				log.ErrorLogWithError(ctx, "Failed to refresh vault clob orders", err, "vaultId", *vaultId)
 			}
 		default:
-			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", vaultId)
+			log.ErrorLog(ctx, "Failed to refresh vault orders: unknown vault type", "vaultId", *vaultId)
 		}
 	}
 }
@@ -74,11 +68,12 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		log.ErrorLogWithError(ctx, "Failed to get vault clob orders to cancel", err, "vaultId", vaultId)
 		return err
 	}
+	orderExpirationSeconds := k.GetParams(ctx).OrderExpirationSeconds
 	for _, order := range ordersToCancel {
 		if _, exists := k.clobKeeper.GetLongTermOrderPlacement(ctx, order.OrderId); exists {
 			err := k.clobKeeper.HandleMsgCancelOrder(ctx, clobtypes.NewMsgCancelOrderStateful(
 				order.OrderId,
-				uint32(ctx.BlockTime().Unix())+ORDER_EXPIRATION_SECONDS,
+				uint32(ctx.BlockTime().Unix())+orderExpirationSeconds,
 			))
 			if err != nil {
 				log.ErrorLogWithError(ctx, "Failed to cancel order", err, "order", order, "vaultId", vaultId)
@@ -97,7 +92,7 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 		return err
 	}
 	for _, order := range ordersToPlace {
-		err := k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order))
+		err := k.PlaceVaultClobOrder(ctx, order)
 		if err != nil {
 			log.ErrorLogWithError(ctx, "Failed to place order", err, "order", order, "vaultId", vaultId)
 		}
@@ -110,14 +105,16 @@ func (k Keeper) RefreshVaultClobOrders(ctx sdk.Context, vaultId types.VaultId) (
 	return nil
 }
 
-// GetVaultClobOrders returns a list of long term orders for a given vault, with its corresponding
-// clob pair, perpetual, market parameter, and market price.
-// Let n be number of layers, then the function returns orders at [a_1, b_1, a_2, b_2, ..., a_n, b_n]
+// GetVaultClobOrders returns a list of long term orders for a given CLOB vault.
+// Let n be number of layers, then the function returns orders at [a_0, b_0, a_1, b_1, ..., a_{n-1}, b_{n-1}]
 // where a_i and b_i are the ask price and bid price at i-th layer. To compute a_i and b_i:
-// - a_i = oraclePrice * (1 + spread)^i
-// - b_i = oraclePrice * (1 - spread)^i
-// TODO (TRA-144): Implement order size
-// TODO (TRA-114): Implement skew
+// - a_i = oraclePrice * (1 + skew_i) * (1 + spread)^{i+1}
+// - b_i = oraclePrice * (1 + skew_i) / (1 + spread)^{i+1}
+// - skew_i = -leverage_i * spread * skew_factor
+// - leverage_i = leverage +/- i * order_size_pct\ (- for ask and + for bid)
+// - leverage = open notional / equity
+// - spread = max(spread_min, spread_buffer + min_price_change)
+// and size of each order is calculated as `order_size * equity / oraclePrice`.
 func (k Keeper) GetVaultClobOrders(
 	ctx sdk.Context,
 	vaultId types.VaultId,
@@ -155,13 +152,61 @@ func (k Keeper) GetVaultClobOrders(
 
 	// Get vault (subaccount 0 of corresponding module account).
 	vault := vaultId.ToSubaccountId()
+	// Calculate leverage = open notional / equity.
+	equity, err := k.GetVaultEquity(ctx, vaultId)
+	if err != nil {
+		return orders, err
+	}
+	if equity.Sign() <= 0 {
+		return orders, errorsmod.Wrap(
+			types.ErrNonPositiveEquity,
+			fmt.Sprintf("VaultId: %v", vaultId),
+		)
+	}
+	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
+	openNotional := lib.BaseToQuoteQuantums(
+		inventory,
+		perpetual.Params.AtomicResolution,
+		marketPrice.GetPrice(),
+		marketPrice.GetExponent(),
+	)
+	leverage := new(big.Rat).Quo(
+		new(big.Rat).SetInt(openNotional),
+		new(big.Rat).SetInt(equity),
+	)
+	// Get parameters.
+	params := k.GetParams(ctx)
+	// Calculate order size (in base quantums).
+	// order_size = order_size_pct * equity / oracle_price
+	// = order_size_pct * equity / (price * 10^exponent / 10^quote_atomic_resolution) / 10^base_atomic_resolution
+	// = order_size_pct * equity / (price * 10^(exponent - quote_atomic_resolution + base_atomic_resolution))
+	orderSizeBaseQuantums := lib.BigRatMulPpm(
+		new(big.Rat).SetInt(equity),
+		params.OrderSizePctPpm,
+	)
+	orderSizeBaseQuantums = orderSizeBaseQuantums.Quo(
+		orderSizeBaseQuantums,
+		lib.BigMulPow10(
+			new(big.Int).SetUint64(marketPrice.Price),
+			marketPrice.Exponent-lib.QuoteCurrencyAtomicResolution+perpetual.Params.AtomicResolution,
+		),
+	)
+	orderSizeBaseQuantumsRounded := lib.BigRatRoundToNearestMultiple(
+		orderSizeBaseQuantums,
+		uint32(clobPair.StepBaseQuantums),
+		false,
+	)
+	// If order size is non-positive, return empty orders.
+	if orderSizeBaseQuantumsRounded <= 0 {
+		return []*clobtypes.Order{}, nil
+	}
 	// Calculate spread.
 	spreadPpm := lib.Max(
-		MIN_BASE_SPREAD_PPM,
-		BASE_SPREAD_MIN_PRICE_CHANGE_PREMIUM_PPM+marketParam.MinPriceChangePpm,
+		params.SpreadMinPpm,
+		params.SpreadBufferPpm+marketParam.MinPriceChangePpm,
 	)
-	// Get market price in subticks.
-	subticks := clobtypes.PriceToSubticks(
+	// Get oracle price in subticks.
+	oracleSubticks := clobtypes.PriceToSubticks(
 		marketPrice,
 		clobPair,
 		perpetual.Params.AtomicResolution,
@@ -169,55 +214,97 @@ func (k Keeper) GetVaultClobOrders(
 	)
 	// Get order expiration time.
 	goodTilBlockTime := &clobtypes.Order_GoodTilBlockTime{
-		GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + ORDER_EXPIRATION_SECONDS,
+		GoodTilBlockTime: uint32(ctx.BlockTime().Unix()) + params.OrderExpirationSeconds,
 	}
+	// Initialize spreadBaseMultiplier and spreadMultiplier as `1 + spread`.
+	spreadBaseMultiplier := new(big.Rat).SetFrac(
+		new(big.Int).SetUint64(uint64(lib.OneMillion+spreadPpm)),
+		lib.BigIntOneMillion(),
+	)
+	spreadMultiplier := new(big.Rat).Set(spreadBaseMultiplier)
 	// Construct one ask and one bid for each layer.
-	orders = make([]*clobtypes.Order, 2*NUM_LAYERS)
-	askSubticks := new(big.Rat).Set(subticks)
-	bidSubticks := new(big.Rat).Set(subticks)
-	for i := uint8(0); i < NUM_LAYERS; i++ {
-		// Calculate ask and bid subticks for this layer.
-		askSubticks = lib.BigRatMulPpm(askSubticks, lib.OneMillion+spreadPpm)
-		bidSubticks = lib.BigRatMulPpm(bidSubticks, lib.OneMillion-spreadPpm)
+	constructOrder := func(
+		side clobtypes.Order_Side,
+		layer uint32,
+		spreadMultipler *big.Rat,
+	) *clobtypes.Order {
+		// Calculate size that will have been filled before this layer is matched.
+		sizeFilledByThisLayer := new(big.Rat).SetFrac(
+			new(big.Int).SetUint64(uint64(params.OrderSizePctPpm*layer)),
+			lib.BigIntOneMillion(),
+		)
 
-		// Construct ask at this layer.
-		ask := clobtypes.Order{
+		// Ask: leverage_i = leverage - i * order_size_pct
+		// Bid: leverage_i = leverage + i * order_size_pct
+		var leverageI *big.Rat
+		if side == clobtypes.Order_SIDE_SELL {
+			leverageI = new(big.Rat).Sub(
+				leverage,
+				sizeFilledByThisLayer,
+			)
+		} else {
+			leverageI = new(big.Rat).Add(
+				leverage,
+				sizeFilledByThisLayer,
+			)
+		}
+
+		// skew_i = -leverage_i * spread * skew_factor
+		skewI := lib.BigRatMulPpm(leverageI, spreadPpm)
+		skewI = lib.BigRatMulPpm(skewI, params.SkewFactorPpm)
+		skewI = skewI.Neg(skewI)
+
+		// Ask: price = oracle price * (1 + skew_i) * (1 + spread)^(i+1)
+		// Bid: price = oracle price * (1 + skew_i) / (1 + spread)^(i+1)
+		orderSubticks := new(big.Rat).Add(skewI, new(big.Rat).SetUint64(1))
+		orderSubticks = orderSubticks.Mul(orderSubticks, oracleSubticks)
+		if side == clobtypes.Order_SIDE_SELL {
+			orderSubticks = orderSubticks.Mul(
+				orderSubticks,
+				spreadMultipler,
+			)
+		} else {
+			orderSubticks = orderSubticks.Quo(
+				orderSubticks,
+				spreadMultipler,
+			)
+		}
+
+		return &clobtypes.Order{
 			OrderId: clobtypes.OrderId{
 				SubaccountId: *vault,
-				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_SELL, uint8(i+1)),
+				ClientId:     k.GetVaultClobOrderClientId(ctx, side, uint8(layer)),
 				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
 				ClobPairId:   clobPair.Id,
 			},
-			Side:     clobtypes.Order_SIDE_SELL,
-			Quantums: clobPair.StepBaseQuantums, // TODO (TRA-144): Implement order size
+			Side:     side,
+			Quantums: orderSizeBaseQuantumsRounded,
 			Subticks: lib.BigRatRoundToNearestMultiple(
-				askSubticks,
+				orderSubticks,
 				clobPair.SubticksPerTick,
-				true, // round up for asks
+				side == clobtypes.Order_SIDE_SELL, // round up for asks and down for bids.
 			),
 			GoodTilOneof: goodTilBlockTime,
 		}
+	}
+	orders = make([]*clobtypes.Order, 2*params.Layers)
+	for i := uint32(0); i < params.Layers; i++ {
+		// Construct ask at this layer.
+		orders[2*i] = constructOrder(
+			clobtypes.Order_SIDE_SELL,
+			i,
+			spreadMultiplier,
+		)
 
 		// Construct bid at this layer.
-		bid := clobtypes.Order{
-			OrderId: clobtypes.OrderId{
-				SubaccountId: *vault,
-				ClientId:     k.GetVaultClobOrderClientId(ctx, clobtypes.Order_SIDE_BUY, uint8(i+1)),
-				OrderFlags:   clobtypes.OrderIdFlags_LongTerm,
-				ClobPairId:   clobPair.Id,
-			},
-			Side:     clobtypes.Order_SIDE_BUY,
-			Quantums: clobPair.StepBaseQuantums, // TODO (TRA-144): Implement order size
-			Subticks: lib.BigRatRoundToNearestMultiple(
-				bidSubticks,
-				clobPair.SubticksPerTick,
-				false, // round down for bids
-			),
-			GoodTilOneof: goodTilBlockTime,
-		}
+		orders[2*i+1] = constructOrder(
+			clobtypes.Order_SIDE_BUY,
+			i,
+			spreadMultiplier,
+		)
 
-		orders[2*i] = &ask
-		orders[2*i+1] = &bid
+		// Update spreadMultiplier for next layer.
+		spreadMultiplier = spreadMultiplier.Mul(spreadMultiplier, spreadBaseMultiplier)
 	}
 
 	return orders, nil
@@ -246,4 +333,14 @@ func (k Keeper) GetVaultClobOrderClientId(
 	layerBits := uint32(layer) << 22
 
 	return sideBit | blockHeightBit | layerBits
+}
+
+// PlaceVaultClobOrder places a vault CLOB order as an order internal to the protocol,
+// skipping various logs, metrics, and validations.
+func (k Keeper) PlaceVaultClobOrder(
+	ctx sdk.Context,
+	order *clobtypes.Order,
+) error {
+	// Place an internal clob order.
+	return k.clobKeeper.HandleMsgPlaceOrder(ctx, clobtypes.NewMsgPlaceOrder(*order), true)
 }

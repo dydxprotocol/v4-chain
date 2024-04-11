@@ -1082,6 +1082,7 @@ func New(
 		app.ClobKeeper,
 		app.PerpetualsKeeper,
 		app.PricesKeeper,
+		app.SendingKeeper,
 		app.SubaccountsKeeper,
 		[]string{
 			lib.GovModuleAddress.String(),
@@ -1526,7 +1527,7 @@ func (app *App) createProposalHandlers(
 			app.Logger(),
 			dydxPrepareProposalHandler,
 			dydxProcessProposalHandler,
-			ve.NewDefaultValidateVoteExtensionsFn(app.ChainID(), app.StakingKeeper),
+			ve.NewDefaultValidateVoteExtensionsFn(app.StakingKeeper),
 			veCodec,
 			extCommitCodec,
 			strategy,
@@ -1683,6 +1684,8 @@ func (app *App) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.
 
 // BeginBlocker application updates every begin block
 func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	ctx = ctx.WithExecMode(lib.ExecModeBeginBlock)
+
 	// Update the proposer address in the logger for the panic logging middleware.
 	proposerAddr := sdk.ConsAddress(ctx.BlockHeader().ProposerAddress)
 	middleware.Logger = ctx.Logger().With("proposer_cons_addr", proposerAddr.String())
@@ -1693,6 +1696,8 @@ func (app *App) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
 
 // EndBlocker application updates every end block
 func (app *App) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	ctx = ctx.WithExecMode(lib.ExecModeEndBlock)
+
 	// Reset the logger for middleware.
 	// Note that the middleware is only used by `CheckTx` and `DeliverTx`, and not `EndBlocker`.
 	// Panics from `EndBlocker` will not be logged by the middleware and will lead to consensus failures.
@@ -1716,6 +1721,8 @@ func (app *App) Precommitter(ctx sdk.Context) {
 
 // PrepareCheckStater application updates after commit and before any check state is invoked.
 func (app *App) PrepareCheckStater(ctx sdk.Context) {
+	ctx = ctx.WithExecMode(lib.ExecModePrepareCheckState)
+
 	if err := app.ModuleManager.PrepareCheckState(ctx); err != nil {
 		panic(err)
 	}

@@ -15,6 +15,7 @@ import {
   OrderStatus,
   OrderType,
   PerpetualMarketStatus,
+  PerpetualMarketType,
   PerpetualPositionFromDatabase,
   PerpetualPositionStatus,
   PositionSide,
@@ -100,6 +101,7 @@ export interface PerpetualPositionResponseObject {
   unrealizedPnl: string;
   closedAt?: IsoString | null;
   exitPrice?: string | null;
+  subaccountNumber: number;
 }
 
 export type PerpetualPositionsMap = { [market: string]: PerpetualPositionResponseObject };
@@ -156,6 +158,28 @@ export interface TransferResponseObject {
   recipient: {
     address: string,
     subaccountNumber?: number,
+  },
+  size: string,
+  createdAt: string,
+  createdAtHeight: string,
+  symbol: string,
+  type: TransferType,
+  transactionHash: string,
+}
+
+export interface ParentSubaccountTransferResponse {
+  transfers: TransferResponseObject[],
+}
+
+export interface ParentSubaccountTransferResponseObject {
+  id: string,
+  sender: {
+    address: string,
+    parentSubaccountNumber?: number,
+  },
+  recipient: {
+    address: string,
+    parentSubaccountNumber?: number,
   },
   size: string,
   createdAt: string,
@@ -245,6 +269,9 @@ export interface PerpetualMarketResponseObject {
   stepSize: string;
   stepBaseQuantums: number;
   subticksPerTick: number;
+  marketType: PerpetualMarketType;
+  openInterestLowerCap?: string;
+  openInterestUpperCap?: string;
 }
 
 /* ------- ORDERBOOK TYPES ------- */
@@ -269,6 +296,7 @@ export interface OrderResponseObject extends Omit<OrderFromDatabase, 'timeInForc
   ticker: string;
   updatedAt?: IsoString;
   updatedAtHeight?: string
+  subaccountNumber: number;
 }
 
 export type RedisOrderMap = { [orderId: string]: RedisOrder };
@@ -349,9 +377,21 @@ export interface PerpetualPositionRequest extends SubaccountRequest, LimitAndCre
   status: PerpetualPositionStatus[],
 }
 
+export interface ParentSubaccountPerpetualPositionRequest extends ParentSubaccountRequest,
+  LimitAndCreatedBeforeRequest {
+  status: PerpetualPositionStatus[],
+}
+
 export interface AssetPositionRequest extends SubaccountRequest {}
 
+export interface ParentSubaccountAssetPositionRequest extends ParentSubaccountRequest {
+}
+
 export interface TransferRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {}
+
+export interface ParentSubaccountTransferRequest
+  extends ParentSubaccountRequest, LimitAndCreatedBeforeRequest {
+}
 
 export interface FillRequest extends SubaccountRequest, LimitAndCreatedBeforeRequest {
   market: string,
@@ -381,6 +421,16 @@ export interface GetOrderRequest {
 }
 
 export interface ListOrderRequest extends SubaccountRequest, LimitRequest, TickerRequest {
+  side?: OrderSide,
+  type?: OrderType,
+  status?: OrderStatus[],
+  goodTilBlockBeforeOrAt?: number,
+  goodTilBlockTimeBeforeOrAt?: IsoString,
+  returnLatestOrders?: boolean,
+}
+
+export interface ParentSubaccountListOrderRequest
+  extends ParentSubaccountRequest, LimitRequest, TickerRequest {
   side?: OrderSide,
   type?: OrderType,
   status?: OrderStatus[],
@@ -433,6 +483,7 @@ export enum BlockedCode {
 export interface ComplianceV2Response {
   status: ComplianceStatus;
   reason?: ComplianceReason;
+  updatedAt?: string;
 }
 
 /* ------- HISTORICAL TRADING REWARD TYPES ------- */

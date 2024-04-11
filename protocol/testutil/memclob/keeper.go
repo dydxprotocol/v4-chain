@@ -284,7 +284,7 @@ func (f *FakeMemClobKeeper) GetStatefulOrdersTimeSlice(
 	return orderIds
 }
 
-func (f *FakeMemClobKeeper) AddOrderToOrderbookCollatCheck(
+func (f *FakeMemClobKeeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 	ctx sdk.Context,
 	clobPairId types.ClobPairId,
 	subaccountOpenOrders map[satypes.SubaccountId][]types.PendingOpenOrder,
@@ -513,6 +513,7 @@ func (f *FakeMemClobKeeper) Logger(ctx sdk.Context) log.Logger {
 }
 
 func (f *FakeMemClobKeeper) SendOrderbookUpdates(
+	ctx sdk.Context,
 	offchainUpdates *types.OffchainUpdates,
 	snapshot bool,
 ) {

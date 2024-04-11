@@ -29,7 +29,7 @@ type MemClobKeeper interface {
 		offchainUpdates *OffchainUpdates,
 		err error,
 	)
-	AddOrderToOrderbookCollatCheck(
+	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
 		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
@@ -116,6 +116,7 @@ type MemClobKeeper interface {
 		ctx sdk.Context,
 	) log.Logger
 	SendOrderbookUpdates(
+		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 		snapshot bool,
 	)

@@ -381,6 +381,13 @@ message LiquidityTierUpsertEventV1 {
   //
   // Deprecated since v3.x.
   uint64 base_position_notional = 5 [ deprecated = true ];
+
+  // Previously existed in v1 for open interest caps. Removed and
+  // now in v2.
+  reserved 6, 7;
+
+  // reserved fields for open interest caps. Removed and now in v2.
+  reserved "open_interest_lower_cap", "open_interest_upper_cap";
 }
 
 // UpdateClobPairEventV1 message contains all the information about an update to
@@ -457,4 +464,36 @@ message AddressTradingReward {
         "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
+}
+
+// LiquidationEventV2 message contains all the information needed to update
+// the liquidity tiers. It contains all the fields from V1 along with the
+// open interest caps.
+message LiquidityTierUpsertEventV2 {
+  // Unique id.
+  uint32 id = 1;
+
+  // The name of the tier purely for mnemonic purposes, e.g. "Gold".
+  string name = 2;
+
+  // The margin fraction needed to open a position.
+  // In parts-per-million.
+  uint32 initial_margin_ppm = 3;
+
+  // The fraction of the initial-margin that the maintenance-margin is,
+  // e.g. 50%. In parts-per-million.
+  uint32 maintenance_fraction_ppm = 4;
+
+  // The maximum position size at which the margin requirements are
+  // not increased over the default values. Above this position size,
+  // the margin requirements increase at a rate of sqrt(size).
+  //
+  // Deprecated since v3.x.
+  uint64 base_position_notional = 5 [ deprecated = true ];
+
+  // Lower cap of open interest in quote quantums. optional
+  uint64 open_interest_lower_cap = 6;
+
+  // Upper cap of open interest in quote quantums.
+  uint64 open_interest_upper_cap = 7;
 }

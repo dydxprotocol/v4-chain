@@ -1,7 +1,87 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos_proto/cosmos.proto";
+import "dydxprotocol/subaccounts/subaccount.proto";
+import "dydxprotocol/vault/params.proto";
+import "dydxprotocol/vault/vault.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // Query defines the gRPC querier service.
-service Query {}
+service Query {
+  // Queries the Params.
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/params";
+  }
+  // Queries a Vault by type and number.
+  rpc Vault(QueryVaultRequest) returns (QueryVaultResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/vault/{type}/{number}";
+  }
+  // Queries all vaults.
+  rpc AllVaults(QueryAllVaultsRequest) returns (QueryAllVaultsResponse) {
+    option (google.api.http).get = "/dydxprotocol/vault/vault";
+  }
+  // Queries owner shares of a vault.
+  rpc OwnerShares(QueryOwnerSharesRequest) returns (QueryOwnerSharesResponse) {
+    option (google.api.http).get =
+        "/dydxprotocol/vault/owner_shares/{type}/{number}";
+  }
+}
+
+// QueryParamsRequest is a request type for the Params RPC method.
+message QueryParamsRequest {}
+
+// QueryParamsResponse is a response type for the Params RPC method.
+message QueryParamsResponse {
+  Params params = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryVaultRequest is a request type for the Vault RPC method.
+message QueryVaultRequest {
+  VaultType type = 1;
+  uint32 number = 2;
+}
+
+// QueryVaultResponse is a response type for the Vault RPC method.
+message QueryVaultResponse {
+  VaultId vault_id = 1 [ (gogoproto.nullable) = false ];
+  dydxprotocol.subaccounts.SubaccountId subaccount_id = 2
+      [ (gogoproto.nullable) = false ];
+  uint64 equity = 3;
+  uint64 inventory = 4;
+  uint64 total_shares = 5;
+}
+
+// QueryAllVaultsRequest is a request type for the AllVaults RPC method.
+message QueryAllVaultsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+// QueryAllVaultsResponse is a response type for the AllVaults RPC method.
+message QueryAllVaultsResponse {
+  repeated QueryVaultResponse vaults = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryOwnerSharesRequest is a request type for the OwnerShares RPC method.
+message QueryOwnerSharesRequest {
+  VaultType type = 1;
+  uint32 number = 2;
+  cosmos.base.query.v1beta1.PageRequest pagination = 3;
+}
+
+// OwnerShare is a type for owner shares in a vault.
+message OwnerShare {
+  string owner = 1 [ (cosmos_proto.scalar) = "cosmos.AddressString" ];
+  NumShares shares = 2;
+}
+
+// QueryOwnerSharesResponse is a response type for the OwnerShares RPC method.
+message QueryOwnerSharesResponse {
+  repeated OwnerShare owner_shares = 1;
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}

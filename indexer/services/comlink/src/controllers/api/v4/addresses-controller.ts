@@ -509,6 +509,7 @@ async function getSubaccountResponse(
         perpetualPosition,
         perpetualMarketsMap,
         marketIdToMarket,
+        subaccount.subaccountNumber,
       );
     },
   );

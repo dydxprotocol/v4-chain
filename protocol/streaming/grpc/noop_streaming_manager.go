@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 )
@@ -29,6 +30,8 @@ func (sm *NoopGrpcStreamingManager) Subscribe(
 func (sm *NoopGrpcStreamingManager) SendOrderbookUpdates(
 	updates *clobtypes.OffchainUpdates,
 	snapshot bool,
+	blockHeight uint32,
+	execMode sdk.ExecMode,
 ) {
 }
 

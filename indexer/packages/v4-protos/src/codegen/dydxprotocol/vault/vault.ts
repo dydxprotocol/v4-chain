@@ -144,7 +144,7 @@ function createBaseNumShares(): NumShares {
 export const NumShares = {
   encode(message: NumShares, writer: _m0.Writer = _m0.Writer.create()): _m0.Writer {
     if (message.numShares.length !== 0) {
-      writer.uint32(10).bytes(message.numShares);
+      writer.uint32(18).bytes(message.numShares);
     }
 
     return writer;
@@ -159,7 +159,7 @@ export const NumShares = {
       const tag = reader.uint32();
 
       switch (tag >>> 3) {
-        case 1:
+        case 2:
           message.numShares = reader.bytes();
           break;
 

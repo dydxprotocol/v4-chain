@@ -102,3 +102,14 @@ func TestBadMarketData(t *testing.T) {
 	_, err = keeper.GetPriceForCurrencyPair(ctx, oracletypes.CurrencyPair{})
 	require.Error(t, err)
 }
+
+func TestGetPrevBlockCPCounter(t *testing.T) {
+	ctx, keeper, _, _, mockTimeProvider := keepertest.PricesKeepers(t)
+	mockTimeProvider.On("Now").Return(constants.TimeT)
+
+	marketNumber := 10
+	_ = keepertest.CreateNMarkets(t, ctx, keeper, marketNumber)
+	cpCounter, err := keeper.GetPrevBlockCPCounter(ctx)
+	require.NoError(t, err)
+	require.Equal(t, uint64(marketNumber), cpCounter)
+}

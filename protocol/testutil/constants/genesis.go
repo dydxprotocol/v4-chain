@@ -1492,7 +1492,17 @@ const GenesisState = `{
       "port_id": "transfer"
     },
     "upgrade": {},
-    "vault": {},
+    "vault": {
+      "params": {
+        "layers": 2,
+        "spread_min_ppm": 3000,
+        "spread_buffer_ppm": 1500,
+        "skew_factor_ppm": 500000,
+        "order_size_pct_ppm": 100000,
+        "order_expiration_seconds": 2,
+        "activation_threshold_quote_quantums": "1000000000"
+      }
+    },
     "vest": {
       "vest_entries": [
         {

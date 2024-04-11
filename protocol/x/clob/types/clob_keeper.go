@@ -14,7 +14,7 @@ type ClobKeeper interface {
 	LiquidationsKeeper
 	LiquidationsConfigKeeper
 
-	AddOrderToOrderbookCollatCheck(
+	AddOrderToOrderbookSubaccountUpdatesCheck(
 		ctx sdk.Context,
 		clobPairId ClobPairId,
 		subaccountOpenOrders map[satypes.SubaccountId][]PendingOpenOrder,
@@ -47,6 +47,7 @@ type ClobKeeper interface {
 	HandleMsgPlaceOrder(
 		ctx sdk.Context,
 		msg *MsgPlaceOrder,
+		isInternalOrder bool,
 	) (err error)
 	GetAllClobPairs(ctx sdk.Context) (list []ClobPair)
 	GetClobPair(ctx sdk.Context, id ClobPairId) (val ClobPair, found bool)
@@ -56,7 +57,11 @@ type ClobKeeper interface {
 		orderStatus OrderStatus,
 		err error,
 	)
-	PlaceStatefulOrder(ctx sdk.Context, msg *MsgPlaceOrder) error
+	PlaceStatefulOrder(
+		ctx sdk.Context,
+		msg *MsgPlaceOrder,
+		isInternalOrder bool,
+	) error
 
 	PruneStateFillAmountsForShortTermOrders(
 		ctx sdk.Context,
@@ -147,7 +152,9 @@ type ClobKeeper interface {
 	// Gprc streaming
 	InitializeNewGrpcStreams(ctx sdk.Context)
 	SendOrderbookUpdates(
+		ctx sdk.Context,
 		offchainUpdates *OffchainUpdates,
 		snapshot bool,
 	)
+	MigratePruneableOrders(ctx sdk.Context)
 }
