@@ -2,10 +2,15 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/cometbft/cometbft/crypto/tmhash"
+	cometbftlog "github.com/cometbft/cometbft/libs/log"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
 
 // ClobDecorator is an AnteDecorator which is responsible for:
@@ -45,7 +50,97 @@ func (cd ClobDecorator) AnteHandle(
 		return next(ctx, tx, simulate)
 	}
 
-	return ctx, sdkerrors.ErrInvalidRequest
+	// Ensure that if this is a clob message then that there is only one.
+	// If it isn't a clob message then pass to the next AnteHandler.
+	isSingleClobMsgTx, err := IsSingleClobMsgTx(ctx, tx)
+	if err != nil {
+		return ctx, err
+	}
+
+	if !isSingleClobMsgTx {
+		return next(ctx, tx, simulate)
+	}
+
+	msgs := tx.GetMsgs()
+	var msg = msgs[0]
+
+	if !allowedMessage(msg) {
+		return ctx, sdkerrors.ErrInvalidRequest
+	}
+
+	// Set request-level logging tags
+	ctx = log.AddPersistentTagsToLogger(ctx,
+		log.Module, log.Clob,
+		log.Callback, lib.TxMode(ctx),
+		log.BlockHeight, ctx.BlockHeight()+1,
+		log.Msg, msg,
+	)
+
+	switch msg := msg.(type) {
+	case *types.MsgCancelOrder:
+		ctx = log.AddPersistentTagsToLogger(ctx,
+			log.Handler, log.CancelOrder,
+		)
+
+		if msg.OrderId.IsStatefulOrder() {
+			err = cd.clobKeeper.CancelStatefulOrder(ctx, msg)
+		} else {
+			// No need to process short term order cancelations on `ReCheckTx`.
+			if ctx.IsReCheckTx() {
+				return next(ctx, tx, simulate)
+			}
+
+			// Note that `msg.ValidateBasic` is called before the AnteHandlers.
+			// This guarantees that `MsgCancelOrder` has undergone stateless validation.
+			err = cd.clobKeeper.CancelShortTermOrder(ctx, msg)
+		}
+
+		log.DebugLog(ctx, "Received new order cancellation",
+			log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+			log.Error, err,
+		)
+
+	case *types.MsgPlaceOrder:
+		ctx = log.AddPersistentTagsToLogger(ctx,
+			log.Handler, log.PlaceOrder,
+		)
+		if msg.Order.OrderId.IsStatefulOrder() {
+			err = cd.clobKeeper.PlaceStatefulOrder(ctx, msg)
+
+			log.DebugLog(ctx, "Received new stateful order",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				log.Error, err,
+			)
+		} else {
+			// No need to process short term orders on `ReCheckTx`.
+			if ctx.IsReCheckTx() {
+				return next(ctx, tx, simulate)
+			}
+
+			var orderSizeOptimisticallyFilledFromMatchingQuantums satypes.BaseQuantums
+			var status types.OrderStatus
+			// Note that `msg.ValidateBasic` is called before all AnteHandlers.
+			// This guarantees that `MsgPlaceOrder` has undergone stateless validation.
+			orderSizeOptimisticallyFilledFromMatchingQuantums, status, err = cd.clobKeeper.PlaceShortTermOrder(
+				ctx,
+				msg,
+			)
+
+			log.DebugLog(ctx, "Received new short term order",
+				log.Tx, cometbftlog.NewLazySprintf("%X", tmhash.Sum(ctx.TxBytes())),
+				log.OrderHash, cometbftlog.NewLazySprintf("%X", msg.Order.GetOrderHash()),
+				log.OrderStatus, status,
+				log.OrderSizeOptimisticallyFilledFromMatchingQuantums, orderSizeOptimisticallyFilledFromMatchingQuantums,
+				log.Error, err,
+			)
+		}
+	}
+	if err != nil {
+		return ctx, err
+	}
+
+	return next(ctx, tx, simulate)
 }
 
 // IsSingleClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
@@ -79,6 +174,27 @@ func IsSingleClobMsgTx(ctx sdk.Context, tx sdk.Tx) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func allowedMessage(message proto.Message) bool {
+	var clobPairId uint32
+	switch msg := message.(type) {
+	case *types.MsgCancelOrder:
+		clobPairId = msg.OrderId.ClobPairId
+	case *types.MsgPlaceOrder:
+		clobPairId = msg.Order.OrderId.ClobPairId
+	default:
+		return false
+	}
+
+	switch clobPairId {
+	case 0:
+		return true
+	case 1:
+		return true
+	default:
+		return false
+	}
 }
 
 // IsShortTermClobMsgTx returns `true` if the supplied `tx` consist of a single clob message
