@@ -24,8 +24,12 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 		vaultIds []vaulttypes.VaultId
 		// Total Shares of each vault ID above.
 		totalShares []*big.Int
+		// Asset quantums of each vault ID above.
+		assetQuantums []*big.Int
+		// Activation threshold (quote quantums) of vaults.
+		activationThresholdQuoteQuantums *big.Int
 	}{
-		"Two Vaults, Both Positive Shares": {
+		"Two Vaults, Both Positive Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -34,8 +38,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(200),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, One Positive Shares, One Zero Shares": {
+		"Two Vaults, One Positive Shares, One Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -44,8 +53,13 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(1_000),
 				big.NewInt(0),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
 		},
-		"Two Vaults, Both Zero Shares": {
+		"Two Vaults, Both Zero Shares, Both above Activation Threshold": {
 			vaultIds: []vaulttypes.VaultId{
 				constants.Vault_Clob_0,
 				constants.Vault_Clob_1,
@@ -54,6 +68,41 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 				big.NewInt(0),
 				big.NewInt(0),
 			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000), // 1,000 USDC
+				big.NewInt(1_000_000_001),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
+		},
+		"Two Vaults, Both Positive Shares, Only One above Activation Threshold": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(200),
+			},
+			assetQuantums: []*big.Int{
+				big.NewInt(1_000_000_000),
+				big.NewInt(999_999_999),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(1_000_000_000),
+		},
+		"Two Vaults, Both Positive Shares, Both below Activation Threshold": {
+			vaultIds: []vaulttypes.VaultId{
+				constants.Vault_Clob_0,
+				constants.Vault_Clob_1,
+			},
+			totalShares: []*big.Int{
+				big.NewInt(1_000),
+				big.NewInt(200),
+			},
+			assetQuantums: []*big.Int{
+				big.NewInt(123_456_788),
+				big.NewInt(123_456_787),
+			},
+			activationThresholdQuoteQuantums: big.NewInt(123_456_789),
 		},
 	}
 
@@ -73,12 +122,22 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 								AssetPositions: []*satypes.AssetPosition{
 									{
 										AssetId:  assettypes.AssetUsdc.Id,
-										Quantums: dtypes.NewInt(1_000_000_000), // 1,000 USDC
+										Quantums: dtypes.NewIntFromBigInt(tc.assetQuantums[i]),
 									},
 								},
 							}
 						}
 						genesisState.Subaccounts = subaccounts
+					},
+				)
+				testapp.UpdateGenesisDocWithAppStateForModule(
+					&genesis,
+					func(genesisState *vaulttypes.GenesisState) {
+						vaultParams := genesisState.Params
+						vaultParams.ActivationThresholdQuoteQuantums = dtypes.NewIntFromBigInt(
+							tc.activationThresholdQuoteQuantums,
+						)
+						genesisState.Params = vaultParams
 					},
 				)
 				return genesis
@@ -102,7 +161,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			// Simulate vault orders placed in last block.
 			numPreviousOrders := 0
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 {
+				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					orders, err := tApp.App.VaultKeeper.GetVaultClobOrders(
 						ctx.WithBlockHeight(ctx.BlockHeight()-1),
 						vaultId,
@@ -125,7 +184,7 @@ func TestRefreshAllVaultOrders(t *testing.T) {
 			numExpectedOrders := 0
 			allExpectedOrderIds := make(map[clobtypes.OrderId]bool)
 			for i, vaultId := range tc.vaultIds {
-				if tc.totalShares[i].Sign() > 0 {
+				if tc.totalShares[i].Sign() > 0 && tc.assetQuantums[i].Cmp(tc.activationThresholdQuoteQuantums) >= 0 {
 					expectedOrders, err := tApp.App.VaultKeeper.GetVaultClobOrders(ctx, vaultId)
 					require.NoError(t, err)
 					numExpectedOrders += len(expectedOrders)
@@ -247,12 +306,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 	}{
 		"Success - Get orders from Vault for Clob Pair 0": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 2,       // 2 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        1_500,   // 15 bps
-				SkewFactorPpm:          500_000, // 0.5
-				OrderSizePctPpm:        100_000, // 10%
-				OrderExpirationSeconds: 2,       // 2 seconds
+				Layers:                           2,       // 2 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  1_500,   // 15 bps
+				SkewFactorPpm:                    500_000, // 0.5
+				OrderSizePctPpm:                  100_000, // 10%
+				OrderExpirationSeconds:           2,       // 2 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_0,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000_000), // 1,000 USDC
@@ -305,12 +365,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Success - Get orders from Vault for Clob Pair 1": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 3,       // 3 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        8_500,   // 85 bps
-				SkewFactorPpm:          900_000, // 0.9
-				OrderSizePctPpm:        200_000, // 20%
-				OrderExpirationSeconds: 4,       // 4 seconds
+				Layers:                           3,       // 3 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  8_500,   // 85 bps
+				SkewFactorPpm:                    900_000, // 0.9
+				OrderSizePctPpm:                  200_000, // 20%
+				OrderExpirationSeconds:           4,       // 4 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_1,
 			vaultAssetQuoteQuantums:    big.NewInt(2_000_000_000), // 2,000 USDC
@@ -378,12 +439,13 @@ func TestGetVaultClobOrders(t *testing.T) {
 		},
 		"Success - Get orders from Vault for Clob Pair 1, No Orders due to Zero Order Size": {
 			vaultParams: vaulttypes.Params{
-				Layers:                 2,       // 2 layers
-				SpreadMinPpm:           3_000,   // 30 bps
-				SpreadBufferPpm:        1_500,   // 15 bps
-				SkewFactorPpm:          500_000, // 0.5
-				OrderSizePctPpm:        1_000,   // 0.1%
-				OrderExpirationSeconds: 2,       // 2 seconds
+				Layers:                           2,       // 2 layers
+				SpreadMinPpm:                     3_000,   // 30 bps
+				SpreadBufferPpm:                  1_500,   // 15 bps
+				SkewFactorPpm:                    500_000, // 0.5
+				OrderSizePctPpm:                  1_000,   // 0.1%
+				OrderExpirationSeconds:           2,       // 2 seconds
+				ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 			},
 			vaultId:                    constants.Vault_Clob_1,
 			vaultAssetQuoteQuantums:    big.NewInt(1_000_000), // 1 USDC

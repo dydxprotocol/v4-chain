@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
 
 	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
@@ -37,12 +38,13 @@ func TestMsgUpdateParams(t *testing.T) {
 			msg: &types.MsgUpdateParams{
 				Authority: lib.GovModuleAddress.String(),
 				Params: types.Params{
-					Layers:                 3,
-					SpreadMinPpm:           4_000,
-					SpreadBufferPpm:        2_000,
-					SkewFactorPpm:          500_000,
-					OrderSizePctPpm:        0, // invalid
-					OrderExpirationSeconds: 5,
+					Layers:                           3,
+					SpreadMinPpm:                     4_000,
+					SpreadBufferPpm:                  2_000,
+					SkewFactorPpm:                    500_000,
+					OrderSizePctPpm:                  0, // invalid
+					OrderExpirationSeconds:           5,
+					ActivationThresholdQuoteQuantums: dtypes.NewInt(1_000_000_000),
 				},
 			},
 			expectedErr: types.ErrInvalidOrderSizePctPpm.Error(),

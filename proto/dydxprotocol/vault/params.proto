@@ -1,6 +1,8 @@
 syntax = "proto3";
 package dydxprotocol.vault;
 
+import "gogoproto/gogo.proto";
+
 option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/vault/types";
 
 // Params stores `x/vault` parameters.
@@ -25,4 +27,14 @@ message Params {
 
   // The duration that a vault's orders are valid for.
   uint32 order_expiration_seconds = 6;
+
+  // The number of quote quantums in quote asset that a vault with no perpetual
+  // positions must have to activate, i.e. if a vault has no perpetual positions
+  // and has strictly less than this amount of quote asset, it will not
+  // activate.
+  bytes activation_threshold_quote_quantums = 7 [
+    (gogoproto.customtype) =
+        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+    (gogoproto.nullable) = false
+  ];
 }
