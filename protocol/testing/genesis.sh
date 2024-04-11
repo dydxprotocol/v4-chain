@@ -97,6 +97,8 @@ function edit_genesis() {
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.proposal_cancel_ratio' -v '1'
 	# require 75% of votes for an expedited proposal to pass
 	dasel put -t string -f "$GENESIS" '.app_state.gov.params.expedited_threshold' -v '0.75000' # 75%
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.voting_period' -v "240s"
+	dasel put -t string -f "$GENESIS" '.app_state.gov.params.quorum' -v "0.000000000000000100"
 
 	# Update staking module.
 	dasel put -t string -f "$GENESIS" '.app_state.staking.params.unbonding_time' -v '1814400s' # 21 days
