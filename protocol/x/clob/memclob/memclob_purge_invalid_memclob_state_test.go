@@ -335,7 +335,7 @@ func TestPurgeInvalidMemclobState(t *testing.T) {
 	}
 }
 
-func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateCanceledStatefulOrderIds(t *testing.T) {
+func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateCanceledStatefulOrderIds(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
@@ -349,12 +349,8 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateCanceledStatefulO
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 	}
 
-	require.PanicsWithValue(
+	require.NotPanics(
 		t,
-		fmt.Sprintf(
-			"PurgeInvalidMemclobState: called with canceledStatefulOrderIds slice %v which contains duplicate order IDs",
-			canceledStatefulOrderIds,
-		),
 		func() {
 			memclob.PurgeInvalidMemclobState(
 				ctx,
@@ -398,7 +394,7 @@ func TestPurgeInvalidMemclobState_PanicsWhenNonStatefulOrderIsCanceled(t *testin
 	)
 }
 
-func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateExpiredStatefulOrders(t *testing.T) {
+func TestPurgeInvalidMemclobState_DoesNotPanicWhenCalledWithDuplicateExpiredStatefulOrders(t *testing.T) {
 	// Setup memclob state.
 	ctx, _, _ := sdktest.NewSdkContextWithMultistore()
 	ctx = ctx.WithIsCheckTx(true)
@@ -413,12 +409,8 @@ func TestPurgeInvalidMemclobState_PanicsWhenCalledWithDuplicateExpiredStatefulOr
 		constants.LongTermOrder_Alice_Num0_Id0_Clob0_Buy5_Price10_GTBT15.OrderId,
 	}
 
-	require.PanicsWithValue(
+	require.NotPanics(
 		t,
-		fmt.Sprintf(
-			"PurgeInvalidMemclobState: called with expiredStatefulOrderIds slice %v which contains duplicate order IDs",
-			expiredStatefulOrderIds,
-		),
 		func() {
 			memclob.PurgeInvalidMemclobState(
 				ctx,

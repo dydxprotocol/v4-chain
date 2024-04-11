@@ -9,6 +9,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	gometrics "github.com/hashicorp/go-metrics"
@@ -287,13 +288,16 @@ func (k Keeper) MaybeTriggerConditionalOrders(ctx sdk.Context) (allTriggeredOrde
 	for _, clobPairId := range sortedKeys {
 		untriggered := k.UntriggeredConditionalOrders[clobPairId]
 		clobPair, found := k.GetClobPair(ctx, clobPairId)
+
+		// Error log and skip to next clob pair id if invalid clob pair id found.
 		if !found {
-			panic(
-				fmt.Errorf(
-					"EndBlocker: untriggeredConditionalOrders failed to find clobPairId %+v",
-					clobPairId,
-				),
+			log.ErrorLogWithError(
+				ctx,
+				"MaybeTriggerConditionalOrders: Failed to fetch Clob Pair for Clob Pair Id",
+				types.ErrInvalidClob,
+				log.ClobPairId, clobPairId,
 			)
+			continue
 		}
 
 		// Trigger conditional orders using the oracle price.
