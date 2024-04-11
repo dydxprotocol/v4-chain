@@ -17,8 +17,6 @@ BEGIN
       perpetual_market_record."id" = (open_interest_update->'perpetualId')::bigint;
       perpetual_market_record."openInterest" = dydx_from_serializable_int(open_interest_update->'openInterest');
       
-
-
           UPDATE perpetual_markets
           SET
               "openInterest" = perpetual_market_record."openInterest"
@@ -27,9 +25,7 @@ BEGIN
           RETURNING * INTO perpetual_market_record;
 
       updates_array = array_append(updates_array, dydx_to_jsonb(perpetual_market_record));
-
     END LOOP;
-
 
     RETURN jsonb_build_object(
         'open_interest_updates',

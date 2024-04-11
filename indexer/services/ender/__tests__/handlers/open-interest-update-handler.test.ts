@@ -94,8 +94,7 @@ describe('openInterestUpdateHandler', () => {
               };
             })
             .value(),
-        },
-        ),
+        }),
     });
   });
 });

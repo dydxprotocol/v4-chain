@@ -3532,11 +3532,13 @@ func TestModifyOpenInterest_store(t *testing.T) {
 		require.NoError(t, err)
 	}
 
-	transientStore := prefix.NewStore(pc.Ctx.TransientStore(pc.TransientStoreKey), []byte(types.UpdatedOIKey))
+	transientStore := prefix.NewStore(pc.Ctx.TransientStore(pc.TransientStoreKey), []byte(types.UpdatedOIKeyPrefix))
 	for _, perp := range perps {
 		perpetualObject, err := pc.PerpetualsKeeper.GetPerpetual(pc.Ctx, perp.Params.Id)
-		expectedOpenInterest := new(big.Int).SetBytes(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
 		require.NoError(t, err)
-		require.Equal(t, perpetualObject.OpenInterest.BigInt(), expectedOpenInterest)
+		serializedOpenInterest := dtypes.SerializableInt{}
+		err = serializedOpenInterest.Unmarshal(transientStore.Get(lib.Uint32ToKey(perpetualObject.Params.Id)))
+		require.NoError(t, err)
+		require.Equal(t, perpetualObject.OpenInterest, serializedOpenInterest)
 	}
 }

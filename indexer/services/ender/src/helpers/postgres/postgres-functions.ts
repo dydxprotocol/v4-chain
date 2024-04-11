@@ -36,6 +36,7 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_market_create_handler.sql',
   'dydx_market_modify_handler.sql',
   'dydx_market_price_update_handler.sql',
+  'dydx_open_interest_update_handler.sql',
   'dydx_perpetual_market_handler.sql',
   'dydx_stateful_order_handler.sql',
   'dydx_subaccount_update_handler.sql',
@@ -43,7 +44,6 @@ const HANDLER_SCRIPTS: string[] = [
   'dydx_transfer_handler.sql',
   'dydx_update_clob_pair_handler.sql',
   'dydx_update_perpetual_handler.sql',
-  'dydx_open_interest_update_handler.sql',
 ];
 
 const DB_SETUP_SCRIPTS: string[] = [

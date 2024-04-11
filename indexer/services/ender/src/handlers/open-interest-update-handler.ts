@@ -40,19 +40,18 @@ export class OpenInterestUpdateHandler extends Handler<OpenInterestUpdateEventV1
 
     return [
       this.generateConsolidatedMarketKafkaEvent(
-        JSON.stringify(generateOpenInterestMessage(perpetualMarkets)),
+        JSON.stringify(generateMarketMessage(perpetualMarkets)),
       ),
     ];
   }
 }
 
-function generateOpenInterestMessage(
+function generateMarketMessage(
   perpetualMarkets: PerpetualMarketFromDatabase[],
 ): MarketMessageContents {
   const tradingMarketMessageContents: TradingMarketMessageContents = _.chain(perpetualMarkets)
     .keyBy(PerpetualMarketColumns.ticker)
     .mapValues((perpetualMarket: PerpetualMarketFromDatabase): TradingPerpetualMarketMessage => {
-
       return {
         id: perpetualMarket.id,
         openInterest: perpetualMarket.openInterest,

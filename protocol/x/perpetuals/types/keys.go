@@ -32,8 +32,8 @@ const (
 	// ParamsKey is the key to retrieve all params for the module.
 	ParamsKey = "Params"
 
-	// UpdatedOIKey is the key to retrieve the updated OI for the module.
-	UpdatedOIKey = "UpdatedOI"
+	// UpdatedOIKeyPrefix is the key to retrieve the updated OI for the module.
+	UpdatedOIKeyPrefix = "UpdatedOI"
 )
 
 // Module Accounts
