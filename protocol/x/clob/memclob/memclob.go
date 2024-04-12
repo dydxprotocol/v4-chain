@@ -1230,17 +1230,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	}
 
 	// Remove all canceled stateful order IDs from the memclob if they exist.
-	// If the slice has non-stateful order IDs or contains duplicates, panic.
-	if lib.ContainsDuplicates(canceledStatefulOrderIds) {
-		panic(
-			fmt.Sprintf(
-				"PurgeInvalidMemclobState: called with canceledStatefulOrderIds slice %v which contains duplicate order IDs",
-				canceledStatefulOrderIds,
-			),
-		)
-	}
-
-	for _, statefulOrderId := range canceledStatefulOrderIds {
+	for _, statefulOrderId := range lib.DedupeSlice(canceledStatefulOrderIds) {
 		statefulOrderId.MustBeStatefulOrder()
 
 		// TODO(DEC-798/DEC-1279): Update this logic once we've determined how to rewind `MsgRemoveOrder` messages.
@@ -1253,17 +1243,7 @@ func (m *MemClobPriceTimePriority) PurgeInvalidMemclobState(
 	}
 
 	// Remove all expired stateful order IDs from the memclob if they exist.
-	// If the slice has non-stateful order IDs or contains duplicates, panic.
-	if lib.ContainsDuplicates(expiredStatefulOrderIds) {
-		panic(
-			fmt.Sprintf(
-				"PurgeInvalidMemclobState: called with expiredStatefulOrderIds slice %v which contains duplicate order IDs",
-				expiredStatefulOrderIds,
-			),
-		)
-	}
-
-	for _, statefulOrderId := range expiredStatefulOrderIds {
+	for _, statefulOrderId := range lib.DedupeSlice(expiredStatefulOrderIds) {
 		statefulOrderId.MustBeStatefulOrder()
 
 		// TODO(DEC-1800): Ensure correct indexer updates are returned for expired stateful orders.

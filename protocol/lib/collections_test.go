@@ -5,9 +5,67 @@ import (
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestDedupeSlice(t *testing.T) {
+	tests := map[string]struct {
+		input  []types.OrderId
+		output []types.OrderId
+	}{
+		"Empty": {
+			input:  []types.OrderId{},
+			output: []types.OrderId{},
+		},
+		"No dupes": {
+			input: []types.OrderId{
+				constants.CancelConditionalOrder_Alice_Num1_Id0_Clob1_GTBT15.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+			},
+			output: []types.OrderId{
+				constants.CancelConditionalOrder_Alice_Num1_Id0_Clob1_GTBT15.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+			},
+		},
+		"Dedupe one": {
+			input: []types.OrderId{
+				constants.CancelConditionalOrder_Alice_Num1_Id0_Clob1_GTBT15.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+			},
+			output: []types.OrderId{
+				constants.CancelConditionalOrder_Alice_Num1_Id0_Clob1_GTBT15.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+			},
+		},
+		"Dedupe multiple": {
+			input: []types.OrderId{
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+				constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.OrderId,
+				constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId,
+				constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.OrderId,
+				constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.OrderId,
+				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10.OrderId,
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10.OrderId,
+			},
+			output: []types.OrderId{
+				constants.Order_Bob_Num0_Id0_Clob0_Sell200BTC_Price101_GTB20.OrderId,
+				constants.Order_Alice_Num0_Id0_Clob0_Buy6_Price10_GTB20.OrderId,
+				constants.LongTermOrder_Alice_Num1_Id0_Clob0_Sell15_Price5_GTBT10.OrderId,
+				constants.LongTermOrder_Dave_Num0_Id1_Clob0_Sell025BTC_Price50001_GTBT10.OrderId,
+			},
+		},
+	}
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			require.Equal(t, tc.output, lib.DedupeSlice(tc.input))
+		})
+	}
+}
 
 func TestContainsDuplicates(t *testing.T) {
 	tests := map[string]struct {

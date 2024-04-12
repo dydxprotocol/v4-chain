@@ -1499,7 +1499,8 @@ const GenesisState = `{
         "spread_buffer_ppm": 1500,
         "skew_factor_ppm": 500000,
         "order_size_pct_ppm": 100000,
-        "order_expiration_seconds": 2
+        "order_expiration_seconds": 2,
+        "activation_threshold_quote_quantums": "1000000000"
       }
     },
     "vest": {

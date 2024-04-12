@@ -456,8 +456,6 @@ github.com/cosmos/gogogateway v1.2.0/go.mod h1:iQpLkGWxYcnCdz5iAdLcRBSw3h7NXeOkZ
 github.com/cosmos/gogoproto v1.4.2/go.mod h1:cLxOsn1ljAHSV527CHOtaIP91kK6cCrZETRBrkzItWU=
 github.com/cosmos/gogoproto v1.4.12 h1:vB6Lbe/rtnYGjQuFxkPiPYiCybqFT8QvLipDZP8JpFE=
 github.com/cosmos/gogoproto v1.4.12/go.mod h1:LnZob1bXRdUoqMMtwYlcR3wjiElmlC+FkjaZRv1/eLY=
-github.com/cosmos/iavl v1.1.1-0.20240313174921-bfaf5fcda7b3 h1:1b7Bd9y4YC0SFFB9PQ4A9TVdc1vdlSLdSv2m+3mjS1Y=
-github.com/cosmos/iavl v1.1.1-0.20240313174921-bfaf5fcda7b3/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/cosmos/ibc-go/modules/capability v1.0.0 h1:r/l++byFtn7jHYa09zlAdSeevo8ci1mVZNO9+V0xsLE=
 github.com/cosmos/ibc-go/modules/capability v1.0.0/go.mod h1:D81ZxzjZAe0ZO5ambnvn1qedsFQ8lOwtqicG6liLBco=
 github.com/cosmos/ibc-go/v8 v8.0.0 h1:QKipnr/NGwc+9L7NZipURvmSIu+nw9jOIWTJuDBqOhg=
@@ -533,6 +531,8 @@ github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240326192503-dd116391188d h1:kHT+
 github.com/dydxprotocol/cosmos-sdk v0.50.6-0.20240326192503-dd116391188d/go.mod h1:NruCXox2SOkVq2ZC5Bs8s2sT+jjVqBEU59wXyZOkCkM=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d h1:HgLu1FD2oDFzlKW6/+SFXlH5Os8cwNTbplQIrQOWx8w=
 github.com/dydxprotocol/cosmos-sdk/store v1.0.3-0.20240326192503-dd116391188d/go.mod h1:zMcD3hfNwd0WMTpdRUhS3QxoCoEtBXWeoKsu3iaLBbQ=
+github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4 h1:/ylf3Y3CVT8uFy7E2C/wRcoOEcTMieNiymGqHGsLzKQ=
+github.com/dydxprotocol/iavl v1.1.1-0.20240408175732-0fca9d69cbc4/go.mod h1:8xIUkgVvwvVrBu81scdPty+/Dx9GqwHnAvXz4cwF7RY=
 github.com/eapache/go-resiliency v1.1.0/go.mod h1:kFI+JgMyC7bLPUVY133qvEBtVayf5mFgVsvEsIPBvNs=
 github.com/eapache/go-resiliency v1.3.0 h1:RRL0nge+cWGlxXbUzJ7yMcq6w2XBEr19dCN6HECGaT0=
 github.com/eapache/go-resiliency v1.3.0/go.mod h1:5yPzW0MIvSe0JDsv0v+DvcjEv2FyD6iZYSs1ZI+iQho=
