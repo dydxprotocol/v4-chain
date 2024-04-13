@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"math/big"
 	"sort"
 
 	errorsmod "cosmossdk.io/errors"
@@ -12,6 +11,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 )
 
@@ -187,35 +187,35 @@ func (k Keeper) GetAllAssets(
 func (k Keeper) GetNetCollateral(
 	ctx sdk.Context,
 	id uint32,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigNetCollateralQuoteQuantums *big.Int,
+	netCollateralQuoteQuantums *int256.Int,
 	err error,
 ) {
 	if id == types.AssetUsdc.Id {
-		return new(big.Int).Set(bigQuantums), nil
+		return new(int256.Int).Set(quantums), nil
 	}
 
 	// Get asset
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return big.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
+		return int256.NewInt(0), errorsmod.Wrap(types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero.
-	if bigQuantums.BitLen() == 0 {
-		return big.NewInt(0), nil
+	if quantums.Sign() == 0 {
+		return int256.NewInt(0), nil
 	}
 
 	// Balance is positive.
 	// TODO(DEC-581): add multi-collateral support.
-	if bigQuantums.Sign() == 1 {
-		return big.NewInt(0), types.ErrNotImplementedMulticollateral
+	if quantums.Sign() == 1 {
+		return int256.NewInt(0), types.ErrNotImplementedMulticollateral
 	}
 
 	// Balance is negative.
 	// TODO(DEC-582): add margin-trading support.
-	return big.NewInt(0), types.ErrNotImplementedMargin
+	return int256.NewInt(0), types.ErrNotImplementedMargin
 }
 
 // GetMarginRequirements returns the initial and maintenance margin-
@@ -223,32 +223,32 @@ func (k Keeper) GetNetCollateral(
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
+	initialMarginQuoteQuantums *int256.Int,
+	maintenanceMarginQuoteQuantums *int256.Int,
 	err error,
 ) {
 	// QuoteBalance does not contribute to any margin requirements.
 	if id == types.AssetUsdc.Id {
-		return big.NewInt(0), big.NewInt(0), nil
+		return int256.NewInt(0), int256.NewInt(0), nil
 	}
 
 	// Get asset
 	_, exists := k.GetAsset(ctx, id)
 	if !exists {
-		return big.NewInt(0), big.NewInt(0), errorsmod.Wrap(
+		return int256.NewInt(0), int256.NewInt(0), errorsmod.Wrap(
 			types.ErrAssetDoesNotExist, lib.UintToString(id))
 	}
 
 	// Balance is zero or positive.
-	if bigQuantums.Sign() >= 0 {
-		return big.NewInt(0), big.NewInt(0), nil
+	if quantums.Sign() >= 0 {
+		return int256.NewInt(0), int256.NewInt(0), nil
 	}
 
 	// Balance is negative.
 	// TODO(DEC-582): margin-trading
-	return big.NewInt(0), big.NewInt(0), types.ErrNotImplementedMargin
+	return int256.NewInt(0), int256.NewInt(0), types.ErrNotImplementedMargin
 }
 
 // ConvertAssetToCoin converts the given `assetId` and `quantums` used in `x/asset`,
@@ -271,9 +271,9 @@ func (k Keeper) GetMarginRequirements(
 func (k Keeper) ConvertAssetToCoin(
 	ctx sdk.Context,
 	assetId uint32,
-	quantums *big.Int,
+	quantums *int256.Int,
 ) (
-	convertedQuantums *big.Int,
+	convertedQuantums *int256.Int,
 	coin sdk.Coin,
 	err error,
 ) {
@@ -299,22 +299,19 @@ func (k Keeper) ConvertAssetToCoin(
 		)
 	}
 
-	bigRatDenomAmount := lib.BigMulPow10(
+	convertedQuantums = new(int256.Int).MulExp10(
 		quantums,
-		asset.AtomicResolution-asset.DenomExponent,
+		int64(asset.AtomicResolution-asset.DenomExponent),
 	)
 
-	// round down to get denom amount that was converted.
-	bigConvertedDenomAmount := lib.BigRatRound(bigRatDenomAmount, false)
+	bigConvertedDenomAmmount := convertedQuantums.ToBig()
 
-	bigRatConvertedQuantums := lib.BigMulPow10(
-		bigConvertedDenomAmount,
-		asset.DenomExponent-asset.AtomicResolution,
+	convertedQuantums.MulExp10(
+		convertedQuantums,
+		int64(asset.DenomExponent-asset.AtomicResolution),
 	)
 
-	bigConvertedQuantums := bigRatConvertedQuantums.Num()
-
-	return bigConvertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmount)), nil
+	return convertedQuantums, sdk.NewCoin(asset.Denom, sdkmath.NewIntFromBigInt(bigConvertedDenomAmmount)), nil
 }
 
 // IsPositionUpdatable returns whether position of an asset is updatable.

@@ -2,11 +2,11 @@ package keeper
 
 import (
 	"math"
-	"math/big"
 
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -196,7 +196,7 @@ func GetIsolatedPerpetualStateTransition(
 	perpetualPosition := updatedSubaccount.PerpetualPositions[0]
 	// If the size of the update and the position are the same, the perpetual update must have opened
 	// the position.
-	if perpetualUpdate.GetBigQuantums().Cmp(perpetualPosition.GetBigQuantums()) == 0 {
+	if perpetualUpdate.GetQuantums().Cmp(perpetualPosition.GetQuantums()) == 0 {
 		if len(settledUpdateWithUpdatedSubaccount.AssetUpdates) != 1 {
 			return nil, errorsmod.Wrapf(
 				types.ErrFailedToUpdateSubaccounts,
@@ -219,9 +219,9 @@ func GetIsolatedPerpetualStateTransition(
 		// Collateral equal to the quote currency asset position before the update was applied needs to be transferred.
 		// Subtract the delta from the updated subaccount's quote currency asset position size to get the size
 		// of the quote currency asset position.
-		quoteQuantumsBeforeUpdate := new(big.Int).Sub(
+		quoteQuantumsBeforeUpdate := new(int256.Int).Sub(
 			updatedSubaccount.GetUsdcPosition(),
-			settledUpdateWithUpdatedSubaccount.AssetUpdates[0].GetBigQuantums(),
+			settledUpdateWithUpdatedSubaccount.AssetUpdates[0].GetQuantums(),
 		)
 		return &types.IsolatedPerpetualPositionStateTransition{
 			SubaccountId:  updatedSubaccount.Id,

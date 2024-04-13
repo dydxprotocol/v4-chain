@@ -2,10 +2,10 @@ package types
 
 import (
 	"context"
-	"math/big"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
@@ -16,18 +16,18 @@ type ProductKeeper interface {
 	GetNetCollateral(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		quantums *int256.Int,
 	) (
-		bigNetCollateralQuoteQuantums *big.Int,
+		netCollateralQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetMarginRequirements(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		Quantumsuantums *int256.Int,
 	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
+		initialMarginQuoteQuantums *int256.Int,
+		maintenanceMarginQuoteQuantums *int256.Int,
 		err error,
 	)
 	IsPositionUpdatable(
@@ -44,9 +44,9 @@ type AssetsKeeper interface {
 	ConvertAssetToCoin(
 		ctx sdk.Context,
 		assetId uint32,
-		quantums *big.Int,
+		quantums *int256.Int,
 	) (
-		convertedQuantums *big.Int,
+		convertedQuantums *int256.Int,
 		coin sdk.Coin,
 		err error,
 	)
@@ -57,11 +57,11 @@ type PerpetualsKeeper interface {
 	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
+		quantums *int256.Int,
+		index *int256.Int,
 	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
+		netSettlement *int256.Int,
+		newFundingIndex *int256.Int,
 		err error,
 	)
 	GetPerpetual(
@@ -75,7 +75,7 @@ type PerpetualsKeeper interface {
 	GetInsuranceFundName(ctx sdk.Context, perpetualId uint32) (string, error)
 	GetInsuranceFundModuleAddress(ctx sdk.Context, perpetualId uint32) (sdk.AccAddress, error)
 	IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error)
-	ModifyOpenInterest(ctx sdk.Context, perpetualId uint32, bigQuantums *big.Int) error
+	ModifyOpenInterest(ctx sdk.Context, perpetualId uint32, quantums *int256.Int) error
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

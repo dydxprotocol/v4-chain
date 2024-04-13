@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assetstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	clobkeeper "github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
@@ -318,7 +319,7 @@ func (c *Client) CheckSubaccountCollateralization(
 		}
 		// Net collateral for USDC is the quantums of the position.
 		// Margin requirements for USDC are zero.
-		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetBigQuantums())
+		bigTotalNetCollateral.Add(bigTotalNetCollateral, assetPosition.GetQuantums().ToBig())
 	}
 
 	// Calculate the net collateral and maintenance margin for each of the perpetual positions.
@@ -341,10 +342,14 @@ func (c *Client) CheckSubaccountCollateralization(
 			)
 		}
 
-		bigQuantums := perpetualPosition.GetBigQuantums()
+		bigQuantums := perpetualPosition.GetQuantums().ToBig()
 
 		// Get the net collateral for the position.
-		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums)
+		bigNetCollateralQuoteQuantums := perpkeeper.GetNetNotionalInQuoteQuantums(
+			perpetual,
+			marketPrice,
+			int256.MustFromBig(bigQuantums),
+		).ToBig()
 		bigTotalNetCollateral.Add(bigTotalNetCollateral, bigNetCollateralQuoteQuantums)
 
 		liquidityTier, ok := liquidityTiers[perpetual.Params.LiquidityTier]
@@ -357,13 +362,13 @@ func (c *Client) CheckSubaccountCollateralization(
 		}
 
 		// Get the maintenance margin requirement for the position.
-		_, bigMaintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
+		_, maintenanceMarginQuoteQuantums := perpkeeper.GetMarginRequirementsInQuoteQuantums(
 			perpetual,
 			marketPrice,
 			liquidityTier,
-			bigQuantums,
+			int256.MustFromBig(bigQuantums),
 		)
-		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, bigMaintenanceMarginQuoteQuantums)
+		bigTotalMaintenanceMargin.Add(bigTotalMaintenanceMargin, maintenanceMarginQuoteQuantums.ToBig())
 	}
 
 	return clobkeeper.CanLiquidateSubaccount(bigTotalNetCollateral, bigTotalMaintenanceMargin),

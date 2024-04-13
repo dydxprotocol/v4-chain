@@ -9,6 +9,7 @@ import (
 
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	errorsmod "cosmossdk.io/errors"
 
@@ -555,20 +556,20 @@ func TestGetAllPerpetuals_Sorted(t *testing.T) {
 func TestModifyOpenInterest_Failure(t *testing.T) {
 	testCases := map[string]struct {
 		id                uint32
-		initOpenInterest  *big.Int
-		openInterestDelta *big.Int
+		initOpenInterest  *int256.Int
+		openInterestDelta *int256.Int
 		err               error
 	}{
 		"Would become negative": {
 			id:                0,
-			initOpenInterest:  big.NewInt(1_000),
-			openInterestDelta: big.NewInt(-1_001),
+			initOpenInterest:  int256.NewInt(1_000),
+			openInterestDelta: int256.NewInt(-1_001),
 			err:               types.ErrOpenInterestWouldBecomeNegative,
 		},
 		"Non-existent perp Id": {
 			id:                1111,
-			initOpenInterest:  big.NewInt(1_000),
-			openInterestDelta: big.NewInt(100),
+			initOpenInterest:  int256.NewInt(1_000),
+			openInterestDelta: int256.NewInt(100),
 			err:               types.ErrPerpetualDoesNotExist,
 		},
 	}
@@ -601,7 +602,7 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
 
 	for _, perp := range perps {
-		openInterestDeltaBaseQuantums := big.NewInt(2_000_000_000*(int64(perp.Params.Id)%2) - 1)
+		openInterestDeltaBaseQuantums := int256.NewInt(2_000_000_000*(int64(perp.Params.Id)%2) - 1)
 
 		// Add `openInterestDeltaBaseQuantums` to open interest which is initially 0.
 		err := pc.PerpetualsKeeper.ModifyOpenInterest(
@@ -622,8 +623,8 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 
 			require.Equal(
 				t,
-				big.NewInt(0), // open interest should remain 0
-				newPerp.OpenInterest.BigInt(),
+				int256.NewInt(0), // open interest should remain 0
+				int256.MustFromBig(newPerp.OpenInterest.BigInt()),
 			)
 		} else {
 			require.NoError(t, err)
@@ -634,7 +635,7 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 			require.Equal(
 				t,
 				openInterestDeltaBaseQuantums,
-				newPerp.OpenInterest.BigInt(),
+				int256.MustFromBig(newPerp.OpenInterest.BigInt()),
 			)
 		}
 
@@ -656,8 +657,8 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 
 			require.Equal(
 				t,
-				big.NewInt(0), // open interest should remain 0
-				newPerp.OpenInterest.BigInt(),
+				int256.NewInt(0), // open interest should remain 0
+				int256.MustFromBig(newPerp.OpenInterest.BigInt()),
 			)
 		} else {
 			require.NoError(t, err)
@@ -670,9 +671,9 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 				// open interest should be 2 * delta now
 				openInterestDeltaBaseQuantums.Mul(
 					openInterestDeltaBaseQuantums,
-					big.NewInt(2),
+					int256.NewInt(2),
 				),
-				newPerp.OpenInterest.BigInt(),
+				int256.MustFromBig(newPerp.OpenInterest.BigInt()),
 			)
 		}
 	}
@@ -681,219 +682,223 @@ func TestModifyOpenInterest_Mixed(t *testing.T) {
 func TestGetMarginRequirements_Success(t *testing.T) {
 	oneBip := math.Pow10(2)
 	tests := map[string]struct {
-		price                           uint64
-		exponent                        int32
-		baseCurrencyAtomicResolution    int32
-		bigBaseQuantums                 *big.Int
-		initialMarginPpm                uint32
-		maintenanceFractionPpm          uint32
-		openInterest                    *big.Int
-		openInterestLowerCap            uint64
-		openInterestUpperCap            uint64
-		bigExpectedInitialMarginPpm     *big.Int
-		bigExpectedMaintenanceMarginPpm *big.Int
+		price                        uint64
+		exponent                     int32
+		baseCurrencyAtomicResolution int32
+		baseQuantums                 *int256.Int
+		initialMarginPpm             uint32
+		maintenanceFractionPpm       uint32
+		openInterest                 *int256.Int
+		openInterestLowerCap         uint64
+		openInterestUpperCap         uint64
+		expectedInitialMarginPpm     *int256.Int
+		expectedMaintenanceMarginPpm *int256.Int
 	}{
 		"InitialMargin 2 BIPs, MaintenanceMargin 1 BIP, positive exponent, atomic resolution 8": {
-			price:                           5_555,
-			exponent:                        2,
-			baseCurrencyAtomicResolution:    -8,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 2),
-			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(7_777),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(3_889),
+			price:                        5_555,
+			exponent:                     2,
+			baseCurrencyAtomicResolution: -8,
+			baseQuantums:                 int256.NewInt(7_000),
+			initialMarginPpm:             uint32(oneBip * 2),
+			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
+			expectedInitialMarginPpm:     int256.NewInt(7_777),
+			expectedMaintenanceMarginPpm: int256.NewInt(3_889),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 4": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -4,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 100),
-			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(38_885_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(19_442_500),
+			price:                        5_555,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -4,
+			baseQuantums:                 int256.NewInt(7_000),
+			initialMarginPpm:             uint32(oneBip * 100),
+			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
+			expectedInitialMarginPpm:     int256.NewInt(38_885_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(19_442_500),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, positive exponent, atomic resolution 0": {
-			price:                           42,
-			exponent:                        5,
-			baseCurrencyAtomicResolution:    -0,
-			bigBaseQuantums:                 big.NewInt(88),
-			initialMarginPpm:                uint32(oneBip * 100),
-			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(3_696_000_000_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(1_848_000_000_000),
+			price:                        42,
+			exponent:                     5,
+			baseCurrencyAtomicResolution: -0,
+			baseQuantums:                 int256.NewInt(88),
+			initialMarginPpm:             uint32(oneBip * 100),
+			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
+			expectedInitialMarginPpm:     int256.NewInt(3_696_000_000_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(1_848_000_000_000),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, negative exponent, atomic resolution 6": {
-			price:                           42_000_000,
-			exponent:                        -2,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(-5_000),
-			initialMarginPpm:                uint32(oneBip * 100),
-			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(21_000_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(10_500_000),
+			price:                        42_000_000,
+			exponent:                     -2,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(-5_000),
+			initialMarginPpm:             uint32(oneBip * 100),
+			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
+			expectedInitialMarginPpm:     int256.NewInt(21_000_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(10_500_000),
 		},
 		"InitialMargin 10_000 BIPs (max), MaintenanceMargin 10_000 BIPs (max), atomic resolution 6": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 10_000),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(38_885_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(38_885_000),
+			price:                        5_555,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(7_000),
+			initialMarginPpm:             uint32(oneBip * 10_000),
+			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM
+			expectedInitialMarginPpm:     int256.NewInt(38_885_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(38_885_000),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 100 BIPs, atomic resolution 6": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 100),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(388_850),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(388_850),
+			price:                        5_555,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(7_000),
+			initialMarginPpm:             uint32(oneBip * 100),
+			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM
+			expectedInitialMarginPpm:     int256.NewInt(388_850),
+			expectedMaintenanceMarginPpm: int256.NewInt(388_850),
 		},
 		"InitialMargin 0.02 BIPs, MaintenanceMargin 0.01 BIPs, positive exponent, atomic resolution 6": {
-			price:                           5_555,
-			exponent:                        3,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(-7_000),
-			initialMarginPpm:                uint32(oneBip * 0.02),
-			maintenanceFractionPpm:          uint32(500_000), // 50% of IM
-			bigExpectedInitialMarginPpm:     big.NewInt(77_770),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(38_885),
+			price:                        5_555,
+			exponent:                     3,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(-7_000),
+			initialMarginPpm:             uint32(oneBip * 0.02),
+			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
+			expectedInitialMarginPpm:     int256.NewInt(77_770),
+			expectedMaintenanceMarginPpm: int256.NewInt(38_885),
 		},
 		"InitialMargin 0 BIPs (min), MaintenanceMargin 0 BIPs (min), atomic resolution 6": {
-			price:                           5_555,
-			exponent:                        0,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(7_000),
-			initialMarginPpm:                uint32(oneBip * 0),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM,
-			bigExpectedInitialMarginPpm:     big.NewInt(0),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(0),
+			price:                        5_555,
+			exponent:                     0,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(7_000),
+			initialMarginPpm:             uint32(oneBip * 0),
+			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
+			expectedInitialMarginPpm:     int256.NewInt(0),
+			expectedMaintenanceMarginPpm: int256.NewInt(0),
 		},
 		"Price is zero, atomic resolution 6": {
-			price:                           0,
-			exponent:                        1,
-			baseCurrencyAtomicResolution:    -6,
-			bigBaseQuantums:                 big.NewInt(-7_000),
-			initialMarginPpm:                uint32(oneBip * 1),
-			maintenanceFractionPpm:          uint32(1_000_000), // 100% of IM,
-			bigExpectedInitialMarginPpm:     big.NewInt(0),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(0),
+			price:                        0,
+			exponent:                     1,
+			baseCurrencyAtomicResolution: -6,
+			baseQuantums:                 int256.NewInt(-7_000),
+			initialMarginPpm:             uint32(oneBip * 1),
+			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
+			expectedInitialMarginPpm:     int256.NewInt(0),
+			expectedMaintenanceMarginPpm: int256.NewInt(0),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
 			exponent:                     1,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
+			baseQuantums:                 new(int256.Int).SetUint64(math.MaxUint64),
 			initialMarginPpm:             uint32(oneBip * 1),
 			maintenanceFractionPpm:       uint32(1_000_000), // 100% of IM,
-			bigExpectedInitialMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349109", 10),
+			expectedInitialMarginPpm: int256.MustFromBig(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("340282366920938463426481119284349109", 10),
+				),
 			),
-			bigExpectedMaintenanceMarginPpm: big_testutil.MustFirst(
-				new(big.Int).SetString("340282366920938463426481119284349109", 10),
+			expectedMaintenanceMarginPpm: int256.MustFromBig(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("340282366920938463426481119284349109", 10),
+				),
 			),
 		},
 		"InitialMargin 100 BIPs, MaintenanceMargin 50 BIPs, atomic resolution 6": {
 			price:                        5_555,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(7_000),
+			baseQuantums:                 int256.NewInt(7_000),
 			initialMarginPpm:             uint32(oneBip * 100),
 			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = 10_000 * 38_885_000 / 1_000_000 ~= 388_850.
-			bigExpectedInitialMarginPpm:     big.NewInt(388_850),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(388_850 / 2),
+			expectedInitialMarginPpm:     int256.NewInt(388_850),
+			expectedMaintenanceMarginPpm: int256.NewInt(388_850 / 2),
 		},
 		"InitialMargin 20%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(12_000),
+			baseQuantums:                 int256.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
 			maintenanceFractionPpm:       uint32(500_000), // 50% of IM
 			// quoteQuantums = 36_750 * 12_000 = 441_000_000
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
-			bigExpectedInitialMarginPpm:     big.NewInt(88_200_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+			expectedInitialMarginPpm:     int256.NewInt(88_200_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(88_200_000 / 2),
 		},
 		"InitialMargin 5%, MaintenanceMargin 3%, atomic resolution 6": {
 			price:                        123_456,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(74_523),
+			baseQuantums:                 int256.NewInt(74_523),
 			initialMarginPpm:             uint32(50_000),
 			maintenanceFractionPpm:       uint32(600_000), // 60% of IM
 			// quoteQuantums = 123_456 * 74_523 = 9_200_311_488
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = 50_000 * 9_200_311_488 / 1_000_000 ~= 460_015_575
-			bigExpectedInitialMarginPpm:     big.NewInt(460_015_575),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(276_009_345),
+			expectedInitialMarginPpm:     int256.NewInt(460_015_575),
+			expectedMaintenanceMarginPpm: int256.NewInt(276_009_345),
 		},
 		"InitialMargin 25%, MaintenanceMargin 15%, atomic resolution 6": {
 			price:                        123_456,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(74_523),
+			baseQuantums:                 int256.NewInt(74_523),
 			initialMarginPpm:             uint32(250_000),
 			maintenanceFractionPpm:       uint32(600_000), // 60% of IM
 			// quoteQuantums = 123_456 * 74_523 = 9_200_311_488
-			bigExpectedInitialMarginPpm:     big.NewInt(2_300_077_872),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(1_380_046_724), // Rounded up
+			expectedInitialMarginPpm:     int256.NewInt(2_300_077_872),
+			expectedMaintenanceMarginPpm: int256.NewInt(1_380_046_724), // Rounded up
 		},
 		"OIMF: IM 20%, scaled to 60%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(12_000),
+			baseQuantums:                 int256.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
-			maintenanceFractionPpm:       uint32(500_000),         // 50% of IM
-			openInterest:                 big.NewInt(408_163_265), // 408.163265
+			maintenanceFractionPpm:       uint32(500_000),            // 50% of IM
+			openInterest:                 int256.NewInt(408_163_265), // 408.163265
 			openInterestLowerCap:         10_000_000_000_000,
 			openInterestUpperCap:         20_000_000_000_000,
 			// quoteQuantums = 36_750 * 12_000 = 441_000_000
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
-			bigExpectedInitialMarginPpm:     big.NewInt(88_200_000 * 3),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+			expectedInitialMarginPpm:     int256.NewInt(88_200_000 * 3),
+			expectedMaintenanceMarginPpm: int256.NewInt(88_200_000 / 2),
 		},
 		"OIMF: IM 20%, scaled to 100%, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(12_000),
+			baseQuantums:                 int256.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
-			maintenanceFractionPpm:       uint32(500_000),           // 50% of IM
-			openInterest:                 big.NewInt(1_000_000_000), // 1000 or ~$36mm notional
+			maintenanceFractionPpm:       uint32(500_000),              // 50% of IM
+			openInterest:                 int256.NewInt(1_000_000_000), // 1000 or ~$36mm notional
 			openInterestLowerCap:         10_000_000_000_000,
 			openInterestUpperCap:         20_000_000_000_000,
 			// quoteQuantums = 36_750 * 12_000 = 441_000_000
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = 200_000 * 441_000_000 / 1_000_000 ~= 88_200_000
-			bigExpectedInitialMarginPpm:     big.NewInt(441_000_000),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+			expectedInitialMarginPpm:     int256.NewInt(441_000_000),
+			expectedMaintenanceMarginPpm: int256.NewInt(88_200_000 / 2),
 		},
 		"OIMF: IM 20%, lower_cap < realistic open interest < upper_cap, MaintenanceMargin 10%, atomic resolution 6": {
 			price:                        36_750,
 			exponent:                     0,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              big.NewInt(12_000),
+			baseQuantums:                 int256.NewInt(12_000),
 			initialMarginPpm:             uint32(200_000),
-			maintenanceFractionPpm:       uint32(500_000),           // 50% of IM
-			openInterest:                 big.NewInt(1_123_456_789), // 1123.456 or ~$41mm notional
+			maintenanceFractionPpm:       uint32(500_000),              // 50% of IM
+			openInterest:                 int256.NewInt(1_123_456_789), // 1123.456 or ~$41mm notional
 			openInterestLowerCap:         25_000_000_000_000,
 			openInterestUpperCap:         50_000_000_000_000,
 			// quoteQuantums = 36_750 * 12_000 = 441_000_000
 			// initialMarginPpmQuoteQuantums = initialMarginPpm * quoteQuantums / 1_000_000
 			// = ((1123.456789 * 36750 - 25000000) / 25000000 * 0.8 + 0.2) * 441_000_000
 			// ~= 318042667
-			bigExpectedInitialMarginPpm:     big.NewInt(318_042_667),
-			bigExpectedMaintenanceMarginPpm: big.NewInt(88_200_000 / 2),
+			expectedInitialMarginPpm:     int256.NewInt(318_042_667),
+			expectedMaintenanceMarginPpm: int256.NewInt(88_200_000 / 2),
 		},
 	}
 
@@ -969,27 +974,27 @@ func TestGetMarginRequirements_Success(t *testing.T) {
 			}
 
 			// Verify initial and maintenance margin requirements are calculated correctly.
-			bigInitialMargin, bigMaintenanceMargin, err := pc.PerpetualsKeeper.GetMarginRequirements(
+			initialMargin, maintenanceMargin, err := pc.PerpetualsKeeper.GetMarginRequirements(
 				pc.Ctx,
 				perpetual.Params.Id,
-				tc.bigBaseQuantums,
+				tc.baseQuantums,
 			)
 			require.NoError(t, err)
 
-			if tc.bigExpectedInitialMarginPpm.Cmp(bigInitialMargin) != 0 {
+			if tc.expectedInitialMarginPpm.Cmp(initialMargin) != 0 {
 				t.Fatalf(
 					"%s: expectedInitialMargin: %s, initialMargin: %s",
 					name,
-					tc.bigExpectedInitialMarginPpm.String(),
-					bigInitialMargin.String())
+					tc.expectedInitialMarginPpm.String(),
+					initialMargin.String())
 			}
 
-			if tc.bigExpectedMaintenanceMarginPpm.Cmp(bigMaintenanceMargin) != 0 {
+			if tc.expectedMaintenanceMarginPpm.Cmp(maintenanceMargin) != 0 {
 				t.Fatalf(
 					"%s: expectedMaintenanceMargin: %s, maintenanceMargin: %s",
 					name,
-					tc.bigExpectedMaintenanceMarginPpm.String(),
-					bigMaintenanceMargin.String())
+					tc.expectedMaintenanceMarginPpm.String(),
+					maintenanceMargin.String())
 			}
 		})
 	}
@@ -1001,7 +1006,7 @@ func TestGetMarginRequirements_PerpetualNotFound(t *testing.T) {
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
@@ -1026,7 +1031,7 @@ func TestGetMarginRequirements_MarketNotFound(t *testing.T) {
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 
 	expectedErrorStr := fmt.Sprintf(
@@ -1057,7 +1062,7 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 	_, _, err := pc.PerpetualsKeeper.GetMarginRequirements(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 
 	require.EqualError(
@@ -1070,61 +1075,63 @@ func TestGetMarginRequirements_LiquidityTierNotFound(t *testing.T) {
 
 func TestGetNetNotional_Success(t *testing.T) {
 	tests := map[string]struct {
-		price                               uint64
-		exponent                            int32
-		baseCurrencyAtomicResolution        int32
-		bigBaseQuantums                     *big.Int
-		bigExpectedNetNotionalQuoteQuantums *big.Int
+		price                            uint64
+		exponent                         int32
+		baseCurrencyAtomicResolution     int32
+		baseQuantums                     *int256.Int
+		expectedNetNotionalQuoteQuantums *int256.Int
 	}{
 		"Positive exponent, atomic resolution 6, long position": {
-			price:                               5_555,
-			exponent:                            2,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(3_888_500_000),
+			price:                            5_555,
+			exponent:                         2,
+			baseCurrencyAtomicResolution:     -6,
+			baseQuantums:                     int256.NewInt(7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(3_888_500_000),
 		},
 		"Positive exponent, atomic resolution 6, short position": {
-			price:                               5_555,
-			exponent:                            2,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(-7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-3_888_500_000),
+			price:                            5_555,
+			exponent:                         2,
+			baseCurrencyAtomicResolution:     -6,
+			baseQuantums:                     int256.NewInt(-7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(-3_888_500_000),
 		},
 		"Negative exponent, atomic resolution 6, short position": {
-			price:                               5_555,
-			exponent:                            -2,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(-7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-388_850),
+			price:                            5_555,
+			exponent:                         -2,
+			baseCurrencyAtomicResolution:     -6,
+			baseQuantums:                     int256.NewInt(-7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(-388_850),
 		},
 		"Zero exponent, atomic resolution 6, short position": {
-			price:                               5_555,
-			exponent:                            0,
-			baseCurrencyAtomicResolution:        -6,
-			bigBaseQuantums:                     big.NewInt(-7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(-38_885_000),
+			price:                            5_555,
+			exponent:                         0,
+			baseCurrencyAtomicResolution:     -6,
+			baseQuantums:                     int256.NewInt(-7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(-38_885_000),
 		},
 		"Positive exponent, atomic resolution 4, long position": {
-			price:                               5_555,
-			exponent:                            4,
-			baseCurrencyAtomicResolution:        -4,
-			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(38_885_000_000_000),
+			price:                            5_555,
+			exponent:                         4,
+			baseCurrencyAtomicResolution:     -4,
+			baseQuantums:                     int256.NewInt(7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(38_885_000_000_000),
 		},
 		"Positive exponent, atomic resolution 0, long position": {
-			price:                               5_555,
-			exponent:                            4,
-			baseCurrencyAtomicResolution:        -0,
-			bigBaseQuantums:                     big.NewInt(7_000),
-			bigExpectedNetNotionalQuoteQuantums: big.NewInt(388_850_000_000_000_000),
+			price:                            5_555,
+			exponent:                         4,
+			baseCurrencyAtomicResolution:     -0,
+			baseQuantums:                     int256.NewInt(7_000),
+			expectedNetNotionalQuoteQuantums: int256.NewInt(388_850_000_000_000_000),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
 			exponent:                     1,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
-			bigExpectedNetNotionalQuoteQuantums: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+			baseQuantums:                 new(int256.Int).SetUint64(math.MaxUint64),
+			expectedNetNotionalQuoteQuantums: int256.MustFromBig(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				),
 			),
 		},
 	}
@@ -1170,19 +1177,19 @@ func TestGetNetNotional_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify collateral requirements are calculated correctly.
-			bigNotionalQuoteQuantums, err := pc.PerpetualsKeeper.GetNetNotional(
+			notionalQuoteQuantums, err := pc.PerpetualsKeeper.GetNetNotional(
 				pc.Ctx,
 				perpetual.Params.Id,
-				tc.bigBaseQuantums,
+				tc.baseQuantums,
 			)
 			require.NoError(t, err)
 
-			if tc.bigExpectedNetNotionalQuoteQuantums.Cmp(bigNotionalQuoteQuantums) != 0 {
+			if tc.expectedNetNotionalQuoteQuantums.Cmp(notionalQuoteQuantums) != 0 {
 				t.Fatalf(
 					"%s: expectedNetNotionalQuoteQuantums: %s, collateralQuoteQuantums: %s",
 					name,
-					tc.bigExpectedNetNotionalQuoteQuantums.String(),
-					bigNotionalQuoteQuantums.String(),
+					tc.expectedNetNotionalQuoteQuantums.String(),
+					notionalQuoteQuantums.String(),
 				)
 			}
 		})
@@ -1195,7 +1202,7 @@ func TestGetNetNotional_PerpetualNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNetNotional(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
@@ -1220,7 +1227,7 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNetNotional(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
@@ -1233,62 +1240,64 @@ func TestGetNetNotional_MarketNotFound(t *testing.T) {
 
 func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 	tests := map[string]struct {
-		price                              uint64
-		exponent                           int32
-		baseCurrencyAtomicResolution       int32
-		bigQuoteQuantums                   *big.Int
-		bigExpectedNetNotionalBaseQuantums *big.Int
+		price                           uint64
+		exponent                        int32
+		baseCurrencyAtomicResolution    int32
+		quoteQuantums                   *int256.Int
+		expectedNetNotionalBaseQuantums *int256.Int
 	}{
 		"Positive exponent, atomic resolution 6, long position": {
-			price:                              5_555,
-			exponent:                           2,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(3_888_500_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
+			price:                           5_555,
+			exponent:                        2,
+			baseCurrencyAtomicResolution:    -6,
+			quoteQuantums:                   int256.NewInt(3_888_500_000),
+			expectedNetNotionalBaseQuantums: int256.NewInt(7_000),
 		},
 		"Positive exponent, atomic resolution 6, short position": {
-			price:                              5_555,
-			exponent:                           2,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(-3_888_500_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
+			price:                           5_555,
+			exponent:                        2,
+			baseCurrencyAtomicResolution:    -6,
+			quoteQuantums:                   int256.NewInt(-3_888_500_000),
+			expectedNetNotionalBaseQuantums: int256.NewInt(-7_000),
 		},
 		"Negative exponent, atomic resolution 6, short position": {
-			price:                              5_555,
-			exponent:                           -2,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(-388_850),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
+			price:                           5_555,
+			exponent:                        -2,
+			baseCurrencyAtomicResolution:    -6,
+			quoteQuantums:                   int256.NewInt(-388_850),
+			expectedNetNotionalBaseQuantums: int256.NewInt(-7_000),
 		},
 		"Zero exponent, atomic resolution 6, short position": {
-			price:                              5_555,
-			exponent:                           0,
-			baseCurrencyAtomicResolution:       -6,
-			bigQuoteQuantums:                   big.NewInt(-38_885_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(-7_000),
+			price:                           5_555,
+			exponent:                        0,
+			baseCurrencyAtomicResolution:    -6,
+			quoteQuantums:                   int256.NewInt(-38_885_000),
+			expectedNetNotionalBaseQuantums: int256.NewInt(-7_000),
 		},
 		"Positive exponent, atomic resolution 4, long position": {
-			price:                              5_555,
-			exponent:                           4,
-			baseCurrencyAtomicResolution:       -4,
-			bigQuoteQuantums:                   big.NewInt(38_885_000_000_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
+			price:                           5_555,
+			exponent:                        4,
+			baseCurrencyAtomicResolution:    -4,
+			quoteQuantums:                   int256.NewInt(38_885_000_000_000),
+			expectedNetNotionalBaseQuantums: int256.NewInt(7_000),
 		},
 		"Positive exponent, atomic resolution 0, long position": {
-			price:                              5_555,
-			exponent:                           4,
-			baseCurrencyAtomicResolution:       -0,
-			bigQuoteQuantums:                   big.NewInt(388_850_000_000_000_000),
-			bigExpectedNetNotionalBaseQuantums: big.NewInt(7_000),
+			price:                           5_555,
+			exponent:                        4,
+			baseCurrencyAtomicResolution:    -0,
+			quoteQuantums:                   int256.NewInt(388_850_000_000_000_000),
+			expectedNetNotionalBaseQuantums: int256.NewInt(7_000),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
 			exponent:                     1,
 			baseCurrencyAtomicResolution: -6,
-			bigQuoteQuantums: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+			quoteQuantums: int256.MustFromBig(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				),
 			),
-			bigExpectedNetNotionalBaseQuantums: new(big.Int).SetUint64(math.MaxUint64),
+			expectedNetNotionalBaseQuantums: new(int256.Int).SetUint64(math.MaxUint64),
 		},
 	}
 
@@ -1332,19 +1341,19 @@ func TestGetNotionalInBaseQuantums_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify collateral requirements are calculated correctly.
-			bigNotionalBaseQuantums, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
+			notionalBaseQuantums, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
 				pc.Ctx,
 				perpetual.Params.Id,
-				tc.bigQuoteQuantums,
+				tc.quoteQuantums,
 			)
 			require.NoError(t, err)
 
-			if tc.bigExpectedNetNotionalBaseQuantums.Cmp(bigNotionalBaseQuantums) != 0 {
+			if tc.expectedNetNotionalBaseQuantums.Cmp(notionalBaseQuantums) != 0 {
 				t.Fatalf(
 					"%s: expectedNetNotionalBaseQuantums: %s, collateralBaseQuantums: %s",
 					name,
-					tc.bigExpectedNetNotionalBaseQuantums.String(),
-					bigNotionalBaseQuantums.String(),
+					tc.expectedNetNotionalBaseQuantums.String(),
+					notionalBaseQuantums.String(),
 				)
 			}
 		})
@@ -1357,7 +1366,7 @@ func TestGetNotionalInBaseQuantums_PerpetualNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
@@ -1382,7 +1391,7 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNotionalInBaseQuantums(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
@@ -1395,61 +1404,63 @@ func TestGetNotionalInBaseQuantums_MarketNotFound(t *testing.T) {
 
 func TestGetNetCollateral_Success(t *testing.T) {
 	tests := map[string]struct {
-		price                                 uint64
-		exponent                              int32
-		baseCurrencyAtomicResolution          int32
-		bigBaseQuantums                       *big.Int
-		bigExpectedNetCollateralQuoteQuantums *big.Int
+		price                              uint64
+		exponent                           int32
+		baseCurrencyAtomicResolution       int32
+		baseQuantums                       *int256.Int
+		expectedNetCollateralQuoteQuantums *int256.Int
 	}{
 		"Positive exponent, atomic resolution 6, long position": {
-			price:                                 5_555,
-			exponent:                              2,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(3_888_500_000),
+			price:                              5_555,
+			exponent:                           2,
+			baseCurrencyAtomicResolution:       -6,
+			baseQuantums:                       int256.NewInt(7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(3_888_500_000),
 		},
 		"Positive exponent, atomic resolution 6, short position": {
-			price:                                 5_555,
-			exponent:                              2,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(-7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-3_888_500_000),
+			price:                              5_555,
+			exponent:                           2,
+			baseCurrencyAtomicResolution:       -6,
+			baseQuantums:                       int256.NewInt(-7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(-3_888_500_000),
 		},
 		"Negative exponent, atomic resolution 6, short position": {
-			price:                                 5_555,
-			exponent:                              -2,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(-7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-388_850),
+			price:                              5_555,
+			exponent:                           -2,
+			baseCurrencyAtomicResolution:       -6,
+			baseQuantums:                       int256.NewInt(-7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(-388_850),
 		},
 		"Zero exponent, atomic resolution 6, short position": {
-			price:                                 5_555,
-			exponent:                              0,
-			baseCurrencyAtomicResolution:          -6,
-			bigBaseQuantums:                       big.NewInt(-7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(-38_885_000),
+			price:                              5_555,
+			exponent:                           0,
+			baseCurrencyAtomicResolution:       -6,
+			baseQuantums:                       int256.NewInt(-7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(-38_885_000),
 		},
 		"Positive exponent, atomic resolution 4, long position": {
-			price:                                 5_555,
-			exponent:                              4,
-			baseCurrencyAtomicResolution:          -4,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(38_885_000_000_000),
+			price:                              5_555,
+			exponent:                           4,
+			baseCurrencyAtomicResolution:       -4,
+			baseQuantums:                       int256.NewInt(7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(38_885_000_000_000),
 		},
 		"Positive exponent, atomic resolution 0, long position": {
-			price:                                 5_555,
-			exponent:                              4,
-			baseCurrencyAtomicResolution:          -0,
-			bigBaseQuantums:                       big.NewInt(7_000),
-			bigExpectedNetCollateralQuoteQuantums: big.NewInt(388_850_000_000_000_000),
+			price:                              5_555,
+			exponent:                           4,
+			baseCurrencyAtomicResolution:       -0,
+			baseQuantums:                       int256.NewInt(7_000),
+			expectedNetCollateralQuoteQuantums: int256.NewInt(388_850_000_000_000_000),
 		},
 		"Price and quantums are max uints": {
 			price:                        math.MaxUint64,
 			exponent:                     1,
 			baseCurrencyAtomicResolution: -6,
-			bigBaseQuantums:              new(big.Int).SetUint64(math.MaxUint64),
-			bigExpectedNetCollateralQuoteQuantums: big_testutil.MustFirst(
-				new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+			baseQuantums:                 new(int256.Int).SetUint64(math.MaxUint64),
+			expectedNetCollateralQuoteQuantums: int256.MustFromBig(
+				big_testutil.MustFirst(
+					new(big.Int).SetString("3402823669209384634264811192843491082250", 10),
+				),
 			),
 		},
 	}
@@ -1495,19 +1506,19 @@ func TestGetNetCollateral_Success(t *testing.T) {
 			require.NoError(t, err)
 
 			// Verify collateral requirements are calculated correctly.
-			bigCollateralQuoteQuantums, err := pc.PerpetualsKeeper.GetNetCollateral(
+			collateralQuoteQuantums, err := pc.PerpetualsKeeper.GetNetCollateral(
 				pc.Ctx,
 				perpetual.Params.Id,
-				tc.bigBaseQuantums,
+				tc.baseQuantums,
 			)
 			require.NoError(t, err)
 
-			if tc.bigExpectedNetCollateralQuoteQuantums.Cmp(bigCollateralQuoteQuantums) != 0 {
+			if tc.expectedNetCollateralQuoteQuantums.Cmp(collateralQuoteQuantums) != 0 {
 				t.Fatalf(
 					"%s: expectedNetCollateralQuoteQuantums: %s, collateralQuoteQuantums: %s",
 					name,
-					tc.bigExpectedNetCollateralQuoteQuantums.String(),
-					bigCollateralQuoteQuantums.String(),
+					tc.expectedNetCollateralQuoteQuantums.String(),
+					collateralQuoteQuantums.String(),
 				)
 			}
 		})
@@ -1520,7 +1531,7 @@ func TestGetNetCollateral_PerpetualNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNetCollateral(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
@@ -1545,7 +1556,7 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 	_, err := pc.PerpetualsKeeper.GetNetCollateral(
 		pc.Ctx,
 		perpetual.Params.Id,
-		big.NewInt(-1),
+		int256.NewInt(-1),
 	)
 	expectedErrorStr := fmt.Sprintf(
 		"Market ID %d does not exist on perpetual ID %d",
@@ -1558,58 +1569,58 @@ func TestGetNetCollateral_MarketNotFound(t *testing.T) {
 
 func TestGetSettlementPpm_Success(t *testing.T) {
 	tests := map[string]struct {
-		quantums              *big.Int
-		perpetualFundingIndex *big.Int
-		prevIndex             *big.Int
-		expectedSettlementPpm *big.Int
+		quantums              *int256.Int
+		perpetualFundingIndex *int256.Int
+		prevIndex             *int256.Int
+		expectedSettlementPpm *int256.Int
 	}{
 		"is long, index went from negative to positive": {
-			quantums:              big.NewInt(30_000),
-			prevIndex:             big.NewInt(-100),
-			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlementPpm: big.NewInt(-6_000_000),
+			quantums:              int256.NewInt(30_000),
+			prevIndex:             int256.NewInt(-100),
+			perpetualFundingIndex: int256.NewInt(100),
+			expectedSettlementPpm: int256.NewInt(-6_000_000),
 		},
 		"is long, index unchanged": {
-			quantums:              big.NewInt(1_000_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlementPpm: big.NewInt(0),
+			quantums:              int256.NewInt(1_000_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(100),
+			expectedSettlementPpm: int256.NewInt(0),
 		},
 		"is long, index went from positive to zero": {
-			quantums:              big.NewInt(10_000_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlementPpm: big.NewInt(1_000_000_000),
+			quantums:              int256.NewInt(10_000_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(0),
+			expectedSettlementPpm: int256.NewInt(1_000_000_000),
 		},
 		"is long, index went from positive to negative": {
-			quantums:              big.NewInt(10_000_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(-200),
-			expectedSettlementPpm: big.NewInt(3_000_000_000),
+			quantums:              int256.NewInt(10_000_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(-200),
+			expectedSettlementPpm: int256.NewInt(3_000_000_000),
 		},
 		"is short, index went from negative to positive": {
-			quantums:              big.NewInt(-30_000),
-			prevIndex:             big.NewInt(-100),
-			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlementPpm: big.NewInt(6_000_000),
+			quantums:              int256.NewInt(-30_000),
+			prevIndex:             int256.NewInt(-100),
+			perpetualFundingIndex: int256.NewInt(100),
+			expectedSettlementPpm: int256.NewInt(6_000_000),
 		},
 		"is short, index unchanged": {
-			quantums:              big.NewInt(-1_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(100),
-			expectedSettlementPpm: big.NewInt(0),
+			quantums:              int256.NewInt(-1_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(100),
+			expectedSettlementPpm: int256.NewInt(0),
 		},
 		"is short, index went from positive to zero": {
-			quantums:              big.NewInt(-5_000_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(0),
-			expectedSettlementPpm: big.NewInt(-500_000_000),
+			quantums:              int256.NewInt(-5_000_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(0),
+			expectedSettlementPpm: int256.NewInt(-500_000_000),
 		},
 		"is short, index went from positive to negative": {
-			quantums:              big.NewInt(-5_000_000),
-			prevIndex:             big.NewInt(100),
-			perpetualFundingIndex: big.NewInt(-50),
-			expectedSettlementPpm: big.NewInt(-750_000_000),
+			quantums:              int256.NewInt(-5_000_000),
+			prevIndex:             int256.NewInt(100),
+			perpetualFundingIndex: int256.NewInt(-50),
+			expectedSettlementPpm: int256.NewInt(-750_000_000),
 		},
 	}
 
@@ -1630,7 +1641,7 @@ func TestGetSettlementPpm_Success(t *testing.T) {
 			err = pc.PerpetualsKeeper.ModifyFundingIndex(pc.Ctx, perpetualId, tc.perpetualFundingIndex)
 			require.NoError(t, err)
 
-			bigNetSettlementPpm, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlementPpm(
+			netSettlementPpm, newFundingIndex, err := pc.PerpetualsKeeper.GetSettlementPpm(
 				pc.Ctx,
 				perpetualId,
 				tc.quantums,
@@ -1645,7 +1656,7 @@ func TestGetSettlementPpm_Success(t *testing.T) {
 
 			require.Equal(t,
 				0,
-				tc.expectedSettlementPpm.Cmp(bigNetSettlementPpm),
+				tc.expectedSettlementPpm.Cmp(netSettlementPpm),
 			)
 		})
 	}
@@ -1657,8 +1668,8 @@ func TestGetSettlementPpm_PerpetualNotFound(t *testing.T) {
 	_, _, err := pc.PerpetualsKeeper.GetSettlementPpm(
 		pc.Ctx,
 		nonExistentPerpetualId, // perpetualId
-		big.NewInt(-100),       // quantum
-		big.NewInt(0),          // index
+		int256.NewInt(-100),    // quantum
+		int256.NewInt(0),       // index
 	)
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
 	require.ErrorIs(t, err, types.ErrPerpetualDoesNotExist)
@@ -1670,7 +1681,7 @@ func TestModifyFundingIndex_Success(t *testing.T) {
 	perps := keepertest.CreateLiquidityTiersAndNPerpetuals(t, pc.Ctx, pc.PerpetualsKeeper, pc.PricesKeeper, 100)
 
 	for _, perp := range perps {
-		testFundingIndexDelta := big.NewInt(2*(int64(perp.Params.Id)%2) - 1)
+		testFundingIndexDelta := int256.NewInt(2*(int64(perp.Params.Id)%2) - 1)
 
 		err := pc.PerpetualsKeeper.ModifyFundingIndex(
 			pc.Ctx,
@@ -1685,7 +1696,7 @@ func TestModifyFundingIndex_Success(t *testing.T) {
 		require.Equal(
 			t,
 			testFundingIndexDelta,
-			newPerp.FundingIndex.BigInt(),
+			int256.MustFromBig(newPerp.FundingIndex.BigInt()),
 		)
 	}
 }
@@ -1697,7 +1708,7 @@ func TestModifyFundingIndex_PerpetualDoesNotExist(t *testing.T) {
 	err := pc.PerpetualsKeeper.ModifyFundingIndex(
 		pc.Ctx,
 		nonExistentPerpetualId,
-		big.NewInt(1),
+		int256.NewInt(1),
 	)
 
 	require.EqualError(t, err, errorsmod.Wrap(types.ErrPerpetualDoesNotExist, fmt.Sprint(nonExistentPerpetualId)).Error())
@@ -1707,18 +1718,18 @@ func TestModifyFundingIndex_PerpetualDoesNotExist(t *testing.T) {
 func TestModifyFundingIndex_IntegerOverflowUnderflow(t *testing.T) {
 	tests := map[string]struct {
 		perpetualId         uint32
-		fundingIndexDelta   *big.Int
-		initialFundingIndex *big.Int
+		fundingIndexDelta   *int256.Int
+		initialFundingIndex *int256.Int
 	}{
 		"funding index overflow": {
 			perpetualId:         0,
-			fundingIndexDelta:   big.NewInt(math.MaxInt64),
-			initialFundingIndex: big.NewInt(1),
+			fundingIndexDelta:   int256.NewInt(math.MaxInt64),
+			initialFundingIndex: int256.NewInt(1),
 		},
 		"funding index underflow": {
 			perpetualId:         0,
-			fundingIndexDelta:   big.NewInt(math.MinInt64),
-			initialFundingIndex: big.NewInt(-1),
+			fundingIndexDelta:   int256.NewInt(math.MinInt64),
+			initialFundingIndex: int256.NewInt(-1),
 		},
 	}
 
@@ -1816,7 +1827,7 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 		testFundingTickDuration          uint32
 		testPerpetuals                   []types.Perpetual
 		testFundingSamples               []int32
-		expectedFundingIndexDeltas       []*big.Int
+		expectedFundingIndexDeltas       []*int256.Int
 		expectedFundingIndexDeltaStrings []string
 		fundingRatesAndIndices           []indexerevents.FundingUpdateV1
 	}{
@@ -2224,17 +2235,18 @@ func TestMaybeProcessNewFundingTickEpoch_ProcessNewEpoch(t *testing.T) {
 
 				// Set `expectedFundingIndexDelta` either to the provided big.Int or to a big.Int of the
 				// provided string value.
-				expectedFundingIndexDelta, ok := new(big.Int).SetString(
+				bigExpectedFundingIndexDelta, ok := new(big.Int).SetString(
 					tc.expectedFundingIndexDeltaStrings[i],
 					10,
 				)
 				if !ok {
 					panic("invalid expectedFundingIndexDeltaString")
 				}
+				expectedFundingIndexDelta := int256.MustFromBig(bigExpectedFundingIndexDelta)
 
-				actualFundingIndexDelta := new(big.Int).Sub(
-					newPerp.FundingIndex.BigInt(),
-					oldPerps[i].FundingIndex.BigInt(),
+				actualFundingIndexDelta := new(int256.Int).Sub(
+					int256.MustFromBig(newPerp.FundingIndex.BigInt()),
+					int256.MustFromBig(oldPerps[i].FundingIndex.BigInt()),
 				)
 				require.Equal(
 					t,

@@ -40,7 +40,7 @@ func (gs GenesisState) Validate() error {
 			if assetP.AssetId != 0 {
 				return ErrAssetPositionNotSupported
 			}
-			if assetP.GetBigQuantums().Sign() == 0 {
+			if assetP.GetQuantums().Sign() == 0 {
 				return ErrAssetPositionZeroQuantum
 			}
 		}
@@ -51,7 +51,7 @@ func (gs GenesisState) Validate() error {
 			if i > 0 && perpP.PerpetualId <= sa.GetPerpetualPositions()[i-1].PerpetualId {
 				return ErrPerpPositionsOutOfOrder
 			}
-			if perpP.GetBigQuantums().Sign() == 0 {
+			if perpP.GetQuantums().Sign() == 0 {
 				return ErrPerpPositionZeroQuantum
 			}
 		}

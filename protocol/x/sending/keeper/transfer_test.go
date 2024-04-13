@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/gogoproto/proto"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
@@ -33,7 +33,7 @@ type TransferTestCase struct {
 	subaccounts []satypes.Subaccount
 	transfer    *types.Transfer
 	// Expectations.
-	expectedSubaccountBalance map[satypes.SubaccountId]*big.Int
+	expectedSubaccountBalance map[satypes.SubaccountId]*int256.Int
 	expectedErr               string
 }
 
@@ -174,9 +174,9 @@ func TestProcessTransfer(t *testing.T) {
 				constants.Dave_Num0_599USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_500,
-			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{
-				constants.Carl_Num0: big.NewInt(99_000_000),
-				constants.Dave_Num0: big.NewInt(1_099_000_000),
+			expectedSubaccountBalance: map[satypes.SubaccountId]*int256.Int{
+				constants.Carl_Num0: int256.NewInt(99_000_000),
+				constants.Dave_Num0: int256.NewInt(1_099_000_000),
 			},
 		},
 		"Transfer succeeds - recipient does not exist": {
@@ -184,9 +184,9 @@ func TestProcessTransfer(t *testing.T) {
 				constants.Carl_Num0_599USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_500,
-			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{
-				constants.Carl_Num0: big.NewInt(99_000_000),
-				constants.Dave_Num0: big.NewInt(500_000_000),
+			expectedSubaccountBalance: map[satypes.SubaccountId]*int256.Int{
+				constants.Carl_Num0: int256.NewInt(99_000_000),
+				constants.Dave_Num0: int256.NewInt(500_000_000),
 			},
 		},
 		"Sender does not have sufficient balance": {
@@ -195,9 +195,9 @@ func TestProcessTransfer(t *testing.T) {
 				constants.Dave_Num0_599USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_600,
-			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{
-				constants.Carl_Num0: big.NewInt(599_000_000), // balance unchanged
-				constants.Dave_Num0: big.NewInt(599_000_000), // balance unchanged
+			expectedSubaccountBalance: map[satypes.SubaccountId]*int256.Int{
+				constants.Carl_Num0: int256.NewInt(599_000_000), // balance unchanged
+				constants.Dave_Num0: int256.NewInt(599_000_000), // balance unchanged
 			},
 			expectedErr: fmt.Sprintf(
 				"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized: failed to apply subaccount updates",
@@ -210,9 +210,9 @@ func TestProcessTransfer(t *testing.T) {
 				constants.Dave_Num0_599USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_600,
-			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{
-				constants.Carl_Num0: big.NewInt(100_000_000_000), // balance unchanged
-				constants.Dave_Num0: big.NewInt(599_000_000),     // balance unchanged
+			expectedSubaccountBalance: map[satypes.SubaccountId]*int256.Int{
+				constants.Carl_Num0: int256.NewInt(100_000_000_000), // balance unchanged
+				constants.Dave_Num0: int256.NewInt(599_000_000),     // balance unchanged
 			},
 			expectedErr: fmt.Sprintf(
 				"Subaccount with id %v failed with UpdateResult: NewlyUndercollateralized: failed to apply subaccount updates",
@@ -225,9 +225,9 @@ func TestProcessTransfer(t *testing.T) {
 				constants.Dave_Num0_1BTC_Long_50000USD,
 			},
 			transfer: &constants.Transfer_Carl_Num0_Dave_Num0_Quote_500,
-			expectedSubaccountBalance: map[satypes.SubaccountId]*big.Int{
-				constants.Carl_Num0: big.NewInt(99_000_000),
-				constants.Dave_Num0: big.NewInt(50_500_000_000),
+			expectedSubaccountBalance: map[satypes.SubaccountId]*int256.Int{
+				constants.Carl_Num0: int256.NewInt(99_000_000),
+				constants.Dave_Num0: int256.NewInt(50_500_000_000),
 			},
 		},
 	}
@@ -352,7 +352,7 @@ func TestProcessDepositToSubaccount(t *testing.T) {
 					sdk.MustAccAddressFromBech32(msg.Sender),
 					msg.Recipient,
 					msg.AssetId,
-					new(big.Int).SetUint64(msg.Quantums),
+					new(int256.Int).SetUint64(msg.Quantums),
 				)
 				tc.setUpMocks(mockCall)
 			}
@@ -437,7 +437,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 					msg.Sender,
 					sdk.MustAccAddressFromBech32(msg.Recipient),
 					msg.AssetId,
-					new(big.Int).SetUint64(msg.Quantums),
+					new(int256.Int).SetUint64(msg.Quantums),
 				)
 				tc.setUpMocks(mockCall)
 			}

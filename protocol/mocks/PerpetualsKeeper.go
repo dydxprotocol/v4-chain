@@ -3,10 +3,10 @@
 package mocks
 
 import (
-	big "math/big"
+	int256 "github.com/dydxprotocol/v4-chain/protocol/lib/int256"
+	mock "github.com/stretchr/testify/mock"
 
 	perpetualstypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"
 )
@@ -122,38 +122,38 @@ func (_m *PerpetualsKeeper) GetAllPerpetuals(ctx types.Context) []perpetualstype
 	return r0
 }
 
-// GetMarginRequirements provides a mock function with given fields: ctx, id, bigQuantums
-func (_m *PerpetualsKeeper) GetMarginRequirements(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, *big.Int, error) {
-	ret := _m.Called(ctx, id, bigQuantums)
+// GetMarginRequirements provides a mock function with given fields: ctx, id, quantums
+func (_m *PerpetualsKeeper) GetMarginRequirements(ctx types.Context, id uint32, quantums *int256.Int) (*int256.Int, *int256.Int, error) {
+	ret := _m.Called(ctx, id, quantums)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMarginRequirements")
 	}
 
-	var r0 *big.Int
-	var r1 *big.Int
+	var r0 *int256.Int
+	var r1 *int256.Int
 	var r2 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) (*big.Int, *big.Int, error)); ok {
-		return rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) (*int256.Int, *int256.Int, error)); ok {
+		return rf(ctx, id, quantums)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) *int256.Int); ok {
+		r0 = rf(ctx, id, quantums)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r1 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, *int256.Int) *int256.Int); ok {
+		r1 = rf(ctx, id, quantums)
 	} else {
 		if ret.Get(1) != nil {
-			r1 = ret.Get(1).(*big.Int)
+			r1 = ret.Get(1).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(2).(func(types.Context, uint32, *big.Int) error); ok {
-		r2 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(2).(func(types.Context, uint32, *int256.Int) error); ok {
+		r2 = rf(ctx, id, quantums)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -161,29 +161,29 @@ func (_m *PerpetualsKeeper) GetMarginRequirements(ctx types.Context, id uint32, 
 	return r0, r1, r2
 }
 
-// GetNetCollateral provides a mock function with given fields: ctx, id, bigQuantums
-func (_m *PerpetualsKeeper) GetNetCollateral(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, error) {
-	ret := _m.Called(ctx, id, bigQuantums)
+// GetNetCollateral provides a mock function with given fields: ctx, id, quantums
+func (_m *PerpetualsKeeper) GetNetCollateral(ctx types.Context, id uint32, quantums *int256.Int) (*int256.Int, error) {
+	ret := _m.Called(ctx, id, quantums)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNetCollateral")
 	}
 
-	var r0 *big.Int
+	var r0 *int256.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) (*big.Int, error)); ok {
-		return rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) (*int256.Int, error)); ok {
+		return rf(ctx, id, quantums)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) *int256.Int); ok {
+		r0 = rf(ctx, id, quantums)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) error); ok {
-		r1 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, *int256.Int) error); ok {
+		r1 = rf(ctx, id, quantums)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -191,29 +191,29 @@ func (_m *PerpetualsKeeper) GetNetCollateral(ctx types.Context, id uint32, bigQu
 	return r0, r1
 }
 
-// GetNetNotional provides a mock function with given fields: ctx, id, bigQuantums
-func (_m *PerpetualsKeeper) GetNetNotional(ctx types.Context, id uint32, bigQuantums *big.Int) (*big.Int, error) {
-	ret := _m.Called(ctx, id, bigQuantums)
+// GetNetNotional provides a mock function with given fields: ctx, id, quantums
+func (_m *PerpetualsKeeper) GetNetNotional(ctx types.Context, id uint32, quantums *int256.Int) (*int256.Int, error) {
+	ret := _m.Called(ctx, id, quantums)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNetNotional")
 	}
 
-	var r0 *big.Int
+	var r0 *int256.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) (*big.Int, error)); ok {
-		return rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) (*int256.Int, error)); ok {
+		return rf(ctx, id, quantums)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) *int256.Int); ok {
+		r0 = rf(ctx, id, quantums)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) error); ok {
-		r1 = rf(ctx, id, bigQuantums)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, *int256.Int) error); ok {
+		r1 = rf(ctx, id, quantums)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -221,29 +221,29 @@ func (_m *PerpetualsKeeper) GetNetNotional(ctx types.Context, id uint32, bigQuan
 	return r0, r1
 }
 
-// GetNotionalInBaseQuantums provides a mock function with given fields: ctx, id, bigQuoteQuantums
-func (_m *PerpetualsKeeper) GetNotionalInBaseQuantums(ctx types.Context, id uint32, bigQuoteQuantums *big.Int) (*big.Int, error) {
-	ret := _m.Called(ctx, id, bigQuoteQuantums)
+// GetNotionalInBaseQuantums provides a mock function with given fields: ctx, id, quoteQuantums
+func (_m *PerpetualsKeeper) GetNotionalInBaseQuantums(ctx types.Context, id uint32, quoteQuantums *int256.Int) (*int256.Int, error) {
+	ret := _m.Called(ctx, id, quoteQuantums)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetNotionalInBaseQuantums")
 	}
 
-	var r0 *big.Int
+	var r0 *int256.Int
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) (*big.Int, error)); ok {
-		return rf(ctx, id, bigQuoteQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) (*int256.Int, error)); ok {
+		return rf(ctx, id, quoteQuantums)
 	}
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) *big.Int); ok {
-		r0 = rf(ctx, id, bigQuoteQuantums)
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) *int256.Int); ok {
+		r0 = rf(ctx, id, quoteQuantums)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*big.Int)
+			r0 = ret.Get(0).(*int256.Int)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Context, uint32, *big.Int) error); ok {
-		r1 = rf(ctx, id, bigQuoteQuantums)
+	if rf, ok := ret.Get(1).(func(types.Context, uint32, *int256.Int) error); ok {
+		r1 = rf(ctx, id, quoteQuantums)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -308,7 +308,7 @@ func (_m *PerpetualsKeeper) MaybeProcessNewFundingTickEpoch(ctx types.Context) {
 }
 
 // ModifyOpenInterest provides a mock function with given fields: ctx, perpetualId, openInterestDeltaBaseQuantums
-func (_m *PerpetualsKeeper) ModifyOpenInterest(ctx types.Context, perpetualId uint32, openInterestDeltaBaseQuantums *big.Int) error {
+func (_m *PerpetualsKeeper) ModifyOpenInterest(ctx types.Context, perpetualId uint32, openInterestDeltaBaseQuantums *int256.Int) error {
 	ret := _m.Called(ctx, perpetualId, openInterestDeltaBaseQuantums)
 
 	if len(ret) == 0 {
@@ -316,7 +316,7 @@ func (_m *PerpetualsKeeper) ModifyOpenInterest(ctx types.Context, perpetualId ui
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(types.Context, uint32, *big.Int) error); ok {
+	if rf, ok := ret.Get(0).(func(types.Context, uint32, *int256.Int) error); ok {
 		r0 = rf(ctx, perpetualId, openInterestDeltaBaseQuantums)
 	} else {
 		r0 = ret.Error(0)

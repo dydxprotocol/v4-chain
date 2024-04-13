@@ -1,9 +1,8 @@
 package constants
 
 import (
-	"math/big"
-
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 )
 
@@ -105,11 +104,11 @@ var LiquidityTiers = []perptypes.LiquidityTier{
 var (
 	BtcUsd_OpenInterest1_AtomicRes8 = perptypes.OpenInterestDelta{
 		PerpetualId:  0,
-		BaseQuantums: big.NewInt(100_000_000),
+		BaseQuantums: int256.NewInt(100_000_000),
 	}
 	EthUsd_OpenInterest1_AtomicRes9 = perptypes.OpenInterestDelta{
 		PerpetualId:  1,
-		BaseQuantums: big.NewInt(1_000_000_000),
+		BaseQuantums: int256.NewInt(1_000_000_000),
 	}
 	DefaultTestPerpOIs = []perptypes.OpenInterestDelta{
 		BtcUsd_OpenInterest1_AtomicRes8,

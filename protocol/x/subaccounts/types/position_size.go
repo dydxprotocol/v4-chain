@@ -1,11 +1,10 @@
 package types
 
 import (
-	"math/big"
-
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 const (
@@ -18,21 +17,21 @@ const (
 type PositionSize interface {
 	// Returns true if and only if the position size is positive.
 	GetIsLong() bool
-	// Returns the signed position size in big.Int.
-	GetBigQuantums() *big.Int
+	// Returns the signed position size in in256.Int.
+	GetQuantums() *int256.Int
 	GetId() uint32
 	GetProductType() string
 }
 
 type PositionUpdate struct {
-	Id          uint32
-	BigQuantums *big.Int
+	Id       uint32
+	Quantums *int256.Int
 }
 
 func NewPositionUpdate(id uint32) PositionUpdate {
 	return PositionUpdate{
-		Id:          id,
-		BigQuantums: big.NewInt(0),
+		Id:       id,
+		Quantums: int256.NewInt(0),
 	}
 }
 
@@ -50,10 +49,10 @@ func (m *AssetPosition) GetId() uint32 {
 	return m.GetAssetId()
 }
 
-// Get the asset position quantum size in big.Int. Panics if the size is zero.
-func (m *AssetPosition) GetBigQuantums() *big.Int {
+// Get the asset position quantum size in int256.Int. Panics if the size is zero.
+func (m *AssetPosition) GetQuantums() *int256.Int {
 	if m == nil {
-		return new(big.Int)
+		return new(int256.Int)
 	}
 
 	if m.Quantums.BigInt().Sign() == 0 {
@@ -64,14 +63,14 @@ func (m *AssetPosition) GetBigQuantums() *big.Int {
 		))
 	}
 
-	return m.Quantums.BigInt()
+	return int256.MustFromBig(m.Quantums.BigInt())
 }
 
 func (m *AssetPosition) GetIsLong() bool {
 	if m == nil {
 		return false
 	}
-	return m.GetBigQuantums().Sign() > 0
+	return m.GetQuantums().Sign() > 0
 }
 
 func (m *AssetPosition) GetProductType() string {
@@ -86,10 +85,10 @@ func (m *PerpetualPosition) SetQuantums(sizeQuantums int64) {
 	m.Quantums = dtypes.NewInt(sizeQuantums)
 }
 
-// Get the perpetual position quantum size in big.Int. Panics if the size is zero.
-func (m *PerpetualPosition) GetBigQuantums() *big.Int {
+// Get the perpetual position quantum size in int256.Int. Panics if the size is zero.
+func (m *PerpetualPosition) GetQuantums() *int256.Int {
 	if m == nil {
-		return new(big.Int)
+		return new(int256.Int)
 	}
 
 	if m.Quantums.BigInt().Sign() == 0 {
@@ -100,14 +99,14 @@ func (m *PerpetualPosition) GetBigQuantums() *big.Int {
 		))
 	}
 
-	return m.Quantums.BigInt()
+	return int256.MustFromBig(m.Quantums.BigInt())
 }
 
 func (m *PerpetualPosition) GetIsLong() bool {
 	if m == nil {
 		return false
 	}
-	return m.GetBigQuantums().Sign() > 0
+	return m.GetQuantums().Sign() > 0
 }
 
 func (m *PerpetualPosition) GetProductType() string {
@@ -115,11 +114,11 @@ func (m *PerpetualPosition) GetProductType() string {
 }
 
 func (au AssetUpdate) GetIsLong() bool {
-	return au.GetBigQuantums().Sign() > 0
+	return au.GetQuantums().Sign() > 0
 }
 
-func (au AssetUpdate) GetBigQuantums() *big.Int {
-	return au.BigQuantumsDelta
+func (au AssetUpdate) GetQuantums() *int256.Int {
+	return au.QuantumsDelta
 }
 
 func (au AssetUpdate) GetId() uint32 {
@@ -130,8 +129,8 @@ func (au AssetUpdate) GetProductType() string {
 	return AssetProductType
 }
 
-func (pu PerpetualUpdate) GetBigQuantums() *big.Int {
-	return pu.BigQuantumsDelta
+func (pu PerpetualUpdate) GetQuantums() *int256.Int {
+	return pu.QuantumsDelta
 }
 
 func (pu PerpetualUpdate) GetId() uint32 {
@@ -139,7 +138,7 @@ func (pu PerpetualUpdate) GetId() uint32 {
 }
 
 func (pu PerpetualUpdate) GetIsLong() bool {
-	return pu.GetBigQuantums().Sign() > 0
+	return pu.GetQuantums().Sign() > 0
 }
 
 func (pu PerpetualUpdate) GetProductType() string {
@@ -151,15 +150,15 @@ func (pu PositionUpdate) GetId() uint32 {
 }
 
 func (pu PositionUpdate) GetIsLong() bool {
-	return pu.BigQuantums.Sign() > 0
+	return pu.Quantums.Sign() > 0
 }
 
-func (pu PositionUpdate) SetBigQuantums(bigQuantums *big.Int) {
-	pu.BigQuantums.Set(bigQuantums)
+func (pu PositionUpdate) SetQuantums(Quantums *int256.Int) {
+	pu.Quantums.Set(Quantums)
 }
 
-func (pu PositionUpdate) GetBigQuantums() *big.Int {
-	return pu.BigQuantums
+func (pu PositionUpdate) GetQuantums() *int256.Int {
+	return pu.Quantums
 }
 func (pu PositionUpdate) GetProductType() string {
 	// PositionUpdate is generic and doesn't have a product type.

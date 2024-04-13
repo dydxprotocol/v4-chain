@@ -5,7 +5,6 @@ package cli_test
 import (
 	"fmt"
 	"math"
-	"math/big"
 	"testing"
 
 	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
@@ -16,6 +15,7 @@ import (
 	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
 	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
 	testutil_bank "github.com/dydxprotocol/v4-chain/protocol/testutil/bank"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
@@ -125,7 +125,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: cancelsSubaccountNumberZero,
 			},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(cancelsInitialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPosition(int256.NewInt(cancelsInitialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 		satypes.Subaccount{
@@ -133,7 +133,7 @@ func (s *CancelOrderIntegrationTestSuite) SetupTest() {
 				Owner:  s.validatorAddress.String(),
 				Number: cancelsSubaccountNumberOne,
 			},
-			AssetPositions:     testutil.CreateUsdcAssetPosition(big.NewInt(cancelsInitialQuoteBalance)),
+			AssetPositions:     testutil.CreateUsdcAssetPosition(int256.NewInt(cancelsInitialQuoteBalance)),
 			PerpetualPositions: []*satypes.PerpetualPosition{},
 		},
 	)
@@ -256,13 +256,13 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelPendingOrder() {
 		subaccount := subaccountResp.Subaccount
 
 		s.Require().Equal(
-			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
+			int256.NewInt(cancelsInitialQuoteBalance),
 			subaccount.GetUsdcPosition(),
 		)
 		s.Require().Len(subaccount.PerpetualPositions, 0)
 
 		s.Require().Equal(
-			new(big.Int).SetInt64(cancelsInitialQuoteBalance),
+			int256.NewInt(cancelsInitialQuoteBalance),
 			subaccount.GetUsdcPosition())
 		s.Require().Len(subaccount.PerpetualPositions, 0)
 	}
@@ -387,24 +387,27 @@ func (s *CancelOrderIntegrationTestSuite) TestCLICancelMatchingOrders() {
 	makerFee := fillSizeQuoteQuantums * int64(constants.PerpetualFeeParams.Tiers[0].MakerFeePpm) / int64(lib.OneMillion)
 
 	s.Require().Contains(
-		[]*big.Int{
-			new(big.Int).SetInt64(initialQuoteBalance - fillSizeQuoteQuantums - takerFee),
-			new(big.Int).SetInt64(initialQuoteBalance - fillSizeQuoteQuantums - makerFee),
+		[]*int256.Int{
+			int256.NewInt(initialQuoteBalance - fillSizeQuoteQuantums - takerFee),
+			int256.NewInt(initialQuoteBalance - fillSizeQuoteQuantums - makerFee),
 		},
 		subaccountZero.GetUsdcPosition(),
 	)
 	s.Require().Len(subaccountZero.PerpetualPositions, 1)
-	s.Require().Equal(quantums.ToBigInt(), subaccountZero.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Equal(quantums.ToInt256(), subaccountZero.PerpetualPositions[0].GetQuantums())
 
 	s.Require().Contains(
-		[]*big.Int{
-			new(big.Int).SetInt64(initialQuoteBalance + fillSizeQuoteQuantums - takerFee),
-			new(big.Int).SetInt64(initialQuoteBalance + fillSizeQuoteQuantums - makerFee),
+		[]*int256.Int{
+			int256.NewInt(initialQuoteBalance + fillSizeQuoteQuantums - takerFee),
+			int256.NewInt(initialQuoteBalance + fillSizeQuoteQuantums - makerFee),
 		},
 		subaccountOne.GetUsdcPosition(),
 	)
 	s.Require().Len(subaccountOne.PerpetualPositions, 1)
-	s.Require().Equal(new(big.Int).Neg(quantums.ToBigInt()), subaccountOne.PerpetualPositions[0].GetBigQuantums())
+	s.Require().Equal(
+		new(int256.Int).Neg(quantums.ToInt256()),
+		subaccountOne.PerpetualPositions[0].GetQuantums(),
+	)
 
 	// Check that the `subaccounts` module account has expected remaining USDC balance.
 	saModuleUSDCBalance, err := testutil_bank.GetModuleAccUsdcBalance(

@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -322,17 +323,18 @@ func (k Keeper) PlacePerpetualLiquidation(
 	if totalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
-		liquidationOrder.GetBaseQuantums().ToBigInt(),
+		int256.NewUnsignedInt((uint64)(liquidationOrder.GetBaseQuantums())),
 	); err == nil {
+		bigTotalQuoteQuantums := totalQuoteQuantums.ToBig()
 		metrics.IncrCounterWithLabels(
 			metrics.LiquidationsPlacePerpetualLiquidationQuoteQuantums,
-			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
+			metrics.GetMetricValueFromBigInt(bigTotalQuoteQuantums),
 			labels...,
 		)
 
 		metrics.AddSampleWithLabels(
 			metrics.LiquidationsPlacePerpetualLiquidationQuoteQuantumsDistribution,
-			metrics.GetMetricValueFromBigInt(totalQuoteQuantums),
+			metrics.GetMetricValueFromBigInt(bigTotalQuoteQuantums),
 			labels...,
 		)
 	}
@@ -353,9 +355,9 @@ func (k Keeper) IsLiquidatable(
 	bool,
 	error,
 ) {
-	bigNetCollateral,
+	netCollateral,
 		_,
-		bigMaintenanceMargin,
+		maintenanceMargin,
 		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
@@ -364,7 +366,7 @@ func (k Keeper) IsLiquidatable(
 		return false, err
 	}
 
-	return CanLiquidateSubaccount(bigNetCollateral, bigMaintenanceMargin), nil
+	return CanLiquidateSubaccount(netCollateral.ToBig(), maintenanceMargin.ToBig()), nil
 }
 
 // CanLiquidateSubaccount returns true if a subaccount is liquidatable given its total net collateral and
@@ -429,18 +431,20 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// - DMMR (delta maintenance margin requirement).
 	// - TMMR (total maintenance margin requirement).
 
-	tncBig, _, tmmrBig, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
+	tnc, _, tmmr, err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
 	)
 	if err != nil {
 		return nil, err
 	}
+	tncBig := tnc.ToBig()
+	tmmrBig := tmmr.ToBig()
 
 	// Position size is necessary for calculating DNNV and DMMR.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
-	psBig := position.GetBigQuantums()
+	psBig := position.GetQuantums().ToBig()
 
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
@@ -459,23 +463,28 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we are intentionally not calculating `DNNV` from `deltaQuantums`
 	// directly to avoid rounding errors.
-	pnnvBig, err := k.perpetualsKeeper.GetNetNotional(
+	ps := int256.MustFromBig(psBig)
+	deltaQuantumsInt256 := int256.MustFromBig(deltaQuantums)
+	psPlusDeltaQuantums := new(int256.Int).Add(ps, deltaQuantumsInt256)
+	pnnv, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
-		psBig,
+		ps,
 	)
 	if err != nil {
 		return nil, err
 	}
+	pnnvBig := pnnv.ToBig()
 
-	pnnvadBig, err := k.perpetualsKeeper.GetNetNotional(
+	pnnvad, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
-		new(big.Int).Add(psBig, deltaQuantums),
+		psPlusDeltaQuantums,
 	)
 	if err != nil {
 		return nil, err
 	}
+	pnnvadBig := pnnvad.ToBig()
 
 	dnnvBig := new(big.Int).Sub(pnnvadBig, pnnvBig)
 
@@ -483,28 +492,26 @@ func (k Keeper) GetBankruptcyPriceInQuoteQuantums(
 	// with a position size of `PS + deltaQuantums`.
 	// Note that we cannot directly calculate `DMMR` from `deltaQuantums` because the maintenance
 	// margin requirement function could be non-linear.
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
+	_, pmmr, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, ps)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pmmradBig, err := k.perpetualsKeeper.GetMarginRequirements(
+	_, pmmrad, err := k.perpetualsKeeper.GetMarginRequirements(
 		ctx,
 		perpetualId,
-		new(big.Int).Add(
-			psBig,
-			deltaQuantums,
-		),
+		psPlusDeltaQuantums,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	dmmrBig := new(big.Int).Sub(pmmradBig, pmmrBig)
+	dmmr := new(int256.Int).Sub(pmmrad, pmmr)
 	// `dmmrBig` should never be positive if `| PS | >= | PS + deltaQuantums |`. If it is, panic.
-	if dmmrBig.Sign() == 1 {
+	if dmmr.Sign() == 1 {
 		panic("GetBankruptcyPriceInQuoteQuantums: DMMR is positive")
 	}
+	dmmrBig := dmmr.ToBig()
 
 	// Calculate `TNC * abs(DMMR) / TMMR`.
 	tncMulDmmrBig := new(big.Int).Mul(tncBig, new(big.Int).Abs(dmmrBig))
@@ -550,7 +557,7 @@ func (k Keeper) GetFillablePrice(
 
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
-	psBig := position.GetBigQuantums()
+	psBig := position.GetQuantums().ToBig()
 
 	// Validate that the provided deltaQuantums is valid with respect to
 	// the current position size.
@@ -565,19 +572,20 @@ func (k Keeper) GetFillablePrice(
 		)
 	}
 
-	pnnvBig, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, psBig)
+	ps := int256.MustFromBig(psBig)
+	pnnv, err := k.perpetualsKeeper.GetNetCollateral(ctx, perpetualId, ps)
 	if err != nil {
 		return nil, err
 	}
 
-	_, pmmrBig, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, psBig)
+	_, pmmr, err := k.perpetualsKeeper.GetMarginRequirements(ctx, perpetualId, ps)
 	if err != nil {
 		return nil, err
 	}
 
-	tncBig,
+	tnc,
 		_,
-		tmmrBig,
+		tmmr,
 		err := k.subaccountsKeeper.GetNetCollateralAndMarginRequirements(
 		ctx,
 		satypes.Update{SubaccountId: subaccountId},
@@ -585,6 +593,8 @@ func (k Keeper) GetFillablePrice(
 	if err != nil {
 		return nil, err
 	}
+	tncBig := tnc.ToBig()
+	tmmrBig := tmmr.ToBig()
 
 	// stat liquidation order for negative TNC
 	// TODO(CLOB-906) Prevent duplicated stat emissions for liquidation orders in PrepareCheckState.
@@ -633,7 +643,7 @@ func (k Keeper) GetFillablePrice(
 
 	// Calculate `SMMR * PMMR` (the maximum liquidation spread in quote quantums).
 	maxLiquidationSpreadQuoteQuantumsRat := lib.BigRatMulPpm(
-		new(big.Rat).SetInt(pmmrBig),
+		new(big.Rat).SetInt(pmmr.ToBig()),
 		smmr,
 	)
 
@@ -645,7 +655,7 @@ func (k Keeper) GetFillablePrice(
 	// For shorts, `pnnvRat < 0` meaning the fillable price in quote quantums will be higher than
 	// the oracle price (in this case the result will be negative, but dividing by `positionSize` below
 	// will make it positive since `positionSize < 0` for shorts).
-	pnnvRat := new(big.Rat).SetInt(pnnvBig)
+	pnnvRat := new(big.Rat).SetInt(pnnv.ToBig())
 	fillablePriceQuoteQuantumsRat := new(big.Rat).Sub(pnnvRat, fillablePriceOracleDeltaQuoteQuantumsRat)
 
 	// Calculate the fillable price by dividing by `PS`.
@@ -834,54 +844,56 @@ func (k Keeper) GetLiquidatablePositionSizeDelta(
 		bigMaxSubaccountNotionalLiquidatable,
 	)
 
-	bigQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+	quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
-		perpetualPosition.GetBigQuantums(),
+		perpetualPosition.GetQuantums(),
 	)
 	if err != nil {
 		panic(err)
 	}
+	bigQuoteQuantums := quoteQuantums.ToBig()
 
 	// Return the full position to avoid any rounding errors.
 	if bigQuoteQuantums.CmpAbs(bigMaxQuoteQuantumsLiquidatable) <= 0 ||
-		perpetualPosition.GetBigQuantums().CmpAbs(
+		perpetualPosition.GetQuantums().ToBig().CmpAbs(
 			new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		) <= 0 {
-		return new(big.Int).Neg(perpetualPosition.GetBigQuantums()), nil
+		return new(big.Int).Neg(perpetualPosition.GetQuantums().ToBig()), nil
 	}
 
 	// Convert the max notional liquidatable to base quantums.
 	absDeltaQuantums, err := k.perpetualsKeeper.GetNotionalInBaseQuantums(
 		ctx,
 		perpetualId,
-		bigMaxQuoteQuantumsLiquidatable,
+		int256.MustFromBig(bigMaxQuoteQuantumsLiquidatable),
 	)
 	if err != nil {
 		panic(err)
 	}
+	bigAbsDeltaQuantums := absDeltaQuantums.ToBig()
 
 	// Round to the nearest step size.
-	absDeltaQuantums = lib.BigIntRoundToMultiple(
-		absDeltaQuantums,
+	bigAbsDeltaQuantums = lib.BigIntRoundToMultiple(
+		bigAbsDeltaQuantums,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
 		false,
 	)
 
 	// Clamp the base quantums to liquidate to the step size and the size of the position
 	// in case there's rounding errors.
-	absDeltaQuantums = lib.BigIntClamp(
-		absDeltaQuantums,
+	bigAbsDeltaQuantums = lib.BigIntClamp(
+		bigAbsDeltaQuantums,
 		new(big.Int).SetUint64(clobPair.StepBaseQuantums),
-		new(big.Int).Abs(perpetualPosition.GetBigQuantums()),
+		new(big.Int).Abs(perpetualPosition.GetQuantums().ToBig()),
 	)
 
 	// Negate the position size if it's a long position to get the size delta.
 	if perpetualPosition.GetIsLong() {
-		return absDeltaQuantums.Neg(absDeltaQuantums), nil
+		return bigAbsDeltaQuantums.Neg(bigAbsDeltaQuantums), nil
 	}
 
-	return absDeltaQuantums, nil
+	return bigAbsDeltaQuantums, nil
 }
 
 // GetSubaccountMaxNotionalLiquidatable returns the maximum notional that the subaccount can liquidate
@@ -1002,14 +1014,15 @@ func (k Keeper) GetMaxAndMinPositionNotionalLiquidatable(
 	liquidationConfig := k.GetLiquidationsConfig(ctx)
 
 	// Get the position size in quote quantums.
-	bigNetNotionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+	netNotionalQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		positionToLiquidate.PerpetualId,
-		positionToLiquidate.GetBigQuantums(),
+		positionToLiquidate.GetQuantums(),
 	)
 	if err != nil {
 		return nil, nil, err
 	}
+	bigNetNotionalQuoteQuantums := netNotionalQuoteQuantums.ToBig()
 
 	bigAbsNetNotionalQuoteQuantums := new(big.Int).Abs(bigNetNotionalQuoteQuantums)
 	// Get the mininum notional of this position that can be liquidated, which cannot exceed the size of the position.
@@ -1186,10 +1199,15 @@ func (k Keeper) validateLiquidationAgainstSubaccountBlockLimits(
 		return err
 	}
 
-	bigNotionalLiquidated, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, fillAmount.ToBigInt())
+	notionalLiquidated, err := k.perpetualsKeeper.GetNetNotional(
+		ctx,
+		perpetualId,
+		int256.NewUnsignedInt((uint64)(fillAmount)),
+	)
 	if err != nil {
 		return err
 	}
+	bigNotionalLiquidated := notionalLiquidated.ToBig()
 
 	if bigNotionalLiquidated.CmpAbs(bigMaxNotionalLiquidatable) > 0 {
 		return errorsmod.Wrapf(
@@ -1284,10 +1302,10 @@ func (k Keeper) getQuoteQuantumsForLiquidationOrder(
 	quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		liquidationOrder.MustGetLiquidatedPerpetualId(),
-		liquidationOrder.GetBaseQuantums().ToBigInt(),
+		int256.NewUnsignedInt((uint64)(liquidationOrder.GetBaseQuantums())),
 	)
 	if err != nil {
 		panic(err)
 	}
-	return quoteQuantums
+	return quoteQuantums.ToBig()
 }

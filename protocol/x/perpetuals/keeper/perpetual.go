@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"fmt"
-	"math/big"
 	"math/rand"
 	"sort"
 	"time"
@@ -23,12 +22,17 @@ import (
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
+)
+
+var (
+	eightHoursInSeconds = new(int256.Int).SetUint64(3600 * 8)
 )
 
 func (k Keeper) IsIsolatedPerpetual(ctx sdk.Context, perpetualId uint32) (bool, error) {
@@ -451,10 +455,10 @@ func (k Keeper) MaybeProcessNewFundingSampleEpoch(
 func (k Keeper) getFundingIndexDelta(
 	ctx sdk.Context,
 	perp types.Perpetual,
-	big8hrFundingRatePpm *big.Int,
+	eightHourFundingRatePpm *int256.Int,
 	timeSinceLastFunding uint32,
 ) (
-	fundingIndexDelta *big.Int,
+	fundingIndexDelta *int256.Int,
 	err error,
 ) {
 	marketPrice, err := k.pricesKeeper.GetMarketPrice(ctx, perp.Params.MarketId)
@@ -462,27 +466,27 @@ func (k Keeper) getFundingIndexDelta(
 		return nil, fmt.Errorf("failed to get market price for perpetual %v, err = %w", perp.Params.Id, err)
 	}
 
+	// TODO Figure out overflow
 	// Get pro-rated funding rate adjusted by time delta.
-	proratedFundingRate := new(big.Rat).SetInt(big8hrFundingRatePpm)
+	proratedFundingRate := int256.NewUnsignedInt(uint64(timeSinceLastFunding))
 	proratedFundingRate.Mul(
 		proratedFundingRate,
-		new(big.Rat).SetUint64(uint64(timeSinceLastFunding)),
+		eightHourFundingRatePpm,
 	)
 
-	proratedFundingRate.Quo(
-		proratedFundingRate,
-		// TODO(DEC-1536): Make the 8-hour funding rate period configurable.
-		new(big.Rat).SetUint64(3600*8),
-	)
-
-	bigFundingIndexDelta := lib.FundingRateToIndex(
+	fundingIndexDeltaInt256 := lib.FundingRateToIndex(
 		proratedFundingRate,
 		perp.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
 
-	return bigFundingIndexDelta, nil
+	fundingIndexDeltaInt256.Div(
+		fundingIndexDeltaInt256,
+		eightHoursInSeconds,
+	)
+
+	return fundingIndexDeltaInt256, nil
 }
 
 // GetAddPremiumVotes returns the newest premiums for all perpetuals,
@@ -571,7 +575,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 		if err != nil {
 			panic(err)
 		}
-		bigImpactNotionalQuoteQuantums := new(big.Int).SetUint64(liquidityTier.ImpactNotional)
+		impactNotionalQuoteQuantums := new(int256.Int).SetUint64(liquidityTier.ImpactNotional)
 
 		// Get `maxAbsPremiumVotePpm` for this perpetual's liquidity tier (panic if not found).
 		maxAbsPremiumVotePpm, exists := liquidityTierToMaxAbsPremiumVotePpm[perp.Params.LiquidityTier]
@@ -585,7 +589,7 @@ func (k Keeper) sampleAllPerpetuals(ctx sdk.Context) (
 				IndexPrice:                  indexPrice,
 				BaseAtomicResolution:        perp.Params.AtomicResolution,
 				QuoteAtomicResolution:       lib.QuoteCurrencyAtomicResolution,
-				ImpactNotionalQuoteQuantums: bigImpactNotionalQuoteQuantums,
+				ImpactNotionalQuoteQuantums: impactNotionalQuoteQuantums,
 				MaxAbsPremiumVotePpm:        maxAbsPremiumVotePpm,
 			},
 		)
@@ -725,12 +729,12 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			premiumPpm = 0
 		}
 
-		bigFundingRatePpm := new(big.Int).SetInt64(int64(premiumPpm))
+		fundingRatePpm := int256.NewInt(int64(premiumPpm))
 
 		// funding rate = premium + default funding
-		bigFundingRatePpm.Add(
-			bigFundingRatePpm,
-			new(big.Int).SetInt64(int64(perp.Params.DefaultFundingPpm)),
+		fundingRatePpm.Add(
+			fundingRatePpm,
+			int256.NewInt(int64(perp.Params.DefaultFundingPpm)),
 		)
 
 		liquidityTier, err := k.GetLiquidityTier(ctx, perp.Params.LiquidityTier)
@@ -750,9 +754,8 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		// Clamp funding rate according to equation:
 		// |R| <= clamp_factor * (initial margin - maintenance margin)
 		fundingRateUpperBoundPpm := liquidityTier.GetMaxAbsFundingClampPpm(params.FundingRateClampFactorPpm)
-		bigFundingRatePpm = lib.BigIntClamp(
-			bigFundingRatePpm,
-			new(big.Int).Neg(fundingRateUpperBoundPpm),
+		fundingRatePpm = fundingRatePpm.Clamp(
+			new(int256.Int).Neg(fundingRateUpperBoundPpm),
 			fundingRateUpperBoundPpm,
 		)
 
@@ -762,7 +765,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 				types.ModuleName,
 				metrics.PremiumRate,
 			},
-			float32(bigFundingRatePpm.Int64()),
+			float32(fundingRatePpm.Int64()),
 			[]gometrics.Label{
 				metrics.GetLabelForIntValue(
 					metrics.PerpetualId,
@@ -771,19 +774,19 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 			},
 		)
 
-		if bigFundingRatePpm.Cmp(lib.BigMaxInt32()) > 0 {
+		if fundingRatePpm.Cmp(int256.MaxInt32) > 0 {
 			panic(errorsmod.Wrapf(
 				types.ErrFundingRateInt32Overflow,
 				"perpetual Id = (%d), funding rate = (%v)",
-				perp.Params.Id, bigFundingRatePpm,
+				perp.Params.Id, fundingRatePpm,
 			))
 		}
 
-		if bigFundingRatePpm.Sign() != 0 {
+		if fundingRatePpm.Sign() != 0 {
 			fundingIndexDelta, err := k.getFundingIndexDelta(
 				ctx,
 				perp,
-				bigFundingRatePpm,
+				fundingRatePpm,
 				// use funding-tick duration as `timeSinceLastFunding`
 				// TODO(DEC-1483): Handle the case when duration value is updated
 				// during the epoch.
@@ -805,7 +808,7 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 		}
 		newFundingRatesAndIndicesForEvent = append(newFundingRatesAndIndicesForEvent, indexerevents.FundingUpdateV1{
 			PerpetualId:     perp.Params.Id,
-			FundingValuePpm: int32(bigFundingRatePpm.Int64()),
+			FundingValuePpm: int32(fundingRatePpm.Int64()),
 			FundingIndex:    perp.FundingIndex,
 		})
 	}
@@ -835,9 +838,9 @@ func (k Keeper) MaybeProcessNewFundingTickEpoch(ctx sdk.Context) {
 func (k Keeper) GetNetNotional(
 	ctx sdk.Context,
 	id uint32,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigNetNotionalQuoteQuantums *big.Int,
+	netNotionalQuoteQuantums *int256.Int,
 	err error,
 ) {
 	if rand.Float64() < metrics.LatencyMetricSampleRate {
@@ -856,10 +859,10 @@ func (k Keeper) GetNetNotional(
 
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
-		return new(big.Int), err
+		return new(int256.Int), err
 	}
 
-	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, bigQuantums), nil
+	return GetNetNotionalInQuoteQuantums(perpetual, marketPrice, quantums), nil
 }
 
 // GetNetNotionalInQuoteQuantums returns the net notional in quote quantums, which can be
@@ -872,18 +875,14 @@ func (k Keeper) GetNetNotional(
 func GetNetNotionalInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
-	bigQuantums *big.Int,
-) (
-	bigNetNotionalQuoteQuantums *big.Int,
-) {
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigQuantums,
+	quantums *int256.Int,
+) *int256.Int {
+	return lib.BaseToQuoteQuantums(
+		quantums,
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
-
-	return bigQuoteQuantums
 }
 
 // GetNotionalInBaseQuantums returns the net notional in base quantums, which can be represented
@@ -895,9 +894,9 @@ func GetNetNotionalInQuoteQuantums(
 func (k Keeper) GetNotionalInBaseQuantums(
 	ctx sdk.Context,
 	id uint32,
-	bigQuoteQuantums *big.Int,
+	quoteQuantums *int256.Int,
 ) (
-	bigBaseQuantums *big.Int,
+	baseQuantums *int256.Int,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -909,16 +908,16 @@ func (k Keeper) GetNotionalInBaseQuantums(
 
 	perpetual, marketPrice, err := k.GetPerpetualAndMarketPrice(ctx, id)
 	if err != nil {
-		return new(big.Int), err
+		return new(int256.Int), err
 	}
 
-	bigBaseQuantums = lib.QuoteToBaseQuantums(
-		bigQuoteQuantums,
+	baseQuantums = lib.QuoteToBaseQuantums(
+		quoteQuantums,
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
-	return bigBaseQuantums, nil
+	return baseQuantums, nil
 }
 
 // GetNetCollateral returns the net collateral in quote quantums. The net collateral is equal to
@@ -930,13 +929,13 @@ func (k Keeper) GetNotionalInBaseQuantums(
 func (k Keeper) GetNetCollateral(
 	ctx sdk.Context,
 	id uint32,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigNetCollateralQuoteQuantums *big.Int,
+	netCollateralQuoteQuantums *int256.Int,
 	err error,
 ) {
 	// The net collateral is equal to the net open notional.
-	return k.GetNetNotional(ctx, id, bigQuantums)
+	return k.GetNetNotional(ctx, id, quantums)
 }
 
 // GetMarginRequirements returns initial and maintenance margin requirements in quote quantums, given the position
@@ -956,10 +955,10 @@ func (k Keeper) GetNetCollateral(
 func (k Keeper) GetMarginRequirements(
 	ctx sdk.Context,
 	id uint32,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
+	initialMarginQuoteQuantums *int256.Int,
+	maintenanceMarginQuoteQuantums *int256.Int,
 	err error,
 ) {
 	if rand.Float64() < metrics.LatencyMetricSampleRate {
@@ -987,14 +986,14 @@ func (k Keeper) GetMarginRequirements(
 		return nil, nil, err
 	}
 
-	bigInitialMarginQuoteQuantums,
-		bigMaintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
+	initialMarginQuoteQuantums,
+		maintenanceMarginQuoteQuantums = GetMarginRequirementsInQuoteQuantums(
 		perpetual,
 		marketPrice,
 		liquidityTier,
-		bigQuantums,
+		quantums,
 	)
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums, nil
+	return initialMarginQuoteQuantums, maintenanceMarginQuoteQuantums, nil
 }
 
 // GetMarginRequirementsInQuoteQuantums returns initial and maintenance margin requirements
@@ -1005,48 +1004,46 @@ func GetMarginRequirementsInQuoteQuantums(
 	perpetual types.Perpetual,
 	marketPrice pricestypes.MarketPrice,
 	liquidityTier types.LiquidityTier,
-	bigQuantums *big.Int,
+	quantums *int256.Int,
 ) (
-	bigInitialMarginQuoteQuantums *big.Int,
-	bigMaintenanceMarginQuoteQuantums *big.Int,
+	initialMarginQuoteQuantums *int256.Int,
+	maintenanceMarginQuoteQuantums *int256.Int,
 ) {
-	// Always consider the magnitude of the position regardless of whether it is long/short.
-	bigAbsQuantums := new(big.Int).Set(bigQuantums).Abs(bigQuantums)
+	var absQuantums int256.Int
+	absQuantums.Abs(quantums)
 
 	// Calculate the notional value of the position in quote quantums.
-	bigQuoteQuantums := lib.BaseToQuoteQuantums(
-		bigAbsQuantums,
+	quoteQuantums := lib.BaseToQuoteQuantums(
+		&absQuantums,
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
 	// Calculate the perpetual's open interest in quote quantums.
 	openInterestQuoteQuantums := lib.BaseToQuoteQuantums(
-		perpetual.OpenInterest.BigInt(), // OpenInterest is represented as base quantums.
+		int256.MustFromBig(perpetual.OpenInterest.BigInt()), // OpenInterest is represented as base quantums.
 		perpetual.Params.AtomicResolution,
 		marketPrice.Price,
 		marketPrice.Exponent,
 	)
 
 	// Initial margin requirement quote quantums = size in quote quantums * initial margin PPM.
-	bigBaseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
-		bigQuoteQuantums,
-		big.NewInt(0), // pass in 0 as open interest to get base IMR.
-	)
-	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
-	bigMaintenanceMarginQuoteQuantums = lib.BigRatRound(
-		lib.BigRatMulPpm(
-			new(big.Rat).SetInt(bigBaseInitialMarginQuoteQuantums),
-			liquidityTier.MaintenanceFractionPpm,
-		),
-		true,
+	baseInitialMarginQuoteQuantums := liquidityTier.GetInitialMarginQuoteQuantums(
+		quoteQuantums,
+		int256.NewInt(0), // pass in 0 as open interest to get base IMR.
 	)
 
-	bigInitialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
-		bigQuoteQuantums,
+	// Maintenance margin requirement quote quantums = IM in quote quantums * maintenance fraction PPM.
+	maintenanceMarginQuoteQuantums = baseInitialMarginQuoteQuantums.MulPpmRoundUp(
+		baseInitialMarginQuoteQuantums,
+		liquidityTier.MaintenanceFractionPpm,
+	)
+
+	initialMarginQuoteQuantums = liquidityTier.GetInitialMarginQuoteQuantums(
+		quoteQuantums,
 		openInterestQuoteQuantums, // pass in current OI to get scaled IMR.
 	)
-	return bigInitialMarginQuoteQuantums, bigMaintenanceMarginQuoteQuantums
+	return initialMarginQuoteQuantums, maintenanceMarginQuoteQuantums
 }
 
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
@@ -1062,25 +1059,25 @@ func GetMarginRequirementsInQuoteQuantums(
 func (k Keeper) GetSettlementPpm(
 	ctx sdk.Context,
 	perpetualId uint32,
-	quantums *big.Int,
-	index *big.Int,
+	quantums *int256.Int,
+	index *int256.Int,
 ) (
-	bigNetSettlementPpm *big.Int,
-	newFundingIndex *big.Int,
+	netSettlementPpm *int256.Int,
+	newFundingIndex *int256.Int,
 	err error,
 ) {
 	// Get the perpetual for newest FundingIndex.
 	perpetual, err := k.GetPerpetual(ctx, perpetualId)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), err
+		return int256.NewInt(0), int256.NewInt(0), err
 	}
 
-	bigNetSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
+	netSettlementPpm, newFundingIndex = GetSettlementPpmWithPerpetual(
 		perpetual,
 		quantums,
 		index,
 	)
-	return bigNetSettlementPpm, newFundingIndex, nil
+	return netSettlementPpm, newFundingIndex, nil
 }
 
 // GetSettlementPpm returns the net settlement amount ppm (in quote quantums) given
@@ -1089,27 +1086,28 @@ func (k Keeper) GetSettlementPpm(
 // Note that this function is a stateless utility function.
 func GetSettlementPpmWithPerpetual(
 	perpetual types.Perpetual,
-	quantums *big.Int,
-	index *big.Int,
+	quantums *int256.Int,
+	index *int256.Int,
 ) (
-	bigNetSettlementPpm *big.Int,
-	newFundingIndex *big.Int,
+	netSettlementPpm *int256.Int,
+	newFundingIndex *int256.Int,
 ) {
-	indexDelta := new(big.Int).Sub(perpetual.FundingIndex.BigInt(), index)
+	fundingIndex := int256.MustFromBig(perpetual.FundingIndex.BigInt())
+	indexDelta := new(int256.Int).Sub(fundingIndex, index)
 
 	// if indexDelta is zero, then net settlement is zero.
 	if indexDelta.Sign() == 0 {
-		return big.NewInt(0), perpetual.FundingIndex.BigInt()
+		return int256.NewInt(0), fundingIndex
 	}
 
-	bigNetSettlementPpm = new(big.Int).Mul(indexDelta, quantums)
+	netSettlementPpm = new(int256.Int).Mul(indexDelta, quantums)
 
-	// `bigNetSettlementPpm` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
+	// `netSettlementPpm` carries sign. `indexDelta`` is the increase in `fundingIndex`, so if
 	// the position is long (positive), the net settlement should be short (negative), and vice versa.
-	// Thus, always negate `bigNetSettlementPpm` here.
-	bigNetSettlementPpm = bigNetSettlementPpm.Neg(bigNetSettlementPpm)
+	// Thus, always negate `netSettlementPpm` here.
+	netSettlementPpm = netSettlementPpm.Neg(netSettlementPpm)
 
-	return bigNetSettlementPpm, perpetual.FundingIndex.BigInt()
+	return netSettlementPpm, fundingIndex
 }
 
 // GetPremiumSamples reads premium samples from the current `funding-tick` epoch,
@@ -1221,7 +1219,7 @@ func (k Keeper) addToPremiumStore(
 func (k Keeper) ModifyFundingIndex(
 	ctx sdk.Context,
 	perpetualId uint32,
-	bigFundingIndexDelta *big.Int,
+	fundingIndexDelta *int256.Int,
 ) (
 	err error,
 ) {
@@ -1231,10 +1229,10 @@ func (k Keeper) ModifyFundingIndex(
 		return err
 	}
 
-	bigFundingIndex := new(big.Int).Set(perpetual.FundingIndex.BigInt())
-	bigFundingIndex.Add(bigFundingIndex, bigFundingIndexDelta)
+	fundingIndex := int256.MustFromBig(perpetual.FundingIndex.BigInt())
+	fundingIndex.Add(fundingIndex, fundingIndexDelta)
 
-	perpetual.FundingIndex = dtypes.NewIntFromBigInt(bigFundingIndex)
+	perpetual.FundingIndex = dtypes.NewIntFromBigInt(fundingIndex.ToBig())
 	k.SetPerpetual(ctx, perpetual)
 	return nil
 }
@@ -1243,7 +1241,7 @@ func (k Keeper) ModifyFundingIndex(
 func (k Keeper) ModifyOpenInterest(
 	ctx sdk.Context,
 	perpetualId uint32,
-	openInterestDeltaBaseQuantums *big.Int,
+	openInterestDeltaBaseQuantums *int256.Int,
 ) (
 	err error,
 ) {
@@ -1258,23 +1256,23 @@ func (k Keeper) ModifyOpenInterest(
 		return err
 	}
 
-	bigOpenInterest := perpetual.OpenInterest.BigInt()
-	bigOpenInterest.Add(
-		bigOpenInterest, // reuse pointer for efficiency
+	openInterest := int256.MustFromBig(perpetual.OpenInterest.BigInt())
+	openInterest.Add(
+		openInterest, // reuse pointer for efficiency
 		openInterestDeltaBaseQuantums,
 	)
 
-	if bigOpenInterest.Sign() < 0 {
+	if openInterest.Sign() < 0 {
 		return errorsmod.Wrapf(
 			types.ErrOpenInterestWouldBecomeNegative,
 			"perpetualId = %d, openInterest before = %s, after = %s",
 			perpetualId,
 			perpetual.OpenInterest.String(),
-			bigOpenInterest.String(),
+			openInterest.String(),
 		)
 	}
 
-	perpetual.OpenInterest = dtypes.NewIntFromBigInt(bigOpenInterest)
+	perpetual.OpenInterest = dtypes.NewIntFromBigInt(openInterest.ToBig())
 	k.SetPerpetual(ctx, perpetual)
 
 	// TODO(OTE-247): add indexer update logic for open interest change.
@@ -1466,10 +1464,10 @@ func (k Keeper) PerformStatefulPremiumVotesValidation(
 			panic(types.ErrLiquidityTierDoesNotExist)
 		}
 		// Check premium vote value is within bounds.
-		bigAbsPremiumPpm := new(big.Int).SetUint64(uint64(
+		absPremiumPpm := new(int256.Int).SetUint64(uint64(
 			lib.AbsInt32(vote.PremiumPpm),
 		))
-		if bigAbsPremiumPpm.Cmp(maxAbsPremiumVotePpm) > 0 {
+		if absPremiumPpm.Cmp(maxAbsPremiumVotePpm) > 0 {
 			return errorsmod.Wrapf(
 				types.ErrPremiumVoteNotClamped,
 				"perpetualId = %d, premium vote = %d, maxAbsPremiumVotePpm = %d",
@@ -1624,10 +1622,10 @@ func (k Keeper) SetParams(ctx sdk.Context, params types.Params) error {
 // (used for clamping premium votes) as a map whose key is liquidity tier ID.
 func (k Keeper) getLiquidityTiertoMaxAbsPremiumVotePpm(
 	ctx sdk.Context,
-) (ltToMaxAbsPremiumVotePpm map[uint32]*big.Int) {
+) (ltToMaxAbsPremiumVotePpm map[uint32]*int256.Int) {
 	params := k.GetParams(ctx)
 	allLiquidityTiers := k.GetAllLiquidityTiers(ctx)
-	ltToMaxAbsPremiumVotePpm = make(map[uint32]*big.Int)
+	ltToMaxAbsPremiumVotePpm = make(map[uint32]*int256.Int)
 	for _, liquidityTier := range allLiquidityTiers {
 		ltToMaxAbsPremiumVotePpm[liquidityTier.Id] =
 			liquidityTier.GetMaxAbsFundingClampPpm(params.PremiumVoteClampFactorPpm)

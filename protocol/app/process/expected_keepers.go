@@ -2,10 +2,10 @@ package process
 
 import (
 	"context"
-	"math/big"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -43,11 +43,11 @@ type ProcessPerpetualKeeper interface {
 	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
+		quantums *int256.Int,
+		index *int256.Int,
 	) (
-		bigNetSettlementPpm *big.Int,
-		newFundingIndex *big.Int,
+		bigNetSettlementPpm *int256.Int,
+		newFundingIndex *int256.Int,
 		err error,
 	)
 	GetPerpetual(ctx sdk.Context, id uint32) (val perptypes.Perpetual, err error)

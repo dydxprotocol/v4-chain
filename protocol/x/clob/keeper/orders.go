@@ -1065,7 +1065,7 @@ func (k Keeper) AddOrderToOrderbookSubaccountUpdatesCheck(
 				panic(err)
 			}
 
-			bigFillAmount := openOrder.RemainingQuantums.ToBigInt()
+			bigFillAmount := openOrder.RemainingQuantums.ToInt256().ToBig()
 			addPerpetualFillAmountStart := time.Now()
 			pendingUpdates.AddPerpetualFill(
 				subaccountId,
@@ -1178,7 +1178,7 @@ func (k Keeper) GetStatePosition(ctx sdk.Context, subaccountId satypes.Subaccoun
 	// corresponding to `perpetualId`, a position size of zero is returned.
 	subaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 	position, _ := subaccount.GetPerpetualPositionForId(perpetualId)
-	return position.GetBigQuantums()
+	return position.GetQuantums().ToBig()
 }
 
 // InitStatefulOrders places all stateful orders in state on the memclob, placed in ascending

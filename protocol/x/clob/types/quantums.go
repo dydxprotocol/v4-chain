@@ -32,7 +32,7 @@ func FillAmountToQuoteQuantums(
 	quantumConversionExponent int32,
 ) (bigNotional *big.Int) {
 	bigSubticks := subticks.ToBigInt()
-	bigBaseQuantums := baseQuantums.ToBigInt()
+	bigBaseQuantums := baseQuantums.ToInt256().ToBig()
 
 	bigSubticksMulBaseQuantums := new(big.Int).Mul(bigSubticks, bigBaseQuantums)
 

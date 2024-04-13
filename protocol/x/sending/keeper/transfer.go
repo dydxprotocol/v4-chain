@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	"math/big"
 	"time"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
@@ -9,6 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
 	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -27,7 +27,7 @@ func (k Keeper) ProcessTransfer(
 		pendingTransfer.Sender,
 		pendingTransfer.Recipient,
 		pendingTransfer.AssetId,
-		pendingTransfer.GetBigQuantums(),
+		pendingTransfer.GetQuantums(),
 	)
 	if err != nil {
 		return err
@@ -95,7 +95,7 @@ func (k Keeper) ProcessDepositToSubaccount(
 		senderAccAddress,
 		msgDepositToSubaccount.Recipient,
 		msgDepositToSubaccount.AssetId,
-		new(big.Int).SetUint64(msgDepositToSubaccount.Quantums),
+		int256.NewUnsignedInt(msgDepositToSubaccount.Quantums),
 	)
 
 	// Emit gauge metric with labels if deposit to subaccount succeeds.
@@ -158,7 +158,7 @@ func (k Keeper) ProcessWithdrawFromSubaccount(
 		msgWithdrawFromSubaccount.Sender,
 		recipientAccAddress,
 		msgWithdrawFromSubaccount.AssetId,
-		new(big.Int).SetUint64(msgWithdrawFromSubaccount.Quantums),
+		int256.NewUnsignedInt(msgWithdrawFromSubaccount.Quantums),
 	)
 
 	// Emit gauge metric with labels if withdrawal from subaccount succeeds.

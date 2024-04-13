@@ -6,6 +6,7 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
 	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
 	perpetualsmoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -27,9 +28,9 @@ type SubaccountsKeeper interface {
 		ctx sdk.Context,
 		update satypes.Update,
 	) (
-		bigNetCollateral *big.Int,
-		bigInitialMargin *big.Int,
-		bigMaintenanceMargin *big.Int,
+		netCollateral *int256.Int,
+		initialMargin *int256.Int,
+		maintenanceMargin *int256.Int,
 		err error,
 	)
 	GetSubaccount(
@@ -64,10 +65,15 @@ type SubaccountsKeeper interface {
 		perpetualId uint32,
 		blockHeight uint32,
 	) error
-	TransferFeesToFeeCollectorModule(ctx sdk.Context, assetId uint32, amount *big.Int, perpetualId uint32) error
+	TransferFeesToFeeCollectorModule(
+		ctx sdk.Context,
+		assetId uint32,
+		amount *int256.Int,
+		perpetualId uint32,
+	) error
 	TransferInsuranceFundPayments(
 		ctx sdk.Context,
-		amount *big.Int,
+		amount *int256.Int,
 		perpetualId uint32,
 	) error
 	GetCollateralPoolFromPerpetualId(
@@ -92,34 +98,34 @@ type PerpetualsKeeper interface {
 	GetNetNotional(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		bigQuantums *int256.Int,
 	) (
-		bigNetNotionalQuoteQuantums *big.Int,
+		bigNetNotionalQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetNotionalInBaseQuantums(
 		ctx sdk.Context,
 		id uint32,
-		bigQuoteQuantums *big.Int,
+		bigQuoteQuantums *int256.Int,
 	) (
-		bigBaseQuantums *big.Int,
+		bigBaseQuantums *int256.Int,
 		err error,
 	)
 	GetNetCollateral(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		bigQuantums *int256.Int,
 	) (
-		bigNetCollateralQuoteQuantums *big.Int,
+		bigNetCollateralQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetMarginRequirements(
 		ctx sdk.Context,
 		id uint32,
-		bigQuantums *big.Int,
+		bigQuantums *int256.Int,
 	) (
-		bigInitialMarginQuoteQuantums *big.Int,
-		bigMaintenanceMarginQuoteQuantums *big.Int,
+		bigInitialMarginQuoteQuantums *int256.Int,
+		bigMaintenanceMarginQuoteQuantums *int256.Int,
 		err error,
 	)
 	GetPerpetual(
@@ -133,11 +139,11 @@ type PerpetualsKeeper interface {
 	GetSettlementPpm(
 		ctx sdk.Context,
 		perpetualId uint32,
-		quantums *big.Int,
-		index *big.Int,
+		quantums *int256.Int,
+		index *int256.Int,
 	) (
-		bigNetSettlement *big.Int,
-		newFundingIndex *big.Int,
+		bigNetSettlement *int256.Int,
+		newFundingIndex *int256.Int,
 		err error,
 	)
 	MaybeProcessNewFundingTickEpoch(ctx sdk.Context)

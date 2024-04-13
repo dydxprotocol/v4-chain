@@ -2,13 +2,13 @@ package keeper_test
 
 import (
 	"errors"
-	"math/big"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 	"github.com/dydxprotocol/v4-chain/protocol/mocks"
 	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
@@ -30,8 +30,8 @@ type testMemClobMethodArgs struct {
 	indexPrice            pricestypes.MarketPrice
 	baseAtomicResolution  int32
 	quoteAtomicResolution int32
-	impactNotionalAmount  *big.Int
-	maxAbsPremiumVotePpm  *big.Int
+	impactNotionalAmount  *int256.Int
+	maxAbsPremiumVotePpm  *int256.Int
 
 	// Return values from `MemClob.GetPricePremium`
 	premiumPpm         int32
@@ -58,8 +58,8 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				},
 				baseAtomicResolution:  -9,
 				quoteAtomicResolution: -6,
-				impactNotionalAmount:  big.NewInt(5000),
-				maxAbsPremiumVotePpm:  big.NewInt(1000),
+				impactNotionalAmount:  int256.NewInt(5000),
+				maxAbsPremiumVotePpm:  int256.NewInt(1000),
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {
 				mck.On(
@@ -100,8 +100,8 @@ func TestGetPricePremiumForPerpetual(t *testing.T) {
 				},
 				baseAtomicResolution:  -9,
 				quoteAtomicResolution: -6,
-				impactNotionalAmount:  big.NewInt(5000),
-				maxAbsPremiumVotePpm:  big.NewInt(1000),
+				impactNotionalAmount:  int256.NewInt(5000),
+				maxAbsPremiumVotePpm:  int256.NewInt(1000),
 				getPricePremiumErr:    errors.New("GetPricePremium error"),
 			},
 			setUpMockMemClob: func(mck *mocks.MemClob, args testMemClobMethodArgs) {

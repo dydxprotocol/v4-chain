@@ -7,6 +7,7 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
@@ -165,11 +166,11 @@ func (k Keeper) GetVaultClobOrders(
 	}
 	inventory := k.GetVaultInventoryInPerpetual(ctx, vaultId, perpId)
 	openNotional := lib.BaseToQuoteQuantums(
-		inventory,
+		int256.MustFromBig(inventory),
 		perpetual.Params.AtomicResolution,
 		marketPrice.GetPrice(),
 		marketPrice.GetExponent(),
-	)
+	).ToBig()
 	leverage := new(big.Rat).Quo(
 		new(big.Rat).SetInt(openNotional),
 		new(big.Rat).SetInt(equity),

@@ -1,12 +1,10 @@
 package types
 
 import (
-	"fmt"
-	"math/big"
-
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 )
 
 // - Initial margin is less than or equal to 1.
@@ -47,18 +45,16 @@ func (liquidityTier LiquidityTier) GetMaintenanceMarginPpm() uint32 {
 			liquidityTier.MaintenanceFractionPpm))
 	}
 	// maintenance margin = initial margin * maintenance fraction
-	bigMaintenanceMarginPpm := lib.BigIntMulPpm(
-		new(big.Int).SetUint64(uint64(liquidityTier.InitialMarginPpm)),
-		liquidityTier.MaintenanceFractionPpm,
-	)
+	result := int256.NewUnsignedInt(uint64(liquidityTier.InitialMarginPpm))
+	result.MulPpm(result, liquidityTier.MaintenanceFractionPpm)
 	// convert result to uint32 (which is fine because margin ppm never exceeds 1 million).
-	return uint32(bigMaintenanceMarginPpm.Uint64())
+	return uint32(result.Uint64())
 }
 
 // `GetMaxAbsFundingClampPpm` returns the maximum absolute value according to the funding clamp function:
 // `|S| ≤ Clamp Factor * (Initial Margin - Maintenance Margin)`, which can be applied to both
 // funding rate clamping and premium vote clamping, each having their own clamp factor.
-func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint32) *big.Int {
+func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint32) *int256.Int {
 	maintenanceMarginPpm := liquidityTier.GetMaintenanceMarginPpm()
 	if maintenanceMarginPpm > liquidityTier.InitialMarginPpm {
 		// Invariant broken: maintenance margin fraction should never be larger than initial margin fraction.
@@ -66,11 +62,9 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 			liquidityTier.MaintenanceFractionPpm))
 	}
 
-	// Need to divide by 1 million (done by `BigIntMulPpm`) as both clamp factor and margin are in units of ppm.
-	return lib.BigIntMulPpm(
-		new(big.Int).SetUint64(uint64(clampFactorPpm)),
-		liquidityTier.InitialMarginPpm-maintenanceMarginPpm,
-	)
+	// Need to divide by 1 million (done by `MulPpm`) as both clamp factor and margin are in units of ppm.
+	ret := new(int256.Int).SetUint64(uint64(clampFactorPpm))
+	return ret.MulPpm(ret, liquidityTier.InitialMarginPpm-maintenanceMarginPpm)
 }
 
 // GetInitialMarginQuoteQuantums returns initial margin requirement (IMR) in quote quantums.
@@ -93,88 +87,42 @@ func (liquidityTier LiquidityTier) GetMaxAbsFundingClampPpm(clampFactorPpm uint3
 // note:
 // - divisions are delayed for precision purposes.
 func (liquidityTier LiquidityTier) GetInitialMarginQuoteQuantums(
-	bigQuoteQuantums *big.Int,
-	openInterestQuoteQuantums *big.Int,
-) *big.Int {
-	bigOpenInterestUpperCap := new(big.Int).SetUint64(liquidityTier.OpenInterestUpperCap)
+	quoteQuantums *int256.Int,
+	openInterestQuoteQuantums *int256.Int,
+) *int256.Int {
+	openInterestUpperCap := int256.NewUnsignedInt(liquidityTier.OpenInterestUpperCap)
 
 	// If `open_interest` >= `open_interest_upper_cap` where `upper_cap` is non-zero,
 	// OIMF = 1.0 so return input quote quantums as the IMR.
 	if openInterestQuoteQuantums.Cmp(
-		bigOpenInterestUpperCap,
+		openInterestUpperCap,
 	) >= 0 && liquidityTier.OpenInterestUpperCap != 0 {
-		return bigQuoteQuantums
+		return quoteQuantums
 	}
-
-	ratQuoteQuantums := new(big.Rat).SetInt(bigQuoteQuantums)
 
 	// If `open_interest_upper_cap` is 0, OIMF is disabled。
 	// Or if `current_interest` <= `open_interest_lower_cap`, IMF is not scaled.
 	// In both cases, use base IMF as OIMF.
-	bigOpenInterestLowerCap := new(big.Int).SetUint64(liquidityTier.OpenInterestLowerCap)
+	openInterestLowerCap := int256.NewUnsignedInt(liquidityTier.OpenInterestLowerCap)
+	baseImr := new(int256.Int).MulPpmRoundUp(quoteQuantums, liquidityTier.InitialMarginPpm)
 	if liquidityTier.OpenInterestUpperCap == 0 || openInterestQuoteQuantums.Cmp(
-		bigOpenInterestLowerCap,
+		openInterestLowerCap,
 	) <= 0 {
-		// Calculate base IMR: multiply `bigQuoteQuantums` with `initialMarginPpm` and divide by 1 million.
-		ratBaseIMR := lib.BigRatMulPpm(ratQuoteQuantums, liquidityTier.InitialMarginPpm)
-		return lib.BigRatRound(ratBaseIMR, true) // Round up initial margin.
+		// Calculate base IMR: multiply `quoteQuantums` with `initialMarginPpm` and divide by 1 million.
+		return baseImr
 	}
 
 	// If `open_interest_lower_cap` < `open_interest` <= `open_interest_upper_cap`, calculate the scaled OIMF.
 	// `Scaling Factor = (Open Notional - Lower Cap) / (Upper Cap - Lower Cap)`
-	ratScalingFactor := new(big.Rat).SetFrac(
-		new(big.Int).Sub(
-			openInterestQuoteQuantums, // reuse pointer for memory efficiency
-			bigOpenInterestLowerCap,
-		),
-		bigOpenInterestUpperCap.Sub(
-			bigOpenInterestUpperCap, // reuse pointer for memory efficiency
-			bigOpenInterestLowerCap,
-		),
-	)
-
-	// `IMF Increase = Scaling Factor * (1 - Base IMF)`
-	ratIMFIncrease := lib.BigRatMulPpm(
-		ratScalingFactor,
-		lib.OneMillion-liquidityTier.InitialMarginPpm, // >= 0, since we check in `liquidityTier.Validate()`
-	)
-
-	// Calculate `Max(IMF Increase, 0)`.
-	if ratIMFIncrease.Sign() < 0 {
-		panic(
-			fmt.Sprintf(
-				"GetInitialMarginQuoteQuantums: IMF Increase is negative (%s), liquidityTier: %+v, openInterestQuoteQuantums: %s",
-				ratIMFIncrease.String(),
-				liquidityTier,
-				openInterestQuoteQuantums.String(),
-			),
-		)
-	}
-
-	// First, calculate base IMF in big.Rat
-	ratBaseIMF := new(big.Rat).SetFrac64(
-		int64(liquidityTier.InitialMarginPpm), // safe, since `InitialMargin` is uint32
-		int64(lib.OneMillion),
-	)
-
-	// `Effective IMF = Min(Base IMF + Max(IMF Increase, 0), 1.0)`
-	ratEffectiveIMF := ratBaseIMF.Add(
-		ratBaseIMF, // reuse pointer for memory efficiency
-		ratIMFIncrease,
-	)
-
-	// `Effective IMR = Effective IMF * Quote Quantums`
-	bigIMREffective := lib.BigRatRound(
-		ratEffectiveIMF.Mul(
-			ratEffectiveIMF, // reuse pointer for memory efficiency
-			ratQuoteQuantums,
-		),
-		true, // Round up initial margin.
-	)
+	additionalImr := new(int256.Int)
+	additionalImr.Mul(quoteQuantums, additionalImr.Sub(openInterestQuoteQuantums, openInterestLowerCap))
+	additionalImr.DivRoundUp(additionalImr, openInterestLowerCap.Sub(openInterestUpperCap, openInterestLowerCap))
+	additionalImr.MulPpmRoundUp(additionalImr, lib.OneMillion-liquidityTier.InitialMarginPpm)
+	additionalImr = additionalImr.Add(baseImr, additionalImr)
 
 	// Return min(Effective IMR, Quote Quantums)
-	if bigIMREffective.Cmp(bigQuoteQuantums) >= 0 {
-		return bigQuoteQuantums
+	if additionalImr.Cmp(quoteQuantums) >= 0 {
+		return quoteQuantums
 	}
-	return bigIMREffective
+	return additionalImr
 }

@@ -11,6 +11,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -232,14 +233,15 @@ func (k Keeper) ProcessSingleMatch(
 
 	// Update subaccount total quantums liquidated and total insurance fund lost for liquidation orders.
 	if matchWithOrders.TakerOrder.IsLiquidation() {
-		notionalLiquidatedQuoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
+		notionalLiquidatedQuoteQuantumsInt256, err := k.perpetualsKeeper.GetNetNotional(
 			ctx,
 			perpetualId,
-			fillAmount.ToBigInt(),
+			int256.NewUnsignedInt((uint64)(fillAmount)),
 		)
 		if err != nil {
 			return false, takerUpdateResult, makerUpdateResult, nil, err
 		}
+		notionalLiquidatedQuoteQuantums := notionalLiquidatedQuoteQuantumsInt256.ToBig()
 
 		k.UpdateSubaccountLiquidationInfo(
 			ctx,
@@ -342,8 +344,8 @@ func (k Keeper) persistMatchedOrders(
 	bigTakerQuoteBalanceDelta := new(big.Int).Set(bigFillQuoteQuantums)
 	bigMakerQuoteBalanceDelta := new(big.Int).Set(bigFillQuoteQuantums)
 
-	bigTakerPerpetualQuantumsDelta := matchWithOrders.FillAmount.ToBigInt()
-	bigMakerPerpetualQuantumsDelta := matchWithOrders.FillAmount.ToBigInt()
+	bigTakerPerpetualQuantumsDelta := matchWithOrders.FillAmount.ToInt256().ToBig()
+	bigMakerPerpetualQuantumsDelta := matchWithOrders.FillAmount.ToInt256().ToBig()
 
 	if matchWithOrders.TakerOrder.IsBuy() {
 		bigTakerQuoteBalanceDelta.Neg(bigTakerQuoteBalanceDelta)
@@ -368,14 +370,14 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: bigTakerQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(bigTakerQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: bigTakerPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(bigTakerPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: matchWithOrders.TakerOrder.GetSubaccountId(),
@@ -384,14 +386,14 @@ func (k Keeper) persistMatchedOrders(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: bigMakerQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(bigMakerQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: bigMakerPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(bigMakerPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: matchWithOrders.MakerOrder.GetSubaccountId(),
@@ -432,7 +434,9 @@ func (k Keeper) persistMatchedOrders(
 		)
 	}
 
-	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(ctx, insuranceFundDelta, perpetualId); err != nil {
+	if err := k.subaccountsKeeper.TransferInsuranceFundPayments(
+		ctx, int256.MustFromBig(insuranceFundDelta), perpetualId,
+	); err != nil {
 		return takerUpdateResult, makerUpdateResult, err
 	}
 
@@ -441,7 +445,7 @@ func (k Keeper) persistMatchedOrders(
 	if err := k.subaccountsKeeper.TransferFeesToFeeCollectorModule(
 		ctx,
 		assettypes.AssetUsdc.Id,
-		bigTotalFeeQuoteQuantums,
+		int256.MustFromBig(bigTotalFeeQuoteQuantums),
 		perpetualId,
 	); err != nil {
 		return takerUpdateResult, makerUpdateResult, errorsmod.Wrapf(
@@ -566,9 +570,9 @@ func getUpdatedOrderFillAmount(
 	currentFillAmount satypes.BaseQuantums,
 	fillQuantums satypes.BaseQuantums,
 ) (satypes.BaseQuantums, error) {
-	bigCurrentFillAmount := currentFillAmount.ToBigInt()
-	bigNewFillAmount := bigCurrentFillAmount.Add(bigCurrentFillAmount, fillQuantums.ToBigInt())
-	if bigNewFillAmount.Cmp(orderBaseQuantums.ToBigInt()) == 1 {
+	bigCurrentFillAmount := currentFillAmount.ToInt256().ToBig()
+	bigNewFillAmount := bigCurrentFillAmount.Add(bigCurrentFillAmount, fillQuantums.ToInt256().ToBig())
+	if bigNewFillAmount.Cmp(orderBaseQuantums.ToInt256().ToBig()) == 1 {
 		return 0, errorsmod.Wrapf(
 			types.ErrInvalidMsgProposedOperations,
 			"Match with Quantums %v would exceed total Quantums %v of OrderId %v. New total filled quantums would be %v.",

@@ -2,10 +2,10 @@ package keeper_test
 
 import (
 	"fmt"
-	"math/big"
 	"testing"
 
 	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	keeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
@@ -35,8 +35,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					SettledSubaccount: types.Subaccount{},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -52,8 +52,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -74,8 +74,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      0,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   0,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -85,8 +85,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(1_000),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(1_000),
 						},
 					},
 				},
@@ -102,8 +102,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -113,8 +113,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -130,8 +130,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -141,8 +141,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(-499),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(-499),
 						},
 					},
 				},
@@ -158,8 +158,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -169,15 +169,15 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1,
-							BigQuantumsDelta: big.NewInt(-500),
+							PerpetualId:   1,
+							QuantumsDelta: int256.NewInt(-500),
 						},
 					},
 				},
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1,
-				BaseQuantums: big.NewInt(500),
+				BaseQuantums: int256.NewInt(500),
 			},
 		},
 		"Valid: 500 -> 0, 0 -> 500, delta = 0": {
@@ -190,8 +190,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -207,8 +207,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-500),
 						},
 					},
 				},
@@ -225,8 +225,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(500),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(500),
 						},
 					},
 				},
@@ -248,8 +248,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-150),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-150),
 						},
 					},
 				},
@@ -260,8 +260,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(150),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(150),
 						},
 					},
 				},
@@ -283,8 +283,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(300),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(300),
 						},
 					},
 				},
@@ -300,15 +300,15 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-300),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-300),
 						},
 					},
 				},
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1000,
-				BaseQuantums: big.NewInt(-50),
+				BaseQuantums: int256.NewInt(-50),
 			},
 		},
 		"Valid: -3100 -> -5000, 1000 -> 2900, delta = 1900": {
@@ -326,8 +326,8 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(-1900),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(-1900),
 						},
 					},
 				},
@@ -343,15 +343,15 @@ func TestGetDeltaOpenInterestFromUpdates(t *testing.T) {
 					},
 					PerpetualUpdates: []types.PerpetualUpdate{
 						{
-							PerpetualId:      1000,
-							BigQuantumsDelta: big.NewInt(+1900),
+							PerpetualId:   1000,
+							QuantumsDelta: int256.NewInt(+1900),
 						},
 					},
 				},
 			},
 			expectedVal: &perptypes.OpenInterestDelta{
 				PerpetualId:  1000,
-				BaseQuantums: big.NewInt(1900),
+				BaseQuantums: int256.NewInt(1900),
 			},
 		},
 	}

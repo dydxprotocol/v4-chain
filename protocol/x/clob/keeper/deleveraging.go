@@ -15,6 +15,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
@@ -70,7 +71,7 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		return new(big.Int), nil
 	}
 
-	deltaQuantums := new(big.Int).Neg(position.GetBigQuantums())
+	deltaQuantums := new(big.Int).Neg(position.GetQuantums().ToBig())
 	quantumsDeleveraged, err = k.MemClob.DeleverageSubaccount(
 		ctx,
 		subaccountId,
@@ -97,20 +98,22 @@ func (k Keeper) MaybeDeleverageSubaccount(
 		labels...,
 	)
 
+	deltaQuantumsInt256 := int256.MustFromBig(deltaQuantums)
 	if quoteQuantums, err := k.perpetualsKeeper.GetNetNotional(
 		ctx,
 		perpetualId,
-		new(big.Int).Abs(deltaQuantums),
+		deltaQuantumsInt256.Abs(deltaQuantumsInt256),
 	); err == nil {
+		bigQuoteQuantums := quoteQuantums.ToBig()
 		metrics.IncrCounterWithLabels(
 			metrics.ClobDeleverageSubaccountTotalQuoteQuantums,
-			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			metrics.GetMetricValueFromBigInt(bigQuoteQuantums),
 			labels...,
 		)
 
 		metrics.AddSampleWithLabels(
 			metrics.ClobDeleverageSubaccountTotalQuoteQuantumsDistribution,
-			metrics.GetMetricValueFromBigInt(quoteQuantums),
+			metrics.GetMetricValueFromBigInt(bigQuoteQuantums),
 			labels...,
 		)
 	}
@@ -350,7 +353,7 @@ func (k Keeper) OffsetSubaccountPerpetualPosition(
 		numSubaccountsIterated++
 		offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, subaccountId)
 		offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-		bigOffsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+		bigOffsettingPositionQuantums := offsettingPosition.GetQuantums().ToBig()
 
 		// Skip subaccounts that do not have a position in the opposite direction as the liquidated subaccount.
 		if deltaQuantumsRemaining.Sign() != bigOffsettingPositionQuantums.Sign() {
@@ -480,7 +483,9 @@ func (k Keeper) getDeleveragingQuoteQuantumsDelta(
 ) (deltaQuoteQuantums *big.Int, err error) {
 	// If market is in final settlement and the subaccount has non-negative TNC, use the oracle price.
 	if isFinalSettlement {
-		return k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, new(big.Int).Neg(deltaQuantums))
+		deltaQuantumsInt256 := int256.MustFromBig(deltaQuantums)
+		notional, err := k.perpetualsKeeper.GetNetNotional(ctx, perpetualId, deltaQuantumsInt256.Neg(deltaQuantumsInt256))
+		return notional.ToBig(), err
 	}
 
 	// For standard deleveraging, use the bankruptcy price.
@@ -515,12 +520,12 @@ func (k Keeper) ProcessDeleveraging(
 	// Get the liquidated subaccount.
 	liquidatedSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, liquidatedSubaccountId)
 	liquidatedPosition, _ := liquidatedSubaccount.GetPerpetualPositionForId(perpetualId)
-	liquidatedPositionQuantums := liquidatedPosition.GetBigQuantums()
+	liquidatedPositionQuantums := liquidatedPosition.GetQuantums().ToBig()
 
 	// Get the offsetting subaccount.
 	offsettingSubaccount := k.subaccountsKeeper.GetSubaccount(ctx, offsettingSubaccountId)
 	offsettingPosition, _ := offsettingSubaccount.GetPerpetualPositionForId(perpetualId)
-	offsettingPositionQuantums := offsettingPosition.GetBigQuantums()
+	offsettingPositionQuantums := offsettingPosition.GetQuantums().ToBig()
 
 	// Make sure that `deltaQuantums` is valid with respect to the liquidated and offsetting subaccounts
 	// by checking that `deltaQuantums` is on the opposite side of the liquidated position side,
@@ -550,14 +555,14 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: deleveragedSubaccountQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(deleveragedSubaccountQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: deleveragedSubaccountPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(deleveragedSubaccountPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: liquidatedSubaccountId,
@@ -566,14 +571,14 @@ func (k Keeper) ProcessDeleveraging(
 		{
 			AssetUpdates: []satypes.AssetUpdate{
 				{
-					AssetId:          assettypes.AssetUsdc.Id,
-					BigQuantumsDelta: offsettingSubaccountQuoteBalanceDelta,
+					AssetId:       assettypes.AssetUsdc.Id,
+					QuantumsDelta: int256.MustFromBig(offsettingSubaccountQuoteBalanceDelta),
 				},
 			},
 			PerpetualUpdates: []satypes.PerpetualUpdate{
 				{
-					PerpetualId:      perpetualId,
-					BigQuantumsDelta: offsettingSubaccountPerpetualQuantumsDelta,
+					PerpetualId:   perpetualId,
+					QuantumsDelta: int256.MustFromBig(offsettingSubaccountPerpetualQuantumsDelta),
 				},
 			},
 			SubaccountId: offsettingSubaccountId,
@@ -592,11 +597,13 @@ func (k Keeper) ProcessDeleveraging(
 	}
 
 	// Stat quantums deleveraged in quote quantums.
+	deltaBaseQuantumsInt256 := int256.MustFromBig(deltaBaseQuantums)
 	if deleveragedQuoteQuantums, err := k.perpetualsKeeper.GetNetCollateral(
 		ctx,
 		perpetualId,
-		new(big.Int).Abs(deltaBaseQuantums),
+		deltaBaseQuantumsInt256.Abs(deltaBaseQuantumsInt256),
 	); err == nil {
+		bigDeleveragedQuoteQuantums := deleveragedQuoteQuantums.ToBig()
 		labels := []metrics.Label{
 			metrics.GetLabelForIntValue(metrics.PerpetualId, int(perpetualId)),
 			metrics.GetLabelForBoolValue(metrics.CheckTx, ctx.IsCheckTx()),
@@ -605,7 +612,7 @@ func (k Keeper) ProcessDeleveraging(
 
 		metrics.AddSampleWithLabels(
 			metrics.ClobDeleverageSubaccountFilledQuoteQuantums,
-			metrics.GetMetricValueFromBigInt(deleveragedQuoteQuantums),
+			metrics.GetMetricValueFromBigInt(bigDeleveragedQuoteQuantums),
 			labels...,
 		)
 	}

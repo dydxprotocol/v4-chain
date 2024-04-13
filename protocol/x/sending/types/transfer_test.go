@@ -1,9 +1,9 @@
 package types_test
 
 import (
-	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
 	testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
 	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
@@ -14,8 +14,8 @@ import (
 
 func TestGetBigQuoteQuantums(t *testing.T) {
 	transfer := constants.Transfer_Carl_Num0_Dave_Num0_Quote_500
-	bigQuoteQuantums := transfer.GetBigQuantums()
-	require.Equal(t, new(big.Int).SetUint64(500_000_000), bigQuoteQuantums)
+	quoteQuantums := transfer.GetQuantums()
+	require.Equal(t, new(int256.Int).SetUint64(500_000_000), quoteQuantums)
 }
 
 func TestGetSubaccountUpdates(t *testing.T) {
@@ -28,11 +28,11 @@ func TestGetSubaccountUpdates(t *testing.T) {
 			expected: []satypes.Update{
 				{
 					SubaccountId: constants.Carl_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(-500_000_000)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(int256.NewInt(-500_000_000)),
 				},
 				{
 					SubaccountId: constants.Dave_Num0,
-					AssetUpdates: testutil.CreateUsdcAssetUpdate(big.NewInt(500_000_000)),
+					AssetUpdates: testutil.CreateUsdcAssetUpdate(int256.NewInt(500_000_000)),
 				},
 			},
 		},

@@ -3,7 +3,6 @@ package keeper
 import (
 	"errors"
 	"fmt"
-	"math/big"
 	"math/rand"
 	"time"
 
@@ -21,6 +20,7 @@ import (
 	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
 	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
@@ -385,7 +385,7 @@ func (k Keeper) UpdateSubaccounts(
 				types.NewCreateSettledFundingEvent(
 					*u.SettledSubaccount.Id,
 					perpetualId,
-					fundingPaid.BigInt(),
+					int256.MustFromBig(fundingPaid.BigInt()),
 				),
 			)
 		}
@@ -471,7 +471,7 @@ func GetSettledSubaccountWithPerpetuals(
 	fundingPayments map[uint32]dtypes.SerializableInt,
 	err error,
 ) {
-	totalNetSettlementPpm := big.NewInt(0)
+	totalNetSettlementPpm := int256.NewInt(0)
 
 	newPerpetualPositions := []*types.PerpetualPosition{}
 	fundingPayments = make(map[uint32]dtypes.SerializableInt)
@@ -488,31 +488,31 @@ func GetSettledSubaccountWithPerpetuals(
 		}
 
 		// Call the stateless utility function to get the net settlement and new funding index.
-		bigNetSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
+		netSettlementPpm, newFundingIndex := perpkeeper.GetSettlementPpmWithPerpetual(
 			perpetual,
-			p.GetBigQuantums(),
-			p.FundingIndex.BigInt(),
+			p.GetQuantums(),
+			int256.MustFromBig(p.FundingIndex.BigInt()),
 		)
+
 		// Record non-zero funding payment (to be later emitted in SubaccountUpdateEvent to indexer).
 		// Note: Funding payment is the negative of settlement, i.e. positive settlement is equivalent
 		// to a negative funding payment (position received funding payment) and vice versa.
-		if bigNetSettlementPpm.Cmp(lib.BigInt0()) != 0 {
-			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(
-				new(big.Int).Neg(
-					new(big.Int).Div(bigNetSettlementPpm, lib.BigIntOneMillion()),
-				),
-			)
+		if netSettlementPpm.Sign() != 0 {
+			// TODO: good div?
+			fundingPayment := new(int256.Int).Div(netSettlementPpm, int256.OneMillion)
+			fundingPayment.Neg(fundingPayment)
+			fundingPayments[p.PerpetualId] = dtypes.NewIntFromBigInt(fundingPayment.ToBig())
 		}
 
 		// Aggregate all net settlements.
-		totalNetSettlementPpm.Add(totalNetSettlementPpm, bigNetSettlementPpm)
+		totalNetSettlementPpm.Add(totalNetSettlementPpm, netSettlementPpm)
 
 		// Update cached funding index of the perpetual position.
 		newPerpetualPositions = append(
 			newPerpetualPositions, &types.PerpetualPosition{
 				PerpetualId:  p.PerpetualId,
 				Quantums:     p.Quantums,
-				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex),
+				FundingIndex: dtypes.NewIntFromBigInt(newFundingIndex.ToBig()),
 			},
 		)
 	}
@@ -523,11 +523,12 @@ func GetSettledSubaccountWithPerpetuals(
 		PerpetualPositions: newPerpetualPositions,
 		MarginEnabled:      subaccount.MarginEnabled,
 	}
-	newUsdcPosition := new(big.Int).Add(
+	newUsdcPosition := new(int256.Int).Add(
 		subaccount.GetUsdcPosition(),
 		// `Div` implements Euclidean division (unlike Go). When the diviser is positive,
 		// division result always rounds towards negative infinity.
-		totalNetSettlementPpm.Div(totalNetSettlementPpm, lib.BigIntOneMillion()),
+		// TODO: good div?
+		totalNetSettlementPpm.Div(totalNetSettlementPpm, int256.OneMillion),
 	)
 	// TODO(CLOB-993): Remove this function and use `UpdateAssetPositions` instead.
 	newSubaccount.SetUsdcAssetPosition(newUsdcPosition)
@@ -666,9 +667,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 	// do not result in OI changes.
 	perpOpenInterestDelta := GetDeltaOpenInterestFromUpdates(settledUpdates, updateType)
 
-	bigCurNetCollateral := make(map[string]*big.Int)
-	bigCurInitialMargin := make(map[string]*big.Int)
-	bigCurMaintenanceMargin := make(map[string]*big.Int)
+	curNetCollateral := make(map[string]*int256.Int)
+	curInitialMargin := make(map[string]*int256.Int)
+	curMaintenanceMargin := make(map[string]*int256.Int)
 
 	// Iterate over all updates.
 	for i, u := range settledUpdates {
@@ -711,9 +712,9 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			}
 		}
 		// Get the new collateralization and margin requirements with the update applied.
-		bigNewNetCollateral,
-			bigNewInitialMargin,
-			bigNewMaintenanceMargin,
+		newNetCollateral,
+			newInitialMargin,
+			newMaintenanceMargin,
 			err := k.internalGetNetCollateralAndMarginRequirements(
 			branchedContext,
 			u,
@@ -728,7 +729,7 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 		// The subaccount is not well-collateralized after the update.
 		// We must now check if the state transition is valid.
-		if bigNewInitialMargin.Cmp(bigNewNetCollateral) > 0 {
+		if newInitialMargin.Cmp(newNetCollateral) > 0 {
 			// Get the current collateralization and margin requirements without the update applied.
 			emptyUpdate := SettledUpdate{
 				SettledSubaccount: u.SettledSubaccount,
@@ -741,10 +742,10 @@ func (k Keeper) internalCanUpdateSubaccounts(
 			saKey := string(bytes)
 
 			// Cache the current collateralization and margin requirements for the subaccount.
-			if _, ok := bigCurNetCollateral[saKey]; !ok {
-				bigCurNetCollateral[saKey],
-					bigCurInitialMargin[saKey],
-					bigCurMaintenanceMargin[saKey],
+			if _, ok := curNetCollateral[saKey]; !ok {
+				curNetCollateral[saKey],
+					curInitialMargin[saKey],
+					curMaintenanceMargin[saKey],
 					err = k.internalGetNetCollateralAndMarginRequirements(
 					ctx,
 					emptyUpdate,
@@ -756,11 +757,11 @@ func (k Keeper) internalCanUpdateSubaccounts(
 
 			// Determine whether the state transition is valid.
 			result = IsValidStateTransitionForUndercollateralizedSubaccount(
-				bigCurNetCollateral[saKey],
-				bigCurInitialMargin[saKey],
-				bigCurMaintenanceMargin[saKey],
-				bigNewNetCollateral,
-				bigNewMaintenanceMargin,
+				curNetCollateral[saKey],
+				curInitialMargin[saKey],
+				curMaintenanceMargin[saKey],
+				newNetCollateral,
+				newMaintenanceMargin,
 			)
 		}
 
@@ -795,29 +796,29 @@ func (k Keeper) internalCanUpdateSubaccounts(
 // has divide-by-zero issue when margin requirements are zero. To make sure the state
 // transition is valid, we special case this scenario and only allow state transition that improves net collateral.
 func IsValidStateTransitionForUndercollateralizedSubaccount(
-	bigCurNetCollateral *big.Int,
-	bigCurInitialMargin *big.Int,
-	bigCurMaintenanceMargin *big.Int,
-	bigNewNetCollateral *big.Int,
-	bigNewMaintenanceMargin *big.Int,
+	curNetCollateral *int256.Int,
+	curInitialMargin *int256.Int,
+	curMaintenanceMargin *int256.Int,
+	newNetCollateral *int256.Int,
+	newMaintenanceMargin *int256.Int,
 ) types.UpdateResult {
 	// Determine whether the subaccount was previously undercollateralized before the update.
 	var underCollateralizationResult = types.StillUndercollateralized
-	if bigCurInitialMargin.Cmp(bigCurNetCollateral) <= 0 {
+	if curInitialMargin.Cmp(curNetCollateral) <= 0 {
 		underCollateralizationResult = types.NewlyUndercollateralized
 	}
 
 	// If the maintenance margin is increasing, then the subaccount is undercollateralized.
-	if bigNewMaintenanceMargin.Cmp(bigCurMaintenanceMargin) > 0 {
+	if newMaintenanceMargin.Cmp(curMaintenanceMargin) > 0 {
 		return underCollateralizationResult
 	}
 
 	// If the maintenance margin is zero, it means the subaccount must have no open positions, and negative net
 	// collateral. If the net collateral is not improving then this transition is not valid.
-	if bigNewMaintenanceMargin.BitLen() == 0 || bigCurMaintenanceMargin.BitLen() == 0 {
-		if bigNewMaintenanceMargin.BitLen() == 0 &&
-			bigCurMaintenanceMargin.BitLen() == 0 &&
-			bigNewNetCollateral.Cmp(bigCurNetCollateral) > 0 {
+	if newMaintenanceMargin.Sign() == 0 || curMaintenanceMargin.Sign() == 0 {
+		if newMaintenanceMargin.Sign() == 0 &&
+			curMaintenanceMargin.Sign() == 0 &&
+			newNetCollateral.Cmp(curNetCollateral) > 0 {
 			return types.Success
 		}
 
@@ -828,12 +829,12 @@ func IsValidStateTransitionForUndercollateralizedSubaccount(
 	// `newNetCollateral / newMaintenanceMargin >= curNetCollateral / curMaintenanceMargin`.
 	// However, to avoid rounding errors, we factor this as
 	// `newNetCollateral * curMaintenanceMargin >= curNetCollateral * newMaintenanceMargin`.
-	bigCurRisk := new(big.Int).Mul(bigNewNetCollateral, bigCurMaintenanceMargin)
-	bigNewRisk := new(big.Int).Mul(bigCurNetCollateral, bigNewMaintenanceMargin)
+	curRisk := new(int256.Int).Mul(newNetCollateral, curMaintenanceMargin)
+	newRisk := new(int256.Int).Mul(curNetCollateral, newMaintenanceMargin)
 
 	// The subaccount is not well-collateralized, and the state transition leaves the subaccount in a
 	// "more-risky" state (collateral relative to margin requirements is decreasing).
-	if bigNewRisk.Cmp(bigCurRisk) > 0 {
+	if newRisk.Cmp(curRisk) > 0 {
 		return underCollateralizationResult
 	}
 
@@ -857,9 +858,9 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	update types.Update,
 ) (
-	bigNetCollateral *big.Int,
-	bigInitialMargin *big.Int,
-	bigMaintenanceMargin *big.Int,
+	netCollateral *int256.Int,
+	initialMargin *int256.Int,
+	maintenanceMargin *int256.Int,
 	err error,
 ) {
 	subaccount := k.GetSubaccount(ctx, update.SubaccountId)
@@ -883,7 +884,7 @@ func (k Keeper) GetNetCollateralAndMarginRequirements(
 
 // internalGetNetCollateralAndMarginRequirements returns the total net collateral, total initial margin
 // requirement, and total maintenance margin requirement for the `Subaccount` as if unsettled funding
-// of existing positions were settled, and the `bigQuoteBalanceDeltaQuantums`, `assetUpdates`, and
+// of existing positions were settled, and the `quoteBalanceDeltaQuantums`, `assetUpdates`, and
 // `perpetualUpdates` were applied. It is used to get information about speculative changes to the
 // `Subaccount`.
 // The input subaccounts must be settled.
@@ -896,9 +897,9 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	ctx sdk.Context,
 	settledUpdate SettledUpdate,
 ) (
-	bigNetCollateral *big.Int,
-	bigInitialMargin *big.Int,
-	bigMaintenanceMargin *big.Int,
+	netCollateral *int256.Int,
+	initialMargin *int256.Int,
+	maintenanceMargin *int256.Int,
 	err error,
 ) {
 	defer telemetry.ModuleMeasureSince(
@@ -909,9 +910,9 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	)
 
 	// Initialize return values.
-	bigNetCollateral = big.NewInt(0)
-	bigInitialMargin = big.NewInt(0)
-	bigMaintenanceMargin = big.NewInt(0)
+	netCollateral = int256.NewInt(0)
+	initialMargin = int256.NewInt(0)
+	maintenanceMargin = int256.NewInt(0)
 
 	// Merge updates and assets.
 	assetSizes, err := applyUpdatesToPositions(
@@ -919,7 +920,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.AssetUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return int256.NewInt(0), int256.NewInt(0), int256.NewInt(0), err
 	}
 
 	// Merge updates and perpetuals.
@@ -928,35 +929,35 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 		settledUpdate.PerpetualUpdates,
 	)
 	if err != nil {
-		return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+		return int256.NewInt(0), int256.NewInt(0), int256.NewInt(0), err
 	}
 
 	// The calculate function increments `netCollateral`, `initialMargin`, and `maintenanceMargin`
 	// given a `ProductKeeper` and a `PositionSize`.
 	calculate := func(pk types.ProductKeeper, size types.PositionSize) error {
 		id := size.GetId()
-		bigQuantums := size.GetBigQuantums()
+		quantums := size.GetQuantums()
 
-		bigNetCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, bigQuantums)
+		netCollateralQuoteQuantums, err := pk.GetNetCollateral(ctx, id, quantums)
 		if err != nil {
 			return err
 		}
 
-		bigNetCollateral.Add(bigNetCollateral, bigNetCollateralQuoteQuantums)
+		netCollateral.Add(netCollateral, netCollateralQuoteQuantums)
 
-		bigInitialMarginRequirements,
-			bigMaintenanceMarginRequirements,
+		initialMarginRequirements,
+			maintenanceMarginRequirements,
 			err := pk.GetMarginRequirements(
 			ctx,
 			id,
-			bigQuantums,
+			quantums,
 		)
 		if err != nil {
 			return err
 		}
 
-		bigInitialMargin.Add(bigInitialMargin, bigInitialMarginRequirements)
-		bigMaintenanceMargin.Add(bigMaintenanceMargin, bigMaintenanceMarginRequirements)
+		initialMargin.Add(initialMargin, initialMarginRequirements)
+		maintenanceMargin.Add(maintenanceMargin, maintenanceMarginRequirements)
 
 		return nil
 	}
@@ -965,7 +966,7 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	for _, size := range assetSizes {
 		err := calculate(k.assetsKeeper, size)
 		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+			return int256.NewInt(0), int256.NewInt(0), int256.NewInt(0), err
 		}
 	}
 
@@ -974,11 +975,11 @@ func (k Keeper) internalGetNetCollateralAndMarginRequirements(
 	for _, size := range perpetualSizes {
 		err := calculate(k.perpetualsKeeper, size)
 		if err != nil {
-			return big.NewInt(0), big.NewInt(0), big.NewInt(0), err
+			return int256.NewInt(0), int256.NewInt(0), int256.NewInt(0), err
 		}
 	}
 
-	return bigNetCollateral, bigInitialMargin, bigMaintenanceMargin, nil
+	return netCollateral, initialMargin, maintenanceMargin, nil
 }
 
 // applyUpdatesToPositions merges a slice of `types.UpdatablePositions` and `types.PositionSize`
@@ -1024,12 +1025,12 @@ func applyUpdatesToPositions[
 			var newPos = types.NewPositionUpdate(id)
 
 			// Add the position size and update together to get the new size.
-			var bigNewPositionSize = new(big.Int).Add(
-				pos.GetBigQuantums(),
-				update.GetBigQuantums(),
+			var newPositionSize = new(int256.Int).Add(
+				pos.GetQuantums(),
+				update.GetQuantums(),
 			)
 
-			newPos.SetBigQuantums(bigNewPositionSize)
+			newPos.SetQuantums(newPositionSize)
 
 			// Replace update with `PositionUpdate`
 			index := updateIndexMap[id]

@@ -1,6 +1,6 @@
 package types
 
-import "math/big"
+import "github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 
 type PositionStateTransition uint
 
@@ -29,7 +29,7 @@ type IsolatedPerpetualPositionStateTransition struct {
 	PerpetualId  uint32
 	// TODO(DEC-715): Support non-USDC assets.
 	// Quote quantums of collateral to transfer as a result of the state transition.
-	QuoteQuantums *big.Int
+	QuoteQuantums *int256.Int
 	// The state transition that occurred for the isolated perpetual positions.
 	Transition PositionStateTransition
 }

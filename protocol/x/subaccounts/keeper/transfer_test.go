@@ -2,9 +2,9 @@ package keeper_test
 
 import (
 	"math"
-	"math/big"
 	"testing"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 
 	errorsmod "cosmossdk.io/errors"
@@ -34,51 +34,51 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		perpetualPositions []*types.PerpetualPosition
 
 		// Module account state.
-		subaccountModuleAccBalance *big.Int
-		accAddressBalance          *big.Int
+		subaccountModuleAccBalance *int256.Int
+		accAddressBalance          *int256.Int
 
 		collateralPoolAddr sdk.AccAddress
 
 		// Transfer details.
-		quantums *big.Int
+		quantums *int256.Int
 
 		// Expectations.
 		expectedAssetPositions              []*types.AssetPosition
-		expectedQuoteBalance                *big.Int
-		expectedSubaccountsModuleAccBalance *big.Int
-		expectedAccAddressBalance           *big.Int
+		expectedQuoteBalance                *int256.Int
+		expectedSubaccountsModuleAccBalance *int256.Int
+		expectedAccAddressBalance           *int256.Int
 	}{
 		"WithdrawFundsFromSubaccountToAccount: send from subaccount to an account address": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			accAddressBalance:          int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedQuoteBalance:                big.NewInt(0),    // 500 - 500
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 100
-			expectedAccAddressBalance:           big.NewInt(3000), // 500 + 2500
+			expectedQuoteBalance:                int256.NewInt(0),    // 500 - 500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(100),  // 600 - 100
+			expectedAccAddressBalance:           int256.NewInt(3000), // 500 + 2500
 		},
 		"WithdrawFundsFromSubaccountToAccount: send from isolated subaccount to an account address": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			accAddressBalance:          int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
-			expectedQuoteBalance:                big.NewInt(0),    // 500 - 500
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 100
-			expectedAccAddressBalance:           big.NewInt(3000), // 500 + 2500
+			expectedQuoteBalance:                int256.NewInt(0),    // 500 - 500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(100),  // 600 - 100
+			expectedAccAddressBalance:           int256.NewInt(3000), // 500 + 2500
 		},
 		"WithdrawFundsFromSubaccountToAccount: DenomeExponent > AtomicResolution, quantums rounded down": {
 			testTransferFundToAccount: true,
@@ -91,51 +91,51 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				MarketId:         uint32(0),
 				AtomicResolution: int32(-7), // $1 = 10_000_000 quantums
 			},
-			accAddressBalance:          big.NewInt(2_500_000),  // $2.5
-			subaccountModuleAccBalance: big.NewInt(10_000_000), // $10
-			quantums:                   big.NewInt(20_000_001), // $2.0000001, only $2 transferred.
+			accAddressBalance:          int256.NewInt(2_500_000),  // $2.5
+			subaccountModuleAccBalance: int256.NewInt(10_000_000), // $10
+			quantums:                   int256.NewInt(20_000_001), // $2.0000001, only $2 transferred.
 			assetPositions: keepertest.CreateUsdcAssetPosition(
-				big.NewInt(30_000_001),
+				int256.NewInt(30_000_001),
 			), // $3.0001
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedQuoteBalance:                big.NewInt(10_000_001), // $1.0001, untransfered $0.0001 remains.
-			expectedSubaccountsModuleAccBalance: big.NewInt(8_000_000),  // $8
-			expectedAccAddressBalance:           big.NewInt(4_500_000),  // $2.5 + $2
+			expectedQuoteBalance:                int256.NewInt(10_000_001), // $1.0001, untransfered $0.0001 remains.
+			expectedSubaccountsModuleAccBalance: int256.NewInt(8_000_000),  // $8
+			expectedAccAddressBalance:           int256.NewInt(4_500_000),  // $2.5 + $2
 		},
 		"DepositFundsFromAccountToSubaccount: send from account to subaccount": {
 			testTransferFundToAccount:  false,
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(200),
-			accAddressBalance:          big.NewInt(2000),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(150)),
+			subaccountModuleAccBalance: int256.NewInt(200),
+			accAddressBalance:          int256.NewInt(2000),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(150)),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedQuoteBalance:                big.NewInt(650),  // 150 + 500
-			expectedSubaccountsModuleAccBalance: big.NewInt(700),  // 200 + 500
-			expectedAccAddressBalance:           big.NewInt(1500), // 2000 - 500
+			expectedQuoteBalance:                int256.NewInt(650),  // 150 + 500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(700),  // 200 + 500
+			expectedAccAddressBalance:           int256.NewInt(1500), // 2000 - 500
 		},
 		"DepositFundsFromAccountToSubaccount: send from account to isolated subaccount": {
 			testTransferFundToAccount:  false,
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(200),
-			accAddressBalance:          big.NewInt(2000),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(150)),
+			subaccountModuleAccBalance: int256.NewInt(200),
+			accAddressBalance:          int256.NewInt(2000),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(150)),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
-			expectedQuoteBalance:                big.NewInt(650),  // 150 + 500
-			expectedSubaccountsModuleAccBalance: big.NewInt(700),  // 200 + 500
-			expectedAccAddressBalance:           big.NewInt(1500), // 2000 - 500
+			expectedQuoteBalance:                int256.NewInt(650),  // 150 + 500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(700),  // 200 + 500
+			expectedAccAddressBalance:           int256.NewInt(1500), // 2000 - 500
 		},
 		"DepositFundsFromAccountToSubaccount: send from account to subaccount, DenomExponent < AtomicResolution": {
 			testTransferFundToAccount: false,
@@ -148,40 +148,40 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				MarketId:         uint32(0),
 				AtomicResolution: int32(-5), // $1 = 100_000 quantums
 			},
-			subaccountModuleAccBalance: big.NewInt(2_000_000),                                   // $2
-			accAddressBalance:          big.NewInt(9_000_000),                                   // $9
-			quantums:                   big.NewInt(502_100),                                     // $5.021
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(105_000)), // $1.05
+			subaccountModuleAccBalance: int256.NewInt(2_000_000),                                   // $2
+			accAddressBalance:          int256.NewInt(9_000_000),                                   // $9
+			quantums:                   int256.NewInt(502_100),                                     // $5.021
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(105_000)), // $1.05
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedQuoteBalance:                big.NewInt(607_100),   // $1.05 + $5.021
-			expectedSubaccountsModuleAccBalance: big.NewInt(7_021_000), // $2 + $5.021
-			expectedAccAddressBalance:           big.NewInt(3_979_000), // $9 - $5.021
+			expectedQuoteBalance:                int256.NewInt(607_100),   // $1.05 + $5.021
+			expectedSubaccountsModuleAccBalance: int256.NewInt(7_021_000), // $2 + $5.021
+			expectedAccAddressBalance:           int256.NewInt(3_979_000), // $9 - $5.021
 		},
 		"DepositFundsFromAccountToSubaccount: new balance reaches max int64": {
 			testTransferFundToAccount:  false,
-			accAddressBalance:          big.NewInt(500),
+			accAddressBalance:          int256.NewInt(500),
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: new(big.Int).SetUint64(math.MaxUint64 - 100),
-			quantums:                   big.NewInt(500),
+			subaccountModuleAccBalance: new(int256.Int).SetUint64(math.MaxUint64 - 100),
+			quantums:                   int256.NewInt(500),
 			assetPositions: keepertest.CreateUsdcAssetPosition(
-				new(big.Int).SetUint64(math.MaxUint64 - 100),
+				new(int256.Int).SetUint64(math.MaxUint64 - 100),
 			),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
 			collateralPoolAddr: types.ModuleAddress,
-			expectedQuoteBalance: new(big.Int).Add(
-				new(big.Int).SetUint64(math.MaxUint64),
-				big.NewInt(400),
+			expectedQuoteBalance: new(int256.Int).Add(
+				new(int256.Int).SetUint64(math.MaxUint64),
+				int256.NewInt(400),
 			),
-			expectedSubaccountsModuleAccBalance: new(big.Int).Add(
-				new(big.Int).SetUint64(math.MaxUint64),
-				big.NewInt(400),
+			expectedSubaccountsModuleAccBalance: new(int256.Int).Add(
+				new(int256.Int).SetUint64(math.MaxUint64),
+				int256.NewInt(400),
 			),
-			expectedAccAddressBalance: big.NewInt(0),
+			expectedAccAddressBalance: int256.NewInt(0),
 		},
 
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
@@ -217,7 +217,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					testAccAddress,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -236,7 +236,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			)
 			require.NoError(t, err)
 
-			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, int256.NewInt(1_000))[0]
 			subaccount.AssetPositions = tc.assetPositions
 			subaccount.PerpetualPositions = tc.perpetualPositions
 
@@ -247,7 +247,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					tc.collateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -291,7 +291,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			// Check the subaccount module balance.
 			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance.ToBig())),
 				subaccountsModuleAccBalance,
 			)
 
@@ -301,7 +301,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedAccAddressBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedAccAddressBalance.ToBig())),
 				testAccountBalance,
 			)
 		})
@@ -319,13 +319,13 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		perpetualPositions []*types.PerpetualPosition
 
 		// Module account state.
-		subaccountModuleAccBalance *big.Int
-		accAddressBalance          *big.Int
+		subaccountModuleAccBalance *int256.Int
+		accAddressBalance          *int256.Int
 
 		collateralPoolAddr sdk.AccAddress
 
 		// Transfer details
-		quantums *big.Int
+		quantums *int256.Int
 
 		// Expectations.
 		expectedErr error
@@ -333,30 +333,30 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		"WithdrawFundsFromSubaccountToAccount: subaccount does not have enough balance to transfer": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(1000),
-			subaccountModuleAccBalance: big.NewInt(500),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			accAddressBalance:          int256.NewInt(1000),
+			subaccountModuleAccBalance: int256.NewInt(500),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(100)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrFailedToUpdateSubaccounts,
 		},
 		"WithdrawFundsFromSubaccountToAccount: subaccounts module account does not have enough balance": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(400),
-			accAddressBalance:          big.NewInt(5000),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(400),
+			accAddressBalance:          int256.NewInt(5000),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                sdkerrors.ErrInsufficientFunds,
 		},
 		"WithdrawFundsFromSubaccountToAccount: isolated market subaccounts module account does not have enough balance": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(400),
-			accAddressBalance:          big.NewInt(5000),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(400),
+			accAddressBalance:          int256.NewInt(5000),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			perpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
@@ -368,82 +368,82 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 		"WithdrawFundsFromSubaccountToAccount: transfer quantums is zero": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(0),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			accAddressBalance:          int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(0),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"WithdrawFundsFromSubaccountToAccount: transfer quantums is negative": {
 			testTransferFundToAccount:  true,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(-100),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			accAddressBalance:          int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(-100),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"WithdrawFundsFromSubaccountToAccount: do not support assets other than USDC": {
 			testTransferFundToAccount:  true,
-			accAddressBalance:          big.NewInt(500),
+			accAddressBalance:          int256.NewInt(500),
 			asset:                      *constants.BtcUsd,
-			subaccountModuleAccBalance: big.NewInt(500),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(500),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferThroughBankNotImplemented,
 		},
 		"WithdrawFundsFromSubaccountToAccount: asset ID doesn't exist": {
 			testTransferFundToAccount:  true,
-			accAddressBalance:          big.NewInt(500),
+			accAddressBalance:          int256.NewInt(500),
 			asset:                      *constants.Usdc,
 			skipSetUpUsdc:              true,
-			subaccountModuleAccBalance: big.NewInt(500),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(500),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                asstypes.ErrAssetDoesNotExist,
 		},
 		"DepositFundsFromAccountToSubaccount: fee-collector does not have enough balance to transfer": {
 			testTransferFundToAccount:  false,
-			accAddressBalance:          big.NewInt(100),
+			accAddressBalance:          int256.NewInt(100),
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(2000),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(2000),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                sdkerrors.ErrInsufficientFunds,
 		},
 		"DepositFundsFromAccountToSubaccount: transfer quantums is zero": {
 			testTransferFundToAccount:  false,
 			asset:                      *constants.Usdc,
-			accAddressBalance:          big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(0),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			accAddressBalance:          int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(0),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferQuantumsNotPositive,
 		},
 		"DepositFundsFromAccountToSubaccount: do not support assets other than USDC": {
 			testTransferFundToAccount:  false,
-			accAddressBalance:          big.NewInt(500),
+			accAddressBalance:          int256.NewInt(500),
 			asset:                      *constants.BtcUsd,
-			subaccountModuleAccBalance: big.NewInt(500),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(500),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                types.ErrAssetTransferThroughBankNotImplemented,
 		},
 		"DepositFundsFromAccountToSubaccount: failure, asset ID doesn't exist": {
 			testTransferFundToAccount:  false,
-			accAddressBalance:          big.NewInt(500),
+			accAddressBalance:          int256.NewInt(500),
 			skipSetUpUsdc:              true,
 			asset:                      *constants.Usdc,
-			subaccountModuleAccBalance: big.NewInt(500),
-			quantums:                   big.NewInt(500),
-			assetPositions:             keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			subaccountModuleAccBalance: int256.NewInt(500),
+			quantums:                   int256.NewInt(500),
+			assetPositions:             keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			collateralPoolAddr:         types.ModuleAddress,
 			expectedErr:                asstypes.ErrAssetDoesNotExist,
 		},
@@ -477,7 +477,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					testAccAddress,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -504,7 +504,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				require.NoError(t, err)
 			}
 
-			subaccount := createNSubaccount(keeper, ctx, 1, big.NewInt(1_000))[0]
+			subaccount := createNSubaccount(keeper, ctx, 1, int256.NewInt(1_000))[0]
 			subaccount.AssetPositions = tc.assetPositions
 			subaccount.PerpetualPositions = tc.perpetualPositions
 
@@ -515,7 +515,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 					ctx,
 					tc.collateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -550,14 +550,14 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 			updatedSubaccount := keeper.GetSubaccount(ctx, *subaccount.Id)
 
 			require.Equal(t,
-				tc.assetPositions[0].GetBigQuantums(),
+				tc.assetPositions[0].GetQuantums(),
 				updatedSubaccount.GetUsdcPosition(),
 			)
 
 			// Check the subaccount module balance stays the same.
 			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance.ToBig())),
 				subaccountsModuleAccBalance,
 			)
 
@@ -567,7 +567,7 @@ func TestWithdrawFundsFromSubaccountToAccount_DepositFundsFromAccountToSubaccoun
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.accAddressBalance.ToBig())),
 				testAccountBalance,
 			)
 		})
@@ -578,7 +578,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 	tests := map[string]struct {
 		// transfer details
 		asset    asstypes.Asset
-		quantums *big.Int
+		quantums *int256.Int
 
 		// Subaccount state.
 		senderAssetPositions        []*types.AssetPosition
@@ -587,8 +587,8 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 		recipientPerpetualPositions []*types.PerpetualPosition
 
 		// Module account state.
-		senderCollateralPoolBalance    *big.Int
-		recipientCollateralPoolBalance *big.Int
+		senderCollateralPoolBalance    *int256.Int
+		recipientCollateralPoolBalance *int256.Int
 
 		senderCollateralPoolAddr    sdk.AccAddress
 		recipientCollateralPoolAddr sdk.AccAddress
@@ -596,127 +596,127 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 		// Expectations.
 		expectedSenderAssetPositions           []*types.AssetPosition
 		expectedRecipientAssetPositions        []*types.AssetPosition
-		expectedSenderQuoteBalance             *big.Int
-		expectedRecipientQuoteBalance          *big.Int
-		expectedSenderCollateralPoolBalance    *big.Int
-		expectedRecipientCollateralPoolBalance *big.Int
+		expectedSenderQuoteBalance             *int256.Int
+		expectedRecipientQuoteBalance          *int256.Int
+		expectedSenderCollateralPoolBalance    *int256.Int
+		expectedRecipientCollateralPoolBalance *int256.Int
 	}{
 		"Send USDC from non-isolated subaccount to non-isolated subaccount": {
 			asset:                *constants.Usdc,
-			quantums:             big.NewInt(500),
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			quantums:             int256.NewInt(500),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			senderCollateralPoolBalance:            big.NewInt(1100), // 500 + 600
-			recipientCollateralPoolBalance:         big.NewInt(1100), // same collateral pool, same balance
+			senderCollateralPoolBalance:            int256.NewInt(1100), // 500 + 600
+			recipientCollateralPoolBalance:         int256.NewInt(1100), // same collateral pool, same balance
 			senderCollateralPoolAddr:               types.ModuleAddress,
 			recipientCollateralPoolAddr:            types.ModuleAddress,
-			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(big.NewInt(1100)),
-			expectedSenderQuoteBalance:             big.NewInt(0),    // 500 - 500
-			expectedRecipientQuoteBalance:          big.NewInt(1100), // 500 + 600
-			expectedSenderCollateralPoolBalance:    big.NewInt(1100), // no changes to collateral pools
-			expectedRecipientCollateralPoolBalance: big.NewInt(1100),
+			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(int256.NewInt(1100)),
+			expectedSenderQuoteBalance:             int256.NewInt(0),    // 500 - 500
+			expectedRecipientQuoteBalance:          int256.NewInt(1100), // 500 + 600
+			expectedSenderCollateralPoolBalance:    int256.NewInt(1100), // no changes to collateral pools
+			expectedRecipientCollateralPoolBalance: int256.NewInt(1100),
 		},
 		"Send USDC from isolated subaccount to non-isolated subaccount": {
 			asset:                *constants.Usdc,
-			quantums:             big.NewInt(500),
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			quantums:             int256.NewInt(500),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			senderCollateralPoolBalance:    big.NewInt(600),
-			recipientCollateralPoolBalance: big.NewInt(700),
+			senderCollateralPoolBalance:    int256.NewInt(600),
+			recipientCollateralPoolBalance: int256.NewInt(700),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr:            types.ModuleAddress,
-			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(big.NewInt(1100)),
-			expectedSenderQuoteBalance:             big.NewInt(0),    // 500 - 500
-			expectedRecipientQuoteBalance:          big.NewInt(1100), // 500 + 600
-			expectedSenderCollateralPoolBalance:    big.NewInt(100),  // 600 - 500
-			expectedRecipientCollateralPoolBalance: big.NewInt(1200), // 700 + 500
+			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(int256.NewInt(1100)),
+			expectedSenderQuoteBalance:             int256.NewInt(0),    // 500 - 500
+			expectedRecipientQuoteBalance:          int256.NewInt(1100), // 500 + 600
+			expectedSenderCollateralPoolBalance:    int256.NewInt(100),  // 600 - 500
+			expectedRecipientCollateralPoolBalance: int256.NewInt(1200), // 700 + 500
 		},
 		"Send USDC from non-isolated subaccount to isolated subaccount": {
 			asset:                *constants.Usdc,
-			quantums:             big.NewInt(500),
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			quantums:             int256.NewInt(500),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			senderCollateralPoolBalance:    big.NewInt(600),
-			recipientCollateralPoolBalance: big.NewInt(700),
+			senderCollateralPoolBalance:    int256.NewInt(600),
+			recipientCollateralPoolBalance: int256.NewInt(700),
 			senderCollateralPoolAddr:       types.ModuleAddress,
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
-			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(big.NewInt(1100)),
-			expectedSenderQuoteBalance:             big.NewInt(0),    // 500 - 500
-			expectedRecipientQuoteBalance:          big.NewInt(1100), // 500 + 600
-			expectedSenderCollateralPoolBalance:    big.NewInt(100),  // 600 - 500
-			expectedRecipientCollateralPoolBalance: big.NewInt(1200), // 700 + 500
+			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(int256.NewInt(1100)),
+			expectedSenderQuoteBalance:             int256.NewInt(0),    // 500 - 500
+			expectedRecipientQuoteBalance:          int256.NewInt(1100), // 500 + 600
+			expectedSenderCollateralPoolBalance:    int256.NewInt(100),  // 600 - 500
+			expectedRecipientCollateralPoolBalance: int256.NewInt(1200), // 700 + 500
 		},
 		"Send USDC from isolated subaccount to isolated subaccount (same perp)": {
 			asset:                *constants.Usdc,
-			quantums:             big.NewInt(500),
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			quantums:             int256.NewInt(500),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			senderCollateralPoolBalance:    big.NewInt(1100), // 500 + 600
-			recipientCollateralPoolBalance: big.NewInt(1100), // same collateral pool, same balance
+			senderCollateralPoolBalance:    int256.NewInt(1100), // 500 + 600
+			recipientCollateralPoolBalance: int256.NewInt(1100), // same collateral pool, same balance
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
-			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(big.NewInt(1100)),
-			expectedSenderQuoteBalance:             big.NewInt(0),    // 500 - 500
-			expectedRecipientQuoteBalance:          big.NewInt(1100), // 500 + 600
-			expectedSenderCollateralPoolBalance:    big.NewInt(1100), // no changes to collateral pools
-			expectedRecipientCollateralPoolBalance: big.NewInt(1100),
+			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(int256.NewInt(1100)),
+			expectedSenderQuoteBalance:             int256.NewInt(0),    // 500 - 500
+			expectedRecipientQuoteBalance:          int256.NewInt(1100), // 500 + 600
+			expectedSenderCollateralPoolBalance:    int256.NewInt(1100), // no changes to collateral pools
+			expectedRecipientCollateralPoolBalance: int256.NewInt(1100),
 		},
 		"Send USDC from isolated subaccount to isolated subaccount (different perp)": {
 			asset:                *constants.Usdc,
-			quantums:             big.NewInt(500),
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			quantums:             int256.NewInt(500),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISO2Long,
 			},
-			senderCollateralPoolBalance:    big.NewInt(600),
-			recipientCollateralPoolBalance: big.NewInt(700),
+			senderCollateralPoolBalance:    int256.NewInt(600),
+			recipientCollateralPoolBalance: int256.NewInt(700),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISO2Long.PerpetualId),
 			),
-			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(big.NewInt(1100)),
-			expectedSenderQuoteBalance:             big.NewInt(0),    // 500 - 500
-			expectedRecipientQuoteBalance:          big.NewInt(1100), // 500 + 600
-			expectedSenderCollateralPoolBalance:    big.NewInt(100),  // 600 - 500
-			expectedRecipientCollateralPoolBalance: big.NewInt(1200), // 700 + 500
+			expectedRecipientAssetPositions:        keepertest.CreateUsdcAssetPosition(int256.NewInt(1100)),
+			expectedSenderQuoteBalance:             int256.NewInt(0),    // 500 - 500
+			expectedRecipientQuoteBalance:          int256.NewInt(1100), // 500 + 600
+			expectedSenderCollateralPoolBalance:    int256.NewInt(100),  // 600 - 500
+			expectedRecipientCollateralPoolBalance: int256.NewInt(1200), // 700 + 500
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
@@ -757,7 +757,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 			)
 			require.NoError(t, err)
 
-			subaccounts := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
+			subaccounts := createNSubaccount(keeper, ctx, 2, int256.NewInt(1_000))
 			senderSubaccount := subaccounts[0]
 			recipientSubaccount := subaccounts[1]
 			senderSubaccount.AssetPositions = tc.senderAssetPositions
@@ -773,7 +773,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 					ctx,
 					tc.senderCollateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -785,7 +785,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 					ctx,
 					tc.recipientCollateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -830,12 +830,12 @@ func TestTransferFundsFromSubaccountToSubaccount_Success(t *testing.T) {
 			// Check the subaccount module balance.
 			senderCollateralPoolAddrBalance := bankKeeper.GetBalance(ctx, tc.senderCollateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSenderCollateralPoolBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSenderCollateralPoolBalance.ToBig())),
 				senderCollateralPoolAddrBalance,
 			)
 			recipientCollateralPoolAddrBalance := bankKeeper.GetBalance(ctx, tc.recipientCollateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedRecipientCollateralPoolBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedRecipientCollateralPoolBalance.ToBig())),
 				recipientCollateralPoolAddrBalance,
 			)
 		})
@@ -854,196 +854,196 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 		recipientPerpetualPositions []*types.PerpetualPosition
 
 		// Module account state.
-		senderCollateralPoolBalance    *big.Int
-		recipientCollateralPoolBalance *big.Int
+		senderCollateralPoolBalance    *int256.Int
+		recipientCollateralPoolBalance *int256.Int
 
 		senderCollateralPoolAddr    sdk.AccAddress
 		recipientCollateralPoolAddr sdk.AccAddress
 
 		// Transfer details
-		quantums *big.Int
+		quantums *int256.Int
 
 		// Expectations.
 		expectedErr error
 	}{
 		"Send from non-isolated subaccount to non-isolated subaccount, sender does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCShort,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCShort,
 			},
-			senderCollateralPoolBalance:    big.NewInt(1100),
-			recipientCollateralPoolBalance: big.NewInt(1100),
+			senderCollateralPoolBalance:    int256.NewInt(1100),
+			recipientCollateralPoolBalance: int256.NewInt(1100),
 			senderCollateralPoolAddr:       types.ModuleAddress,
 			recipientCollateralPoolAddr:    types.ModuleAddress,
-			quantums:                       big.NewInt(500),
+			quantums:                       int256.NewInt(500),
 			expectedErr:                    types.ErrFailedToUpdateSubaccounts,
 		},
 		"Send between isolated subaccounts (same perp), sender does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOShort,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOShort,
 			},
-			senderCollateralPoolBalance:    big.NewInt(1100),
-			recipientCollateralPoolBalance: big.NewInt(1100),
+			senderCollateralPoolBalance:    int256.NewInt(1100),
+			recipientCollateralPoolBalance: int256.NewInt(1100),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOShort.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOShort.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
 		"Send between isolated subaccounts (different perp), sender does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOShort,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISO2Short,
 			},
-			senderCollateralPoolBalance:    big.NewInt(500),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(500),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOShort.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISO2Short.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: types.ErrFailedToUpdateSubaccounts,
 		},
 		"Send from isolated subaccount to non-isolated subaccount, sender does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(100)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(100)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOShort,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCShort,
 			},
-			senderCollateralPoolBalance:    big.NewInt(500),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(500),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOShort.PerpetualId),
 			),
 			recipientCollateralPoolAddr: types.ModuleAddress,
-			quantums:                    big.NewInt(500),
+			quantums:                    int256.NewInt(500),
 			expectedErr:                 types.ErrFailedToUpdateSubaccounts,
 		},
 		"Send from non-isolated subaccount to isolated subaccount, collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			senderCollateralPoolBalance:    big.NewInt(100),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(100),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr:       types.ModuleAddress,
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: sdkerrors.ErrInsufficientFunds,
 		},
 		"Send from isolated subaccount to non-isolated subaccount, collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneBTCLong,
 			},
-			senderCollateralPoolBalance:    big.NewInt(100),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(100),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: types.ModuleAddress,
-			quantums:                    big.NewInt(500),
+			quantums:                    int256.NewInt(500),
 			expectedErr:                 sdkerrors.ErrInsufficientFunds,
 		},
 		"Send between isolated subaccounts (different perp), collateral pool does not have enough balance": {
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISO2Long,
 			},
-			senderCollateralPoolBalance:    big.NewInt(100),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(100),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISO2Long.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: sdkerrors.ErrInsufficientFunds,
 		},
 		"Do not support assets other than USDC": {
 			asset:                *constants.BtcUsd,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISO2Long,
 			},
-			senderCollateralPoolBalance:    big.NewInt(100),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(100),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISO2Long.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: types.ErrAssetTransferThroughBankNotImplemented,
 		},
 		"Asset ID doesn't exist": {
 			skipSetUpUsdc:        true,
 			asset:                *constants.Usdc,
-			senderAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(500)),
+			senderAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(500)),
 			senderPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISOLong,
 			},
-			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(big.NewInt(600)),
+			recipientAssetPositions: keepertest.CreateUsdcAssetPosition(int256.NewInt(600)),
 			recipientPerpetualPositions: []*types.PerpetualPosition{
 				&constants.PerpetualPosition_OneISO2Long,
 			},
-			senderCollateralPoolBalance:    big.NewInt(100),
-			recipientCollateralPoolBalance: big.NewInt(600),
+			senderCollateralPoolBalance:    int256.NewInt(100),
+			recipientCollateralPoolBalance: int256.NewInt(600),
 			senderCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISOLong.PerpetualId),
 			),
 			recipientCollateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.PerpetualPosition_OneISO2Long.PerpetualId),
 			),
-			quantums:    big.NewInt(500),
+			quantums:    int256.NewInt(500),
 			expectedErr: asstypes.ErrAssetDoesNotExist,
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
@@ -1091,7 +1091,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 				require.NoError(t, err)
 			}
 
-			subaccounts := createNSubaccount(keeper, ctx, 2, big.NewInt(1_000))
+			subaccounts := createNSubaccount(keeper, ctx, 2, int256.NewInt(1_000))
 			senderSubaccount := subaccounts[0]
 			recipientSubaccount := subaccounts[1]
 			senderSubaccount.AssetPositions = tc.senderAssetPositions
@@ -1107,7 +1107,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 					ctx,
 					tc.senderCollateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -1119,7 +1119,7 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 					ctx,
 					tc.recipientCollateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -1155,12 +1155,12 @@ func TestTransferFundsFromSubaccountToSubaccount_Failure(t *testing.T) {
 			// Check the subaccount module balance.
 			senderCollateralPoolAddrBalance := bankKeeper.GetBalance(ctx, tc.senderCollateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.senderCollateralPoolBalance.ToBig())),
 				senderCollateralPoolAddrBalance,
 			)
 			recipientCollateralPoolAddrBalance := bankKeeper.GetBalance(ctx, tc.recipientCollateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.recipientCollateralPoolBalance.ToBig())),
 				recipientCollateralPoolAddrBalance,
 			)
 		})
@@ -1172,103 +1172,103 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 		skipSetUpUsdc bool
 
 		// Module account state.
-		subaccountModuleAccBalance *big.Int
-		feeModuleAccBalance        *big.Int
+		subaccountModuleAccBalance *int256.Int
+		feeModuleAccBalance        *int256.Int
 
 		// Transfer details.
 		asset       asstypes.Asset
-		quantums    *big.Int
+		quantums    *int256.Int
 		perpetualId uint32
 
 		collateralPoolAddr sdk.AccAddress
 
 		// Expectations.
 		expectedErr                         error
-		expectedSubaccountsModuleAccBalance *big.Int
-		expectedFeeModuleAccBalance         *big.Int
+		expectedSubaccountsModuleAccBalance *int256.Int
+		expectedFeeModuleAccBalance         *int256.Int
 	}{
 		"success - send to fee-collector module account": {
 			asset:                               *constants.Usdc,
-			feeModuleAccBalance:                 big.NewInt(2500),
-			subaccountModuleAccBalance:          big.NewInt(600),
-			quantums:                            big.NewInt(500),
+			feeModuleAccBalance:                 int256.NewInt(2500),
+			subaccountModuleAccBalance:          int256.NewInt(600),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:         int256.NewInt(3000), // 500 + 2500
 		},
 		"success - send to fee-collector module account from isolated market account": {
 			asset:                      *constants.Usdc,
-			feeModuleAccBalance:        big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(600),
-			quantums:                   big.NewInt(500),
+			feeModuleAccBalance:        int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(600),
+			quantums:                   int256.NewInt(500),
 			perpetualId:                3, // Isolated market perpetual ID
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(3),
 			),
-			expectedSubaccountsModuleAccBalance: big.NewInt(100),  // 600 - 500
-			expectedFeeModuleAccBalance:         big.NewInt(3000), // 500 + 2500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(100),  // 600 - 500
+			expectedFeeModuleAccBalance:         int256.NewInt(3000), // 500 + 2500
 		},
 		"success - quantums is zero": {
 			asset:                               *constants.Usdc,
-			feeModuleAccBalance:                 big.NewInt(2500),
-			subaccountModuleAccBalance:          big.NewInt(600),
-			quantums:                            big.NewInt(0),
+			feeModuleAccBalance:                 int256.NewInt(2500),
+			subaccountModuleAccBalance:          int256.NewInt(600),
+			quantums:                            int256.NewInt(0),
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedSubaccountsModuleAccBalance: big.NewInt(600),  // 600
-			expectedFeeModuleAccBalance:         big.NewInt(2500), // 2500
+			expectedSubaccountsModuleAccBalance: int256.NewInt(600),  // 600
+			expectedFeeModuleAccBalance:         int256.NewInt(2500), // 2500
 		},
 		"failure - subaccounts module does not have sufficient funds": {
 			asset:                               *constants.Usdc,
-			feeModuleAccBalance:                 big.NewInt(2500),
-			subaccountModuleAccBalance:          big.NewInt(300),
-			quantums:                            big.NewInt(500),
+			feeModuleAccBalance:                 int256.NewInt(2500),
+			subaccountModuleAccBalance:          int256.NewInt(300),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedSubaccountsModuleAccBalance: big.NewInt(300),
-			expectedFeeModuleAccBalance:         big.NewInt(2500),
+			expectedSubaccountsModuleAccBalance: int256.NewInt(300),
+			expectedFeeModuleAccBalance:         int256.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"failure - isolated markets subaccounts module does not have sufficient funds": {
 			asset:                      *constants.Usdc,
-			feeModuleAccBalance:        big.NewInt(2500),
-			subaccountModuleAccBalance: big.NewInt(300),
-			quantums:                   big.NewInt(500),
+			feeModuleAccBalance:        int256.NewInt(2500),
+			subaccountModuleAccBalance: int256.NewInt(300),
+			quantums:                   int256.NewInt(500),
 			perpetualId:                3, // Isolated market perpetual ID
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.IntToString(3),
 			),
-			expectedSubaccountsModuleAccBalance: big.NewInt(300),
-			expectedFeeModuleAccBalance:         big.NewInt(2500),
+			expectedSubaccountsModuleAccBalance: int256.NewInt(300),
+			expectedFeeModuleAccBalance:         int256.NewInt(2500),
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
 		},
 		"failure - asset ID doesn't exist": {
-			feeModuleAccBalance:                 big.NewInt(1500),
+			feeModuleAccBalance:                 int256.NewInt(1500),
 			skipSetUpUsdc:                       true,
 			asset:                               *constants.Usdc,
-			subaccountModuleAccBalance:          big.NewInt(500),
-			quantums:                            big.NewInt(500),
+			subaccountModuleAccBalance:          int256.NewInt(500),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         asstypes.ErrAssetDoesNotExist,
-			expectedSubaccountsModuleAccBalance: big.NewInt(500),
-			expectedFeeModuleAccBalance:         big.NewInt(1500),
+			expectedSubaccountsModuleAccBalance: int256.NewInt(500),
+			expectedFeeModuleAccBalance:         int256.NewInt(1500),
 		},
 		"failure - asset other than USDC not supported": {
-			feeModuleAccBalance:                 big.NewInt(1500),
+			feeModuleAccBalance:                 int256.NewInt(1500),
 			asset:                               *constants.BtcUsd,
-			subaccountModuleAccBalance:          big.NewInt(500),
-			quantums:                            big.NewInt(500),
+			subaccountModuleAccBalance:          int256.NewInt(500),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         types.ErrAssetTransferThroughBankNotImplemented,
-			expectedSubaccountsModuleAccBalance: big.NewInt(500),
-			expectedFeeModuleAccBalance:         big.NewInt(1500),
+			expectedSubaccountsModuleAccBalance: int256.NewInt(500),
+			expectedFeeModuleAccBalance:         int256.NewInt(1500),
 		},
 		"success - transfer quantums is negative": {
-			feeModuleAccBalance:                 big.NewInt(1500),
+			feeModuleAccBalance:                 int256.NewInt(1500),
 			asset:                               *constants.Usdc,
-			subaccountModuleAccBalance:          big.NewInt(500),
-			quantums:                            big.NewInt(-500),
+			subaccountModuleAccBalance:          int256.NewInt(500),
+			quantums:                            int256.NewInt(-500),
 			collateralPoolAddr:                  types.ModuleAddress,
-			expectedSubaccountsModuleAccBalance: big.NewInt(1000),
-			expectedFeeModuleAccBalance:         big.NewInt(1000),
+			expectedSubaccountsModuleAccBalance: int256.NewInt(1000),
+			expectedFeeModuleAccBalance:         int256.NewInt(1000),
 		},
 		// TODO(DEC-715): Add more test for non-USDC assets, after asset update
 		// is implemented.
@@ -1306,7 +1306,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					ctx,
 					authtypes.FeeCollectorName,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.feeModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.feeModuleAccBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -1318,7 +1318,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 					ctx,
 					tc.collateralPoolAddr,
 					sdk.Coins{
-						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance)),
+						sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.subaccountModuleAccBalance.ToBig())),
 					},
 					*bankKeeper,
 				)
@@ -1359,7 +1359,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 			// Check the subaccount module balance.
 			subaccountsModuleAccBalance := bankKeeper.GetBalance(ctx, tc.collateralPoolAddr, tc.asset.Denom)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedSubaccountsModuleAccBalance.ToBig())),
 				subaccountsModuleAccBalance,
 			)
 
@@ -1369,7 +1369,7 @@ func TestTransferFeesToFeeCollectorModule(t *testing.T) {
 				tc.asset.Denom,
 			)
 			require.Equal(t,
-				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance)),
+				sdk.NewCoin(tc.asset.Denom, sdkmath.NewIntFromBigInt(tc.expectedFeeModuleAccBalance.ToBig())),
 				toModuleBalance,
 			)
 		})
@@ -1387,7 +1387,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 		collateralPoolAddr         sdk.AccAddress
 
 		// Transfer details.
-		quantums *big.Int
+		quantums *int256.Int
 
 		// Expectations.
 		panics                              bool
@@ -1399,7 +1399,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
-			quantums:                            big.NewInt(500),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 100,  // 600 - 500
 			expectedInsuranceFundBalance:        3000, // 2500 + 500
@@ -1408,7 +1408,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
-			quantums:                            big.NewInt(-500),
+			quantums:                            int256.NewInt(-500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 1100, // 600 + 500
 			expectedInsuranceFundBalance:        2000, // 2500 - 500
@@ -1417,7 +1417,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          600,
-			quantums:                            big.NewInt(0),
+			quantums:                            int256.NewInt(0),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 600,
 			expectedInsuranceFundBalance:        2500,
@@ -1426,7 +1426,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                  constants.IsoUsd_IsolatedMarket,
 			insuranceFundBalance:       2500,
 			subaccountModuleAccBalance: 600,
-			quantums:                   big.NewInt(500),
+			quantums:                   int256.NewInt(500),
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
 			),
@@ -1437,7 +1437,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                  constants.IsoUsd_IsolatedMarket,
 			insuranceFundBalance:       2500,
 			subaccountModuleAccBalance: 600,
-			quantums:                   big.NewInt(-500),
+			quantums:                   int256.NewInt(-500),
 			collateralPoolAddr: authtypes.NewModuleAddress(
 				types.ModuleName + ":" + lib.UintToString(constants.IsoUsd_IsolatedMarket.GetId()),
 			),
@@ -1448,7 +1448,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                2500,
 			subaccountModuleAccBalance:          300,
-			quantums:                            big.NewInt(500),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 300,
 			expectedInsuranceFundBalance:        2500,
@@ -1458,7 +1458,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.BtcUsd_SmallMarginRequirement,
 			insuranceFundBalance:                300,
 			subaccountModuleAccBalance:          2500,
-			quantums:                            big.NewInt(-500),
+			quantums:                            int256.NewInt(-500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedSubaccountsModuleAccBalance: 2500,
 			expectedInsuranceFundBalance:        300,
@@ -1468,7 +1468,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			perpetual:                           constants.IsoUsd_IsolatedMarket,
 			insuranceFundBalance:                300,
 			subaccountModuleAccBalance:          2500,
-			quantums:                            big.NewInt(-500),
+			quantums:                            int256.NewInt(-500),
 			expectedSubaccountsModuleAccBalance: 2500,
 			expectedInsuranceFundBalance:        300,
 			expectedErr:                         sdkerrors.ErrInsufficientFunds,
@@ -1478,7 +1478,7 @@ func TestTransferInsuranceFundPayments(t *testing.T) {
 			insuranceFundBalance:                1500,
 			skipSetUpUsdc:                       true,
 			subaccountModuleAccBalance:          500,
-			quantums:                            big.NewInt(500),
+			quantums:                            int256.NewInt(500),
 			collateralPoolAddr:                  types.ModuleAddress,
 			expectedErr:                         errorsmod.Wrap(asstypes.ErrAssetDoesNotExist, lib.UintToString(uint32(0))),
 			expectedSubaccountsModuleAccBalance: 500,

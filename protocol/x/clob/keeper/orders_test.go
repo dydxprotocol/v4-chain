@@ -1858,7 +1858,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			subaccountId: constants.Dave_Num0,
 			clobPairId:   types.ClobPairId(constants.ClobPair_Btc.Id),
 
-			expectedPositionSize: constants.Dave_Num0_1BTC_Long_50000USD.PerpetualPositions[0].GetBigQuantums(),
+			expectedPositionSize: constants.Dave_Num0_1BTC_Long_50000USD.PerpetualPositions[0].GetQuantums().ToBig(),
 		},
 		`Can fetch the position size from multiple positions`: {
 			subaccount: &constants.Dave_Num0_1BTC_Long_1ETH_Long_46000USD_Short,
@@ -1866,7 +1866,8 @@ func TestGetStatePosition_Success(t *testing.T) {
 			subaccountId: constants.Dave_Num0,
 			clobPairId:   types.ClobPairId(constants.ClobPair_Eth.Id),
 
-			expectedPositionSize: constants.Dave_Num0_1BTC_Long_1ETH_Long_46000USD_Short.PerpetualPositions[1].GetBigQuantums(),
+			expectedPositionSize: constants.Dave_Num0_1BTC_Long_1ETH_Long_46000USD_Short.PerpetualPositions[1].
+				GetQuantums().ToBig(),
 		},
 		`Can fetch the position size of a short position`: {
 			subaccount: &constants.Carl_Num0_1BTC_Short,
@@ -1874,7 +1875,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			subaccountId: constants.Carl_Num0,
 			clobPairId:   types.ClobPairId(constants.ClobPair_Btc.Id),
 
-			expectedPositionSize: constants.Carl_Num0_1BTC_Short.PerpetualPositions[0].GetBigQuantums(),
+			expectedPositionSize: constants.Carl_Num0_1BTC_Short.PerpetualPositions[0].GetQuantums().ToBig(),
 		},
 		`Fetching a non-existent subaccount returns 0`: {
 			subaccountId: constants.Carl_Num0,
@@ -1944,7 +1945,7 @@ func TestGetStatePosition_Success(t *testing.T) {
 			// Run the test and verify expectations.
 			positionSizeBig := ks.ClobKeeper.GetStatePosition(ks.Ctx, tc.subaccountId, tc.clobPairId)
 
-			require.Equal(t, tc.expectedPositionSize, positionSizeBig)
+			require.True(t, tc.expectedPositionSize.Cmp(positionSizeBig) == 0)
 		})
 	}
 }

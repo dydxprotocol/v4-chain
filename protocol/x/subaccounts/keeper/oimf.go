@@ -2,8 +2,8 @@ package keeper
 
 import (
 	"fmt"
-	"math/big"
 
+	"github.com/dydxprotocol/v4-chain/protocol/lib/int256"
 	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
 )
@@ -13,7 +13,7 @@ func getDeltaLongFromSettledUpdate(
 	u SettledUpdate,
 	updatedPerpId uint32,
 ) (
-	deltaLong *big.Int,
+	deltaLong *int256.Int,
 ) {
 	var perpPosition *types.PerpetualPosition
 	for _, p := range u.SettledSubaccount.PerpetualPositions {
@@ -23,10 +23,10 @@ func getDeltaLongFromSettledUpdate(
 		}
 	}
 
-	prevQuantums := perpPosition.GetBigQuantums()
-	afterQuantums := new(big.Int).Add(
+	prevQuantums := perpPosition.GetQuantums()
+	afterQuantums := new(int256.Int).Add(
 		prevQuantums,
-		u.PerpetualUpdates[0].GetBigQuantums(),
+		u.PerpetualUpdates[0].GetQuantums(),
 	)
 
 	prevLong := prevQuantums // re-use pointer for efficiency
@@ -90,8 +90,8 @@ func GetDeltaOpenInterestFromUpdates(
 
 	updatedPerpId := settledUpdates[0].PerpetualUpdates[0].PerpetualId
 
-	if (perpUpdate0.BigQuantumsDelta.Sign()*perpUpdate1.BigQuantumsDelta.Sign() > 0) ||
-		perpUpdate0.BigQuantumsDelta.CmpAbs(perpUpdate1.BigQuantumsDelta) != 0 {
+	if (perpUpdate0.QuantumsDelta.Sign()*perpUpdate1.QuantumsDelta.Sign() > 0) ||
+		perpUpdate0.QuantumsDelta.CmpAbs(perpUpdate1.QuantumsDelta) != 0 {
 		panic(
 			fmt.Sprintf(
 				types.ErrMatchUpdatesInvalidSize,
@@ -100,7 +100,7 @@ func GetDeltaOpenInterestFromUpdates(
 		)
 	}
 
-	baseQuantumsDelta := big.NewInt(0)
+	baseQuantumsDelta := int256.NewInt(0)
 	for _, u := range settledUpdates {
 		deltaLong := getDeltaLongFromSettledUpdate(u, updatedPerpId)
 		baseQuantumsDelta.Add(
