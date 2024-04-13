@@ -359,6 +359,7 @@ func (k Keeper) PlaceStatefulOrder(
 		return err
 	}
 
+<<<<<<< HEAD
 	// 4. Perform a collateralization check for the full size of the order to mitigate spam.
 	// TODO(CLOB-725): Consider using a pessimistic collateralization check.
 	_, successPerSubaccountUpdate := k.AddOrderToOrderbookCollatCheck(
@@ -383,6 +384,38 @@ func (k Keeper) PlaceStatefulOrder(
 			order,
 			successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
 		)
+=======
+		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
+		if !order.IsConditionalOrder() {
+			_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+				ctx,
+				order.GetClobPairId(),
+				map[satypes.SubaccountId][]types.PendingOpenOrder{
+					order.OrderId.SubaccountId: {
+						{
+							RemainingQuantums: order.GetBaseQuantums(),
+							IsBuy:             order.IsBuy(),
+							Subticks:          order.GetOrderSubticks(),
+							ClobPairId:        order.GetClobPairId(),
+						},
+					},
+				},
+			)
+
+			if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+				err := types.ErrStatefulOrderCollateralizationCheckFailed
+				if updateResult.IsIsolatedSubaccountError() {
+					err = types.ErrWouldViolateIsolatedSubaccountConstraints
+				}
+				return errorsmod.Wrapf(
+					err,
+					"PlaceStatefulOrder: order (%+v), result (%s)",
+					order,
+					successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
+				)
+			}
+		}
+>>>>>>> e56d6a10 (Skip add to book collat check upon placement for conditional orders (#1369))
 	}
 
 	// 5. If we are in `deliverTx` then we write the order to committed state otherwise add the order to uncommitted
