@@ -372,33 +372,34 @@ func (k Keeper) PlaceStatefulOrder(
 		}
 
 		// 4. Perform a check on the subaccount updates for the full size of the order to mitigate spam.
-		// TODO(CLOB-725): Consider using a pessimistic collateralization check.
-		_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
-			ctx,
-			order.GetClobPairId(),
-			map[satypes.SubaccountId][]types.PendingOpenOrder{
-				order.OrderId.SubaccountId: {
-					{
-						RemainingQuantums: order.GetBaseQuantums(),
-						IsBuy:             order.IsBuy(),
-						Subticks:          order.GetOrderSubticks(),
-						ClobPairId:        order.GetClobPairId(),
+		if !order.IsConditionalOrder() {
+			_, successPerSubaccountUpdate := k.AddOrderToOrderbookSubaccountUpdatesCheck(
+				ctx,
+				order.GetClobPairId(),
+				map[satypes.SubaccountId][]types.PendingOpenOrder{
+					order.OrderId.SubaccountId: {
+						{
+							RemainingQuantums: order.GetBaseQuantums(),
+							IsBuy:             order.IsBuy(),
+							Subticks:          order.GetOrderSubticks(),
+							ClobPairId:        order.GetClobPairId(),
+						},
 					},
 				},
-			},
-		)
-
-		if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
-			err := types.ErrStatefulOrderCollateralizationCheckFailed
-			if updateResult.IsIsolatedSubaccountError() {
-				err = types.ErrWouldViolateIsolatedSubaccountConstraints
-			}
-			return errorsmod.Wrapf(
-				err,
-				"PlaceStatefulOrder: order (%+v), result (%s)",
-				order,
-				successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
 			)
+
+			if updateResult := successPerSubaccountUpdate[order.OrderId.SubaccountId]; !updateResult.IsSuccess() {
+				err := types.ErrStatefulOrderCollateralizationCheckFailed
+				if updateResult.IsIsolatedSubaccountError() {
+					err = types.ErrWouldViolateIsolatedSubaccountConstraints
+				}
+				return errorsmod.Wrapf(
+					err,
+					"PlaceStatefulOrder: order (%+v), result (%s)",
+					order,
+					successPerSubaccountUpdate[order.OrderId.SubaccountId].String(),
+				)
+			}
 		}
 	}
 
