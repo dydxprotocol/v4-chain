@@ -2,16 +2,15 @@ package keeper
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	blocktimekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	blocktimekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 
 	"testing"
 )
@@ -34,7 +33,6 @@ func VestKeepers(
 		transientStoreKey storetypes.StoreKey,
 	) []GenesisInitializer {
 		authorities = []string{
-			bridgetypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
 		}
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)

@@ -2,6 +2,9 @@ package keeper
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/codec"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
@@ -12,10 +15,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 func createAccountKeeper(
@@ -37,7 +36,6 @@ func createAccountKeeper(
 	// Create default module account permissions for test.
 	maccPerms := map[string][]string{
 		minttypes.ModuleName:        {types.Minter},
-		bridgetypes.ModuleName:      {types.Minter},
 		types.FeeCollectorName:      nil,
 		satypes.ModuleName:          nil,
 		clobtypes.InsuranceFundName: nil,

@@ -8,10 +8,6 @@ import (
 	sdkmath "cosmossdk.io/math"
 
 	"cosmossdk.io/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cometbfttypes "github.com/cometbft/cometbft/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -21,6 +17,10 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -42,36 +42,6 @@ var (
 		),
 	)
 )
-
-func TestDispatchMessagesForBlock(t *testing.T) {
-	ctx, k, _, bridgeKeeper, _ := keepertest.DelayMsgKeeperWithMockBridgeKeeper(t)
-
-	// Add messages to the keeper.
-	for i, msg := range constants.AllMsgs {
-		id, err := k.DelayMessageByBlocks(ctx, msg, 0)
-		require.NoError(t, err)
-		require.Equal(t, uint32(i), id)
-	}
-
-	// Sanity check: messages appear for block 0.
-	blockMessageIds, found := k.GetBlockMessageIds(ctx, 0)
-	require.True(t, found)
-	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
-
-	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("CompleteBridge", mock.AnythingOfType("types.Context"), mock.Anything).
-		Return(nil).Times(len(constants.AllMsgs))
-	bridgeKeeper.On("HasAuthority", DelayMsgAuthority.String()).Return(true).Times(len(constants.AllMsgs))
-
-	// Dispatch messages for block 0.
-
-	keeper.DispatchMessagesForBlock(k, ctx)
-
-	_, found = k.GetBlockMessageIds(ctx, 0)
-	require.False(t, found)
-
-	require.True(t, bridgeKeeper.AssertExpectations(t))
-}
 
 func setupMockKeeperNoMessages(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
 	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{}, false).Once()
@@ -506,7 +476,7 @@ func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
 // This test case verifies that events emitted from message executions are correctly
 // propagated to the base context.
 func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
-	ctx, k, _, _, bankKeeper, _ := keepertest.DelayMsgKeepers(t)
+	ctx, k, _, bankKeeper, _ := keepertest.DelayMsgKeepers(t)
 	// Mint coins to the bridge module account so that it has enough balance for completing bridges.
 	err := bankKeeper.MintCoins(ctx, bridgetypes.ModuleName, sdk.NewCoins(BridgeGenesisAccountBalance))
 	require.NoError(t, err)

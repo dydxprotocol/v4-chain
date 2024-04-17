@@ -3,24 +3,25 @@ package delaymsg_test
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
 	testutildelaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/delaymsg"
 	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
 	delaymsg_keeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -37,7 +38,7 @@ func createAppModule(t *testing.T) delaymsg.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (delaymsg.AppModule, *delaymsg_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, _, _ := keeper.DelayMsgKeepers(t)
+	ctx, keeper, _, _, _ := keeper.DelayMsgKeepers(t)
 
 	return delaymsg.NewAppModule(
 		appCodec,

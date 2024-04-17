@@ -9,13 +9,13 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	bridgemoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -109,7 +109,7 @@ func TestDelayMessage(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockKeeper := &mocks.DelayMsgKeeper{}
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 			tc.setupMocks(ctx, mockKeeper)
 
 			// Set up error logging for expected errors.

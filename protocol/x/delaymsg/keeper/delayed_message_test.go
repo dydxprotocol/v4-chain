@@ -7,13 +7,13 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -134,7 +134,7 @@ func TestDelayMessageByBlocks(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 			// Act - add messages.
 			for i, testDelayedMsg := range tc.testDelayedMsgs {
@@ -193,7 +193,7 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 			delay := uint32(blockDelay1)
 			if tc.overflow {
@@ -208,7 +208,7 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 }
 
 func TestDeleteMessage_NotFound(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	err := delaymsg.DeleteMessage(ctx, 0)
 	require.EqualError(t, err, "failed to delete message: message with id 0 not found: Invalid input")
@@ -216,7 +216,7 @@ func TestDeleteMessage_NotFound(t *testing.T) {
 
 func TestDeleteMessage(t *testing.T) {
 	// Setup - add a message.
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	id, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, 10)
 	require.Equal(t, uint32(0), id)
@@ -239,7 +239,7 @@ func TestDeleteMessage(t *testing.T) {
 }
 
 func TestGetNextDelayedMessageId(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	// Next delayed message id should be 0.
 	require.Equal(t, uint32(0), delaymsg.GetNextDelayedMessageId(ctx))
@@ -270,7 +270,7 @@ func expectDelayedMessagesAndBlockIds(
 }
 
 func TestGetNextDelayedMessageId_AddAndDeleteMessages(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	// No messages.
 	require.Equal(t, uint32(0), delaymsg.GetNextDelayedMessageId(ctx))
@@ -335,7 +335,7 @@ func TestGetNextDelayedMessageId_AddAndDeleteMessages(t *testing.T) {
 }
 
 func TestGetMessage_NotFound(t *testing.T) {
-	ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 	delayedMsg, found := delaymsg.GetMessage(ctx, 0)
 	require.False(t, found)
@@ -373,7 +373,7 @@ func TestValidateMsg(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			_, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			_, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 			err := delaymsg.ValidateMsg(tc.msg, [][]byte{tc.signer})
 			if tc.expectedError == "" {
 				require.NoError(t, err)
@@ -433,7 +433,7 @@ func TestSetDelayedMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 
 			// Add a message to the store to test for duplicate message id insertion.
 			err := delaymsg.SetDelayedMessage(ctx, &types.DelayedMessage{

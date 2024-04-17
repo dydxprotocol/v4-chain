@@ -102,7 +102,7 @@ setup_cosmovisor
 while true; do
   # p2p.seeds taken from --p2p.persistent_peers flag of full node
   cosmovisor run start --log_level info --home /dydxprotocol/chain/local_node --p2p.seeds "${p2p_seeds}" \
-    --bridge-daemon-eth-rpc-endpoint "https://eth-sepolia.g.alchemy.com/v2/demo" --non-validating-full-node=true &
+    --non-validating-full-node=true &
 
   sleep ${upload_period}
   kill -TERM $(pidof cosmovisor)

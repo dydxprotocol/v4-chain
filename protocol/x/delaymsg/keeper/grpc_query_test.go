@@ -3,12 +3,12 @@ package keeper_test
 import (
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,7 +26,7 @@ func TestNextDelayedMessageId(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 			for _, msg := range tc.delayedMessages {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, msg, 1)
 				require.NoError(t, err)
@@ -52,7 +52,7 @@ func TestMessage(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 			if tc.delayedMessage != nil {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, tc.delayedMessage, 1)
 				require.NoError(t, err)
@@ -87,7 +87,7 @@ func TestBlockMessageIds(t *testing.T) {
 	}
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			ctx, delaymsg, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _ := keepertest.DelayMsgKeepers(t)
 			for _, msg := range tc.delayedMessages {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, msg, 1)
 				require.NoError(t, err)

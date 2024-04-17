@@ -1,22 +1,20 @@
 package keeper
 
 import (
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	dbm "github.com/cosmos/cosmos-db"
+
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
-	bridgekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/keeper"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 func DelayMsgKeepers(
@@ -25,7 +23,6 @@ func DelayMsgKeepers(
 	ctx sdk.Context,
 	delayMsgKeeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
-	bridgeKeeper *bridgekeeper.Keeper,
 	bankKeeper bankkeeper.Keeper,
 	authorities []string,
 ) {
@@ -43,19 +40,10 @@ func DelayMsgKeepers(
 		router := baseapp.NewMsgServiceRouter()
 		router.SetInterfaceRegistry(registry)
 
-		// Register bridge messages for encoding / decoding.
-		bridgetypes.RegisterInterfaces(registry)
-
 		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
 		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
-		bridgeKeeper, _, _, _, _ =
-			createBridgeKeeper(stateStore, db, cdc, transientStoreKey, bankKeeper)
-
-		// Register bridge keeper msg server for msg routing.
-		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
 
 		authorities = []string{
-			bridgetypes.ModuleAddress.String(),
 			lib.GovModuleAddress.String(),
 		}
 		delayMsgKeeper, storeKey = createDelayMsgKeeper(
@@ -70,55 +58,7 @@ func DelayMsgKeepers(
 			delayMsgKeeper,
 		}
 	})
-	return ctx, delayMsgKeeper, storeKey, bridgeKeeper, bankKeeper, authorities
-}
-
-func DelayMsgKeeperWithMockBridgeKeeper(
-	t testing.TB,
-) (
-	ctx sdk.Context,
-	delayMsgKeeper *keeper.Keeper,
-	storeKey storetypes.StoreKey,
-	bridgeKeeper *mocks.BridgeKeeper,
-	authorities []string,
-) {
-	ctx = initKeepers(t, func(
-		db *dbm.MemDB,
-		_ codectypes.InterfaceRegistry,
-		_ *codec.ProtoCodec,
-		stateStore storetypes.CommitMultiStore,
-		transientStoreKey storetypes.StoreKey,
-	) []GenesisInitializer {
-		encCfg := ante.MakeTestEncodingConfig()
-		cdc := encCfg.Codec.(*codec.ProtoCodec)
-		registry := encCfg.InterfaceRegistry
-
-		router := baseapp.NewMsgServiceRouter()
-		router.SetInterfaceRegistry(registry)
-
-		// Register bridge messages for encoding / decoding.
-		bridgetypes.RegisterInterfaces(registry)
-
-		bridgeKeeper = &mocks.BridgeKeeper{}
-
-		// Register bridge keeper msg server for msg routing.
-		bridgetypes.RegisterMsgServer(router, bridgekeeper.NewMsgServerImpl(bridgeKeeper))
-
-		authorities = []string{
-			bridgetypes.ModuleAddress.String(),
-			lib.GovModuleAddress.String(),
-		}
-		delayMsgKeeper, storeKey = createDelayMsgKeeper(
-			stateStore,
-			db,
-			cdc,
-			router,
-			authorities,
-		)
-
-		return []GenesisInitializer{delayMsgKeeper}
-	})
-	return ctx, delayMsgKeeper, storeKey, bridgeKeeper, authorities
+	return ctx, delayMsgKeeper, storeKey, bankKeeper, authorities
 }
 
 func createDelayMsgKeeper(

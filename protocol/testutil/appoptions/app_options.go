@@ -2,13 +2,14 @@ package appoptions
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/server/config"
-	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	"os"
 
+	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	"github.com/cosmos/cosmos-sdk/server/config"
+
+	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 )
 
 // FakeAppOptions is a helper struct used for creating `servertypes.AppOptions` for simulator and end-to-end testing.
@@ -48,9 +49,6 @@ func GetDefaultTestAppOptions(homePath string, customFlags map[string]interface{
 
 	// Disable the Price Daemon for all end-to-end and integration tests by default.
 	fao.Set(daemonflags.FlagPriceDaemonEnabled, false)
-
-	// Disable the Bridge Daemon for all end-to-end and integration tests by default.
-	fao.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
 	// Disable the Liquidation Daemon for all end-to-end and integration tests by default.
 	fao.Set(daemonflags.FlagLiquidationDaemonEnabled, false)

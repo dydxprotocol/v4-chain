@@ -1,11 +1,19 @@
 package encoding
 
 import (
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	"testing"
+
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
+	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
@@ -27,14 +35,6 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
-	bridgemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
-	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
-	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
 	"github.com/stretchr/testify/require"
 )
 
@@ -65,7 +65,6 @@ func GetTestEncodingCfg() testutil.TestEncodingConfig {
 		consensus.AppModuleBasic{},
 
 		// Custom modules
-		bridgemodule.AppModuleBasic{},
 		subaccountsmodule.AppModuleBasic{})
 
 	msgInterfacesToRegister := []sdk.Msg{
