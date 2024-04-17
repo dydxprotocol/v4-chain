@@ -2,8 +2,8 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/json"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/json"
 )
 
 // Validate checks that the MarketParam is valid.

@@ -5,15 +5,15 @@ import (
 	"math"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
 )
 

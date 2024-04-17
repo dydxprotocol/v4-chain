@@ -5,7 +5,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/spf13/cobra"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 )
 
 func CmdQueryParams() *cobra.Command {

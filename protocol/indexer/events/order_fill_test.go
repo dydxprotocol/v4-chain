@@ -3,11 +3,11 @@ package events_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
+	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

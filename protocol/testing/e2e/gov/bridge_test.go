@@ -7,10 +7,10 @@ import (
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/stretchr/testify/require"
 )
 

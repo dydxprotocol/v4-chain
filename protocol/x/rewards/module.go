@@ -6,8 +6,8 @@ import (
 	"fmt"
 
 	"cosmossdk.io/core/appmodule"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
@@ -17,9 +17,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 )
 
 var (

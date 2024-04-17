@@ -11,7 +11,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkante "github.com/cosmos/cosmos-sdk/x/auth/ante"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	gometrics "github.com/hashicorp/go-metrics"
 	"google.golang.org/protobuf/types/known/anypb"
 )

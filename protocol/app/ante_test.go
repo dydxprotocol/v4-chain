@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 )
 

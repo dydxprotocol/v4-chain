@@ -3,7 +3,7 @@ package constants
 import (
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 )
 
 var (

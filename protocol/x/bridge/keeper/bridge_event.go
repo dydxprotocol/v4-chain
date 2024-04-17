@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 )
 
 // `GetBridgeEventFromServer` returns the bridge event with the given id from the server. `found` is false

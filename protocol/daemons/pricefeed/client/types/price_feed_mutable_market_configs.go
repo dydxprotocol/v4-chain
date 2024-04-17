@@ -8,8 +8,8 @@ import (
 	"sync"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

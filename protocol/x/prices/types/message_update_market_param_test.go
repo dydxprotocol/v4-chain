@@ -1,10 +1,10 @@
 package types_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/client/testutil"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

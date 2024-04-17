@@ -3,10 +3,10 @@ package v1
 import (
 	"fmt"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	v1types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 func SubaccountIdToIndexerSubaccountId(

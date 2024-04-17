@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
 

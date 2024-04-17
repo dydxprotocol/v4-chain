@@ -8,8 +8,8 @@ import (
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )

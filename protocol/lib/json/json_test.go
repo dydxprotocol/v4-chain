@@ -3,7 +3,7 @@ package json_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/json"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/json"
 )
 
 func TestIsValidJSON(t *testing.T) {

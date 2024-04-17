@@ -5,8 +5,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 // UpdateBlockRateLimitConfiguration updates the block rate limit configuration returning an error

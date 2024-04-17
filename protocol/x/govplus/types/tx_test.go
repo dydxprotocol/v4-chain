@@ -4,9 +4,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	types "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	types "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 	"github.com/stretchr/testify/require"
 )
 

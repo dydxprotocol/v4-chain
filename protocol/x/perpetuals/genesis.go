@@ -2,8 +2,8 @@ package perpetuals
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
 
 // InitGenesis initializes the perpetual module's state from a provided genesis

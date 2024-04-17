@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
 	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/stretchr/testify/require"

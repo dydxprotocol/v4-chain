@@ -1,8 +1,8 @@
 package keeper_test
 
 import (
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

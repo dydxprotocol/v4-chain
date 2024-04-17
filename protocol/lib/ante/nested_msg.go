@@ -7,8 +7,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authz "github.com/cosmos/cosmos-sdk/x/authz"
 	gov "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const DYDX_MSG_PREFIX = "/" + constants.AppName

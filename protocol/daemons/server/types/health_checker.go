@@ -2,8 +2,8 @@ package types
 
 import (
 	"cosmossdk.io/log"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
+	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"sync"
 	"time"
 )

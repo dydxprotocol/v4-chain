@@ -13,7 +13,7 @@ import (
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -54,7 +54,7 @@ type MsgSlashValidator struct {
 	// Tokens of the validator at the specified height. Used to compute the slash
 	// amount. The x/staking HistoricalInfo query endpoint can be used to find
 	// this.
-	TokensAtInfractionHeight github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=tokens_at_infraction_height,json=tokensAtInfractionHeight,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"tokens_at_infraction_height"`
+	TokensAtInfractionHeight github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,4,opt,name=tokens_at_infraction_height,json=tokensAtInfractionHeight,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"tokens_at_infraction_height"`
 	// Multiplier for how much of the validator's stake should be slashed.
 	// slash_factor * tokens_at_infraction_height = tokens slashed
 	SlashFactor cosmossdk_io_math.LegacyDec `protobuf:"bytes,5,opt,name=slash_factor,json=slashFactor,proto3,customtype=cosmossdk.io/math.LegacyDec" json:"slash_factor"`

@@ -3,12 +3,12 @@ package memclob
 import (
 	"testing"
 
-	clobtest "github.com/dydxprotocol/v4-chain/protocol/testutil/clob"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testutil_memclob "github.com/dydxprotocol/v4-chain/protocol/testutil/memclob"
-	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	testutil_memclob "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/memclob"
+	sdktest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 func TestPlaceOrder_LongTerm(t *testing.T) {

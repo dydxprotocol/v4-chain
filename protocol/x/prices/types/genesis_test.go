@@ -2,13 +2,13 @@ package types_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

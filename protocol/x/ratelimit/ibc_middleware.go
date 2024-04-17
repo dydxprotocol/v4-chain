@@ -3,9 +3,9 @@ package ratelimit
 import (
 	"fmt"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"

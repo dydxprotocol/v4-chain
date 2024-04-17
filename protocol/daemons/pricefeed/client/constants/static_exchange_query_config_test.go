@@ -3,9 +3,9 @@ package constants_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/stretchr/testify/require"
 )
 

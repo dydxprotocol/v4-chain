@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/delaymsg"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/delaymsg"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
 )
 

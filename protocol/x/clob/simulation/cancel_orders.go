@@ -9,10 +9,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 const (

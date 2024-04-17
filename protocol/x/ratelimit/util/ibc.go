@@ -14,7 +14,7 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 // Parses the following information from a packet needed for transfer rate limit:

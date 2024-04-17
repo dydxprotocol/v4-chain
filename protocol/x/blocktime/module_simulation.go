@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
-	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	ratelimitsimulation "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	ratelimitsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/simulation"
 )
 
 // avoid unused import issue

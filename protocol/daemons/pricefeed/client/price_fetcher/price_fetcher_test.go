@@ -2,18 +2,18 @@ package price_fetcher
 
 import (
 	"errors"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
+	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	"testing"
 
 	"cosmossdk.io/math"
-	pricefeed_cosntants "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	pricefeed_cosntants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
 
 	"cosmossdk.io/log"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

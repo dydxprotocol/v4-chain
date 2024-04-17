@@ -1,13 +1,13 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 

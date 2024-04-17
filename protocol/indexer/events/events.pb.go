@@ -8,9 +8,9 @@ import (
 	_ "github.com/cosmos/cosmos-proto"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	types1 "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
+	types1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -76,7 +76,7 @@ type FundingUpdateV1 struct {
 	FundingValuePpm int32 `protobuf:"varint,2,opt,name=funding_value_ppm,json=fundingValuePpm,proto3" json:"funding_value_ppm,omitempty"`
 	// funding index is required if and only if parent `FundingEvent` type is
 	// `TYPE_FUNDING_RATE_AND_INDEX`.
-	FundingIndex github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=funding_index,json=fundingIndex,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"funding_index"`
+	FundingIndex github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=funding_index,json=fundingIndex,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"funding_index"`
 }
 
 func (m *FundingUpdateV1) Reset()         { *m = FundingUpdateV1{} }
@@ -2061,7 +2061,7 @@ type AddressTradingReward struct {
 	Owner string `protobuf:"bytes,1,opt,name=owner,proto3" json:"owner,omitempty"`
 	// The amount of trading rewards earned by the address above in denoms. 1e18
 	// denoms is equivalent to a single coin.
-	DenomAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=denom_amount,json=denomAmount,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"denom_amount"`
+	DenomAmount github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=denom_amount,json=denomAmount,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"denom_amount"`
 }
 
 func (m *AddressTradingReward) Reset()         { *m = AddressTradingReward{} }

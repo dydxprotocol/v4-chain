@@ -26,8 +26,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
@@ -43,27 +43,27 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	sdkproto "github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	appconstants "github.com/dydxprotocol/v4-chain/protocol/app/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testlog "github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
-	feetiertypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
-	govplus "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	ratelimittypes "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	rewardstypes "github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
-	vesttypes "github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -168,7 +168,7 @@ func DefaultTestApp(customFlags map[string]interface{}, baseAppOptions ...func(*
 
 // DefaultGenesis returns a genesis doc using configuration from the local net with a genesis time
 // equivalent to unix epoch + 1 nanosecond. We specifically use non-zero because stateful orders
-// validate that block time is non-zero (https://github.com/dydxprotocol/v4-chain/protocol/blob/
+// validate that block time is non-zero (https://github.com/StreamFinance-Protocol/stream-chain/protocol/blob/
 // 84a046554ab1b4725475500d94a0b3179fdd18c2/x/clob/keeper/stateful_order_state.go#L237).
 func DefaultGenesis() (genesis types.GenesisDoc) {
 	// NOTE: Tendermint uses a custom JSON decoder for GenesisDoc
@@ -1199,7 +1199,7 @@ func launchValidatorInDir(
 	parentCtx, cancelFn := context.WithCancel(context.Background())
 
 	appCaptor := make(chan *app.App, 1)
-	// Set up the root command using https://github.com/dydxprotocol/v4-chain/blob/
+	// Set up the root command using https://github.com/StreamFinance-Protocol/stream-chain/blob/
 	// 1fa21ed5d848ed7cc6a98053838cadb68422079f/protocol/cmd/dydxprotocold/main.go#L12 as a basis.
 	option := cmd.GetOptionWithCustomStartCmd()
 	rootCmd := cmd.NewRootCmdWithInterceptors(

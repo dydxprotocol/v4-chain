@@ -3,8 +3,8 @@ package types
 import (
 	"fmt"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // OperationsToPropose is a struct encapsulating data required for determining the operations

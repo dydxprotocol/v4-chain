@@ -4,7 +4,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	"github.com/stretchr/testify/require"
 )

@@ -15,7 +15,7 @@ import (
 
 	sdklog "cosmossdk.io/log"
 	"github.com/Shopify/sarama"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/ory/dockertest"
 	"github.com/ory/dockertest/docker"
 	"github.com/stretchr/testify/require"

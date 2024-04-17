@@ -1,12 +1,12 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/json"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/json"
 	"github.com/stretchr/testify/require"
 )
 

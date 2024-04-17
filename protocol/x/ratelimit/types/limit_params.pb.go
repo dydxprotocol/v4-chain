@@ -9,7 +9,7 @@ import (
 	proto "github.com/cosmos/gogoproto/proto"
 	_ "github.com/cosmos/gogoproto/types"
 	github_com_cosmos_gogoproto_types "github.com/cosmos/gogoproto/types"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -93,7 +93,7 @@ type Limiter struct {
 	// baseline_minimum is the minimum maximum withdrawal coin amount within the
 	// time period.
 	// e.g. 100_000_000_000 uusdc for 100k USDC; 5e22 adv4tnt for 50k DV4TNT
-	BaselineMinimum github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=baseline_minimum,json=baselineMinimum,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"baseline_minimum"`
+	BaselineMinimum github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,3,opt,name=baseline_minimum,json=baselineMinimum,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"baseline_minimum"`
 	// baseline_tvl_ppm is the maximum ratio of TVL withdrawable in
 	// the time period, in part-per-million.
 	// e.g. 100_000 (10%)

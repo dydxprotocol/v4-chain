@@ -1,6 +1,6 @@
 package exchange_config
 
-import "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+import "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 
 // All market ids must match with the genesis state.
 const (

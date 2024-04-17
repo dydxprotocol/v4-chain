@@ -1,12 +1,12 @@
 package prices_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	"github.com/stretchr/testify/require"
 )
 

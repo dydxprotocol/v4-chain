@@ -1,7 +1,7 @@
 package price_fetcher
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"golang.org/x/exp/maps"
 	"gopkg.in/typ.v4/lists"
 	"sync"

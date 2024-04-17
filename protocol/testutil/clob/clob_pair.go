@@ -1,8 +1,8 @@
 package clob
 
 import (
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // MustPerpetualId is a wrapper around ClobPair.GetPerpetualId() which panics if an error is returned.

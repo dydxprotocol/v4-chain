@@ -1,14 +1,14 @@
 package grpc
 
 import (
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
-	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/api"
-	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricetypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/bridge/api"
+	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
+	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // QueryClient combines all the query clients used in testing into a single mock interface for testing convenience.

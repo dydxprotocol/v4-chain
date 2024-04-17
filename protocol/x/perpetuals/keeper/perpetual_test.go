@@ -2,7 +2,7 @@ package keeper_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"sort"
@@ -10,32 +10,32 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/stretchr/testify/mock"
 
 	"github.com/stretchr/testify/require"
 
 	"cosmossdk.io/store/prefix"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	lttest "github.com/dydxprotocol/v4-chain/protocol/testutil/liquidity_tier"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
-	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
-	pricefeed_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/pricefeed"
-	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	epochstypes "github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	lttest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/liquidity_tier"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/nullify"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
+	pricefeed_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/pricefeed"
+	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 func TestModifyPerpetual_Success(t *testing.T) {

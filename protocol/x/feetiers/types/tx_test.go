@@ -1,8 +1,8 @@
 package types_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	types "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	types "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

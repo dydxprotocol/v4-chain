@@ -3,13 +3,13 @@ package types_test
 import (
 	"errors"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	prices_types "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	prices_types "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

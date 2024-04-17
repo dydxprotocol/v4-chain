@@ -7,15 +7,15 @@ import (
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -6,16 +6,16 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	bridgemoduletypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	bridgemoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

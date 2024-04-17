@@ -14,8 +14,8 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 )
 
 // Remove a pending packet sequence number from the store

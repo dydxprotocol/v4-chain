@@ -1,8 +1,8 @@
 package testutil
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/bitfinex"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function/bitfinex"
 	"github.com/h2non/gock"
 )
 

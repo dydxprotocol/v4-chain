@@ -6,11 +6,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 
-	appmsgs "github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	appmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/app/msgs"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 func TestIsSingleAppInjectedMsg(t *testing.T) {

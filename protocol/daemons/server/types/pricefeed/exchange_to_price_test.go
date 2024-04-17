@@ -3,8 +3,8 @@ package types
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

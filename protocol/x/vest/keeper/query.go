@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 )
 
 var _ types.QueryServer = Keeper{}

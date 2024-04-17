@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	"github.com/stretchr/testify/require"
 )
 

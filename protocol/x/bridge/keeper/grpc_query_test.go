@@ -9,13 +9,13 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 )
 
 var (

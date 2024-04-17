@@ -3,8 +3,8 @@ package keeper
 import (
 	"context"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 )
 
 // AcknowledgeBridges acknowledges bridge events and sets them to complete

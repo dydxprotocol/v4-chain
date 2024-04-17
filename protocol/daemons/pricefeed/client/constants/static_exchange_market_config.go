@@ -3,11 +3,11 @@ package constants
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/daemons/pricefeed/exchange_config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
 	"sort"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 )
 
 const (

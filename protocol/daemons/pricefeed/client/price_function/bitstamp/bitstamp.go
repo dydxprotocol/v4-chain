@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 )
 
 // BitstampTicker is our representation of ticker information returned in Bitstamp response.

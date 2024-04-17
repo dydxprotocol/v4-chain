@@ -1,9 +1,9 @@
 package events
 
 import (
-	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
+	sharedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 func NewLongTermOrderPlacementEvent(

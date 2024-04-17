@@ -4,7 +4,7 @@ package big
 import (
 	"math/big"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 )
 
 // MustFirst is used for returning the first value of the SetString

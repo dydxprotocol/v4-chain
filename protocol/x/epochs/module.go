@@ -17,10 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/epochs/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 )
 
 var (

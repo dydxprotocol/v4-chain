@@ -3,7 +3,7 @@ package types
 import (
 	"cosmossdk.io/log"
 	"fmt"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
+	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
 	"sync"
 	"time"
 )

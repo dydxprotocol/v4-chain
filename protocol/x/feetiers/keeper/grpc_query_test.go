@@ -7,8 +7,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 )
 
 func TestParams(t *testing.T) {

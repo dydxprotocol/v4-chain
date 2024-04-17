@@ -2,15 +2,15 @@ package keeper
 
 import (
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdktest "github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
+	sdktest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
 	"github.com/stretchr/testify/require"
 )
 

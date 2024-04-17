@@ -9,11 +9,11 @@ import (
 	"google.golang.org/grpc/status"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	btkeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
-	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	sakeeper "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	btkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	sakeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {

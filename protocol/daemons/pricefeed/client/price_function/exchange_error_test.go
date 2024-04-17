@@ -2,7 +2,7 @@ package price_function_test
 
 import (
 	"errors"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

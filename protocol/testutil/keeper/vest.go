@@ -7,11 +7,11 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	blocktimekeeper "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/keeper"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	blocktimekeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 
 	"testing"
 )

@@ -3,7 +3,7 @@ package constants
 import (
 	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/ethereum/go-ethereum/common"
 	ethcoretypes "github.com/ethereum/go-ethereum/core/types"
 )

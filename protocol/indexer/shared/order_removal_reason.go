@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	sharedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 // ConvertOrderRemovalReasonToIndexerOrderRemovalReason converts a `OrderRemoval_RemovalReason` to indexer's

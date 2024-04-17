@@ -6,8 +6,8 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 type msgServer struct {

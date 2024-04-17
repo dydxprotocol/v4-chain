@@ -2,7 +2,7 @@ package price_function
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 )
 
 // ExchangeError describes an error that is specific to a particular exchange. These errors are emitted

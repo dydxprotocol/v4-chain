@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 // ExchangeToMarketPrices maintains price info for multiple exchanges. Each exchange can support

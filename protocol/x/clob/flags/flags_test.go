@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/flags"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

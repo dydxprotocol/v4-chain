@@ -9,12 +9,12 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
-	feetierstypes "github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
+	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	"github.com/stretchr/testify/require"
 )
 

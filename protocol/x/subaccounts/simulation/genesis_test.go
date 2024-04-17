@@ -3,7 +3,7 @@ package simulation_test
 import (
 	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
@@ -12,11 +12,11 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	banksim "github.com/cosmos/cosmos-sdk/x/bank/simulation"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	testutil_rand "github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
-	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
+	asstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,9 +3,9 @@ package rate_limit_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/rate_limit"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

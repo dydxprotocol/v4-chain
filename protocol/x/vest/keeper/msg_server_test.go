@@ -7,11 +7,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 

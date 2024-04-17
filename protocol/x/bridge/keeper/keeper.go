@@ -7,10 +7,10 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgeserver "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	bridgeserver "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/bridge"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 type (

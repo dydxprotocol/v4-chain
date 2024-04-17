@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 
 	comethttp "github.com/cometbft/cometbft/rpc/client/http"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -17,8 +17,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	gogogrpc "github.com/cosmos/gogoproto/grpc"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/dydxprotocol/v4-chain/protocol/cmd/dydxprotocold/cmd"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/ory/dockertest/v3"
 	"github.com/spf13/pflag"
 	"google.golang.org/grpc"

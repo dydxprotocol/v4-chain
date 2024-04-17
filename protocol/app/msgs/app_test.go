@@ -6,9 +6,9 @@ import (
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
 

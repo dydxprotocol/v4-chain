@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 var _ types.QueryServer = Keeper{}

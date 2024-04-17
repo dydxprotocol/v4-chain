@@ -12,12 +12,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

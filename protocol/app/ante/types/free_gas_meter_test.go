@@ -5,7 +5,7 @@ import (
 	"math"
 	"testing"
 
-	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
+	ante_types "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
 	"github.com/stretchr/testify/require"
 )
 

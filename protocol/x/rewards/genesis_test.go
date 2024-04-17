@@ -3,9 +3,9 @@ package rewards_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	"github.com/stretchr/testify/require"
 )
 

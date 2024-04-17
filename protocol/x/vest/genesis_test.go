@@ -3,10 +3,10 @@ package vest_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 

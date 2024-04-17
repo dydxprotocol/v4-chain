@@ -6,8 +6,8 @@ import (
 	"fmt"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

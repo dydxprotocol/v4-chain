@@ -5,7 +5,7 @@ package prices
 import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	pricessimulation "github.com/dydxprotocol/v4-chain/protocol/x/prices/simulation"
+	pricessimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/simulation"
 )
 
 var (

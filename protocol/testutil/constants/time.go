@@ -3,7 +3,7 @@ package constants
 import (
 	"time"
 
-	pricefeed "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	pricefeed "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 )
 
 var (

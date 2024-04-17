@@ -2,7 +2,7 @@ package app_test
 
 import (
 	"encoding/json"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"os"
 	"testing"
 

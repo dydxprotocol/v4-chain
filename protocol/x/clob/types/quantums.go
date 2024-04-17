@@ -4,9 +4,9 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // FillAmountToQuoteQuantums converts a fill amount denoted in base quantums, to a price denoted in quote

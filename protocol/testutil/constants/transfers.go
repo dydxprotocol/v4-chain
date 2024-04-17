@@ -1,8 +1,8 @@
 package constants
 
 import (
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 )
 
 var (

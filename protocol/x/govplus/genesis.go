@@ -2,8 +2,8 @@ package govplus
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/govplus/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 )
 
 // InitGenesis initializes the govplus module's state from a provided genesis state.

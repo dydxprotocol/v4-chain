@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
 
 	"github.com/stretchr/testify/require"
 )

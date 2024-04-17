@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 )
 
 type msgServer struct {

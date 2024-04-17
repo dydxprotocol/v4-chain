@@ -3,7 +3,7 @@ package indexer_manager
 import (
 	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 )
 
 type IndexerEventManager interface {

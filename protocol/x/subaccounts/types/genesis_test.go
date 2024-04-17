@@ -4,9 +4,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
-	"github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/require"
 )
 

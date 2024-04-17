@@ -4,8 +4,8 @@ import (
 	"math"
 	"math/big"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	asstypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	asstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 )
 
 const (

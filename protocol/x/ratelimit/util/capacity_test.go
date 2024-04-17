@@ -5,10 +5,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	"github.com/stretchr/testify/require"
 )
 

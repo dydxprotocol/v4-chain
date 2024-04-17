@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	abci "github.com/cometbft/cometbft/abci/types"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

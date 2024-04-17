@@ -1,8 +1,8 @@
 package app
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/app/basic_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/basic_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"

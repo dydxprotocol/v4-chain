@@ -6,9 +6,9 @@ import (
 
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	"github.com/stretchr/testify/require"
 )
 

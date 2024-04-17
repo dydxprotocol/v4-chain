@@ -14,11 +14,11 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	libeth "github.com/dydxprotocol/v4-chain/protocol/lib/eth"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	libeth "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/eth"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 
 	eth "github.com/ethereum/go-ethereum"
 	ethcommon "github.com/ethereum/go-ethereum/common"

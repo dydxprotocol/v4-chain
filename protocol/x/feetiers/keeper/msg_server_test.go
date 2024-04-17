@@ -2,12 +2,12 @@ package keeper_test
 
 import (
 	"context"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	"github.com/stretchr/testify/require"
 )
 

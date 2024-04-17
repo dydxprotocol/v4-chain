@@ -10,10 +10,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authsigning "github.com/cosmos/cosmos-sdk/x/auth/signing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/msgs"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/msgs"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
+	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
 

@@ -11,11 +11,11 @@ import (
 	cometbfttypes "github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	big_testutil "github.com/dydxprotocol/v4-chain/protocol/testutil/big"
-	blocktimetypes "github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	big_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/big"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/stretchr/testify/require"
 )
 

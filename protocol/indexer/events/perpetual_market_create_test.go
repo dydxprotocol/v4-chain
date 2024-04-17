@@ -3,8 +3,8 @@ package events
 import (
 	"testing"
 
-	v1types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	v1types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 
 	"github.com/stretchr/testify/require"
 )

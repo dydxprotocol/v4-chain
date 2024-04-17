@@ -8,11 +8,11 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricefeedtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/pricefeed"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	libtime "github.com/dydxprotocol/v4-chain/protocol/lib/time"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 type (

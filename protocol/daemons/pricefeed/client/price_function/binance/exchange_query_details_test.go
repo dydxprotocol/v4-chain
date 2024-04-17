@@ -3,7 +3,7 @@ package binance_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/binance"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function/binance"
 	"github.com/stretchr/testify/require"
 )
 

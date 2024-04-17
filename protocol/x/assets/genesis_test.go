@@ -4,10 +4,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"testing"
 
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/assets"
-	"github.com/dydxprotocol/v4-chain/protocol/x/assets/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/stretchr/testify/require"
 )
 

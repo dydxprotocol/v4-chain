@@ -38,9 +38,9 @@ import (
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	rosettaCmd "github.com/cosmos/rosetta/cmd"
-	dydxapp "github.com/dydxprotocol/v4-chain/protocol/app"
-	"github.com/dydxprotocol/v4-chain/protocol/app/constants"
-	protocolflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	dydxapp "github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	protocolflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 
 	"github.com/spf13/cast"
 	"github.com/spf13/cobra"
@@ -48,7 +48,7 @@ import (
 
 	// Unnamed import of statik for swagger UI support.
 	// Used in cosmos-sdk when registering the route for swagger docs.
-	_ "github.com/dydxprotocol/v4-chain/protocol/client/docs/statik"
+	_ "github.com/StreamFinance-Protocol/stream-chain/protocol/client/docs/statik"
 )
 
 const (

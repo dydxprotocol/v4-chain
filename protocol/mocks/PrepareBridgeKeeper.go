@@ -3,7 +3,7 @@
 package mocks
 
 import (
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	mock "github.com/stretchr/testify/mock"
 
 	time "time"

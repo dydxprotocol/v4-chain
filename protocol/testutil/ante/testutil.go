@@ -12,7 +12,7 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
 
 	"github.com/golang/mock/gomock"

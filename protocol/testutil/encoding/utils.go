@@ -1,7 +1,7 @@
 package encoding
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
 	"testing"
 
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
@@ -27,14 +27,14 @@ import (
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
 	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
-	custommodule "github.com/dydxprotocol/v4-chain/protocol/app/module"
-	bridgemodule "github.com/dydxprotocol/v4-chain/protocol/x/bridge"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers"
-	perpetualtypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
-	sendingtypes "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	subaccountsmodule "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts"
+	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	bridgemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
+	perpetualtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
 	"github.com/stretchr/testify/require"
 )
 

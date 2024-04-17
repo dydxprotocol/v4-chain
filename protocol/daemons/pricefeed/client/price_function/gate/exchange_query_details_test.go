@@ -3,7 +3,7 @@ package gate_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function/gate"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function/gate"
 	"github.com/stretchr/testify/require"
 )
 

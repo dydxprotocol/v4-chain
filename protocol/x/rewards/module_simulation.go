@@ -7,9 +7,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sample"
-	rewardssimulation "github.com/dydxprotocol/v4-chain/protocol/x/rewards/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	rewardssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 )
 
 // avoid unused import issue

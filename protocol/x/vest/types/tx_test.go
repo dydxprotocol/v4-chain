@@ -2,7 +2,7 @@ package types_test
 
 import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/vest/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

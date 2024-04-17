@@ -5,10 +5,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	ante_types "github.com/dydxprotocol/v4-chain/protocol/app/ante/types"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	ante_types "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const (

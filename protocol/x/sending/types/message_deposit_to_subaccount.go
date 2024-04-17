@@ -2,9 +2,9 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 var _ sdk.Msg = &MsgDepositToSubaccount{}

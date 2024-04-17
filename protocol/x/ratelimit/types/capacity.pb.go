@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -32,7 +32,7 @@ type DenomCapacity struct {
 	// capacity_list is a list of capacity amount tracked for each `Limiter`
 	// on the denom. This list has a 1:1 mapping to `limiter` list under
 	// `LimitParams`.
-	CapacityList []github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,rep,name=capacity_list,json=capacityList,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"capacity_list"`
+	CapacityList []github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,rep,name=capacity_list,json=capacityList,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"capacity_list"`
 }
 
 func (m *DenomCapacity) Reset()         { *m = DenomCapacity{} }
@@ -78,7 +78,7 @@ func (m *DenomCapacity) GetDenom() string {
 // LimiterCapacity contains a pair of limiter and its corresponding capacity.
 type LimiterCapacity struct {
 	Limiter  Limiter                                                          `protobuf:"bytes,1,opt,name=limiter,proto3" json:"limiter"`
-	Capacity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=capacity,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"capacity"`
+	Capacity github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=capacity,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"capacity"`
 }
 
 func (m *LimiterCapacity) Reset()         { *m = LimiterCapacity{} }

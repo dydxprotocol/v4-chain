@@ -6,10 +6,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	clobante "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/ante"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,8 +3,8 @@ package msgs
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govbeta "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 )
 
 func init() {

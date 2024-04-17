@@ -3,7 +3,7 @@ package simulation
 // DONTCOVER
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"math"
 	"math/big"
 	"math/rand"
@@ -13,12 +13,12 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 const (

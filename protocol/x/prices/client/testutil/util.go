@@ -3,7 +3,7 @@ package testutil
 import (
 	"sort"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 )
 
 func GetTickersSortedByMarketId(marketToMarketConfig map[uint32]types.MarketConfig) []string {

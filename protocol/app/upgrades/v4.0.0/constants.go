@@ -5,8 +5,8 @@ import (
 	circuittypes "cosmossdk.io/x/circuit/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
-	govplustypes "github.com/dydxprotocol/v4-chain/protocol/x/govplus/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades"
+	govplustypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
 )
 
 const (

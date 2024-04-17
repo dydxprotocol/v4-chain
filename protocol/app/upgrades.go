@@ -5,8 +5,8 @@ import (
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/upgrades"
-	v4_0_0 "github.com/dydxprotocol/v4-chain/protocol/app/upgrades/v4.0.0"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades"
+	v4_0_0 "github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades/v4.0.0"
 )
 
 var (

@@ -2,7 +2,7 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

@@ -5,7 +5,7 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 

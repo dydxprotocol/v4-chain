@@ -2,9 +2,9 @@ package server
 
 import (
 	"context"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/bridge/api"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	bdtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/bridge/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
+	bdtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/bridge"
 )
 
 // BridgeServer defines the fields required for bridge event updates.

@@ -1,7 +1,7 @@
 package msgs
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 )
 
 var (

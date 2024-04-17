@@ -6,14 +6,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
-	indexershared "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
+	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the clob module.

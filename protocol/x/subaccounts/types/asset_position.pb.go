@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,7 +30,7 @@ type AssetPosition struct {
 	// The `Id` of the `Asset`.
 	AssetId uint32 `protobuf:"varint,1,opt,name=asset_id,json=assetId,proto3" json:"asset_id,omitempty"`
 	// The absolute size of the position in base quantums.
-	Quantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=quantums,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"quantums"`
+	Quantums github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=quantums,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"quantums"`
 	// The `Index` (either `LongIndex` or `ShortIndex`) of the `Asset` the last
 	// time this position was settled
 	// TODO(DEC-582): pending margin trading being added.

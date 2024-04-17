@@ -6,8 +6,8 @@ import (
 	"math/rand"
 	"testing"
 
-	testutil_rand "github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sim_helpers"
+	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
 	"github.com/stretchr/testify/require"
 )
 

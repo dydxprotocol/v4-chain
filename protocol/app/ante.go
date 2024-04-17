@@ -6,10 +6,10 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	customante "github.com/dydxprotocol/v4-chain/protocol/app/ante"
-	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	clobante "github.com/dydxprotocol/v4-chain/protocol/x/clob/ante"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	customante "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
+	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	clobante "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/ante"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 // HandlerOptions are the options required for constructing an SDK AnteHandler.

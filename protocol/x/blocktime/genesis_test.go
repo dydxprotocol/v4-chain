@@ -3,9 +3,9 @@ package blocktime_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime"
-	"github.com/dydxprotocol/v4-chain/protocol/x/blocktime/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/stretchr/testify/require"
 )
 

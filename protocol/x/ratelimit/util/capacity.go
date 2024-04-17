@@ -4,9 +4,9 @@ import (
 	"math/big"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 // CalculateNewCapacityList calculates the new capacity list for the given current `tvl` and `limitParams“.

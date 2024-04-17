@@ -6,8 +6,8 @@ import (
 	"math/big"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/stretchr/testify/require"
 )
 

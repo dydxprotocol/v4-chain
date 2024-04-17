@@ -1,11 +1,11 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/constants"
-	daemonClientTypes "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/client"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
+	daemonClientTypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 var (

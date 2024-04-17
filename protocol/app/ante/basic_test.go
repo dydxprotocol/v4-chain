@@ -2,7 +2,7 @@ package ante_test
 
 import (
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -11,9 +11,9 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
 
-	libante "github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )

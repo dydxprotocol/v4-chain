@@ -6,8 +6,8 @@ package types
 import (
 	fmt "fmt"
 	proto "github.com/cosmos/gogoproto/proto"
-	types "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1/types"
-	types1 "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
+	types "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1/types"
+	types1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	io "io"
 	math "math"
 	math_bits "math/bits"

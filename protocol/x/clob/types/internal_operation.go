@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // NewShortTermOrderPlacementInternalOperation returns a new internal operation for placing

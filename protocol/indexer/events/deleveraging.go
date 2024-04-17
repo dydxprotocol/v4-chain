@@ -1,8 +1,8 @@
 package events
 
 import (
-	v1 "github.com/dydxprotocol/v4-chain/protocol/indexer/protocol/v1"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // NewDeleveragingEvent creates a DeleveragingEvent representing a deleveraging

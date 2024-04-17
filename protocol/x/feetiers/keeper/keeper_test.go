@@ -3,9 +3,9 @@ package keeper_test
 import (
 	"testing"
 
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
-	stattypes "github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
 

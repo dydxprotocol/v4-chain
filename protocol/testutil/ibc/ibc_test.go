@@ -3,8 +3,8 @@ package ibc_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/ibc"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ibc"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/stretchr/testify/require"
 )
 

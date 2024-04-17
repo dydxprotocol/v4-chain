@@ -1,8 +1,8 @@
 package constants
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	perptypes "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 )
 
 func init() {

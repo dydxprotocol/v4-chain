@@ -16,9 +16,9 @@ import (
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	ibccore "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	clob "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
-	sending "github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 )
 
 var (

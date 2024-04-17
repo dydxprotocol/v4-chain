@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/shared"
-	sharedtypes "github.com/dydxprotocol/v4-chain/protocol/indexer/shared/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared"
+	sharedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/stretchr/testify/require"
 )
 

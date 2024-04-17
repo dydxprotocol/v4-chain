@@ -2,7 +2,7 @@ package lib
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 )
 
 func AssertDeliverTxMode(ctx sdk.Context) {

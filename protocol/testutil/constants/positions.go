@@ -3,8 +3,8 @@ package constants
 import (
 	"math"
 
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 var (

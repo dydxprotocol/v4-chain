@@ -3,12 +3,12 @@ package appoptions
 import (
 	"fmt"
 	"github.com/cosmos/cosmos-sdk/server/config"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
+	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	daemonflags "github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
+	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 )
 
 // FakeAppOptions is a helper struct used for creating `servertypes.AppOptions` for simulator and end-to-end testing.

@@ -5,10 +5,10 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/gogoproto/proto"
-	ocutypes "github.com/dydxprotocol/v4-chain/protocol/indexer/off_chain_updates/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	ocutypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/streaming/grpc/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 var _ types.GrpcStreamingManager = (*GrpcStreamingManagerImpl)(nil)

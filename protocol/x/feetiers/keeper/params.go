@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/feetiers/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 )
 
 // GetPerpetualFeeParams returns the PerpetualFeeParams in state.

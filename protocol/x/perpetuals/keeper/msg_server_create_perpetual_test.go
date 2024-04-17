@@ -1,17 +1,17 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
-	pricestest "github.com/dydxprotocol/v4-chain/protocol/testutil/prices"
-	perpkeeper "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	priceskeeper "github.com/dydxprotocol/v4-chain/protocol/x/prices/keeper"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
+	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
+	perpkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/stretchr/testify/require"
 )
 

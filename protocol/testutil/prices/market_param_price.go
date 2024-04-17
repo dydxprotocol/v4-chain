@@ -3,7 +3,7 @@ package prices
 import (
 	"math/big"
 
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 type MarketParamPriceModifierOption func(cp *pricestypes.MarketParamPrice)

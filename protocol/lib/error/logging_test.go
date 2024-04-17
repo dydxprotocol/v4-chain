@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	liberror "github.com/dydxprotocol/v4-chain/protocol/lib/error"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/sdk"
+	liberror "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
 )
 
 func TestWrapErrorWithSourceModuleContext_ErrorWithLogContext(t *testing.T) {

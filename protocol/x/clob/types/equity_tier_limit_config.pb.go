@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -85,7 +85,7 @@ func (m *EquityTierLimitConfiguration) GetStatefulOrderEquityTiers() []EquityTie
 // Defines an equity tier limit.
 type EquityTierLimit struct {
 	// The total net collateral in USDC quote quantums of equity required.
-	UsdTncRequired github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=usd_tnc_required,json=usdTncRequired,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"usd_tnc_required"`
+	UsdTncRequired github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,1,opt,name=usd_tnc_required,json=usdTncRequired,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"usd_tnc_required"`
 	// What the limit is for `usd_tnc_required`.
 	Limit uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
 }

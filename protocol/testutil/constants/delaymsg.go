@@ -3,8 +3,8 @@ package constants
 import (
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgetypes "github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 var (

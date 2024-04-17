@@ -6,8 +6,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/rewards/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 )
 
 type msgServer struct {

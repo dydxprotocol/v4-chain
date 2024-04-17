@@ -2,8 +2,8 @@ package delaymsg
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 // InitGenesis initializes the delaymsg module's state from a provided genesis state.

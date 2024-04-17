@@ -10,9 +10,9 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/network"
-	"github.com/dydxprotocol/v4-chain/protocol/x/stats/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 )
 
 // Prevent strconv unused error

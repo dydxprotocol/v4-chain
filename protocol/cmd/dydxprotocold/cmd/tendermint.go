@@ -4,7 +4,7 @@ import (
 	"os"
 
 	debug "github.com/cometbft/cometbft/cmd/cometbft/commands/debug"
-	"github.com/dydxprotocol/v4-chain/protocol/command/genprivkey"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/command/genprivkey"
 	"github.com/spf13/cobra"
 )
 

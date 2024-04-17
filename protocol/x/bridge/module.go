@@ -14,9 +14,9 @@ import (
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 )
 
 var (

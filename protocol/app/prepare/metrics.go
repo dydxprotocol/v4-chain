@@ -4,7 +4,7 @@ import (
 	gometrics "github.com/hashicorp/go-metrics"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const (

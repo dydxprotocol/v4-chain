@@ -3,8 +3,8 @@ package constants
 import (
 	"math"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 var (

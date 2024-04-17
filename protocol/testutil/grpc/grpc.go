@@ -4,7 +4,7 @@ import (
 	"context"
 	"os"
 
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"google.golang.org/grpc"
 )
 

@@ -10,11 +10,11 @@ import (
 
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/dtypes"
-	assettypes "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/client/cli"
-	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
-	ratelimitutil "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	ratelimitutil "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,11 +3,11 @@ package middleware_test
 import (
 	"bytes"
 	"fmt"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/logger"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/middleware"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/middleware"
 	"github.com/stretchr/testify/require"
 )
 

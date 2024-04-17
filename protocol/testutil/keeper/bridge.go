@@ -2,8 +2,8 @@ package keeper
 
 import (
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	delaymsgtypes "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
@@ -11,10 +11,10 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	bridgeserver_types "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/bridge"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/x/bridge/types"
+	bridgeserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/bridge"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 )
 
 func BridgeKeepers(

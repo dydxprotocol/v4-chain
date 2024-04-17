@@ -2,9 +2,9 @@ package types_test
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	daemontypes "github.com/dydxprotocol/v4-chain/protocol/daemons/types"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
+	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"testing"

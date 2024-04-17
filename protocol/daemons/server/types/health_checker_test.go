@@ -2,8 +2,8 @@ package types_test
 
 import (
 	"cosmossdk.io/log"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/server/types"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"

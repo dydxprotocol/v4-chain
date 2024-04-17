@@ -7,8 +7,8 @@ import (
 
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

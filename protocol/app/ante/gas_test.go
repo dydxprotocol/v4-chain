@@ -5,8 +5,8 @@ import (
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
-	testapp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
-	assets "github.com/dydxprotocol/v4-chain/protocol/x/assets/types"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	assets "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"reflect"
 	"testing"
 
@@ -15,10 +15,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/ante"
-	testante "github.com/dydxprotocol/v4-chain/protocol/testutil/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
+	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
 	"github.com/stretchr/testify/require"
 )

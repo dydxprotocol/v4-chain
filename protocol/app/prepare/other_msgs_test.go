@@ -1,12 +1,12 @@
 package prepare_test
 
 import (
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/app/prepare"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/stretchr/testify/require"
 )
 

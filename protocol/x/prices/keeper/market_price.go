@@ -7,18 +7,18 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 
 	gometrics "github.com/hashicorp/go-metrics"
 
 	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	pricefeedmetrics "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 // getMarketPriceStore returns a prefix store for MarketPrices.

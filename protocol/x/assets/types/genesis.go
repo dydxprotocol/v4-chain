@@ -1,6 +1,6 @@
 package types
 
-import "github.com/dydxprotocol/v4-chain/protocol/lib"
+import "github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 const (
 	// UusdcDenom is the precomputed denom for IBC Micro USDC.

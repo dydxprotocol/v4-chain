@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app/process"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/encoding"
-	testmsgs "github.com/dydxprotocol/v4-chain/protocol/testutil/msgs"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/process"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
+	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
 	"github.com/stretchr/testify/require"
 )
 

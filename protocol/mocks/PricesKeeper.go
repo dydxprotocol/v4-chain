@@ -4,7 +4,7 @@ package mocks
 
 import (
 	log "cosmossdk.io/log"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/cosmos/cosmos-sdk/types"

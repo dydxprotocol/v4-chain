@@ -9,8 +9,8 @@ import (
 	"github.com/cosmos/gogoproto/proto"
 	gometrics "github.com/hashicorp/go-metrics"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib/ante"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 // GetGroupMsgOther returns two separate slices of byte txs given a single slice of byte txs and max bytes.

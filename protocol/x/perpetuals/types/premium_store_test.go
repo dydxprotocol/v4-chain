@@ -3,8 +3,8 @@ package types_test
 import (
 	"testing"
 
-	perptest "github.com/dydxprotocol/v4-chain/protocol/testutil/perpetuals"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
+	perptest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/perpetuals"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/stretchr/testify/require"
 )
 

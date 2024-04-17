@@ -4,14 +4,14 @@ import (
 	"math/big"
 	"time"
 
-	indexerevents "github.com/dydxprotocol/v4-chain/protocol/indexer/events"
-	indexer_manager "github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
+	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
+	indexer_manager "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/sending/types"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

@@ -1,8 +1,8 @@
 package types
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

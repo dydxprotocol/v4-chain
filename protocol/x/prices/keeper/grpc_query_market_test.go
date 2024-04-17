@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"testing"
 
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -9,9 +9,9 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	keepertest "github.com/dydxprotocol/v4-chain/protocol/testutil/keeper"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/nullify"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/nullify"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 func TestMarketPriceQuerySingle(t *testing.T) {

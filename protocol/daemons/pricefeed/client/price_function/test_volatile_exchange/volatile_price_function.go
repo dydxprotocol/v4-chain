@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/price_function"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 )
 
 // VolatileExchangeTicker is our representation of ticker information for a test market.

@@ -1,7 +1,7 @@
 package app_test
 
 import (
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

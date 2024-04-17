@@ -7,14 +7,14 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
-	appflags "github.com/dydxprotocol/v4-chain/protocol/app/flags"
-	d_constants "github.com/dydxprotocol/v4-chain/protocol/daemons/constants"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/flags"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/liquidation/client"
-	"github.com/dydxprotocol/v4-chain/protocol/mocks"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/appoptions"
-	daemontestutils "github.com/dydxprotocol/v4-chain/protocol/testutil/daemons"
-	"github.com/dydxprotocol/v4-chain/protocol/testutil/grpc"
+	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	d_constants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
+	daemontestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/grpc"
 	"github.com/stretchr/testify/require"
 )
 

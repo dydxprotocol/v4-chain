@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"math/big"
 
-	satypes "github.com/dydxprotocol/v4-chain/protocol/x/subaccounts/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 var _ MatchableOrder = &LiquidationOrder{}

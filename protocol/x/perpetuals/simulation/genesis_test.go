@@ -3,18 +3,18 @@ package simulation_test
 import (
 	"encoding/json"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v4module "github.com/dydxprotocol/v4-chain/protocol/app/module"
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	testutil_rand "github.com/dydxprotocol/v4-chain/protocol/testutil/rand"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/simulation"
-	"github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types"
-	pricessimulation "github.com/dydxprotocol/v4-chain/protocol/x/prices/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricessimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/simulation"
 	"github.com/stretchr/testify/require"
 )
 

@@ -3,8 +3,8 @@
 package mocks
 
 import (
-	types "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/types"
-	pricestypes "github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	mock "github.com/stretchr/testify/mock"
 )
 

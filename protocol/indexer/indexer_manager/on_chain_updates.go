@@ -2,8 +2,8 @@ package indexer_manager
 
 import (
 	"fmt"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/common"
-	"github.com/dydxprotocol/v4-chain/protocol/indexer/msgsender"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 )
 
 const (

@@ -3,9 +3,9 @@ package lib_test
 import (
 	"testing"
 
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/log"
-	testApp "github.com/dydxprotocol/v4-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
+	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/stretchr/testify/require"
 )
 

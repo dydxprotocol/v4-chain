@@ -7,9 +7,9 @@ import (
 	"time"
 
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
-	"github.com/dydxprotocol/v4-chain/protocol/app"
-	testtx "github.com/dydxprotocol/v4-chain/protocol/testutil/tx"
-	clobtypes "github.com/dydxprotocol/v4-chain/protocol/x/clob/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	testtx "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/tx"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 )
 
 // BlockAdvancement holds orders and matches to be placed in a block. Using this struct and building

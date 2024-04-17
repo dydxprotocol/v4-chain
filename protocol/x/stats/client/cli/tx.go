@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/dydxprotocol/v4-chain/protocol/x/stats/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 )
 
 // GetTxCmd returns the transaction commands for this module

@@ -7,7 +7,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	proto "github.com/cosmos/gogoproto/proto"
-	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/dydxprotocol/v4-chain/protocol/dtypes"
+	github_com_dydxprotocol_v4_chain_protocol_dtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	io "io"
 	math "math"
 	math_bits "math/bits"
@@ -30,7 +30,7 @@ type Perpetual struct {
 	Params PerpetualParams `protobuf:"bytes,1,opt,name=params,proto3" json:"params"`
 	// The current index determined by the cumulative all-time
 	// history of the funding mechanism. Starts at zero.
-	FundingIndex github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=funding_index,json=fundingIndex,proto3,customtype=github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt" json:"funding_index"`
+	FundingIndex github_com_dydxprotocol_v4_chain_protocol_dtypes.SerializableInt `protobuf:"bytes,2,opt,name=funding_index,json=fundingIndex,proto3,customtype=github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt" json:"funding_index"`
 }
 
 func (m *Perpetual) Reset()         { *m = Perpetual{} }

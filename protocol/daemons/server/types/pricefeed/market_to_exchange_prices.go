@@ -5,11 +5,11 @@ import (
 	"time"
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
-	"github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/api"
-	pricefeedmetrics "github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/lib"
-	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
-	"github.com/dydxprotocol/v4-chain/protocol/x/prices/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
+	pricefeedmetrics "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 
