@@ -23,8 +23,6 @@ source "./testing/genesis.sh"
 
 TMP_CHAIN_DIR="/tmp/prod-chain"
 TMP_EXCHANGE_CONFIG_JSON_DIR="/tmp/prod-exchange_config"
-BRIDGE_MODACC_BALANCE="1$NINE_ZEROS$EIGHTEEN_ZEROS" # 1e27
-BRIDGE_MODACC_ADDR="dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv"
 
 # TODO(GENESIS): Update below values before running this script. Sample values are shown.
 ################## Start of required values to be updated ##################
@@ -37,14 +35,6 @@ NATIVE_TOKEN_WHOLE_COIN="sample"
 COIN_NAME="Sample Coin Name"
 # Market ID in the oracle price list for the rewards token.
 REWARDS_TOKEN_MARKET_ID=1
-# The numerical chain ID of the Ethereum chain for bridge daemon to query.
-ETH_CHAIN_ID=9
-# The address of the Ethereum contract for bridge daemon to monitor for logs.
-ETH_BRIDGE_ADDRESS="0xsampleaddress" # default value points to a Sepolia contract
-# The next event id (the last processed id plus one) of the logs from the Ethereum contract.
-BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID=99
-# The Ethereum block height of the most recently processed bridge event.
-BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT=99999
 # Genesis time of the chain.
 GENESIS_TIME="2023-12-31T00:00:00Z"
 # Start time of the community vesting schedule.
@@ -88,14 +78,7 @@ function overwrite_genesis_production() {
 	dasel put -t string -f "$GENESIS" '.app_state.distribution.params.community_tax' -v '0.0' # 0%
 	dasel put -t bool -f "$GENESIS" '.app_state.distribution.params.withdraw_addr_enabled' -v 'true'
 
-	# Bank params
-	# Initialize bank balance of bridge module account.
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances" -v "[]"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].address" -v "${BRIDGE_MODACC_ADDR}"
-	dasel put -t json -f "$GENESIS" ".app_state.bank.balances.[0].coins.[]" -v "{}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].denom" -v "${NATIVE_TOKEN}"
-	dasel put -t string -f "$GENESIS" ".app_state.bank.balances.[0].coins.[0].amount" -v "${BRIDGE_MODACC_BALANCE}"
+	# Bank params	
 	# Set denom metadata
 	set_denom_metadata "$NATIVE_TOKEN" "$NATIVE_TOKEN_WHOLE_COIN" "$COIN_NAME"
 
@@ -142,13 +125,6 @@ function overwrite_genesis_production() {
 	dasel put -t json -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].msg' -v "$delaymsg"
 	# Schedule the message to execute in ~120 days (at 1.5s per block)
 	dasel put -t int -f "$GENESIS" '.app_state.delaymsg.delayed_messages.[0].block_height' -v '6912000'
-
-	# Bridge module params.
-	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.denom' -v "$NATIVE_TOKEN"
-	dasel put -t int -f "$GENESIS" '.app_state.bridge.event_params.eth_chain_id' -v "$ETH_CHAIN_ID"
-	dasel put -t string -f "$GENESIS" '.app_state.bridge.event_params.eth_address' -v "$ETH_BRIDGE_ADDRESS"
-	dasel put -t int -f "$GENESIS" '.app_state.bridge.acknowledged_event_info.next_id' -v "$BRIDGE_GENESIS_ACKNOWLEDGED_NEXT_ID"
-	dasel put -t int -f "$GENESIS" '.app_state.bridge.acknowledged_event_info.eth_block_height' -v "$BRIDGE_GENESIS_ACKNOWLEDGED_ETH_BLOCK_HEIGHT"
 
 	# Crisis module
 	dasel put -t string -f "$GENESIS" '.app_state.crisis.constant_fee.amount' -v "1$EIGHTEEN_ZEROS" # 1 whole coin of native denom

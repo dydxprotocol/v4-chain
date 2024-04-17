@@ -72,27 +72,6 @@
         ]
       }
     },
-    "bridge": {
-      "acknowledged_event_info": {
-        "eth_block_height": 99999,
-        "next_id": 99
-      },
-      "event_params": {
-        "denom": "asample",
-        "eth_address": "0xsampleaddress",
-        "eth_chain_id": 9
-      },
-      "propose_params": {
-        "max_bridges_per_block": 10,
-        "propose_delay_duration": "60s",
-        "skip_if_block_delayed_by_duration": "5s",
-        "skip_rate_ppm": 800000
-      },
-      "safety_params": {
-        "delay_blocks": 86400,
-        "is_disabled": false
-      }
-    },
     "capability": {
       "index": "1",
       "owners": []
