@@ -8,8 +8,6 @@ import (
 	"testing"
 	"time"
 
-	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	appflags "github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
@@ -22,6 +20,8 @@ import (
 	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/client/testutil"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	networktestutil "github.com/cosmos/cosmos-sdk/testutil/network"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/h2non/gock"
 	"github.com/stretchr/testify/suite"
 )
@@ -88,9 +88,6 @@ func (s *PricesIntegrationTestSuite) SetupTest() {
 
 			// Disable the Liquidations daemon.
 			appOptions.Set(daemonflags.FlagLiquidationDaemonEnabled, false)
-
-			// Disable the Bridge Daemon.
-			appOptions.Set(daemonflags.FlagBridgeDaemonEnabled, false)
 
 			// Enable the Price daemon.
 			appOptions.Set(daemonflags.FlagPriceDaemonEnabled, true)

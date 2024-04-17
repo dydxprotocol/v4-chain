@@ -4,6 +4,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (
@@ -31,4 +32,6 @@ var (
 		},
 	}
 	NoHandlerMsg = &testdata.TestMsg{Signers: []string{types.ModuleAddress.String()}}
+
+	AllMsgs = []sdk.Msg{TestMsg1, TestMsg2, TestMsg3}
 )

@@ -1,26 +1,27 @@
 package keeper_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	"errors"
 	"fmt"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"math/big"
 	"testing"
+
+	sdkmath "cosmossdk.io/math"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/stretchr/testify/mock"
@@ -466,7 +467,7 @@ func TestProcessWithdrawFromSubaccount(t *testing.T) {
 
 func TestSendFromModuleToAccount(t *testing.T) {
 	testDenom := "TestSendFromModuleToAccount/Coin"
-	testModuleName := "bridge"
+	testModuleName := "mint"
 
 	tests := map[string]struct {
 		// Setup.
@@ -626,7 +627,7 @@ func TestSendFromModuleToAccount_InvalidRecipient(t *testing.T) {
 		ks.Ctx,
 		&types.MsgSendFromModuleToAccount{
 			Authority:        lib.GovModuleAddress.String(),
-			SenderModuleName: "bridge",
+			SenderModuleName: "mint",
 			Recipient:        "dydx1abc", // invalid recipient address
 			Coin:             sdk.NewCoin("dv4tnt", sdkmath.NewInt(1)),
 		},

@@ -6,15 +6,14 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -115,7 +114,7 @@ func TestQueryMessage(t *testing.T) {
 				msg, err := resp.Message.GetMessage()
 				require.NoError(t, err)
 
-				require.Equal(t, tc.expectedMsg, msg.(*bridgetypes.MsgCompleteBridge))
+				require.Equal(t, tc.expectedMsg, msg)
 			}
 		})
 	}
