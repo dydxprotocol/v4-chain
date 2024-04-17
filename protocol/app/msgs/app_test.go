@@ -3,12 +3,12 @@ package msgs_test
 import (
 	"testing"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testmsgs "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/msgs"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/stretchr/testify/require"
 )
 
@@ -275,11 +275,10 @@ func TestDisallowMsgs_PrepareProposal_Filter(t *testing.T) {
 					// 2. Validate that PrepareProposal would filter out the disallow msgs.
 					ValidateRespPrepare: func(ctx sdk.Context, resp abcitypes.ResponsePrepareProposal) (haltChain bool) {
 						proposalTxs := resp.GetTxs()
-						require.Len(t, proposalTxs, 4)
+						require.Len(t, proposalTxs, 3)
 						require.Equal(t, constants.ValidEmptyMsgProposedOperationsTxBytes, proposalTxs[0])
-						require.Equal(t, constants.MsgAcknowledgeBridges_NoEvents_TxBytes, proposalTxs[1])
-						require.Equal(t, constants.EmptyMsgAddPremiumVotesTxBytes, proposalTxs[2])
-						require.Equal(t, constants.EmptyMsgUpdateMarketPricesTxBytes, proposalTxs[3])
+						require.Equal(t, constants.EmptyMsgAddPremiumVotesTxBytes, proposalTxs[1])
+						require.Equal(t, constants.EmptyMsgUpdateMarketPricesTxBytes, proposalTxs[2])
 						return false
 					},
 

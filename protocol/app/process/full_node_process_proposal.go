@@ -11,7 +11,6 @@ import (
 // Validators within the validator set should never use this implementation.
 func FullNodeProcessProposalHandler(
 	txConfig client.TxConfig,
-	bridgeKeeepr ProcessBridgeKeeper,
 	clobKeeper ProcessClobKeeper,
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
@@ -34,7 +33,7 @@ func FullNodeProcessProposalHandler(
 		}
 		ctx = ctx.WithValue(ConsensusRound, currentConsensusRound)
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeepr, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
 		if err != nil {
 			return response, nil
 		}

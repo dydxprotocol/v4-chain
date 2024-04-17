@@ -3,25 +3,23 @@ package app_test
 import (
 	"testing"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
-	bridgemoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 
 func TestModuleAccountsToAddresses(t *testing.T) {
 	expectedModuleAccToAddresses := map[string]string{
 		authtypes.FeeCollectorName:                   "dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2",
-		bridgemoduletypes.ModuleName:                 "dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv",
 		distrtypes.ModuleName:                        "dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg",
 		stakingtypes.BondedPoolName:                  "dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq",
 		stakingtypes.NotBondedPoolName:               "dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605",
@@ -59,7 +57,6 @@ func TestMaccPerms(t *testing.T) {
 	maccPerms := app.GetMaccPerms()
 	expectedMaccPerms := map[string][]string{
 		"bonded_tokens_pool":     {"burner", "staking"},
-		"bridge":                 {"minter"},
 		"distribution":           nil,
 		"fee_collector":          nil,
 		"gov":                    {"burner"},
@@ -79,7 +76,6 @@ func TestMaccPerms(t *testing.T) {
 func TestModuleAccountAddrs(t *testing.T) {
 	expectedModuleAccAddresses := map[string]bool{
 		"dydx17xpfvakm2amg962yls6f84z3kell8c5leqdyt2": true, // x/auth.FeeCollector
-		"dydx1zlefkpe3g0vvm9a4h0jf9000lmqutlh9jwjnsv": true, // x/bridge
 		"dydx1jv65s3grqf6v6jl3dp4t6c9t9rk99cd8wx2cfg": true, // x/distribution
 		"dydx1fl48vsnmsdzcv85q5d2q4z5ajdha8yu3uz8teq": true, // x/staking.bondedPool
 		"dydx1tygms3xhhs3yv487phx3dw4a95jn7t7lgzm605": true, // x/staking.notBondedPool

@@ -3,11 +3,11 @@ package process_test
 import (
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/process"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -21,9 +21,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 
 	// Valid operations tx.
 	validOperationsTx := constants.ValidEmptyMsgProposedOperationsTxBytes
-
-	// Valid acknowledge bridges tx.
-	validAcknowledgeBridgesTx := constants.MsgAcknowledgeBridges_Ids0_1_Height0_TxBytes
 
 	// Valid add funding tx.
 	validAddFundingTx := constants.ValidMsgAddPremiumVotesTxBytes
@@ -51,7 +48,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 		"Invalid transactions": {
 			txsBytes: [][]byte{
 				validOperationsTx,
-				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				invalidUpdatePriceTx, // invalid.
 			},
@@ -61,7 +57,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 				validOperationsTx,
 				validMultiMsgOtherTx,  // other txs.
 				validSingleMsgOtherTx, // other txs.
-				validAcknowledgeBridgesTx,
 				validAddFundingTx,
 				validUpdatePriceTx,
 			},
@@ -70,8 +65,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			// Setup.
-			_, bridgeKeeper, _, _, _, _, _ := keepertest.BridgeKeepers(t)
 
 			ctx, pricesKeeper, _, indexPriceCache, _, mockTimeProvider := keepertest.PricesKeepers(t)
 			mockTimeProvider.On("Now").Return(constants.TimeT)
@@ -84,7 +77,6 @@ func TestFullNodeProcessProposalHandler(t *testing.T) {
 
 			handler := process.FullNodeProcessProposalHandler(
 				constants.TestEncodingCfg.TxConfig,
-				bridgeKeeper,
 				mockClobKeeper,
 				&mocks.ProcessStakingKeeper{},
 				&mocks.ProcessPerpetualKeeper{},

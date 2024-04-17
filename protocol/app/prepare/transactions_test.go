@@ -4,8 +4,8 @@ import (
 	"errors"
 	"testing"
 
-	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/prepare"
+	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,7 +13,6 @@ type TestFunction int
 
 const (
 	testUpdateMarketPrices TestFunction = iota
-	testAcknowledgeBridges
 	testAddPremiumVotes
 	testProposedOperations
 )
@@ -30,7 +29,6 @@ func Test_NewPrepareProposalTransactions_Success(t *testing.T) {
 
 	require.Nil(t, ppt.UpdateMarketPricesTx)
 	require.Nil(t, ppt.AddPremiumVotesTx)
-	require.Nil(t, ppt.AcknowledgeBridgesTx)
 	require.Nil(t, ppt.ProposedOperationsTx)
 	require.Nil(t, ppt.OtherTxs)
 }
@@ -47,10 +45,6 @@ func Test_NewPrepareProposalTransactions_Fail(t *testing.T) {
 
 func Test_SetUpdateMarketPricesTx(t *testing.T) {
 	setterTestCases(t, testUpdateMarketPrices)
-}
-
-func Test_SetAcknowledgeBridgesTx(t *testing.T) {
-	setterTestCases(t, testAcknowledgeBridges)
 }
 
 func Test_SetAddPremiumVotesTx(t *testing.T) {
@@ -123,8 +117,6 @@ func setterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs, va
 		return target.SetUpdateMarketPricesTx(value)
 	case testAddPremiumVotes:
 		return target.SetAddPremiumVotesTx(value)
-	case testAcknowledgeBridges:
-		return target.SetAcknowledgeBridgesTx(value)
 	case testProposedOperations:
 		return target.SetProposedOperationsTx(value)
 	default:
@@ -138,8 +130,6 @@ func getterTestHelper(tFunc TestFunction, target *prepare.PrepareProposalTxs) []
 		return target.UpdateMarketPricesTx
 	case testAddPremiumVotes:
 		return target.AddPremiumVotesTx
-	case testAcknowledgeBridges:
-		return target.AcknowledgeBridgesTx
 	case testProposedOperations:
 		return target.ProposedOperationsTx
 	default:
@@ -385,7 +375,6 @@ func Test_GetTxsInOrder(t *testing.T) {
 		operationsTx       []byte
 		otherTxs           [][]byte
 		otherAdditionalTxs [][]byte
-		bridgeTx           []byte
 		fundingTx          []byte
 		pricesTx           []byte
 
@@ -396,7 +385,6 @@ func Test_GetTxsInOrder(t *testing.T) {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{},
 			fundingTx:          []byte{},
 			pricesTx:           []byte{},
 
@@ -407,77 +395,60 @@ func Test_GetTxsInOrder(t *testing.T) {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{},
 			fundingTx:          []byte{},
 			pricesTx:           []byte{1},
 
 			expectedTxs: nil,
 			expectedErr: errors.New("AddPremiumVotesTx must be set"),
 		},
-		"acknowledge bridges is not set": {
+		"prices and funding only": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{},
-			fundingTx:          []byte{2},
-			pricesTx:           []byte{1},
-
-			expectedTxs: nil,
-			expectedErr: errors.New("AcknowledgeBridgesTx must be set"),
-		},
-		"prices, funding, and bridge only": {
-			operationsTx:       []byte{},
-			otherTxs:           [][]byte{},
-			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{4},
 			fundingTx:          []byte{2, 3},
 			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{2, 3}, {1}},
 			expectedErr: nil,
 		},
-		"prices, funding, bridge + matched orders": {
+		"prices, funding + matched orders": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{3},
 			fundingTx:          []byte{2},
 			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4, 5, 6}, {3}, {2}, {1}},
+			expectedTxs: [][]byte{{4, 5, 6}, {2}, {1}},
 			expectedErr: nil,
 		},
-		"prices, funding, bridge + others": {
+		"prices, funding + others": {
 			operationsTx:       []byte{},
 			otherTxs:           [][]byte{{4}, {5, 6}},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{3},
 			fundingTx:          []byte{2},
 			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4}, {5, 6}, {3}, {2}, {1}},
+			expectedTxs: [][]byte{{4}, {5, 6}, {2}, {1}},
 			expectedErr: nil,
 		},
 		"partially set": {
 			operationsTx:       []byte{4, 5, 6},
 			otherTxs:           [][]byte{{7, 8}, {9, 10}},
 			otherAdditionalTxs: [][]byte{},
-			bridgeTx:           []byte{11},
 			fundingTx:          []byte{2, 3},
 			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4, 5, 6}, {7, 8}, {9, 10}, {11}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{4, 5, 6}, {7, 8}, {9, 10}, {2, 3}, {1}},
 			expectedErr: nil,
 		},
 		"all set": {
 			operationsTx:       []byte{4, 5},
 			otherTxs:           [][]byte{{6}, {7, 8}},
 			otherAdditionalTxs: [][]byte{{9}, {10}},
-			bridgeTx:           []byte{11},
 			fundingTx:          []byte{2, 3},
 			pricesTx:           []byte{1},
 
-			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {11}, {2, 3}, {1}},
+			expectedTxs: [][]byte{{4, 5}, {6}, {7, 8}, {9}, {10}, {2, 3}, {1}},
 			expectedErr: nil,
 		},
 	}
@@ -497,9 +468,6 @@ func Test_GetTxsInOrder(t *testing.T) {
 			require.NoError(t, err)
 
 			err = ppt.SetAddPremiumVotesTx(tc.fundingTx)
-			require.NoError(t, err)
-
-			err = ppt.SetAcknowledgeBridgesTx(tc.bridgeTx)
 			require.NoError(t, err)
 
 			err = ppt.SetProposedOperationsTx(tc.operationsTx)

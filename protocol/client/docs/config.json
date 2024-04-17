@@ -23,14 +23,6 @@
       }
     },
     {
-      "url": "./tmp-swagger-gen/dydxprotocol/bridge/query.swagger.json",
-      "operationIds": {
-        "rename": {
-          "Params": "BridgeParams"
-        }
-      }
-    },
-    {
       "url": "./tmp-swagger-gen/dydxprotocol/clob/query.swagger.json",
       "operationIds": {
         "rename": {

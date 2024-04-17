@@ -1,8 +1,9 @@
 package module
 
 import (
-	"cosmossdk.io/x/tx/signing"
 	"fmt"
+
+	"cosmossdk.io/x/tx/signing"
 	addresscodec "github.com/cosmos/cosmos-sdk/codec/address"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -90,7 +91,6 @@ func NewInterfaceRegistry(addrPrefix string, valAddrPrefix string) (types.Interf
 				),
 
 				// App injected messages have no signers.
-				"dydxprotocol.bridge.MsgAcknowledgeBridges":  noSigners,
 				"dydxprotocol.clob.MsgProposedOperations":    noSigners,
 				"dydxprotocol.perpetuals.MsgAddPremiumVotes": noSigners,
 				"dydxprotocol.prices.MsgUpdateMarketPrices":  noSigners,

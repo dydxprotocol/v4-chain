@@ -7,11 +7,11 @@ import (
 	error_lib "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/error"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const ConsensusRound = sdk.ContextKey("consensus_round")
@@ -32,7 +32,6 @@ const ConsensusRound = sdk.ContextKey("consensus_round")
 // Note: stakingKeeper and perpetualKeeper are only needed for MEV calculations.
 func ProcessProposalHandler(
 	txConfig client.TxConfig,
-	bridgeKeeper ProcessBridgeKeeper,
 	clobKeeper ProcessClobKeeper,
 	stakingKeeper ProcessStakingKeeper,
 	perpetualKeeper ProcessPerpetualKeeper,
@@ -72,7 +71,7 @@ func ProcessProposalHandler(
 			error_lib.LogErrorWithOptionalContext(ctx, "UpdateSmoothedPrices failed", err)
 		}
 
-		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, bridgeKeeper, pricesKeeper)
+		txs, err := DecodeProcessProposalTxs(ctx, txConfig.TxDecoder(), req, pricesKeeper)
 		if err != nil {
 			error_lib.LogErrorWithOptionalContext(ctx, "DecodeProcessProposalTxs failed", err)
 			recordErrorMetricsWithLabel(metrics.Decode)

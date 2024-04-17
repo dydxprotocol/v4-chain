@@ -14,7 +14,6 @@ type PrepareProposalTxs struct {
 	UpdateMarketPricesTx []byte
 	AddPremiumVotesTx    []byte
 	ProposedOperationsTx []byte
-	AcknowledgeBridgesTx []byte
 	OtherTxs             [][]byte
 
 	// Bytes.
@@ -68,17 +67,6 @@ func (t *PrepareProposalTxs) SetProposedOperationsTx(tx []byte) error {
 		return err
 	}
 	t.ProposedOperationsTx = tx
-	return nil
-}
-
-// SetAcknowledgeBridgesTx sets the tx used for acknowledging bridges.
-func (t *PrepareProposalTxs) SetAcknowledgeBridgesTx(tx []byte) error {
-	oldBytes := uint64(len(t.AcknowledgeBridgesTx))
-	newBytes := uint64(len(tx))
-	if err := t.UpdateUsedBytes(oldBytes, newBytes); err != nil {
-		return err
-	}
-	t.AcknowledgeBridgesTx = tx
 	return nil
 }
 
@@ -139,10 +127,6 @@ func (t *PrepareProposalTxs) GetTxsInOrder() ([][]byte, error) {
 		return nil, errors.New("AddPremiumVotesTx must be set")
 	}
 
-	if len(t.AcknowledgeBridgesTx) == 0 {
-		return nil, errors.New("AcknowledgeBridgesTx must be set")
-	}
-
 	var txsToReturn [][]byte
 
 	// 1. Proposed operations.
@@ -155,14 +139,11 @@ func (t *PrepareProposalTxs) GetTxsInOrder() ([][]byte, error) {
 		txsToReturn = append(txsToReturn, t.OtherTxs...)
 	}
 
-	// 3. Acknowledge bridges.
-	txsToReturn = append(txsToReturn, t.AcknowledgeBridgesTx)
-
-	// 4. Funding samples.
+	// 3. Funding samples.
 	// The validation for `AddPremiumVotesTx` is done at the beginning.
 	txsToReturn = append(txsToReturn, t.AddPremiumVotesTx)
 
-	// 5. Price updates.
+	// 4. Price updates.
 	// The validation for `UpdateMarketPricesTx` is done at the beginning.
 	txsToReturn = append(txsToReturn, t.UpdateMarketPricesTx)
 

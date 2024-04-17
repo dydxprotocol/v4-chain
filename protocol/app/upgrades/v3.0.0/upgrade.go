@@ -5,6 +5,11 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
@@ -18,12 +23,6 @@ import (
 	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	bridgemoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	clobmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	rewardsmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 )
 
 var (
@@ -51,7 +50,6 @@ var (
 	// List of module accounts to check in state.
 	// These include all dYdX custom module accounts.
 	ModuleAccsToInitialize = []string{
-		bridgemoduletypes.ModuleName,
 		satypes.ModuleName,
 		clobmoduletypes.InsuranceFundName,
 		rewardsmoduletypes.TreasuryAccountName,

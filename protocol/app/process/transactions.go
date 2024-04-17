@@ -1,27 +1,26 @@
 package process
 
 import (
+	"slices"
+
 	errorsmod "cosmossdk.io/errors"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	abci "github.com/cometbft/cometbft/abci/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	"slices"
 )
 
 const (
-	minTxsCount                   = 4
+	minTxsCount                   = 3
 	proposedOperationsTxIndex     = 0
 	updateMarketPricesTxLenOffset = -1
 	addPremiumVotesTxLenOffset    = -2
-	acknowledgeBridgesTxLenOffset = -3
-	lastOtherTxLenOffset          = acknowledgeBridgesTxLenOffset
+	lastOtherTxLenOffset          = addPremiumVotesTxLenOffset
 	firstOtherTxIndex             = proposedOperationsTxIndex + 1
 )
 
 func init() {
 	txIndicesAndOffsets := []int{
 		proposedOperationsTxIndex,
-		acknowledgeBridgesTxLenOffset,
 		addPremiumVotesTxLenOffset,
 		updateMarketPricesTxLenOffset,
 	}
@@ -39,7 +38,6 @@ func init() {
 	}
 	txIndicesForMinTxsCount := []int{
 		proposedOperationsTxIndex,
-		acknowledgeBridgesTxLenOffset + minTxsCount,
 		addPremiumVotesTxLenOffset + minTxsCount,
 		updateMarketPricesTxLenOffset + minTxsCount,
 	}
@@ -59,7 +57,6 @@ func init() {
 type ProcessProposalTxs struct {
 	// Single msg txs.
 	ProposedOperationsTx *ProposedOperationsTx
-	AcknowledgeBridgesTx *AcknowledgeBridgesTx
 	AddPremiumVotesTx    *AddPremiumVotesTx
 	UpdateMarketPricesTx *UpdateMarketPricesTx
 
@@ -72,7 +69,6 @@ func DecodeProcessProposalTxs(
 	ctx sdk.Context,
 	decoder sdk.TxDecoder,
 	req *abci.RequestProcessProposal,
-	bridgeKeeper ProcessBridgeKeeper,
 	pricesKeeper ProcessPricesKeeper,
 ) (*ProcessProposalTxs, error) {
 	// Check len.
@@ -88,17 +84,6 @@ func DecodeProcessProposalTxs(
 
 	// Operations.
 	operationsTx, err := DecodeProposedOperationsTx(decoder, req.Txs[proposedOperationsTxIndex])
-	if err != nil {
-		return nil, err
-	}
-
-	// Acknowledge bridges.
-	acknowledgeBridgesTx, err := DecodeAcknowledgeBridgesTx(
-		ctx,
-		bridgeKeeper,
-		decoder,
-		req.Txs[numTxs+acknowledgeBridgesTxLenOffset],
-	)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +118,6 @@ func DecodeProcessProposalTxs(
 
 	return &ProcessProposalTxs{
 		ProposedOperationsTx: operationsTx,
-		AcknowledgeBridgesTx: acknowledgeBridgesTx,
 		AddPremiumVotesTx:    addPremiumVotesTx,
 		UpdateMarketPricesTx: updatePricesTx,
 		OtherTxs:             allOtherTxs,
@@ -150,7 +134,6 @@ func (ppt *ProcessProposalTxs) Validate() error {
 	singleTxs := []SingleMsgTx{
 		ppt.ProposedOperationsTx,
 		ppt.AddPremiumVotesTx,
-		ppt.AcknowledgeBridgesTx,
 		ppt.UpdateMarketPricesTx,
 	}
 	for _, smt := range singleTxs {

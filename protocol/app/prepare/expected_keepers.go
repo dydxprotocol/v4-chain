@@ -1,13 +1,10 @@
 package prepare
 
 import (
-	"time"
-
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // PrepareClobKeeper defines the expected CLOB keeper used for `PrepareProposal`.
@@ -23,9 +20,4 @@ type PreparePerpetualsKeeper interface {
 // PreparePricesKeeper defines the expected Prices keeper used for `PrepareProposal`.
 type PreparePricesKeeper interface {
 	GetValidMarketPriceUpdates(ctx sdk.Context) *pricestypes.MsgUpdateMarketPrices
-}
-
-// PrepareBridgeKeeper defines the expected Bridge keeper used for `PrepareProposal`.
-type PrepareBridgeKeeper interface {
-	GetAcknowledgeBridges(ctx sdk.Context, blockTimestamp time.Time) *bridgetypes.MsgAcknowledgeBridges
 }
