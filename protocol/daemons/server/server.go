@@ -1,17 +1,17 @@
 package server
 
 import (
+	"net"
+	"syscall"
+
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	bridgeapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/bridge/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	liquidationapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	pricefeedapi "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
-	"net"
-	"syscall"
 )
 
 // Server struct defines the shared gRPC server for all daemons.
@@ -24,7 +24,6 @@ type Server struct {
 	fileHandler   daemontypes.FileHandler
 	socketAddress string
 
-	BridgeServer
 	PriceFeedServer
 	LiquidationServer
 }
@@ -91,9 +90,6 @@ func (server *Server) Start() {
 
 	// Register gRPC services needed by the daemons. This is required before invoking `Serve`.
 	// https://pkg.go.dev/google.golang.org/grpc#Server.RegisterService
-
-	// Register Server to ingest gRPC requests from bridge daemon.
-	bridgeapi.RegisterBridgeServiceServer(server.gsrv, server)
 
 	// Register Server to ingest gRPC requests from price feed daemon and update market prices.
 	pricefeedapi.RegisterPriceFeedServiceServer(server.gsrv, server)

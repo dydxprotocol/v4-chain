@@ -20,9 +20,6 @@ func TestAddDaemonFlagsToCmd(t *testing.T) {
 		flags.FlagPanicOnDaemonFailureEnabled,
 		flags.FlagMaxDaemonUnhealthySeconds,
 
-		flags.FlagBridgeDaemonEnabled,
-		flags.FlagBridgeDaemonLoopDelayMs,
-
 		flags.FlagLiquidationDaemonEnabled,
 		flags.FlagLiquidationDaemonLoopDelayMs,
 		flags.FlagLiquidationDaemonQueryPageLimit,
@@ -45,10 +42,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 	optsMap[flags.FlagUnixSocketAddress] = "test-socket-address"
 	optsMap[flags.FlagPanicOnDaemonFailureEnabled] = false
 	optsMap[flags.FlagMaxDaemonUnhealthySeconds] = uint32(1234)
-
-	optsMap[flags.FlagBridgeDaemonEnabled] = true
-	optsMap[flags.FlagBridgeDaemonLoopDelayMs] = uint32(1111)
-	optsMap[flags.FlagBridgeDaemonEthRpcEndpoint] = "test-eth-rpc-endpoint"
 
 	optsMap[flags.FlagLiquidationDaemonEnabled] = true
 	optsMap[flags.FlagLiquidationDaemonLoopDelayMs] = uint32(2222)
@@ -73,11 +66,6 @@ func TestGetDaemonFlagValuesFromOptions_Custom(t *testing.T) {
 		optsMap[flags.FlagMaxDaemonUnhealthySeconds],
 		r.Shared.MaxDaemonUnhealthySeconds,
 	)
-
-	// Bridge Daemon.
-	require.Equal(t, optsMap[flags.FlagBridgeDaemonEnabled], r.Bridge.Enabled)
-	require.Equal(t, optsMap[flags.FlagBridgeDaemonLoopDelayMs], r.Bridge.LoopDelayMs)
-	require.Equal(t, optsMap[flags.FlagBridgeDaemonEthRpcEndpoint], r.Bridge.EthRpcEndpoint)
 
 	// Liquidation Daemon.
 	require.Equal(t, optsMap[flags.FlagLiquidationDaemonEnabled], r.Liquidation.Enabled)
