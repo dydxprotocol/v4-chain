@@ -3,8 +3,8 @@ package types
 import (
 	fmt "fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // sending module event types

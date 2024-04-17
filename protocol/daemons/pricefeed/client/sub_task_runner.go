@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	pricefeedmetrics "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/metrics"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

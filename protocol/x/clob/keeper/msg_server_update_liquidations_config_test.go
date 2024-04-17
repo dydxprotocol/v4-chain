@@ -4,7 +4,6 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"testing"
 
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -13,6 +12,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 )
 

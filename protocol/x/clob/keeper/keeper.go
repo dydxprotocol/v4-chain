@@ -8,8 +8,6 @@ import (
 	"cosmossdk.io/log"
 	"cosmossdk.io/store/prefix"
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -18,6 +16,8 @@ import (
 	flags "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 type (

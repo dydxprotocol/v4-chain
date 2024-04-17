@@ -1,9 +1,9 @@
 package rewards
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.

@@ -6,14 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	"gopkg.in/typ.v4/slices"
 
 	"github.com/cometbft/cometbft/types"

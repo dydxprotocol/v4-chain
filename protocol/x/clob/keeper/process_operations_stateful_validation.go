@@ -5,9 +5,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // FetchOrderFromOrderId is a helper function that fetches a order from an order id.

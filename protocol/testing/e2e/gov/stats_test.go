@@ -6,12 +6,12 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	statstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	statstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	"github.com/stretchr/testify/require"
 )
 

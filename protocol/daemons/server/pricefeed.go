@@ -6,13 +6,13 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	pricefeedmetrics "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/metrics"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

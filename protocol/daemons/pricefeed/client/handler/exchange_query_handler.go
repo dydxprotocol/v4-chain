@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
@@ -16,6 +15,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	libtime "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/time"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

@@ -3,10 +3,10 @@ package ante_test
 import (
 	"cosmossdk.io/errors"
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
-	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	assets "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"reflect"
 	"testing"
 

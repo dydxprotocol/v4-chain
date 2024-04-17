@@ -4,11 +4,11 @@ import (
 	"testing"
 	"time"
 
-	abci "github.com/cometbft/cometbft/abci/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
 	testApp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
+	abci "github.com/cometbft/cometbft/abci/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	gometrics "github.com/hashicorp/go-metrics"
 	"github.com/stretchr/testify/require"
 )

@@ -6,7 +6,6 @@ package app
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
@@ -14,6 +13,7 @@ import (
 	pricestest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/prices"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // Subsitute quantums and subticks with value converted from human readable price and amount.

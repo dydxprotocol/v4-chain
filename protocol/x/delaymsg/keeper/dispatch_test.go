@@ -22,8 +22,6 @@ import (
 
 var (
 	DelayMsgAuthority = types.ModuleAddress
-
-	testDenom = "adv4tnt"
 )
 
 func setupMockKeeperNoMessages(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
@@ -279,19 +277,6 @@ func TestDispatchMessagesForBlock_Mixed(t *testing.T) {
 			mock.AssertExpectationsForObjects(t, k, ms, cms)
 		})
 	}
-}
-
-// expectAccountBalance checks that the specified account has the expected balance.
-func expectAccountBalance(
-	t *testing.T,
-	ctx sdk.Context,
-	tApp *testapp.TestApp,
-	address sdk.AccAddress,
-	expectedBalance sdk.Coin,
-) {
-	balance := tApp.App.BankKeeper.GetBalance(ctx, address, expectedBalance.Denom)
-	require.Equal(t, expectedBalance.Amount, balance.Amount)
-	require.Equal(t, expectedBalance.Denom, balance.Denom)
 }
 
 // TestSendDelayedPerpetualFeeParamsUpdate tests that the delayed message testApp genesis state, which contains a

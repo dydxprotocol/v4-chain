@@ -6,10 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
@@ -27,6 +23,10 @@ import (
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
+	"github.com/cometbft/cometbft/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/stretchr/testify/require"
 )
 

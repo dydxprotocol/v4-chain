@@ -4,10 +4,10 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetEquityTierLimitConfiguration gets the equity tier limit configuration from state.

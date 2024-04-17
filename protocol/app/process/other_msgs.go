@@ -2,8 +2,8 @@ package process
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // OtherMsgsTx represents tx msgs in the "other" category that can be validated.

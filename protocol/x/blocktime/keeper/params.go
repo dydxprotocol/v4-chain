@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetParams returns the DowntimeParams in state.

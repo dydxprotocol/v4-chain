@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	sdkmath "cosmossdk.io/math"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
@@ -12,7 +13,6 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 )
 
 // GetModuleAccUsdcBalance is a test utility function to query USDC balance

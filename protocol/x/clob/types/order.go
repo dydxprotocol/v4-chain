@@ -7,9 +7,9 @@ import (
 	"math/big"
 	"time"
 
-	proto "github.com/cosmos/gogoproto/proto"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	proto "github.com/cosmos/gogoproto/proto"
 	gometrics "github.com/hashicorp/go-metrics"
 )
 

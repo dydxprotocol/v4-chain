@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/rate_limit"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetBlockRateLimitConfiguration gets the block rate limit configuration from state.

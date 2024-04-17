@@ -3,10 +3,10 @@ package cmd_test
 import (
 	"testing"
 
-	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/config"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
 	"github.com/stretchr/testify/require"
 )
 

@@ -9,11 +9,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 // genNumClobPairs returns a randomized number of CLOB pairs.

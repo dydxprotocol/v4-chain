@@ -4,8 +4,8 @@ import (
 	errorsmod "cosmossdk.io/errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ RateLimiter[int] = (*singleBlockRateLimiter[int])(nil)

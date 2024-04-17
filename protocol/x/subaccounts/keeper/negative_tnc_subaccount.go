@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	gogotypes "github.com/cosmos/gogoproto/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 )
 
 // GetNegativeTncSubaccountSeenAtBlock gets the last block height a negative TNC subaccount was

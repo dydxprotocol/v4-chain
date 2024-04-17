@@ -11,10 +11,6 @@ import (
 
 	pricetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testutil_json "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/json"
@@ -24,6 +20,10 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	perpetuals_keeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
 	prices_keeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"

@@ -7,9 +7,9 @@ import (
 	errorsmod "cosmossdk.io/errors"
 
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // GetSubaccountLiquidationInfo returns liquidation information of the given subaccount in the

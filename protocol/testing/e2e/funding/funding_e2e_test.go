@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/cometbft/cometbft/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -18,6 +17,7 @@ import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 )
 

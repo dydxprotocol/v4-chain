@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	"github.com/cosmos/cosmos-sdk/client"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/network"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	"github.com/cosmos/cosmos-sdk/client"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 )
 

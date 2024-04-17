@@ -4,10 +4,9 @@ import (
 	"testing"
 	"time"
 
-	cmt "github.com/cometbft/cometbft/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	cmt "github.com/cometbft/cometbft/types"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
@@ -16,6 +15,7 @@ import (
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

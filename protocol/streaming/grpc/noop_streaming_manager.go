@@ -1,9 +1,9 @@
 package grpc
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/streaming/grpc/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ types.GrpcStreamingManager = (*NoopGrpcStreamingManager)(nil)

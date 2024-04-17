@@ -3,13 +3,13 @@ package rewards
 import (
 	"math/rand"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	rewardssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	rewardssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 )
 
 // avoid unused import issue

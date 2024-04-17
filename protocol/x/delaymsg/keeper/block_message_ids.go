@@ -3,9 +3,9 @@ package keeper
 import (
 	errorsmod "cosmossdk.io/errors"
 	"cosmossdk.io/store/prefix"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // newBlockMessageIdsStore creates a new prefix store for BlockMessageIds.

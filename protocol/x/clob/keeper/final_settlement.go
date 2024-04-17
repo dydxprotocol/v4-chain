@@ -1,12 +1,12 @@
 package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	indexershared "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/shared/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // mustTransitionToFinalSettlement holds logic executed when a market transitions to FINAL_SETTLEMENT status.

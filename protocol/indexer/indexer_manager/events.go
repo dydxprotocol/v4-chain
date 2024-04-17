@@ -2,13 +2,13 @@ package indexer_manager
 
 import (
 	storetypes "cosmossdk.io/store/types"
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/gogoproto/proto"
 	ante_types "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/gogoproto/proto"
 )
 
 const (

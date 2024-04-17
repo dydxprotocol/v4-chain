@@ -1,13 +1,13 @@
 package epochs
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	epochssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/simulation"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	epochssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/simulation"
 )
 
 // avoid unused import issue

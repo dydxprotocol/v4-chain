@@ -1,8 +1,8 @@
 package epochs
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BeginBlocker executes all ABCI BeginBlock logic respective to the epochs module.

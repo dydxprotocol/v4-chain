@@ -1,14 +1,14 @@
 package assets
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	assetssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	assetssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 )
 
 // avoid unused import issue

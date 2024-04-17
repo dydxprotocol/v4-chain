@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/cosmos/cosmos-sdk/types/module"
 
 	ratelimitkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/keeper"
 	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"

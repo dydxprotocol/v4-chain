@@ -6,8 +6,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	"github.com/cosmos/cosmos-sdk/client"
 )
 
 var (

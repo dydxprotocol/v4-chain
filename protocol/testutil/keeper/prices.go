@@ -5,10 +5,6 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
-	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cosmos/cosmos-sdk/codec"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	pricefeed_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/types"
 	pricefeedserver_types "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/pricefeed"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/common"
@@ -20,6 +16,10 @@ import (
 	delaymsgmoduletypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	dbm "github.com/cosmos/cosmos-db"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

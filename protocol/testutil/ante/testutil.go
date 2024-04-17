@@ -2,6 +2,7 @@ package ante
 
 import (
 	storetypes "cosmossdk.io/store/types"
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -12,7 +13,6 @@ import (
 	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	txtestutil "github.com/cosmos/cosmos-sdk/x/auth/tx/testutil"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"testing"
 
 	"github.com/golang/mock/gomock"

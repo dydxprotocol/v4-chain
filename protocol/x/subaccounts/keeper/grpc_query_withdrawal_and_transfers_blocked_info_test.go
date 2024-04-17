@@ -8,12 +8,12 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	btkeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
 	sakeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 func TestQueryWithdrawalAndTransfersBlockedInfo(t *testing.T) {

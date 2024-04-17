@@ -2,10 +2,10 @@ package ante
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // ValidateMsgTypeDecorator checks that the tx has the expected message types.

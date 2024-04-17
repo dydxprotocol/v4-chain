@@ -5,11 +5,11 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 )
 
 const (

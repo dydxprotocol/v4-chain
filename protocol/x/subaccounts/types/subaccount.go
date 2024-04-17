@@ -5,9 +5,9 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 const (

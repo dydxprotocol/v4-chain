@@ -6,7 +6,6 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/gogoproto/proto"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender"
 	ocutypes "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/off_chain_updates/types"
 	v1 "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/protocol/v1"
@@ -16,6 +15,7 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/stretchr/testify/require"
 )
 

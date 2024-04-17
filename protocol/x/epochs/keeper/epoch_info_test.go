@@ -8,11 +8,11 @@ import (
 
 	errorsmod "cosmossdk.io/errors"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/nullify"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 

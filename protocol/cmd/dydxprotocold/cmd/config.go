@@ -3,10 +3,10 @@ package cmd
 import (
 	"time"
 
-	tmcfg "github.com/cometbft/cometbft/config"
-	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	tmcfg "github.com/cometbft/cometbft/config"
+	serverconfig "github.com/cosmos/cosmos-sdk/server/config"
 )
 
 const (

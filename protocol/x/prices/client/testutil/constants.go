@@ -1,11 +1,11 @@
 package testutil
 
 import (
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants/exchange_common"
 	pricefeed "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed/exchange_config"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
 const (

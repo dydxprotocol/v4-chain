@@ -1,10 +1,10 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante/types"
 	libante "github.com/StreamFinance-Protocol/stream-chain/protocol/lib/ante"
 	clobante "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/ante"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // FreeInfiniteGasDecorator is an AnteHandler that sets `GasMeter` to

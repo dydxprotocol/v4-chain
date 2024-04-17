@@ -6,6 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -13,10 +17,6 @@ import (
 	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/gogoproto/proto"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	"github.com/stretchr/testify/require"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"

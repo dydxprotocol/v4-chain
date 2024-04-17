@@ -7,10 +7,10 @@ import (
 	"path/filepath"
 	"text/template"
 
-	tmos "github.com/cometbft/cometbft/libs/os"
 	daemonconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
+	tmos "github.com/cometbft/cometbft/libs/os"
 	"github.com/pelletier/go-toml"
 )
 

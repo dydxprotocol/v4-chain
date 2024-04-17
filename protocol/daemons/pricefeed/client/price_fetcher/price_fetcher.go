@@ -3,8 +3,8 @@ package price_fetcher
 import (
 	"context"
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	daemontypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"math/rand"
 	"sync"
 	"time"

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
@@ -18,6 +17,7 @@ import (
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sakeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/keeper"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // SubTaskRunner provides an interface that encapsulates the liquidations daemon logic to gather and report

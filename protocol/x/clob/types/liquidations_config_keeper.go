@@ -1,8 +1,8 @@
 package types
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

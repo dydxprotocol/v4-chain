@@ -3,8 +3,8 @@ package delaymsg
 import (
 	"testing"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/stretchr/testify/require"
 )
 

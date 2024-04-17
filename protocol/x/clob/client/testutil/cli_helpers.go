@@ -3,10 +3,10 @@ package testutil
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobcli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"

@@ -1,13 +1,13 @@
 package perpetuals
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	perpetualssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/simulation"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	perpetualssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/simulation"
 )
 
 // avoid unused import issue

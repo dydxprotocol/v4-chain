@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades"
 	v4_0_0 "github.com/StreamFinance-Protocol/stream-chain/protocol/app/upgrades/v4.0.0"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var (

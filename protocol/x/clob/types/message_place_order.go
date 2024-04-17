@@ -2,9 +2,9 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const TypeMsgPlaceOrder = "place_order"

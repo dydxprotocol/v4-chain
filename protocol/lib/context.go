@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 	"github.com/cometbft/cometbft/crypto/tmhash"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/log"
 )
 
 // Custom exec modes

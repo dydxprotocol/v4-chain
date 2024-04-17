@@ -10,15 +10,15 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
 	storetypes "cosmossdk.io/store/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 )
 
 // CreateUsdcAsset creates USDC in the assets module for tests.

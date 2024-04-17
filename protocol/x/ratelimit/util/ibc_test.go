@@ -10,11 +10,11 @@ import (
 	"testing"
 
 	"cosmossdk.io/log"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/util"
 
 	tmbytes "github.com/cometbft/cometbft/libs/bytes"
 

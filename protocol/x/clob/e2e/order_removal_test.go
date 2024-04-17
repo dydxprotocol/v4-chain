@@ -5,8 +5,6 @@ import (
 
 	"github.com/cometbft/cometbft/types"
 
-	abcitypes "github.com/cometbft/cometbft/abci/types"
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	clobtestutils "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
@@ -18,6 +16,8 @@ import (
 	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	abcitypes "github.com/cometbft/cometbft/abci/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 

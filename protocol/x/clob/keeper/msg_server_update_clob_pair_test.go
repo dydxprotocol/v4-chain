@@ -5,8 +5,6 @@ import (
 	"testing"
 
 	"cosmossdk.io/store/prefix"
-	"github.com/cosmos/cosmos-sdk/codec"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
@@ -19,6 +17,8 @@ import (
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/stretchr/testify/require"
 )
 

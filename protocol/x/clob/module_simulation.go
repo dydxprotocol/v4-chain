@@ -3,15 +3,15 @@ package clob
 import (
 	"math/rand"
 
+	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	clobsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/simulation"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	clobsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/simulation"
 )
 
 // avoid unused import issue

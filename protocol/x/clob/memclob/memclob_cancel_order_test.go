@@ -6,13 +6,13 @@ import (
 	"math"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	testutil_memclob "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/memclob"
 	sdktest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sdk"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/stretchr/testify/require"
 )
 
