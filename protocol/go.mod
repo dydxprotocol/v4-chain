@@ -1,4 +1,4 @@
-module github.com/dydxprotocol/v4-chain/protocol
+module github.com/StreamFinance-Protocol/stream-chain/protocol
 
 go 1.21
 
