@@ -12,7 +12,6 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/daemons/pricefeed"
 	testutildelaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/delaymsg"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
@@ -129,7 +128,6 @@ func TestAppModuleBasic_ValidateGenesis(t *testing.T) {
 	am := createAppModuleBasic(t)
 
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
-	bridgetypes.RegisterInterfaces(module.InterfaceRegistry)
 
 	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
 
@@ -220,7 +218,6 @@ func TestAppModule_RegisterServices(t *testing.T) {
 func TestAppModule_InitExportGenesis(t *testing.T) {
 	am, keeper, ctx := createAppModuleWithKeeper(t)
 	cdc := codec.NewProtoCodec(module.InterfaceRegistry)
-	bridgetypes.RegisterInterfaces(module.InterfaceRegistry)
 
 	validGenesisState := pricefeed.ReadJsonTestFile(t, "valid_genesis_state.json")
 
