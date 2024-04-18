@@ -27,13 +27,13 @@ var (
 )
 
 func TestGetBlockMessageIds_ZeroBlockHeight(t *testing.T) {
-	ctx, delaymsg, _, _, _ := keeper.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 	_, found := delaymsg.GetBlockMessageIds(ctx, 0)
 	require.False(t, found)
 }
 
 func TestGetBlockMessageIds_DeleteAllMgs(t *testing.T) {
-	ctx, delaymsg, _, _, _ := keeper.DelayMsgKeepers(t)
+	ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
 	for _, delay := range testBlockDelays {
 		_, err := delaymsg.DelayMessageByBlocks(ctx, constants.TestMsg1, delay)
@@ -78,7 +78,7 @@ func TestGetBlockMessageIds_DeleteWithMultipleIds(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			// Setup - add all messages to the same block.
-			ctx, delaymsg, _, _, _ := keeper.DelayMsgKeepers(t)
+			ctx, delaymsg, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
 			for _, msg := range constants.AllMsgs {
 				_, err := delaymsg.DelayMessageByBlocks(ctx, msg, 10)

@@ -108,7 +108,7 @@ func TestDelayMessage(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			mockKeeper := &mocks.DelayMsgKeeper{}
 			msgServer := keeper.NewMsgServerImpl(mockKeeper)
-			ctx, _, _, _, _ := keepertest.DelayMsgKeepers(t)
+			ctx, _, _, _, _, _ := keepertest.DelayMsgKeepers(t)
 			tc.setupMocks(ctx, mockKeeper)
 
 			// Set up error logging for expected errors.

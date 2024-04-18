@@ -10,11 +10,13 @@ import (
 	storetypes "cosmossdk.io/store/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	perpetualskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/keeper"
+	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	priceskeeper "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 )
 
 func DelayMsgKeepers(
@@ -23,7 +25,8 @@ func DelayMsgKeepers(
 	ctx sdk.Context,
 	delayMsgKeeper *keeper.Keeper,
 	storeKey storetypes.StoreKey,
-	bankKeeper bankkeeper.Keeper,
+	perpsKeeper *perpetualskeeper.Keeper,
+	pricesKeeper *priceskeeper.Keeper,
 	authorities []string,
 ) {
 	ctx = initKeepers(t, func(
@@ -40,8 +43,15 @@ func DelayMsgKeepers(
 		router := baseapp.NewMsgServiceRouter()
 		router.SetInterfaceRegistry(registry)
 
-		accountKeeper, _ := createAccountKeeper(stateStore, db, cdc, registry)
-		bankKeeper, _ = createBankKeeper(stateStore, db, cdc, accountKeeper)
+		// Register perpetuals messages for encoding / decoding.
+		perpetualstypes.RegisterInterfaces(registry)
+
+		epochsKeeper, _ := createEpochsKeeper(stateStore, db, cdc)
+		pricesKeeper, _, _, _, _ = createPricesKeeper(stateStore, db, cdc, transientStoreKey)
+		perpsKeeper, _ = createPerpetualsKeeper(stateStore, db, cdc, pricesKeeper, epochsKeeper, transientStoreKey)
+
+		// Register perps keeper msg server for msg routing.
+		perpetualstypes.RegisterMsgServer(router, perpetualskeeper.NewMsgServerImpl(perpsKeeper))
 
 		authorities = []string{
 			lib.GovModuleAddress.String(),
@@ -58,7 +68,7 @@ func DelayMsgKeepers(
 			delayMsgKeeper,
 		}
 	})
-	return ctx, delayMsgKeeper, storeKey, bankKeeper, authorities
+	return ctx, delayMsgKeeper, storeKey, perpsKeeper, pricesKeeper, authorities
 }
 
 func createDelayMsgKeeper(

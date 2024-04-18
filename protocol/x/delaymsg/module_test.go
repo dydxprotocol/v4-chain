@@ -37,7 +37,7 @@ func createAppModule(t *testing.T) delaymsg.AppModule {
 func createAppModuleWithKeeper(t *testing.T) (delaymsg.AppModule, *delaymsg_keeper.Keeper, sdk.Context) {
 	appCodec := codec.NewProtoCodec(module.InterfaceRegistry)
 
-	ctx, keeper, _, _, _ := keeper.DelayMsgKeepers(t)
+	ctx, keeper, _, _, _, _ := keeper.DelayMsgKeepers(t)
 
 	return delaymsg.NewAppModule(
 		appCodec,

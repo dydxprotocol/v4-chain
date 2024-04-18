@@ -34,10 +34,10 @@ func TestDecodeProcessProposalTxs_Error(t *testing.T) {
 		expectedErr error
 	}{
 		"Less than min num txs": {
-			txsBytes: [][]byte{validOperationsTx, validAddFundingTx, validUpdatePriceTx}, // need at least 4.
+			txsBytes: [][]byte{validOperationsTx, validUpdatePriceTx}, // need at least 4.
 			expectedErr: errorsmod.Wrapf(
 				process.ErrUnexpectedNumMsgs,
-				"Expected the proposal to contain at least 4 txs, but got 3",
+				"Expected the proposal to contain at least 3 txs, but got 2",
 			),
 		},
 		"Order tx decoding fails": {
