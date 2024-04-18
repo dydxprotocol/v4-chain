@@ -217,7 +217,7 @@ test: test-unit
 
 test-ci: test-unit-and-integration
 
-test-all: test-unit test-race test-cover test-integration
+test-all: test-unit test-race test-cover test-unit-and-integration
 
 test-unit:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock $(build_tags)' ./...
@@ -229,7 +229,7 @@ test-cover:
 	@VERSION=$(VERSION) go test -mod=readonly -timeout 12m -coverprofile=coverage.out -covermode=atomic -coverpkg=github.com/dydxprotocol/v4-chain/protocol/... -tags='test_ledger_mock $(build_tags)' ./...
 
 test-exchanges:
-	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' github.com/dydxprotocol/v4-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
+	@VERSION=$(VERSION) go test -mod=readonly -tags='test_ledger_mock exchange_tests $(build_tags)' github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/handler -run "TestQueryingActualExchanges"
 
 test-unit-and-integration:
 	@VERSION=$(VERSION) go test -mod=readonly -tags='integration_test test_ledger_mock $(build_tags)' ./...
