@@ -7,9 +7,9 @@ import (
 
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/stretchr/testify/require"
 )
 

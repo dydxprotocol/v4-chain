@@ -4,9 +4,9 @@ import (
 	"context"
 	"strconv"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/spf13/cobra"
 )
 

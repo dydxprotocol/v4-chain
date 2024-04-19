@@ -3,8 +3,8 @@ package cli
 import (
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 )
 

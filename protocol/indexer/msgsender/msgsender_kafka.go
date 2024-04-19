@@ -6,11 +6,11 @@ import (
 
 	"cosmossdk.io/log"
 	"github.com/Shopify/sarama"
-	"github.com/burdiyan/kafkautil"
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/msgsender/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/burdiyan/kafkautil"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // Ensure the `IndexerMessageSender` interface is implemented at compile time.

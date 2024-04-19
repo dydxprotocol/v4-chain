@@ -1,8 +1,8 @@
 package process
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // IsDisallowClobOrderMsgInOtherTxs returns true if the given msg type is not allowed

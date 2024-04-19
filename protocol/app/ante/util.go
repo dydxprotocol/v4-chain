@@ -1,8 +1,8 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // ShouldSkipSequenceValidation returns whether sequence validation can be skipped for a given list of messages.

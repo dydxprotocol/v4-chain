@@ -3,13 +3,13 @@ package ratelimit
 import (
 	"math/rand"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	ratelimitsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/simulation"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	ratelimitsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
 )
 
 // avoid unused import issue

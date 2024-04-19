@@ -7,13 +7,14 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
 	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	subaccounttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,10 +24,10 @@ type FakeRoutableMsg struct {
 }
 
 // setting XXX_MessageName on the FakeRoutableMsg causes the router to incorrectly return the handler for the
-// registered CompleteBridge message type. This is done so that we can bypass the handler check and trigger
+// registered MsgUpdateParams message type. This is done so that we can bypass the handler check and trigger
 // the ValidateBasic error.
 func (msg *FakeRoutableMsg) XXX_MessageName() string {
-	return "dydxprotocol.bridge.MsgCompleteBridge"
+	return "dydxprotocol.perpetuals.MsgUpdateParams"
 }
 
 // implementing XXX_Size along with XXX_Marshal proto interface methods allows us to simulate an encoding failure.
@@ -175,9 +176,9 @@ func TestDelayMessageByBlocks_Failures(t *testing.T) {
 			expectedError: "/testpb.TestMsg: Message not recognized by router",
 		},
 		"Message fails validation": {
-			msg: &bridgetypes.MsgCompleteBridge{
-				Authority: bridgetypes.ModuleAddress.String(),
-				Event:     constants.BridgeEvent_Id0_Height0,
+			msg: &perpetualstypes.MsgUpdateParams{
+				Authority: subaccounttypes.ModuleAddress.String(),
+				Params:    constants.PerpetualsGenesisParams,
 			},
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
 		},
@@ -359,9 +360,9 @@ func TestValidateMsg(t *testing.T) {
 			expectedError: "message failed basic validation: Invalid msg: Invalid input",
 		},
 		"Message fails validateSigners": {
-			msg: &bridgetypes.MsgCompleteBridge{
-				Authority: bridgetypes.ModuleAddress.String(),
-				Event:     constants.BridgeEvent_Id0_Height0,
+			msg: &perpetualstypes.MsgUpdateParams{
+				Authority: subaccounttypes.ModuleAddress.String(),
+				Params:    constants.PerpetualsGenesisParams,
 			},
 			signer:        []byte("other signer"),
 			expectedError: "message signer must be delaymsg module address: Invalid signer",
@@ -405,9 +406,9 @@ func TestSetDelayedMessage(t *testing.T) {
 				Id: 0,
 				Msg: encoding.EncodeMessageToAny(
 					t,
-					&bridgetypes.MsgCompleteBridge{
-						Authority: bridgetypes.ModuleAddress.String(),
-						Event:     constants.BridgeEvent_Id0_Height0,
+					&perpetualstypes.MsgUpdateParams{
+						Authority: subaccounttypes.ModuleAddress.String(),
+						Params:    constants.PerpetualsGenesisParams,
 					},
 				),
 				BlockHeight: 1,

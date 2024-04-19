@@ -1,8 +1,8 @@
 package perpetuals
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // EndBlocker executes all ABCI EndBlock logic respective to the perpetuals module.

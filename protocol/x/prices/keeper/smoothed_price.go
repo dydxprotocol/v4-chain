@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // UpdateSmoothedPrices updates the internal map of smoothed prices for all markets.

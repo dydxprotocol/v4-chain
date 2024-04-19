@@ -1,13 +1,14 @@
 package types_test
 
 import (
-	sdkmath "cosmossdk.io/math"
 	fmt "fmt"
 	"testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
+
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -54,7 +55,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		"Invalid recipient address": {
 			msg: types.MsgSendFromModuleToAccount{
 				Authority:        validAuthority,
-				SenderModuleName: "bridge",
+				SenderModuleName: "blocktime",
 				Recipient:        "invalid_address",
 				Coin:             sdk.NewCoin("adv4tnt", sdkmath.NewInt(100)),
 			},
@@ -63,7 +64,7 @@ func TestMsgSendFromModuleToAccount_ValidateBasic(t *testing.T) {
 		"Invalid coin denom": {
 			msg: types.MsgSendFromModuleToAccount{
 				Authority:        validAuthority,
-				SenderModuleName: "bridge",
+				SenderModuleName: "blocktime",
 				Recipient:        constants.CarlAccAddress.String(),
 				Coin: sdk.Coin{
 					Denom:  "7coin",

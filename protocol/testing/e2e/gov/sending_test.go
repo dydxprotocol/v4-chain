@@ -7,15 +7,15 @@ import (
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/cometbft/cometbft/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
-	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 

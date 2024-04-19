@@ -1,9 +1,9 @@
 package sending
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the sending module's state from a provided genesis

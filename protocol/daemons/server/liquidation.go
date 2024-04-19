@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/server/types/liquidations"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 // LiquidationServer defines the fields required for liquidation updates.

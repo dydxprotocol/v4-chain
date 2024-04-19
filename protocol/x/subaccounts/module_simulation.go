@@ -1,13 +1,13 @@
 package subaccounts
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
+	subaccountssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/simulation"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sample"
-	subaccountssimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/simulation"
 )
 
 // avoid unused import issue

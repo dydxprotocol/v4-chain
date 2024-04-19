@@ -16,10 +16,6 @@ const (
 	FlagPriceDaemonEnabled     = "price-daemon-enabled"
 	FlagPriceDaemonLoopDelayMs = "price-daemon-loop-delay-ms"
 
-	FlagBridgeDaemonEnabled        = "bridge-daemon-enabled"
-	FlagBridgeDaemonLoopDelayMs    = "bridge-daemon-loop-delay-ms"
-	FlagBridgeDaemonEthRpcEndpoint = "bridge-daemon-eth-rpc-endpoint"
-
 	FlagLiquidationDaemonEnabled        = "liquidation-daemon-enabled"
 	FlagLiquidationDaemonLoopDelayMs    = "liquidation-daemon-loop-delay-ms"
 	FlagLiquidationDaemonQueryPageLimit = "liquidation-daemon-query-page-limit"
@@ -33,16 +29,6 @@ type SharedFlags struct {
 	PanicOnDaemonFailureEnabled bool
 	// MaxDaemonUnhealthySeconds is the maximum allowable duration for which a daemon can be unhealthy.
 	MaxDaemonUnhealthySeconds uint32
-}
-
-// BridgeFlags contains configuration flags for the Bridge Daemon.
-type BridgeFlags struct {
-	// Enabled toggles the bridge daemon on or off.
-	Enabled bool
-	// LoopDelayMs configures the update frequency of the bridge daemon.
-	LoopDelayMs uint32
-	// EthRpcEndpoint is the endpoint for the Ethereum node where bridge data is queried.
-	EthRpcEndpoint string
 }
 
 // LiquidationFlags contains configuration flags for the Liquidation Daemon.
@@ -66,7 +52,6 @@ type PriceFlags struct {
 // DaemonFlags contains the collected configuration flags for all daemons.
 type DaemonFlags struct {
 	Shared      SharedFlags
-	Bridge      BridgeFlags
 	Liquidation LiquidationFlags
 	Price       PriceFlags
 }
@@ -81,11 +66,6 @@ func GetDefaultDaemonFlags() DaemonFlags {
 				SocketAddress:               "/tmp/daemons.sock",
 				PanicOnDaemonFailureEnabled: true,
 				MaxDaemonUnhealthySeconds:   5 * 60, // 5 minutes.
-			},
-			Bridge: BridgeFlags{
-				Enabled:        true,
-				LoopDelayMs:    30_000,
-				EthRpcEndpoint: "",
 			},
 			Liquidation: LiquidationFlags{
 				Enabled:        true,
@@ -126,23 +106,6 @@ func AddDaemonFlagsToCmd(
 		FlagMaxDaemonUnhealthySeconds,
 		df.Shared.MaxDaemonUnhealthySeconds,
 		"Maximum allowable duration for which a daemon can be unhealthy.",
-	)
-
-	// Bridge Daemon.
-	cmd.Flags().Bool(
-		FlagBridgeDaemonEnabled,
-		df.Bridge.Enabled,
-		"Enable Bridge Daemon. Set to false for non-validator nodes.",
-	)
-	cmd.Flags().Uint32(
-		FlagBridgeDaemonLoopDelayMs,
-		df.Bridge.LoopDelayMs,
-		"Delay in milliseconds between running the Bridge Daemon task loop.",
-	)
-	cmd.Flags().String(
-		FlagBridgeDaemonEthRpcEndpoint,
-		df.Bridge.EthRpcEndpoint,
-		"Ethereum Node Rpc Endpoint",
 	)
 
 	// Liquidation Daemon.
@@ -196,23 +159,6 @@ func GetDaemonFlagValuesFromOptions(
 	if option := appOpts.Get(FlagMaxDaemonUnhealthySeconds); option != nil {
 		if v, err := cast.ToUint32E(option); err == nil {
 			result.Shared.MaxDaemonUnhealthySeconds = v
-		}
-	}
-
-	// Bridge Daemon.
-	if option := appOpts.Get(FlagBridgeDaemonEnabled); option != nil {
-		if v, err := cast.ToBoolE(option); err == nil {
-			result.Bridge.Enabled = v
-		}
-	}
-	if option := appOpts.Get(FlagBridgeDaemonLoopDelayMs); option != nil {
-		if v, err := cast.ToUint32E(option); err == nil {
-			result.Bridge.LoopDelayMs = v
-		}
-	}
-	if option := appOpts.Get(FlagBridgeDaemonEthRpcEndpoint); option != nil {
-		if v, err := cast.ToStringE(option); err == nil && len(v) > 0 {
-			result.Bridge.EthRpcEndpoint = v
 		}
 	}
 

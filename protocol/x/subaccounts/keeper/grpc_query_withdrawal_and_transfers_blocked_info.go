@@ -6,8 +6,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k Keeper) GetWithdrawalAndTransfersBlockedInfo(

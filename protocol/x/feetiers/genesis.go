@@ -1,9 +1,9 @@
 package feetiers
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the feetiers module's state from a provided genesis state.

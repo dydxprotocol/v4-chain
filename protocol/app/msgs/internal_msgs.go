@@ -2,6 +2,19 @@ package msgs
 
 import (
 	upgrade "cosmossdk.io/x/upgrade/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	blocktime "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	delaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	feetiers "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
+	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewards "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	stats "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
+	vest "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bank "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -15,20 +28,6 @@ import (
 	ibctransfer "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	ibcclient "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	ibcconn "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	blocktime "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
-	bridge "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	clob "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	delaymsg "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
-	feetiers "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
-	perpetuals "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	prices "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimit "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewards "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	sending "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
-	stats "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
-	vest "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 )
 
 var (
@@ -105,16 +104,6 @@ var (
 		// blocktime
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParams":         &blocktime.MsgUpdateDowntimeParams{},
 		"/dydxprotocol.blocktime.MsgUpdateDowntimeParamsResponse": nil,
-
-		// bridge
-		"/dydxprotocol.bridge.MsgCompleteBridge":              &bridge.MsgCompleteBridge{},
-		"/dydxprotocol.bridge.MsgCompleteBridgeResponse":      nil,
-		"/dydxprotocol.bridge.MsgUpdateEventParams":           &bridge.MsgUpdateEventParams{},
-		"/dydxprotocol.bridge.MsgUpdateEventParamsResponse":   nil,
-		"/dydxprotocol.bridge.MsgUpdateProposeParams":         &bridge.MsgUpdateProposeParams{},
-		"/dydxprotocol.bridge.MsgUpdateProposeParamsResponse": nil,
-		"/dydxprotocol.bridge.MsgUpdateSafetyParams":          &bridge.MsgUpdateSafetyParams{},
-		"/dydxprotocol.bridge.MsgUpdateSafetyParamsResponse":  nil,
 
 		// clob
 		"/dydxprotocol.clob.MsgCreateClobPair":                             &clob.MsgCreateClobPair{},

@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	debug "github.com/cometbft/cometbft/cmd/cometbft/commands/debug"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/command/genprivkey"
+	debug "github.com/cometbft/cometbft/cmd/cometbft/commands/debug"
 	"github.com/spf13/cobra"
 )
 

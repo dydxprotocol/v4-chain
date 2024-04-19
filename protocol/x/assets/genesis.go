@@ -1,9 +1,9 @@
 package assets
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the capability module's state from a provided genesis

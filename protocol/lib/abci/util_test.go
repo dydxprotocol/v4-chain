@@ -3,10 +3,10 @@ package abci_test
 import (
 	"cosmossdk.io/log"
 	"fmt"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/abci"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

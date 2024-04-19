@@ -2,76 +2,27 @@ package keeper_test
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
-	sdkmath "cosmossdk.io/math"
-
 	"cosmossdk.io/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	cometbfttypes "github.com/cometbft/cometbft/types"
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/encoding"
-	keepertest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/keeper"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	feetierstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cometbfttypes "github.com/cometbft/cometbft/types"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 var (
-	BridgeAuthority      = bridgetypes.ModuleAddress.String()
-	BridgeAccountAddress = sdk.MustAccAddressFromBech32(BridgeAuthority)
-
 	DelayMsgAuthority = types.ModuleAddress
-
-	testDenom = "adv4tnt"
-
-	BridgeGenesisAccountBalance = sdk.NewCoin(testDenom, sdkmath.NewInt(1000000000))
-
-	delta                        = constants.BridgeEvent_Id0_Height0.Coin.Amount.Int64()
-	BridgeExpectedAccountBalance = sdk.NewCoin(testDenom,
-		BridgeGenesisAccountBalance.Amount.Sub(
-			constants.BridgeEvent_Id0_Height0.Coin.Amount,
-		),
-	)
 )
-
-func TestDispatchMessagesForBlock(t *testing.T) {
-	ctx, k, _, bridgeKeeper, _ := keepertest.DelayMsgKeeperWithMockBridgeKeeper(t)
-
-	// Add messages to the keeper.
-	for i, msg := range constants.AllMsgs {
-		id, err := k.DelayMessageByBlocks(ctx, msg, 0)
-		require.NoError(t, err)
-		require.Equal(t, uint32(i), id)
-	}
-
-	// Sanity check: messages appear for block 0.
-	blockMessageIds, found := k.GetBlockMessageIds(ctx, 0)
-	require.True(t, found)
-	require.Equal(t, []uint32{0, 1, 2}, blockMessageIds.Ids)
-
-	// Mock the bridge keeper methods called by the bridge msg server.
-	bridgeKeeper.On("CompleteBridge", mock.AnythingOfType("types.Context"), mock.Anything).
-		Return(nil).Times(len(constants.AllMsgs))
-	bridgeKeeper.On("HasAuthority", DelayMsgAuthority.String()).Return(true).Times(len(constants.AllMsgs))
-
-	// Dispatch messages for block 0.
-
-	keeper.DispatchMessagesForBlock(k, ctx)
-
-	_, found = k.GetBlockMessageIds(ctx, 0)
-	require.False(t, found)
-
-	require.True(t, bridgeKeeper.AssertExpectations(t))
-}
 
 func setupMockKeeperNoMessages(t *testing.T, ctx sdk.Context, k *mocks.DelayMsgKeeper) {
 	k.On("GetBlockMessageIds", ctx, uint32(0)).Return(types.BlockMessageIds{}, false).Once()
@@ -328,88 +279,6 @@ func TestDispatchMessagesForBlock_Mixed(t *testing.T) {
 	}
 }
 
-// generateBridgeEventMsgAny wraps bridge event in a MsgCompleteBridge and encodes it into an Any.
-func generateBridgeEventMsgAny(t *testing.T, event bridgetypes.BridgeEvent) *codectypes.Any {
-	msgCompleteBridge := bridgetypes.MsgCompleteBridge{
-		Authority: DelayMsgAuthority.String(),
-		Event:     event,
-	}
-	any, err := codectypes.NewAnyWithValue(&msgCompleteBridge)
-	require.NoError(t, err)
-	return any
-}
-
-// expectAccountBalance checks that the specified account has the expected balance.
-func expectAccountBalance(
-	t *testing.T,
-	ctx sdk.Context,
-	tApp *testapp.TestApp,
-	address sdk.AccAddress,
-	expectedBalance sdk.Coin,
-) {
-	balance := tApp.App.BankKeeper.GetBalance(ctx, address, expectedBalance.Denom)
-	require.Equal(t, expectedBalance.Amount, balance.Amount)
-	require.Equal(t, expectedBalance.Denom, balance.Denom)
-}
-
-func TestSendDelayedCompleteBridgeMessage(t *testing.T) {
-	// Create an encoded bridge event set to occur at block 2.
-	// Expect that Alice's account will increase by 888 coins at block 2.
-	// Bridge module account will also decrease by 888 coins at block 2.
-	delayedMessage := types.DelayedMessage{
-		Id:          0,
-		Msg:         generateBridgeEventMsgAny(t, constants.BridgeEvent_Id0_Height0),
-		BlockHeight: 2,
-	}
-
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
-		genesis = testapp.DefaultGenesis()
-		// Add the delayed message to the genesis state.
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *types.GenesisState) {
-				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NextDelayedMessageId = 1
-			},
-		)
-		return genesis
-	}).Build()
-	ctx := tApp.InitChain()
-
-	// Sanity check: the delayed message is in the keeper scheduled for block 2.
-	blockMessageIds, found := tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
-	require.True(t, found)
-	require.Equal(t, []uint32{0}, blockMessageIds.Ids)
-
-	aliceAccountAddress := sdk.MustAccAddressFromBech32(constants.BridgeEvent_Id0_Height0.Address)
-
-	// Sanity check: at block 1, expect bridge balance is genesis value before the message is sent.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-
-	// Get initial Alice balance
-	aliceInitialBalance := tApp.App.BankKeeper.GetBalance(ctx, aliceAccountAddress, testDenom)
-	// Calculate Alice's expected balance after complete bridge event.
-	aliceExpectedAccountBalance := sdk.NewCoin(
-		testDenom,
-		aliceInitialBalance.Amount.Add(sdkmath.NewInt(delta)),
-	)
-
-	// Advance to block 2 and invoke delayed message to complete bridge.
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
-
-	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeExpectedAccountBalance)
-	expectAccountBalance(t, ctx, tApp, aliceAccountAddress, aliceExpectedAccountBalance)
-
-	// Assert: the message has been deleted from the keeper.
-	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
-	require.False(t, found)
-
-	// The block message ids have also been deleted.
-	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
-	require.False(t, found)
-}
-
 // TestSendDelayedPerpetualFeeParamsUpdate tests that the delayed message testApp genesis state, which contains a
 // message to update the x/feetiers perpetual fee params after ~120 days of blocks, is executed correctly. In this
 // test, we modify the genesis state to apply the parameter update on block 2 to validate that the update is applied
@@ -435,124 +304,11 @@ func TestSendDelayedPerpetualFeeParamsUpdate(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, feetierstypes.PromotionalParams(), resp.Params)
 
-	// Advance to block 2 and invoke delayed message to complete bridge.
+	// Advance to block 2 and invoke delayed message to complete bridge. In this context, bridge seems to be
+	// referring to an implicit bridging operation not reliant on the bridge module.
 	ctx = tApp.AdvanceToBlock(3, testapp.AdvanceToBlockOptions{})
 
 	resp, err = tApp.App.FeeTiersKeeper.PerpetualFeeParams(ctx, &feetierstypes.QueryPerpetualFeeParamsRequest{})
 	require.NoError(t, err)
 	require.Equal(t, feetierstypes.StandardParams(), resp.Params)
-}
-
-func TestSendDelayedCompleteBridgeMessage_Failure(t *testing.T) {
-	// Create an encoded bridge event set to occur at block 2.
-	// The bridge event is invalid and will not execute.
-	// Expect no account balance changes, and the message to be deleted from the keeper.
-	invalidBridgeEvent := bridgetypes.BridgeEvent{
-		Id:             constants.BridgeEvent_Id0_Height0.Id,
-		Address:        "INVALID",
-		Coin:           constants.BridgeEvent_Id0_Height0.Coin,
-		EthBlockHeight: constants.BridgeEvent_Id0_Height0.EthBlockHeight,
-	}
-	_, err := sdk.AccAddressFromBech32("INVALID")
-	require.Error(t, err)
-
-	delayedMessage := types.DelayedMessage{
-		Id:          0,
-		Msg:         generateBridgeEventMsgAny(t, invalidBridgeEvent),
-		BlockHeight: 2,
-	}
-
-	tApp := testapp.NewTestAppBuilder(t).WithGenesisDocFn(func() (genesis cometbfttypes.GenesisDoc) {
-		genesis = testapp.DefaultGenesis()
-		// Add the delayed message to the genesis state.
-		testapp.UpdateGenesisDocWithAppStateForModule(
-			&genesis,
-			func(genesisState *types.GenesisState) {
-				genesisState.DelayedMessages = []*types.DelayedMessage{&delayedMessage}
-				genesisState.NextDelayedMessageId = 1
-			},
-		)
-		return genesis
-	}).Build()
-	ctx := tApp.InitChain()
-
-	// Sanity check: at block 1, balances are as expected before the message is sent.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-
-	// Sanity check: a message with this id exists within the keeper.
-	_, found := tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
-	require.True(t, found)
-
-	// Sanity check: this message id is scheduled to be executed at block 2.
-	messageIds, found := tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
-	require.True(t, found)
-	require.Equal(t, []uint32{0}, messageIds.Ids)
-
-	// Advance to block 2 and invoke delayed message to complete bridge.
-	ctx = tApp.AdvanceToBlock(2, testapp.AdvanceToBlockOptions{})
-
-	// Assert: balances have been updated to reflect the executed CompleteBridge message.
-	expectAccountBalance(t, ctx, tApp, BridgeAccountAddress, BridgeGenesisAccountBalance)
-
-	// Assert: the message has been deleted from the keeper.
-	_, found = tApp.App.DelayMsgKeeper.GetMessage(ctx, 0)
-	require.False(t, found)
-
-	// The block message ids have also been deleted.
-	_, found = tApp.App.DelayMsgKeeper.GetBlockMessageIds(ctx, 2)
-	require.False(t, found)
-}
-
-// This test case verifies that events emitted from message executions are correctly
-// propagated to the base context.
-func TestDispatchMessagesForBlock_EventsArePropagated(t *testing.T) {
-	ctx, k, _, _, bankKeeper, _ := keepertest.DelayMsgKeepers(t)
-	// Mint coins to the bridge module account so that it has enough balance for completing bridges.
-	err := bankKeeper.MintCoins(ctx, bridgetypes.ModuleName, sdk.NewCoins(BridgeGenesisAccountBalance))
-	require.NoError(t, err)
-
-	// Delay a complete bridge message, which calls bank transfer that emits a transfer event.
-	bridgeEvent := bridgetypes.BridgeEvent{
-		Id:             1,
-		Coin:           sdk.NewCoin("adv4tnt", sdkmath.NewInt(1_000)),
-		Address:        constants.AliceAccAddress.String(),
-		EthBlockHeight: 0,
-	}
-	_, err = k.DelayMessageByBlocks(
-		ctx,
-		&bridgetypes.MsgCompleteBridge{
-			Authority: DelayMsgAuthority.String(),
-			Event:     bridgeEvent,
-		},
-		0,
-	)
-	require.NoError(t, err)
-
-	// Sanity check: messages appear for block 0.
-	blockMessageIds, found := k.GetBlockMessageIds(ctx, 0)
-	require.True(t, found)
-	require.Equal(t, []uint32{0}, blockMessageIds.Ids)
-
-	// Dispatch messages for block 0.
-	keeper.DispatchMessagesForBlock(k, ctx)
-
-	_, found = k.GetBlockMessageIds(ctx, 0)
-	require.False(t, found)
-
-	emittedEvents := ctx.EventManager().Events()
-	expectedTransferEvent := sdk.NewEvent(
-		"transfer",
-		sdk.NewAttribute("recipient", bridgeEvent.Address),
-		sdk.NewAttribute("sender", BridgeAccountAddress.String()),
-		sdk.NewAttribute("amount", bridgeEvent.Coin.String()),
-	)
-
-	// Verify that emitted events contains the expected transfer event exactly once.
-	foundExpectedTransferEvent := 0
-	for _, emittedEvent := range emittedEvents {
-		if reflect.DeepEqual(expectedTransferEvent, emittedEvent) {
-			foundExpectedTransferEvent++
-		}
-	}
-	require.Equal(t, 1, foundExpectedTransferEvent)
 }

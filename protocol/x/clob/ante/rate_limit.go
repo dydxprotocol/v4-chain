@@ -1,8 +1,8 @@
 package ante
 
 import (
-	sdktypes "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	sdktypes "github.com/cosmos/cosmos-sdk/types"
 )
 
 var _ sdktypes.AnteDecorator = (*ClobRateLimitDecorator)(nil)

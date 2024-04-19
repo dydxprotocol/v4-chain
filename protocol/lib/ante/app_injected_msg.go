@@ -1,11 +1,10 @@
 package ante
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // IsSingleAppInjectedMsg returns true if the given list of msgs contains an "app-injected msg"
@@ -20,8 +19,6 @@ func IsAppInjectedMsg(msg sdk.Msg) bool {
 	switch msg.(type) {
 	case
 		// ------- Custom modules
-		// bridge
-		*bridgetypes.MsgAcknowledgeBridges,
 
 		// clob
 		*clobtypes.MsgProposedOperations,

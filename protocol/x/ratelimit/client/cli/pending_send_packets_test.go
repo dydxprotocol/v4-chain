@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"testing"
 
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 	"gotest.tools/v3/assert"
 )

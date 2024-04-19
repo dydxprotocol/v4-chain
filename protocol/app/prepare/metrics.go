@@ -3,8 +3,8 @@ package prepare
 import (
 	gometrics "github.com/hashicorp/go-metrics"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
+	"github.com/cosmos/cosmos-sdk/telemetry"
 )
 
 const (
@@ -16,7 +16,6 @@ type successMetricParams struct {
 	txs                 PrepareProposalTxs
 	pricesTx            PricesTxResponse
 	fundingTx           FundingTxResponse
-	bridgeTx            BridgeTxResponse
 	operationsTx        OperationsTxResponse
 	numTxsToReturn      int
 	numTxsInOriginalReq int
@@ -54,13 +53,6 @@ func recordSuccessMetrics(params successMetricParams) {
 		float32(params.fundingTx.NumVotes),
 		ModuleName,
 		metrics.NumPremiumVotes,
-	)
-
-	// Bridge tx.
-	telemetry.IncrCounter(
-		float32(params.bridgeTx.NumBridges),
-		ModuleName,
-		metrics.NumBridges,
 	)
 
 	// Operations tx.

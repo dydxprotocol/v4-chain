@@ -6,9 +6,9 @@ import (
 
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 
-	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
 )
 
 const (

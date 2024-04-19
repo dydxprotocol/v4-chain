@@ -2,8 +2,8 @@ package tx
 
 import (
 	"fmt"
-	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/cosmos/cosmos-sdk/codec"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 

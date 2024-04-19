@@ -6,7 +6,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/client"
@@ -18,6 +17,7 @@ import (
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

@@ -3,8 +3,8 @@ package cmd
 import (
 	"os"
 
-	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/configs"
+	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/spf13/cobra"
 )
 

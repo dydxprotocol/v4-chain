@@ -192,10 +192,6 @@ Daemons are background processes that run in go-routines to do asyncronous work.
 
 TODO(CORE-512): update daemon flags
 
-### Bridge Daemon
-
-TODO(CORE-512): add details
-
 ### Liquidation Daemon
 
 TODO(CORE-512): add details

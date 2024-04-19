@@ -1,30 +1,34 @@
 package constants
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 )
 
 var (
-	// MsgCompleteBridge is an example of an expected Msg type in the delaymsg module.
-	TestMsg1 = &bridgetypes.MsgCompleteBridge{
+	// MsgUpdateParams replaces MsgCompleteBridge, since we delete the bridge module
+	// Note: the crucial component here is that Authority is set to the module address
+	// of the delaymsg module
+	TestMsg1 = &perpetualstypes.MsgUpdateParams{
 		Authority: types.ModuleAddress.String(),
-		Event: bridgetypes.BridgeEvent{
-			Id: 1,
+		Params:    PerpetualsGenesisParams,
+	}
+	TestMsg2 = &perpetualstypes.MsgUpdateParams{
+		Authority: types.ModuleAddress.String(),
+		Params: perpetualstypes.Params{
+			FundingRateClampFactorPpm: TestFundingRateClampFactorPpm + 1,
+			PremiumVoteClampFactorPpm: TestPremiumVoteClampFactorPpm,
+			MinNumVotesPerSample:      TestMinNumVotesPerSample,
 		},
 	}
-	TestMsg2 = &bridgetypes.MsgCompleteBridge{
+	TestMsg3 = &perpetualstypes.MsgUpdateParams{
 		Authority: types.ModuleAddress.String(),
-		Event: bridgetypes.BridgeEvent{
-			Id: 2,
-		},
-	}
-	TestMsg3 = &bridgetypes.MsgCompleteBridge{
-		Authority: types.ModuleAddress.String(),
-		Event: bridgetypes.BridgeEvent{
-			Id: 3,
+		Params: perpetualstypes.Params{
+			FundingRateClampFactorPpm: TestFundingRateClampFactorPpm + 2,
+			PremiumVoteClampFactorPpm: TestPremiumVoteClampFactorPpm,
+			MinNumVotesPerSample:      TestMinNumVotesPerSample,
 		},
 	}
 	NoHandlerMsg = &testdata.TestMsg{Signers: []string{types.ModuleAddress.String()}}

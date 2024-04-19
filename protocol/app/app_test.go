@@ -9,6 +9,25 @@ import (
 	evidencemodule "cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	assetsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets"
+	blocktimemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime"
+	clobmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob"
+	delaymsgmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
+	epochsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs"
+	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
+	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
+	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
+	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
+	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
+	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
+	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
+	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
+	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
+	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
@@ -28,26 +47,6 @@ import (
 	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
 	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
 	ibc "github.com/cosmos/ibc-go/v8/modules/core"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
-	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	assetsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets"
-	blocktimemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime"
-	bridgemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge"
-	clobmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob"
-	delaymsgmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
-	epochsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs"
-	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
-	govplusmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus"
-	perpetualsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals"
-	pricesmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices"
-	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit"
-	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards"
-	sendingmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending"
-	statsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats"
-	subaccountsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts"
-	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/typ.v4/slices"
 )
@@ -103,7 +102,6 @@ func TestAppIsFullyInitialized(t *testing.T) {
 				// daemon is explicitly disabled.
 				"PriceFeedClient",
 				"LiquidationsClient",
-				"BridgeClient",
 
 				// Any default constructed type can be considered initialized if the default is what is
 				// expected. getUninitializedStructFields relies on fields being the non-default and
@@ -207,7 +205,6 @@ func TestModuleBasics(t *testing.T) {
 		pricesmodule.AppModuleBasic{},
 		assetsmodule.AppModuleBasic{},
 		blocktimemodule.AppModuleBasic{},
-		bridgemodule.AppModuleBasic{},
 		feetiersmodule.AppModuleBasic{},
 		perpetualsmodule.AppModuleBasic{},
 		statsmodule.AppModuleBasic{},

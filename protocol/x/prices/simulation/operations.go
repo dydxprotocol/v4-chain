@@ -7,15 +7,15 @@ import (
 	"math/big"
 	"math/rand"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/sim_helpers"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
 )
 
 // Simulation operation weights constants

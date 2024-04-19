@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cosmos/cosmos-sdk/crypto/hd"
-	"github.com/cosmos/cosmos-sdk/crypto/keyring"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/price_function/testexchange"
 	pricefeed "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/client/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
 	pricefeed_testutil "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/pricefeed"
+	"github.com/cosmos/cosmos-sdk/crypto/hd"
+	"github.com/cosmos/cosmos-sdk/crypto/keyring"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/ory/dockertest/v3"
 )
 
@@ -148,8 +148,6 @@ func (t *Testnet) initializeNode(moniker string) (*Node, error) {
 				fmt.Sprintf("/dydxprotocol/chain/.%s", moniker),
 				"--p2p.persistent_peers",
 				persistentPeers,
-				"--bridge-daemon-eth-rpc-endpoint",
-				"https://eth-sepolia.g.alchemy.com/v2/demo",
 			},
 			Env: []string{
 				"DAEMON_NAME=dydxprotocold",

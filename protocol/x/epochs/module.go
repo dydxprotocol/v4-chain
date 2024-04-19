@@ -11,16 +11,16 @@ import (
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/client/cli"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/client/cli"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/keeper"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
 )
 
 var (

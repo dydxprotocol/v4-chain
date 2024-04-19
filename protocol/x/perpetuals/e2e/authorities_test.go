@@ -3,11 +3,11 @@ package perpetuals_e2e_test
 import (
 	"testing"
 
+	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/cometbft/cometbft/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
-	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
 	"github.com/stretchr/testify/require"
 )
 

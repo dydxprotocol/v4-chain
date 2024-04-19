@@ -2,8 +2,8 @@ package types
 
 import (
 	"context"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // BankKeeper defines the expected interface needed to retrieve account balances.

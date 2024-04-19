@@ -1,7 +1,6 @@
 package grpc
 
 import (
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/bridge/api"
 	liquidationtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/liquidation/api"
 	pricefeedtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/pricefeed/api"
 	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
@@ -18,7 +17,6 @@ type QueryClient interface {
 	clobtypes.QueryClient
 	perptypes.QueryClient
 	pricetypes.QueryClient
-	bridgetypes.BridgeServiceClient
 	liquidationtypes.LiquidationServiceClient
 	pricefeedtypes.PriceFeedServiceClient
 }

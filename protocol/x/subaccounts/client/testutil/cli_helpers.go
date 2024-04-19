@@ -3,8 +3,8 @@ package testutil
 import (
 	"fmt"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	sacli "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/client/cli"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/testutil"

@@ -4,8 +4,8 @@ import (
 	fmt "fmt"
 	"math/big"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // CLOB module event types.

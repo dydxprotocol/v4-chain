@@ -4,6 +4,7 @@ import (
 	"cosmossdk.io/x/evidence"
 	feegrantmodule "cosmossdk.io/x/feegrant/module"
 	"cosmossdk.io/x/upgrade"
+	delaymsgmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -19,12 +20,10 @@ import (
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/ibc-go/modules/capability"
-	delaymsgmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg"
 
 	custommodule "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	assetsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets"
 	blocktimemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime"
-	bridgemodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge"
 	clobmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob"
 	epochsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs"
 	feetiersmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers"
@@ -78,7 +77,6 @@ var (
 		pricesmodule.AppModuleBasic{},
 		assetsmodule.AppModuleBasic{},
 		blocktimemodule.AppModuleBasic{},
-		bridgemodule.AppModuleBasic{},
 		feetiersmodule.AppModuleBasic{},
 		perpetualsmodule.AppModuleBasic{},
 		statsmodule.AppModuleBasic{},

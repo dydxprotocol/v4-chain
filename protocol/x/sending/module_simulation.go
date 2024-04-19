@@ -1,10 +1,10 @@
 package sending
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	sendingsimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/simulation"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 )
 
 var (

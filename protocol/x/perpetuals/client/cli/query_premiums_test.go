@@ -4,10 +4,10 @@ package cli_test
 
 import (
 	"fmt"
-	tmcli "github.com/cometbft/cometbft/libs/cli"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/client/cli"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	tmcli "github.com/cometbft/cometbft/libs/cli"
+	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/stretchr/testify/require"
 	"testing"
 )

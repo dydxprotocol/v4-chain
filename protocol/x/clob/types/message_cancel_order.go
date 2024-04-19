@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
 )
 
 const TypeMsgCancelOrder = "cancel_order"

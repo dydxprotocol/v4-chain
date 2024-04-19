@@ -3,13 +3,12 @@ package process
 import (
 	gometrics "github.com/hashicorp/go-metrics"
 
-	"github.com/cosmos/cosmos-sdk/telemetry"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib/metrics"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
 	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
 	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
 	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	"github.com/cosmos/cosmos-sdk/telemetry"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // recordErrorMetricsWithLabel records an error metric in `ProcessProposalHandler` with a label.
@@ -55,18 +54,6 @@ func recordSuccessMetrics(ctx sdk.Context, txs *ProcessProposalTxs, totalNumTxs 
 		)
 	} else {
 		ctx.Logger().Error("ProcessProposal: expected MsgAddPremiumVotes")
-	}
-
-	// Bridge tx.
-	msgAcknowledgeBridges, ok := txs.AcknowledgeBridgesTx.GetMsg().(*bridgetypes.MsgAcknowledgeBridges)
-	if ok {
-		telemetry.IncrCounter(
-			float32(len(msgAcknowledgeBridges.Events)),
-			ModuleName,
-			metrics.NumBridges,
-		)
-	} else {
-		ctx.Logger().Error("ProcessProposal: expected MsgAcknowledgeBridges")
 	}
 
 	// Order tx.

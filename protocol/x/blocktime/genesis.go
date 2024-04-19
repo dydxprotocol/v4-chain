@@ -1,9 +1,9 @@
 package blocktime
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/keeper"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // InitGenesis initializes the blocktime module's state from a provided genesis state.

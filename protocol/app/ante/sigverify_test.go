@@ -5,6 +5,10 @@ import (
 	"testing"
 
 	storetypes "cosmossdk.io/store/types"
+	customante "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
+	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
@@ -17,10 +21,6 @@ import (
 	txmodule "github.com/cosmos/cosmos-sdk/x/auth/tx/config"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	customante "github.com/StreamFinance-Protocol/stream-chain/protocol/app/ante"
-	testante "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ante"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 )

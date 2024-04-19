@@ -14,6 +14,20 @@ import (
 	"cosmossdk.io/store"
 	evidencetypes "cosmossdk.io/x/evidence/types"
 	feegranttypes "cosmossdk.io/x/feegrant"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/basic_manager"
+	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
+	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	tmtypes "github.com/cometbft/cometbft/types"
 	dbm "github.com/cosmos/cosmos-db"
@@ -45,20 +59,6 @@ import (
 	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
 	exportedtypes "github.com/cosmos/ibc-go/v8/modules/core/exported"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/basic_manager"
-	daemonflags "github.com/StreamFinance-Protocol/stream-chain/protocol/daemons/flags"
-	assetstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
-	perpetualstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimitmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewardsmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vestmodule "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 )
 
@@ -423,7 +423,6 @@ func defaultAppOptionsForSimulation() simtestutil.AppOptionsMap {
 	appOptions[flags.FlagHome] = app.DefaultNodeHome
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 	appOptions[daemonflags.FlagPriceDaemonEnabled] = false
-	appOptions[daemonflags.FlagBridgeDaemonEnabled] = false
 	appOptions[daemonflags.FlagLiquidationDaemonEnabled] = false
 	return appOptions
 }

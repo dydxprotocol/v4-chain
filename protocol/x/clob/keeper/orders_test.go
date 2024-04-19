@@ -8,12 +8,11 @@ import (
 
 	indexerevents "github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/events"
 
-	cmt "github.com/cometbft/cometbft/types"
 	testapp "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/app"
+	cmt "github.com/cometbft/cometbft/types"
 
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer/indexer_manager"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/lib"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/mocks"
 	clobtest "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/clob"
@@ -32,6 +31,7 @@ import (
 	rewardtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
 	statstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
 	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )

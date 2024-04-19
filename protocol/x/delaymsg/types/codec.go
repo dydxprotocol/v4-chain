@@ -1,9 +1,9 @@
 package types
 
 import (
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 	"github.com/cosmos/cosmos-sdk/codec"
 	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
 
 	"github.com/cosmos/cosmos-sdk/types/msgservice"
 )

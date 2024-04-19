@@ -21,14 +21,34 @@ import (
 	cmtlog "github.com/cometbft/cometbft/libs/log"
 	dbm "github.com/cosmos/cosmos-db"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 	tmcfg "github.com/cometbft/cometbft/config"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/cmd/dydxprotocold/cmd"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/indexer"
 
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
+	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
+	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
+	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
+	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
+	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
+	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
+	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
+	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
+	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
+	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
+	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
+	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
+	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
+	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	abcitypes "github.com/cometbft/cometbft/abci/types"
 	tmjson "github.com/cometbft/cometbft/libs/json"
 	"github.com/cometbft/cometbft/mempool"
@@ -43,27 +63,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govtypesv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
 	sdkproto "github.com/cosmos/gogoproto/proto"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
-	appconstants "github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
-	testlog "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/logger"
-	assettypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/assets/types"
-	blocktimetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/blocktime/types"
-	bridgetypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/bridge/types"
-	clobtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types"
-	delaymsgtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types"
-	epochstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/epochs/types"
-	feetiertypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/feetiers/types"
-	govplus "github.com/StreamFinance-Protocol/stream-chain/protocol/x/govplus/types"
-	perptypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types"
-	pricestypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
-	ratelimittypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types"
-	rewardstypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/rewards/types"
-	sendingtypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/sending/types"
-	stattypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/stats/types"
-	satypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/subaccounts/types"
-	vesttypes "github.com/StreamFinance-Protocol/stream-chain/protocol/x/vest/types"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/exp/slices"
 )
@@ -197,7 +196,6 @@ type GenesisStates interface {
 		epochstypes.GenesisState |
 		sendingtypes.GenesisState |
 		delaymsgtypes.GenesisState |
-		bridgetypes.GenesisState |
 		govtypesv1.GenesisState |
 		ratelimittypes.GenesisState |
 		govplus.GenesisState
@@ -222,8 +220,6 @@ func UpdateGenesisDocWithAppStateForModule[T GenesisStates](genesisDoc *types.Ge
 		moduleName = banktypes.ModuleName
 	case blocktimetypes.GenesisState:
 		moduleName = blocktimetypes.ModuleName
-	case bridgetypes.GenesisState:
-		moduleName = bridgetypes.ModuleName
 	case delaymsgtypes.GenesisState:
 		moduleName = delaymsgtypes.ModuleName
 	case perptypes.GenesisState:
@@ -1250,12 +1246,8 @@ func launchValidatorInDir(
 		// TODO(CORE-29): Allow the daemons to be launched and cleaned-up successfully by default.
 		"--price-daemon-enabled",
 		"false",
-		"--bridge-daemon-enabled",
-		"false",
 		"--liquidation-daemon-enabled",
 		"false",
-		"--bridge-daemon-eth-rpc-endpoint",
-		"https://eth-sepolia.g.alchemy.com/v2/demo",
 	})
 
 	ctx := svrcmd.CreateExecuteContext(parentCtx)

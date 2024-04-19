@@ -1,8 +1,8 @@
 package ante_test
 
 import (
-	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/constants"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	"testing"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"

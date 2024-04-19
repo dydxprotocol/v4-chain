@@ -10,6 +10,10 @@ import (
 
 	"cosmossdk.io/log"
 	pruningtypes "cosmossdk.io/store/pruning/types"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/basic_manager"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
+	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ci"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -20,10 +24,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module/testutil"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/basic_manager"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/appoptions"
-	"github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/ci"
 	"github.com/gofrs/flock"
 	"github.com/stretchr/testify/require"
 )

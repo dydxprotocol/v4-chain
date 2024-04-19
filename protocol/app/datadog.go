@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	"cosmossdk.io/log"
-	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/constants"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/app/flags"
+	"github.com/cosmos/cosmos-sdk/version"
 	errorspkg "github.com/pkg/errors"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/pkgerrors"

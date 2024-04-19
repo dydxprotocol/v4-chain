@@ -3,9 +3,9 @@ package prices
 // DONTCOVER
 
 import (
+	pricessimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/simulation"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	pricessimulation "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/simulation"
 )
 
 var (

@@ -2,18 +2,18 @@ package simulation_test
 
 import (
 	"encoding/json"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	v4module "github.com/StreamFinance-Protocol/stream-chain/protocol/app/module"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"strings"
 	"testing"
 
 	sdkmath "cosmossdk.io/math"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	testutil_rand "github.com/StreamFinance-Protocol/stream-chain/protocol/testutil/rand"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/simulation"
 	"github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types"
+	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/cosmos-sdk/types/module"
+	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/stretchr/testify/require"
 )
 

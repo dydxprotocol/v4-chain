@@ -35,12 +35,6 @@ type OperationsTxResponse struct {
 	NumOperations int
 }
 
-// BridgeTxResponse represents a response for creating 'AcknowledgeBridges' tx
-type BridgeTxResponse struct {
-	Tx         []byte
-	NumBridges int
-}
-
 // PrepareProposalHandler is responsible for preparing a block proposal that's returned to Tendermint via ABCI++.
 //
 // The returned txs are gathered in the following way to fit within the given request's max bytes:
@@ -50,7 +44,6 @@ type BridgeTxResponse struct {
 //   - If there are extra available bytes and there are more txs in "Other" group, add more txs from this group.
 func PrepareProposalHandler(
 	txConfig client.TxConfig,
-	bridgeKeeper PrepareBridgeKeeper,
 	clobKeeper PrepareClobKeeper,
 	pricesKeeper PreparePricesKeeper,
 	perpetualKeeper PreparePerpetualsKeeper,
@@ -95,21 +88,6 @@ func PrepareProposalHandler(
 		if err != nil {
 			ctx.Logger().Error(fmt.Sprintf("SetAddPremiumVotesTx error: %v", err))
 			recordErrorMetricsWithLabel(metrics.FundingTx)
-			return &EmptyResponse, nil
-		}
-
-		acknowledgeBridgesTxResp, err := GetAcknowledgeBridgesTx(ctx, txConfig, bridgeKeeper)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("GetAcknowledgeBridgesTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
-			return &EmptyResponse, nil
-		}
-		// Set AcknowledgeBridgesTx whether there are bridge events or not to ensure
-		// consistent ordering of txs received by ProcessProposal.
-		err = txs.SetAcknowledgeBridgesTx(acknowledgeBridgesTxResp.Tx)
-		if err != nil {
-			ctx.Logger().Error(fmt.Sprintf("SetAcknowledgeBridgesTx error: %v", err))
-			recordErrorMetricsWithLabel(metrics.AcknowledgeBridgesTx)
 			return &EmptyResponse, nil
 		}
 
@@ -169,7 +147,6 @@ func PrepareProposalHandler(
 				txs:                 txs,
 				pricesTx:            pricesTxResp,
 				fundingTx:           fundingTxResp,
-				bridgeTx:            acknowledgeBridgesTxResp,
 				operationsTx:        operationsTxResp,
 				numTxsToReturn:      len(txsToReturn),
 				numTxsInOriginalReq: len(req.Txs),
@@ -255,28 +232,6 @@ func GetProposedOperationsTx(
 	return OperationsTxResponse{
 		Tx:            tx,
 		NumOperations: len(msgOperations.GetOperationsQueue()),
-	}, nil
-}
-
-// GetAcknowledgeBridgeTx returns a tx containing a list of `MsgAcknowledgeBridge`.
-func GetAcknowledgeBridgesTx(
-	ctx sdk.Context,
-	txConfig client.TxConfig,
-	bridgeKeeper PrepareBridgeKeeper,
-) (BridgeTxResponse, error) {
-	msgAcknowledgeBridges := bridgeKeeper.GetAcknowledgeBridges(ctx, ctx.BlockTime())
-
-	tx, err := EncodeMsgsIntoTxBytes(txConfig, msgAcknowledgeBridges)
-	if err != nil {
-		return BridgeTxResponse{}, err
-	}
-	if len(tx) == 0 {
-		return BridgeTxResponse{}, fmt.Errorf("Invalid tx: %v", tx)
-	}
-
-	return BridgeTxResponse{
-		Tx:         tx,
-		NumBridges: len(msgAcknowledgeBridges.Events),
 	}, nil
 }
 
