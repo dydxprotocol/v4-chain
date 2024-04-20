@@ -7,7 +7,7 @@ import "gogoproto/gogo.proto";
 import "dydxprotocol/perpetuals/params.proto";
 import "dydxprotocol/perpetuals/perpetual.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/perpetuals/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/perpetuals/types";
 
 // Msg defines the Msg service.
 service Msg {

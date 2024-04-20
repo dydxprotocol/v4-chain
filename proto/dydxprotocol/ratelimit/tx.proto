@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.ratelimit;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
 
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/ratelimit/limit_params.proto";

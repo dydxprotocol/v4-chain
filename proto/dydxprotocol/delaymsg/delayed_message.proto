@@ -3,7 +3,7 @@ package dydxprotocol.delaymsg;
 
 import "google/protobuf/any.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/delaymsg/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/delaymsg/types";
 
 // DelayedMessage is a message that is delayed until a certain block height.
 message DelayedMessage {

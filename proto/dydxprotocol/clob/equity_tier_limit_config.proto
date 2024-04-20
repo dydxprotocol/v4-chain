@@ -3,7 +3,7 @@ package dydxprotocol.clob;
 
 import "gogoproto/gogo.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types";
 
 // Defines the set of equity tiers to limit how many open orders
 // a subaccount is allowed to have.
@@ -23,7 +23,7 @@ message EquityTierLimit {
   // The total net collateral in USDC quote quantums of equity required.
   bytes usd_tnc_required = 1 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 

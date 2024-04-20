@@ -1,7 +1,7 @@
 syntax = "proto3";
 package dydxprotocol.ratelimit;
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
 
 // PendingSendPacket contains the channel_id and sequence pair to identify a
 // pending packet
