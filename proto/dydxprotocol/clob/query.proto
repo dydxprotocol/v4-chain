@@ -11,7 +11,7 @@ import "dydxprotocol/clob/liquidations_config.proto";
 import "dydxprotocol/clob/mev.proto";
 import "dydxprotocol/indexer/off_chain_updates/off_chain_updates.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/clob/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/clob/types";
 
 // Query defines the gRPC querier service.
 service Query {

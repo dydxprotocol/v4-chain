@@ -4,7 +4,7 @@ package dydxprotocol.ratelimit;
 import "gogoproto/gogo.proto";
 import "google/protobuf/duration.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
 
 // LimitParams defines rate limit params on a denom.
 message LimitParams {
@@ -27,7 +27,7 @@ message Limiter {
   // e.g. 100_000_000_000 uusdc for 100k USDC; 5e22 adv4tnt for 50k DV4TNT
   bytes baseline_minimum = 3 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
   // baseline_tvl_ppm is the maximum ratio of TVL withdrawable in

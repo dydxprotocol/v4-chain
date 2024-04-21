@@ -4,7 +4,7 @@ package dydxprotocol.ratelimit;
 import "gogoproto/gogo.proto";
 import "dydxprotocol/ratelimit/limit_params.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/ratelimit/types";
 
 // DenomCapacity stores a list of rate limit capacity for a denom.
 message DenomCapacity {
@@ -16,7 +16,7 @@ message DenomCapacity {
   // `LimitParams`.
   repeated bytes capacity_list = 2 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }
@@ -26,7 +26,7 @@ message LimiterCapacity {
   Limiter limiter = 1 [ (gogoproto.nullable) = false ];
   bytes capacity = 2 [
     (gogoproto.customtype) =
-        "github.com/dydxprotocol/v4-chain/protocol/dtypes.SerializableInt",
+        "github.com/StreamFinance-Protocol/stream-chain/protocol/dtypes.SerializableInt",
     (gogoproto.nullable) = false
   ];
 }

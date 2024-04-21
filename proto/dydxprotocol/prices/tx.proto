@@ -6,7 +6,7 @@ import "cosmos_proto/cosmos.proto";
 import "cosmos/msg/v1/msg.proto";
 import "dydxprotocol/prices/market_param.proto";
 
-option go_package = "github.com/dydxprotocol/v4-chain/protocol/x/prices/types";
+option go_package = "github.com/StreamFinance-Protocol/stream-chain/protocol/x/prices/types";
 
 // Msg defines the Msg service.
 service Msg {
