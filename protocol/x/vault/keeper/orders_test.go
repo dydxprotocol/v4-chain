@@ -500,7 +500,7 @@ func TestGetVaultClobOrders(t *testing.T) {
 				2_964_188_000,
 			},
 			// order_size = 100% * 1000 / 3000 ~= 0.333333333
-			// order_size_base_quantums = 0.0333333333 * 10^9 ~= 33_333_333.33
+			// order_size_base_quantums = 0.333333333 * 10^9 ~= 333_333_333.33
 			// round down to nearest multiple of step_base_quantums=1_000.
 			expectedOrderQuantums: []uint64{
 				333_333_000,
