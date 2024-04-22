@@ -114,7 +114,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 					},
 				},
 			}
-			fmt.Println("sending out an order fill update", orderbookUpdate)
+			fmt.Printf("sending out an order fill update: %+v\n\n", orderbookUpdate)
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates: []clobtypes.StreamOrderbookUpdate{
@@ -186,6 +186,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookUpdates(
 					},
 				},
 			}
+			fmt.Printf("sending out an order place update: %+v, snapshot: %+v\n\n", orderbookUpdate, snapshot)
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates: []clobtypes.StreamOrderbookUpdate{

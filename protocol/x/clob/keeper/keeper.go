@@ -13,6 +13,7 @@ import (
 	liquidationtypes "github.com/dydxprotocol/v4-chain/protocol/daemons/server/types/liquidations"
 	"github.com/dydxprotocol/v4-chain/protocol/indexer/indexer_manager"
 	"github.com/dydxprotocol/v4-chain/protocol/lib"
+	v4logger "github.com/dydxprotocol/v4-chain/protocol/lib/log"
 	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	streamingtypes "github.com/dydxprotocol/v4-chain/protocol/streaming/grpc/types"
 	flags "github.com/dydxprotocol/v4-chain/protocol/x/clob/flags"
@@ -232,6 +233,9 @@ func (k Keeper) InitializeNewGrpcStreams(ctx sdk.Context) {
 
 		allUpdates.Append(update)
 	}
+	len := len(uninitializedClobPairIds)
+	v4logger.InfoLog(ctx, fmt.Sprintf("Initializing orderbook updates: %+v", uninitializedClobPairIds),
+		"len_uninitialized_clob_pairs", len)
 
 	k.SendOrderbookUpdates(ctx, allUpdates, true)
 }
@@ -243,7 +247,11 @@ func (k Keeper) SendOrderbookUpdates(
 	snapshot bool,
 ) {
 	if len(offchainUpdates.Messages) == 0 {
+		v4logger.InfoLog(ctx, "send orderbook update empty")
 		return
+	}
+	if snapshot {
+		v4logger.InfoLog(ctx, "Sending orderbook updates", "snapshot", snapshot)
 	}
 
 	k.GetGrpcStreamingManager().SendOrderbookUpdates(

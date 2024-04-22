@@ -92,9 +92,14 @@ func (c *GrpcClient) GetOrderbookSnapshot(pairId uint32) *LocalOrderbook {
 func (c *GrpcClient) Update(updates *clobtypes.StreamOrderbookUpdatesResponse) {
 	for _, update := range updates.GetUpdates() {
 		if orderPlace := update.GetOrderPlace(); orderPlace != nil {
+			c.Logger.Info("just got an order placement", "orderPlace", orderPlace, "snapshot", orderPlace.Snapshot)
+			if orderPlace.Snapshot {
+				c.Logger.Info("Going to initialize")
+			}
 			c.ProcessOrderPlace(orderPlace)
 		}
 		if orderFill := update.GetOrderFill(); orderFill != nil {
+			c.Logger.Info("just got an order fill", "orderFill", orderFill, "initialized", c.initialized)
 			c.ProcessFill(orderFill)
 		}
 	}
@@ -139,6 +144,7 @@ func (c *GrpcClient) ProcessOrderPlace(orderPlace *clobtypes.StreamOrderbookUpda
 func (c *GrpcClient) ProcessFill(orderFills *clobtypes.StreamOrderbookUpdatesOrderFills) {
 	// Need to wait for the snapshot message first
 	if !c.initialized {
+		c.Logger.Info("early return, not initialized")
 		return
 	}
 
@@ -179,11 +185,15 @@ func (c *GrpcClient) ProcessMatchOrders(
 	takerOrder := orderMap[takerOrderId]
 
 	for _, fill := range matchOrders.Fills {
-		c.Logger.Info("recieved an order fills", fill)
+		c.Logger.Info("processing an order fills", "fill", fill)
 		makerOrder := orderMap[fill.MakerOrderId]
 		deltaFillAmount := fill.FillAmount
 		localOrderbook.AdjustOrderDeltaFillAmount(makerOrder, deltaFillAmount)
 		localOrderbook.AdjustOrderDeltaFillAmount(takerOrder, deltaFillAmount)
+		c.Logger.Info("local orderbook updated to",
+			"makerOrder", makerOrder,
+			"fillAmt", localOrderbook.FillAmounts[v1.OrderIdToIndexerOrderId(makerOrder.OrderId)],
+		)
 	}
 }
 
