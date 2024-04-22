@@ -14,6 +14,7 @@ import (
 	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types" //nolint:staticcheck
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	"github.com/dydxprotocol/v4-chain/protocol/lib/metrics"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/types"
 	"github.com/dydxprotocol/v4-chain/protocol/x/ratelimit/util"
 )
@@ -171,8 +172,24 @@ func (k Keeper) TrySendRateLimitedPacket(ctx sdk.Context, packet channeltypes.Pa
 
 	if err := k.ProcessWithdrawal(ctx, packetInfo.Denom, packetInfo.Amount); err != nil {
 		// Some of the capacities were inefficient. Return error to fail the transaction.
+		metrics.EmitTelemetryWithLabelsForExecMode(
+			ctx,
+			[]sdk.ExecMode{sdk.ExecModeFinalize},
+			metrics.IncrCounterWithLabels,
+			metrics.RateLimitInsufficientWithdrawalAmount,
+			1,
+			metrics.GetLabelForStringValue(metrics.RateLimitDenom, packetInfo.Denom),
+		)
 		return err
 	}
+	metrics.EmitTelemetryWithLabelsForExecMode(
+		ctx,
+		[]sdk.ExecMode{sdk.ExecModeFinalize},
+		metrics.AddSampleWithLabels,
+		metrics.RateLimitWithdrawalAmount,
+		metrics.GetMetricValueFromBigInt(packetInfo.Amount),
+		metrics.GetLabelForStringValue(metrics.RateLimitDenom, packetInfo.Denom),
+	)
 
 	// Store the sequence number of the packet so that if the transfer fails,
 	// we can identify if it was sent during this quota and can revert the outflow
