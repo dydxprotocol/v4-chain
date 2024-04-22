@@ -24,6 +24,7 @@ import (
 func fetchOrdersInvolvedInMatchesFromOpQueue(
 	operations []types.InternalOperation,
 ) (orderIdSet map[types.OrderId]struct{}) {
+	orderIdSet = make(map[types.OrderId]struct{})
 	for _, operation := range operations {
 		if clobMatch := operation.GetMatch(); clobMatch != nil {
 			orderIdSetForClobMatch := clobMatch.GetAllOrderIds()
