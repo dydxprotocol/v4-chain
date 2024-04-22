@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"sync"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -113,6 +114,7 @@ func (sm *GrpcStreamingManagerImpl) SendOrderbookMatchFillUpdates(
 					},
 				},
 			}
+			fmt.Println("sending out an order fill update", orderbookUpdate)
 			if err := subscription.srv.Send(
 				&clobtypes.StreamOrderbookUpdatesResponse{
 					Updates: []clobtypes.StreamOrderbookUpdate{

@@ -179,6 +179,7 @@ func (c *GrpcClient) ProcessMatchOrders(
 	takerOrder := orderMap[takerOrderId]
 
 	for _, fill := range matchOrders.Fills {
+		c.Logger.Info("recieved an order fills", fill)
 		makerOrder := orderMap[fill.MakerOrderId]
 		deltaFillAmount := fill.FillAmount
 		localOrderbook.AdjustOrderDeltaFillAmount(makerOrder, deltaFillAmount)
