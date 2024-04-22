@@ -90,3 +90,32 @@ func ModuleMeasureSinceWithLabels(
 		),
 	)
 }
+<<<<<<< HEAD
+=======
+
+func isAllowedExecutionMode(
+	ctx sdk.Context,
+	allowedModes []sdk.ExecMode,
+) bool {
+	contextExecMode := ctx.ExecMode()
+	for _, mode := range allowedModes {
+		if contextExecMode == mode {
+			return true
+		}
+	}
+	return false
+}
+
+func EmitTelemetryWithLabelsForExecMode(
+	ctx sdk.Context,
+	allowedModes []sdk.ExecMode,
+	telemetryFuncWithLabels TelemetryEmitWithLabelsFunc,
+	key string,
+	val float32,
+	labels ...gometrics.Label,
+) {
+	if isAllowedExecutionMode(ctx, allowedModes) {
+		telemetryFuncWithLabels(key, val, labels...)
+	}
+}
+>>>>>>> 12b3a70d (Emit metric to track withdrawal amounts (#1186))
