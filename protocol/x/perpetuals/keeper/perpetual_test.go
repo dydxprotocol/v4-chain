@@ -373,7 +373,7 @@ func TestSetPerpetualMarketType(t *testing.T) {
 					1,
 				)[0]
 				perp.Params.MarketType = tc.currType
-				pc.PerpetualsKeeper.SetPerpetual(pc.Ctx, perp)
+				pc.PerpetualsKeeper.SetPerpetualForTest(pc.Ctx, perp)
 
 				_, err := pc.PerpetualsKeeper.SetPerpetualMarketType(
 					pc.Ctx,
