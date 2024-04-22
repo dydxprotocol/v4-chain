@@ -85,7 +85,7 @@ export default class PerpetualMarketModel extends Model {
         stepBaseQuantums: { type: 'integer' },
         liquidityTierId: { type: 'integer' },
         marketType: { type: 'string' },
-        baseOpenInterest: { type: ['string', 'null'], pattern: NumericPattern },
+        baseOpenInterest: { type: 'string', pattern: NumericPattern },
       },
     };
   }

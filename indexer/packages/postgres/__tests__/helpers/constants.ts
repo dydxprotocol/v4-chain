@@ -210,7 +210,7 @@ export const defaultPerpetualMarket: PerpetualMarketCreateObject = {
   stepBaseQuantums: 10,
   liquidityTierId: 0,
   marketType: PerpetualMarketType.CROSS,
-  baseOpenInterest: '100000'
+  baseOpenInterest: '100000',
 };
 export const defaultPerpetualMarket2: PerpetualMarketCreateObject = {
   id: '1',

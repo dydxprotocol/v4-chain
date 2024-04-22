@@ -4128,7 +4128,7 @@ or
 |marketType|[PerpetualMarketType](#schemaperpetualmarkettype)|true|none|none|
 |openInterestLowerCap|string|false|none|none|
 |openInterestUpperCap|string|false|none|none|
-|baseOpenInterest|string|false|none|none|
+|baseOpenInterest|string|true|none|none|
 
 ## PerpetualMarketResponse
 
