@@ -268,7 +268,6 @@ func (k Keeper) GetVaultClobOrders(
 			if orderSubticks.Cmp(oracleSubticks) < 0 {
 				orderSubticks.Set(oracleSubticks)
 			}
-
 		} else {
 			orderSubticks = orderSubticks.Quo(
 				orderSubticks,
@@ -279,7 +278,6 @@ func (k Keeper) GetVaultClobOrders(
 			if orderSubticks.Cmp(oracleSubticks) > 0 {
 				orderSubticks.Set(oracleSubticks)
 			}
-
 		}
 
 		return &clobtypes.Order{
