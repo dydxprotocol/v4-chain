@@ -150,5 +150,5 @@ export default class PerpetualMarketModel extends Model {
 
   marketType!: PerpetualMarketType;
 
-  baseOpenInterest?: string;
+  baseOpenInterest!: string;
 }
