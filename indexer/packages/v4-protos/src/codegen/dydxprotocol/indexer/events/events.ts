@@ -780,8 +780,8 @@ export interface AssetCreateEventV1SDKType {
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
  * new Perpetual Market on the dYdX chain.
- * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message for the event to
- * create a new Perpetual Market.
+ * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+ * for the event to create a new Perpetual Market.
  */
 
 /** @deprecated */
@@ -854,8 +854,8 @@ export interface PerpetualMarketCreateEventV1 {
 /**
  * PerpetualMarketCreateEventV1 message contains all the information about a
  * new Perpetual Market on the dYdX chain.
- * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message for the event to
- * create a new Perpetual Market.
+ * Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+ * for the event to create a new Perpetual Market.
  */
 
 /** @deprecated */

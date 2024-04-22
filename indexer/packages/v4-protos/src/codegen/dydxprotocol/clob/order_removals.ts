@@ -59,13 +59,6 @@ export enum OrderRemoval_RemovalReason {
    * was fully filled and should therefore be removed from state.
    */
   REMOVAL_REASON_FULLY_FILLED = 7,
-
-  /**
-   * REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS - REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS represents
-   * a removal of an order that if filled causes the subaccount to violate
-   * isolated subaccount constraints.
-   */
-  REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
   UNRECOGNIZED = -1,
 }
 export enum OrderRemoval_RemovalReasonSDKType {
@@ -126,13 +119,6 @@ export enum OrderRemoval_RemovalReasonSDKType {
    * was fully filled and should therefore be removed from state.
    */
   REMOVAL_REASON_FULLY_FILLED = 7,
-
-  /**
-   * REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS - REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS represents
-   * a removal of an order that if filled causes the subaccount to violate
-   * isolated subaccount constraints.
-   */
-  REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS = 8,
   UNRECOGNIZED = -1,
 }
 export function orderRemoval_RemovalReasonFromJSON(object: any): OrderRemoval_RemovalReason {
@@ -169,10 +155,6 @@ export function orderRemoval_RemovalReasonFromJSON(object: any): OrderRemoval_Re
     case "REMOVAL_REASON_FULLY_FILLED":
       return OrderRemoval_RemovalReason.REMOVAL_REASON_FULLY_FILLED;
 
-    case 8:
-    case "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS":
-      return OrderRemoval_RemovalReason.REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS;
-
     case -1:
     case "UNRECOGNIZED":
     default:
@@ -204,9 +186,6 @@ export function orderRemoval_RemovalReasonToJSON(object: OrderRemoval_RemovalRea
 
     case OrderRemoval_RemovalReason.REMOVAL_REASON_FULLY_FILLED:
       return "REMOVAL_REASON_FULLY_FILLED";
-
-    case OrderRemoval_RemovalReason.REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS:
-      return "REMOVAL_REASON_VIOLATES_ISOLATED_SUBACCOUNT_CONSTRAINTS";
 
     case OrderRemoval_RemovalReason.UNRECOGNIZED:
     default:

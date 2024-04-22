@@ -1593,8 +1593,8 @@ func (m *AssetCreateEventV1) GetAtomicResolution() int32 {
 
 // PerpetualMarketCreateEventV1 message contains all the information about a
 // new Perpetual Market on the dYdX chain.
-// Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message for the event to
-// create a new Perpetual Market.
+// Deprecated. See PerpetualMarketCreateEventV2 for the most up to date message
+// for the event to create a new Perpetual Market.
 //
 // Deprecated: Do not use.
 type PerpetualMarketCreateEventV1 struct {
