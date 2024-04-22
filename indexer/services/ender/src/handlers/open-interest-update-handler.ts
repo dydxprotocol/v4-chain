@@ -54,7 +54,7 @@ function generateMarketMessage(
     .mapValues((perpetualMarket: PerpetualMarketFromDatabase): TradingPerpetualMarketMessage => {
       return {
         id: perpetualMarket.id,
-        openInterest: perpetualMarket.openInterest,
+        baseOpenInterest: perpetualMarket.baseOpenInterest,
       };
     })
     .value();

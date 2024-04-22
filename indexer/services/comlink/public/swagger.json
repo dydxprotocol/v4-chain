@@ -961,6 +961,9 @@
           },
           "openInterestUpperCap": {
             "type": "string"
+          },
+          "baseOpenInterest": {
+            "type": "string"
           }
         },
         "required": [

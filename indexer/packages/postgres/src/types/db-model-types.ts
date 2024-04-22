@@ -92,6 +92,7 @@ export interface PerpetualMarketFromDatabase {
   stepBaseQuantums: number;
   liquidityTierId: number;
   marketType: PerpetualMarketType;
+  baseOpenInterest?: string;
 }
 
 export interface FillFromDatabase {

@@ -32,6 +32,7 @@ import { createPostgresFunctions } from '../../src/helpers/postgres/postgres-fun
 import {
   bytesToBigInt,
 } from '@dydxprotocol-indexer/v4-proto-parser';
+import { quantumsToHumanFixedString } from '@dydxprotocol-indexer/postgres/build/src/lib/protocol-translations';
 
 describe('openInterestUpdateHandler', () => {
   beforeAll(async () => {
@@ -76,8 +77,8 @@ describe('openInterestUpdateHandler', () => {
       const perpetualMarket:
       PerpetualMarketFromDatabase = perpetualMarketRefresher.getPerpetualMarketFromId(
         openInterestUpdate.perpetualId.toString())!;
-      expect(Number(perpetualMarket.openInterest)).toEqual(
-        Number(bytesToBigInt(openInterestUpdate.openInterest)));
+      expect(perpetualMarket.baseOpenInterest).toEqual(
+        quantumsToHumanFixedString(bytesToBigInt(openInterestUpdate.openInterest).toString(), perpetualMarket.atomicResolution)),
       perpetualMarketsFromDB.push(perpetualMarket);
     }
     expectMarketKafkaMessage({
@@ -90,7 +91,7 @@ describe('openInterestUpdateHandler', () => {
             .mapValues((perpetualMarket) => {
               return {
                 id: perpetualMarket.id,
-                openInterest: perpetualMarket.openInterest,
+                baseOpenInterest: perpetualMarket.baseOpenInterest,
               };
             })
             .value(),

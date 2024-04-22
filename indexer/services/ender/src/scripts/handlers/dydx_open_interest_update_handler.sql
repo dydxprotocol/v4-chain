@@ -19,7 +19,7 @@ BEGIN
       
           UPDATE perpetual_markets
           SET
-              "openInterest" = perpetual_market_record."openInterest"
+              "baseOpenInterest" = dydx_trim_scale(perpetual_market_record."openInterest"::numeric * power(10, "atomicResolution")::numeric)
           WHERE
               "id" = perpetual_market_record."id"
           RETURNING * INTO perpetual_market_record;
